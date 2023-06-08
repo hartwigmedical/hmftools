@@ -625,8 +625,8 @@ PURPLE builds a catalog of drivers based on a configured gene panel.    PURPLE a
 A detailed description of the driver catalog is available [here](./DriverCatalog.md).
 
 Note that additional restrictions apply on amplification and deletion drivers for samples with QC warnings:
-- If warning = DELETED_GENES or WARN_HIGH_COPY_NUMBER_NOISE, DELs must be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases).
-- If warning = HIGH_CN_WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV.   
+- If warning = WARN_DELETED_GENES or WARN_HIGH_COPY_NUMBER_NOISE, DELs must be supported on both sides by SV OR (supported by SV + CENTROMERE/TELOMERE and be <10M bases).
+- If warning = WARN_HIGH_COPY_NUMBER_NOISE, AMPS must be bounded on at least one side by an SV.   
 
 
 ## Output
