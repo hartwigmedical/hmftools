@@ -179,6 +179,14 @@ public class ResultsWriter
         if(purity >= 0.01)
             return format("%.4f", purity);
         else
-            return format("%4.3e", purity);
+            return format("%.6f", purity);
+    }
+
+    public static String formatProbabilityValue(double probability)
+    {
+        if(probability >= 0.03)
+            return format("%.4f", probability);
+        else
+            return format("%4.3e", probability);
     }
 }

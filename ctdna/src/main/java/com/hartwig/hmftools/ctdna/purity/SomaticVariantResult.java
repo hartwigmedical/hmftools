@@ -42,15 +42,15 @@ public class SomaticVariantResult
     {
         TotalVariants = totalVariants;
         CalcVariants = calcVariants;
-        TotalFragments = sampleCounts.depthTotal();
+        TotalFragments = sampleCounts.totalFragments();
         UmiRefNonDual = umiTypeCounts.RefNone + umiTypeCounts.RefSingle;
         UmiRefDual = umiTypeCounts.RefDual;
-        AlleleFragments = sampleCounts.AlleleFragments;
+        AlleleFragments = sampleCounts.alleleFragments();
         UmiAlleleNonDual = umiTypeCounts.AlleleNone + umiTypeCounts.AlleleSingle;
         UmiAlleleDual = umiTypeCounts.AlleleDual;
         QualPerAdTotal = qualPerAdTotal;
         DepthMedian = sampleCounts.medianDepth(false);
-        NonZeroDepthCount = sampleCounts.NonZeroVariantDepths.size();
+        NonZeroDepthCount = sampleCounts.nonZeroDepth();
         NonZeroDepthMedian = sampleCounts.medianDepth(true);
         TumorVaf = tumorVaf;
         AdjustedTumorVaf = adjustedTumorVaf;
@@ -87,7 +87,7 @@ public class SomaticVariantResult
     public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        sj.add(FragmentCalcResult.header("All"));
+        sj.add(FragmentCalcResult.header("")); // was All
         sj.add(FragmentCalcResult.header("Dual"));
         sj.add("LodPurity");
         sj.add("TotalVariants");

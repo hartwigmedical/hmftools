@@ -13,11 +13,8 @@ public final class SomaticPurityCalc
     public static final double HIGH_PROBABILITY = 1 - LOW_PROBABILITY;
     private static final double OBSERVED_ZERO_LOW_MEAN = 3.0;
 
-    public static FragmentCalcResult calc(
-            double tumorPloidy, double tumorVaf, int totalCount, int alleleCount, double noisePerMillion)
+    public static FragmentCalcResult calc(double tumorPloidy, double tumorVaf, int totalCount, int alleleCount, double noise)
     {
-        double noise = totalCount / 1000000.0 * noisePerMillion;
-
         // ctDNA_TF = 2 * cfDNA_VAF / [ PLOIDY * ADJ_PRIMARY_VAF + cfDNA_VAF * ( 2 - PLOIDY)]
         // ADJ_PRIMARY_VAF= PRIMARY_VAF * [ PURITY*PLOIDY - 2*(1-PURITY)]/PURITY/PLOIDY
 
@@ -37,10 +34,8 @@ public final class SomaticPurityCalc
 
         if(totalCount > 0)
         {
-            double lowProbAlleleCount = PoissonCalcs.calcPoissonNoiseValue(alleleCount, HIGH_PROBABILITY);
-
-            double highProbAlleleCount = alleleCount == 0 ?
-                    OBSERVED_ZERO_LOW_MEAN : PoissonCalcs.calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
+            double lowProbAlleleCount = calcPoissonNoiseValue(alleleCount, HIGH_PROBABILITY); // note reversal of prob thresholds is intended
+            double highProbAlleleCount = calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
 
             double sampleVafLow = max(lowProbAlleleCount - noise, 0) / (double) totalCount;
             estimatedPurityLow = estimatedPurity(sampleVafLow, tumorPloidy, tumorVaf);
@@ -49,7 +44,15 @@ public final class SomaticPurityCalc
             estimatedPurityHigh = estimatedPurity(sampleVafHigh, tumorPloidy, tumorVaf);
         }
 
-        return new FragmentCalcResult(noise, sampleVaf, estimatedPurity, probability, estimatedPurityLow, estimatedPurityHigh);
+        return new FragmentCalcResult(sampleVaf, estimatedPurity, probability, estimatedPurityLow, estimatedPurityHigh);
+    }
+
+    public static double calcPoissonNoiseValue(int alleleCount, double requiredProb)
+    {
+        if(alleleCount == 0)
+            return requiredProb == LOW_PROBABILITY ? OBSERVED_ZERO_LOW_MEAN : 0;
+
+        return PoissonCalcs.calcPoissonNoiseValue(alleleCount, requiredProb);
     }
 
     private static double estimatedPurity(double sampleVaf, double tumorPloidy, double tumorVaf)

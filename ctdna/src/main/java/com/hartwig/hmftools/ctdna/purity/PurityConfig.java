@@ -82,7 +82,6 @@ public class PurityConfig
             Arrays.stream(PurityMethod.values()).forEach(x -> PurityMethods.add(x));
         }
 
-        // SomaticVcf = cmd.hasOption(SOMATIC_VCF) ? cmd.getOptionValue(SOMATIC_VCF) : format("%s/*.purple.somatic.ctdna.vcf.gz", SampleDataDir);
         SomaticVcf = cmd.getOptionValue(SOMATIC_VCF, "");
         PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, SampleDataDir));
         CobaltDir = checkAddDirSeparator(cmd.getOptionValue(COBALT_DIR, SampleDataDir));
