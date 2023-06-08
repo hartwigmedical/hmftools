@@ -101,7 +101,6 @@ class PurityDAO {
                 .tumorMutationalBurdenStatus(TumorMutationalStatus.valueOf(result.getValue(PURITY.TMBSTATUS)))
                 .tumorMutationalLoad(result.getValue(PURITY.TML))
                 .tumorMutationalLoadStatus(TumorMutationalStatus.valueOf(result.getValue(PURITY.TMLSTATUS)))
-                .version(result.getValue(PURITY.VERSION))
                 .gender(cobaltGender)
                 .polyClonalProportion(result.getValue(PURITY.POLYCLONALPROPORTION))
                 .method(method)
@@ -149,7 +148,6 @@ class PurityDAO {
         context.delete(PURITY).where(PURITY.SAMPLEID.eq(sample)).execute();
 
         context.insertInto(PURITY,
-                PURITY.VERSION,
                 PURITY.SAMPLEID,
                 PURITY.PURITY_,
                 PURITY.GENDER,
@@ -184,8 +182,7 @@ class PurityDAO {
                 PURITY.AMBERGENDER,
                 PURITY.TARGETED,
                 PURITY.MODIFIED)
-                .values(purity.version(),
-                        sample,
+                .values(sample,
                         DatabaseUtil.decimal(bestFit.purity()),
                         purity.gender().toString(),
                         purity.method().toString(),

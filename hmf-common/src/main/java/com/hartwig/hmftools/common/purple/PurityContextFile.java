@@ -111,7 +111,7 @@ public final class PurityContextFile
                 .add(FORMAT.format(score.maxPloidy()))
                 .add(FORMAT.format(score.minDiploidProportion()))
                 .add(FORMAT.format(score.maxDiploidProportion()))
-                .add(String.valueOf(context.version()))
+                .add("")
                 .add(FORMAT.format(purity.somaticPenalty()))
                 .add(String.valueOf(context.wholeGenomeDuplication()))
                 .add(FORMAT.format(context.microsatelliteIndelsPerMb()))
@@ -161,8 +161,7 @@ public final class PurityContextFile
         int tumorMutationalLoad = tml.contains(".") ?
                 Integer.parseInt(tml.substring(0, tml.indexOf("."))) : Integer.parseInt(tml);
 
-        RunMode runMode = fieldsIndexMap.containsKey("runMode") ?
-                RunMode.valueOf(values[fieldsIndexMap.get("runMode")]) : RunMode.TUMOR_GERMLINE;
+        RunMode runMode = RunMode.valueOf(values[fieldsIndexMap.get("runMode")]);
 
         builder.score(score)
                 .bestFit(fittedPurity)
@@ -171,7 +170,6 @@ public final class PurityContextFile
                 .runMode(runMode)
                 .targeted(fieldsIndexMap.containsKey("targeted") ? Boolean.parseBoolean(values[fieldsIndexMap.get("targeted")]) : false)
                 .polyClonalProportion(Double.parseDouble(values[fieldsIndexMap.get("polyclonalProportion")]))
-                .version(values[fieldsIndexMap.get("version")])
                 .wholeGenomeDuplication(Boolean.parseBoolean(values[fieldsIndexMap.get("wholeGenomeDuplication")]))
                 .microsatelliteIndelsPerMb(Double.parseDouble(values[fieldsIndexMap.get("msIndelsPerMb")]))
                 .microsatelliteStatus(MicrosatelliteStatus.valueOf(values[fieldsIndexMap.get("msStatus")]))

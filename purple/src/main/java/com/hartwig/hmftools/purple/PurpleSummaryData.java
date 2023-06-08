@@ -58,11 +58,10 @@ public final class PurpleSummaryData
     }
 
     public static PurityContext createPurity(
-            final String version, final BestFit bestFit, final Gender gender, final PurpleConfig config, final PurpleQC qcChecks,
+            final BestFit bestFit, final Gender gender, final PurpleConfig config, final PurpleQC qcChecks,
             final List<PurpleCopyNumber> copyNumbers, final SomaticStream somaticStream, final SomaticSvCache svCache)
     {
         return ImmutablePurityContext.builder()
-                .version(version)
                 .bestFit(bestFit.fit())
                 .method(bestFit.method())
                 .gender(gender)

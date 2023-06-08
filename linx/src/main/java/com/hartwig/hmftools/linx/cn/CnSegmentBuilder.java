@@ -438,7 +438,6 @@ public class CnSegmentBuilder
                 .polyClonalProportion(0)
                 .score(purityScore)
                 .method(NORMAL)
-                .version("1.0")
                 .wholeGenomeDuplication(false)
                 .tumorMutationalLoad(0)
                 .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)

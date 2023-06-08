@@ -9,4 +9,7 @@ ALTER TABLE somaticVariant
     ADD COLUMN gnomadFrequency DOUBLE PRECISION NULL after clinvarInfo,
     ADD COLUMN somaticLikelihood varchar(10) NULL after gnomadFrequency;
 
+ALTER TABLE purity
+    DROP COLUMN version;
+
 
