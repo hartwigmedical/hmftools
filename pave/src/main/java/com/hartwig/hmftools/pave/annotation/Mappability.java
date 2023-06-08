@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.annotation;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.pave.VariantData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

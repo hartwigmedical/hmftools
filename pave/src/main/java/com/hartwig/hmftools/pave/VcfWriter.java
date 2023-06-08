@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
-import static com.hartwig.hmftools.pave.PonAnnotation.PON_COUNT;
-import static com.hartwig.hmftools.pave.PonAnnotation.PON_MAX;
+import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_COUNT;
+import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_MAX;
 
 import java.io.File;
 import java.util.List;
@@ -12,6 +12,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
+import com.hartwig.hmftools.pave.annotation.Blacklistings;
+import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
+import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
+import com.hartwig.hmftools.pave.annotation.Mappability;
+import com.hartwig.hmftools.pave.annotation.PonAnnotation;
+import com.hartwig.hmftools.pave.annotation.Reportability;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
