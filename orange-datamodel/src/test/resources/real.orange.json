@@ -1578,252 +1578,324 @@
         "likelihood": 0.996,
         "snvPairwiseClassifier": 0.979,
         "genomicPositionClassifier": 0.99,
-        "featureClassifier": 0.972
+        "featureClassifier": 0.972,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Skin: Other",
         "likelihood": 2.08E-4,
         "snvPairwiseClassifier": 0.0205,
         "genomicPositionClassifier": 5.89E-4,
-        "featureClassifier": 0.00175
+        "featureClassifier": 0.00175,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Acute myeloid leukemia",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 5.1E-57,
         "genomicPositionClassifier": 7.8E-4,
-        "featureClassifier": 5.84E-13
+        "featureClassifier": 5.84E-13,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Anogenital",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.96E-31,
         "genomicPositionClassifier": 2.21E-4,
-        "featureClassifier": 3.5E-4
+        "featureClassifier": 3.5E-4,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Bile duct/Gallbladder",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 9.33E-33,
         "genomicPositionClassifier": 2.52E-4,
-        "featureClassifier": 0.00299
+        "featureClassifier": 0.00299,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Bone/Soft tissue: Other",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 6.33E-4,
         "genomicPositionClassifier": 7.26E-4,
-        "featureClassifier": 8.71E-5
+        "featureClassifier": 8.71E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Cartilaginous neoplasm",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.73E-56,
         "genomicPositionClassifier": 6.58E-4,
-        "featureClassifier": 2.8E-13
+        "featureClassifier": 2.8E-13,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Colorectum/Appendix/SmallIntestine",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.43E-6,
         "genomicPositionClassifier": 6.28E-5,
-        "featureClassifier": 3.96E-5
+        "featureClassifier": 3.96E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Esophagus/Stomach",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 5.6E-26,
         "genomicPositionClassifier": 4.43E-6,
-        "featureClassifier": 4.34E-5
+        "featureClassifier": 4.34E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "GIST",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.86E-34,
         "genomicPositionClassifier": 1.87E-4,
-        "featureClassifier": 2.97E-6
+        "featureClassifier": 2.97E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Glioma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 2.41E-28,
         "genomicPositionClassifier": 8.35E-5,
-        "featureClassifier": 0.00626
+        "featureClassifier": 0.00626,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Head and neck: other",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.16E-32,
         "genomicPositionClassifier": 7.48E-5,
-        "featureClassifier": 0.00142
+        "featureClassifier": 0.00142,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Kidney",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.37E-10,
         "genomicPositionClassifier": 1.07E-4,
-        "featureClassifier": 1.82E-4
+        "featureClassifier": 1.82E-4,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Kidney-ChRCC",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.3E-40,
         "genomicPositionClassifier": 5.13E-4,
-        "featureClassifier": 3.11E-9
+        "featureClassifier": 3.11E-9,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Leiomyosarcoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 2.68E-26,
         "genomicPositionClassifier": 4.2E-4,
-        "featureClassifier": 1.69E-6
+        "featureClassifier": 1.69E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Liposarcoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.03E-24,
         "genomicPositionClassifier": 2.09E-4,
-        "featureClassifier": 5.23E-6
+        "featureClassifier": 5.23E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Liver",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 2.05E-39,
         "genomicPositionClassifier": 3.46E-5,
-        "featureClassifier": 0.00165
+        "featureClassifier": 0.00165,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Lung: NET",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.28E-37,
         "genomicPositionClassifier": 2.82E-4,
-        "featureClassifier": 1.42E-8
+        "featureClassifier": 1.42E-8,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Lung: Non-small Cell",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 4.83E-28,
         "genomicPositionClassifier": 2.89E-5,
-        "featureClassifier": 0.00503
+        "featureClassifier": 0.00503,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Lung: Small Cell",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 7.52E-46,
         "genomicPositionClassifier": 6.44E-6,
-        "featureClassifier": 3.44E-4
+        "featureClassifier": 3.44E-4,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Lymphoid tissue",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.62E-37,
         "genomicPositionClassifier": 1.7E-8,
-        "featureClassifier": 3.41E-6
+        "featureClassifier": 3.41E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Medulloblastoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.75E-52,
         "genomicPositionClassifier": 2.93E-4,
-        "featureClassifier": 5.0E-9
+        "featureClassifier": 5.0E-9,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Mesothelium",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.65E-33,
         "genomicPositionClassifier": 3.8E-4,
-        "featureClassifier": 1.93E-7
+        "featureClassifier": 1.93E-7,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Myeloproliferative neoplasm",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 4.11E-53,
         "genomicPositionClassifier": 6.68E-4,
-        "featureClassifier": 1.81E-12
+        "featureClassifier": 1.81E-12,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Osteosarcoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 9.7E-25,
         "genomicPositionClassifier": 4.74E-4,
-        "featureClassifier": 7.67E-6
+        "featureClassifier": 7.67E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Pancreas",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 7.99E-29,
         "genomicPositionClassifier": 6.05E-5,
-        "featureClassifier": 1.76E-5
+        "featureClassifier": 1.76E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Pancreas: NET",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 6.75E-28,
         "genomicPositionClassifier": 2.41E-4,
-        "featureClassifier": 3.14E-7
+        "featureClassifier": 3.14E-7,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Pilocytic astrocytoma",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.63E-54,
         "genomicPositionClassifier": 6.55E-4,
-        "featureClassifier": 3.11E-12
+        "featureClassifier": 3.11E-12,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Prostate",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.75E-42,
         "genomicPositionClassifier": 1.68E-4,
-        "featureClassifier": 2.73E-5
+        "featureClassifier": 2.73E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Salivary gland/Adenoid cystic",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 1.48E-4,
         "genomicPositionClassifier": 8.93E-4,
-        "featureClassifier": 0.00412
+        "featureClassifier": 0.00412,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Small intestine/Colorectum: NET",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 5.4E-45,
         "genomicPositionClassifier": 1.43E-4,
-        "featureClassifier": 1.77E-9
+        "featureClassifier": 1.77E-9,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Thyroid gland",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 2.5E-29,
         "genomicPositionClassifier": 3.84E-4,
-        "featureClassifier": 3.25E-6
+        "featureClassifier": 3.25E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Urothelial tract",
         "likelihood": 1.3E-4,
         "snvPairwiseClassifier": 3.35E-27,
         "genomicPositionClassifier": 2.0E-4,
-        "featureClassifier": 0.00327
+        "featureClassifier": 0.00327,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Breast",
         "likelihood": 5.83E-5,
         "snvPairwiseClassifier": 8.18E-26,
         "genomicPositionClassifier": 2.99E-4,
-        "featureClassifier": 1.16E-4
+        "featureClassifier": 1.16E-4,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Ovary/Fallopian tube",
         "likelihood": 0.0,
         "snvPairwiseClassifier": 0.0,
         "genomicPositionClassifier": 0.0,
-        "featureClassifier": 0.0
+        "featureClassifier": 0.0,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       },
       {
         "cancerType": "Uterus: Endometrium",
         "likelihood": 0.0,
         "snvPairwiseClassifier": 0.0,
         "genomicPositionClassifier": 0.0,
-        "featureClassifier": 0.0
+        "featureClassifier": 0.0,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
       }
     ],
     "simpleDups32To200B": 3,
