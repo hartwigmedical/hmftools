@@ -23,4 +23,10 @@ public interface CuppaPrediction {
 
     @Nullable
     Double featureClassifier();
+
+    @Nullable
+    Double altSjCohortClassifier();
+
+    @Nullable
+    Double expressionPairwiseClassifier();
 }

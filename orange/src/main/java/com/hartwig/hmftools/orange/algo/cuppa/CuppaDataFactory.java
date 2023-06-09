@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.orange.algo.cuppa;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
@@ -50,20 +52,28 @@ public final class CuppaDataFactory {
         Map<String, CuppaDataFile> filesByType = files.stream()
                 .filter(entry -> entry.Result.equals(ResultType.CLASSIFIER))
                 .collect(Collectors.toMap(file -> file.DataType, file -> file));
-        CuppaDataFile SNVPairwiseFile = filesByType.get(ClassifierType.SNV_96_PAIRWISE.toString());
-        CuppaDataFile genomicPositionFile = filesByType.get(ClassifierType.GENOMIC_POSITION_COHORT.toString());
-        CuppaDataFile featureFile = filesByType.get(ClassifierType.FEATURE.toString());
+
+        Map<ClassifierType, Map<String, Double>> predictionsByClassifier = Stream.of(ClassifierType.SNV_96_PAIRWISE,
+                ClassifierType.GENOMIC_POSITION_COHORT, ClassifierType.FEATURE, ClassifierType.ALT_SJ_COHORT, ClassifierType.EXPRESSION_PAIRWISE)
+                .collect(Collectors.toMap(classifier -> classifier, classifier -> predictionsForClassifier(filesByType, classifier)));
 
         return filesByType.get(bestCombinedType).CancerTypeValues.entrySet().stream().map(cancerPrediction -> {
             String cancerType = cancerPrediction.getKey();
             return ImmutableCuppaPrediction.builder()
                     .cancerType(cancerType)
                     .likelihood(cancerPrediction.getValue())
-                    .snvPairwiseClassifier(SNVPairwiseFile == null ? null : SNVPairwiseFile.CancerTypeValues.get(cancerType))
-                    .genomicPositionClassifier(genomicPositionFile == null ? null : genomicPositionFile.CancerTypeValues.get(cancerType))
-                    .featureClassifier(featureFile == null ? null : featureFile.CancerTypeValues.get(cancerType))
+                    .snvPairwiseClassifier(predictionsByClassifier.get(ClassifierType.SNV_96_PAIRWISE).get(cancerType))
+                    .genomicPositionClassifier(predictionsByClassifier.get(ClassifierType.GENOMIC_POSITION_COHORT).get(cancerType))
+                    .featureClassifier(predictionsByClassifier.get(ClassifierType.FEATURE).get(cancerType))
+                    .altSjCohortClassifier(predictionsByClassifier.get(ClassifierType.ALT_SJ_COHORT).get(cancerType))
+                    .expressionPairwiseClassifier(predictionsByClassifier.get(ClassifierType.EXPRESSION_PAIRWISE).get(cancerType))
                     .build();
         }).sorted(new CuppaPredictionComparator()).collect(Collectors.toList());
+    }
+
+    private static Map<String, Double> predictionsForClassifier(Map<String, CuppaDataFile> filesByType, ClassifierType classifierType) {
+        CuppaDataFile cuppaDataFile = filesByType.get(classifierType.toString());
+        return cuppaDataFile == null ? Collections.emptyMap() : cuppaDataFile.CancerTypeValues;
     }
 
     @Nullable

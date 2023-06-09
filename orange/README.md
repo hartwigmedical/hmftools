@@ -220,6 +220,7 @@ investigate potential causes for QC failure.
 - NEXT
     - Bugfix: Maintain linx clusters after ORANGE germline conversion
     - Include breakdown by classifier in CUPPA predictions
+    - Fixed bug that used invalid RNA gene expression cohort percentiles for CUP tumors and prevented high-expression findings
 - [2.4.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.1)
     - Fixes java.lang.IllegalStateException occurring when sample has virus integration.
 - [2.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.0)

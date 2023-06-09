@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.util.List;
@@ -44,10 +45,12 @@ public class CuppaDataFactoryTest {
                 prediction("Lung: Non-small Cell", 0.00013, 4.83e-28, 2.89e-05, 0.00503))) {
             CuppaPrediction actual = actualPredictionsByCancerType.get(expected.cancerType());
             assertNotNull(actual);
-            assertCuppaPredictionField(expected, actual, CuppaPrediction::likelihood);
-            assertCuppaPredictionField(expected, actual, CuppaPrediction::snvPairwiseClassifier);
-            assertCuppaPredictionField(expected, actual, CuppaPrediction::genomicPositionClassifier);
-            assertCuppaPredictionField(expected, actual, CuppaPrediction::featureClassifier);
+            List<Function<CuppaPrediction, Double>> functionsToVerify = List.of(CuppaPrediction::likelihood,
+                    CuppaPrediction::snvPairwiseClassifier, CuppaPrediction::genomicPositionClassifier, CuppaPrediction::featureClassifier,
+                    CuppaPrediction::altSjCohortClassifier, CuppaPrediction::expressionPairwiseClassifier);
+            for (Function<CuppaPrediction, Double> function : functionsToVerify) {
+                assertCuppaPredictionField(expected, actual, function);
+            }
         }
 
         assertEquals(3, cuppaData.simpleDups32To200B());
@@ -78,7 +81,7 @@ public class CuppaDataFactoryTest {
     }
 
     @NotNull
-    private static ImmutableCuppaPrediction prediction(String cancerType, double likelihood, double snvPairwiseClassifier,
+    private static ImmutableCuppaPrediction prediction(@NotNull String cancerType, double likelihood, double snvPairwiseClassifier,
             double genomicPositionClassifier, double featureClassifier) {
         return ImmutableCuppaPrediction.builder()
                 .cancerType(cancerType)
@@ -89,12 +92,15 @@ public class CuppaDataFactoryTest {
                 .build();
     }
 
-    private void assertCuppaPredictionField(CuppaPrediction expected, CuppaPrediction actual, Function<CuppaPrediction, Double> function) {
+    private void assertCuppaPredictionField(@NotNull CuppaPrediction expected, @NotNull CuppaPrediction actual, @NotNull Function<CuppaPrediction, Double> function) {
         Double expectedValue = function.apply(expected);
         Double actualValue = function.apply(actual);
-        assertNotNull(expectedValue);
-        assertNotNull(actualValue);
-        assertEquals(expectedValue, actualValue, EPSILON);
+        if (expectedValue == null) {
+            assertNull(actualValue);
+        } else {
+            assertNotNull(actualValue);
+            assertEquals(expectedValue, actualValue, EPSILON);
+        }
     }
 
     @NotNull
