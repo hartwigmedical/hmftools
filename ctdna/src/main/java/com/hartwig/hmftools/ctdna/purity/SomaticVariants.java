@@ -191,8 +191,8 @@ public class SomaticVariants
 
         UmiTypeCounts umiTypeCounts = new UmiTypeCounts();
 
-        double sampleTumorAlleleRatio = calcTumorSampleAlleleRatio(sampleId);
-        double sampleTumorVafRatio = calcTumorSampleVafRatio(sampleId);
+        // double sampleTumorAlleleRatio = calcTumorSampleAlleleRatio(sampleId);
+        // double sampleTumorVafRatio = calcTumorSampleVafRatio(sampleId);
 
         for(SomaticVariant variant : mVariants)
         {
@@ -219,7 +219,7 @@ public class SomaticVariants
             if(mConfig.WriteFilteredSomatics || useForTotals)
             {
                 String filter = variant.PassFilters && useForTotals ? "PASS" : (!variant.PassFilters ? "FILTERED" : "NO_FRAGS");
-                mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleFragData, filter);
+                mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleFragData, tumorFragData, filter);
             }
 
             if(!useForTotals)
@@ -279,6 +279,9 @@ public class SomaticVariants
         FragmentCalcResult lodFragsResult = SomaticPurityCalc.calc(
                 tumorPloidy, adjustedTumorVaf, sampleDepthTotal, (int)round(lodFragments), allFragsNoise);
 
+        // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
+        //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
+
         return new SomaticVariantResult(
                 true, totalVariants, calcVariants, sampleCounts, umiTypeCounts, qualPerAllele,
                 tumorVaf, adjustedTumorVaf, allFragsResult, dualFragsResult, lodFragsResult);
@@ -303,7 +306,7 @@ public class SomaticVariants
                     continue;
 
                 tumorVafTotal += tumorFragData.AlleleCount / (double)tumorFragData.Depth;
-                sampleVafTotal += sampleFragData.AlleleCount / (double)sampleFragData.UmiCounts.total();
+                sampleVafTotal += sampleFragData.UmiCounts.alleleTotal() / (double)sampleFragData.UmiCounts.total();
             }
         }
 
@@ -325,14 +328,11 @@ public class SomaticVariants
 
             if(useVariantForPurityCalcs(variant, sampleFragData))
             {
-                // tumorFragments += tumorFragData.AlleleCount;
-                // sampleFragments += sampleFragData.AlleleCount;
-
                 if(tumorFragData.Depth == 0 || sampleFragData.UmiCounts.total() == 0)
                     continue;
 
                 double tumorVaf = tumorFragData.AlleleCount / (double)tumorFragData.Depth;;
-                double sampleVaf = sampleFragData.AlleleCount / (double)sampleFragData.UmiCounts.total();
+                double sampleVaf = sampleFragData.UmiCounts.alleleTotal() / (double)sampleFragData.UmiCounts.total();
 
                 tumorFragments += tumorVaf;
                 sampleFragments += sampleVaf;
