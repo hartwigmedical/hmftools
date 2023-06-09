@@ -112,4 +112,8 @@ public interface SomaticVariant extends Variant
     {
         return localPhaseSets() != null && !localPhaseSets().isEmpty();
     }
+
+    String clinvarInfo();
+    double gnomadFrequency();
+    SomaticLikelihood somaticLikelihood();
 }

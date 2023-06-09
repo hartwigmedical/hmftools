@@ -11,22 +11,31 @@ import com.hartwig.hmftools.common.genome.gc.GCMedianReadCount;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 import com.hartwig.hmftools.common.utils.Doubles;
 
+import org.apache.commons.lang3.Validate;
+
 import tech.tablesaw.aggregate.AggregateFunctions;
 import tech.tablesaw.aggregate.NumericAggregateFunction;
 import tech.tablesaw.api.*;
 
-public class GcNormalizedRatioBuilder
+public class GcNormalizedRatioMapper implements RatioMapper
 {
     private static final int MIN_BUCKET = 20;
     private static final int MAX_BUCKET = 60;
 
-    private final Table mGCMedianReadCount;
-    private final double mSampleMedianReadCount;
-    private final double mSampleMeanReadCount;
-    private final Table mGcRatios;
+    private final boolean mUseInterpolatedMedian;
+
+    private Table mGCMedianReadCount;
+    private double mSampleMedianReadCount;
+    private double mSampleMeanReadCount;
 
     // apply gc normalisation, the input ratios must have chromosome, position, ratio, gcBucket, isMappable
-    public GcNormalizedRatioBuilder(Table inputRatios, boolean useInterpolatedMedian)
+    public GcNormalizedRatioMapper(boolean useInterpolatedMedian)
+    {
+        mUseInterpolatedMedian = useInterpolatedMedian;
+    }
+
+    @Override
+    public Table mapRatios(final Table inputRatios)
     {
         CB_LOGGER.info("Applying ratio gc normalization");
 
@@ -41,15 +50,14 @@ public class GcNormalizedRatioBuilder
 
         // skipped masked regions
         Table gcMedianCalcDf = inputRatios.where(
-                inputRatios.doubleColumn(CobaltColumns.RATIO).isNonNegative()
-                .and(inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenExclusive(MIN_BUCKET, MAX_BUCKET))
-                .and(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
-                .and(inputRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection())
-                .and(inputRatios.intColumn(CobaltColumns.READ_COUNT).isPositive()));
+                inputRatios.doubleColumn(CobaltColumns.RATIO).isGreaterThan(0.0) // TODO: change to >= 0.0
+                        .and(inputRatios.intColumn(CobaltColumns.GC_BUCKET).isBetweenInclusive(MIN_BUCKET, MAX_BUCKET))
+                        .and(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
+                        .and(inputRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection()));
 
         NumericAggregateFunction aggFunc;
 
-        if (useInterpolatedMedian)
+        if (mUseInterpolatedMedian)
         {
             aggFunc = new NumericAggregateFunction("Interpolated Median")
             {
@@ -76,19 +84,23 @@ public class GcNormalizedRatioBuilder
                 .summarize(CobaltColumns.RATIO, aggFunc, AggregateFunctions.count)
                 .by(CobaltColumns.GC_BUCKET);
 
-        CB_LOGGER.trace("gc median calc: {}", gcMedianCalcDf);
+        CB_LOGGER.trace("sample median: {}, mean: {}, gc median calc: {}",
+                mSampleMedianReadCount, mSampleMeanReadCount, gcMedianCalcDf);
 
         gcMedianCalcDf.column(String.format("%s [%s]", aggFunc.functionName(), CobaltColumns.RATIO)).setName("gcMedianCount");
         gcMedianCalcDf.column(String.format("Count [%s]", CobaltColumns.RATIO)).setName("windowCount");
 
         // merge in the gc median count
-        Table ratiosWithMedianCount = inputRatios.joinOn(CobaltColumns.GC_BUCKET).leftOuter(gcMedianCalcDf);
+        Table ratiosWithMedianCount = inputRatios
+                .where(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
+                .joinOn(CobaltColumns.GC_BUCKET).inner(gcMedianCalcDf);
 
         double medianNormalisation = mSampleMedianReadCount / mSampleMeanReadCount;
 
         DoubleColumn gcNormalisedRatio = ratiosWithMedianCount.doubleColumn(CobaltColumns.RATIO)
                 .multiply(medianNormalisation)
-                .divide(ratiosWithMedianCount.doubleColumn("gcMedianCount"));
+                .divide(ratiosWithMedianCount.doubleColumn("gcMedianCount"))
+                .map(d -> Double.isFinite(d) ? d : Double.NaN); // protect against division by 0
 
         ratiosWithMedianCount.replaceColumn(gcNormalisedRatio.setName(CobaltColumns.RATIO));
 
@@ -96,12 +108,7 @@ public class GcNormalizedRatioBuilder
         ratiosWithMedianCount = ratiosWithMedianCount.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
 
         mGCMedianReadCount = gcMedianCalcDf;
-        mGcRatios = ratiosWithMedianCount;
-    }
-
-    public Table ratios()
-    {
-        return mGcRatios;
+        return ratiosWithMedianCount;
     }
 
     public Table gcMedianReadCountTable()

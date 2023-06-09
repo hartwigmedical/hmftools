@@ -188,7 +188,7 @@ In case ORANGE was run in DNA+RNA mode, the alleles will be annotated by RNA fra
 If run with RNA, this chapter displays potentially interesting RNA details:
 
 - QC Details
-- Drive gene panel genes with high TPM (>90th percentile database & tumor type) or low TPM (<5th percentile database or tumor type)
+- Drive gene panel genes with high TPM (>90th percentile database & tumor type) or low TPM (<5th percentile database & tumor type)
 - Potentially interesting support for known or promiscuous fusions not detected in our DNA analysis pipeline
 - Potentially interesting novel splice junctions
     1. Exon-skipping events in `EXON_DEL_DUP` fusion genes

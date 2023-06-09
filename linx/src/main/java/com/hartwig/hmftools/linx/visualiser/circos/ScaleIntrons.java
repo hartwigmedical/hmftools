@@ -26,12 +26,12 @@ class ScaleIntrons
     public static List<GenomeRegion> introns(@NotNull final List<? extends GenomeRegion> exons)
     {
         final List<GenomeRegion> result = Lists.newArrayList();
-        for (int i = 0; i < exons.size() - 1; i++)
+        for(int i = 0; i < exons.size() - 1; i++)
         {
             GenomeRegion current = exons.get(i);
             GenomeRegion next = exons.get(i + 1);
 
-            if (next.start() > current.end())
+            if(next.start() > current.end())
             {
                 result.add(GenomeRegions.create(current.chromosome(), current.end() + 1, next.start() - 1));
             }
@@ -44,7 +44,7 @@ class ScaleIntrons
     public List<FusedExon> scaleIntronsInExons(@NotNull final List<FusedExon> exons)
     {
         final List<FusedExon> result = Lists.newArrayList();
-        for (FusedExon exon : exons)
+        for(FusedExon exon : exons)
         {
             result.add(ImmutableFusedExon.builder().from(exon)
                     .start(exon.start() + offset(exon.start()))
@@ -61,7 +61,7 @@ class ScaleIntrons
     public List<VisProteinDomain> scaleIntronsInProteinDomains(@NotNull final List<VisProteinDomain> domains)
     {
         final List<VisProteinDomain> result = Lists.newArrayList();
-        for (VisProteinDomain domain : domains)
+        for(VisProteinDomain domain : domains)
         {
             VisProteinDomain newDomain = VisProteinDomain.from(domain);
             newDomain.Start = domain.start() + offset(domain.start());
@@ -81,9 +81,9 @@ class ScaleIntrons
     private int offset(long position)
     {
         int offset = 0;
-        for (GenomeRegion intron : mIntrons)
+        for(GenomeRegion intron : mIntrons)
         {
-            if (position > intron.start())
+            if(position > intron.start())
             {
                 long distanceFromStart = Math.min(intron.bases(), position - intron.start() + 1);
                 double proportion = (1d * distanceFromStart) / intron.bases();

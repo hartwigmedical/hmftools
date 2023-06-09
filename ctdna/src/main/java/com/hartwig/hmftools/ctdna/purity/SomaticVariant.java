@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.ctdna.purity;
 
+import static java.lang.String.format;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -42,4 +44,6 @@ public class SomaticVariant
     {
         return Samples.stream().filter(x -> x.SampleName.equals(sampleId)).findFirst().orElse(null);
     }
+
+    public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }
 }

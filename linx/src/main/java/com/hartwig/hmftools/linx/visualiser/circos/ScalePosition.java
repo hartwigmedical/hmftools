@@ -42,7 +42,7 @@ class ScalePosition
     {
         int totalLength = 0;
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
-        for (final String contig : contigs)
+        for(final String contig : contigs)
         {
             final List<Integer> contigPositions = positions.stream()
                     .filter(x -> x.chromosome().equals(contig))
@@ -57,7 +57,7 @@ class ScalePosition
         long minContigDistance = Math.round(MIN_CONTIG_PERCENTAGE * totalLength);
 
         totalLength = 0;
-        for (final ScaleContig scaleContig : mContigMap.values())
+        for(final ScaleContig scaleContig : mContigMap.values())
         {
             if(scaleContig.length() < minContigDistance)
             {
@@ -196,7 +196,7 @@ class ScalePosition
     public List<VisSvData> scaleLinks(final List<VisSvData> links)
     {
         final List<VisSvData> results = Lists.newArrayList();
-        for (final VisSvData link : links)
+        for(final VisSvData link : links)
         {
             try
             {

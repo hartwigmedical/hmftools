@@ -185,7 +185,7 @@ public class DriverDataCache
 
         final GeneData geneData = GeneTransCache.getGeneDataByName(gene.geneName());
 
-        if (geneData == null)
+        if(geneData == null)
         {
             LNX_LOGGER.warn("gene({}) no Ensembl gene data found", gene.geneName());
             return null;

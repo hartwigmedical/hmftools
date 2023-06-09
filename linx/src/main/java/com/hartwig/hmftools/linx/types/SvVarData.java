@@ -379,7 +379,7 @@ public class SvVarData
 
         if(mCluster != null)
         {
-            if (mFoldbackBreakends[SE_START] == null && mFoldbackBreakends[SE_END] == null)
+            if(mFoldbackBreakends[SE_START] == null && mFoldbackBreakends[SE_END] == null)
             {
                 mCluster.deregisterFoldback(this);
             }
@@ -487,7 +487,7 @@ public class SvVarData
 
                 for(String assembly : assemblyList)
                 {
-                    if (assembly.contains(ASSEMBLY_TYPE_TI) || assembly.contains(TRANSITIVE_TYPE_TI))
+                    if(assembly.contains(ASSEMBLY_TYPE_TI) || assembly.contains(TRANSITIVE_TYPE_TI))
                         mTIAssemblies.get(se).add(assembly);
                 }
             }
@@ -536,7 +536,7 @@ public class SvVarData
 
         if(mSVData.insertSequenceRepeatClass().equals("Simple_repeat"))
         {
-            if (mSVData.insertSequenceRepeatType().equals("(CCCTAA)n") || mSVData.insertSequenceRepeatType().equals("(TTAGGG)n"))
+            if(mSVData.insertSequenceRepeatType().equals("(CCCTAA)n") || mSVData.insertSequenceRepeatType().equals("(TTAGGG)n"))
                 return true;
         }
 

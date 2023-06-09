@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.annotation;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
@@ -12,6 +12,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.pave.VariantData;
 
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;

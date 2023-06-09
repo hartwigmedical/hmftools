@@ -3,24 +3,16 @@ package com.hartwig.hmftools.purple.somatic;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_VAF_DISTANCE;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_VAF_DISTANCE_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD_DESC;
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH;
 import static com.hartwig.hmftools.purple.config.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.util.StringJoiner;
-
-import com.hartwig.hmftools.common.variant.PanelSomaticLikelihood;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 
 import htsjdk.variant.vcf.VCFConstants;
@@ -115,20 +107,20 @@ public class SomaticGermlineLikelihood
         double[] diffValues = new double[] { germlineMinDiff, somaticMinDiff };
         variant.context().getCommonInfo().putAttribute(PANEL_GERMLINE_VAF_DISTANCE, diffValues);
 
-        PanelSomaticLikelihood somaticLikelihood;
+        SomaticLikelihood somaticLikelihood;
         double somaticGermlineDiff = abs(somaticMinDiff) - abs(germlineMinDiff);
 
         if(variant.isHotspot() || somaticGermlineDiff < PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH)
         {
-            somaticLikelihood = PanelSomaticLikelihood.HIGH;
+            somaticLikelihood = SomaticLikelihood.HIGH;
         }
         else if(somaticGermlineDiff > PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW)
         {
-            somaticLikelihood = PanelSomaticLikelihood.LOW;
+            somaticLikelihood = SomaticLikelihood.LOW;
         }
         else
         {
-            somaticLikelihood = PanelSomaticLikelihood.MEDIUM;
+            somaticLikelihood = SomaticLikelihood.MEDIUM;
         }
 
         variant.context().getCommonInfo().putAttribute(PANEL_SOMATIC_LIKELIHOOD, somaticLikelihood);

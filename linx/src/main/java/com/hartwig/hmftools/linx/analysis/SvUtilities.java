@@ -87,7 +87,7 @@ public class SvUtilities {
 
             List<SvBreakend> breakendList = chrBreakendMap.get(breakend.chromosome());
 
-            if (breakendList == null)
+            if(breakendList == null)
             {
                 breakendList = Lists.newArrayList();
                 chrBreakendMap.put(breakend.chromosome(), breakendList);
@@ -95,11 +95,11 @@ public class SvUtilities {
 
             // add the variant in order by ascending position
             int index = 0;
-            for (; index < breakendList.size(); ++index)
+            for(; index < breakendList.size(); ++index)
             {
                 final SvBreakend otherBreakend = breakendList.get(index);
 
-                if (position < otherBreakend.position())
+                if(position < otherBreakend.position())
                     break;
 
                 // special case of inferred placed at another SV's location to explain a CN change
@@ -265,7 +265,7 @@ public class SvUtilities {
         double copyNumDiff = abs(cn2 - cn1);
         double copyNumDiffPerc = copyNumDiff / max(abs(cn1), abs(cn2));
 
-        if (copyNumDiff > maxDiff && copyNumDiffPerc > maxDiffPerc)
+        if(copyNumDiff > maxDiff && copyNumDiffPerc > maxDiffPerc)
             return false;
 
         return true;

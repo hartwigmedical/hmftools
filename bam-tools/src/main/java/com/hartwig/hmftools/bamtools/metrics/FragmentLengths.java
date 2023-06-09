@@ -54,6 +54,9 @@ public class FragmentLengths
             if(mateNegativeStrand(read) == read.getReadNegativeStrandFlag())
                 return false;
 
+            if(read.getDuplicateReadFlag())
+                return false;
+
             if(read.isSecondaryOrSupplementary())
                 return false;
         }

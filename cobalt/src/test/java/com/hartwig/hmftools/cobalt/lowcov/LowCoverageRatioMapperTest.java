@@ -12,23 +12,23 @@ import org.junit.Test;
 
 import tech.tablesaw.api.*;
 
-public class LowCoverageRatioBuilderTest
+public class LowCoverageRatioMapperTest
 {
     @Test
     public void testCalcConsoliationCount()
     {
-        assertEquals(1, LowCoverageRatioBuilder.calcConsolidationCount(100.0));
-        assertEquals(1, LowCoverageRatioBuilder.calcConsolidationCount(51.0));
+        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(100.0));
+        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(51.0));
 
         // starting from 50 reads we consolidate
-        assertEquals(10, LowCoverageRatioBuilder.calcConsolidationCount(50.0));
-        assertEquals(30, LowCoverageRatioBuilder.calcConsolidationCount(20.0));
-        assertEquals(100, LowCoverageRatioBuilder.calcConsolidationCount(5.0));
-        assertEquals(300, LowCoverageRatioBuilder.calcConsolidationCount(2.0));
-        assertEquals(500, LowCoverageRatioBuilder.calcConsolidationCount(1.0));
-        assertEquals(1000, LowCoverageRatioBuilder.calcConsolidationCount(0.5));
-        assertEquals(1000, LowCoverageRatioBuilder.calcConsolidationCount(0.05));
-        assertEquals(1000, LowCoverageRatioBuilder.calcConsolidationCount(0.001));
+        assertEquals(10, LowCoverageRatioMapper.calcConsolidationCount(50.0));
+        assertEquals(30, LowCoverageRatioMapper.calcConsolidationCount(20.0));
+        assertEquals(100, LowCoverageRatioMapper.calcConsolidationCount(5.0));
+        assertEquals(300, LowCoverageRatioMapper.calcConsolidationCount(2.0));
+        assertEquals(500, LowCoverageRatioMapper.calcConsolidationCount(1.0));
+        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.5));
+        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.05));
+        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.001));
     }
 
     @Test
@@ -47,7 +47,7 @@ public class LowCoverageRatioBuilderTest
         windowPositions.add(3_024_001);
         windowPositions.add(3_029_001);
 
-        List<LowCovBucket> buckets = LowCoverageRatioBuilder.consolidateIntoBuckets(windowPositions, 4);
+        List<LowCovBucket> buckets = LowCoverageRatioMapper.consolidateIntoBuckets(windowPositions, 4);
 
         assertEquals(3, buckets.size());
 
@@ -61,7 +61,7 @@ public class LowCoverageRatioBuilderTest
 
         windowPositions.add(3_034_001);
 
-        buckets = LowCoverageRatioBuilder.consolidateIntoBuckets(windowPositions, 4);
+        buckets = LowCoverageRatioMapper.consolidateIntoBuckets(windowPositions, 4);
 
         assertEquals(4, buckets.size());
 
@@ -101,7 +101,7 @@ public class LowCoverageRatioBuilderTest
 
         appendReadRatio(rawRatios, "chr1", 19001, 1.0);
 
-        List<LowCovBucket> buckets = Objects.requireNonNull(LowCoverageRatioBuilder.consolidateIntoBuckets(rawRatios, 4)).get("chr1");
+        List<LowCovBucket> buckets = Objects.requireNonNull(LowCoverageRatioMapper.consolidateIntoBuckets(rawRatios, 4)).get("chr1");
 
         assertEquals(3, buckets.size());
 
@@ -119,7 +119,7 @@ public class LowCoverageRatioBuilderTest
         // put a masked out ratio at the end, should also work
         row = rawRatios.appendRow(); row.setString("chromosome", "chr1"); row.setInt("position", 20001); row.setDouble("ratio", -1.0);
 
-        buckets = Objects.requireNonNull(LowCoverageRatioBuilder.consolidateIntoBuckets(rawRatios, 4)).get("chr1");
+        buckets = Objects.requireNonNull(LowCoverageRatioMapper.consolidateIntoBuckets(rawRatios, 4)).get("chr1");
 
         assertEquals(3, buckets.size());
 

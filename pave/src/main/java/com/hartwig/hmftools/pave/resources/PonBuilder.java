@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.PonAnnotation.PON_DELIM;
+import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,7 +26,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.pave.PonAnnotation;
+import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

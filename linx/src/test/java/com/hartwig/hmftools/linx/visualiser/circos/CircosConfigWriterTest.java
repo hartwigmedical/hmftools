@@ -15,7 +15,7 @@ public class CircosConfigWriterTest
         String positionString = CircosConfigWriter.cnaAxisPositions(maxTracks);
 
         StringJoiner copyNumberString = new StringJoiner(",");
-        for (String relativePosition : positionString.split(",")) {
+        for(String relativePosition : positionString.split(",")) {
             long copyNumber = Math.round(maxTracks * Double.parseDouble(relativePosition.replace("r", ""))) + 2;
             copyNumberString.add(String.valueOf(copyNumber));
         }

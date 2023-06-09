@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.cobalt;
 
-import static com.hartwig.hmftools.common.cobalt.CobaltCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedReader;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter;
@@ -58,7 +58,6 @@ public final class CobaltRatioFile
         return filename;
     }
 
-    @NotNull
     public static ListMultimap<Chromosome,CobaltRatio> read(final String filename) throws IOException
     {
         Map<Chromosome,List<CobaltRatio>> chrRatiosMap = read(filename, null, true);
@@ -74,7 +73,6 @@ public final class CobaltRatioFile
         return result;
     }
 
-    @NotNull
     public static Map<Chromosome,List<CobaltRatio>> readWithGender(final String filename, final Gender gender, boolean hasTumor)
             throws IOException
     {
@@ -97,7 +95,7 @@ public final class CobaltRatioFile
         try(BufferedReader reader = filename.endsWith(".gz") ? createGzipBufferedReader(filename) : createBufferedReader(filename))
         {
             String line = reader.readLine();
-            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get(CHROMOSOME);
             int posIndex = fieldsIndexMap.get(POSITION);
@@ -112,7 +110,7 @@ public final class CobaltRatioFile
 
             while((line = reader.readLine()) != null)
             {
-                String[] values = line.split(DELIMITER, -1);
+                String[] values = line.split(TSV_DELIM, -1);
 
                 String chromosome = values[chrIndex];
                 double initialRefGCRatio = Double.parseDouble(values[refGcRatioIndex]);
@@ -169,7 +167,7 @@ public final class CobaltRatioFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(CHROMOSOME)
                 .add(POSITION)
                 .add(REF_READ_COUNT)
@@ -182,7 +180,7 @@ public final class CobaltRatioFile
 
     private static String toString(final CobaltRatio position)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(position.chromosome())
                 .add(String.valueOf(position.position()))
                 .add(String.valueOf(position.referenceReadCount()))

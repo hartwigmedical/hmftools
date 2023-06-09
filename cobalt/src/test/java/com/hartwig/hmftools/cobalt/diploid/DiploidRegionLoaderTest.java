@@ -4,13 +4,10 @@ import static junit.framework.TestCase.assertEquals;
 
 import java.util.List;
 
-import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
 
-import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -18,7 +15,7 @@ import htsjdk.samtools.util.Locatable;
 
 import tech.tablesaw.api.*;
 
-public class DiploidRatioLoaderTest
+public class DiploidRegionLoaderTest
 {
     @Test
     public void testBuildRatios()
@@ -26,8 +23,7 @@ public class DiploidRatioLoaderTest
         String chr1 = "1";
         String chr2 = "2";
         ChromosomePositionCodec chromosomePosCodec = new ChromosomePositionCodec();
-        DiploidRatioLoader victim = new DiploidRatioLoader(List.of(new Chromosome(chr1, 0), new Chromosome(chr2, 0)),
-                chromosomePosCodec);
+        DiploidRegionLoader victim = new DiploidRegionLoader(chromosomePosCodec);
         victim.accept(locatable("1", 1001, 3000));
         victim.accept(locatable("1", 5001, 6000));
         victim.accept(locatable("2", 1001, 3000));
@@ -46,7 +42,6 @@ public class DiploidRatioLoaderTest
     {
         assertEquals(contig, victim.getString(CobaltColumns.CHROMOSOME));
         assertEquals(position, victim.getInt(CobaltColumns.POSITION));
-        assertEquals(1, victim.getDouble(CobaltColumns.RATIO), 0.01);
     }
 
     @NotNull

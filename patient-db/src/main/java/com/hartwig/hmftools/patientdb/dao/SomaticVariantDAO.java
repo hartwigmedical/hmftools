@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -286,13 +287,15 @@ public class SomaticVariantDAO
                 SOMATICVARIANT.RNATOTALREADCOUNT,
                 SOMATICVARIANT.QUAL,
                 SOMATICVARIANT.LOCALPHASESET,
+                SOMATICVARIANT.CLINVARINFO,
+                SOMATICVARIANT.GNOMADFREQUENCY,
+                SOMATICVARIANT.SOMATICLIKELIHOOD,
                 SOMATICVARIANT.MODIFIED);
         variants.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
         inserter.execute();
     }
 
-    private static void addRecord(
-            Timestamp timestamp, InsertValuesStepN inserter, String sample, SomaticVariant variant)
+    private static void addRecord(Timestamp timestamp, InsertValuesStepN inserter, String sample, SomaticVariant variant)
     {
         inserter.values(sample,
                 variant.chromosome(),
@@ -335,6 +338,9 @@ public class SomaticVariantDAO
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
                 variant.qual(),
                 variant.localPhaseSets() != null ? checkStringLength(variant.localPhaseSetsStr(), SOMATICVARIANT.LOCALPHASESET) : null,
+                variant.clinvarInfo(),
+                variant.gnomadFrequency(),
+                variant.somaticLikelihood() == SomaticLikelihood.UNKNOWN ? Strings.EMPTY : variant.somaticLikelihood().toString(),
                 timestamp);
     }
 

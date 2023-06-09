@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.neo.scorer;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.exp;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
@@ -27,6 +28,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
+import com.hartwig.hmftools.common.stats.PoissonCalcs;
 import com.hartwig.hmftools.neo.PeptideData;
 import com.hartwig.hmftools.neo.epitope.EpitopeUtils;
 
@@ -40,6 +42,7 @@ public class TpmCalculator
 
     public static final double LOW_PROBABILITY = 0.25;
     public static final double HIGH_PROBABILITY = 1 - LOW_PROBABILITY;
+    public static final double LOW_PROBABILITY_ZERO_OBS_MEAN = 1.39;
 
     public static final double EFFECTIVE_TPM_ACTUAL_PERC = 0.8;
 
@@ -338,71 +341,11 @@ public class TpmCalculator
         if(fragmentCount < 0)
             return 0;
 
-        if(fragmentCount == 0 && requiredProb == HIGH_PROBABILITY)
-            return 0;
-
-        // find the mean for a Poisson distribution where the observed fragment count is at the required probability level
-        int maxIterations = 20;
-        int iterations = 0;
-
-        double currentValue = 0;
-        double testValueUpper = 0;
-        double testValueLower = 0;
-
-        if(requiredProb > 0.5)
+        if(fragmentCount == 0)
         {
-            currentValue = fragmentCount * 0.5;
-            testValueUpper = fragmentCount;
-            testValueLower = currentValue * 0.5;
-        }
-        else if(fragmentCount == 0)
-        {
-            currentValue = 1;
-            testValueUpper = currentValue * 2;
-            testValueLower = fragmentCount;
-        }
-        else
-        {
-            currentValue = fragmentCount * 2;
-            testValueUpper = currentValue * 3;
-            testValueLower = fragmentCount;
+            return requiredProb == HIGH_PROBABILITY ? 0 : LOW_PROBABILITY_ZERO_OBS_MEAN;
         }
 
-        PoissonDistribution poisson = new PoissonDistribution(currentValue);
-
-        double currentProb = poisson.cumulativeProbability(fragmentCount);
-        double probDiff = 0;
-
-        while(iterations < maxIterations)
-        {
-            probDiff = abs(requiredProb - currentProb) / requiredProb;
-
-            if(probDiff < 0.005)
-                return currentValue;
-
-            // if prob is too low, need to lower the test value
-            if(currentProb < requiredProb)
-            {
-                testValueUpper = currentValue;
-                currentValue = (currentValue + testValueLower) * 0.5;
-            }
-            else
-            {
-                testValueLower = currentValue;
-                currentValue = (currentValue + testValueUpper) * 0.5;
-            }
-
-            poisson = new PoissonDistribution(currentValue);
-            currentProb = poisson.cumulativeProbability(fragmentCount);
-            ++iterations;
-        }
-
-        if(iterations >= maxIterations)
-        {
-            NE_LOGGER.warn(format("max iterations reached: value(%d) test(%d) prob(%.4f diff=%.4f)",
-                    fragmentCount, currentValue, currentProb, probDiff));
-        }
-
-        return currentValue;
+        return PoissonCalcs.calcPoissonNoiseValue(fragmentCount, requiredProb);
     }
 }

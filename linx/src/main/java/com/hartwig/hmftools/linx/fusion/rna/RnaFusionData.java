@@ -249,7 +249,7 @@ public class RnaFusionData
                 // check for a matching chain if the clusters are the same
                 matchingChain = clusterUp.findSameChainForSVs(varUp, varDown);
 
-                if (matchingChain != null)
+                if(matchingChain != null)
                 {
                     final int chainData[] = breakendsAreChained(
                             matchingChain, varUp, !mBreakends[FS_UP].usesStart(), varDown, !mBreakends[FS_DOWN].usesStart());

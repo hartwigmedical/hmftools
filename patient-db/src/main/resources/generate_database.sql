@@ -574,6 +574,9 @@ CREATE TABLE somaticVariant
     localPhaseSet varchar(50),
     qual double precision not null,
     reported BOOLEAN NOT NULL,
+    clinvarInfo varchar(255) NULL,
+    gnomadFrequency DOUBLE PRECISION NULL,
+    somaticLikelihood varchar(10) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY (sampleId, chromosome, position, ref, alt),
     INDEX(sampleId),
@@ -651,7 +654,6 @@ DROP TABLE IF EXISTS purity;
 CREATE TABLE purity
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    version VARCHAR(20) NOT NULL,
     sampleId varchar(50) NOT NULL,
     gender varchar(20) NOT NULL,
     runMode varchar(20) NOT NULL,

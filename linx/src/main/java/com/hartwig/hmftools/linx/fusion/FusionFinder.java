@@ -105,7 +105,7 @@ public class FusionFinder
                     continue;
                 }
 
-                if (startUpstream == endUpstream)
+                if(startUpstream == endUpstream)
                 {
                     if(LOG_INVALID_REASON && !mInvalidReasons.contains(INVALID_REASON_ORIENTATION))
                         mInvalidReasons.add(INVALID_REASON_ORIENTATION);
@@ -308,7 +308,7 @@ public class FusionFinder
             }
         }
 
-        if (isIrrelevantSameGene(upstreamTrans, downstreamTrans))
+        if(isIrrelevantSameGene(upstreamTrans, downstreamTrans))
         {
             logInvalidReasonInfo(upstreamTrans, downstreamTrans, INVALID_REASON_CODING_TYPE, "irrelevant fusion");
             return null;
@@ -362,7 +362,7 @@ public class FusionFinder
                 // check for a match within the alternative phasings from upstream and downstream of the breakend
                 for(Map.Entry<Integer, Integer> altPhasing : upstreamTrans.getAlternativePhasing().entrySet())
                 {
-                    if (altPhasing.getKey() == downstreamTrans.Phase)
+                    if(altPhasing.getKey() == downstreamTrans.Phase)
                     {
                         phaseMatched = true;
                         phaseExonsSkippedUp = altPhasing.getValue();
@@ -374,7 +374,7 @@ public class FusionFinder
                 {
                     for(Map.Entry<Integer, Integer> altPhasing : downstreamTrans.getAlternativePhasing().entrySet())
                     {
-                        if (altPhasing.getKey() == upstreamTrans.Phase)
+                        if(altPhasing.getKey() == upstreamTrans.Phase)
                         {
                             phaseMatched = true;
                             phaseExonsSkippedDown = altPhasing.getValue();

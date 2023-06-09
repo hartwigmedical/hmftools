@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILTERS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
-import static com.hartwig.hmftools.pave.PonAnnotation.PON_ARTEFACT_FILTER;
+import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_ARTEFACT_FILTER;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
 import java.io.IOException;
@@ -25,6 +25,12 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.pave.annotation.Blacklistings;
+import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
+import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
+import com.hartwig.hmftools.pave.annotation.Mappability;
+import com.hartwig.hmftools.pave.annotation.PonAnnotation;
+import com.hartwig.hmftools.pave.annotation.Reportability;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

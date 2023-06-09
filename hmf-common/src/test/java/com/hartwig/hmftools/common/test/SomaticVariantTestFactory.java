@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.test;
 
+import static com.hartwig.hmftools.common.variant.SomaticLikelihood.UNKNOWN;
+
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -55,6 +57,9 @@ public final class SomaticVariantTestFactory {
                 .repeatCount(0)
                 .subclonalLikelihood(0)
                 .tier(VariantTier.UNKNOWN)
-                .mappability(0D);
+                .mappability(0D)
+                .clinvarInfo("")
+                .gnomadFrequency(0)
+                .somaticLikelihood(UNKNOWN);
     }
 }

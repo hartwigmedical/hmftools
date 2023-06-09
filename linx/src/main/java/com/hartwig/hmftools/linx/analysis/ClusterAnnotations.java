@@ -66,13 +66,13 @@ public class ClusterAnnotations
 
         for(final SvChain chain : cluster.getChains())
         {
-            for (int be1 = SE_START; be1 <= SE_END; ++be1)
+            for(int be1 = SE_START; be1 <= SE_END; ++be1)
             {
                 final SvBreakend chainEnd = chain.getOpenBreakend(isStart(be1));
-                if (chainEnd == null)
+                if(chainEnd == null)
                     continue;
 
-                if (!startEndArms.contains(chainEnd.getChrArm()))
+                if(!startEndArms.contains(chainEnd.getChrArm()))
                     startEndArms.add(chainEnd.getChrArm());
             }
         }
@@ -126,7 +126,7 @@ public class ClusterAnnotations
                         int lowerBuffer = getMinTemplatedInsertionLength(pairLowerBe, chainLowerBe);
                         int upperBuffer = getMinTemplatedInsertionLength(pairUpperBe, chainUpperBe);
 
-                        if (pairLowerBe.position() >= chainLowerBe.position() - lowerBuffer
+                        if(pairLowerBe.position() >= chainLowerBe.position() - lowerBuffer
                         && pairUpperBe.position() <= chainUpperBe.position() + upperBuffer)
                         {
                             pair.setLocationType(LOCATION_TYPE_INTERNAL);
@@ -245,12 +245,12 @@ public class ClusterAnnotations
 
         String traversedInfo = "";
 
-        for (int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
+        for(int i = lowerIndex + 1; i <= upperIndex - 1; ++i)
         {
             final SvBreakend breakend = breakendList.get(i);
             final SvCluster otherCluster = breakend.getCluster();
 
-            if (otherCluster == cluster || otherCluster.isResolved())
+            if(otherCluster == cluster || otherCluster.isResolved())
                 continue;
 
             traversedInfo = appendStr(traversedInfo,
@@ -282,7 +282,7 @@ public class ClusterAnnotations
                 final SvBreakend breakend = breakendList.get(i);
                 int distance = lowerBreakend.position() - breakend.position();
 
-                if (breakend.getCluster() == cluster)
+                if(breakend.getCluster() == cluster)
                 {
                     nextSvData[NEXT_CLUSTERED_SV_DISTANCE] = distance;
                     break;
@@ -303,9 +303,9 @@ public class ClusterAnnotations
 
                 int distance = breakend.position() - upperBreakend.position();
 
-                if (breakend.getCluster() == cluster)
+                if(breakend.getCluster() == cluster)
                 {
-                    if (nextSvData[NEXT_CLUSTERED_SV_DISTANCE] == -1 || distance < nextSvData[NEXT_CLUSTERED_SV_DISTANCE])
+                    if(nextSvData[NEXT_CLUSTERED_SV_DISTANCE] == -1 || distance < nextSvData[NEXT_CLUSTERED_SV_DISTANCE])
                     {
                         nextSvData[NEXT_CLUSTERED_SV_DISTANCE] = distance;
                     }
@@ -342,14 +342,14 @@ public class ClusterAnnotations
 
             Map<SvCluster, Integer> otherClusterMatches = Maps.newHashMap();
 
-            for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
                 final List<SvBreakend> breakendList = entry.getValue();
                 final List<SvBreakend> fullBreakendList = chrBreakendMap.get(entry.getKey());
 
                 genomicSpan += MAX_MERGE_DISTANCE * 2; // account for outer breakends in the cluster
 
-                for (int i = 0; i < breakendList.size() - 1; ++i)
+                for(int i = 0; i < breakendList.size() - 1; ++i)
                 {
                     final SvBreakend breakend = breakendList.get(i);
                     final SvBreakend nextBreakend = breakendList.get(i + 1);
@@ -359,7 +359,7 @@ public class ClusterAnnotations
                     genomicSpan += min(MAX_MERGE_DISTANCE * 2, breakendDistance);
 
                     // look for gaps in this cluster's breakend list
-                    if (nextBreakend.getChrPosIndex() == breakend.getChrPosIndex() + 1)
+                    if(nextBreakend.getChrPosIndex() == breakend.getChrPosIndex() + 1)
                         continue;
 
                     List<SvCluster> encounteredClusters = Lists.newArrayList();
@@ -432,7 +432,7 @@ public class ClusterAnnotations
                 }
             }
 
-            for (final Map.Entry<SvCluster, Integer> entry : otherClusterMatches.entrySet())
+            for(final Map.Entry<SvCluster, Integer> entry : otherClusterMatches.entrySet())
             {
                 if(entry.getValue() <= 1)
                     continue;
@@ -520,7 +520,7 @@ public class ClusterAnnotations
         int shortTiCount = 0;
         int longTiCount = 0;
 
-        for (final SvChain chain : cluster.getChains())
+        for(final SvChain chain : cluster.getChains())
         {
             boolean chainConsistent = chain.isConsistent();
 
@@ -530,7 +530,7 @@ public class ClusterAnnotations
             {
                 final SvVarData first = pair.first();
 
-                if (pair.first().isSglBreakend() || pair.second().isSglBreakend())
+                if(pair.first().isSglBreakend() || pair.second().isSglBreakend())
                     continue;
 
                 final String chrArm = first.getBreakend(pair.firstLinkOnStart()).getChrArm();
@@ -548,7 +548,7 @@ public class ClusterAnnotations
                 }
             }
 
-            if (!chainConsistent)
+            if(!chainConsistent)
             {
                 ++inconsistentChains;
             }
@@ -619,7 +619,7 @@ public class ClusterAnnotations
                     cluster.getArmGroups().size(), fragmentArms.size(), originArms.size(), consistentArmCount,
                     shortTiCount, longTiCount);
 
-            if (isComplete && !isComplex && longTiCount > 0 && cluster.getResolvedType() == COMPLEX)
+            if(isComplete && !isComplex && longTiCount > 0 && cluster.getResolvedType() == COMPLEX)
             {
                 // chromothripsis is currently defined as fully chained simple cluster
                 // but needs to take into account the copy number gain / loss compared with the surrounding chromatid
@@ -684,7 +684,7 @@ public class ClusterAnnotations
             final ChainMetrics chainMetrics = extractChainMetrics(chain);
 
             // require internal TIs with gain, which mandates chain ends are on the same arm
-            if (chainMetrics.ChainEndsAway != 1 || chainMetrics.InternalTICnGain == 0 || chainMetrics.OverlappingTIs == 0)
+            if(chainMetrics.ChainEndsAway != 1 || chainMetrics.InternalTICnGain == 0 || chainMetrics.OverlappingTIs == 0)
                 continue;
 
             long internalGainLength = getCopyNumberGainLength(cluster, chain);
@@ -696,7 +696,7 @@ public class ClusterAnnotations
             double chainEndsCN = max(chainStart.copyNumber(), chainEnd.copyNumber());
             double gainPercent = internalGainLength / (double) chainRange;
 
-            if (gainPercent >= 0.05 && chainRange >= 1000)
+            if(gainPercent >= 0.05 && chainRange >= 1000)
             {
                 cluster.addAnnotation(CLUSTER_ANNOT_REP_REPAIR);
 

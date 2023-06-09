@@ -144,7 +144,7 @@ public class ChainLinkAllocator
 
         if(!hasReplication)
         {
-            for (LinkedPair pair : assembledLinks)
+            for(LinkedPair pair : assembledLinks)
             {
                 ProposedLinks proposedLink = new ProposedLinks(pair, ASSEMBLY);
                 proposedLink.addBreakendPloidies(
@@ -376,12 +376,12 @@ public class ChainLinkAllocator
             ProposedLinks proposedLinks = proposedLinksList.get(0);
 
             // in case an earlier link has invalidated the chain
-            if (proposedLinks.targetChain() != null && !mChains.contains(proposedLinks.targetChain()))
+            if(proposedLinks.targetChain() != null && !mChains.contains(proposedLinks.targetChain()))
                 break;
 
             proposedLinksList.remove(0);
 
-            if (!proposedLinks.isValid())
+            if(!proposedLinks.isValid())
             {
                 LNX_LOGGER.error("cluster({}) skipping invalid proposed links: {}", mClusterId, proposedLinks.toString());
                 continue;
@@ -389,14 +389,14 @@ public class ChainLinkAllocator
 
             linkAdded |= addLinks(proposedLinks);
 
-            if (!mIsValid)
+            if(!mIsValid)
                 return;
 
-            if (proposedLinks.multiConnection()) // stop after the first complex link is made
+            if(proposedLinks.multiConnection()) // stop after the first complex link is made
                 break;
         }
 
-        if (linkAdded)
+        if(linkAdded)
         {
             if(mChainsSplit)
             {
@@ -432,13 +432,13 @@ public class ChainLinkAllocator
         boolean addLinksToNewChain = true;
         boolean reconcileChains = false;
 
-        if (proposedLinks.targetChain() != null)
+        if(proposedLinks.targetChain() != null)
         {
             addLinksToNewChain = false;
             addComplexLinksToExistingChain(proposedLinks);
             reconcileChains = true;
         }
-        else if (proposedLinks.multiConnection())
+        else if(proposedLinks.multiConnection())
         {
             // if no chain has been specified then don't search for one - this is managed by the specific rule-finder
         }
@@ -489,7 +489,7 @@ public class ChainLinkAllocator
             {
                 if(requiredChains[SE_START] != null && requiredChains[SE_END] != null)
                 {
-                    if (!jcnMatch(
+                    if(!jcnMatch(
                             requiredChains[SE_START].jcn(), requiredChains[SE_START].jcnUncertainty(),
                             requiredChains[SE_END].jcn(), requiredChains[SE_END].jcnUncertainty()) && !pairJcnMatched)
                     {
@@ -506,7 +506,7 @@ public class ChainLinkAllocator
                         matchesChainJcn = true;
                     }
 
-                    if (requiredChains[SE_START] == requiredChains[SE_END])
+                    if(requiredChains[SE_START] == requiredChains[SE_END])
                     {
                         LNX_LOGGER.trace("skipping linked pair({}) would close existing chain({})",
                                 newPair.toString(), requiredChains[SE_START].id());
@@ -571,14 +571,14 @@ public class ChainLinkAllocator
                 if(matchesChainJcn)
                 {
                     // mark this breakend as to-be-exhausted unless its on both ends of the chain
-                    for (int se = SE_START; se <= SE_END; ++se)
+                    for(int se = SE_START; se <= SE_END; ++se)
                     {
-                        if (requiredChains[se] != null)
+                        if(requiredChains[se] != null)
                         {
                             final SvChain requiredChain = requiredChains[se];
                             final SvBreakend breakend = newPair.getBreakend(se);
 
-                            if (!(requiredChain.getOpenBreakend(true) == breakend && requiredChain.getOpenBreakend(false) == breakend))
+                            if(!(requiredChain.getOpenBreakend(true) == breakend && requiredChain.getOpenBreakend(false) == breakend))
                             {
                                 proposedLinks.overrideBreakendJcnMatched(breakend, true);
                             }
@@ -589,7 +589,7 @@ public class ChainLinkAllocator
             else
             {
                 // look for any chain which can take this link with matching ploidy
-                for (SvChain chain : allChains)
+                for(SvChain chain : allChains)
                 {
                     boolean[] canAddToStart = { false, false };
                     boolean linksToFirst = false;
@@ -597,16 +597,16 @@ public class ChainLinkAllocator
                     boolean ploidyMatched = jcnMatch(
                             proposedLinks.jcn(), chain.jcnUncertainty(), chain.jcn(), chain.jcnUncertainty());
 
-                    for (int se = SE_START; se <= SE_END; ++se)
+                    for(int se = SE_START; se <= SE_END; ++se)
                     {
                         final SvBreakend chainBreakend = chain.getOpenBreakend(isStart(se));
 
-                        if (chainBreakend == null)
+                        if(chainBreakend == null)
                             continue;
 
-                        if (chainBreakend == newPair.firstBreakend())
+                        if(chainBreakend == newPair.firstBreakend())
                             linksToFirst = true;
-                        else if (chainBreakend == newPair.secondBreakend())
+                        else if(chainBreakend == newPair.secondBreakend())
                             linksToFirst = false;
                         else
                             continue;
@@ -614,13 +614,13 @@ public class ChainLinkAllocator
                         canAddToStart[se] = true;
                    }
 
-                    if (!canAddToStart[SE_START] && !canAddToStart[SE_END])
+                    if(!canAddToStart[SE_START] && !canAddToStart[SE_END])
                         continue;
 
                     boolean couldCloseChain =
                             (canAddToStart[SE_START] && canAddToStart[SE_END]) ? chain.linkWouldCloseChain(newPair) : false;
 
-                    if (couldCloseChain)
+                    if(couldCloseChain)
                     {
                         LNX_LOGGER.trace("skipping linked pair({}) would close existing chain({})", newPair.toString(), chain.id());
                         addSkippedPair(newPair, CLOSING);
@@ -630,15 +630,15 @@ public class ChainLinkAllocator
                     final SvBreakend newBreakend = linksToFirst ? newPair.secondBreakend() : newPair.firstBreakend();
 
                     // check whether a match was expected
-                    if (!ploidyMatched)
+                    if(!ploidyMatched)
                     {
-                        if (proposedLinks.linkJcnMatch())
+                        if(proposedLinks.linkJcnMatch())
                             continue;
 
-                        if (targetChain != null && targetChain.jcn() > chain.jcn())
+                        if(targetChain != null && targetChain.jcn() > chain.jcn())
                             continue; // stick with the larger ploidy chain
                     }
-                    else if (targetChain != null && matchesChainJcn)
+                    else if(targetChain != null && matchesChainJcn)
                     {
                         // stick with existing matched chain even if there are other equivalent options
                         continue;
@@ -650,7 +650,7 @@ public class ChainLinkAllocator
 
                     newSvJcn = proposedLinks.breakendJcn(newBreakend);
 
-                    if (ploidyMatched)
+                    if(ploidyMatched)
                     {
                         matchesChainJcn = true;
                     }
@@ -666,7 +666,7 @@ public class ChainLinkAllocator
                 targetChain = null;
             }
 
-            if (targetChain != null)
+            if(targetChain != null)
             {
                 addLinksToNewChain = false;
                 reconcileChains = true;
@@ -679,7 +679,7 @@ public class ChainLinkAllocator
             reconcileChains = addLinksToNewChain(proposedLinks);
         }
 
-        if (reconcileChains)
+        if(reconcileChains)
         {
             // now see if any partial chains can be linked
             reconcileChains(mChains);
@@ -711,7 +711,7 @@ public class ChainLinkAllocator
 
         boolean requiresNewChain = !matchesChainJcn && targetChain.jcn() > newSvJcn * 2;
 
-        if (requiresNewChain)
+        if(requiresNewChain)
         {
             SvChain newChain = new SvChain(mNextChainId++);
             mChains.add(newChain);
@@ -719,7 +719,7 @@ public class ChainLinkAllocator
             // copy the existing links into a new chain and set to the ploidy difference
             newChain.copyFrom(targetChain);
 
-            if (targetChain.jcn() > newSvJcn * 2)
+            if(targetChain.jcn() > newSvJcn * 2)
             {
                 // chain will have its ploidy halved anyway so just split off the excess
                 newChain.setJcnData(targetChain.jcn() - newSvJcn * 2, targetChain.jcnUncertainty());
@@ -734,7 +734,7 @@ public class ChainLinkAllocator
         LNX_LOGGER.debug("duplicating chain({} links={} sv={}) for multi-connect {}",
                 targetChain.id(), targetChain.getLinkCount(), targetChain.getSvCount(), proposedLinks.getSplittingRule());
 
-        if (proposedLinks.getSplittingRule() == FOLDBACK_SPLIT)
+        if(proposedLinks.getSplittingRule() == FOLDBACK_SPLIT)
         {
             final SvChain foldbackChain = proposedLinks.foldbackChain();
 
@@ -758,7 +758,7 @@ public class ChainLinkAllocator
         targetChain.setJcnData(newJcn, newUncertainty);
         mChainsSplit = true;
 
-        for (LinkedPair pair : proposedLinks.Links)
+        for(LinkedPair pair : proposedLinks.Links)
         {
             LNX_LOGGER.debug("index({}) method({}) adding pair({} ploidy={}) to existing chain({}) ploidy({} unc={}) match({})",
                     mLinkIndex, proposedLinks.topRule(), pair.toString(), formatJcn(proposedLinks.jcn()), targetChain.id(),
@@ -794,9 +794,9 @@ public class ChainLinkAllocator
 
         JcnCalcData ploidyData;
 
-        if (matchesChainJcn || targetChain.jcn() > newSvJcn)
+        if(matchesChainJcn || targetChain.jcn() > newSvJcn)
         {
-            if (!proposedLinks.linkJcnMatch())
+            if(!proposedLinks.linkJcnMatch())
             {
                 ploidyData = calcJcnUncertainty(
                         new JcnCalcData(proposedLinks.jcn(), newSvBreakend.jcnUncertainty()),
@@ -832,15 +832,15 @@ public class ChainLinkAllocator
         // where more than one links is being added, they may not be able to be added to the same chain
         // eg a chained foldback replicating another breakend - the chain reconciliation step will join them back up
         SvChain newChain = null;
-        for (final LinkedPair pair : proposedLinks.Links)
+        for(final LinkedPair pair : proposedLinks.Links)
         {
-            if (newChain != null)
+            if(newChain != null)
             {
-                if (newChain.canAddLinkedPairToStart(pair))
+                if(newChain.canAddLinkedPairToStart(pair))
                 {
                     newChain.addLink(pair, true);
                 }
-                else if (newChain.canAddLinkedPairToEnd(pair))
+                else if(newChain.canAddLinkedPairToEnd(pair))
                 {
                     newChain.addLink(pair, false);
                 }
@@ -851,7 +851,7 @@ public class ChainLinkAllocator
                 }
             }
 
-            if (newChain == null)
+            if(newChain == null)
             {
                 newChain = new SvChain(mNextChainId++);
                 mChains.add(newChain);
@@ -860,7 +860,7 @@ public class ChainLinkAllocator
 
                 JcnCalcData ploidyData;
 
-                if (!proposedLinks.linkJcnMatch() || proposedLinks.multiConnection())
+                if(!proposedLinks.linkJcnMatch() || proposedLinks.multiConnection())
                 {
                     ploidyData = calcJcnUncertainty(
                             new JcnCalcData(proposedLinks.jcn(), newPair.first().jcnUncertainty()),
@@ -892,7 +892,7 @@ public class ChainLinkAllocator
         List<SvBreakend> exhaustedBreakends = Lists.newArrayList();
         boolean canUseMaxJcn = proposedLink.topRule() == ASSEMBLY;
 
-        for (final LinkedPair newPair : proposedLink.Links)
+        for(final LinkedPair newPair : proposedLink.Links)
         {
             mJcnLimits.assignLinkJcn(newPair, proposedLink.jcn());
 
@@ -900,11 +900,11 @@ public class ChainLinkAllocator
 
             removeOppositeLinks(newPair);
 
-            for (int se = SE_START; se <= SE_END; ++se)
+            for(int se = SE_START; se <= SE_END; ++se)
             {
                 final SvBreakend breakend = newPair.getBreakend(se);
 
-                if (exhaustedBreakends.contains(breakend))
+                if(exhaustedBreakends.contains(breakend))
                     continue;
 
                 final SvBreakend otherPairBreakend = newPair.getOtherBreakend(breakend);
@@ -912,7 +912,7 @@ public class ChainLinkAllocator
 
                 ChainState svConn = mSvConnections.get(var);
 
-                if (otherPairBreakend == null || breakend == null)
+                if(otherPairBreakend == null || breakend == null)
                 {
                     LNX_LOGGER.error("cluster({}) invalid breakend in proposed link: {}", mClusterId, proposedLink.toString());
                     mIsValid = false;
@@ -921,7 +921,7 @@ public class ChainLinkAllocator
 
                 boolean beIsStart = breakend.usesStart();
 
-                if (svConn == null || svConn.breakendExhaustedVsMax(beIsStart))
+                if(svConn == null || svConn.breakendExhaustedVsMax(beIsStart))
                 {
                     LNX_LOGGER.error("breakend({}) breakend already exhausted: {} with proposedLink({})",
                             breakend.toString(), svConn != null ? svConn.toString() : "null", proposedLink.toString());
@@ -956,7 +956,7 @@ public class ChainLinkAllocator
                 boolean breakendExhausted = canUseMaxJcn ? svConn.breakendExhaustedVsMax(beIsStart)
                         : svConn.breakendExhausted(beIsStart);
 
-                if (breakendExhausted)
+                if(breakendExhausted)
                 {
                     LNX_LOGGER.trace("{} breakend exhausted: {}", beIsStart? "start" : "end", svConn.toString());
                     exhaustedBreakends.add(breakend);
@@ -966,25 +966,25 @@ public class ChainLinkAllocator
             }
 
             // track unique pairs to avoid conflicts (eg end-to-end and start-to-start)
-            if (!matchesExistingPair(newPair))
+            if(!matchesExistingPair(newPair))
             {
                 mUniquePairs.add(newPair);
             }
         }
 
         // clean up breakends and SVs which have been fully allocated
-        for (final SvBreakend breakend : exhaustedBreakends)
+        for(final SvBreakend breakend : exhaustedBreakends)
         {
             final SvVarData var = breakend.getSV();
 
             ChainState svConn = mSvConnections.get(var);
 
-            if (svConn != null)
+            if(svConn != null)
             {
                 boolean otherBreakendExhausted = canUseMaxJcn ? svConn.breakendExhaustedVsMax(!breakend.usesStart())
                         : svConn.breakendExhausted(!breakend.usesStart());
 
-                if (otherBreakendExhausted)
+                if(otherBreakendExhausted)
                 {
                     checkSvComplete(svConn);
                 }
@@ -1032,7 +1032,7 @@ public class ChainLinkAllocator
     {
         List<LinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(breakend);
 
-        if (possibleLinks == null)
+        if(possibleLinks == null)
             return;
 
         mSvBreakendPossibleLinks.remove(breakend);
@@ -1043,12 +1043,12 @@ public class ChainLinkAllocator
 
             List<LinkedPair> otherPossibles = mSvBreakendPossibleLinks.get(otherBreakend);
 
-            if (otherPossibles == null)
+            if(otherPossibles == null)
                 continue;
 
             otherPossibles.remove(pair);
 
-            if (otherPossibles.isEmpty())
+            if(otherPossibles.isEmpty())
                 mSvBreakendPossibleLinks.remove(otherBreakend);
         }
     }
@@ -1066,7 +1066,7 @@ public class ChainLinkAllocator
 
             List<LinkedPair> possibleLinks = mSvBreakendPossibleLinks.get(otherBreakend);
 
-            if (possibleLinks == null)
+            if(possibleLinks == null)
                 continue;
 
             if(possibleLinks.isEmpty())
@@ -1080,13 +1080,13 @@ public class ChainLinkAllocator
             if(otherPairBreakend == null)
                 continue;
 
-            for (LinkedPair otherPair : possibleLinks)
+            for(LinkedPair otherPair : possibleLinks)
             {
-                if (otherPair.hasBreakend(otherBreakend) && otherPair.hasBreakend(otherPairBreakend))
+                if(otherPair.hasBreakend(otherBreakend) && otherPair.hasBreakend(otherPairBreakend))
                 {
                     possibleLinks.remove(otherPair);
 
-                    if (possibleLinks.isEmpty())
+                    if(possibleLinks.isEmpty())
                         mSvBreakendPossibleLinks.remove(otherBreakend);
 
                     break;
@@ -1097,7 +1097,7 @@ public class ChainLinkAllocator
 
     private void checkSvComplete(final ChainState svConn)
     {
-        if (svConn.breakendExhausted(true) && (svConn.SV.isSglBreakend() || svConn.breakendExhausted(false)))
+        if(svConn.breakendExhausted(true) && (svConn.SV.isSglBreakend() || svConn.breakendExhausted(false)))
         {
             LNX_LOGGER.trace("SV({}) both breakends exhausted", svConn.toString());
             mSvConnections.remove(svConn.SV);
@@ -1108,7 +1108,7 @@ public class ChainLinkAllocator
     protected double getUnlinkedBreakendCount(final SvBreakend breakend)
     {
         ChainState svConn = mSvConnections.get(breakend.getSV());
-        if (svConn == null)
+        if(svConn == null)
             return 0;
 
         return !svConn.breakendExhausted(breakend.usesStart()) ? svConn.unlinked(breakend.usesStart()) : 0;
@@ -1127,7 +1127,7 @@ public class ChainLinkAllocator
         // gather up data about how much unallocated ploidy is available for this breakend
         // and whether it is tied to any chains
         ChainState svConn = mSvConnections.get(breakend.getSV());
-        if (svConn == null)
+        if(svConn == null)
             return new BreakendJcn(0, true);
 
         double unlinkedjcn = !svConn.breakendExhausted(breakend.usesStart()) ? svConn.unlinked(breakend.usesStart()) : 0;
@@ -1188,12 +1188,12 @@ public class ChainLinkAllocator
     protected double getMaxUnlinkedBreakendCount(final SvBreakend breakend)
     {
         ChainState svConn = mSvConnections.get(breakend.getSV());
-        if (svConn == null)
+        if(svConn == null)
             return 0;
 
-        if (!svConn.breakendExhausted(breakend.usesStart()))
+        if(!svConn.breakendExhausted(breakend.usesStart()))
             return svConn.unlinked(breakend.usesStart());
-        else if (!svConn.breakendExhaustedVsMax(breakend.usesStart()))
+        else if(!svConn.breakendExhaustedVsMax(breakend.usesStart()))
             return svConn.maxUnlinked(breakend.usesStart());
         else
             return 0;

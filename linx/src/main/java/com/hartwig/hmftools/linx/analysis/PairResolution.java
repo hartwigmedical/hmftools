@@ -143,14 +143,14 @@ public class PairResolution
             {
                 SvChain newChain = new SvChain(chain.id());
 
-                if (pairs.get(0) == longTiLink || pairs.get(pairs.size() - 1) == longTiLink)
+                if(pairs.get(0) == longTiLink || pairs.get(pairs.size() - 1) == longTiLink)
                 {
                     unchainedSvCount = 1;
                     unchainedSv = pairs.get(0) == longTiLink ? pairs.get(0).first() : pairs.get(pairs.size() - 1).second();
 
-                    for (LinkedPair pair : pairs)
+                    for(LinkedPair pair : pairs)
                     {
-                        if (pair != longTiLink)
+                        if(pair != longTiLink)
                         {
                             newChain.addLink(pair, false);
                         }
@@ -160,9 +160,9 @@ public class PairResolution
                 }
                 else
                 {
-                    for (LinkedPair pair : pairs)
+                    for(LinkedPair pair : pairs)
                     {
-                        if (pair == longTiLink)
+                        if(pair == longTiLink)
                         {
                             clusterChains.add(newChain);
 
@@ -332,12 +332,12 @@ public class PairResolution
             arm1Be1 = startBe1;
             arm2Be1 = endBe1;
 
-            if (startBe2.getChrArm().equals(arm1Be1.getChrArm()) && endBe2.getChrArm().equals(arm2Be1.getChrArm()))
+            if(startBe2.getChrArm().equals(arm1Be1.getChrArm()) && endBe2.getChrArm().equals(arm2Be1.getChrArm()))
             {
                 arm1Be2 = startBe2;
                 arm2Be2 = endBe2;
             }
-            else if (endBe2.getChrArm().equals(arm1Be1.getChrArm()) && startBe2.getChrArm().equals(arm2Be1.getChrArm()))
+            else if(endBe2.getChrArm().equals(arm1Be1.getChrArm()) && startBe2.getChrArm().equals(arm2Be1.getChrArm()))
             {
                 arm1Be2 = endBe2;
                 arm2Be2 = startBe2;
@@ -386,7 +386,7 @@ public class PairResolution
         }
         else
         {
-            if (longestTiPair == null)
+            if(longestTiPair == null)
                 return;
 
             // set synthetic lengths prior to any chain reconfiguration
@@ -394,7 +394,7 @@ public class PairResolution
 
             boolean lohBoundedTi = isLohBoundedTi(longestTiPair); // length no longer a classifying factor
 
-            if (!arm1MatchingDB && !arm2MatchingDB)
+            if(!arm1MatchingDB && !arm2MatchingDB)
             {
                 resolvedType = lohBoundedTi && uniformJcn ? DUP_TI : RECIP_TRANS_DUPS;
             }
@@ -534,7 +534,7 @@ public class PairResolution
             {
                 long innerInversionLength = min(upperBe1.position() - lowerBe1.position(), upperBe2.position() - lowerBe2.position());
 
-                if (innerInversionLength < MIN_SIMPLE_DUP_DEL_CUTOFF)
+                if(innerInversionLength < MIN_SIMPLE_DUP_DEL_CUTOFF)
                 {
                     resolvedType = RESOLVED_FOLDBACK;
                 }

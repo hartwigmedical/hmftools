@@ -22,7 +22,7 @@ public class ResultsWriter
     {
         mConfig = config;
         mSampleWriter = initialiseWriter();
-        mVariantWriter = config.WriteVariants ? initialiseVariantWriter() : null;
+        mVariantWriter = config.WriteSomatics ? initialiseVariantWriter() : null;
         mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
     }
 
@@ -119,6 +119,7 @@ public class ResultsWriter
         catch(IOException e)
         {
             CT_LOGGER.error("failed to write output file: {}", e.toString());
+            System.exit(1);
         }
     }
 
@@ -179,6 +180,14 @@ public class ResultsWriter
         if(purity >= 0.01)
             return format("%.4f", purity);
         else
-            return format("%4.3e", purity);
+            return format("%.6f", purity);
+    }
+
+    public static String formatProbabilityValue(double probability)
+    {
+        if(probability >= 0.03)
+            return format("%.4f", probability);
+        else
+            return format("%4.3e", probability);
     }
 }

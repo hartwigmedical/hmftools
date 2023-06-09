@@ -381,8 +381,7 @@ public class PurpleApplication
                 cobaltChromosomes.germlineAberrations(), amberData.AverageTumorDepth,
                 mConfig.TargetRegionsMode ? TARGET_REGIONS_MAX_DELETED_GENES : MAX_DELETED_GENES);
 
-        final PurityContext purityContext = createPurity(
-                mPurpleVersion.version(), bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
+        final PurityContext purityContext = createPurity(bestFit, gender, mConfig, qcChecks, copyNumbers, somaticStream, sampleData.SvCache);
 
         PurityContextFile.write(mConfig.OutputDir, tumorId, purityContext);
         SegmentFile.write(SegmentFile.generateFilename(mConfig.OutputDir, tumorId), fittedRegions);
@@ -616,7 +615,7 @@ public class PurpleApplication
             somaticDriverCatalog.addAll(amplificationDrivers.amplifications(
                     purityContext.bestFit().ploidy(), geneCopyNumbers, mConfig.TargetRegionsMode));
 
-            DriverCatalogFile.write(DriverCatalogFile.generateSomaticFilename(mConfig.OutputDir, tumorSample), somaticDriverCatalog);
+            DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample, true), somaticDriverCatalog);
         }
 
         if(mConfig.runGermline())
@@ -627,7 +626,7 @@ public class PurpleApplication
             if(germlineDeletions != null)
                 germlineDriverCatalog.addAll(germlineDeletions.getDrivers());
 
-            DriverCatalogFile.write(DriverCatalogFile.generateGermlineFilename(mConfig.OutputDir, tumorSample), germlineDriverCatalog);
+            DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample, false), germlineDriverCatalog);
         }
     }
 

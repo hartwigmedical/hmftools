@@ -70,7 +70,7 @@ public class CnJcnCalcs
 
     private StructuralVariantData getSvDataById(int svId)
     {
-        for (final StructuralVariantData svData : mSvDataList)
+        for(final StructuralVariantData svData : mSvDataList)
         {
             if(svData.id() == svId)
                 return svData;
@@ -83,14 +83,14 @@ public class CnJcnCalcs
     {
         mSvJcnCalcMap.clear();
 
-        for (Map.Entry<Integer, SvCNData[]> entry : mSvIdCnDataMap.entrySet())
+        for(Map.Entry<Integer, SvCNData[]> entry : mSvIdCnDataMap.entrySet())
         {
             final int svId = entry.getKey();
             final SvCNData[] cnDataPair = entry.getValue();
 
             final SvCNData cnStartData = cnDataPair[SE_START];
 
-            if (cnStartData == null || cnStartData.getStructuralVariantData() == null)
+            if(cnStartData == null || cnStartData.getStructuralVariantData() == null)
             {
                 LNX_LOGGER.error("SV({}) missing start copy number data or unlinked SV data", svId);
                 continue;
@@ -186,7 +186,7 @@ public class CnJcnCalcs
 
             jcnUncertainty += cnUncertaintyFactor * PROPORTION_CNCHANGE_USED_IN_JCN_UNC;
 
-            if (jcnUncertainty > 0)
+            if(jcnUncertainty > 0)
             {
                 observations.add(rcAdjustedJcn);
                 uncertainties.add(jcnUncertainty);

@@ -20,6 +20,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.pave.annotation.Blacklistings;
+import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
+import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
+import com.hartwig.hmftools.pave.annotation.Mappability;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

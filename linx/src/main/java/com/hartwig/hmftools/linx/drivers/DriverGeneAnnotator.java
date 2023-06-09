@@ -149,7 +149,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
             {
                 geneMinCopyNumber = calcGeneCopyNumberRegion(transcriptData, mDataCache.CopyNumberData.getChrCnDataMap().get(geneData.Chromosome));
 
-                if (geneMinCopyNumber == null)
+                if(geneMinCopyNumber == null)
                 {
                     LNX_LOGGER.warn("sample({}) gene({}) min copy number data not found for driver",
                             mDataCache.sampleId(), driverGene.gene());
@@ -168,7 +168,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
             {
                 mDelDrivers.annotateBiallelicEvent(dgData);
             }
-            else if (driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
+            else if(driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
             {
                 final List<SvBreakend> breakendList = mChrBreakendMap.get(dgData.GeneInfo.Chromosome);
                 mAmpDrivers.annotateAmplification(dgData, breakendList);
@@ -235,7 +235,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
         // convert to a sample driver record
         if(mVisSampleData != null)
         {
-            for (final DriverGeneEvent driverEvent : dgData.getEvents())
+            for(final DriverGeneEvent driverEvent : dgData.getEvents())
             {
                 int clusterId = driverEvent.getCluster() != null ? driverEvent.getCluster().id() : -1;
 

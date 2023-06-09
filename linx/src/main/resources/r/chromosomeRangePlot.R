@@ -48,10 +48,10 @@ add_row_numbers <- function(columnsInFirstRow, chromosomeLengths, minRelativeLen
 }
 
 optimal_columns_in_first_row <- function(chromosomeMaxColumns, chromosomeMaxRows, minRelativeLength, chromosomeLengths) {
-  for (columns in 1:chromosomeMaxColumns) {
+  for(columns in 1:chromosomeMaxColumns) {
     tmp = add_row_numbers(columns, chromosomeLengths, minRelativeLength)
     rows = max(tmp$row)
-    if (rows <= chromosomeMaxRows) {
+    if(rows <= chromosomeMaxRows) {
       return (columns)
     }
   }
@@ -97,7 +97,7 @@ chromosomeHeight = chromosomeHeightPerRow * max(chromosomeLengths$row)
 
 png(file = circosPicturePath, width = 0.85 * circosWidth, height = chromosomeHeight, units = "px")
 
-for (i in 1:nrow(chromosomeLengths)) {
+for(i in 1:nrow(chromosomeLengths)) {
   x = chromosomeLengths[i, "x"]
   y = chromosomeLengths[i, "y"]
   width = chromosomeLengths[i, "width"]

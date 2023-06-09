@@ -44,14 +44,14 @@ public class BfbFinder
 
         double maxInfJcn = 0;
 
-        for (SvVarData var : cluster.getSVs())
+        for(SvVarData var : cluster.getSVs())
         {
-            if (var.isSglBreakend())
+            if(var.isSglBreakend())
                 clusterMaxJcn = max(clusterMaxJcn, var.jcnMin() * 0.5); // in case the SGL is a disguised foldback
             else
                 clusterMaxJcn = max(clusterMaxJcn, var.jcnMin());
 
-            if (var.isInferredSgl())
+            if(var.isInferredSgl())
                 maxInfJcn = max(maxInfJcn, var.jcn());
         }
 
@@ -61,7 +61,7 @@ public class BfbFinder
         double foldbackCount = 0;
         double maxSglJcn = 0;
 
-        for (final SvVarData var : cluster.getSVs())
+        for(final SvVarData var : cluster.getSVs())
         {
             if(candidateDMSVs.contains(var))
                 continue;
@@ -102,7 +102,7 @@ public class BfbFinder
     {
         double maxCopyNumber = 0;
 
-        for (ArmGroup armGroup : cluster.getArmGroups())
+        for(ArmGroup armGroup : cluster.getArmGroups())
         {
             final TelomereCentromereCnData tcData = mCnDataLoader.getChrTeleCentroData().get(armGroup.chromosome());
 

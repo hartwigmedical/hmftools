@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.amber.qc;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
 
 import java.io.File;
@@ -16,7 +17,6 @@ public final class AmberQCFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
-    private static final String DELIMITER = "\t";
     private static final String EXTENSION = ".amber.qc";
 
     @NotNull
@@ -46,14 +46,14 @@ public final class AmberQCFile
     {
         try
         {
-            String uniparentalDisomy = getValue(lines, UNIPARENTAL_DISOMY, null, DELIMITER);
+            String uniparentalDisomy = getValue(lines, UNIPARENTAL_DISOMY, null, TSV_DELIM);
 
             if(uniparentalDisomy != null && uniparentalDisomy.equals(UNIPARENTAL_DISOMY_NONE))
                 uniparentalDisomy = null;
 
             return ImmutableAmberQC.builder()
-                    .contamination(Double.parseDouble(getValue(lines, CONTAMINATION, "0", DELIMITER)))
-                    .consanguinityProportion(Double.parseDouble(getValue(lines, CONSANGUINITY_PROPORTION, "0", DELIMITER)))
+                    .contamination(Double.parseDouble(getValue(lines, CONTAMINATION, "0", TSV_DELIM)))
+                    .consanguinityProportion(Double.parseDouble(getValue(lines, CONSANGUINITY_PROPORTION, "0", TSV_DELIM)))
                     .uniparentalDisomy(uniparentalDisomy)
                     .build();
         }
@@ -68,10 +68,10 @@ public final class AmberQCFile
     {
         final List<String> result = Lists.newArrayList();
 
-        result.add(QC_STATUS + DELIMITER + check.status());
-        result.add(CONTAMINATION + DELIMITER + FORMAT.format(check.contamination()));
-        result.add(CONSANGUINITY_PROPORTION + DELIMITER + FORMAT.format(check.consanguinityProportion()));
-        result.add(UNIPARENTAL_DISOMY + DELIMITER + (check.uniparentalDisomy() != null ? check.uniparentalDisomy() : UNIPARENTAL_DISOMY_NONE));
+        result.add(QC_STATUS + TSV_DELIM + check.status());
+        result.add(CONTAMINATION + TSV_DELIM + FORMAT.format(check.contamination()));
+        result.add(CONSANGUINITY_PROPORTION + TSV_DELIM + FORMAT.format(check.consanguinityProportion()));
+        result.add(UNIPARENTAL_DISOMY + TSV_DELIM + (check.uniparentalDisomy() != null ? check.uniparentalDisomy() : UNIPARENTAL_DISOMY_NONE));
 
         return result;
     }

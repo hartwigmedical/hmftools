@@ -159,7 +159,7 @@ public class CircosDataWriter
         List<String> result = Lists.newArrayList();
 
         List<GenomeRegion> regions = Span.spanRegions(unadjustedAlterations);
-        for (GenomeRegion region : regions)
+        for(GenomeRegion region : regions)
         {
             final String bandString = new StringJoiner(DELIMITER).add(region.chromosome())
                     .add(String.valueOf(region.start()))
@@ -176,12 +176,12 @@ public class CircosDataWriter
     private List<String> genes(final Map<String, String> geneColours, final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
-        if (!data.displayGenes())
+        if(!data.displayGenes())
         {
             return result;
         }
 
-        for (final Gene gene : genes)
+        for(final Gene gene : genes)
         {
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
                     .add(String.valueOf(gene.start()))
@@ -200,14 +200,14 @@ public class CircosDataWriter
     private List<String> exonRank(int totalContigLength, final List<VisGeneExon> exons)
     {
         final List<String> result = Lists.newArrayList();
-        if (!data.displayGenes())
+        if(!data.displayGenes())
         {
             return result;
         }
 
-        if (totalContigLength <= MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK)
+        if(totalContigLength <= MAX_CONTIG_LENGTH_TO_DISPLAY_EXON_RANK)
         {
-            for (final VisGeneExon exon : exons)
+            for(final VisGeneExon exon : exons)
             {
                 int position = exon.start() + (exon.end() - exon.start()) / 2;
 
@@ -228,12 +228,12 @@ public class CircosDataWriter
     private List<String> geneName(final List<Gene> genes)
     {
         final List<String> result = Lists.newArrayList();
-        if (!data.displayGenes())
+        if(!data.displayGenes())
         {
             return result;
         }
 
-        for (final Gene gene : genes)
+        for(final Gene gene : genes)
         {
             final StringJoiner exonStringJoiner = new StringJoiner(DELIMITER).add(circosContig(gene.chromosome()))
                     .add(String.valueOf(gene.namePosition()))
@@ -250,12 +250,12 @@ public class CircosDataWriter
     private List<String> exons(final Map<String, String> geneColours, final List<GenomeRegion> disruptedRegions, final List<VisGeneExon> exons)
     {
         final List<String> result = Lists.newArrayList();
-        if (!data.displayGenes())
+        if(!data.displayGenes())
         {
             return result;
         }
 
-        for (final VisGeneExon exon : exons)
+        for(final VisGeneExon exon : exons)
         {
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(exon.chromosome()))
                     .add(String.valueOf(exon.start()))
@@ -266,7 +266,7 @@ public class CircosDataWriter
             result.add(exonString);
         }
 
-        for (final GenomeRegion disruptedRegion : disruptedRegions)
+        for(final GenomeRegion disruptedRegion : disruptedRegions)
         {
             final String exonString = new StringJoiner(DELIMITER).add(circosContig(disruptedRegion.chromosome()))
                     .add(String.valueOf(disruptedRegion.start()))
@@ -294,13 +294,13 @@ public class CircosDataWriter
     {
         final List<String> result = Lists.newArrayList();
         int unadjustedSegments = (int)segments.stream().filter(x -> !x.Truncated).count();
-        if (unadjustedSegments <= circosConfig.MaxNumberOfDistanceLabels)
+        if(unadjustedSegments <= circosConfig.MaxNumberOfDistanceLabels)
         {
-            for (int i = 0; i < unadjustedSegment.size(); i++)
+            for(int i = 0; i < unadjustedSegment.size(); i++)
             {
                 final VisCopyNumber adjusted = segments.get(i);
                 final VisCopyNumber unadjusted = unadjustedSegment.get(i);
-                if (!adjusted.Truncated)
+                if(!adjusted.Truncated)
                 {
                     final String distance = new StringJoiner(DELIMITER).add(circosContig(adjusted.chromosome()))
                             .add(String.valueOf(adjusted.start()))
@@ -320,7 +320,7 @@ public class CircosDataWriter
     private List<String> createCNA(final List<VisCopyNumber> alterations)
     {
         final List<String> result = Lists.newArrayList();
-        for (VisCopyNumber alteration : alterations)
+        for(VisCopyNumber alteration : alterations)
         {
             final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
                     .add(String.valueOf(alteration.start()))
@@ -336,7 +336,7 @@ public class CircosDataWriter
     private List<String> createMinorAllelePloidy(final List<VisCopyNumber> alterations)
     {
         final List<String> result = Lists.newArrayList();
-        for (VisCopyNumber alteration : alterations)
+        for(VisCopyNumber alteration : alterations)
         {
             final String cna = new StringJoiner(DELIMITER).add(circosContig(alteration.chromosome()))
                     .add(String.valueOf(alteration.start()))
@@ -355,10 +355,10 @@ public class CircosDataWriter
         int glyphSizeInner = (int) Math.floor(circosConfig.GlyphSize * 14d / 20d);
 
         final List<String> result = Lists.newArrayList();
-        for (VisSegment segment : segments)
+        for(VisSegment segment : segments)
         {
 
-            if (segment.Track == 0)
+            if(segment.Track == 0)
             {
                 continue;
             }
@@ -366,14 +366,14 @@ public class CircosDataWriter
             final String colorOption = colorPicker.transparentColor(segment.ClusterId, segment.ChainId);
             final String startGlyph = scatterGlyph(true, segment, links);
             result.add(scatterEntry(true, segment, colorOption, startGlyph, glyphSize, segment.Frame));
-            if (segment.startTerminal() == SegmentTerminal.CENTROMERE)
+            if(segment.startTerminal() == SegmentTerminal.CENTROMERE)
             {
                 result.add(scatterEntry(true, segment, "color=white", startGlyph, glyphSizeInner, 0));
             }
 
             final String endGlyph = scatterGlyph(false, segment, links);
             result.add(scatterEntry(false, segment, colorOption, endGlyph, glyphSize, segment.Frame));
-            if (segment.endTerminal() == SegmentTerminal.CENTROMERE)
+            if(segment.endTerminal() == SegmentTerminal.CENTROMERE)
             {
                 result.add(scatterEntry(false, segment, "color=white", endGlyph, glyphSizeInner, 0));
             }
@@ -390,9 +390,9 @@ public class CircosDataWriter
         final List<String> result = Lists.newArrayList();
 
         // Draw open circles at SGL ends
-        for (final VisSvData link : links)
+        for(final VisSvData link : links)
         {
-            if (link.isValidStart() && !link.isValidEnd())
+            if(link.isValidStart() && !link.isValidEnd())
             {
                 final String colorOption = colorPicker.transparentColor(link.ClusterId, link.ChainId);
                 result.add(scatterSGLEntry(link, colorOption, glyphSize));
@@ -407,7 +407,7 @@ public class CircosDataWriter
     {
         int location = isStart ? segment.start() : segment.end();
         final SegmentTerminal terminal = isStart ? segment.startTerminal() : segment.endTerminal();
-        if (terminal != SegmentTerminal.NONE)
+        if(terminal != SegmentTerminal.NONE)
         {
             return "square";
         }
@@ -472,7 +472,7 @@ public class CircosDataWriter
     private List<String> createConnectors(final List<Connector> connectors)
     {
         final List<String> result = Lists.newArrayList();
-        for (Connector connector : connectors)
+        for(Connector connector : connectors)
         {
             final double r1 = configWriter.svTrackRelative(connector.track());
             final String start = new StringJoiner(DELIMITER).add(circosContig(connector.chromosome()))
@@ -496,7 +496,7 @@ public class CircosDataWriter
         final List<GenomePosition> positions = Lists.newArrayList(contigLengths);
         Collections.sort(positions);
 
-        for (GenomePosition contig : positions)
+        for(GenomePosition contig : positions)
         {
 
             final String start = new StringJoiner(" ").add("chr -")
@@ -515,9 +515,9 @@ public class CircosDataWriter
     private List<String> createHistogramTrack(final List<VisSegment> segments)
     {
         final List<String> result = Lists.newArrayList();
-        for (final VisSegment segment : segments)
+        for(final VisSegment segment : segments)
         {
-            if (segment.Track > 0)
+            if(segment.Track > 0)
             {
                 double thickness = thicknessPixels(segment.LinkPloidy);
                 double r0 = configWriter.svTrackRelative(segment.Track);
@@ -541,19 +541,19 @@ public class CircosDataWriter
     private List<String> createPositionText(final List<VisSvData> originalLinks, final List<VisSvData> scaledLinks)
     {
         final List<AdjustedPosition> positions = AdjustedPositions.create(originalLinks, scaledLinks);
-        if (circosConfig.ExactPosition)
+        if(circosConfig.ExactPosition)
         {
             return createPositionText(1, positions, POSITION_FORMAT::format);
         }
 
         final List<String> positionsEvery100k = createPositionText(100_000, positions, CircosDataWriter::shorthand);
-        if (positionsEvery100k.size() < circosConfig.MaxNumberOfPositionLabels)
+        if(positionsEvery100k.size() < circosConfig.MaxNumberOfPositionLabels)
         {
             return positionsEvery100k;
         }
 
         final List<String> positionsEvery1M = createPositionText(1_000_000, positions, CircosDataWriter::shorthand);
-        if (positionsEvery1M.size() < circosConfig.MaxNumberOfPositionLabels)
+        if(positionsEvery1M.size() < circosConfig.MaxNumberOfPositionLabels)
         {
             return positionsEvery1M;
         }
@@ -566,20 +566,20 @@ public class CircosDataWriter
         final Set<String> result = Sets.newHashSet();
         final Set<String> contigs = positions.stream().map(GenomePosition::chromosome).collect(Collectors.toSet());
 
-        for (final String contig : contigs)
+        for(final String contig : contigs)
         {
             int currentPosition = 0;
-            for (final AdjustedPosition adjustedPosition : positions)
+            for(final AdjustedPosition adjustedPosition : positions)
             {
-                if (adjustedPosition.chromosome().equals(contig))
+                if(adjustedPosition.chromosome().equals(contig))
                 {
                     int newPosition = adjustedPosition.unadjustedPosition();
 
-                    if (newPosition - minDistance >= currentPosition)
+                    if(newPosition - minDistance >= currentPosition)
                     {
                         String positionLabel = formatter.apply(adjustedPosition.unadjustedPosition());
 
-                        if (circosConfig.ShowSvId)
+                        if(circosConfig.ShowSvId)
                         {
                             positionLabel += String.format(":%d", adjustedPosition.svId());
                         }
@@ -620,12 +620,12 @@ public class CircosDataWriter
     @NotNull
     static String shorthand(int value)
     {
-        if (value < 100)
+        if(value < 100)
         {
             return String.valueOf(value);
         }
 
-        if (value < 99_950)
+        if(value < 99_950)
         {
             return String.format(Locale.ENGLISH, "%.1fk", value / 1_000d);
         }

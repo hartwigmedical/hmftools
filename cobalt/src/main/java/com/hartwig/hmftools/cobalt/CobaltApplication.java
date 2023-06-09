@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentati
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,6 +24,7 @@ import com.beust.jcommander.ParametersDelegate;
 import com.beust.jcommander.UnixStyleUsageFormatter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hartwig.hmftools.cobalt.count.BamReadCounter;
+import com.hartwig.hmftools.cobalt.diploid.DiploidRegionLoader;
 import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
@@ -53,6 +55,7 @@ public class CobaltApplication implements AutoCloseable
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
     {
+        CB_LOGGER.info("{}", LocalDate.now());
         CB_LOGGER.info("args: {}", String.join(" ", args));
 
         final CobaltApplication application = new CobaltApplication();
@@ -118,7 +121,7 @@ public class CobaltApplication implements AutoCloseable
             final Table gcProfiles = loadGCContent(chromosomePosCodec);
 
             final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
-                    gcProfiles, chromosomes, bamReadCounter.getReferenceCounts(), bamReadCounter.getTumorCounts(),
+                    gcProfiles, bamReadCounter.getReferenceCounts(), bamReadCounter.getTumorCounts(),
                     chromosomePosCodec);
 
             if (mConfig.TargetRegionPath != null)
@@ -134,7 +137,8 @@ public class CobaltApplication implements AutoCloseable
             switch (mConfig.mode())
             {
                 case TUMOR_ONLY:
-                    ratios = ratioSupplier.tumorOnly(mConfig.TumorOnlyDiploidBed);
+                    final Table diploidRegions = new DiploidRegionLoader(mConfig.TumorOnlyDiploidBed, chromosomePosCodec).build();
+                    ratios = ratioSupplier.tumorOnly(diploidRegions);
                     break;
                 case GERMLIHE_ONLY:
                     ratios = ratioSupplier.germlineOnly();
@@ -194,11 +198,11 @@ public class CobaltApplication implements AutoCloseable
     @NotNull
     public Table loadGCContent(ChromosomePositionCodec chromosomePosCodec) throws IOException
     {
-        Table gcProfileTable = Table.create(List.of(
+        Table gcProfileTable = Table.create("gcProfiles",
                 LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
-                DoubleColumn.create("gcContent"),
-                BooleanColumn.create("isMappable"),
-                BooleanColumn.create("isAutosome")));
+                DoubleColumn.create(CobaltColumns.GC_CONTENT),
+                BooleanColumn.create(CobaltColumns.IS_MAPPABLE),
+                BooleanColumn.create(CobaltColumns.IS_AUTOSOME));
 
         Collection<GCProfile> gcProfileList = GCProfileFactory.loadGCContent(WINDOW_SIZE, mConfig.GcProfilePath).values();
 
@@ -214,9 +218,9 @@ public class CobaltApplication implements AutoCloseable
             {
                 throw new RuntimeException("Unknown chromosome: " + gcProfile.chromosome());
             }
-            row.setDouble("gcContent", gcProfile.gcContent());
-            row.setBoolean("isMappable", gcProfile.isMappable());
-            row.setBoolean("isAutosome", HumanChromosome.fromString(gcProfile.chromosome()).isAutosome());
+            row.setDouble(CobaltColumns.GC_CONTENT, gcProfile.gcContent());
+            row.setBoolean(CobaltColumns.IS_MAPPABLE, gcProfile.isMappable());
+            row.setBoolean(CobaltColumns.IS_AUTOSOME, HumanChromosome.fromString(gcProfile.chromosome()).isAutosome());
         }
 
         return gcProfileTable;

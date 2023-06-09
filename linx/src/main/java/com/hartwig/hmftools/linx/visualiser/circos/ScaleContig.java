@@ -35,7 +35,7 @@ public class ScaleContig
             int previousUnadjustedPositionPosition = sortedDistinctPositions.get(0);
             mPositionMap.put(previousUnadjustedPositionPosition, currentAdjustedPosition);
 
-            for (int i = 1; i < sortedDistinctPositions.size(); i++)
+            for(int i = 1; i < sortedDistinctPositions.size(); i++)
             {
                 int currentUnadjustedPosition = sortedDistinctPositions.get(i);
                 int linearDistance = currentUnadjustedPosition - previousUnadjustedPositionPosition;
@@ -67,7 +67,7 @@ public class ScaleContig
 
     public void expand(double factor)
     {
-        for (Map.Entry<Integer, Integer> entry : mPositionMap.entrySet())
+        for(Map.Entry<Integer, Integer> entry : mPositionMap.entrySet())
         {
             if(entry.getValue() > 1)
             {

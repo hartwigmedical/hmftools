@@ -228,11 +228,11 @@ public class CohortDataWriter
                         LineElementType.toString(var.getLineElement(true)), LineElementType.toString(var.getLineElement(false))));
 
                 // linked pair info
-                for (int be = SE_START; be <= SE_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
                     boolean isStart = isStart(be);
                     final LinkedPair link = var.getLinkedPair(isStart);
-                    if (link != null)
+                    if(link != null)
                     {
                         writer.write(String.format(",%s,%d",
                                 link.first() == var ? link.second().id() : link.first().id(), link.length()));
@@ -251,7 +251,7 @@ public class CohortDataWriter
                 final SvChain chain = cluster.findChain(var);
                 String chainStr = "";
 
-                if (chain != null)
+                if(chain != null)
                 {
                     chainStr = String.format(",%d,%d,%s", chain.id(), chain.getSvCount(), chain.getSvIndices(var));
                 }
@@ -286,11 +286,11 @@ public class CohortDataWriter
                         var.getFoldbackId(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
                         var.getFoldbackId(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
 
-                for (int be = SE_START; be <= SE_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
                     ArmCluster armCluster = be == SE_START ? armClusterStart : armClusterEnd;
 
-                    if (armCluster != null)
+                    if(armCluster != null)
                         writer.write(String.format(",%d,%s,%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
                     else
                         writer.write(",-1,,0");
@@ -408,12 +408,12 @@ public class CohortDataWriter
 
                 double foldbackCount = 0;
 
-                for (final SvVarData var : cluster.getFoldbacks())
+                for(final SvVarData var : cluster.getFoldbacks())
                 {
                     // avoid double-count chained foldbacks
-                    if (var.getFoldbackBreakend(true) != null)
+                    if(var.getFoldbackBreakend(true) != null)
                         foldbackCount += 0.5;
-                    if (var.getFoldbackBreakend(false) != null)
+                    if(var.getFoldbackBreakend(false) != null)
                         foldbackCount += 0.5;
                 }
 
@@ -517,7 +517,7 @@ public class CohortDataWriter
 
                 List<SvChain> chains = cluster.getChains();
 
-                for (final SvChain chain : chains)
+                for(final SvChain chain : chains)
                 {
                     int chainSvCount = chain.getSvCount();
                     boolean chainConsistent = chain.isConsistent();
@@ -526,7 +526,7 @@ public class CohortDataWriter
                     List<LinkedPair> uniquePairs = Lists.newArrayList();
                     final List<LinkedPair> chainLinks = chain.getLinkedPairs();
 
-                    for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
+                    for(int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                     {
                         final LinkedPair pair = chainLinks.get(chainIndex);
 

@@ -10,33 +10,50 @@ import com.google.common.collect.Lists;
 
 public class SomaticVariantCounts
 {
-    public int AlleleFragments;
-    public double AllelelQualTotal;
-
-    public final List<Integer> VariantDepths;
-    public final List<Integer> NonZeroVariantDepths;
+    private int mAlleleFragments;
+    private int mTotalFragments;
+    private double mAllelelQualTotal;
+    private final List<Integer> mVariantDepths;
+    private final List<Integer> mNonZeroVariantDepths;
 
     public SomaticVariantCounts()
     {
-        VariantDepths = Lists.newArrayList();
-        NonZeroVariantDepths = Lists.newArrayList();
-        AlleleFragments = 0;
-        AllelelQualTotal = 0;
+        mVariantDepths = Lists.newArrayList();
+        mNonZeroVariantDepths = Lists.newArrayList();
+        mAlleleFragments = 0;
+        mTotalFragments = 0;
+        mAllelelQualTotal = 0;
     }
 
-    public int depthTotal()
+    public void addFragmentCount(int count)
     {
-        return VariantDepths.stream().mapToInt(x -> x).sum();
+        mTotalFragments += count;
+        mVariantDepths.add(count);
+
+        if(count > 0)
+            mNonZeroVariantDepths.add(count);
     }
+
+    public void addAlleleFragmentCount(int count, double qualTotal)
+    {
+        mAlleleFragments += count;
+        mAllelelQualTotal += qualTotal;
+    }
+
+    public int alleleFragments() { return mAlleleFragments; }
+    public int totalFragments() { return mTotalFragments; }
+    public double allelelQualTotal() { return mAllelelQualTotal; }
+
+    public int nonZeroDepth() { return mNonZeroVariantDepths.size(); }
 
     public double medianDepth(boolean useNonZero)
     {
-        return useNonZero ? median(NonZeroVariantDepths) : median(VariantDepths);
+        return useNonZero ? median(mNonZeroVariantDepths) : median(mVariantDepths);
     }
 
     public String toString()
     {
         return format("AF(%d) avgQualTotal(%.1f) depthCounts(nonzero=%d all=%d)",
-                AlleleFragments, AllelelQualTotal, NonZeroVariantDepths.size(), VariantDepths.size());
+                mAlleleFragments, mAllelelQualTotal, mNonZeroVariantDepths.size(), mVariantDepths.size());
     }
 }

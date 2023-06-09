@@ -105,7 +105,7 @@ public class BamReadCounter
     private Table fromFutures(List<Future<ChromosomeReadCount>> futures)
             throws ExecutionException, InterruptedException
     {
-        final Table readCounts = Table.create(
+        final Table readCounts = Table.create("readCounts",
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
                 IntColumn.create(CobaltColumns.READ_COUNT));

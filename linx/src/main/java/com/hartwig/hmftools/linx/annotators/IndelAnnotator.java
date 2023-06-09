@@ -90,7 +90,7 @@ public class IndelAnnotator
         for(IndelData indel : sampleIndelData)
         {
             // only cache non-MSI indels and record the MSI count
-            if (indel.highRepeatCount())
+            if(indel.highRepeatCount())
             {
                 ++mMsiIndelCount;
                 continue;
@@ -98,7 +98,7 @@ public class IndelAnnotator
 
             List<IndelData> indelDataList = mSampleChrIndelData.get(indel.Chromosome);
 
-            if (indelDataList == null)
+            if(indelDataList == null)
             {
                 indelDataList = Lists.newArrayList();
                 mSampleChrIndelData.put(indel.Chromosome, indelDataList);
@@ -162,7 +162,7 @@ public class IndelAnnotator
             long clusterRange = metrics.TotalRange - metrics.TotalDeleted;
             double expectedIndelCount = min(clusterRange / GENOME_LENGTH, 1) * (mIndelCount - mMsiIndelCount);
 
-            if (totalIndels > expectedIndelCount)
+            if(totalIndels > expectedIndelCount)
             {
                 PoissonDistribution poisson = new PoissonDistribution(expectedIndelCount);
                 double indelProbability = 1 - poisson.cumulativeProbability(totalIndels - 1);
@@ -257,7 +257,7 @@ public class IndelAnnotator
 
         for(final SomaticVariant variant : variants)
         {
-            if (variant.isFiltered())
+            if(variant.isFiltered())
                 continue;
 
             sampleIndelList.add(new IndelData(variant.chromosome(), (int)variant.position(), variant.ref(), variant.alt(),

@@ -118,7 +118,7 @@ public class ColorPicker
     @NotNull
     public String color(final int clusterId, final int chainId)
     {
-        if (clusterId == -1 || chainId == -1)
+        if(clusterId == -1 || chainId == -1)
         {
             return toString(BLACK);
         }
@@ -174,19 +174,19 @@ public class ColorPicker
 
         clusterSizeList.sort(longComparator);
 
-        for (int i = 0; i < clusterSizeList.size(); i++)
+        for(int i = 0; i < clusterSizeList.size(); i++)
         {
             String color = i < COLOURS.length ? ColorPicker.toString(COLOURS[i]) : "color=black";
             result.put(clusterSizeList.get(i).clusterId, color);
         }
 
-        for (VisSvData link : links)
+        for(VisSvData link : links)
         {
-            if (link.isSimpleSV())
+            if(link.isSimpleSV())
             {
                 result.put(link.ClusterId, simpleSvColor(link.Type));
             }
-            else if (link.isLineElement())
+            else if(link.isLineElement())
             {
                 result.put(link.ClusterId, toString(LINE));
             }
@@ -200,7 +200,7 @@ public class ColorPicker
     {
         final Map<Integer,String> result = Maps.newHashMap();
 
-        if (!links.isEmpty())
+        if(!links.isEmpty())
         {
             final VisSvData firstLink = links.get(0);
 
@@ -241,27 +241,27 @@ public class ColorPicker
 
     private static double connectorTransparency(int links)
     {
-        if (links < 10)
+        if(links < 10)
         {
             return 1;
         }
 
-        if (links < 50)
+        if(links < 50)
         {
             return 0.8;
         }
 
-        if (links < 100)
+        if(links < 100)
         {
             return 0.6;
         }
 
-        if (links < 200)
+        if(links < 200)
         {
             return 0.4;
         }
 
-        if (links < 400)
+        if(links < 400)
         {
             return 0.2;
         }

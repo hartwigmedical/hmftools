@@ -160,7 +160,7 @@ public class CnDataLoader
 
         int unmatchedSVs = 0;
 
-        for (final StructuralVariantData svData : mSvDataList)
+        for(final StructuralVariantData svData : mSvDataList)
         {
             if(svData.filter().equals(PON_FILTER_PON))
                 continue;

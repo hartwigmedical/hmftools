@@ -23,7 +23,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.ImpactClassifier;
-import com.hartwig.hmftools.pave.Reportability;
+import com.hartwig.hmftools.pave.annotation.Reportability;
 import com.hartwig.hmftools.pave.VariantData;
 import com.hartwig.hmftools.pave.VariantImpactBuilder;
 import com.hartwig.hmftools.pave.VariantTransImpact;

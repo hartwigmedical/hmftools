@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
+import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
 import static com.hartwig.hmftools.ctdna.purity.SampleData.ctDnaSamplesFromStr;
 
 import java.io.File;
@@ -41,10 +42,11 @@ public class PurityConfig
     public final String CobaltDir;
     public final String OutputDir;
     public final String OutputId;
-    public final boolean WriteVariants;
+    public final boolean WriteSomatics;
     public final boolean WriteCnRatios;
-    public final boolean IncludeFilteredVariants;
-    public final int NoiseReadsPerMillion;
+    public final boolean WriteFilteredSomatics;
+    public final double NoiseReadsPerMillion;
+    public final double NoiseReadsPerMillionDualStrand;
     public final int Threads;
 
     private static final String PATIENT_ID = "patient_id";
@@ -55,11 +57,11 @@ public class PurityConfig
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String PURPLE_DIR = "purple_dir";
     private static final String COBALT_DIR = "cobalt_dir";
-    private static final String WRITE_VARIANTS = "write_variants";
-    private static final String INCLUDE_FILTERED_VARIANTS = "include_filtered";
+    private static final String WRITE_VARIANTS = "write_somatics";
+    private static final String INCLUDE_FILTERED_VARIANTS = "write_filtered_somatics";
     private static final String WRITE_CN_RATIOS = "write_cn_ratios";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
-
+    private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
 
     public PurityConfig(final CommandLine cmd)
     {
@@ -80,18 +82,20 @@ public class PurityConfig
             Arrays.stream(PurityMethod.values()).forEach(x -> PurityMethods.add(x));
         }
 
-        // SomaticVcf = cmd.hasOption(SOMATIC_VCF) ? cmd.getOptionValue(SOMATIC_VCF) : format("%s/*.purple.somatic.ctdna.vcf.gz", SampleDataDir);
         SomaticVcf = cmd.getOptionValue(SOMATIC_VCF, "");
         PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, SampleDataDir));
         CobaltDir = checkAddDirSeparator(cmd.getOptionValue(COBALT_DIR, SampleDataDir));
         OutputDir = checkAddDirSeparator(cmd.getOptionValue(OUTPUT_DIR, SampleDataDir));
         OutputId = cmd.getOptionValue(OUTPUT_ID);
 
-        NoiseReadsPerMillion = Integer.parseInt(cmd.getOptionValue(NOISE_READS_PER_MILLION, String.valueOf(DEFAULT_NOISE_READS_PER_MILLION)));
+        NoiseReadsPerMillion = Double.parseDouble(
+                cmd.getOptionValue(NOISE_READS_PER_MILLION, String.valueOf(DEFAULT_NOISE_READS_PER_MILLION)));
+        NoiseReadsPerMillionDualStrand = Double.parseDouble(
+                cmd.getOptionValue(NOISE_READS_PER_MILLION_DUAL, String.valueOf(DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND)));
 
-        WriteVariants = cmd.hasOption(WRITE_VARIANTS);
+        WriteSomatics = cmd.hasOption(WRITE_VARIANTS);
         WriteCnRatios = cmd.hasOption(WRITE_CN_RATIOS);
-        IncludeFilteredVariants = cmd.hasOption(INCLUDE_FILTERED_VARIANTS);
+        WriteFilteredSomatics = cmd.hasOption(INCLUDE_FILTERED_VARIANTS);
         Threads = parseThreads(cmd);
     }
 

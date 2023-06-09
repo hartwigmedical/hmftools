@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.annotation;
 
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
@@ -14,6 +14,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.pave.VariantData;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;

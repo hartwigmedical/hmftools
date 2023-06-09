@@ -27,10 +27,10 @@ public class Genes
         final Map<String, Gene> result = Maps.newHashMap();
         for(Gene gene : genes)
         {
-            if (result.containsKey(gene.name()))
+            if(result.containsKey(gene.name()))
             {
                 final Gene prior = result.get(gene.name());
-                if (gene.bases() < prior.bases())
+                if(gene.bases() < prior.bases())
                 {
                     continue;
                 }
