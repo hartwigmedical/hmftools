@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 public class GeneExpressionDistributionData
 {
     private static final Logger LOGGER = LogManager.getLogger(GeneExpressionDistributionData.class);
+    public static final int NOT_AVAILABLE = -1;
 
     private final Map<String, Map<String, double[]>> mGenePercentiles; // by geneId and then cancer type
     private final Map<String, Map<String, Double>> mGeneMedians;
@@ -89,7 +90,7 @@ public class GeneExpressionDistributionData
 
         if(medianMap == null || !medianMap.containsKey(cancerType))
         {
-            return -1;
+            return NOT_AVAILABLE;
         }
 
         return medianMap.get(cancerType);
@@ -101,7 +102,7 @@ public class GeneExpressionDistributionData
 
         if(percentileMap == null || !percentileMap.containsKey(cancerType))
         {
-            return -1;
+            return NOT_AVAILABLE;
         }
 
         return getPercentile(percentileMap.get(cancerType), sampleTpm);
