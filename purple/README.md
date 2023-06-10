@@ -928,7 +928,7 @@ We can determine the likelihood of a variant being subclonal at any given varian
 - **Centromeric noise** - regions within 1Mb of the centromere are normally excluded from fitting in most tools.  This should be evaluated.
 
 ## Version History and Download Links
-- [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.8.1)
+- [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.8.4)
 - [3.7](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.7.2)
 - [3.6](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.6)
 - [3.5](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.5)
