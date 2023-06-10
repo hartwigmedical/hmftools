@@ -38,12 +38,6 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
     }
 
     public double deviationFromMax(
-            final PurityAdjuster purityAdjuster, final ObservedRegion region, final SomaticVariant variant)
-    {
-        return deviationFromMax(purityAdjuster, region.chromosome(), region.majorAlleleCopyNumber(), region.tumorCopyNumber(), variant);
-    }
-
-    public double deviationFromMax(
             final PurityAdjuster purityAdjuster, final String chromosome, double majorAlleleCopyNumber, double tumorCopyNumber,
             final SomaticVariant variant)
     {
@@ -54,7 +48,6 @@ public enum SomaticDeviation implements RemovalListener<Double, Integer>
         return deviationFromMax(
                 purityAdjuster, normalCopyNumber, variant.tumorAlleleDepth(), constrainedTumorCopyNumber, constrainedMajorAllelePloidy);
     }
-
 
     @VisibleForTesting
     double deviationFromMax(final PurityAdjuster purityAdjuster, double normalCopyNumber, final AllelicDepth depth,

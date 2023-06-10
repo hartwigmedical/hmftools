@@ -7,9 +7,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 public class RegionFitCalcs
 {
-    public final double Purity;
-    public final double NormFactor;
-
     public double TumorCopyNumber;
     public double TumorBAF;
     public double RefNormalisedCopyNumber;
@@ -18,18 +15,17 @@ public class RegionFitCalcs
     public double EventPenalty;
     public double DeviationPenalty;
 
-    public RegionFitCalcs(final double purity, final double normFactor)
+    public RegionFitCalcs(
+            double tumorCopyNumber, double tumorBAF, double refNormalisedCopyNumber, double minorAlleleCopyNumberDeviation,
+            double majorAlleleCopyNumberDeviation, double eventPenalty, double deviationPenalty)
     {
-        Purity = purity;
-        NormFactor = normFactor;
-
-        TumorCopyNumber = 0;
-        TumorBAF = 0;
-        RefNormalisedCopyNumber = 0;
-        MinorAlleleCopyNumberDeviation = 0;
-        MajorAlleleCopyNumberDeviation = 0;
-        EventPenalty = 0;
-        DeviationPenalty = 0;
+        TumorCopyNumber = tumorCopyNumber;
+        TumorBAF = tumorBAF;
+        RefNormalisedCopyNumber = refNormalisedCopyNumber;
+        MinorAlleleCopyNumberDeviation = minorAlleleCopyNumberDeviation;
+        MajorAlleleCopyNumberDeviation = majorAlleleCopyNumberDeviation;
+        EventPenalty = eventPenalty;
+        DeviationPenalty = deviationPenalty;
     }
 
     public double majorAlleleCopyNumber() { return TumorBAF * TumorCopyNumber; }

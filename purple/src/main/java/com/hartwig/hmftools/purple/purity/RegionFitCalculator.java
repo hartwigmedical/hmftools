@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.region;
+package com.hartwig.hmftools.purple.purity;
 
 import java.util.Collection;
 import java.util.List;
@@ -9,21 +9,19 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.purple.purity.PurityAdjuster;
-import com.hartwig.hmftools.purple.purity.RegionFitCalcs;
+import com.hartwig.hmftools.purple.region.ObservedRegion;
+import com.hartwig.hmftools.purple.region.PloidyDeviation;
 import com.hartwig.hmftools.purple.segment.ExpectedBAF;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-import org.jetbrains.annotations.NotNull;
-
-public class FittedRegionFactory
+public class RegionFitCalculator
 {
     private final double mAmbiguousBaf;
     private final double mPloidyPenaltyFactor;
     private final PloidyDeviation mPloidyDeviation;
     private final CobaltChromosomes mCobaltChromosomes;
 
-    public FittedRegionFactory(final CobaltChromosomes cobaltChromosomes, final int averageReadDepth, double ploidyPenaltyFactor,
+    public RegionFitCalculator(final CobaltChromosomes cobaltChromosomes, final int averageReadDepth, double ploidyPenaltyFactor,
             double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy,
             final double majorAlleleSubOnePenaltyMultiplier, final double majorAlleleSubOneAdditionalPenalty,
             final double baselineDeviation)
@@ -48,33 +46,13 @@ public class FittedRegionFactory
     }
 
     @VisibleForTesting
-    static boolean isAllowedRegion(final CobaltChromosomes cobaltChromosomes, final GenomeRegion region)
+    public static boolean isAllowedRegion(final CobaltChromosomes cobaltChromosomes, final GenomeRegion region)
     {
         return cobaltChromosomes.contains(region.chromosome());
     }
 
     public ObservedRegion fitRegion(final double purity, final double normFactor, final ObservedRegion observedRegion)
     {
-        /*
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
-
-        double observedTumorRatio = observedRegion.observedTumorRatio();
-        double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
-        double observedBAF = observedRegion.observedBAF();
-        double impliedBAF = impliedBaf(purityAdjuster, observedRegion.chromosome(), impliedCopyNumber, observedBAF);
-
-        double refNormalisedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedTumorRatio, observedRegion.observedNormalRatio());
-
-        double majorAllelePloidy = impliedBAF * impliedCopyNumber;
-        double minorAllelePloidy = impliedCopyNumber - majorAllelePloidy;
-
-        double majorAllelePloidyDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
-        double minorAllelePloidyDeviation = mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
-
-        final double eventPenalty = EventPenalty.penalty(mPloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
-        final double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
-        */
-
         RegionFitCalcs regionFitCalcs = calculateRegionFit(purity, normFactor, observedRegion);
 
         ObservedRegion fittedRegion = ObservedRegion.from(observedRegion);
@@ -94,9 +72,6 @@ public class FittedRegionFactory
     {
         final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
 
-        RegionFitCalcs regionFitCalcs = new RegionFitCalcs(purity, normFactor);
-
-        // TO-DO remove local variables if also in RegionFitCalcs
         double observedTumorRatio = observedRegion.observedTumorRatio();
         double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
         double observedBAF = observedRegion.observedBAF();
@@ -110,18 +85,20 @@ public class FittedRegionFactory
         double majorAllelePloidyDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
         double minorAllelePloidyDeviation = mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
 
-        final double eventPenalty = EventPenalty.penalty(mPloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
-        final double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
+        double eventPenalty = calculateEventPenalty(mPloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+        double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
 
-        regionFitCalcs.TumorCopyNumber = impliedCopyNumber;
-        regionFitCalcs.TumorBAF = impliedBAF;
-        regionFitCalcs.RefNormalisedCopyNumber = Doubles.replaceNaNWithZero(refNormalisedCopyNumber);
-        regionFitCalcs.MinorAlleleCopyNumberDeviation = minorAllelePloidyDeviation;
-        regionFitCalcs.MajorAlleleCopyNumberDeviation = majorAllelePloidyDeviation;
-        regionFitCalcs.DeviationPenalty = deviationPenalty;
-        regionFitCalcs.EventPenalty = eventPenalty;
+        return new RegionFitCalcs(
+                impliedCopyNumber, impliedBAF, Doubles.replaceNaNWithZero(refNormalisedCopyNumber),
+                minorAllelePloidyDeviation, majorAllelePloidyDeviation, eventPenalty, deviationPenalty);
+    }
 
-        return regionFitCalcs;
+    public static double calculateEventPenalty(double eventPenaltyFactor, double majorAllele, double minorAllele)
+    {
+        double wholeGenomeDoublingDistance = 1 + (Math.abs(majorAllele - 2)) + (Math.abs(minorAllele - 2));
+        double singleEventDistance = (Math.abs(majorAllele - 1)) + (Math.abs(minorAllele - 1));
+
+        return 1 + eventPenaltyFactor * Math.min(singleEventDistance, wholeGenomeDoublingDistance);
     }
 
     private static final double MIN_CN_THRESHOLD = 0.1;
