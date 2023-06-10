@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.region;
 
+import static com.hartwig.hmftools.purple.purity.RegionFitCalculator.calculateEventPenalty;
+
 import static org.junit.Assert.assertEquals;
 
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +30,6 @@ public class EventPenaltyTest
     {
         int major = (int) descriptiveBAF.chars().filter(x -> x == 'A').count();
         int minor = (int) descriptiveBAF.chars().filter(x -> x == 'B').count();
-        assertEquals(expectedResult, EventPenalty.penalty(1, minor, major), EPSILON);
+        assertEquals(expectedResult, calculateEventPenalty(1, minor, major), EPSILON);
     }
 }
