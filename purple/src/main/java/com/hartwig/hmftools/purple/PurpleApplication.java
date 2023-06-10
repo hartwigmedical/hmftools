@@ -45,8 +45,6 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
@@ -447,9 +445,6 @@ public class PurpleApplication
             final FittedRegionFactory fittedRegionFactory, final List<StructuralVariant> structuralVariants)
             throws ExecutionException, InterruptedException
     {
-        final FittingConfig fittingConfig = mConfig.Fitting;
-        final SomaticFitConfig somaticFitConfig = mConfig.SomaticFitting;
-
         final List<FittedPurity> fitCandidates = Lists.newArrayList();
 
         final CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
@@ -463,12 +458,11 @@ public class PurpleApplication
         }
 
         final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
-                mExecutorService, cobaltChromosomes,
-                fittingConfig.MinPurity, fittingConfig.MaxPurity, fittingConfig.PurityIncrement,
-                fittingConfig.MinPloidy, fittingConfig.MaxPloidy, somaticFitConfig.SomaticPenaltyWeight, mConfig.tumorOnlyMode(),
-                fittedRegionFactory, observedRegions, fittingVariants);
+                mConfig, mExecutorService, cobaltChromosomes, fittedRegionFactory, observedRegions, fittingVariants);
 
-        fitCandidates.addAll(fittedPurityFactory.all());
+        fittedPurityFactory.fitPurity();
+
+        fitCandidates.addAll(fittedPurityFactory.getFittedPurities());
 
         final BestFitFactory bestFitFactory = new BestFitFactory(
                 mConfig,

@@ -10,6 +10,7 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
+import com.hartwig.hmftools.purple.purity.RegionFitCalcs;
 import com.hartwig.hmftools.purple.segment.ExpectedBAF;
 import com.hartwig.hmftools.common.utils.Doubles;
 
@@ -54,6 +55,7 @@ public class FittedRegionFactory
 
     public ObservedRegion fitRegion(final double purity, final double normFactor, final ObservedRegion observedRegion)
     {
+        /*
         final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
 
         double observedTumorRatio = observedRegion.observedTumorRatio();
@@ -71,23 +73,58 @@ public class FittedRegionFactory
 
         final double eventPenalty = EventPenalty.penalty(mPloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
         final double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
+        */
+
+        RegionFitCalcs regionFitCalcs = calculateRegionFit(purity, normFactor, observedRegion);
 
         ObservedRegion fittedRegion = ObservedRegion.from(observedRegion);
 
-        fittedRegion.setTumorCopyNumber(impliedCopyNumber);
-
-        fittedRegion.setTumorBAF(impliedBAF);
-        fittedRegion.setRefNormalisedCopyNumber(Doubles.replaceNaNWithZero(refNormalisedCopyNumber));
-        fittedRegion.setMinorAlleleCopyNumberDeviation(minorAllelePloidyDeviation);
-        fittedRegion.setMajorAlleleCopyNumberDeviation(majorAllelePloidyDeviation);
-        fittedRegion.setDeviationPenalty(deviationPenalty);
-        fittedRegion.setEventPenalty(eventPenalty);
+        fittedRegion.setTumorCopyNumber(regionFitCalcs.TumorCopyNumber);
+        fittedRegion.setTumorBAF(regionFitCalcs.TumorBAF);
+        fittedRegion.setRefNormalisedCopyNumber(regionFitCalcs.RefNormalisedCopyNumber);
+        fittedRegion.setMinorAlleleCopyNumberDeviation(regionFitCalcs.MinorAlleleCopyNumberDeviation);
+        fittedRegion.setMajorAlleleCopyNumberDeviation(regionFitCalcs.MajorAlleleCopyNumberDeviation);
+        fittedRegion.setDeviationPenalty(regionFitCalcs.DeviationPenalty);
+        fittedRegion.setEventPenalty(regionFitCalcs.EventPenalty);
 
         return fittedRegion;
     }
 
+    public RegionFitCalcs calculateRegionFit(final double purity, final double normFactor, final ObservedRegion observedRegion)
+    {
+        final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
+
+        RegionFitCalcs regionFitCalcs = new RegionFitCalcs(purity, normFactor);
+
+        // TO-DO remove local variables if also in RegionFitCalcs
+        double observedTumorRatio = observedRegion.observedTumorRatio();
+        double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
+        double observedBAF = observedRegion.observedBAF();
+        double impliedBAF = impliedBaf(purityAdjuster, observedRegion.chromosome(), impliedCopyNumber, observedBAF);
+
+        double refNormalisedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedTumorRatio, observedRegion.observedNormalRatio());
+
+        double majorAllelePloidy = impliedBAF * impliedCopyNumber;
+        double minorAllelePloidy = impliedCopyNumber - majorAllelePloidy;
+
+        double majorAllelePloidyDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
+        double minorAllelePloidyDeviation = mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
+
+        final double eventPenalty = EventPenalty.penalty(mPloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+        final double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
+
+        regionFitCalcs.TumorCopyNumber = impliedCopyNumber;
+        regionFitCalcs.TumorBAF = impliedBAF;
+        regionFitCalcs.RefNormalisedCopyNumber = Doubles.replaceNaNWithZero(refNormalisedCopyNumber);
+        regionFitCalcs.MinorAlleleCopyNumberDeviation = minorAllelePloidyDeviation;
+        regionFitCalcs.MajorAlleleCopyNumberDeviation = majorAllelePloidyDeviation;
+        regionFitCalcs.DeviationPenalty = deviationPenalty;
+        regionFitCalcs.EventPenalty = eventPenalty;
+
+        return regionFitCalcs;
+    }
+
     private static final double MIN_CN_THRESHOLD = 0.1;
-    // private static final double MIN_CN_THRESHOLD = 1;
 
     private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
             final double observedBAF)

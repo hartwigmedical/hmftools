@@ -9,8 +9,28 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
-public final class SomaticPenaltyFactory
+public final class SomaticPenaltyCalc
 {
+    public static double calcPenaltyNew(final PurityAdjuster purityAdjuster, final List<ObservedRegionData> regions)
+    {
+        final SomaticDeviation somaticDeviation = SomaticDeviation.INSTANCE;
+
+        double scoreTotal = 0;
+        int variantCount = 0;
+
+        for(ObservedRegionData region : regions)
+        {
+            for(SomaticVariant variant : region.Variants)
+            {
+                double score = somaticDeviation.deviationFromMax(purityAdjuster, region.Region, variant);
+                scoreTotal += score;
+                ++variantCount;
+            }
+        }
+
+        return variantCount == 0 ? 0 : scoreTotal / variantCount;
+    }
+
     public static double calcPenalty(
             final PurityAdjuster purityAdjuster, final Collection<ObservedRegion> regions, final List<SomaticVariant> variants)
     {
