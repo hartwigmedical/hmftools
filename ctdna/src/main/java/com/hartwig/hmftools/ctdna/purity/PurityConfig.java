@@ -44,6 +44,7 @@ public class PurityConfig
     public final String OutputId;
     public final boolean WriteSomatics;
     public final boolean WriteCnRatios;
+    public final boolean PlotCnFit;
     public final boolean WriteFilteredSomatics;
     public final double NoiseReadsPerMillion;
     public final double NoiseReadsPerMillionDualStrand;
@@ -60,6 +61,7 @@ public class PurityConfig
     private static final String WRITE_VARIANTS = "write_somatics";
     private static final String INCLUDE_FILTERED_VARIANTS = "write_filtered_somatics";
     private static final String WRITE_CN_RATIOS = "write_cn_ratios";
+    private static final String PLOT_CN = "plot_cn_fit";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
 
@@ -96,6 +98,7 @@ public class PurityConfig
         WriteSomatics = cmd.hasOption(WRITE_VARIANTS);
         WriteCnRatios = cmd.hasOption(WRITE_CN_RATIOS);
         WriteFilteredSomatics = cmd.hasOption(INCLUDE_FILTERED_VARIANTS);
+        PlotCnFit = cmd.hasOption(PLOT_CN);
         Threads = parseThreads(cmd);
     }
 
@@ -192,6 +195,7 @@ public class PurityConfig
         options.addOption(COBALT_DIR, true, "Sample Cobalt directory");
         options.addOption(WRITE_VARIANTS, false, "Write variants");
         options.addOption(WRITE_CN_RATIOS, false, "Write copy number segment GC ratio summary");
+        options.addOption(PLOT_CN, false, "Plot copy number / GC ratio fit");
         options.addOption(INCLUDE_FILTERED_VARIANTS, false, "Include filtered somatic variants in output (not purity calcs)");
 
         options.addOption(

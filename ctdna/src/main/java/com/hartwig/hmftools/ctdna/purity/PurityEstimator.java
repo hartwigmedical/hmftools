@@ -68,6 +68,25 @@ public class PurityEstimator
         }
 
         mResultsWriter.close();
+
+        if(mConfig.PlotCnFit && mConfig.WriteCnRatios)
+        {
+            boolean hasError = false;
+            for(SampleData sample : mConfig.Samples)
+            {
+                for(String sampleId : sample.CtDnaSamples)
+                {
+                    if(!CopyNumberProfile.plotCopyNumberGcRatioFit(sample.PatientId, sampleId, mConfig))
+                    {
+                        hasError = true;
+                        break;
+                    }
+                }
+
+                if(hasError)
+                    break;
+            }
+        }
     }
 
     private class PurityTask implements Callable

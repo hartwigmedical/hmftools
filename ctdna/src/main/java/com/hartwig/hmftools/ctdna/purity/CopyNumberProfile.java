@@ -5,6 +5,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.Integers.median;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.CnPurityResult.INVALID_RESULT;
+import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.CN_SEGMENT_FILE_ID;
+import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.SUMMARY_FILE_ID;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -21,6 +23,7 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
 import org.apache.logging.log4j.Level;
@@ -58,8 +61,6 @@ public class CopyNumberProfile
         }
     }
 
-    public List<CopyNumberGcData> copyNumberGcRatios() { return mCopyNumberGcRatios; }
-
     public CnPurityResult processSample(final String sampleId, final PurityContext purityContext)
     {
         mCopyNumberGcRatios.clear();
@@ -83,7 +84,9 @@ public class CopyNumberProfile
             buildCopyNumberGcRatios(cobaltRatios);
 
             if(mResultsWriter != null)
+            {
                 mCopyNumberGcRatios.forEach(x -> mResultsWriter.writeCnSegmentData(mSample.PatientId, sampleId, x));
+            }
 
             double samplePloidy = purityContext.bestFit().ploidy();
 
@@ -159,5 +162,29 @@ public class CopyNumberProfile
         List<Integer> segmentGcCounts = Lists.newArrayList();
         mCopyNumberGcRatios.forEach(x -> segmentGcCounts.add(x.count()));
         return median(segmentGcCounts);
+    }
+
+    private void plotCopyNumberGcRatioFit(final String sampleId)
+    {
+        plotCopyNumberGcRatioFit(mSample.PatientId, sampleId, mConfig);
+    }
+
+    public static boolean plotCopyNumberGcRatioFit(final String patientId, final String sampleId, final PurityConfig config)
+    {
+        try
+        {
+            String summaryFile = config.formFilename(SUMMARY_FILE_ID);
+            String cnSegmentsFile = config.formFilename(CN_SEGMENT_FILE_ID);
+
+            int runCode = RExecutor.executeFromClasspath(
+                    "plots/CopyNumberGcRatioPlot.R", patientId, sampleId, summaryFile, cnSegmentsFile, config.OutputDir);
+
+            return runCode == 0;
+        }
+        catch(Exception e)
+        {
+            CT_LOGGER.error("failed to generate CN plot with R script: {}", e.toString());
+            return false;
+        }
     }
 }
