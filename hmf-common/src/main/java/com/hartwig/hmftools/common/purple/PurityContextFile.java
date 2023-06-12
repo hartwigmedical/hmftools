@@ -161,7 +161,8 @@ public final class PurityContextFile
         int tumorMutationalLoad = tml.contains(".") ?
                 Integer.parseInt(tml.substring(0, tml.indexOf("."))) : Integer.parseInt(tml);
 
-        RunMode runMode = RunMode.valueOf(values[fieldsIndexMap.get("runMode")]);
+        RunMode runMode = fieldsIndexMap.containsKey("runMode") ?
+                RunMode.valueOf(values[fieldsIndexMap.get("runMode")]) : RunMode.TUMOR_GERMLINE;
 
         builder.score(score)
                 .bestFit(fittedPurity)
