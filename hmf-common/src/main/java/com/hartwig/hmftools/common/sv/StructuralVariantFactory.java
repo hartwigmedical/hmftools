@@ -136,7 +136,29 @@ public class StructuralVariantFactory
     public static boolean isSingleBreakend(final VariantContext context)
     {
         final byte[] altBases = context.getAlternateAllele(0).getDisplayBases();
+        return isSingleBreakend(altBases);
+    }
+
+    public static boolean isSingleBreakend(final byte[] altBases)
+    {
         return altBases.length > 0 && (altBases[0] == SINGLE_BREAKEND_BYTE || altBases[altBases.length - 1] == SINGLE_BREAKEND_BYTE);
+    }
+
+    public static byte parseSingleOrientation(final VariantContext context)
+    {
+        final String alt = context.getAlternateAllele(0).getDisplayString();
+        return (byte) (alt.startsWith(".") ? -1 : 1);
+    }
+
+    public static byte parseSvOrientation(final VariantContext context)
+    {
+        final String alt = context.getAlternateAllele(0).getDisplayString();
+        final Matcher match = BREAKEND_REGEX.matcher(alt);
+
+        if(!match.matches())
+            return (byte)0;
+
+        return (byte) (match.group(1).length() > 0 ? 1 : -1);
     }
 
     public void addVariantContext(final VariantContext context)

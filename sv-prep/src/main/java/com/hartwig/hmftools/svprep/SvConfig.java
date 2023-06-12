@@ -86,7 +86,6 @@ public class SvConfig
     // throttling and down-sampling - off by default
     public final int JunctionFragmentCap;
     public final int MaxPartitionReads;
-    public final boolean ApplyDownsampling;
     public final boolean CaptureDepth;
     public final boolean NoCleanUp;
 
@@ -94,7 +93,7 @@ public class SvConfig
 
     // config strings
     public static final String SAMPLE = "sample";
-    private static final String BAM_FILE = "bam_file";
+    public static final String BAM_FILE = "bam_file";
     private static final String KNOWN_FUSION_BED = "known_fusion_bed";
     public static final String BLACKLIST_BED = "blacklist_bed";
     private static final String EXISTING_JUNCTION_FILE = "existing_junction_file";
@@ -105,9 +104,8 @@ public class SvConfig
     private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
     private static final String PARTITION_SIZE = "partition_size";
 
-    private static final String LOG_READ_IDS = "log_read_ids";
+    public static final String LOG_READ_IDS = "log_read_ids";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
-    private static final String APPLY_DOWNSAMPLING = "apply_downsampling";
     private static final String CAPTURE_DEPTH = "capture_depth";
     private static final String TRACK_REMOTES = "track_remotes";
     private static final String NO_CACHE_BAM = "no_cache_bam";
@@ -189,7 +187,6 @@ public class SvConfig
         MaxPartitionReads = Integer.parseInt(cmd.getOptionValue(MAX_PARTITION_READS, "0"));
         JunctionFragmentCap = Integer.parseInt(cmd.getOptionValue(JUNCTION_FRAGS_CAP, "0"));
         CaptureDepth = cmd.hasOption(CAPTURE_DEPTH);
-        ApplyDownsampling = cmd.hasOption(APPLY_DOWNSAMPLING);
         TrackRemotes = cmd.hasOption(TRACK_REMOTES);
         NoCleanUp = cmd.hasOption(NO_CLEAN_UP);
         PerfDebug = cmd.hasOption(PERF_DEBUG);
@@ -286,7 +283,6 @@ public class SvConfig
         LogReadIds = Lists.newArrayList();
         Threads = 1;
         MaxPartitionReads = 0;
-        ApplyDownsampling = false;
         TrackRemotes = true;
         UseCacheBam = false;
         PerfDebug = false;
@@ -317,7 +313,6 @@ public class SvConfig
         options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
         options.addOption(MAX_PARTITION_READS, true, "Limit to stop processing reads in partition, for debug");
         options.addOption(CAPTURE_DEPTH, false, "Capture depth for junctions");
-        options.addOption(APPLY_DOWNSAMPLING, false, "Apply downsampling of reads in high-depth regions");
         options.addOption(NO_CACHE_BAM, false, "Write a BAM to cache candidate reads");
         options.addOption(TRACK_REMOTES, false, "Track support for remote junctions");
         options.addOption(NO_TRIM_READ_ID, false, "Use a shortened readId internally");

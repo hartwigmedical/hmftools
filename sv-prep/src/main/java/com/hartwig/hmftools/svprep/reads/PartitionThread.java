@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.SvCommon.createBamSlicer;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,9 +50,7 @@ public class PartitionThread extends Thread
                         .validationStringency(mConfig.BamStringency)
                         .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(0, false, true, false);
-        mBamSlicer.setKeepUnmapped();
-        mBamSlicer.setKeepHardClippedSecondaries();
+        mBamSlicer = createBamSlicer();
 
         start();
     }

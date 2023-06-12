@@ -45,8 +45,6 @@ public class PartitionSlicer
     private final PartitionStats mStats;
     private final CombinedStats mCombinedStats;
 
-    private final ReadRateTracker mReadRateTracker;
-    private boolean mRateLimitTriggered;
     private boolean mLogReadIds;
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -76,19 +74,6 @@ public class PartitionSlicer
 
         mSamReader = samReader;
         mBamSlicer = bamSlicer;
-
-        if(mConfig.ApplyDownsampling)
-        {
-            int rateSegmentLength = mConfig.PartitionSize / DOWN_SAMPLE_FRACTION;
-            int downsampleThreshold = DOWN_SAMPLE_THRESHOLD / DOWN_SAMPLE_FRACTION;
-            mReadRateTracker = new ReadRateTracker(rateSegmentLength, mRegion.start(), downsampleThreshold);
-        }
-        else
-        {
-            mReadRateTracker = null;
-        }
-
-        mRateLimitTriggered = false;
 
         ChrBaseRegion excludedRegion = getPolyGRegion(mConfig.RefGenVersion);
         mFilterRegion = region.overlaps(excludedRegion) ? excludedRegion : null;
@@ -140,9 +125,6 @@ public class PartitionSlicer
             mPerfCounters.addAll(mJunctionTracker.perfCounters());
 
         mCombinedStats.addPerfCounters(mPerfCounters);
-
-        if(mRateLimitTriggered)
-            System.gc();
     }
 
     private static final boolean LOG_READ_ONLY = false;
@@ -179,9 +161,6 @@ public class PartitionSlicer
             else if(LOG_READ_ONLY)
                 return;
         }
-
-        if(readStart > 0 && !checkReadRateLimits(readStart))
-            return;
 
         int filters = mReadFilters.checkFilters(record);
 
@@ -301,32 +280,4 @@ public class PartitionSlicer
     }
 
     private void perfCounterStop(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).stop(); }
-
-    private boolean checkReadRateLimits(int positionStart)
-    {
-        if(mReadRateTracker == null)
-            return true;
-
-        boolean wasLimited = mReadRateTracker.isRateLimited();
-        int lastSegementReadCount = mReadRateTracker.readCount();
-
-        boolean handleRead = mReadRateTracker.handleRead(positionStart);
-
-        if(wasLimited != mReadRateTracker.isRateLimited())
-        {
-            if(mReadRateTracker.isRateLimited())
-            {
-                SV_LOGGER.info("region({}) rate limited with read count({}) at position({})",
-                        mRegion, lastSegementReadCount, positionStart);
-                mRateLimitTriggered = true;
-            }
-            else
-            {
-                SV_LOGGER.info("region({}) rate limit cleared at position({}), last read count({})",
-                        mRegion, positionStart, lastSegementReadCount);
-            }
-        }
-
-        return handleRead;
-    }
 }

@@ -13,7 +13,8 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -26,6 +27,7 @@ import com.hartwig.hmftools.common.sv.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -34,13 +36,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
@@ -64,9 +63,9 @@ public class DepthAnnotator
 
     public void run()
     {
-        if(mConfig.InputVcf == null || mConfig.OutputVcf == null)
+        if(mConfig.InputVcf == null || !Files.exists(Paths.get(mConfig.InputVcf)) || mConfig.OutputVcf == null)
         {
-            SV_LOGGER.error("missing VCF");
+            SV_LOGGER.error("missing VCF config or file");
             System.exit(1);
         }
 
@@ -80,10 +79,9 @@ public class DepthAnnotator
 
         long startTimeMs = System.currentTimeMillis();
 
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                mConfig.InputVcf, new VCFCodec(), false);
+        VcfFileReader reader = new VcfFileReader(mConfig.InputVcf);
 
-        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+        VCFHeader vcfHeader = reader.vcfHeader();
 
         if(!establishGenotypeIds(vcfHeader))
         {
@@ -122,7 +120,7 @@ public class DepthAnnotator
                 variantsList.add(newVariant);
             }
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             SV_LOGGER.error("error reading vcf({}): {}", mConfig.InputVcf, e.toString());
             System.exit(1);
