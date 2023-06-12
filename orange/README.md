@@ -217,6 +217,11 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
+- [2.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.5.0)
+    - Bugfix: Maintain linx clusters after ORANGE germline conversion
+    - Include breakdown by classifier in CUPPA predictions
+    - Fixed bug that used invalid RNA gene expression cohort percentiles for CUP tumors and prevented high-expression findings
+    - Added new PURPLE variant effects: `PHASED_MISSENSE` and `PHASED_SYNONYMOUS`
 - [2.4.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.1)
     - Fixes java.lang.IllegalStateException occurring when sample has virus integration.
 - [2.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.0)

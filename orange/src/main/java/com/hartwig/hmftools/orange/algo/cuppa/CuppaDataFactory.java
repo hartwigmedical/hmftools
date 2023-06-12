@@ -1,12 +1,17 @@
 package com.hartwig.hmftools.orange.algo.cuppa;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.cuppa.ClassifierType;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.cuppa.DataTypes;
+import com.hartwig.hmftools.common.cuppa.ResultType;
 import com.hartwig.hmftools.common.cuppa.SvDataType;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
@@ -37,29 +42,43 @@ public final class CuppaDataFactory {
     }
 
     @NotNull
-    private static List<CuppaPrediction> extractPredictions(@NotNull List<CuppaDataFile> entries) {
-        String bestCombinedType = determineBestCombinedDataType(entries);
+    private static List<CuppaPrediction> extractPredictions(@NotNull List<CuppaDataFile> files) {
+        String bestCombinedType = determineBestCombinedDataType(files);
         if (bestCombinedType == null) {
             LOGGER.warn("Could not find a valid combined data type amongst cuppa entries");
             return Lists.newArrayList();
         }
 
-        List<CuppaPrediction> predictions = Lists.newArrayList();
+        Map<String, CuppaDataFile> filesByType = files.stream()
+                .filter(entry -> entry.Result.equals(ResultType.CLASSIFIER))
+                .collect(Collectors.toMap(file -> file.DataType, file -> file));
 
-        for (CuppaDataFile entry : entries) {
-            if (entry.DataType.equals(bestCombinedType)) {
-                for (Map.Entry<String, Double> cancerTypeEntry : entry.CancerTypeValues.entrySet()) {
-                    predictions.add(ImmutableCuppaPrediction.builder()
-                            .cancerType(cancerTypeEntry.getKey())
-                            .likelihood(cancerTypeEntry.getValue())
-                            .build());
-                }
-            }
-        }
+        Map<ClassifierType, Map<String, Double>> predictionsByClassifier = Stream.of(ClassifierType.SNV_96_PAIRWISE,
+                        ClassifierType.GENOMIC_POSITION_COHORT,
+                        ClassifierType.FEATURE,
+                        ClassifierType.ALT_SJ_COHORT,
+                        ClassifierType.EXPRESSION_PAIRWISE)
+                .collect(Collectors.toMap(classifier -> classifier, classifier -> predictionsForClassifier(filesByType, classifier)));
 
-        predictions.sort(new CuppaPredictionComparator());
+        return filesByType.get(bestCombinedType).CancerTypeValues.entrySet().stream().map(cancerPrediction -> {
+            String cancerType = cancerPrediction.getKey();
+            return ImmutableCuppaPrediction.builder()
+                    .cancerType(cancerType)
+                    .likelihood(cancerPrediction.getValue())
+                    .snvPairwiseClassifier(predictionsByClassifier.get(ClassifierType.SNV_96_PAIRWISE).get(cancerType))
+                    .genomicPositionClassifier(predictionsByClassifier.get(ClassifierType.GENOMIC_POSITION_COHORT).get(cancerType))
+                    .featureClassifier(predictionsByClassifier.get(ClassifierType.FEATURE).get(cancerType))
+                    .altSjCohortClassifier(predictionsByClassifier.get(ClassifierType.ALT_SJ_COHORT).get(cancerType))
+                    .expressionPairwiseClassifier(predictionsByClassifier.get(ClassifierType.EXPRESSION_PAIRWISE).get(cancerType))
+                    .build();
+        }).sorted(new CuppaPredictionComparator()).collect(Collectors.toList());
+    }
 
-        return predictions;
+    @NotNull
+    private static Map<String, Double> predictionsForClassifier(@NotNull Map<String, CuppaDataFile> filesByType,
+            @NotNull ClassifierType classifierType) {
+        CuppaDataFile cuppaDataFile = filesByType.get(classifierType.toString());
+        return cuppaDataFile == null ? Collections.emptyMap() : cuppaDataFile.CancerTypeValues;
     }
 
     @Nullable

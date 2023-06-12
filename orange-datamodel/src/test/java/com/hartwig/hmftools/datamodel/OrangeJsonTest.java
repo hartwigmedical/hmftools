@@ -337,6 +337,11 @@ public class OrangeJsonTest {
         CuppaPrediction prediction = cuppa.predictions().iterator().next();
         assertEquals("Melanoma", prediction.cancerType());
         assertEquals(0.996, prediction.likelihood(), EPSILON);
+        assertEquals(0.979, prediction.snvPairwiseClassifier(), EPSILON);
+        assertEquals(0.990, prediction.genomicPositionClassifier(), EPSILON);
+        assertEquals(0.972, prediction.featureClassifier(), EPSILON);
+        assertNull(prediction.altSjCohortClassifier());
+        assertNull(prediction.expressionPairwiseClassifier());
     }
 
     private static void assertVirusInterpreter(@NotNull VirusInterpreterData virusInterpreter) {
