@@ -54,7 +54,10 @@ public final class CuppaDataFactory {
                 .collect(Collectors.toMap(file -> file.DataType, file -> file));
 
         Map<ClassifierType, Map<String, Double>> predictionsByClassifier = Stream.of(ClassifierType.SNV_96_PAIRWISE,
-                ClassifierType.GENOMIC_POSITION_COHORT, ClassifierType.FEATURE, ClassifierType.ALT_SJ_COHORT, ClassifierType.EXPRESSION_PAIRWISE)
+                        ClassifierType.GENOMIC_POSITION_COHORT,
+                        ClassifierType.FEATURE,
+                        ClassifierType.ALT_SJ_COHORT,
+                        ClassifierType.EXPRESSION_PAIRWISE)
                 .collect(Collectors.toMap(classifier -> classifier, classifier -> predictionsForClassifier(filesByType, classifier)));
 
         return filesByType.get(bestCombinedType).CancerTypeValues.entrySet().stream().map(cancerPrediction -> {
@@ -71,7 +74,9 @@ public final class CuppaDataFactory {
         }).sorted(new CuppaPredictionComparator()).collect(Collectors.toList());
     }
 
-    private static Map<String, Double> predictionsForClassifier(Map<String, CuppaDataFile> filesByType, ClassifierType classifierType) {
+    @NotNull
+    private static Map<String, Double> predictionsForClassifier(@NotNull Map<String, CuppaDataFile> filesByType,
+            @NotNull ClassifierType classifierType) {
         CuppaDataFile cuppaDataFile = filesByType.get(classifierType.toString());
         return cuppaDataFile == null ? Collections.emptyMap() : cuppaDataFile.CancerTypeValues;
     }

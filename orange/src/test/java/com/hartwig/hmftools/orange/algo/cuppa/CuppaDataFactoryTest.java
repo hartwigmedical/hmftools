@@ -46,8 +46,11 @@ public class CuppaDataFactoryTest {
             CuppaPrediction actual = actualPredictionsByCancerType.get(expected.cancerType());
             assertNotNull(actual);
             List<Function<CuppaPrediction, Double>> functionsToVerify = List.of(CuppaPrediction::likelihood,
-                    CuppaPrediction::snvPairwiseClassifier, CuppaPrediction::genomicPositionClassifier, CuppaPrediction::featureClassifier,
-                    CuppaPrediction::altSjCohortClassifier, CuppaPrediction::expressionPairwiseClassifier);
+                    CuppaPrediction::snvPairwiseClassifier,
+                    CuppaPrediction::genomicPositionClassifier,
+                    CuppaPrediction::featureClassifier,
+                    CuppaPrediction::altSjCohortClassifier,
+                    CuppaPrediction::expressionPairwiseClassifier);
             for (Function<CuppaPrediction, Double> function : functionsToVerify) {
                 assertCuppaPredictionField(expected, actual, function);
             }
@@ -92,7 +95,8 @@ public class CuppaDataFactoryTest {
                 .build();
     }
 
-    private void assertCuppaPredictionField(@NotNull CuppaPrediction expected, @NotNull CuppaPrediction actual, @NotNull Function<CuppaPrediction, Double> function) {
+    private static void assertCuppaPredictionField(@NotNull CuppaPrediction expected, @NotNull CuppaPrediction actual,
+            @NotNull Function<CuppaPrediction, Double> function) {
         Double expectedValue = function.apply(expected);
         Double actualValue = function.apply(actual);
         if (expectedValue == null) {
