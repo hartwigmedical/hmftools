@@ -21,6 +21,9 @@ public interface PurpleVariant extends Variant {
     @NotNull
     List<PurpleTranscriptImpact> otherImpacts();
 
+    @Nullable
+    List<PurpleTranscriptImpact> otherNonCDKN2AImpacts();
+
     @NotNull
     Hotspot hotspot();
 

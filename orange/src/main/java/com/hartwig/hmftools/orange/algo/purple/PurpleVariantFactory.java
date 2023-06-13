@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.variant.MultipleTranscriptSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.Hotspot;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
@@ -41,13 +44,14 @@ public class PurpleVariantFactory {
 
         List<PurpleVariant> purpleVariants = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
-            purpleVariants.add(toPurpleVariant(variant));
+
+            purpleVariants.add(toPurpleVariant((MultipleTranscriptSomaticVariant) variant));
         }
         return purpleVariants;
     }
 
     @NotNull
-    private PurpleVariant toPurpleVariant(@NotNull SomaticVariant variant) {
+    private PurpleVariant toPurpleVariant(@NotNull MultipleTranscriptSomaticVariant variant) {
         com.hartwig.hmftools.common.variant.AllelicDepth nullable = variant.rnaDepth();
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.valueOf(variant.type().name()))
@@ -72,6 +76,7 @@ public class PurpleVariantFactory {
                 .repeatCount(variant.repeatCount())
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .localPhaseSets(variant.localPhaseSets())
+                .otherNonCDKN2AImpacts(variant.transcripts().stream().map(this::extractNonCDKN2AImpacts).collect(Collectors.toList()))
                 .build();
     }
 
@@ -80,6 +85,14 @@ public class PurpleVariantFactory {
         return ImmutablePurpleAllelicDepth.builder()
                 .alleleReadCount(variant.alleleReadCount())
                 .totalReadCount(variant.totalReadCount())
+                .build();
+    }
+
+    private PurpleTranscriptImpact extractNonCDKN2AImpacts(VariantTranscriptImpact impact) {
+        return ImmutablePurpleTranscriptImpact.builder()
+                .transcript(impact.Transcript)
+                .hgvsCodingImpact(impact.HgvsCoding)
+                .hgvsProteinImpact(impact.HgvsProtein)
                 .build();
     }
 
