@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,15 +45,22 @@ public class PurpleVariantFactory {
 
         List<PurpleVariant> purpleVariants = Lists.newArrayList();
         for (SomaticVariant variant : variants) {
-
-            purpleVariants.add(toPurpleVariant((MultipleTranscriptSomaticVariant) variant));
+            purpleVariants.add(toPurpleVariant(variant));
         }
         return purpleVariants;
     }
 
     @NotNull
-    private PurpleVariant toPurpleVariant(@NotNull MultipleTranscriptSomaticVariant variant) {
+    private PurpleVariant toPurpleVariant(@NotNull SomaticVariant variant) {
         com.hartwig.hmftools.common.variant.AllelicDepth nullable = variant.rnaDepth();
+        List<PurpleTranscriptImpact> otherNonCDKN2AImpacts;
+        if (variant instanceof MultipleTranscriptSomaticVariant) {
+            MultipleTranscriptSomaticVariant multipleTranscriptSomaticVariant = (MultipleTranscriptSomaticVariant) variant;
+            otherNonCDKN2AImpacts = multipleTranscriptSomaticVariant.transcripts().stream().map(this::extractNonCDKN2AImpacts).collect(Collectors.toList());
+        } else {
+            otherNonCDKN2AImpacts = Collections.emptyList();
+        }
+
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.valueOf(variant.type().name()))
                 .gene(variant.gene())
@@ -76,7 +84,7 @@ public class PurpleVariantFactory {
                 .repeatCount(variant.repeatCount())
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .localPhaseSets(variant.localPhaseSets())
-                .otherNonCDKN2AImpacts(variant.transcripts().stream().map(this::extractNonCDKN2AImpacts).collect(Collectors.toList()))
+                .otherNonCDKN2AImpacts(otherNonCDKN2AImpacts)
                 .build();
     }
 
@@ -93,6 +101,7 @@ public class PurpleVariantFactory {
                 .transcript(impact.Transcript)
                 .hgvsCodingImpact(impact.HgvsCoding)
                 .hgvsProteinImpact(impact.HgvsProtein)
+                .spliceRegion(impact.SpliceRegion)
                 .build();
     }
 
