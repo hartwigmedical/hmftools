@@ -105,6 +105,12 @@ public class SvAppend
         int breakendCount = 0;
         for(VariantContext variant : vcfFileReader.iterator())
         {
+            if(!mConfig.SpecificRegions.isEmpty())
+            {
+                if(mConfig.SpecificRegions.stream().noneMatch(x -> x.containsPosition(variant.getContig(), variant.getStart())))
+                    continue;
+            }
+
             String chromosome = mConfig.RefGenVersion.versionedChromosome(variant.getContig());
 
             List<BreakendData> breakends = mChrBreakendMap.get(chromosome);

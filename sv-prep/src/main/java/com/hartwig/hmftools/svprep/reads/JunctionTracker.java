@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.svprep.append.AppendConstants.JUNCTION_DISTANCE_BUFFER;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.formDiscordantJunctions;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.isDiscordantGroup;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
@@ -1047,8 +1048,20 @@ public class JunctionTracker
 
     private boolean junctionHasSupport(final JunctionData junctionData)
     {
-        if(mConfig.AppendMode) // only keep those previously identified
-            return junctionData.isExisting();
+        if(mConfig.AppendMode) // only keep those previously identified or within the permitted buffer of one
+        {
+            if(junctionData.isExisting())
+                return true;
+
+            if(mJunctions.stream()
+                    .filter(x -> x.isExisting() && x.Orientation == junctionData.Orientation)
+                    .anyMatch(x -> abs(x.Position - junctionData.Position) <= JUNCTION_DISTANCE_BUFFER))
+            {
+                return true;
+            }
+
+            return false;
+        }
 
         // first deal with junctions loaded from another sample - keep these if they've found any possible support
         if(junctionData.isExisting())

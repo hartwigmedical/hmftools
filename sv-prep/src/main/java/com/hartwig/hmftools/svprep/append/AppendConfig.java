@@ -52,8 +52,8 @@ public class AppendConfig
     public final List<String> LogReadIds;
     public final List<ChrBaseRegion> SpecificRegions;
 
-    private static final String INPUT_VCF = "input_vcf";
-    private static final String OUTPUT_VCF = "output_vcf";
+    public static final String INPUT_VCF = "input_vcf";
+    public static final String OUTPUT_VCF = "output_vcf";
 
     public AppendConfig(final CommandLine cmd)
     {

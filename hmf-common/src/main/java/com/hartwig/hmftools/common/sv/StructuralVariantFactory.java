@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.sv;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -58,8 +60,8 @@ public class StructuralVariantFactory
     public static final String ALLELE_FRACTION = "AF";
     public static final String ALLELE_FRACTION_DESC = "Allele fraction";
 
-    public static final String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
-    public static final String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "BVF";
+    public static final String SV_FRAGMENT_COUNT = "VF";
+    public static final String SGL_FRAGMENT_COUNT = "BVF";
 
     public static final String REF_READ_COVERAGE = "REF";
     public static final String REF_READ_COVERAGE_DESC = "Count of reads mapping across this breakend";
@@ -147,7 +149,7 @@ public class StructuralVariantFactory
     public static byte parseSingleOrientation(final VariantContext context)
     {
         final String alt = context.getAlternateAllele(0).getDisplayString();
-        return (byte) (alt.startsWith(".") ? -1 : 1);
+        return alt.startsWith(".") ? NEG_ORIENT : POS_ORIENT;
     }
 
     public static byte parseSvOrientation(final VariantContext context)
@@ -158,7 +160,7 @@ public class StructuralVariantFactory
         if(!match.matches())
             return (byte)0;
 
-        return (byte) (match.group(1).length() > 0 ? 1 : -1);
+        return match.group(1).length() > 0 ? POS_ORIENT : NEG_ORIENT;
     }
 
     public void addVariantContext(final VariantContext context)
@@ -226,10 +228,10 @@ public class StructuralVariantFactory
         }
 
         // Local orientation determined by the positioning of the anchoring bases
-        final byte startOrientation = (byte) (match.group(1).length() > 0 ? 1 : -1);
+        final byte startOrientation = (byte) (match.group(1).length() > 0 ? POS_ORIENT : NEG_ORIENT);
 
         // Other orientation determined by the direction of the brackets
-        final byte endOrientation = (byte) (match.group(2).equals("]") ? 1 : -1);
+        final byte endOrientation = (byte) (match.group(2).equals("]") ? POS_ORIENT : NEG_ORIENT);
 
         // Grab the inserted sequence by removing 1 base from the reference anchoring bases
         String insertedSequence = match.group(1).length() > 0 ?
@@ -297,7 +299,7 @@ public class StructuralVariantFactory
         final String alt = context.getAlternateAllele(0).getDisplayString();
 
         // local orientation determined by the positioning of the anchoring bases
-        final byte orientation = (byte) (alt.startsWith(".") ? -1 : 1);
+        final byte orientation = alt.startsWith(".") ? NEG_ORIENT : POS_ORIENT;
         final int refLength = context.getReference().length();
 
         final String insertedSequence = orientation == -1 ?
@@ -445,12 +447,12 @@ public class StructuralVariantFactory
         if(referenceOrdinal >= 0 && context.getGenotype(referenceOrdinal) != null)
         {
             Genotype geno = context.getGenotype(referenceOrdinal);
-            if(geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
-                    VARIANT_FRAGMENT_BREAKEND_COVERAGE))
+            if(geno.hasExtendedAttribute(SV_FRAGMENT_COUNT) || geno.hasExtendedAttribute(
+                    SGL_FRAGMENT_COUNT))
             {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
-                        ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
-                        : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
+                        ? SV_FRAGMENT_COUNT
+                        : SGL_FRAGMENT_COUNT));
                 Integer ref = asInteger(geno.getExtendedAttribute(REF_READ_COVERAGE));
                 Integer refpair = asInteger(geno.getExtendedAttribute(REF_READPAIR_COVERAGE));
                 builder.normalVariantFragmentCount(var);
@@ -461,12 +463,12 @@ public class StructuralVariantFactory
         if(context.getGenotype(tumorOrdinal) != null)
         {
             Genotype geno = context.getGenotype(tumorOrdinal);
-            if(geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
-                    VARIANT_FRAGMENT_BREAKEND_COVERAGE))
+            if(geno.hasExtendedAttribute(SV_FRAGMENT_COUNT) || geno.hasExtendedAttribute(
+                    SGL_FRAGMENT_COUNT))
             {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
-                        ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
-                        : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
+                        ? SV_FRAGMENT_COUNT
+                        : SGL_FRAGMENT_COUNT));
                 Integer ref = asInteger(geno.getExtendedAttribute(REF_READ_COVERAGE));
                 Integer refpair = asInteger(geno.getExtendedAttribute(REF_READPAIR_COVERAGE));
                 builder.tumorVariantFragmentCount(var);

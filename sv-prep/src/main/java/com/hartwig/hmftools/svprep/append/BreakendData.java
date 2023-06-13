@@ -1,14 +1,20 @@
 package com.hartwig.hmftools.svprep.append;
 
+import static java.lang.Math.max;
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSingleOrientation;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSvOrientation;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
-import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
 import com.hartwig.hmftools.svprep.reads.ReadType;
 
@@ -22,6 +28,7 @@ public class BreakendData
     public final boolean IsSingle;
 
     private final int[] mReadTypeSupport;
+    private final int[] mUmiTypeCounts;
     private int mDepth;
 
     private final VariantContext mVariant;
@@ -36,6 +43,7 @@ public class BreakendData
         mVariant = variant;
 
         mReadTypeSupport = new int[ReadType.values().length];
+        mUmiTypeCounts = new int[UmiReadType.values().length];
         mDepth = 0;
     }
 
@@ -48,25 +56,64 @@ public class BreakendData
 
     public VariantContext variant() { return mVariant; }
 
-    public void setJunctionData(final JunctionData junctionData)
+    public void addJunctionData(final List<JunctionData> junctions)
     {
-        for(Map.Entry<ReadType, List<ReadRecord>> entry : junctionData.ReadTypeReads.entrySet())
-        {
-            mReadTypeSupport[entry.getKey().ordinal()] = entry.getValue().size();
-        }
+        Set<String> processedReads = Sets.newHashSet();
 
-        mDepth = junctionData.depth();
+        for(JunctionData junctionData : junctions)
+        {
+            for(Map.Entry<ReadType, List<ReadRecord>> entry : junctionData.ReadTypeReads.entrySet())
+            {
+                ReadType readType = entry.getKey();
+                List<ReadRecord> reads = entry.getValue();
+
+                if(!supportsJunction(readType))
+                    continue;
+
+                for(ReadRecord read : reads)
+                {
+                    if(processedReads.contains(read.id()))
+                        continue;
+
+                    processedReads.add(read.id());
+
+                    ++mReadTypeSupport[readType.ordinal()];
+
+                    String umiType = read.record().getStringAttribute(UMI_TYPE_ATTRIBUTE);
+
+                    UmiReadType umiReadType = umiType != null ? UmiReadType.valueOf(umiType) : UmiReadType.NONE;
+                    ++mUmiTypeCounts[umiReadType.ordinal()];
+                }
+            }
+
+            mDepth = max(mDepth, junctionData.depth());
+        }
     }
 
-    public final int[] readTypeSupport() { return mReadTypeSupport; }
+    private static boolean supportsJunction(final ReadType readType)
+    {
+        return readType == ReadType.JUNCTION || readType == ReadType.EXACT_SUPPORT; //  || readType == ReadType.SUPPORT
+    }
+
+    // public final int[] readTypeSupport() { return mReadTypeSupport; }
 
     public int totalSupport()
     {
-        return mReadTypeSupport[ReadType.JUNCTION.ordinal()]
-                + mReadTypeSupport[ReadType.EXACT_SUPPORT.ordinal()]
-                + mReadTypeSupport[ReadType.SUPPORT.ordinal()];
+        int total = 0;
+
+        for(ReadType readType : ReadType.values())
+        {
+            if(supportsJunction(readType))
+                total += mReadTypeSupport[readType.ordinal()];
+        }
+
+        return total;
     }
 
     public int depth() { return mDepth; }
+
+    public int[] umiTypeCounts() { return mUmiTypeCounts; }
+
+    public String toString() { return format("%s:%d:%d", mVariant.getContig(), Position, Orientation); }
 
 }

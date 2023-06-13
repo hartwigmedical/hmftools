@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.svprep.append;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvCommon.createBamSlicer;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.svprep.append.AppendConstants.BREAKEND_PROXIMITY;
+import static com.hartwig.hmftools.svprep.append.AppendConstants.JUNCTION_DISTANCE_BUFFER;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
@@ -65,7 +68,7 @@ public class RegionTask implements Callable
         List<JunctionData> junctions = breakends.stream()
                 .map(x -> new JunctionData(x.Position, x.Orientation, null)).collect(Collectors.toList());
 
-        mBreakends.forEach(x -> mBreakendTracker.addExistingJunctions(junctions));
+        mBreakendTracker.addExistingJunctions(junctions);
 
         mTotalReads = 0;
 
@@ -83,13 +86,14 @@ public class RegionTask implements Callable
 
         SV_LOGGER.debug("region({}) complete, total reads({})", mRegion, mTotalReads);
 
-        for(JunctionData junctionData : mBreakendTracker.junctions())
+        for(BreakendData breakendData : mBreakends)
         {
-            BreakendData breakendData = mBreakends.stream()
-                    .filter(x -> x.Position == junctionData.Position && x.Orientation == junctionData.Orientation)
-                    .findFirst().orElse(null);
+            List<JunctionData> junctions = mBreakendTracker.junctions().stream()
+                    .filter(x -> abs(x.Position - breakendData.Position) <= JUNCTION_DISTANCE_BUFFER
+                            && x.Orientation == breakendData.Orientation)
+                    .collect(Collectors.toList());
 
-            breakendData.setJunctionData(junctionData);
+            breakendData.addJunctionData(junctions);
         }
 
         mBreakendTracker.clear();

@@ -6,8 +6,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
@@ -135,8 +135,8 @@ public class BlacklistExplorer
                     + variantContext.getAttributeAsInt(REF_READPAIR_COVERAGE, 0);
 
             Genotype tumor = variantContext.getGenotype(1);
-            int tumorFrags = getGenotypeAttributeAsInt(tumor, VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0)
-                    + getGenotypeAttributeAsInt(tumor, VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0);
+            int tumorFrags = getGenotypeAttributeAsInt(tumor, SV_FRAGMENT_COUNT, 0)
+                    + getGenotypeAttributeAsInt(tumor, SGL_FRAGMENT_COUNT, 0);
 
             mWriter.write(format(",%.1f,%d,%d,%s",
                     variantContext.getPhredScaledQual(), tumorFrags, refDepth, filtersStr));

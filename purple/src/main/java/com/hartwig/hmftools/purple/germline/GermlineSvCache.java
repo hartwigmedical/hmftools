@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
@@ -39,13 +39,10 @@ import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
-import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
 import com.hartwig.hmftools.purple.sv.VariantContextCollection;
-
-import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.tribble.index.tabix.TabixFormat;
@@ -251,8 +248,8 @@ public class GermlineSvCache
         int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REF_READ_COVERAGE, 0)
                 + getGenotypeAttributeAsInt(genotype, REF_READPAIR_COVERAGE, 0);
 
-        int variantFrags = getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0) +
-                getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0);
+        int variantFrags = getGenotypeAttributeAsInt(genotype, SV_FRAGMENT_COUNT, 0) +
+                getGenotypeAttributeAsInt(genotype, SGL_FRAGMENT_COUNT, 0);
 
         double total = variantFrags + totalReadCoverage;
         return variantFrags / total;

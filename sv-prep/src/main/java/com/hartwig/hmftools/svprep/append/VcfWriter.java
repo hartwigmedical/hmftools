@@ -2,9 +2,14 @@ package com.hartwig.hmftools.svprep.append;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESCRIPTION;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.io.File;
@@ -12,7 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -26,7 +33,9 @@ import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFConstants;
+import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
 
 public class VcfWriter
 {
@@ -100,13 +109,16 @@ public class VcfWriter
         VCFHeader newHeader = new VCFHeader(vcfFileReader.vcfHeader());
         newHeader.getGenotypeSamples().add(mConfig.SampleId);
 
+        newHeader.addMetaDataLine(new VCFFormatHeaderLine(
+                UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
+
         // header.setSequenceDictionary(condensedDictionary);
         writer.writeHeader(newHeader);
 
         return writer;
     }
 
-    private static final List<Allele> NO_CALL = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
+    private static final List<Allele> NO_ALLELES = Lists.newArrayList(Allele.NO_CALL);
 
     private void writeBreakend(final VariantContextWriter writer, final BreakendData breakendData)
     {
@@ -119,9 +131,39 @@ public class VcfWriter
         int junctionSupport = breakendData.totalSupport();
         int refSupport = max(depth - junctionSupport, 0);
 
+        // Gridss does not write AD & DP, so instead for now write ref support into REF and junction support into VF and BVF
+        // and capture UMI counts if available
+        Map<String, Object> attributes = Maps.newHashMap();
+        attributes.put(REF_READ_COVERAGE, refSupport);
+
+        if(breakendData.IsSingle)
+        {
+            attributes.put(SGL_FRAGMENT_COUNT, junctionSupport);
+            attributes.put(SV_FRAGMENT_COUNT, 0);
+        }
+        else
+        {
+            attributes.put(SGL_FRAGMENT_COUNT, 0);
+            attributes.put(SV_FRAGMENT_COUNT, junctionSupport);
+        }
+
+        int[] umiTypeCounts = new int[UMI_TYPE_COUNT];
+
+        for(int i = 0; i < breakendData.umiTypeCounts().length; ++i)
+        {
+            umiTypeCounts[i + 3] = breakendData.umiTypeCounts()[i];
+        }
+
+        attributes.put(UMI_TYPE_COUNTS, umiTypeCounts);
+
+        gBuilder.attributes(attributes);
+        gBuilder.alleles(NO_ALLELES);
+
+        /*
         gBuilder.DP(depth)
                 .AD(new int[] { refSupport, junctionSupport })
                 .alleles(NO_CALL);
+        */
 
         genotypes.add(gBuilder.make());
 

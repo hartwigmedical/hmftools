@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svprep;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
 import static com.hartwig.hmftools.svprep.TestUtils.CHR_2;
 import static com.hartwig.hmftools.svprep.TestUtils.createSamRecord;
@@ -17,11 +17,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.j2objc.annotations.ReflectionSupport;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.svprep.depth.DepthConfig;
 import com.hartwig.hmftools.svprep.depth.DepthTask;
-import com.hartwig.hmftools.svprep.depth.RefSupportCounts;
 import com.hartwig.hmftools.svprep.depth.VariantInfo;
 
 import org.junit.Test;
@@ -288,15 +286,15 @@ public class DepthAnnotationTest
         List<Allele> alleles = Lists.newArrayList();
 
         alleles.add(Allele.create("A", true));
-        alleles.add(Allele.create("T", false));
+        alleles.add(Allele.create("T[2:500[", false));
 
         Map<String,Object> commonAttributes = Maps.newHashMap();
-        commonAttributes.put(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 1);
+        commonAttributes.put(SV_FRAGMENT_COUNT, 1);
 
         Map<String,Object> genotypeAttributes = Maps.newHashMap();
 
         // defaults to indicate a somatic variant
-        genotypeAttributes.put(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 1);
+        genotypeAttributes.put(SV_FRAGMENT_COUNT, 1);
 
         Genotype genotype = new GenotypeBuilder()
                 .attributes(genotypeAttributes)
