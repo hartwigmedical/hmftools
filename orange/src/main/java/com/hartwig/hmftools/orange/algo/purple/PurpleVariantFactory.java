@@ -53,12 +53,12 @@ public class PurpleVariantFactory {
     @NotNull
     private PurpleVariant toPurpleVariant(@NotNull SomaticVariant variant) {
         com.hartwig.hmftools.common.variant.AllelicDepth nullable = variant.rnaDepth();
-        List<PurpleTranscriptImpact> otherNonCDKN2AImpacts;
+        List<PurpleTranscriptImpact> otherNonCDKN2ARelatedImpacts;
         if (variant instanceof MultipleTranscriptSomaticVariant) {
             MultipleTranscriptSomaticVariant multipleTranscriptSomaticVariant = (MultipleTranscriptSomaticVariant) variant;
-            otherNonCDKN2AImpacts = multipleTranscriptSomaticVariant.transcripts().stream().map(this::extractNonCDKN2AImpacts).collect(Collectors.toList());
+            otherNonCDKN2ARelatedImpacts = multipleTranscriptSomaticVariant.transcripts().stream().map(this::extractNonCDKN2AImpacts).collect(Collectors.toList());
         } else {
-            otherNonCDKN2AImpacts = Collections.emptyList();
+            otherNonCDKN2ARelatedImpacts = Collections.emptyList();
         }
 
         return ImmutablePurpleVariant.builder()
@@ -84,7 +84,7 @@ public class PurpleVariantFactory {
                 .repeatCount(variant.repeatCount())
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .localPhaseSets(variant.localPhaseSets())
-                .otherNonCDKN2AImpacts(otherNonCDKN2AImpacts)
+                .otherNonCDKN2ARelatedImpacts(otherNonCDKN2ARelatedImpacts)
                 .build();
     }
 
