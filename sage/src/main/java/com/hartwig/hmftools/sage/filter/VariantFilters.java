@@ -155,7 +155,7 @@ public class VariantFilters
             filters.add(SoftFilter.STRAND_BIAS.filterName());
         }
 
-        if(tier != VariantTier.HOTSPOT && belowMinAverageBaseQuality(primaryTumor))
+        if(belowMinAverageBaseQuality(primaryTumor, tier))
         {
             filters.add(SoftFilter.MIN_AVG_BASE_QUALITY.filterName());
         }
@@ -180,9 +180,12 @@ public class VariantFilters
         return Doubles.lessThan(primaryTumor.vaf(), config.MinTumorVaf);
     }
 
-    private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor)
+    private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor, final VariantTier tier)
     {
-        return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
+        if(tier == VariantTier.HOTSPOT)
+            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
+        else
+            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
     }
 
     // normal and paired tumor-normal tests
