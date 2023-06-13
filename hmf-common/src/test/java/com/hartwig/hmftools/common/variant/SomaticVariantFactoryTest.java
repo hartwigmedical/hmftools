@@ -55,7 +55,7 @@ public class SomaticVariantFactoryTest {
     public void canReadCorrectSomaticVariant() {
         final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:59,60:120";
 
-        final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
+        final SomaticVariant variant = assertedGet((Optional) victim.createVariant(SAMPLE, codec.decode(line)));
         assertEquals("15", variant.chromosome());
         assertEquals(12345678, variant.position());
         assertEquals(VariantType.SNP, variant.type());
@@ -70,7 +70,7 @@ public class SomaticVariantFactoryTest {
     @Test
     public void handleZeroReadCount() {
         final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:0,0:0";
-        final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(line));
+        final Optional<SomaticVariant> missingAFVariant = (Optional)victim.createVariant(SAMPLE, codec.decode(line));
         assertFalse(missingAFVariant.isPresent());
     }
 
@@ -78,11 +78,11 @@ public class SomaticVariantFactoryTest {
     public void incorrectSampleFieldYieldsMissingReadCounts() {
         final String missingAFLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:DP\t0/1:21";
 
-        final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(missingAFLine));
+        final Optional<SomaticVariant> missingAFVariant = (Optional)victim.createVariant(SAMPLE, codec.decode(missingAFLine));
         assertFalse(missingAFVariant.isPresent());
 
         final String missingRefCovLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:60:121";
-        final Optional<SomaticVariant> missingRefCovVariant = victim.createVariant(SAMPLE, codec.decode(missingRefCovLine));
+        final Optional<SomaticVariant> missingRefCovVariant = (Optional)victim.createVariant(SAMPLE, codec.decode(missingRefCovLine));
         assertFalse(missingRefCovVariant.isPresent());
     }
 
