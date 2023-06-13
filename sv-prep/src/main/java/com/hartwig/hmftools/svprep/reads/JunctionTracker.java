@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_MAP_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.UNPAIRED_READ_JUNCTION_DISTANCE;
+import static com.hartwig.hmftools.svprep.append.AppendConstants.JUNCTION_DISTANCE_BUFFER;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.formDiscordantJunctions;
 import static com.hartwig.hmftools.svprep.reads.DiscordantGroups.isDiscordantGroup;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
@@ -60,7 +61,7 @@ import htsjdk.samtools.CigarElement;
 public class JunctionTracker
 {
     private final ChrBaseRegion mRegion;
-    private final SvConfig mConfig;
+    private final JunctionsConfig mConfig;
     private final ReadFilterConfig mFilterConfig;
     private final List<BaseRegion> mBlacklistRegions;
     private final List<ChrBaseRegion> mHotspotRegions;
@@ -69,7 +70,7 @@ public class JunctionTracker
     private final Map<String,ReadGroup> mReadGroupMap; // keyed by readId
     private final Set<String> mExpectedReadIds; // as indicated by another partition
     private final List<ReadGroup> mExpectedReadGroups;
-    private final List<ReadGroup> mRemoteCandidateReadGroups; // reads with their mate(s) in another partition, but not suppporting a junction
+    private final List<ReadGroup> mRemoteCandidateReadGroups; // reads with their mate(s) in another partition, but not supporting a junction
     private final List<ReadGroup> mCandidateDiscordantGroups;
 
     private final List<JunctionData> mJunctions; // ordered by position
@@ -90,7 +91,13 @@ public class JunctionTracker
     };
 
     public JunctionTracker(
-            final ChrBaseRegion region, final SvConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
+            final ChrBaseRegion region, final SvConfig svConfig, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
+    {
+        this(region, JunctionsConfig.from(svConfig), hotspotCache, blacklist);
+    }
+
+    public JunctionTracker(
+            final ChrBaseRegion region, final JunctionsConfig config, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
     {
         mRegion = region;
         mConfig = config;
@@ -128,6 +135,16 @@ public class JunctionTracker
         {
             mPerfCounters.add(pc.ordinal(), new PerformanceCounter(pc.toString()));
         }
+    }
+
+    public void clear()
+    {
+        mReadGroupMap.clear();
+        mExpectedReadIds.clear();
+        mExpectedReadGroups.clear();
+        mRemoteCandidateReadGroups.clear();
+        mCandidateDiscordantGroups.clear();
+        mJunctions.clear();
     }
 
     public List<JunctionData> junctions() { return mJunctions; }
@@ -325,12 +342,13 @@ public class JunctionTracker
                     readGroup.addJunctionPosition(junctionData.Position);
                 }
             }
-            else
+            else if(!mConfig.AppendMode)
             {
                 mRemoteCandidateReadGroups.add(readGroup);
             }
 
-            if(!hasBlacklistedRead && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
+            if(!hasBlacklistedRead && !mConfig.AppendMode
+            && isDiscordantGroup(readGroup, mFilterConfig.fragmentLengthMin(), mFilterConfig.fragmentLengthMax()))
             {
                 mCandidateDiscordantGroups.add(readGroup);
             }
@@ -341,7 +359,7 @@ public class JunctionTracker
 
     public void findDiscordantGroups()
     {
-        if(mConfig.UnpairedReads)
+        if(mConfig.UnpairedReads || mConfig.AppendMode)
             return;
 
         perfCounterStart(PerfCounters.DiscordantGroups);
@@ -1030,6 +1048,21 @@ public class JunctionTracker
 
     private boolean junctionHasSupport(final JunctionData junctionData)
     {
+        if(mConfig.AppendMode) // only keep those previously identified or within the permitted buffer of one
+        {
+            if(junctionData.isExisting())
+                return true;
+
+            if(mJunctions.stream()
+                    .filter(x -> x.isExisting() && x.Orientation == junctionData.Orientation)
+                    .anyMatch(x -> abs(x.Position - junctionData.Position) <= JUNCTION_DISTANCE_BUFFER))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         // first deal with junctions loaded from another sample - keep these if they've found any possible support
         if(junctionData.isExisting())
             return junctionData.totalFragmentCount() > 0;

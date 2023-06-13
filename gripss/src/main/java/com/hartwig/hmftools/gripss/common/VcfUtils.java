@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPA
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.TAF;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 
 import java.util.List;
@@ -36,8 +36,8 @@ public class VcfUtils
 
     // read counts
     public static final String VT_SR = "SR";
-    public static final String VT_VF = VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
-    public static final String VT_BVF = VARIANT_FRAGMENT_BREAKEND_COVERAGE;
+    public static final String VT_VF = SV_FRAGMENT_COUNT;
+    public static final String VT_BVF = SGL_FRAGMENT_COUNT;
     public static final String VT_RP = "RP";
     public static final String VT_IC = "IC";
     public static final String VT_REF = REF_READ_COVERAGE;

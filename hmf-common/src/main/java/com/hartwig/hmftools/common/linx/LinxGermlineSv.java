@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.linx;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getDoubleValue;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
@@ -137,7 +137,7 @@ public final class LinxGermlineSv
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("svId")
                 .add("vcfId")
                 .add("chromosomeStart")
@@ -181,7 +181,7 @@ public final class LinxGermlineSv
 
     private static String toString(final LinxGermlineSv germlineSv)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(germlineSv.SvId))
                 .add(germlineSv.VcfId)
                 .add(germlineSv.ChromosomeStart)
@@ -225,14 +225,14 @@ public final class LinxGermlineSv
 
     static List<LinxGermlineSv> fromLines(final List<String> lines)
     {
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
         lines.remove(0);
 
         List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
 
         for(final String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             germlineSVs.add(new LinxGermlineSv(
                     getIntValue(fieldsIndexMap, "svId", values),

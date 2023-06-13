@@ -654,7 +654,6 @@ DROP TABLE IF EXISTS purity;
 CREATE TABLE purity
 (   id int NOT NULL AUTO_INCREMENT,
     modified DATETIME NOT NULL,
-    version VARCHAR(20) NOT NULL,
     sampleId varchar(50) NOT NULL,
     gender varchar(20) NOT NULL,
     runMode varchar(20) NOT NULL,

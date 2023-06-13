@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.rna;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -7,7 +9,7 @@ public class RnaCommon
 {
     public static final String ISF_FILE_ID = ".isf.";
 
-    public static final String DELIMITER = ",";
+    public static final String DELIMITER = CSV_DELIM;
 
     // field names shared across various Isofox files
     public static final String FLD_GENE_ID = "GeneId";

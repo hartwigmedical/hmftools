@@ -2,12 +2,14 @@ package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
 
@@ -17,6 +19,10 @@ public class ResultsWriter
     private final BufferedWriter mSampleWriter;
     private final BufferedWriter mVariantWriter;
     private final BufferedWriter mCnRatioWriter;
+
+    public static final String SUMMARY_FILE_ID = "summary";
+    public static final String SOMATICS_FILE_ID = "somatic_variants";
+    public static final String CN_SEGMENT_FILE_ID = "cn_segments";
 
     public ResultsWriter(final PurityConfig config)
     {
@@ -30,7 +36,7 @@ public class ResultsWriter
     {
         try
         {
-            String fileName = mConfig.formFilename("summary");
+            String fileName = mConfig.formFilename(SUMMARY_FILE_ID);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -75,14 +81,20 @@ public class ResultsWriter
     {
         try
         {
-            String fileName = mConfig.formFilename("somatic_variants");
+            String fileName = mConfig.formFilename(SOMATICS_FILE_ID);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            if(mConfig.multipleSamples())
-                writer.write("PatientId\t");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            writer.write("SampleId\tChromosome\tPosition\tRef\tAlt\tFilter\tTier\tType\tRepeatCount\tMappability\tSubclonalPerc\tAD\tDP\tQualPerAD");
+            if(mConfig.multipleSamples())
+                sj.add("PatientId");
+
+            sj.add("SampleId").add("Chromosome").add("Position").add("Ref").add("Alt");
+            sj.add("Filter").add("Tier").add("Type").add("RepeatCount").add("Mappability").add("SubclonalPerc");
+            sj.add("TumorDP").add("TumorAD");
+            sj.add("SampleDP").add("SampleAD").add("SampleRefDual").add("SampleAlleleDual").add("SampleQualPerAD");
+            writer.write(sj.toString());
             writer.newLine();
 
             return writer;
@@ -96,29 +108,36 @@ public class ResultsWriter
 
     public synchronized void writeVariant(
             final String patientId, final String sampleId, final SomaticVariant variant, final GenotypeFragments sampleData,
-            final String filter)
+            final GenotypeFragments tumorData, final String filter)
     {
         if(mVariantWriter == null)
             return;
 
         try
         {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
             if(mConfig.multipleSamples())
-                mVariantWriter.write(format("%s\t", patientId));
+                sj.add(patientId);
 
-            mVariantWriter.write(format("%s\t%s\t%d\t%s\t%s\t%s",
-                    sampleId, variant.Chromosome, variant.Position, variant.Ref, variant.Alt, filter));
+            sj.add(sampleId).add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
 
-            mVariantWriter.write(format("\t%s\t%s\t%d\t%.3f\t%.3f",
-                    variant.Tier, variant.Type, variant.RepeatCount, variant.Mappability, variant.SubclonalPerc));
+            sj.add(filter).add(variant.Tier.toString()).add(variant.Type.toString()).add(String.valueOf(variant.RepeatCount))
+                    .add(format("%.2f", variant.Mappability)).add(format("%.2f", variant.SubclonalPerc));
 
-            mVariantWriter.write(format("\t%d\t%d\t%.1f", sampleData.AlleleCount, sampleData.Depth, sampleData.qualPerAlleleFragment()));
+            sj.add(String.valueOf(tumorData.Depth)).add(String.valueOf(tumorData.AlleleCount));
+            sj.add(String.valueOf(sampleData.UmiCounts.total())).add(String.valueOf(sampleData.UmiCounts.alleleTotal()));
+            sj.add(String.valueOf(sampleData.UmiCounts.RefDual)).add(String.valueOf(sampleData.UmiCounts.AlleleDual));
+            sj.add(format("%.1f", sampleData.qualPerAlleleFragment()));
+
+            mVariantWriter.write(sj.toString());
 
             mVariantWriter.newLine();
         }
         catch(IOException e)
         {
             CT_LOGGER.error("failed to write output file: {}", e.toString());
+            System.exit(1);
         }
     }
 
@@ -126,7 +145,7 @@ public class ResultsWriter
     {
         try
         {
-            String fileName = mConfig.formFilename("cn_segments");
+            String fileName = mConfig.formFilename(CN_SEGMENT_FILE_ID);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -172,6 +191,18 @@ public class ResultsWriter
         closeBufferedWriter(mVariantWriter);
         closeBufferedWriter(mSampleWriter);
         closeBufferedWriter(mCnRatioWriter);
+    }
+
+    public void flush()
+    {
+        try
+        {
+            mCnRatioWriter.flush();
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to flush copy number segment file: {}", e.toString());
+        }
     }
 
     public static String formatPurityValue(double purity)

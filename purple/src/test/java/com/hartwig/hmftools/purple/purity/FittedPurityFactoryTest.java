@@ -8,7 +8,6 @@ import org.junit.Test;
 
 public class FittedPurityFactoryTest
 {
-
     private static final double EPSILON = 1e-10;
 
     @Test

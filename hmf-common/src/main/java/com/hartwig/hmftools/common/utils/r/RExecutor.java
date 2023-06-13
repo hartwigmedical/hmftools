@@ -36,12 +36,13 @@ import htsjdk.samtools.util.IOUtil;
  * THE SOFTWARE.
  */
 
-public final class RExecutor {
-
+public final class RExecutor
+{
     private static final String R_EXE = "Rscript";
     private static final Logger LOGGER = LogManager.getLogger(RExecutor.class);
 
-    public static int executeFromClasspath(final String rScriptName, final String... arguments) throws IOException, InterruptedException {
+    public static int executeFromClasspath(final String rScriptName, final String... arguments) throws IOException, InterruptedException
+    {
         final File scriptFile = writeScriptFile(rScriptName);
 
         final int returnCode = executeFromFile(rScriptName, scriptFile, arguments);
@@ -50,7 +51,8 @@ public final class RExecutor {
     }
 
     private static int executeFromFile(final String rScriptName, final File scriptFile, final String... arguments)
-            throws IOException, InterruptedException {
+            throws IOException, InterruptedException
+    {
         final String[] command = new String[arguments.length + 2];
         command[0] = R_EXE;
         command[1] = scriptFile.getAbsolutePath();
@@ -61,36 +63,50 @@ public final class RExecutor {
 
         LOGGER.info(String.format("Executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
         int result = new ProcessBuilder(command).redirectError(errorFile).redirectOutput(outputFile).start().waitFor();
-        if (result != 0) {
+        if(result != 0)
+        {
             LOGGER.fatal("Error executing R script. Examine error file {} for details.", errorFile.toString());
         }
 
         return result;
     }
 
-    private static File writeScriptFile(final String rScriptName) throws IOException {
+    private static File writeScriptFile(final String rScriptName) throws IOException
+    {
         InputStream scriptStream = null;
         OutputStream scriptFileStream = null;
-        try {
+        try
+        {
             scriptStream = RExecutor.class.getClassLoader().getResourceAsStream(rScriptName);
-            if (scriptStream == null) {
+            if(scriptStream == null)
+            {
                 throw new IllegalArgumentException("Script [" + rScriptName + "] not found in classpath");
             }
             final File scriptFile = File.createTempFile("script", ".R");
             scriptFileStream = IOUtil.openFileForWriting(scriptFile);
             IOUtil.copyStream(scriptStream, scriptFileStream);
             return scriptFile;
-        } finally {
-            if (scriptStream != null) {
-                try {
+        }
+        finally
+        {
+            if(scriptStream != null)
+            {
+                try
+                {
                     scriptStream.close();
-                } catch (IOException ignored) {
+                }
+                catch(IOException ignored)
+                {
                 }
             }
-            if (scriptFileStream != null) {
-                try {
+            if(scriptFileStream != null)
+            {
+                try
+                {
                     scriptFileStream.close();
-                } catch (IOException ignored) {
+                }
+                catch(IOException ignored)
+                {
                 }
             }
         }

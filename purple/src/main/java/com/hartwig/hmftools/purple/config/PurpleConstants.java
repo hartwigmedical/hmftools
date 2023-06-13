@@ -22,6 +22,10 @@ public class PurpleConstants
     public static final int TARGET_REGIONS_MAX_DELETED_GENES = 1500;
     public static final double ASSUMED_BIALLELIC_FRACTION = 0.2;
 
+    // purity fitting
+    public static final double MAX_DIPLOID_COPY_NUMBER = 1.2;
+    public static final double MIN_DIPLOID_COPY_NUMBER = 0.8;
+
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.linx;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -23,8 +24,6 @@ public abstract class LinxCluster
     public abstract String resolvedType();
     public abstract int clusterCount();
     public abstract String clusterDesc();
-
-    public static final String DELIMITER = "\t";
 
     private static final String FILE_EXTENSION = ".linx.clusters.tsv";
     private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.clusters.tsv";
@@ -62,13 +61,13 @@ public abstract class LinxCluster
         final String header = lines.get(0);
         lines.remove(0);
 
-        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header,DELIMITER);
+        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
         List<LinxCluster> clusters = Lists.newArrayList();
 
         for(int i = 0; i < lines.size(); ++i)
         {
-            String[] values = lines.get(i).split(DELIMITER);
+            String[] values = lines.get(i).split(TSV_DELIM);
 
             clusters.add(ImmutableLinxCluster.builder()
                     .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))
@@ -85,7 +84,7 @@ public abstract class LinxCluster
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("clusterId")
                 .add("category")
                 .add("synthetic")
@@ -97,7 +96,7 @@ public abstract class LinxCluster
 
     private static String toString(final LinxCluster cluster)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(cluster.clusterId()))
                 .add(String.valueOf(cluster.category()))
                 .add(String.valueOf(cluster.synthetic()))

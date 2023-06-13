@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
 import static com.hartwig.hmftools.common.purple.BestFit.bestFitPerPurity;
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -45,12 +45,12 @@ public final class FittedPurityRangeFile
         List<String> lines = Files.readAllLines(new File(filePath).toPath());
 
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             fittedPurities.add(ImmutableFittedPurity.builder()
                     .purity(Double.parseDouble(values[fieldsIndexMap.get(PURITY)]))
@@ -95,7 +95,7 @@ public final class FittedPurityRangeFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add(PURITY)
                 .add(NORM_FACTOR)
                 .add(SCORE)
@@ -108,7 +108,7 @@ public final class FittedPurityRangeFile
     @NotNull
     private static String toString(final FittedPurity purity)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(FORMAT.format(purity.purity()))
                 .add(FORMAT.format(purity.normFactor()))
                 .add(FORMAT.format(purity.score()))

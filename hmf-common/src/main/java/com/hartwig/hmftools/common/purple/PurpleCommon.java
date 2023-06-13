@@ -15,8 +15,6 @@ public final class PurpleCommon
     public static final String PURPLE_SV_VCF_SUFFIX = ".purple.sv.vcf.gz";
     public static final String PURPLE_SV_GERMLINE_VCF_SUFFIX = ".purple.sv.germline.vcf.gz";
 
-    public static final String DELIMITER = "\t";
-
     public static String purpleSomaticVcfFile(final String purpleDir, final String sampleId)
     {
         return FileWriterUtils.checkAddDirSeparator(purpleDir) + sampleId + PURPLE_SOMATIC_VCF_SUFFIX;

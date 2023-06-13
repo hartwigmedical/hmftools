@@ -38,9 +38,7 @@ public final class Doubles
         return value - reference > -EPSILON;
     }
 
-    public static double replaceNaNWithZero(double value) {
-        return Double.isNaN(value) ? 0d : value;
-    }
+    public static double replaceNaNWithZero(double value) { return Double.isNaN(value) ? 0d : value; }
 
     public static boolean positive(double value) {
         return greaterThan(value, 0);

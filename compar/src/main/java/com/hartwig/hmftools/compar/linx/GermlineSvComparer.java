@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
@@ -97,7 +97,7 @@ public class GermlineSvComparer implements ItemComparer
             else
             {
                 List<String> rawGermlineSvs = Files.readAllLines(Paths.get(germlineSvFile));
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(rawGermlineSvs.get(0), DELIMITER);
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(rawGermlineSvs.get(0), TSV_DELIM);
                 Integer reportedIndex = fieldsIndexMap.get("reported");
 
                 if(reportedIndex == null)
@@ -108,7 +108,7 @@ public class GermlineSvComparer implements ItemComparer
                 for(int i = 0; i < germlineSvs.size(); ++i)
                 {
                     LinxGermlineSv germlineSv = germlineSvs.get(i);
-                    String[] values = rawGermlineSvs.get(i).split(DELIMITER, -1);
+                    String[] values = rawGermlineSvs.get(i).split(TSV_DELIM, -1);
                     boolean isReported = Boolean.parseBoolean(values[reportedIndex]);
                     items.add(new GermlineSvData(germlineSv, isReported));
                 }

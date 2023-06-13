@@ -14,7 +14,6 @@ public final class PurpleTestFactory {
     public static PurpleData createMinimalTestPurpleData()
     {
         PurityContext minimalContext = ImmutablePurityContext.builder()
-                .version(Strings.EMPTY)
                 .gender(Gender.FEMALE)
                 .runMode(RunMode.TUMOR_GERMLINE)
                 .targeted(false)

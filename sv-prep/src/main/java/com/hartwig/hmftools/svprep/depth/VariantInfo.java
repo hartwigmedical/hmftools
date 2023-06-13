@@ -4,9 +4,11 @@ import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.CIPOS;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.isSingleBreakend;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSingleOrientation;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSvOrientation;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
@@ -53,8 +55,8 @@ public class VariantInfo
 
     private static int genotypeFragments(final VariantContext variant, int genotypeIndex)
     {
-        Object sglFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE);
-        Object svFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(VARIANT_FRAGMENT_BREAKEND_COVERAGE);
+        Object sglFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(SV_FRAGMENT_COUNT);
+        Object svFrags = variant.getGenotype(genotypeIndex).getExtendedAttribute(SGL_FRAGMENT_COUNT);
         return max(sglFrags != null ? Integer.parseInt(sglFrags.toString()) : 0, svFrags != null ? Integer.parseInt(svFrags.toString()) : 0);
     }
 
@@ -76,16 +78,7 @@ public class VariantInfo
 
     private static byte getOrientation(final VariantContext variant)
     {
-        String alt = variant.getAlternateAllele(0).getDisplayString();
-
-        if(isSingleBreakend(variant))
-        {
-            return alt.startsWith(".") ? NEG_ORIENT : POS_ORIENT;
-        }
-        else
-        {
-            return alt.startsWith("]") || alt.startsWith("[") ? NEG_ORIENT : POS_ORIENT;
-        }
+        return isSingleBreakend(variant) ? parseSingleOrientation(variant) : parseSvOrientation(variant);
     }
 
     public String toString()

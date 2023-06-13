@@ -101,7 +101,6 @@ public class SomaticVariantResult
         sj.add("QualPerAdTotal");
         sj.add("TumorVaf");
         sj.add("AdjustedTumorVaf");
-        sj.add("SampleVaf");
         sj.add("DepthMedian");
         sj.add("NonZeroDepthCount");
         sj.add("NonZeroDepthMedian");

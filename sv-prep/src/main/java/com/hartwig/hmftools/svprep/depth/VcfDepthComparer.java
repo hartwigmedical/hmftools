@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -29,11 +30,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 
 public class VcfDepthComparer
 {
@@ -69,40 +67,38 @@ public class VcfDepthComparer
 
         SV_LOGGER.info("loading VCF({})", mVcfFile);
 
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                mVcfFile, new VCFCodec(), false);
+        VcfFileReader reader = new VcfFileReader(mVcfFile);
+
+        if(!reader.fileValid())
+        {
+            SV_LOGGER.error("error reading vcf({})", mVcfFile);
+            System.exit(1);
+        }
 
         List<String> oldVcfTags = Lists.newArrayList(REF_READ_COVERAGE, REF_READPAIR_COVERAGE);
         List<String> newVcfTags = oldVcfTags.stream().map(x -> format("%s_%s", mNewVcfTagPrefix, x)).collect(Collectors.toList());
 
-        try
+        for(VariantContext variant : reader.iterator())
         {
-            for(VariantContext variant : reader.iterator())
+            for(Genotype genotype : variant.getGenotypes())
             {
-                for(Genotype genotype : variant.getGenotypes())
+                if(genotype.getExtendedAttributes() == null || genotype.getExtendedAttributes().isEmpty())
+                    continue;
+
+                for(int i = 0; i < oldVcfTags.size(); ++i)
                 {
-                    if(genotype.getExtendedAttributes() == null || genotype.getExtendedAttributes().isEmpty())
-                        continue;
+                    String oldTag = oldVcfTags.get(i);
+                    String newTag = newVcfTags.get(i);
 
-                    for(int i = 0; i < oldVcfTags.size(); ++i)
+                    int oldValue = getGenotypeAttributeAsInt(genotype, oldTag, 0);
+                    int newValue = getGenotypeAttributeAsInt(genotype, newTag, 0);
+
+                    if(hasDiff(oldValue, newValue))
                     {
-                        String oldTag = oldVcfTags.get(i);
-                        String newTag = newVcfTags.get(i);
-
-                        int oldValue = getGenotypeAttributeAsInt(genotype, oldTag, 0);
-                        int newValue = getGenotypeAttributeAsInt(genotype, newTag, 0);
-
-                        if(hasDiff(oldValue, newValue))
-                        {
-                            writeDiffs(variant, oldTag, genotype.getSampleName(), oldValue, newValue);
-                        }
+                        writeDiffs(variant, oldTag, genotype.getSampleName(), oldValue, newValue);
                     }
                 }
             }
-        }
-        catch(IOException e)
-        {
-            SV_LOGGER.error("error reading vcf({}): {}", mVcfFile, e.toString());
         }
 
         closeBufferedWriter(mWriter);
