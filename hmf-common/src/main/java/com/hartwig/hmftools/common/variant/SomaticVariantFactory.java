@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -130,7 +131,7 @@ public class SomaticVariantFactory implements VariantContextFilter
             {
                 if(mFilter.test(variant))
                 {
-                    Optional<SomaticVariant> varOptional = createVariant(tumor, reference, rna, variant);
+                    Optional<MultipleTranscriptSomaticVariant> varOptional = createVariant(tumor, reference, rna, variant);
 
                     if(varOptional.isPresent())
                     {
@@ -150,12 +151,12 @@ public class SomaticVariantFactory implements VariantContextFilter
         }
     }
 
-    public Optional<SomaticVariant> createVariant(final String sample, final VariantContext context)
+    public Optional<MultipleTranscriptSomaticVariant> createVariant(final String sample, final VariantContext context)
     {
         return createVariant(sample, null, null, context);
     }
 
-    public Optional<SomaticVariant> createVariant(final String sample, @Nullable final String reference,
+    public Optional<MultipleTranscriptSomaticVariant> createVariant(final String sample, @Nullable final String reference,
             @Nullable final String rna, final VariantContext context)
     {
         final Genotype genotype = context.getGenotype(sample);
@@ -179,24 +180,24 @@ public class SomaticVariantFactory implements VariantContextFilter
 
             if(tumorDepth.totalReadCount() > 0)
             {
-                ImmutableSomaticVariantImpl.Builder builder = createVariantBuilder(tumorDepth, context);
+                ImmutableMultipleTranscriptSomaticVariantImpl.Builder builder = createVariantBuilder(tumorDepth, context);
                 builder.genotypeStatus(genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN);
 
                 return Optional.of(builder)
                         .map(x -> x.rnaDepth(rnaDepth.orElse(null)))
                         .map(x -> x.referenceDepth(referenceDepth.orElse(null)))
-                        .map(ImmutableSomaticVariantImpl.Builder::build);
+                        .map(ImmutableMultipleTranscriptSomaticVariantImpl.Builder::build);
             }
         }
         return Optional.empty();
     }
 
-    private static ImmutableSomaticVariantImpl.Builder createVariantBuilder(final AllelicDepth allelicDepth, final VariantContext context)
+    private static ImmutableMultipleTranscriptSomaticVariantImpl.Builder createVariantBuilder(final AllelicDepth allelicDepth, final VariantContext context)
     {
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
         final VariantImpact variantImpact = decorator.variantImpact();
 
-        ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
+        ImmutableMultipleTranscriptSomaticVariantImpl.Builder builder = ImmutableMultipleTranscriptSomaticVariantImpl.builder()
                 .qual(decorator.qual())
                 .type(decorator.type())
                 .filter(decorator.filter())
@@ -236,7 +237,8 @@ public class SomaticVariantFactory implements VariantContextFilter
                 .clinvarInfo(context.getAttributeAsString(CLNSIG, ""))
                 .gnomadFrequency(context.getAttributeAsDouble(GNOMAD_FREQ, 0))
                 .somaticLikelihood(SomaticLikelihood.valueOf(
-                        context.getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, SomaticLikelihood.UNKNOWN.toString())));
+                        context.getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, SomaticLikelihood.UNKNOWN.toString())))
+                .transcripts(VariantTranscriptImpact.fromVariantContext(context));
 
         if(context.hasAttribute(LOCAL_PHASE_SET))
         {
