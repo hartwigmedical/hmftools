@@ -32,6 +32,6 @@ public interface PurpleTranscriptImpact {
     @NotNull
     Set<PurpleVariantEffect> effects();
 
-    @NotNull
+    @Nullable
     PurpleCodingEffect codingEffect();
 }
