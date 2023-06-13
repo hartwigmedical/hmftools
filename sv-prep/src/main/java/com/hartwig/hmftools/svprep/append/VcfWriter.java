@@ -11,6 +11,9 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS_DESCRIPTION;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.append.AppendConstants.JUNCTION_FRAGMENTS;
+import static com.hartwig.hmftools.svprep.append.AppendConstants.JUNCTION_FRAGMENTS_DESCRIPTION;
+import static com.hartwig.hmftools.svprep.append.AppendConstants.JUNCTION_FRAGMENT_TYPE_COUNT;
 
 import java.io.File;
 import java.util.List;
@@ -21,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.svprep.reads.ReadType;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -95,24 +99,15 @@ public class VcfWriter
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
-         /*
-        final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
-        for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
-        {
-            if(HumanChromosome.contains(sequence.getContig()) || MitochondrialChromosome.contains(sequence.getContig()))
-            {
-                condensedDictionary.addSequence(sequence);
-            }
-        }
-         */
-
         VCFHeader newHeader = new VCFHeader(vcfFileReader.vcfHeader());
         newHeader.getGenotypeSamples().add(mConfig.SampleId);
 
         newHeader.addMetaDataLine(new VCFFormatHeaderLine(
                 UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
 
-        // header.setSequenceDictionary(condensedDictionary);
+        newHeader.addMetaDataLine(new VCFFormatHeaderLine(
+                JUNCTION_FRAGMENTS, JUNCTION_FRAGMENT_TYPE_COUNT, VCFHeaderLineType.Integer, JUNCTION_FRAGMENTS_DESCRIPTION));
+
         writer.writeHeader(newHeader);
 
         return writer;
@@ -155,6 +150,12 @@ public class VcfWriter
         }
 
         attributes.put(UMI_TYPE_COUNTS, umiTypeCounts);
+
+        int[] juncFragCounts = new int[JUNCTION_FRAGMENT_TYPE_COUNT];
+        juncFragCounts[0] = breakendData.readTypeSupport()[ReadType.JUNCTION.ordinal()];
+        juncFragCounts[1] = breakendData.readTypeSupport()[ReadType.EXACT_SUPPORT.ordinal()];
+        juncFragCounts[2] = breakendData.readTypeSupport()[ReadType.SUPPORT.ordinal()];
+        attributes.put(JUNCTION_FRAGMENTS, juncFragCounts);
 
         gBuilder.attributes(attributes);
         gBuilder.alleles(NO_ALLELES);

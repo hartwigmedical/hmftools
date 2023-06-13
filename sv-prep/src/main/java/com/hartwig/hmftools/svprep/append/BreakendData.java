@@ -95,7 +95,7 @@ public class BreakendData
         return readType == ReadType.JUNCTION || readType == ReadType.EXACT_SUPPORT; //  || readType == ReadType.SUPPORT
     }
 
-    // public final int[] readTypeSupport() { return mReadTypeSupport; }
+    public final int[] readTypeSupport() { return mReadTypeSupport; }
 
     public int totalSupport()
     {
