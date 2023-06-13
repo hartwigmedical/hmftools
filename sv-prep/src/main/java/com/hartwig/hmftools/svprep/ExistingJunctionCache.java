@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.svprep;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
@@ -69,7 +70,7 @@ public class ExistingJunctionCache
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             String line = fileReader.readLine();
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get("Chromosome");
             int posIndex = fieldsIndexMap.get("Position");
@@ -82,7 +83,7 @@ public class ExistingJunctionCache
 
             while ((line = fileReader.readLine()) != null)
             {
-                final String[] values = line.split(DELIM, -1);
+                final String[] values = line.split(TSV_DELIM, -1);
 
                 String chromosome = values[chrIndex];
                 int position = Integer.parseInt(values[posIndex]);

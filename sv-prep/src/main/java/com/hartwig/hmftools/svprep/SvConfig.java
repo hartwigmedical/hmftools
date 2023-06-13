@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
@@ -232,11 +233,11 @@ public class SvConfig
 
         switch(writeType)
         {
-            case READS: return filename + "reads.csv";
+            case READS: return filename + "reads" + TSV_EXTENSION;
             case BAM: return filename + "bam";
             case CACHE_BAM: return filename + "cache";
-            case JUNCTIONS: return filename + "junctions.csv";
-            case FRAGMENT_LENGTH_DIST: return filename + "fragment_lengths";
+            case JUNCTIONS: return filename + "junctions" + TSV_EXTENSION;
+            case FRAGMENT_LENGTH_DIST: return filename + "fragment_lengths" + TSV_EXTENSION;
         }
 
         return null;

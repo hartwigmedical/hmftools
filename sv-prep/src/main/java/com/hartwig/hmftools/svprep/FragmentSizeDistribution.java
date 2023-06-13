@@ -174,12 +174,12 @@ public class FragmentSizeDistribution
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("FragmentLength,Count");
+            writer.write("FragmentLength\tCount");
             writer.newLine();
 
             for(LengthFrequency lengthFrequency : mLengthFrequencies)
             {
-                writer.write(String.format("%d,%d", lengthFrequency.Length, lengthFrequency.Frequency));
+                writer.write(String.format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));
                 writer.newLine();
             }
 

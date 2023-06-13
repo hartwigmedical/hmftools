@@ -36,7 +36,6 @@ import com.hartwig.hmftools.svprep.reads.ReadFilterType;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
 import com.hartwig.hmftools.svprep.reads.ReadGroupStatus;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
-import com.hartwig.hmftools.svprep.reads.ReadType;
 import com.hartwig.hmftools.svprep.reads.RemoteJunction;
 
 public class ResultsWriter
@@ -81,9 +80,9 @@ public class ResultsWriter
             String filename = mConfig.formFilename(READS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("ReadId,GroupCount,ExpectedCount,GroupStatus,HasExternal,ReadType,Chromosome,PosStart,PosEnd,Cigar");
-            writer.write(",FragLength,MateChr,MatePosStart,MapQual,SuppData,Flags,Filters");
-            writer.write(",FirstInPair,ReadReversed,Proper,Unmapped,MateUnmapped,Supplementary,Duplicate,JunctionPositions");
+            writer.write("ReadId\tGroupCount\tExpectedCount\tGroupStatus\tHasExternal\tReadType\tChromosome\tPosStart\tPosEnd\tCigar");
+            writer.write("\tFragLength\tMateChr\tMatePosStart\tMapQual\tSuppData\tFlags\tFilters");
+            writer.write("\tFirstInPair\tReadReversed\tProper\tUnmapped\tMateUnmapped\tSupplementary\tDuplicate\tJunctionPositions");
 
             writer.newLine();
 
@@ -146,22 +145,22 @@ public class ResultsWriter
 
         try
         {
-            mReadWriter.write(format("%s,%d,%d,%s,%s", read.id(), readCount, expectedReadCount, status, spansPartitions));
+            mReadWriter.write(format("%s\t%d\t%d\t%s\t%s", read.id(), readCount, expectedReadCount, status, spansPartitions));
 
-            mReadWriter.write(format(",%s,%s,%d,%d,%s",
+            mReadWriter.write(format("\t%s\t%s\t%d\t%d\t%s",
                     read.readType(), read.Chromosome, read.start(), read.end(), read.cigar().toString()));
 
             SupplementaryReadData suppData = read.supplementaryAlignment();
 
-            mReadWriter.write(format(",%d,%s,%d,%d,%s,%d,%d",
+            mReadWriter.write(format("\t%d\t%s\t%d\t%d\t%s\t%d\t%d",
                     read.fragmentInsertSize(), read.MateChromosome, read.MatePosStart, read.mapQuality(),
                     suppData != null ? suppData.asCsv() : "N/A", read.flags(), read.filters()));
 
-            mReadWriter.write(format(",%s,%s,%s,%s,%s,%s,%s",
+            mReadWriter.write(format("\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
                     read.isFirstOfPair(), read.isReadReversed(), read.hasFlag(PROPER_PAIR), read.hasFlag(READ_UNMAPPED),
                     read.hasMate() && read.isMateUnmapped(), read.hasFlag(SUPPLEMENTARY_ALIGNMENT), read.hasFlag(DUPLICATE_READ)));
 
-            mReadWriter.write(format(",%s", junctionPositions));
+            mReadWriter.write(format("\t%s", junctionPositions));
 
             mReadWriter.newLine();
         }
@@ -181,11 +180,11 @@ public class ResultsWriter
             String filename = mConfig.formFilename(JUNCTIONS);
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,Position,Orientation,JunctionFrags,SupportFrags,DiscordantFrags,LowMapQualFrags,MaxQual");
-            writer.write(",MaxSoftClip,BaseDepth,HasPolyAT,Indel,Hotspot,SoftClipBases,InitialReadId");
+            writer.write("Chromosome\tPosition\tOrientation\tJunctionFrags\tSupportFrags\tDiscordantFrags\tLowMapQualFrags\tMaxQual");
+            writer.write("\tMaxSoftClip\tBaseDepth\tHasPolyAT\tIndel\tHotspot\tSoftClipBases\tInitialReadId");
 
             if(mConfig.TrackRemotes)
-                writer.write(",RemoteJunctionCount,RemoteJunctions");
+                writer.write("\tRemoteJunctionCount\tRemoteJunctions");
 
             writer.newLine();
 
@@ -257,11 +256,11 @@ public class ResultsWriter
                         ++lowMapQualFrags;
                 }
 
-                mJunctionWriter.write(format("%s,%d,%d,%d,%d,%d,%d,%d",
+                mJunctionWriter.write(format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
                         chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
                         exactSupportFrags, discordantFrags, lowMapQualFrags, maxMapQual));
 
-                mJunctionWriter.write(format(",%d,%d,%s,%s,%s,%s,%s",
+                mJunctionWriter.write(format("\t%d\t%d\t%s\t%s\t%s\t%s\t%s",
                         maxSoftClip, junctionData.depth(), hasPloyAT, junctionData.internalIndel(), junctionData.hotspot(),
                         softClipBases, junctionData.topJunctionRead() != null ? junctionData.topJunctionRead().id() : "EXISTING"));
 
@@ -286,7 +285,7 @@ public class ResultsWriter
                         remoteJunctionsStr = sj.toString();
                     }
 
-                    mJunctionWriter.write(format(",%d,%s", junctionData.RemoteJunctions.size(), remoteJunctionsStr));
+                    mJunctionWriter.write(format("\t%d\t%s", junctionData.RemoteJunctions.size(), remoteJunctionsStr));
                 }
 
                 mJunctionWriter.newLine();
