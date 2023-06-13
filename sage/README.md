@@ -66,11 +66,11 @@ threads | 2       | Number of threads to use
 max_read_depth | 1000    | Maximum number of reads to look for evidence of any `HIGH_CONFIDENCE` or `LOW_CONFIDENCE` variant. Reads in excess of this are ignored.  
 max_read_depth_panel | 100,000 | Maximum number of reads to look for evidence of any `HOTSPOT` or `PANEL` variant. Reads in excess of this are ignored.  
 min_map_quality | 10      | Min mapping quality to apply to non-hotspot variants
-min_avg_base_qual | 22 | Min average base quality hard filter
+min_avg_base_qual | 28      | Min average base quality hard filter. Hotspots default is 22 (config: min_avg_base_qual_hotspot).
 coverage_bed | NA      | Write file with counts of depth of each base of the supplied bed file
 validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT
 include_mt | NA      | By default the mitochondrial DNA is not read but will be if this config is included
-sync_fragments | False | Where R1 and R2 in a fragment overlap, count only a single consensus base and base qual for that fragment
+sync_fragments | False   | Where R1 and R2 in a fragment overlap, count only a single consensus base and base qual for that fragment
 
 The cardinality of `reference` must match `reference_bam`.
 
