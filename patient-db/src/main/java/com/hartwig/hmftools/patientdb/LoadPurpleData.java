@@ -137,7 +137,7 @@ public class LoadPurpleData
             final DatabaseAccess dbAccess, final String purpleDir) throws Exception
     {
         // check all somatic files exist before attempting to load
-        final String geneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
+        final String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, sampleId);
         final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
         final String somaticDriversFile = DriverCatalogFile.generateSomaticFilename(purpleDir, sampleId);
         final String somaticVcf = purpleSomaticVcfFile(purpleDir, sampleId);

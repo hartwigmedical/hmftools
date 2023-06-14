@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -13,7 +14,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWr
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.cohort.CohortCommon.SAMPLE_FILES_DIR;
 import static com.hartwig.hmftools.lilac.cohort.CohortFrequency.ALLELE_FREQUENCY_FILE;
 import static com.hartwig.hmftools.lilac.coverage.HlaComplexFile.parseCandidateCoverageData;
@@ -133,7 +133,7 @@ public class CandidateScores
 
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
             lines.remove(0);
 
             int totalCoverageIndex = fieldsMap.get("totalCoverage");
@@ -141,7 +141,7 @@ public class CandidateScores
 
             for(String line : lines)
             {
-                String[] items = line.split(DELIM);
+                String[] items = line.split(TSV_DELIM);
                 int totalCoverage = Integer.parseInt(items[totalCoverageIndex]);
 
                 List<String> rawAlleleData = Lists.newArrayList();

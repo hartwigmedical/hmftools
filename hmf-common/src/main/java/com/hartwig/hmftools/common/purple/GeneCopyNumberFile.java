@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.purple;
 
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,8 +15,6 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class GeneCopyNumberFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
@@ -24,25 +23,22 @@ public final class GeneCopyNumberFile
 
     private GeneCopyNumberFile() {}
 
-    @NotNull
-    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilenameForWriting(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + File.separator + sample + EXTENSION;
     }
 
-    @NotNull
-    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
-    @NotNull
-    public static List<GeneCopyNumber> read(@NotNull final String fileName) throws IOException
+    public static List<GeneCopyNumber> read(final String fileName) throws IOException
     {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(@NotNull final String fileName, @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException
+    public static void write(final String fileName, List<GeneCopyNumber> geneCopyNumbers) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(geneCopyNumbers));
     }

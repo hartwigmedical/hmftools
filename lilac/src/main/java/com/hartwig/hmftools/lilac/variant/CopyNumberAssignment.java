@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.lilac.variant;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
@@ -55,7 +55,7 @@ public class CopyNumberAssignment
                 // load a cohort file - for now only retain the required sample's data
                 final List<String> fileData = Files.readAllLines(new File(config.CopyNumberFile).toPath());
                 String header = fileData.get(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
                 fileData.remove(0); // remove header
                 int sampleIndex = fieldsIndexMap.get("SampleId");
                 int geneIndex = fieldsIndexMap.get("Gene");
@@ -71,7 +71,7 @@ public class CopyNumberAssignment
 
                     for(final String line : fileData)
                     {
-                        String[] items = line.split(DELIM, -1);
+                        String[] items = line.split(CSV_DELIM, -1);
 
                         String sampleId = items[sampleIndex];
 
@@ -93,7 +93,7 @@ public class CopyNumberAssignment
 
                     for(final String line : fileData)
                     {
-                        String[] items = line.split(DELIM, -1);
+                        String[] items = line.split(CSV_DELIM, -1);
 
                         String sampleId = items[sampleIndex];
 

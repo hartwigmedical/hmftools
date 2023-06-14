@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.hla;
 
-import static com.hartwig.hmftools.common.hla.LilacAllele.DELIMITER;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.checkFileExtensionRename;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -26,21 +27,36 @@ public abstract class LilacQcData
 
     public abstract String status();
 
-    private static final String FILE_EXTENSION = ".lilac.qc.csv";
+    private static final String FILE_EXTENSION = ".lilac.qc.tsv";
+    private static final String OLD_FILE_EXTENSION = ".lilac.qc.csv";
+
     public static final String FLD_QC_STATUS = "Status";
 
-    public static String generateFilename(final String basePath, final String sample)
+    public static String generateFilenameForWriting(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
+    public static String generateFilename(final String basePath, final String sample)
+    {
+        String filename = generateFilenameForWriting(basePath, sample);
+
+        if(Files.exists(Paths.get(filename)))
+            return filename;
+
+        return basePath + File.separator + sample + OLD_FILE_EXTENSION;
+    }
+
     public static LilacQcData read(final String filePath) throws IOException
     {
-        List<String> lines = Files.readAllLines(Paths.get(filePath));
+        String filename = checkFileExtensionRename(filePath);
+        String delim = inferFileDelimiter(filename);
 
-        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        List<String> lines = Files.readAllLines(Paths.get(filename));
 
-        String[] values = lines.get(1).split(DELIMITER);
+        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), delim);
+
+        String[] values = lines.get(1).split(delim);
 
         return ImmutableLilacQcData.builder()
                     .status(values[fieldsIndexMap.get(FLD_QC_STATUS)])

@@ -80,9 +80,6 @@ public class LilacConstants
 
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
-    // technical
-    public static final String DELIM = ",";
-
     // common routines using constants
     public static List<Integer> getAminoAcidExonBoundaries(final String gene)
     {
@@ -105,14 +102,14 @@ public class LilacConstants
     }
 
     // output file IDs
-    public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.csv";
-    public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.csv";
-    public static String LILAC_FILE_ALL_FRAGMENTS = "fragments.csv";
+    public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
+    public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
+    public static String LILAC_FILE_ALL_FRAGMENTS = "fragments.tsv";
 
     public static String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
     public static String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";
 
-    public static String LILAC_FILE_SOMATIC_VCF = "lilac.somatic.vcf.gz";
-    public static String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.csv";
-    public static String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.csv";
+    public static String LILAC_FILE_SOMATIC_VCF = "somatic.vcf.gz";
+    public static String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.tsv";
+    public static String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.tsv";
 }

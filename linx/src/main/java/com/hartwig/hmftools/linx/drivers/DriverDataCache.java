@@ -119,7 +119,7 @@ public class DriverDataCache
                             .collect(Collectors.toList()));
 
             mGeneCopyNumberData.addAll(
-                    GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, mSampleId)));
+                    GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilename(purpleDataPath, mSampleId)));
         }
         catch(IOException e)
         {

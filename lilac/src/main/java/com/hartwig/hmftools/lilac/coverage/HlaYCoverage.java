@@ -309,7 +309,7 @@ public class HlaYCoverage
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("Source,Allele,Total,Shared,HlaYShared,Unique");
+            writer.write("Source\tAllele\tTotal\tShared\tHlaYShared\tUnique");
             writer.newLine();
 
             for(Map.Entry<String,Map<HlaAllele,int[]>> sourceEntry : mSourceAlleleFragmentCounts.entrySet())
@@ -322,7 +322,7 @@ public class HlaYCoverage
 
                     int total = counts[SHARED] + counts[SHARED_HLAY] + counts[UNIQUE];
 
-                    writer.write(String.format("%s,%s,%d,%d,%d,%d",
+                    writer.write(String.format("%s\t%s\t%d\t%d\t%d\t%d",
                             source, allele, total, counts[SHARED], counts[SHARED_HLAY], counts[UNIQUE]));
 
                     writer.newLine();
@@ -353,7 +353,7 @@ public class HlaYCoverage
                 String fileName = mConfig.formFileId(LILAC_FILE_HLA_Y_FRAGMENTS);
                 mWriter = createBufferedWriter(fileName, false);
 
-                mWriter.write("ReadId,ReadInfo,Alleles,Shared,Loci");
+                mWriter.write("ReadId\tReadInfo\tAlleles\tShared\tLoci");
                 mWriter.newLine();
             }
 
@@ -363,8 +363,8 @@ public class HlaYCoverage
             StringJoiner sjLoci = new StringJoiner(ITEM_DELIM);
             fragAminoAcidLoci.forEach(x -> sjLoci.add(x.toString()));
 
-            mWriter.write(String.format("%s,%s,%s,%s,%s",
-                    fragment.id(), fragment.readInfo(), sjAlleles.toString(), isShared, sjLoci.toString()));
+            mWriter.write(String.format("%s\t%s\t%s\t%s\t%s",
+                    fragment.id(), fragment.readInfo(), sjAlleles, isShared, sjLoci.toString()));
             mWriter.newLine();
 
         }

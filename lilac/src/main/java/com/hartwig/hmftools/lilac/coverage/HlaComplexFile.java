@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.lilac.coverage;
 
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_B;
 
@@ -19,7 +19,7 @@ public class HlaComplexFile
 {
     public static String header()
     {
-        StringJoiner sb = new StringJoiner(DELIM);
+        StringJoiner sb = new StringJoiner(TSV_DELIM);
         sb.add("Score");
         sb.add("HomozygousCount");
         sb.add("CohortFrequency");
@@ -64,7 +64,7 @@ public class HlaComplexFile
 
     public static String asString(final ComplexCoverage coverage)
     {
-        StringJoiner sj = new StringJoiner(DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(String.format("%.2f", coverage.getScore()));
         sj.add(String.valueOf(coverage.homozygousCount()));
@@ -87,7 +87,7 @@ public class HlaComplexFile
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            StringJoiner sb = new StringJoiner(DELIM);
+            StringJoiner sb = new StringJoiner(TSV_DELIM);
             sb.add("Complex");
             sb.add("FragmentId");
             sb.add("FragmentCoords");
@@ -116,7 +116,7 @@ public class HlaComplexFile
                     String type = (fragAllele.getFull().size() == 1 && fragAllele.getWild().isEmpty()) ? "UNIQUE_FULL" :
                             (fragAllele.getFull().isEmpty() && fragAllele.getWild().size() == 1) ? "UNIQUE_WILD" : "SHARED";
 
-                    writer.write(String.format("%s,%s,%s,%s,%s,%s",
+                    writer.write(String.format("%s\t%s\t%s\t%s\t%s\t%s",
                             complexStr, fragAllele.getFragment().id(), fragAllele.getFragment().readInfo(),
                             type, fullAlleles.toString(), wildAlleles.toString()));
 

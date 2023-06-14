@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.lilac.read;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
-
-import com.hartwig.hmftools.lilac.hla.HlaAllele;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 
 public class Indel
 {
@@ -31,7 +29,7 @@ public class Indel
 
     public static Indel fromString(final String line)
     {
-        final String[] items = line.split(DELIM);
+        final String[] items = line.split(CSV_DELIM);
         return new Indel(items[0], Integer.parseInt(items[1]), items[2], items[3]);
     }
 

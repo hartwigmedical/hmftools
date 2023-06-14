@@ -1,9 +1,5 @@
 package com.hartwig.hmftools.neo.scorer;
 
-import java.util.List;
-
-import com.google.common.collect.Lists;
-
 public class AlleleCoverage
 {
     public final String Allele;
@@ -29,29 +25,5 @@ public class AlleleCoverage
     {
         return String.format("allele(%s) copyNumber(%.2f) variants(%.1f)",
                 Allele, CopyNumber, VariantCount);
-    }
-
-    public static AlleleCoverage fromCsv(final String data, int alleleIndex, int tumorCnIndex, final List<Integer> somaticVariantIndices)
-    {
-        // SomaticMissense>0|SomaticNonsenseOrFrameshift>0|SomaticSplice>0|SomaticInframeIndel>0
-        final String[] items = data.split(DELIM, -1);
-
-        String allele = items[alleleIndex].replaceAll("\\*", "").replaceAll(":", "");
-        double variantCount = somaticVariantIndices.stream().mapToDouble(x -> Double.parseDouble(items[x])).sum();
-
-        return new AlleleCoverage(allele, Double.parseDouble(items[tumorCnIndex]), variantCount);
-    }
-
-    public static List<Boolean> getGeneStatus(final List<AlleleCoverage> alleleCoverages)
-    {
-        final List<Boolean> geneLostStatus = Lists.newArrayListWithExpectedSize(EXPECTED_ALLELE_COUNT);
-
-        for(AlleleCoverage alleleCoverage : alleleCoverages)
-        {
-            boolean geneLost = alleleCoverages.stream().filter(x -> x.gene().equals(alleleCoverage.gene())).anyMatch(x -> x.isLost());
-            geneLostStatus.add(geneLost);
-        }
-
-        return geneLostStatus;
     }
 }

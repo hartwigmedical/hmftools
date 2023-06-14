@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
@@ -46,8 +45,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class LilacConfig
 {
-    private final CommandLine mCmdLineArgs;
-
     public final String Sample;
     public final String ReferenceBam;
     public final String TumorBam;
@@ -74,7 +71,6 @@ public class LilacConfig
 
     public final String CopyNumberFile;
     public final String SomaticVariantsFile;
-    public final String CohortSomaticVariantsFile;
 
     public final boolean DebugPhasing;
     public final boolean RunValidation;
@@ -88,6 +84,8 @@ public class LilacConfig
     // limit analysis from full data set to these + other configured alleles, for testing purposes
     public final List<HlaAllele> RestrictedAlleles;
 
+    private final CommandLine mCmdLineArgs;
+
     // config strings
     public static final String RESOURCE_DIR = "resource_dir";
 
@@ -98,6 +96,7 @@ public class LilacConfig
     private static final String RNA_BAM = "rna_bam";
     private static final String RUN_ID = "run_id";
 
+    private static final String PURPLE_DIR = "purple_dir";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String COHORT_SOMATIC_VCF = "cohort_somatic_file";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
@@ -143,13 +142,6 @@ public class LilacConfig
             // these 3 are optional so check existence before initialising
             TumorBam = checkFileExists(SampleDataDir + Sample + ".hla.bam");
             RnaBam = checkFileExists(SampleDataDir + Sample + ".rna.hla.bam");
-
-            String purpleGeneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(SampleDataDir, Sample);
-            CopyNumberFile = checkFileExists(purpleGeneCopyNumberFile);
-
-            String somaticVariantsFile = PurpleCommon.purpleSomaticVcfFile(SampleDataDir, Sample);
-            SomaticVariantsFile = checkFileExists(somaticVariantsFile);
-            CohortSomaticVariantsFile = "";
         }
         else
         {
@@ -168,12 +160,32 @@ public class LilacConfig
             }
 
             RnaBam = cmd.getOptionValue(RNA_BAM, "");
-
-            SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VCF, "");
-            CohortSomaticVariantsFile = cmd.getOptionValue(COHORT_SOMATIC_VCF, "");
-            CopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER, "");
-
             OutputDir = parseOutputDir(cmd);
+        }
+
+        if(cmd.hasOption(SOMATIC_VCF) && cmd.hasOption(GENE_COPY_NUMBER))
+        {
+            SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VCF);
+            CopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER);
+        }
+        else if(cmd.hasOption(PURPLE_DIR))
+        {
+            String purpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR));
+            SomaticVariantsFile = PurpleCommon.purpleSomaticVcfFile(purpleDir, Sample);
+            CopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, Sample);
+        }
+        else if(!SampleDataDir.isEmpty())
+        {
+            String purpleGeneCopyNumberFile = GeneCopyNumberFile.generateFilename(SampleDataDir, Sample);
+            CopyNumberFile = checkFileExists(purpleGeneCopyNumberFile);
+
+            String somaticVariantsFile = PurpleCommon.purpleSomaticVcfFile(SampleDataDir, Sample);
+            SomaticVariantsFile = checkFileExists(somaticVariantsFile);
+        }
+        else
+        {
+            SomaticVariantsFile = "";
+            CopyNumberFile = "";
         }
 
         RunId = cmd.getOptionValue(RUN_ID, "");
@@ -212,7 +224,7 @@ public class LilacConfig
         return Files.exists(Paths.get(filename)) ? filename : "";
     }
 
-    public String formFileId(final String fileId) { return OutputDir + Sample + "." + fileId; }
+    public String formFileId(final String fileId) { return OutputDir + Sample + ".lilac." + fileId; }
 
     public double calcMinEvidence(int totalFragments) { return max(MinEvidence, totalFragments * MinEvidenceFactor); }
     public double calcMinHighQualEvidence(int totalFragments) { return totalFragments * MinHighQualEvidenceFactor; }
@@ -302,7 +314,6 @@ public class LilacConfig
 
         CopyNumberFile = "";
         SomaticVariantsFile = "";
-        CohortSomaticVariantsFile = "";
 
         ActualAlleles = Lists.newArrayList();
         RestrictedAlleles = Lists.newArrayList();
@@ -354,8 +365,9 @@ public class LilacConfig
         options.addOption(ACTUAL_ALLELES, true,"Comma separated known actual alleles for the sample");
         options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
         options.addOption(MAX_ELIM_CANDIDATES, true, "Revert to only common alleles if candidate allele count exceeds this after elimination");
-        options.addOption(GENE_COPY_NUMBER, true,"Deprecated, use 'gene_copy_number instead': Path to gene copy number file ");
-        options.addOption(SOMATIC_VCF, true,"Path to somatic VCF");
+        options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
+        options.addOption(PURPLE_DIR, true,"Path to somatic VCF");
+        options.addOption(SOMATIC_VCF, true,"Path to sample Purple data");
         options.addOption(COHORT_SOMATIC_VCF, true,"Cohort somatic variants file");
         options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
         options.addOption(RUN_VALIDATION, false, "Run validation checks");

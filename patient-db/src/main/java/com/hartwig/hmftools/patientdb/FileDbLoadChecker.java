@@ -243,7 +243,7 @@ public class FileDbLoadChecker
                 List<SomaticVariant> somaticVariants = somaticVariantFactory.fromVCFFile(sampleId, somaticVcf);
                 checkFileVsDatabase(sampleId, "SomaticVariant", somaticVariants.size(), "somaticVariant");
 
-                final String geneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
+                final String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, sampleId);
                 final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
                 final String svVcf = PurpleCommon.purpleSomaticSvFile(purpleDir, sampleId);
 

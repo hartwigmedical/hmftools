@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac.variant;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
@@ -20,8 +20,6 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.read.BamReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
@@ -32,7 +30,6 @@ import htsjdk.variant.vcf.VCFFileReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -257,58 +254,6 @@ public class SomaticVariantAnnotation
 
             LL_LOGGER.info("loaded {} HLA variants from file: {}", variants.size(), mConfig.SomaticVariantsFile);
             fileReader.close();
-        }
-        else if(!mConfig.CohortSomaticVariantsFile.isEmpty())
-        {
-            try
-            {
-                // load a cohort file - for now only retain the required sample's data
-                final List<String> fileData = Files.readAllLines(new File(mConfig.SomaticVariantsFile).toPath());
-                String header = fileData.get(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
-                fileData.remove(0); // remove header
-                int sampleIndex = fieldsIndexMap.get("SampleId");
-                int geneIndex = fieldsIndexMap.get("Gene");
-                int chrIndex = fieldsIndexMap.get("Chromosome");
-                int posIndex = fieldsIndexMap.get("Position");
-                int refIndex = fieldsIndexMap.get("Ref");
-                int altIndex = fieldsIndexMap.get("Alt");
-                int filterIndex = fieldsIndexMap.get("Filter");
-                int effectIndex = fieldsIndexMap.get("CanonicalCodingEffect");
-
-                for(final String line : fileData)
-                {
-                    String[] items = line.split(DELIM, -1);
-
-                    String sampleId = items[sampleIndex];
-
-                    if(!sampleId.equals(mConfig.Sample))
-                        continue;
-
-                    String gene = items[geneIndex];
-                    CodingEffect codingEffect = CodingEffect.valueOf(items[effectIndex]);
-                    String filter = items[filterIndex];
-
-                    if(!HLA_GENES.contains(gene))
-                        continue;
-
-                    if(UNKNOWN_CODING_EFFECT.contains(codingEffect))
-                        continue;
-
-                    if(!filter.equals(SomaticVariantFactory.PASS_FILTER))
-                        continue;
-
-                    variants.add(new SomaticVariant(
-                            gene, items[chrIndex], Integer.parseInt(items[posIndex]), items[refIndex], items[altIndex],
-                            filter, codingEffect, null));
-                }
-
-                LL_LOGGER.info("loaded {} HLA variants from cohort file: {}", variants.size(), mConfig.CohortSomaticVariantsFile);
-            }
-            catch(IOException e)
-            {
-                LL_LOGGER.error("failed to read somatic variant file({}): {}", mConfig.SomaticVariantsFile, e.toString());
-            }
         }
 
         return variants;

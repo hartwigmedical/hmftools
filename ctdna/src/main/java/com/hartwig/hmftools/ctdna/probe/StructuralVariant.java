@@ -397,7 +397,7 @@ public class StructuralVariant extends Variant
 
         if(drivers.stream().anyMatch(x -> x.eventType() == DEL))
         {
-            String geneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
+            String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, sampleId);
             GeneCopyNumberFile.read(geneCopyNumberFile).stream()
                     .filter(x -> drivers.stream().anyMatch(y -> y.gene().equals(x.geneName())))
                     .forEach(x -> geneCopyNumbers.add(x));

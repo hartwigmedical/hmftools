@@ -177,8 +177,8 @@ public class FragmentUtils
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("Source,ReadId,ReadInfo,Genes");
-            writer.write(",NucLociStart,NucLociEnd,AcidLociStart,AcidLociEnd,Scope");
+            writer.write("Source\tReadId\tReadInfo\tGenes");
+            writer.write("\tNucLociStart\tNucLociEnd\tAcidLociStart\tAcidLociEnd\tScope");
             writer.newLine();
 
             for(Fragment fragment : fragments)
@@ -186,10 +186,10 @@ public class FragmentUtils
                 StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
                 fragment.getGenes().forEach(x -> genesStr.add(x));
 
-                writer.write(String.format("REFERENCE,%s,%s,%s",
+                writer.write(String.format("REFERENCE\t%s\t%s\t%s",
                         fragment.id(), fragment.readInfo(), genesStr));
 
-                writer.write(String.format(",%d,%d,%d,%d,%s",
+                writer.write(String.format("\t%d\t%d\t%d\t%d\t%s",
                         fragment.minNucleotideLocus(), fragment.maxNucleotideLocus(),
                         fragment.minAminoAcidLocus(), fragment.maxAminoAcidLocus(), fragment.scope()));
 

@@ -192,7 +192,7 @@ public class PurpleApplication
         }
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        PPL_LOGGER.info("Purple complete, runTime({})", format("%.1fs", timeTakenMs/1000.0));
+        PPL_LOGGER.info("Purple complete, run time({}s)", format("%.1fs", timeTakenMs/1000.0));
         mExecutorService.shutdown();
     }
 
@@ -537,7 +537,7 @@ public class PurpleApplication
         final List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(purpleDataPath, tumorId));
 
         final List<GeneCopyNumber> geneCopyNumbers = GeneCopyNumberFile.read(
-                GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, tumorId));
+                GeneCopyNumberFile.generateFilename(purpleDataPath, tumorId));
 
         if(mConfig.runTumor())
         {

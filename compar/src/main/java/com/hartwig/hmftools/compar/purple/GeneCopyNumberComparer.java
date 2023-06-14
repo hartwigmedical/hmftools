@@ -2,9 +2,6 @@ package com.hartwig.hmftools.compar.purple;
 
 import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_MAJOR_ALLELE_CN;
-import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_METHOD;
 import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MAX_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_REGION_END;
@@ -98,7 +95,7 @@ public class GeneCopyNumberComparer implements ItemComparer
 
         try
         {
-            List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(
+            List<GeneCopyNumber> copyNumbers = GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilename(
                     fileSources.Purple, sampleId));
 
             copyNumbers.stream().filter(x -> driverGenes.contains(x.geneName())).forEach(x -> items.add(new GeneCopyNumberData(x)));

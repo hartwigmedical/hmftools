@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.NeoEpitopeType;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
@@ -52,8 +53,6 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class DataLoader
 {
-    public static final String LILAC_COVERAGE_FILE_ID = ".lilac.csv";
-
     public static List<NeoEpitopeData> loadNeoEpitopes(final String sampleId, final String neoDataDir)
     {
         try
@@ -184,30 +183,17 @@ public class DataLoader
 
     public static List<AlleleCoverage> loadAlleleCoverage(final String sampleId, final String lilacDir)
     {
-        String filename = lilacDir + sampleId + LILAC_COVERAGE_FILE_ID;
-
         try
         {
+            List<LilacAllele> lilacAlleles = LilacAllele.read(LilacAllele.generateFilename(lilacDir, sampleId));
+
             List<AlleleCoverage> alleleCoverages = Lists.newArrayListWithExpectedSize(EXPECTED_ALLELE_COUNT);
 
-            List<String> lines = Files.readAllLines(new File(filename).toPath());
-
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), AlleleCoverage.DELIM);
-            lines.remove(0);
-
-            int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
-            int tumorCnIndex = fieldsIndexMap.get("TumorCopyNumber");
-
-            // only select the somatic mutations which are predicted to silence/disable the allele
-            List<Integer> somVariantIndices = Lists.newArrayList(
-                    fieldsIndexMap.get("SomaticMissense"),
-                    fieldsIndexMap.get("SomaticSplice"),
-                    fieldsIndexMap.get("SomaticNonsenseOrFrameshift"),
-                    fieldsIndexMap.get("SomaticInframeIndel"));
-
-            for(String line : lines)
+            for(LilacAllele allele : lilacAlleles)
             {
-                alleleCoverages.add(AlleleCoverage.fromCsv(line, alleleIndex, tumorCnIndex, somVariantIndices));
+                double variantCount = allele.somaticMissense() + allele.somaticSplice() + allele.somaticNonsenseOrFrameshift() + allele.somaticInframeIndel();
+                String alleleStr = allele.allele().replaceAll("\\*", "").replaceAll(":", "");
+                alleleCoverages.add(new AlleleCoverage(alleleStr, allele.tumorCopyNumber(), variantCount));
             }
 
             return alleleCoverages;

@@ -570,7 +570,9 @@ public class LilacApplication
         if(hasVcfData)
         {
             final VersionInfo version = new VersionInfo("lilac.version");
-            lilacVCF = new LilacVCF(mConfig.formFileId(LILAC_FILE_SOMATIC_VCF), mConfig.SomaticVariantsFile).writeHeader(version.toString());
+            lilacVCF = new LilacVCF(
+                    mConfig.formFileId(LILAC_FILE_SOMATIC_VCF),
+                    mConfig.SomaticVariantsFile).writeHeader(version.version());
         }
 
         for(SomaticVariant variant : mSomaticVariants)
@@ -625,8 +627,8 @@ public class LilacApplication
 
         LL_LOGGER.info("writing output to {}", mConfig.OutputDir);
 
-        mSolutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
-        mSummaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        mSolutionSummary.write(LilacAllele.generateFilenameForWriting(mConfig.OutputDir, mConfig.Sample));
+        mSummaryMetrics.writefile(LilacQcData.generateFilenameForWriting(mConfig.OutputDir, mConfig.Sample));
 
         HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), mRankedComplexes);
 
