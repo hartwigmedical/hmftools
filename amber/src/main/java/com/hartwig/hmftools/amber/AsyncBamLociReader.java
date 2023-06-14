@@ -127,7 +127,7 @@ public class AsyncBamLociReader
         final Queue<Task<E>> taskQ = new ConcurrentLinkedQueue<>();
         
         // create genome regions from the loci
-        populateTaskQueue(loci, taskQ);
+        populateTaskQueue(loci, taskQ, bamFile.endsWith(".cram"));
 
         // we create the consumer and producer
         var bamReaders = new ArrayList<BamReaderThread<E>>();
@@ -160,10 +160,14 @@ public class AsyncBamLociReader
 
     /**
      * Group the genome regions
+     * cram file is much less efficient at handling seeks than bam files, therefore we merge more regions together when using cram.
      */
-    public static <E extends GenomePosition> void populateTaskQueue(final List<E> sortedGenomePositions, final Queue<Task<E>> taskQ)
+    public static <E extends GenomePosition> void populateTaskQueue(final List<E> sortedGenomePositions,
+            final Queue<Task<E>> taskQ, boolean isCram)
     {
-        int minGap = 2000;
+        final int optimalNumRegions = isCram ? AmberConstants.OPTIMAL_CRAM_SLICE_REGIONS : AmberConstants.OPTIMAL_BAM_SLICE_REGIONS;
+
+        int minGap = isCram ? 10000 : 2000;
         List<Task<E>> tasks = new ArrayList<>();
 
         while (true)
@@ -206,11 +210,11 @@ public class AsyncBamLociReader
                 tasks.add(task);
             }
 
-            if (tasks.size() <= AmberConstants.OPTIMAL_BAM_SLICE_REGIONS)
+            if (tasks.size() <= optimalNumRegions)
             {
                 break;
             }
-            minGap += 200;
+            minGap += isCram ? 1000 : 200;
         }
         taskQ.addAll(tasks);
 

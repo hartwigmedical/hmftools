@@ -14,6 +14,7 @@ public class AmberConstants
     public static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
 
     public static final int OPTIMAL_BAM_SLICE_REGIONS = 150_000;
+    public static final int OPTIMAL_CRAM_SLICE_REGIONS = 10000;
     public static final int MIN_NORMAL_READ_DEPTH = 7;
     public static final long MIN_THREE_PLUS_READS = 2000;
 
