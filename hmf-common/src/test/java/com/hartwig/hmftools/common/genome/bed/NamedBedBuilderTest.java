@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -17,7 +16,7 @@ public class NamedBedBuilderTest {
     public void testNoOverlap() {
         final NamedBedBuilder victim = new NamedBedBuilder();
 
-        final List<NamedBed> orderedInput = Lists.newArrayList();
+        final List<NamedBed> orderedInput = new ArrayList<>();
         orderedInput.add(create(101, 200, "A"));
         orderedInput.add(create(301, 400, "B"));
         orderedInput.add(create(501, 600, "C"));
@@ -36,7 +35,7 @@ public class NamedBedBuilderTest {
     public void testFullyContains() {
         final NamedBedBuilder victim = new NamedBedBuilder();
 
-        final List<NamedBed> orderedInput = Lists.newArrayList();
+        final List<NamedBed> orderedInput = new ArrayList<>();
         orderedInput.add(create(101, 200, "A"));
         orderedInput.add(create(301, 400, "B"));
         orderedInput.add(create(501, 600, "C"));
@@ -52,7 +51,7 @@ public class NamedBedBuilderTest {
     public void testPartialOverlap() {
         final NamedBedBuilder victim = new NamedBedBuilder();
 
-        final List<NamedBed> orderedInput = Lists.newArrayList();
+        final List<NamedBed> orderedInput = new ArrayList<>();
         orderedInput.add(create(101, 200, "A"));
         orderedInput.add(create(301, 400, "B"));
         orderedInput.add(create(501, 600, "C"));

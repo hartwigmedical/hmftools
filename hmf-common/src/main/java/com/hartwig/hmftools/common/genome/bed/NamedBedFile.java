@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -15,7 +16,6 @@ import java.util.zip.GZIPOutputStream;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -66,7 +66,7 @@ public final class NamedBedFile
     @NotNull
     public static List<NamedBed> readBedFile(String bedFile) throws IOException
     {
-        List<NamedBed> result = Lists.newArrayList();
+        List<NamedBed> result = new ArrayList<>();
         NamedBed prevRegion = null;
         try(final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(bedFile, new BEDCodec(), false))
         {

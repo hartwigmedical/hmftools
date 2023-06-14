@@ -2,9 +2,9 @@ package com.hartwig.hmftools.common.virus;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
@@ -12,7 +12,7 @@ public class VirusLikelihoodTypeTest {
 
     @Test
     public void canExtractVirusDriverLikelihood() {
-        List<AnnotatedVirus> annotatedVirus = Lists.newArrayList();
+        List<AnnotatedVirus> annotatedVirus = new ArrayList<>();
 
         annotatedVirus.add(ImmutableAnnotatedVirus.builder()
                 .taxid(0)
