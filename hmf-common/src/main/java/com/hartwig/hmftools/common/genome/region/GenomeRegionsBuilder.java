@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.genome.region;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -7,7 +8,6 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class GenomeRegionsBuilder {
@@ -41,7 +41,7 @@ public class GenomeRegionsBuilder {
 
     @NotNull
     public List<GenomeRegion> build() {
-        List<GenomeRegion> result = Lists.newArrayList();
+        List<GenomeRegion> result = new ArrayList<>();
         for (String contig : contigMap.keySet()) {
             result.addAll(contigMap.get(contig).build());
         }

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLi
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,9 +21,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class RefreshAmberPatient
@@ -39,7 +37,7 @@ public class RefreshAmberPatient
             LOGGER.info("Reading sample data");
             List<AmberPatient> previousPatients = dbAccess.readAmberPatients();
             List<AmberSample> allSamples = dbAccess.readAmberSamples();
-            List<AmberMapping> allMappings = Lists.newArrayList();
+            List<AmberMapping> allMappings = new ArrayList<>();
 
             for(int i = 0; i < allSamples.size(); i++)
             {

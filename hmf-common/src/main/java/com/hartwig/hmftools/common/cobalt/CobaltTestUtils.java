@@ -2,11 +2,11 @@ package com.hartwig.hmftools.common.cobalt;
 
 import static com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes.MIN_Y_COUNT;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class CobaltTestUtils
@@ -14,7 +14,7 @@ public class CobaltTestUtils
     @NotNull
     public static CobaltChromosomes female()
     {
-        List<MedianRatio> ratios = Lists.newArrayList();
+        List<MedianRatio> ratios = new ArrayList<>();
         for(int i = 0; i < 22; i++)
         {
             ratios.add(create(String.valueOf(i), 1, 1));
@@ -27,7 +27,7 @@ public class CobaltTestUtils
     @NotNull
     public static CobaltChromosomes male()
     {
-        List<MedianRatio> ratios = Lists.newArrayList();
+        List<MedianRatio> ratios = new ArrayList<>();
         for(int i = 0; i < 22; i++)
         {
             ratios.add(create(String.valueOf(i), 1, 1));

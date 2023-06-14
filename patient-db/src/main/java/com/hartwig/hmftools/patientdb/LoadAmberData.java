@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +34,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.vcf.VCFFileReader;
@@ -87,7 +87,7 @@ public class LoadAmberData
     {
         LOGGER.info("Comparing with existing samples");
         final List<AmberSample> allSamples = dbAccess.readAmberSamples();
-        final List<AmberMapping> sampleMappings = Lists.newArrayList();
+        final List<AmberMapping> sampleMappings = new ArrayList<>();
         for(AmberSample other : allSamples)
         {
             if(!other.sampleId().equals(sample.sampleId()))

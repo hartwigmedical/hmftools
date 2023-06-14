@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -20,7 +21,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadCanonicalTranscripts
@@ -51,8 +51,8 @@ public class LoadCanonicalTranscripts
         ensemblDataCache.setRequiredData(true, false, false, true);
         ensemblDataCache.load(false);
 
-        List<GeneData> geneDataList = Lists.newArrayList();
-        List<TranscriptData> transDataList = Lists.newArrayList();
+        List<GeneData> geneDataList = new ArrayList<>();
+        List<TranscriptData> transDataList = new ArrayList<>();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
