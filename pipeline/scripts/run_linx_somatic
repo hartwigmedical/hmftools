@@ -36,8 +36,8 @@ args="-sample ${tumor_id} \
   -purple_dir ${purple_dir} \
   -ref_genome_version ${ref_genome_version} \
   -ensembl_data_dir ${ensembl_dir} \
-  -check_fusions -known_fusion_file ${known_fusion_file} \
-  -check_drivers -driver_gene_panel ${driver_gene_panel} \
+  -known_fusion_file ${known_fusion_file} \
+  -driver_gene_panel ${driver_gene_panel} \
   -output_dir ${output_dir}"
 
 echo "Running Linx somatic with args: ${args}"

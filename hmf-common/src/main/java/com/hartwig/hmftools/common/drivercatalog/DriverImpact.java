@@ -4,8 +4,6 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
-import org.jetbrains.annotations.NotNull;
-
 public enum DriverImpact
 {
     MISSENSE,

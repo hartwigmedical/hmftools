@@ -17,7 +17,7 @@ if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
 fi
 
-lilac_tsv=${output_dir}/${tumor_id}.lilac.csv
+lilac_tsv=${output_dir}/${tumor_id}.lilac.tsv
 
 if [[ -f "${lilac_tsv}" ]]; then
   echo "Skipping Lilac for ${tumor_id}, since results file ${lilac_tsv} exists"
