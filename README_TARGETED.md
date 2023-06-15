@@ -66,7 +66,7 @@ A tsv file used for COBALT targeted CN normalisation can be prepared from a set 
 
 2. Run cobalt on bams from targeted and matching WGS samples. For the targeted samples, calculate the targeted regions enrichment rate as median(tumorGCRatio) of the targetRegions.
 
-3. Run the python script [target_region_normalisation.py](https://github.com/hartwigmedical/hmftools/blob/master/cobalt/src/main/resources/py/target_region_normalisation.py), with the following command:
+3. Copy the directory [cobalt analysis](https://github.com/hartwigmedical/hmftools/blob/master/cobalt/analysis), and run the python script `target_region_normalisation.py`:
 ```
 python target_region_normalisation.py --output=<output tsv> --sample_cfg=<json sample config> --target_region=<bed file>
 ```
