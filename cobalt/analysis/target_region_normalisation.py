@@ -2,6 +2,13 @@ import pandas as pd
 import json
 import argparse
 
+import os, sys
+script_dir = os.path.dirname(__file__)
+if script_dir not in sys.path:
+    sys.path.append(script_dir)
+
+import cobalt_calc
+
 def isX(chromosome: str):
     return chromosome == "X" or chromosome == "chrX"
 
@@ -24,6 +31,7 @@ def load_exon_region_df(csv_path, region_size):
     exon_region_df = exons_df.reset_index(drop=True)
     exon_region_df['position'] = exon_region_df.apply(lambda x: exon_to_regions(x), axis=1)
     exon_region_df = exon_region_df[['chromosome', 'exon', 'position']].explode('position').reset_index(drop=True)
+    exon_region_df['position'] = exon_region_df['position'].astype(int)
 
     # remove the duplicate
     exon_region_df.drop_duplicates(subset=['chromosome', 'position'], inplace=True)
@@ -40,10 +48,9 @@ def load_cobalt_ratio_df(sample_cfg, assume_diploid):
             sample_id = sample["sample_id"]
             targeted_cobalt_ratios = sample["targeted_cobalt_ratios"]
 
-            cols_to_drop = ['referenceReadCount', 'referenceGCRatio', 'referenceGCDiploidRatio']
-
-            panel_df = pd.read_csv(targeted_cobalt_ratios, sep="\t", dtype={"chromosome": str}).drop(columns=cols_to_drop)
-            panel_df = panel_df.loc[panel_df['tumorGCRatio'] >= 0]
+            panel_df = pd.read_csv(targeted_cobalt_ratios, sep="\t", dtype={"chromosome": str})
+            panel_df.drop(columns=['referenceReadCount', 'referenceGCRatio', 'referenceGCDiploidRatio'],
+                          inplace=True)
 
             if assume_diploid:
                 gender = sample["gender"]
@@ -67,11 +74,12 @@ def load_cobalt_ratio_df(sample_cfg, assume_diploid):
                     raise RuntimeError(f"unknown gender: {gender}")
             else:
                 wgs_cobalt_ratios = sample["wgs_cobalt_ratios"]
-                wgs_df = pd.read_csv(wgs_cobalt_ratios, sep="\t", dtype={"chromosome": str}).drop(columns=cols_to_drop)
+                wgs_df = pd.read_csv(wgs_cobalt_ratios, sep="\t", dtype={"chromosome": str})
                 wgs_df = wgs_df.loc[wgs_df['tumorGCRatio'] >= 0]
 
-            # merge them together
-            combine_df = pd.merge(panel_df, wgs_df, how='left', on=['chromosome', 'position'], suffixes=['_panel', '_wgs'])
+            # merge them together, we only need tumorGCRatio from WGS
+            combine_df = pd.merge(panel_df, wgs_df[['chromosome', 'position', 'tumorGCRatio']],
+                                  how='left', on=['chromosome', 'position'], suffixes=('_panel', '_wgs'))
 
             combine_df.insert(0, 'sample_id', sample_id)
             cobalt_ratio_dfs.append(combine_df)
@@ -84,6 +92,30 @@ def load_cobalt_ratio_df(sample_cfg, assume_diploid):
 
     # merge all into one
     cobalt_ratio_df = pd.concat(cobalt_ratio_dfs).reset_index(drop=True)
+
+    return cobalt_ratio_df
+
+# add two boolean columns: onTarget and offTarget
+def label_on_off_target(cobalt_ratio_df, exon_region_df) -> pd.DataFrame:
+    # we want to merge in the exons, so we know which region is within the panel
+    cobalt_ratio_df = cobalt_ratio_df.merge(exon_region_df[['chromosome', 'position', 'exon']], how='inner',
+                                            on=('chromosome', 'position'))
+    # on target ratio
+    cobalt_ratio_df["onTarget"] = cobalt_ratio_df['exon'].notna()
+
+    # add another column whether it is included in offtarget ratio
+    exclude_from_offtarget_df = exon_region_df[["chromosome", "position"]].reset_index(drop=True)
+    exclude_from_offtarget_df["position"] = exclude_from_offtarget_df["position"].apply(
+        lambda x: [v for v in range(x - cobalt_calc.OFF_TARGET_MIN_DISANCE_FROM_ON_TARGET,
+                                    x + cobalt_calc.OFF_TARGET_MIN_DISANCE_FROM_ON_TARGET + cobalt_calc.WINDOW_SIZE,
+                                    cobalt_calc.WINDOW_SIZE)])
+    exclude_from_offtarget_df = exclude_from_offtarget_df.explode("position").drop_duplicates()
+    exclude_from_offtarget_df["excludeFromOffTarget"] = True
+
+    cobalt_ratio_df = cobalt_ratio_df.merge(exclude_from_offtarget_df, on=["chromosome", "position"], how="left")
+    cobalt_ratio_df["offTarget"] = ~(cobalt_ratio_df["excludeFromOffTarget"].fillna(False))
+    cobalt_ratio_df.drop(columns="excludeFromOffTarget", inplace=True)
+
     return cobalt_ratio_df
 
 def chromosome_rank(chromosome):
@@ -99,6 +131,49 @@ def chromosome_rank(chromosome):
         return int(chromosome)
     except:
         return 1000
+
+def create_normalisation_df(cobalt_ratio_df, row_mask) -> pd.DataFrame:
+
+    # make a copy with row mask applied
+    cobalt_ratio_df = cobalt_ratio_df[row_mask].reset_index(drop=True)
+
+    # calculate a gc normalised value of all targeted regions
+    cobalt_ratio_df["tumorGCRatio_panel"] = cobalt_ratio_df.groupby("sample_id", as_index=False) \
+        .apply(lambda x: cobalt_calc.gc_normalise(x, "tumorReadCount", cobalt_calc.included_in_median_calc)) \
+        .droplevel(0)
+
+    # use this normalisation to calculate relative enrichment per region
+    cobalt_ratio_df['relativeEnrichment'] = cobalt_ratio_df['tumorGCRatio_panel'] / cobalt_ratio_df['tumorGCRatio_wgs']
+
+    print(f"calculating relative enrichment")
+
+    # calculate enrichment
+    normalisation_df = cobalt_ratio_df[['chromosome', 'position', 'relativeEnrichment']] \
+        .groupby(['chromosome', 'position']).agg(['median']).reset_index()
+
+    # flatten the columns
+    normalisation_df.columns = ['chromosome', 'position', 'relativeEnrichment']
+    return normalisation_df
+
+def create_onoff_target_df(cobalt_ratio_df, exon_region_df, gc_profile_df, min_enrichment_ratio) -> pd.DataFrame:
+    # merge in gc profiles
+    cobalt_ratio_df = cobalt_ratio_df.merge(gc_profile_df, on=["chromosome", "position"], how="left")
+
+    cobalt_ratio_df = label_on_off_target(cobalt_ratio_df, exon_region_df)
+
+    on_target_normalisation_df = create_normalisation_df(cobalt_ratio_df, cobalt_ratio_df["onTarget"])
+    #on_target_normalisation_df["onTarget"] = True
+    #on_target_normalisation_df["offTarget"] = False
+    #off_target_normalisation_df = create_normalisation_df(cobalt_ratio_df, cobalt_ratio_df["offTarget"])
+    #off_target_normalisation_df["onTarget"] = False
+    #off_target_normalisation_df["offTarget"] = True
+
+    # merge into one
+    enrichment_df = on_target_normalisation_df
+
+    # set a minimum relative enrichment, enrichment ratio below this will be removed
+    enrichment_df['relativeEnrichment'] = enrichment_df['relativeEnrichment'].apply(lambda x: x if x >= min_enrichment_ratio else float('nan'))
+    return enrichment_df
 
 epilog = '''Argument for sample_cfg is a json file that contains information for each sample.
 For each sample we need to provide the cobalt ratio outputs generated from both the
@@ -139,9 +214,10 @@ of bam files generated using the same target enrichment process.''',
     parser.add_argument('--output', help='Output TSV file', required=True)
     parser.add_argument('--sample_cfg', help='Path to sample config file', required=True)
     parser.add_argument('--target_region', help='CSV file with targeted regions', required=True)
+    parser.add_argument('--gc_profile', help='TSV file with gc profiles', required=True)
     parser.add_argument('--cobalt_window_size', type=int, default=1000,
                         help='Cobalt genome region window size [default=1000]')
-    parser.add_argument('--assume_diploid', type=bool, default=False,
+    parser.add_argument('--assume_diploid', action='store_true',
                         help='Assume the genome is diploid instead of using the WGS ratios')
     parser.add_argument('--min_enrichment_ratio', type=float, default=0.1,
                         help='Minimum enrichment ratio, window with enrichment ratios < this will be masked')
@@ -151,49 +227,21 @@ of bam files generated using the same target enrichment process.''',
         print(f"--assume_diploid=True set. Assuming genome is diploid")
 
     exon_region_df = load_exon_region_df(args.target_region, args.cobalt_window_size)
+    gc_profile_df = cobalt_calc.load_gc_profile_df(args.gc_profile)
+
     cobalt_ratio_df = load_cobalt_ratio_df(args.sample_cfg, args.assume_diploid)
 
-    # we want to merge in the exons, so we know which region is within the panel
-    cobalt_ratio_df = cobalt_ratio_df.merge(exon_region_df[['chromosome', 'position', 'exon']], how='left', on=('chromosome', 'position'))
-    cobalt_ratio_df['target_region'] = cobalt_ratio_df['exon'].notna()
-
-    # remove all regions that are not in the exons. Maybe think about including more?
-    cobalt_ratio_df = cobalt_ratio_df.loc[cobalt_ratio_df['target_region']].reset_index(drop=True)
-
-    # now want to normalise this by the median of GC ratios of the panel regions
-    normalisation_df = cobalt_ratio_df[['sample_id', 'tumorGCRatio_panel']].groupby(['sample_id']).agg(['median'])
-    normalisation_df.columns = normalisation_df.columns.to_flat_index()
-    normalisation_df.columns = [ c[0] + '_' + c[1] for c in normalisation_df.columns]
-
-    # use this normalisation to calculate relative enrichment per region
-    cobalt_ratio_df = pd.merge(cobalt_ratio_df, normalisation_df, how='left', on='sample_id')
-    cobalt_ratio_df['relativeEnrichment'] = cobalt_ratio_df['tumorGCRatio_panel'] / cobalt_ratio_df['tumorGCRatio_wgs'] / cobalt_ratio_df['tumorGCRatio_panel_median']
-
-    print(f"calculating relative enrichment")
-
-    # calculate enrichment
-    enrichment_df = cobalt_ratio_df[['chromosome', 'position', 'relativeEnrichment']].groupby(['chromosome','position']).agg(['median', 'mean', 'std', 'min', 'max'])
-    enrichment_df.reset_index(inplace=True)
-    # flatten the columns
-    enrichment_df.columns = [ c[1] if c[1] else c[0] for c in enrichment_df.columns.to_flat_index() ]
-
-    # now save all these regions into a bed file for cobalt to use
-    enrichment_file = enrichment_df[['chromosome', 'position', 'median']].reset_index(drop=True)
-    enrichment_file.columns = ['chromosome', 'position', 'relativeEnrichment']
-
-    # set a minimum relative enrichment, enrichment ratio below this will be removed
-    enrichment_file['relativeEnrichment'] = enrichment_file['relativeEnrichment'].apply(lambda x: x if x >= args.min_enrichment_ratio else float('nan'))
+    enrichment_file = create_onoff_target_df(cobalt_ratio_df, exon_region_df, gc_profile_df, args.min_enrichment_ratio)
 
     # merge in the exons again. We must do this cause some regions might be missing from the cobalt data
-    enrichment_file = enrichment_file.merge(exon_region_df, on=['chromosome', 'position'], how='outer')
-    enrichment_file.drop(columns=['exon'], inplace=True)
-    enrichment_file['position'] = enrichment_file['position'].astype(int)
+    enrichment_file = enrichment_file.merge(exon_region_df, on=['chromosome', 'position'], how='outer').drop(columns='exon')
     enrichment_file['relativeEnrichment'] = enrichment_file['relativeEnrichment'].apply(lambda x: 'NaN' if pd.isna(x) else '{:.4f}'.format(x))
     enrichment_file.sort_values(by='position', inplace=True)
     enrichment_file.sort_values(by='chromosome', key=lambda col: col.map(chromosome_rank), kind='stable', inplace=True)
 
     print(f"writing {enrichment_file.shape[0]} enrichments to {args.output}")
     enrichment_file.to_csv(args.output, sep="\t", index=False)
+
 
 if __name__ == "__main__":
     main()
