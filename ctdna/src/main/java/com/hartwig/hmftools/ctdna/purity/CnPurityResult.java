@@ -17,14 +17,17 @@ public class CnPurityResult
     public final int CopyNumberSegments;
     public final int GcRatioSegments;
     public final double MedianGcRatiosPerSegments;
+    public final double AnueploidyScore;
+    public final double ClonalPercent;
 
     public static final CnPurityResult INVALID_RESULT = new CnPurityResult(
             false, 0, 0, 0, 0,
-            0, 0, 0);
+            0, 0, 0, 0, 0);
 
     public CnPurityResult(
             final boolean valid, final double fitCoefficient, final double fitIntercept, final double residuals,
-            final double estimatedPurity, final int copyNumberSegments, final int gcRatioSegments, final double medianGcRatiosPerSegments)
+            final double estimatedPurity, final int copyNumberSegments, final int gcRatioSegments, final double medianGcRatiosPerSegments,
+            double anueploidyScore, double clonalPercent)
     {
         Valid = valid;
         FitCoefficient = fitCoefficient;
@@ -34,18 +37,22 @@ public class CnPurityResult
         CopyNumberSegments = copyNumberSegments;
         GcRatioSegments = gcRatioSegments;
         MedianGcRatiosPerSegments = medianGcRatiosPerSegments;
+        AnueploidyScore = anueploidyScore;
+        ClonalPercent = clonalPercent;
     }
 
     public static String header()
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("CopyNumberPurity");
+        sj.add("AnueploidyScore");
+        sj.add("ClonalPercent");
+        sj.add("CnFitResidualsPerc");
         sj.add("CnFitCoeff");
         sj.add("CnFitIntercept");
-        sj.add("CnFitResidualsPerc");
+        sj.add("GcRatioMedianPerSegment");
         sj.add("CnSegments");
         sj.add("GcRatioSegments");
-        sj.add("GcRatioMedianPerSegment");
         return sj.toString();
     }
 
@@ -53,12 +60,14 @@ public class CnPurityResult
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(formatPurityValue(EstimatedPurity));
-        sj.add(format("%.4f", FitCoefficient));
-        sj.add(format("%.4f", FitIntercept));
+        sj.add(format("%.4f", AnueploidyScore));
+        sj.add(format("%.3f", ClonalPercent));
         sj.add(format("%.4f", Residuals));
+        sj.add(format("%.3f", FitCoefficient));
+        sj.add(format("%.4f", FitIntercept));
+        sj.add(format("%.1f", MedianGcRatiosPerSegments));
         sj.add(format("%d", CopyNumberSegments));
         sj.add(format("%d", GcRatioSegments));
-        sj.add(format("%.1f", MedianGcRatiosPerSegments));
 
         return sj.toString();
     }

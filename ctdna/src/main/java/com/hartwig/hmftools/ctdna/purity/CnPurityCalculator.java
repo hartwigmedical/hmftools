@@ -41,30 +41,39 @@ public class CnPurityCalculator
         double copyNumberCountTotal = 0;
 
         // compute average GC ratio median and average copy number
+        int segmentCount = 0;
+
         for(CopyNumberGcData cnSegment : copyNumberSegments)
         {
+            if(!cnSegment.IsValid)
+                continue;
+
+            ++segmentCount;
             gcRatioCountTotal += cnSegment.count();
-            copyNumberCountTotal += cnSegment.count() * cnSegment.CopyNumber;
+            copyNumberCountTotal += cnSegment.count() * cnSegment.CopyNumberLevel;
             gcRatioMedianCountTotal += cnSegment.count() * cnSegment.median();
         }
 
         double avgGcRatio = gcRatioMedianCountTotal / gcRatioCountTotal;
         double avgCopyNumber = copyNumberCountTotal / gcRatioCountTotal;
-        int segmentCount = copyNumberSegments.size();
 
         double[][] adjustedCopyNumber = new double[segmentCount][1];
         double[] adjustedGcRatioMedians = new double[segmentCount];
 
         // weight the data by the number of GC ratio points in each Cn segment
-        for(int i = 0; i < segmentCount; ++i)
+        int segmentIndex = 0;
+        for(CopyNumberGcData cnSegment : copyNumberSegments)
         {
-            CopyNumberGcData cnSegment = copyNumberSegments.get(i);
+            if(!cnSegment.IsValid)
+                continue;
 
             double sqrtCount = sqrt(cnSegment.count());
-            adjustedCopyNumber[i][0] = (cnSegment.CopyNumber - avgCopyNumber) * sqrtCount;
+            adjustedCopyNumber[segmentIndex][0] = (cnSegment.CopyNumberLevel - avgCopyNumber) * sqrtCount;
 
             double adjustMedian = (cnSegment.median() - avgGcRatio) * sqrtCount;
-            adjustedGcRatioMedians[i] = adjustMedian;
+            adjustedGcRatioMedians[segmentIndex] = adjustMedian;
+
+            ++segmentIndex;
         }
 
         LeastSquaresFit lsqFit = new LeastSquaresFit(segmentCount, 1);
@@ -78,10 +87,12 @@ public class CnPurityCalculator
         double fittedDiffWeightedTotalAbs = 0;
         double gcRatioWeightedTotal = 0;
 
-        for(int i = 0; i < segmentCount; ++i)
+        for(CopyNumberGcData cnSegment : copyNumberSegments)
         {
-            CopyNumberGcData cnSegment = copyNumberSegments.get(i);
-            double fittedGcRatio = mFitIntercept + cnSegment.CopyNumber * mFitCoefficient;
+            if(!cnSegment.IsValid)
+                continue;
+
+            double fittedGcRatio = mFitIntercept + cnSegment.CopyNumberLevel * mFitCoefficient;
             double gcRatioFitDiff = cnSegment.median() - fittedGcRatio;
 
             double sqrtCount = sqrt(cnSegment.count());

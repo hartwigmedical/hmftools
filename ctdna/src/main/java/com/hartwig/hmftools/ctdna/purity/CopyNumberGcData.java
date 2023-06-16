@@ -14,6 +14,9 @@ public class CopyNumberGcData
     public final int SegmentEnd;
     public final double CopyNumber;
 
+    public final int CopyNumberLevel;
+    public final boolean IsValid;
+
     private final List<GcRatioData> mTumorGcRatios;
 
     private boolean mComputed;
@@ -21,12 +24,15 @@ public class CopyNumberGcData
     private double mMedian;
 
     public CopyNumberGcData(
-            final String chromosome, final int segmentStart, final int segmentEnd, final double copyNumber)
+            final String chromosome, final int segmentStart, final int segmentEnd, final double copyNumber,
+            boolean isValid, int copyNumberLevel)
     {
         Chromosome = chromosome;
         SegmentStart = segmentStart;
         SegmentEnd = segmentEnd;
         CopyNumber = copyNumber;
+        CopyNumberLevel = copyNumberLevel;
+        IsValid = isValid;
 
         mTumorGcRatios = Lists.newArrayList();
 

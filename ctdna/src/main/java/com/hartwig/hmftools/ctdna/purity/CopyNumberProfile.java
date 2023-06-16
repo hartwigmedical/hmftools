@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.ctdna.purity;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Integers.median;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.CnPurityResult.INVALID_RESULT;
+import static com.hartwig.hmftools.ctdna.purity.PurityConstants.CLONAL_COPY_NUMBER_MARGIN;
+import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MAX_COPY_NUMBER;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.CN_SEGMENT_FILE_ID;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.SUMMARY_FILE_ID;
 
@@ -15,6 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -98,12 +104,42 @@ public class CopyNumberProfile
             CT_LOGGER.info(format("sample(%s) ploidy(%.4f) copy number segments(%d) estimated purity(%.6f)",
                     sampleId, samplePloidy, mCopyNumberGcRatios.size(), mPurityCalculator.estimatedPurity()));
 
-            double medianGcRatioPerSegment = calculateGcRatioCountMedian();
+            // calculate a median GC Ratio count and clonal percentage
+            int totalRatios = 0;
+            int clonalRatios = 0;
+
+            List<Integer> segmentGcCounts = Lists.newArrayList();
+            Map<Integer,Integer> cnLevelRatioaTotals = Maps.newHashMap();
+            int maxCnLevelCount = 0;
+
+            for(CopyNumberGcData cnSegment : mCopyNumberGcRatios)
+            {
+                int ratioCount = cnSegment.count();
+                totalRatios += ratioCount;
+
+                 if(cnSegment.IsValid)
+                 {
+                     clonalRatios += ratioCount;
+                     segmentGcCounts.add(ratioCount);
+
+                     Integer levelTotal = cnLevelRatioaTotals.get(cnSegment.CopyNumberLevel);
+                     int newTotal = levelTotal != null ? levelTotal + ratioCount : ratioCount;
+                     maxCnLevelCount = max(maxCnLevelCount, newTotal);
+                     cnLevelRatioaTotals.put(cnSegment.CopyNumberLevel, newTotal);
+                 }
+            }
+
+            double maxLevelPercent = clonalRatios > 0 ? maxCnLevelCount / (double)clonalRatios : 0;
+            double anueploidyScore = 1 - maxLevelPercent;
+
+            double clonalPercent = totalRatios > 0 ? clonalRatios / (double)totalRatios : 0;
+            double medianGcRatioPerSegment = median(segmentGcCounts);
 
             return new CnPurityResult(
                     true, mPurityCalculator.fitCoefficient(), mPurityCalculator.fitIntercept(),
                     mPurityCalculator.residuals(), mPurityCalculator.estimatedPurity(),
-                    mCopyNumberGcRatios.size(), mCopyNumberGcRatios.stream().mapToInt(x -> x.count()).sum(), medianGcRatioPerSegment);
+                    mCopyNumberGcRatios.size(), mCopyNumberGcRatios.stream().mapToInt(x -> x.count()).sum(), medianGcRatioPerSegment,
+                    anueploidyScore, clonalPercent);
         }
         catch(Exception e)
         {
@@ -140,9 +176,12 @@ public class CopyNumberProfile
             if(segmentRatios.isEmpty())
                 continue;
 
+            boolean useCnSegment = useCopyNumberSegment(copyNumber.averageTumorCopyNumber());
+            int cnLevel = (int)round(copyNumber.averageTumorCopyNumber());
+
             CopyNumberGcData cnSegment = new CopyNumberGcData(
                     copyNumber.chromosome(), copyNumber.start(), copyNumber.end(),
-                    Doubles.round(copyNumber.averageTumorCopyNumber(), 2));
+                    Doubles.round(copyNumber.averageTumorCopyNumber(), 2), useCnSegment, cnLevel);
 
             segmentRatios.forEach(x -> cnSegment.addRatio(new GcRatioData(x.position(), x.tumorGCRatio())));
 
@@ -157,11 +196,15 @@ public class CopyNumberProfile
         }
     }
 
-    private double calculateGcRatioCountMedian()
+    private static boolean useCopyNumberSegment(double copyNumber)
     {
-        List<Integer> segmentGcCounts = Lists.newArrayList();
-        mCopyNumberGcRatios.forEach(x -> segmentGcCounts.add(x.count()));
-        return median(segmentGcCounts);
+        for(int i = 0; i <= MAX_COPY_NUMBER; ++i)
+        {
+            if(abs(copyNumber - i) <= CLONAL_COPY_NUMBER_MARGIN)
+                return true;
+        }
+
+        return false;
     }
 
     private void plotCopyNumberGcRatioFit(final String sampleId)
