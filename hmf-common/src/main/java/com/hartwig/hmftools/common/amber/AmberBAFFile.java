@@ -110,7 +110,6 @@ public final class AmberBAFFile
         }
     }
 
-    @NotNull
     private static List<String> toLines(final List<AmberBAF> bafs)
     {
         final List<String> lines = new ArrayList<>();
