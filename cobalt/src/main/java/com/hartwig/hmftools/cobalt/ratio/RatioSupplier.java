@@ -33,7 +33,7 @@ public class RatioSupplier
 
     private final Table mGcProfiles;
     @Nullable private final Table mReferenceCounts;
-    @Nullable private Table mTumorCounts;
+    @Nullable private final Table mTumorCounts;
 
     // a table with chromosome, position, relativeEnrichment
     private Table mTargetRegionEnrichment = null;
@@ -192,10 +192,6 @@ public class RatioSupplier
         // filter tumor ratios by the diploid regions
         // we use inner join to remove any tumor ratios that are not in the diploid regions
         tumorRatios = tumorRatios.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS)
-                .inner(diploidRegions.selectColumns(CobaltColumns.ENCODED_CHROMOSOME_POS))
-                .sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
-
-        mTumorCounts = mTumorCounts.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS)
                 .inner(diploidRegions.selectColumns(CobaltColumns.ENCODED_CHROMOSOME_POS))
                 .sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
 
