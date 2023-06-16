@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -25,12 +26,14 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
 import org.apache.logging.log4j.Level;
 
@@ -96,13 +99,28 @@ public class CopyNumberProfile
 
             double samplePloidy = purityContext.bestFit().ploidy();
 
-            mPurityCalculator.calculatePurity(mCopyNumberGcRatios, samplePloidy);
+            CnFitResult fitResult = CnPurityCalculator.calculatePurity(mCopyNumberGcRatios, samplePloidy);
 
-            if(!mPurityCalculator.valid())
-                return INVALID_RESULT;
+            double fitPurityHigh = 0;
+            double fitPurityLow = -1;
+            // find a range by excluding each chromosome in turn
+            for(HumanChromosome chromosome : HumanChromosome.values())
+            {
+                List<CopyNumberGcData> excludedChrSegments = mCopyNumberGcRatios.stream()
+                        .filter(x -> !RefGenomeFunctions.stripChrPrefix(x.Chromosome).equals(chromosome.toString()))
+                        .collect(Collectors.toList());
+
+                CnFitResult chrFitResult = CnPurityCalculator.calculatePurity(excludedChrSegments, samplePloidy);
+
+                fitPurityLow = fitPurityLow < 0 ? chrFitResult.EstimatedPurity : min(fitPurityLow, chrFitResult.EstimatedPurity);
+                fitPurityHigh = max(fitPurityHigh, chrFitResult.EstimatedPurity);
+            }
+
+            // if(!mPurityCalculator.valid())
+            //    return INVALID_RESULT;
 
             CT_LOGGER.info(format("sample(%s) ploidy(%.4f) copy number segments(%d) estimated purity(%.6f)",
-                    sampleId, samplePloidy, mCopyNumberGcRatios.size(), mPurityCalculator.estimatedPurity()));
+                    sampleId, samplePloidy, mCopyNumberGcRatios.size(), fitResult.EstimatedPurity));
 
             // calculate a median GC Ratio count and clonal percentage
             int totalRatios = 0;
@@ -136,10 +154,9 @@ public class CopyNumberProfile
             double medianGcRatioPerSegment = median(segmentGcCounts);
 
             return new CnPurityResult(
-                    true, mPurityCalculator.fitCoefficient(), mPurityCalculator.fitIntercept(),
-                    mPurityCalculator.residuals(), mPurityCalculator.estimatedPurity(),
-                    mCopyNumberGcRatios.size(), mCopyNumberGcRatios.stream().mapToInt(x -> x.count()).sum(), medianGcRatioPerSegment,
-                    anueploidyScore, clonalPercent);
+                    true, fitResult.FitCoefficient, fitResult.FitIntercept, fitResult.Residuals, fitResult.EstimatedPurity,
+                    fitPurityLow, fitPurityHigh, anueploidyScore, clonalPercent,
+                    mCopyNumberGcRatios.size(), mCopyNumberGcRatios.stream().mapToInt(x -> x.count()).sum(), medianGcRatioPerSegment);
         }
         catch(Exception e)
         {
@@ -218,6 +235,12 @@ public class CopyNumberProfile
         {
             String summaryFile = config.formFilename(SUMMARY_FILE_ID);
             String cnSegmentsFile = config.formFilename(CN_SEGMENT_FILE_ID);
+
+            if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(cnSegmentsFile)))
+            {
+                CT_LOGGER.warn("plots missing required files: summary({}) segments({})", summaryFile, cnSegmentsFile);
+                return false;
+            }
 
             int runCode = RExecutor.executeFromClasspath(
                     "plots/CopyNumberGcRatioPlot.R", patientId, sampleId, summaryFile, cnSegmentsFile, config.OutputDir);

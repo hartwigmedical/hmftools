@@ -1,40 +1,17 @@
 package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
-
-import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
-import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
-import com.hartwig.hmftools.common.sigs.SigResiduals;
 
-public class CnPurityCalculator
+public final class CnPurityCalculator
 {
-    private double mFitCoefficient;
-    private double mFitIntercept;
-    private double mEstimatedPurity;
-    private double mResiduals;
-    private boolean mValid;
-
-    public CnPurityCalculator()
-    {
-        mFitCoefficient = 0;
-        mFitIntercept = 0;
-        mEstimatedPurity = 0;
-        mResiduals = 0;
-        mValid = false;
-    }
-
-    public double fitCoefficient() { return mFitCoefficient; }
-    public double fitIntercept() { return mFitIntercept; }
-    public double estimatedPurity() { return mEstimatedPurity; }
-    public double residuals() { return mResiduals; }
-    public boolean valid() { return mValid; }
-
-    public void calculatePurity(final List<CopyNumberGcData> copyNumberSegments, final double samplePloidy)
+    public static CnFitResult calculatePurity(final List<CopyNumberGcData> copyNumberSegments, final double samplePloidy)
     {
         double gcRatioCountTotal = 0;
         double gcRatioMedianCountTotal = 0;
@@ -81,8 +58,8 @@ public class CnPurityCalculator
         lsqFit.initialise(adjustedCopyNumber, adjustedGcRatioMedians);
         lsqFit.solve();
 
-        mFitCoefficient = lsqFit.getContribs()[0];
-        mFitIntercept = avgGcRatio - avgCopyNumber * mFitCoefficient;
+        double fitCoefficient = lsqFit.getContribs()[0];
+        double fitIntercept = avgGcRatio - avgCopyNumber * fitCoefficient;
 
         double fittedDiffWeightedTotalAbs = 0;
         double gcRatioWeightedTotal = 0;
@@ -92,7 +69,7 @@ public class CnPurityCalculator
             if(!cnSegment.IsValid)
                 continue;
 
-            double fittedGcRatio = mFitIntercept + cnSegment.CopyNumberLevel * mFitCoefficient;
+            double fittedGcRatio = fitIntercept + cnSegment.CopyNumberLevel * fitCoefficient;
             double gcRatioFitDiff = cnSegment.median() - fittedGcRatio;
 
             double sqrtCount = sqrt(cnSegment.count());
@@ -102,11 +79,10 @@ public class CnPurityCalculator
         }
 
         double weightedResiduals = gcRatioWeightedTotal > 0 ? fittedDiffWeightedTotalAbs / gcRatioWeightedTotal : 0;
-        mResiduals = weightedResiduals;
+        double residuals = weightedResiduals;
 
-        mEstimatedPurity = 2 * mFitCoefficient / (1 + (2 - samplePloidy) * mFitCoefficient);
+        double estimatedPurity = max(min(2 * fitCoefficient / (1 + (2 - samplePloidy) * fitCoefficient), 1), 0);
 
-        mValid = true;
+        return new CnFitResult(fitCoefficient, fitIntercept, estimatedPurity, residuals);
     }
-
 }

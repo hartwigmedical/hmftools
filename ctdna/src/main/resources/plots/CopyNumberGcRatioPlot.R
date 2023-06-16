@@ -1,5 +1,5 @@
 library(dplyr)
-#library(tidyr)
+library(tidyr)
 library(ggplot2)
 library(gtable)
 
@@ -8,7 +8,7 @@ args <- commandArgs(trailingOnly = TRUE)
 print(args)
 
 if (length(args) < 5)
-  {
+{
   print("Requires arguments 1=PatientId 2=SampleId 3=Summary file 4=CN Segment file 5=Sample data output directory")
   stop()
 }
@@ -21,25 +21,31 @@ outputDir <- args[5]
 
 print(sprintf('Producing CN-GC Ratio plot for patient(%s) sample(%s), writing to output(%s)', patientId, sampleId, outputDir))
 
-# summaryFile = paste0(outputDir, patientId, '.ctdna.summary.tsv')
-# cnGcRatioFile = paste0(outputDir, patientId, '.ctdna.cn_segments.tsv')
-
 if (!file.exists(summaryFile))
-  {
+{
   print(sprintf('Missing sample summary file: %s', summaryFile))
   stop()
 }
 
 if (!file.exists(cnSegmentFile))
-  {
+{
   print(sprintf('Missing sample CN-GcRatio file: %s', cnSegmentFile))
   stop()
 }
 
-sampleSummary = read.csv(summaryFile,sep='\t') %>% filter(SampleId==sampleId)
-cnGcRatioSegments = read.csv(cnSegmentFile,sep='\t') %>% filter(SampleId==sampleId)
+sampleSummary = read.csv(summaryFile,sep='\t')
+cnGcRatioSegments = read.csv(cnSegmentFile,sep='\t')
 
-cnSegmentRatios = merge(cnSegmentRatios,sampleSummary %>% select(SampleId,CnFitIntercept,CnFitCoeff),by='SampleId',all.x=T)
+sampleSummary = sampleSummary %>% filter(SampleId==sampleId)
+cnGcRatioSegments = cnGcRatioSegments %>% filter(SampleId==sampleId)
+
+if(nrow(sampleSummary) == 0 | nrow(cnGcRatioSegments) == 0)
+{
+  print(sprintf('Empty filtered input files'))
+  stop()
+}
+
+cnGcRatioSegments = merge(cnGcRatioSegments,sampleSummary %>% select(SampleId,CnFitIntercept,CnFitCoeff),by='SampleId',all.x=T)
 
 cnGcRatioSegments = cnGcRatioSegments %>%
     mutate(GcRatioMedianFit=CnFitIntercept+CnFitCoeff*CopyNumber,
