@@ -44,7 +44,7 @@ import htsjdk.samtools.cram.ref.ReferenceSource;
 import tech.tablesaw.api.*;
 import tech.tablesaw.io.csv.CsvReadOptions;
 
-public class CobaltApplication implements AutoCloseable
+public class CobaltApplication
 {
     @ParametersDelegate
     private final CobaltConfig mConfig = new CobaltConfig();
@@ -174,12 +174,6 @@ public class CobaltApplication implements AutoCloseable
             return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomePath)));
         }
         return readerFactory;
-    }
-
-    @Override
-    public void close()
-    {
-        CB_LOGGER.info("Complete");
     }
 
     private Collection<Chromosome> loadChromosomes(final SamReaderFactory readerFactory) throws IOException
