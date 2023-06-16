@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cobalt.ratio;
 
+import static com.hartwig.hmftools.cobalt.CobaltTestUtils.assertDoubleEquals;
+
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -70,14 +72,19 @@ public class RatioSupplierTest
 
         Table ratios = ratioSupplier.tumorOnly(diploidRegions);
 
-        // chr2:4001 is not in diploid region, therefore does not have ratio
-        assertEquals(2, ratios.rowCount());
+        assertEquals(3, ratios.rowCount());
 
         Row ratio = ratios.row(0);
         assertEquals(chromosomePosCodec.encodeChromosomePosition("chr1", 2001), ratio.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS));
 
         ratio = ratios.row(1);
         assertEquals(chromosomePosCodec.encodeChromosomePosition("chr2", 3001), ratio.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS));
+
+        ratio = ratios.row(2);
+        assertEquals(chromosomePosCodec.encodeChromosomePosition("chr2", 4001), ratio.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS));
+
+        // tumorGCRatio must be -1 since this position is not in diploid bed file
+        assertDoubleEquals(ratio.getDouble("tumorGCRatio"), -1);
     }
 
     private static void addReadCount(Table readCountTable, String chromosome, int position, int readCount)
