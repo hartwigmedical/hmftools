@@ -12,8 +12,10 @@ public interface GCBucket
 {
     static GCBucket create(final GCProfile profile)
     {
-        return new ImmutableGCBucket((int) Math.round(profile.gcContent() * 100));
+        return new ImmutableGCBucket(calcGcBucket(profile.gcContent() * 100));
     }
 
     int bucket();
+
+    static int calcGcBucket(double gcContent) { return (int) Math.round(gcContent * 100); }
 }

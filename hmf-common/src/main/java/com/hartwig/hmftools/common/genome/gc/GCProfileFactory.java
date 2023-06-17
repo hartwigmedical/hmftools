@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -35,6 +38,31 @@ public final class GCProfileFactory
     public static Multimap<Chromosome, GCProfile> loadGCContent(final String fileName) throws IOException
     {
         return loadGCContent(WINDOW_SIZE, Files.readAllLines(new File(fileName).toPath()));
+    }
+
+    public static Map<String,List<GCProfile>> loadChrGcProfileMap(final String fileName) throws IOException
+    {
+        List<String> lines = Files.readAllLines(new File(fileName).toPath());
+        Map<String,List<GCProfile>> chrProfileMap = Maps.newHashMap();
+
+        String currentChr = "";
+        List<GCProfile> profiles = null;
+
+        for(String line : lines)
+        {
+            final GCProfile gcProfile = fromLine(WINDOW_SIZE, line);
+            if(!gcProfile.chromosome().equals(currentChr))
+            {
+                profiles = Lists.newArrayList();
+                currentChr = gcProfile.chromosome();
+                chrProfileMap.put(gcProfile.chromosome(), profiles);
+            }
+
+            chrProfileMap.put(gcProfile.chromosome(), profiles);
+            profiles.add(gcProfile);
+        }
+
+        return chrProfileMap;
     }
 
     public static Multimap<Chromosome, GCProfile> loadGCContent(int windowSize, final String fileName) throws IOException
