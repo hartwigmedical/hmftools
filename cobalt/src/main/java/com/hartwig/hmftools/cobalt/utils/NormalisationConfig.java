@@ -8,9 +8,6 @@ import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 
 import java.util.List;
 
@@ -26,13 +23,13 @@ public class NormalisationConfig
     public final String CobaltDir;
     public final String TargetRegionsBed;
     public final String GcProfile;
-    public final String OutputDir;
-    public final String OutputId;
+    public final String OutputFile;
     public final RefGenomeVersion RefGenVersion;
 
     private static final String COBALT_DIR = "cobalt_dir";
     private static final String AMBER_DIR = "amber_dir";
     private static final String TARGET_REGIONS_BED = "target_regions_bed";
+    private static final String OUTPUT_FILE = "output_file";
 
     public NormalisationConfig(final CommandLine cmd)
     {
@@ -42,8 +39,7 @@ public class NormalisationConfig
         GcProfile = cmd.getOptionValue(GC_PROFILE);
         TargetRegionsBed = cmd.getOptionValue(TARGET_REGIONS_BED);
         RefGenVersion = RefGenomeVersion.from(cmd);
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
+        OutputFile = cmd.getOptionValue(OUTPUT_FILE);
     }
 
     public static void addCommandLineOptions(final Options options)
@@ -53,9 +49,9 @@ public class NormalisationConfig
         options.addOption(COBALT_DIR, true, "Path to cobalt files");
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(TARGET_REGIONS_BED, true, "Target regions BED file");
+        options.addOption(OUTPUT_FILE, true, "Output normalisation file");
         addGcProfilePath(options);
         addSampleIdFile(options);
-        addOutputOptions(options);
         addLoggingOptions(options);
     }
 }
