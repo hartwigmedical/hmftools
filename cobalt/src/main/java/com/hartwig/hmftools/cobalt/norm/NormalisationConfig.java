@@ -24,12 +24,14 @@ public class NormalisationConfig
     public final String TargetRegionsBed;
     public final String GcProfile;
     public final String OutputFile;
+    public final String DetailedFile;
     public final RefGenomeVersion RefGenVersion;
 
     private static final String COBALT_DIR = "cobalt_dir";
     private static final String AMBER_DIR = "amber_dir";
     private static final String TARGET_REGIONS_BED = "target_regions_bed";
     private static final String OUTPUT_FILE = "output_file";
+    private static final String DETAILED_OUTPUT = "detailed_file";
 
     public NormalisationConfig(final CommandLine cmd)
     {
@@ -40,6 +42,7 @@ public class NormalisationConfig
         TargetRegionsBed = cmd.getOptionValue(TARGET_REGIONS_BED);
         RefGenVersion = RefGenomeVersion.from(cmd);
         OutputFile = cmd.getOptionValue(OUTPUT_FILE);
+        DetailedFile = cmd.getOptionValue(DETAILED_OUTPUT);
     }
 
     public static void addCommandLineOptions(final Options options)
@@ -50,6 +53,7 @@ public class NormalisationConfig
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(TARGET_REGIONS_BED, true, "Target regions BED file");
         options.addOption(OUTPUT_FILE, true, "Output normalisation file");
+        options.addOption(DETAILED_OUTPUT, true, "Output normalisation file");
         addGcProfilePath(options);
         addSampleIdFile(options);
         addLoggingOptions(options);

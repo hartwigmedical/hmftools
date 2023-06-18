@@ -2,11 +2,11 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_REF_ID;
 import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_SAMPLE_ID;
-import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_T;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;

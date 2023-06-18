@@ -82,7 +82,7 @@ public class Normaliser
         double sampleMedianReadCount = interpolatedMedian(sampleReadCounts);
         double sampleMedianNormalisation = sampleMedianReadCount / sampleMeanReadCount;
 
-        Map<Integer, Double> gcBucketMedians = Maps.newHashMap();
+        Map<Integer,Double> gcBucketMedians = Maps.newHashMap();
 
         for(Map.Entry<Integer, List<Double>> entry : gcBucketReadCounts.entrySet())
         {

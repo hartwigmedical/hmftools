@@ -74,8 +74,6 @@ import htsjdk.variant.variantcontext.filter.CompoundFilter;
 
 public class GripssTestUtils
 {
-    public static final String CHR_1 = "1";
-    public static final String CHR_2 = "2";
     public static final String LINE_INSERT_SEQ_A = "AAAAAAAAAAAAAAAAAAAA";
     public static final String LINE_INSERT_SEQ_T = "TTTTTTTTTTTTTTTTTTTT";
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.utils;
+package com.hartwig.hmftools.cobalt.norm;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
@@ -16,8 +16,7 @@ import com.hartwig.hmftools.common.purple.Gender;
 public class CobaltDataLoader
 {
     public static void addCobaltSampleData(
-            final RefGenomeVersion refGenVersion, final Gender amberGender, final String cobaltFilename,
-            final Map<String,List<RegionData>> chrRegionData)
+            final Gender amberGender, final String cobaltFilename, final Map<String,List<RegionData>> chrRegionData)
     {
         try
         {

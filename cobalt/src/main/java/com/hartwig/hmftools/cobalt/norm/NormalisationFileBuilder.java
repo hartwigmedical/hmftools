@@ -65,6 +65,7 @@ public class NormalisationFileBuilder
 
         // load reference data
         loadTargetRegionsBed(mConfig.TargetRegionsBed);
+
         setGcProfileData();
 
         // load Amber files and establish gender
@@ -80,6 +81,7 @@ public class NormalisationFileBuilder
         calcRelativeEnrichment(mChrRegionData, MIN_ENRICHMENT_RATIO);
 
         writeNormalisationFile();
+        writeDetailedFile();
 
         CB_LOGGER.info("Cobalt normalisation file generation complete");
     }
@@ -218,6 +220,48 @@ public class NormalisationFileBuilder
                             regionData.relativeEnrichment() > 0 ? regionData.relativeEnrichment() : Double.NaN));
 
                     writer.newLine();
+                }
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            CB_LOGGER.error("failed to write normalisation file: {}", e.toString());
+            System.exit(1);
+        }
+    }
+
+    private void writeDetailedFile()
+    {
+        if(mConfig.DetailedFile == null)
+            return;
+
+        try
+        {
+            BufferedWriter writer = createBufferedWriter(mConfig.DetailedFile, false);
+
+            writer.write("SampleId\tChromosome\tPosition\tGcBucket\tMappability\tGcRatioPanel\tReadCount\tAdjGcRatio");
+            writer.newLine();
+
+            for(Map.Entry<String, List<RegionData>> entry : mChrRegionData.entrySet())
+            {
+                String chromosome = entry.getKey();
+
+                List<RegionData> regions = entry.getValue();
+
+                for(RegionData regionData : regions)
+                {
+                    for(int i = 0; i < mConfig.SampleIds.size(); ++i)
+                    {
+                        String sampleId = mConfig.SampleIds.get(i);
+                        SampleRegionData sampleRegionData = regionData.getSampleData(i);
+
+                        writer.write(format("%s\t%s\t%d\t%d\t%.3f\t%.3f\t%d\t%.3f",
+                                sampleId, chromosome, regionData.Position, regionData.gcBucket(), regionData.mappability(),
+                                sampleRegionData.GcRatioPanel, sampleRegionData.ReadCount, sampleRegionData.adjustedGcRatio()));
+                        writer.newLine();
+                    }
                 }
             }
 
