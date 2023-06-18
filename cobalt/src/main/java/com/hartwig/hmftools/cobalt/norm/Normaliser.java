@@ -1,8 +1,8 @@
-package com.hartwig.hmftools.cobalt.utils;
+package com.hartwig.hmftools.cobalt.norm;
 
-import static com.hartwig.hmftools.cobalt.utils.NormConstants.GC_BUCKET_MAX;
-import static com.hartwig.hmftools.cobalt.utils.NormConstants.GC_BUCKET_MIN;
-import static com.hartwig.hmftools.cobalt.utils.NormConstants.MAPPABILITY_THRESHOLD;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.GC_BUCKET_MAX;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.GC_BUCKET_MIN;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.MAPPABILITY_THRESHOLD;
 import static com.hartwig.hmftools.common.utils.Doubles.interpolatedMedian;
 import static com.hartwig.hmftools.common.utils.Doubles.median;
 
@@ -28,15 +28,14 @@ public class Normaliser
     {
         for(int i = 0; i < samples.size(); ++i)
         {
-            calcSampleAdjustedRatios(i, chrRegionData);
+            NormCalcData normCalcData = calcSampleAdjustedRatios(0, chrRegionData);
+            applySampleNormalisation(i, chrRegionData, normCalcData);
         }
     }
 
-    private static void calcSampleAdjustedRatios(final int sampleIndex, final Map<String,List<RegionData>> chrRegionData)
+    public static NormCalcData calcSampleAdjustedRatios(final int sampleIndex, final Map<String,List<RegionData>> chrRegionData)
     {
         // calculate interpolated median read count per GC bucket across filtered regions
-
-        // gather up the sample's region data entries
 
         List<Double> sampleReadCounts = Lists.newArrayList();
         double sampleReadCountTotal = 0;
@@ -76,11 +75,10 @@ public class Normaliser
         }
 
         if(sampleReadCounts.isEmpty())
-            return;
+            return NormCalcData.INVALID;
 
         double sampleMeanReadCount = sampleReadCountTotal / sampleReadCounts.size();
         double sampleMedianReadCount = interpolatedMedian(sampleReadCounts);
-        double sampleMedianNormalisation = sampleMedianReadCount / sampleMeanReadCount;
 
         Map<Integer,Double> gcBucketMedians = Maps.newHashMap();
 
@@ -91,14 +89,22 @@ public class Normaliser
             gcBucketMedians.put(gcBucket, medianReadCount);
         }
 
-        // now combine these median values into each sample's adjusted calcs
+        return new NormCalcData(sampleMeanReadCount, sampleMedianReadCount, sampleReadCounts.size(), gcBucketMedians);
+    }
+
+    public static void applySampleNormalisation(
+            final int sampleIndex, final Map<String,List<RegionData>> chrRegionData, final NormCalcData normCalcData)
+    {
+        // apply the median values into each sample's adjusted calcs
+        double sampleMedianNormalisation = normCalcData.sampleMedianNormalisation();
+
         for(List<RegionData> regions : chrRegionData.values())
         {
             for(RegionData regionData : regions)
             {
                 SampleRegionData sampleRegionData = regionData.getSampleData(sampleIndex);
 
-                Double gcBucketMedian = gcBucketMedians.get(regionData.gcBucket());
+                Double gcBucketMedian = normCalcData.GcBucketMedians.get(regionData.gcBucket());
 
                 if(gcBucketMedian == null || gcBucketMedian == 0)
                     continue;

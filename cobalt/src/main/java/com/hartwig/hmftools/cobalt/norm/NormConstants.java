@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.utils;
+package com.hartwig.hmftools.cobalt.norm;
 
 import static com.hartwig.hmftools.common.genome.gc.GCProfile.MIN_MAPPABLE_PERCENTAGE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.WINDOW_SIZE;

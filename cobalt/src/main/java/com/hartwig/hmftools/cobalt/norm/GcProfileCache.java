@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.utils;
+package com.hartwig.hmftools.cobalt.norm;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.loadChrGcProfileMap;
@@ -66,7 +66,5 @@ public class GcProfileCache
         }
 
         return null;
-
     }
-
 }

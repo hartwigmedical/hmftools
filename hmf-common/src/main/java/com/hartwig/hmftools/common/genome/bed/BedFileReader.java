@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.genome.bed;
 
-import java.io.IOException;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -45,7 +46,7 @@ public final class BedFileReader
             if(line.contains("Chromosome"))
                 continue;
 
-            final String[] values = line.split("\t", -1);
+            final String[] values = line.split(TSV_DELIM, -1);
 
             if(values.length < 3)
             {

@@ -23,7 +23,8 @@ def load_exon_region_df(csv_path, region_size):
     # in order to merge with the regions, we need to cut open the regions to smaller ones
     def exon_to_regions(exon_row):
         # we round the start position to 1k
-        start_region = int(exon_row['start'] / region_size) * region_size + 1
+        exon_start = exon_row['start'] + 1 # BED file standard
+        start_region = int(exon_start / region_size) * region_size + 1
         end_region = int(exon_row['end'] / region_size + 1) * region_size + 1
         #print(exon_row.start, exon_row.end)
         return [r for r in range(start_region, end_region, region_size)]

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.utils;
+package com.hartwig.hmftools.cobalt.norm;
 
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;

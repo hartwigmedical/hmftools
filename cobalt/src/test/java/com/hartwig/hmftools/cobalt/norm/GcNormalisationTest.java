@@ -1,9 +1,10 @@
-package com.hartwig.hmftools.cobalt.ratio;
+package com.hartwig.hmftools.cobalt.norm;
 
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
+import com.hartwig.hmftools.cobalt.ratio.GcNormalizedRatioMapper;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.junit.Before;

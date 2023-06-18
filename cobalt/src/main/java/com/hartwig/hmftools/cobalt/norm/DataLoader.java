@@ -1,20 +1,61 @@
 package com.hartwig.hmftools.cobalt.norm;
 
+import static java.lang.Math.floor;
+
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
+import static com.hartwig.hmftools.cobalt.norm.NormConstants.REGION_SIZE;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
+import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.Gender;
 
-public class CobaltDataLoader
+public class DataLoader
 {
+    public static void addTargetRegions(final List<NamedBed> namedBedRecords, final Map<String,List<RegionData>> chrRegionData)
+    {
+        String currentChromosome = "";
+        List<RegionData> regions = null;
+
+        for(NamedBed namedBed : namedBedRecords)
+        {
+            if(!namedBed.chromosome().equals(currentChromosome))
+            {
+                currentChromosome = namedBed.chromosome();
+                regions = Lists.newArrayList();
+                chrRegionData.put(namedBed.chromosome(), regions);
+            }
+
+            int startPosition = (int)(floor(namedBed.start()/(double)REGION_SIZE) * REGION_SIZE + 1);
+            int endPosition = startPosition + REGION_SIZE - 1;
+
+            addRegion(regions, startPosition);
+
+            while(endPosition < namedBed.end())
+            {
+                startPosition += REGION_SIZE;
+                addRegion(regions, startPosition);
+                endPosition = startPosition + REGION_SIZE - 1;
+            }
+        }
+    }
+
+    private static void addRegion(final List<RegionData> regions, int position)
+    {
+        RegionData prevRegion = !regions.isEmpty() ? regions.get(regions.size() - 1) : null;
+        if(prevRegion != null && prevRegion.Position == position)
+            return;
+
+        regions.add(new RegionData(position));
+    }
+
     public static void addCobaltSampleData(
             final Gender amberGender, final String cobaltFilename, final Map<String,List<RegionData>> chrRegionData)
     {

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.genome.bed;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.FileOutputStream;
@@ -29,11 +31,6 @@ import htsjdk.tribble.readers.LineIterator;
 public final class NamedBedFile
 {
     private static final Logger LOGGER = LogManager.getLogger(NamedBedFile.class);
-    private static final String DELIMITER = "\t";
-
-    private NamedBedFile()
-    {
-    }
 
     public static void writeUnnamedBedFile(final String filename, final List<GenomeRegion> regions) throws IOException
     {
@@ -82,10 +79,9 @@ public final class NamedBedFile
                 }
                 else
                 {
-                    if(prevRegion != null && namedBed.chromosome().equals(prevRegion.chromosome())
-                            && prevRegion.end() >= namedBed.start())
+                    if(prevRegion != null && namedBed.chromosome().equals(prevRegion.chromosome()) && prevRegion.end() >= namedBed.start())
                     {
-                        LOGGER.warn("BED file is not sorted, please fix! Current={}, Previous={}", namedBed, prevRegion);
+                        LOGGER.warn("BED file is not sorted: Current={}, Previous={}", namedBed, prevRegion);
                     }
                     else
                     {
@@ -112,7 +108,7 @@ public final class NamedBedFile
 
     private static String asBed(final GenomeRegion region)
     {
-        return new StringJoiner(DELIMITER).add(region.chromosome())
+        return new StringJoiner(TSV_DELIM).add(region.chromosome())
                 .add(String.valueOf(region.start() - 1))
                 .add(String.valueOf(region.end()))
                 .toString();
@@ -120,7 +116,7 @@ public final class NamedBedFile
 
     private static String asBed(final NamedBed region)
     {
-        return new StringJoiner(DELIMITER).add(region.chromosome())
+        return new StringJoiner(TSV_DELIM).add(region.chromosome())
                 .add(String.valueOf(region.start() - 1))
                 .add(String.valueOf(region.end()))
                 .add(region.name())

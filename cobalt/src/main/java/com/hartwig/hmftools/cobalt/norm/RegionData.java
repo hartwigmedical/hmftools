@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.cobalt.utils;
+package com.hartwig.hmftools.cobalt.norm;
 
 import static java.lang.String.format;
 
