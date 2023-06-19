@@ -13,6 +13,7 @@ import tech.tablesaw.columns.Column;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
+import com.hartwig.hmftools.cobalt.CobaltConstants;
 import com.hartwig.hmftools.cobalt.lowcov.LowCovBucket;
 import com.hartwig.hmftools.cobalt.lowcov.LowCoverageRatioMapper;
 import com.hartwig.hmftools.cobalt.targeted.TargetedRatioMapper;
@@ -335,11 +336,11 @@ public class RatioSupplier
         {
             if (c instanceof IntColumn)
             {
-                ((IntColumn)c).setMissingTo(-1);
+                ((IntColumn)c).setMissingTo(CobaltConstants.INVALID_VALUE_INDICATOR);
             }
             else if (c instanceof DoubleColumn)
             {
-                ((DoubleColumn)c).setMissingTo(-1.0);
+                ((DoubleColumn)c).setMissingTo((double)CobaltConstants.INVALID_VALUE_INDICATOR);
                 // ((DoubleColumn)c).map(d -> Double.isFinite(d) ? d : -1.0);
             }
         }
