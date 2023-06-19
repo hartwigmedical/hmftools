@@ -59,7 +59,48 @@ PURPLE
 
 ## Targeted specific methods
 ### Cobalt depth coverage normalisation
-#### Steps to targetRegions CN normalisation file
+
+### Steps to generated target regions Cobalt normalisation file
+
+1. Run Cobalt without a normalisation file in tumor-only mode on all applicable samples
+
+2. Run Amber on applicable samples in tumor-only mode
+
+3. Run the Cobalt normalisation file builder command described below
+- for each 1K region covering any target region, extract each sample's tumor read count and teh GC profile mappability and GC ratio bucket
+- calculate median and median read counts for each sample, and overall sample mean and median counts
+- normalise each sample's tumor read counts per region
+- calculate a median read count from all samples per GC ratio bucket  
+- write a relative enrichment for each region to the output file, with a min enrichment of 0.1
+- if no WGS is available for normalisation, the tumorGCRatio is assumed to be 1 for autosomes. The gender of each sample must be provided. Female samples are excluded from Y chromosome normalisation and males use a tumorGCRatio of 0.5 for the sex chromosomes
+
+### Arguments
+
+Field | Description
+---|---
+sample_id_file | CSV with SampleId column header and list of sample IDs, as per pipeline output, corresponding to Amber and Cobalt files
+amber_dir | Pipeline Amber output directory
+cobalt_dir | Pipeline Amber output directory
+ref_genome_version | V37 or V38
+gc_profile | As used in Cobalt and Purple
+target_regions_bed | Definition of target regions
+output_file | Output normalisation TSV file
+
+### Command
+
+```
+java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder 
+  -sample_id_file sample_ids.csv
+  -amber_dir /path_to_pipeline_amber_data/ 
+  -cobalt_dir /path_to_pipeline_cobalt_data/
+  -ref_genome_version V37 
+  -gc_profile /ref_data/GC_profile.1000bp.37.cnp 
+  -target_regions_bed /ref_data/target_regions_definition.37.bed 
+  -output_file /data/output/target_regions.cobalt_normalisation.37.tsv 
+  -log_debug
+```
+
+#### Deprecated: Steps to targetRegions CN normalisation file
 A tsv file used for COBALT targeted CN normalisation can be prepared from a set of matching tumor targeted BAMs, + optionally a WGS BAM (if available) and a target regions bed file. The process for generating the tsv file is as follows:
 
 1. Set targetRegions = cobalt 1kb depth windows that meet normal GC and mappability criteria and overlap or partially overlap at least 1 region specified in the primary targets bed file
@@ -103,28 +144,17 @@ If no WGS is available for normalisation, we use `--assume_diploid` mode. And th
 
 #### What [target_region_normalisation.py](https://github.com/hartwigmedical/hmftools/blob/master/cobalt/src/main/resources/py/target_region_normalisation.py) does
 
-For each depth window in targetRegions, calculate relativeEnrichment across the n samples as:
-```
-relativeEnrichment = median[tumorGCRatio(Targeted(i))/tumorGCRatio(WGS(i)) / targetEnrichmentRate(i)] 
-
-If relativeEnrichment < 0.1 then the region is masked.
-```
-If no WGS is available for normalisation, the tumorGCRatio is assumed to be 1 for autosomes. The gender of each sample must be provided. Female samples are excluded from Y chromosome normalisation and males use a tumorGCRatio of 0.5 for the sex chromosomes
-
-3. Write targetRegions normalisation file:
-- chromosome
-- positonStart
-- relativeEnrichment
-
 #### Calculation of target enrichment rate when targetRegions tsv specified
 If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions
-Masking and normalisation of GC ratio when targetRegions tsv specified
-If a targetRegions tsv file is provided then any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the tsv file are normalised first by the overall target enrichment rate for the sample and then by the relativeEnrichment for that depth window.
+Masking and normalisation of GC ratio when targetRegions TSV specified
+If a targetRegions TSV file is provided then any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE.
+Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample and then by the relativeEnrichment for that depth window.
 
-#### Off target normalisation
+### Off target normalisation
 For each 100kb bucket that does not overlap an on-target region and has at least half of the depth windows that meet the COBALT GC and mappability criteria, calculate the median tumor ratios. Normalise such that the median of all 100kb buckets for the bam is 1. Note we don’t use the mean since some regions still contain dna that has been highly enriched by the targeted panel which could skew the average.
 
 Note, the off target normalisation is not currently used in the targeted output.
+
 
 ### PURPLE MSI 
 

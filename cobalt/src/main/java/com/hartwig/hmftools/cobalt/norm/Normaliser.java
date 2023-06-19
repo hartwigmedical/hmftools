@@ -28,7 +28,7 @@ public class Normaliser
     {
         for(int i = 0; i < samples.size(); ++i)
         {
-            NormCalcData normCalcData = calcSampleAdjustedRatios(0, chrRegionData);
+            NormCalcData normCalcData = calcSampleAdjustedRatios(i, chrRegionData);
             applySampleNormalisation(i, chrRegionData, normCalcData);
         }
     }

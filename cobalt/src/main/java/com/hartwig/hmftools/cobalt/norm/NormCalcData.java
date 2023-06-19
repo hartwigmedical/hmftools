@@ -16,7 +16,7 @@ public class NormCalcData
 
     public NormCalcData(
             final double sampleMeanReadCount, final double sampleMedianReadCount, final int sampleFilteredRegionCount,
-            final Map<Integer, Double> gcBucketMedians)
+            final Map<Integer,Double> gcBucketMedians)
     {
         SampleMeanReadCount = sampleMeanReadCount;
         SampleMedianReadCount = sampleMedianReadCount;

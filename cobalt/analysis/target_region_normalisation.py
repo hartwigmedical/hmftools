@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import argparse
+import numpy
 
 import os, sys
 script_dir = os.path.dirname(__file__)
@@ -23,9 +24,20 @@ def load_exon_region_df(csv_path, region_size):
     # in order to merge with the regions, we need to cut open the regions to smaller ones
     def exon_to_regions(exon_row):
         # we round the start position to 1k
-        exon_start = exon_row['start'] + 1 # BED file standard
-        start_region = int(exon_start / region_size) * region_size + 1
-        end_region = int(exon_row['end'] / region_size + 1) * region_size + 1
+
+        start_pos = exon_row['start'] + 1 # standard BED file adjustment
+        start_region = int(numpy.floor(start_pos / region_size) * region_size) + 1
+
+        end_pos = exon_row['end']
+
+        if (end_pos % 1000) == 0:
+            end_region = end_pos
+        else:
+            end_region = int(numpy.ceil(end_pos / region_size) * region_size)
+
+        #exon_start = exon_row['start'] + 1 # BED file standard
+        #start_region = int(exon_start / region_size) * region_size + 1
+        #end_region = int(exon_row['end'] / region_size + 1) * region_size + 1
         #print(exon_row.start, exon_row.end)
         return [r for r in range(start_region, end_region, region_size)]
 
@@ -145,6 +157,9 @@ def create_normalisation_df(cobalt_ratio_df, row_mask) -> pd.DataFrame:
 
     # use this normalisation to calculate relative enrichment per region
     cobalt_ratio_df['relativeEnrichment'] = cobalt_ratio_df['tumorGCRatio_panel'] / cobalt_ratio_df['tumorGCRatio_wgs']
+
+    cobalt_ratio_file = 'cobalt_ratio_df.tsv'
+    cobalt_ratio_df.to_csv(cobalt_ratio_file, sep="\t", index=False)
 
     print(f"calculating relative enrichment")
 
