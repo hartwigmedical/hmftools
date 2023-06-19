@@ -5,10 +5,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
-import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.datamodel.OrangeJson;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeConfig;
+import com.hartwig.hmftools.datamodel.orange.OrangeConfig;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.orange.util.Config;
 
@@ -20,17 +22,15 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeConfig {
+public interface OrangeCommandLine {
 
-    Logger LOGGER = LogManager.getLogger(OrangeConfig.class);
+    Logger LOGGER = LogManager.getLogger(OrangeCommandLine.class);
 
     String DOID_SEPARATOR = ";";
+
+    String ORANGE_JSON = "orange_json";
 
     // General params needed for every analysis
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
@@ -83,6 +83,8 @@ public interface OrangeConfig {
     static Options createOptions() {
         Options options = new Options();
 
+        options.addOption(ORANGE_JSON, true, "(Optional) Location of an existing orange json");
+
         options.addOption(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         options.addOption(REFERENCE_SAMPLE_ID, true, "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
         options.addOption(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
@@ -126,7 +128,7 @@ public interface OrangeConfig {
         options.addOption(ADD_DISCLAIMER, false, "If set, prints a disclaimer on each page.");
         options.addOption(LOG_DEBUG, false, "If set, set the log level to debug rather than default.");
 
-        for (Option rnaOption : OrangeRNAConfig.createOptions().getOptions()) {
+        for (Option rnaOption : OrangeRNACommandLine.createOptions().getOptions()) {
             options.addOption(rnaOption);
         }
 
@@ -134,121 +136,16 @@ public interface OrangeConfig {
     }
 
     @NotNull
-    String tumorSampleId();
-
-    @Nullable
-    String referenceSampleId();
-
-    @Nullable
-    OrangeRNAConfig rnaConfig();
-
-    @NotNull
-    Set<String> primaryTumorDoids();
-
-    @NotNull
-    LocalDate experimentDate();
-
-    @NotNull
-    OrangeRefGenomeVersion refGenomeVersion();
-
-    @NotNull
-    String outputDir();
-
-    @NotNull
-    String doidJsonFile();
-
-    @NotNull
-    String cohortMappingTsv();
-
-    @NotNull
-    String cohortPercentilesTsv();
-
-    @NotNull
-    String driverGenePanelTsv();
-
-    @NotNull
-    String knownFusionFile();
-
-    @NotNull
-    String ensemblDataDirectory();
-
-    @Nullable
-    String pipelineVersionFile();
-
-    @Nullable
-    String refSampleWGSMetricsFile();
-
-    @Nullable
-    String refSampleFlagstatFile();
-
-    @NotNull
-    String tumorSampleWGSMetricsFile();
-
-    @NotNull
-    String tumorSampleFlagstatFile();
-
-    @Nullable
-    String sageGermlineGeneCoverageTsv();
-
-    @Nullable
-    String sageSomaticRefSampleBQRPlot();
-
-    @NotNull
-    String sageSomaticTumorSampleBQRPlot();
-
-    @NotNull
-    String purpleDataDirectory();
-
-    @NotNull
-    String purplePlotDirectory();
-
-    @NotNull
-    String linxSomaticDataDirectory();
-
-    @Nullable
-    String linxGermlineDataDirectory();
-
-    @NotNull
-    String linxPlotDirectory();
-
-    @NotNull
-    String lilacResultCsv();
-
-    @NotNull
-    String lilacQcCsv();
-
-    @Nullable
-    String annotatedVirusTsv();
-
-    @Nullable
-    String chordPredictionTxt();
-
-    @Nullable
-    String cuppaResultCsv();
-
-    @Nullable
-    String cuppaSummaryPlot();
-
-    @Nullable
-    String cuppaFeaturePlot();
-
-    @Nullable
-    String cuppaChartPlot();
-
-    @Nullable
-    String peachGenotypeTsv();
-
-    @Nullable
-    String sigsAllocationTsv();
-
-    boolean convertGermlineToSomatic();
-
-    boolean limitJsonOutput();
-
-    boolean addDisclaimer();
-
-    @NotNull
     static OrangeConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
+
+        if (cmd.hasOption(ORANGE_JSON)) {
+            try {
+                return OrangeJson.getInstance().read(cmd.getOptionValue(ORANGE_JSON)).config();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         if (cmd.hasOption(LOG_DEBUG)) {
             Configurator.setRootLevel(Level.DEBUG);
             LOGGER.debug("Switched root level logging to DEBUG");
@@ -284,10 +181,11 @@ public interface OrangeConfig {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(Config.nonOptionalValue(cmd, TUMOR_SAMPLE_ID))
                 .referenceSampleId(refSampleId)
-                .rnaConfig(OrangeRNAConfig.createConfig(cmd))
+                .rnaConfig(OrangeRNACommandLine.createConfig(cmd))
                 .primaryTumorDoids(toStringSet(Config.nonOptionalValue(cmd, PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .experimentDate(experimentDate)
-                .refGenomeVersion(OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(Config.nonOptionalValue(cmd, REF_GENOME_VERSION)).name()))
+                .refGenomeVersion(OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(Config.nonOptionalValue(cmd, REF_GENOME_VERSION))
+                        .name()))
                 .outputDir(Config.outputDir(cmd, OUTPUT_DIRECTORY))
                 .doidJsonFile(Config.nonOptionalFile(cmd, DOID_JSON))
                 .cohortMappingTsv(Config.nonOptionalFile(cmd, COHORT_MAPPING_TSV))

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.report;
 
-import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.datamodel.orange.OrangeConfig;
+import com.hartwig.hmftools.orange.OrangeCommandLine;
 
 import org.jetbrains.annotations.NotNull;
 

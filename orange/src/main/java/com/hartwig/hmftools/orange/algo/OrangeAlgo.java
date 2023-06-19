@@ -56,14 +56,14 @@ import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangePlots;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeSample;
+import com.hartwig.hmftools.datamodel.orange.OrangeConfig;
 import com.hartwig.hmftools.datamodel.orange.OrangePlots;
+import com.hartwig.hmftools.datamodel.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
-import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
@@ -319,7 +319,8 @@ public class OrangeAlgo {
 
     @NotNull
     private static EnsemblDataCache loadEnsemblDataCache(@NotNull OrangeConfig config) {
-        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(), RefGenomeVersion.from(config.refGenomeVersion().name()));
+        EnsemblDataCache ensemblDataCache =
+                new EnsemblDataCache(config.ensemblDataDirectory(), RefGenomeVersion.from(config.refGenomeVersion().name()));
         ensemblDataCache.load(false);
         return ensemblDataCache;
     }

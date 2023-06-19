@@ -14,15 +14,15 @@ import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeConfig;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
-import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
-import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
@@ -147,8 +147,8 @@ public class ReportGeneratorTestApplication {
             @NotNull List<PurpleDriver> drivers) {
         List<String> copyNumberDriverGenes = Lists.newArrayList();
         for (PurpleDriver driver : drivers) {
-            if (driver.driver() == PurpleDriverType.AMP || driver.driver() == PurpleDriverType.PARTIAL_AMP || driver.driver() == PurpleDriverType.DEL
-                    || driver.driver() == PurpleDriverType.GERMLINE_DELETION) {
+            if (driver.driver() == PurpleDriverType.AMP || driver.driver() == PurpleDriverType.PARTIAL_AMP
+                    || driver.driver() == PurpleDriverType.DEL || driver.driver() == PurpleDriverType.GERMLINE_DELETION) {
                 copyNumberDriverGenes.add(driver.gene());
             }
         }

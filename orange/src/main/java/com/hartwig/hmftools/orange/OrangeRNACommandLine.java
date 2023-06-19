@@ -1,5 +1,13 @@
 package com.hartwig.hmftools.orange;
 
+import static com.hartwig.hmftools.orange.OrangeCommandLine.ORANGE_JSON;
+
+import java.io.IOException;
+import java.util.Optional;
+
+import com.hartwig.hmftools.datamodel.OrangeJson;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRNAConfig;
+import com.hartwig.hmftools.datamodel.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.util.Config;
 
 import org.apache.commons.cli.CommandLine;
@@ -7,15 +15,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeRNAConfig {
+public interface OrangeRNACommandLine {
 
-    Logger LOGGER = LogManager.getLogger(OrangeRNAConfig.class);
+    Logger LOGGER = LogManager.getLogger(OrangeRNACommandLine.class);
 
     String RNA_SAMPLE_ID = "rna_sample_id";
 
@@ -30,6 +34,8 @@ public interface OrangeRNAConfig {
     @NotNull
     static Options createOptions() {
         Options options = new Options();
+
+        options.addOption(ORANGE_JSON, true, "(Optional) Location of an existing orange json");
 
         options.addOption(RNA_SAMPLE_ID, true, "(Optional) The RNA sample of the tumor sample for which ORANGE will run.");
 
@@ -77,6 +83,15 @@ public interface OrangeRNAConfig {
                 ISOFOX_ALT_SPLICE_JUNCTION_CSV)) {
             LOGGER.debug("No proper RNA input fed to ORANGE");
             return null;
+        }
+
+        if (cmd.hasOption(ORANGE_JSON)) {
+            try {
+                return Optional.ofNullable(OrangeJson.getInstance().read(cmd.getOptionValue(ORANGE_JSON)).config().rnaConfig())
+                        .orElseThrow(() -> new IllegalStateException("Cannot rerun ORANGE rna from a JSON without RNA configuration"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         String rnaSampleId = Config.nonOptionalValue(cmd, RNA_SAMPLE_ID);

@@ -3,6 +3,9 @@ package com.hartwig.hmftools.orange;
 import java.time.LocalDate;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeConfig;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRNAConfig;
+import com.hartwig.hmftools.datamodel.orange.OrangeConfig;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;

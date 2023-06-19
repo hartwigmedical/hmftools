@@ -5,8 +5,8 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
-import com.hartwig.hmftools.orange.OrangeConfig;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeConfig;
+import com.hartwig.hmftools.datamodel.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 
 import org.junit.Test;

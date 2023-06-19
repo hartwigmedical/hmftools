@@ -24,8 +24,11 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(passAnnotations = {NotNull.class, Nullable.class})
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface OrangeRecord {
+
+    @NotNull
+    OrangeConfig config();
 
     @NotNull
     String sampleId();

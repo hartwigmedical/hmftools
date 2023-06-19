@@ -2,8 +2,8 @@ package com.hartwig.hmftools.orange.report;
 
 import java.io.IOException;
 
+import com.hartwig.hmftools.datamodel.orange.OrangeConfig;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
