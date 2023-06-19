@@ -6,14 +6,15 @@ import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsInde
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +27,7 @@ public class ConfigUtils
     public static final String LOG_LEVEL = "log_level";
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
+    public static final String SAMPLE_ID_COLUMN = "SampleId";
 
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);
 
@@ -77,7 +79,7 @@ public class ConfigUtils
 
     public static List<String> loadSampleIdsFile(final String filename)
     {
-        return loadDelimitedIdFile(filename, "SampleId", CSV_DELIM);
+        return loadDelimitedIdFile(filename, SAMPLE_ID_COLUMN, CSV_DELIM);
     }
 
     public static List<String> loadGeneIdsFile(final String filename)
@@ -87,6 +89,7 @@ public class ConfigUtils
 
     public static List<String> loadDelimitedIdFile(final String filename, final String idColumn, final String delim)
     {
+        // the file must either contain the idColumn in the header, or have a single column
         final List<String> ids = Lists.newArrayList();
 
         if(filename == null || filename.isEmpty())
@@ -97,63 +100,52 @@ public class ConfigUtils
 
         try
         {
-            final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-            if(fileContents.isEmpty())
-                return ids;
-
-            String header = fileContents.get(0);
-
-            if(!header.contains(idColumn))
-                return ids;
-
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, delim);
-            fileContents.remove(0);
-            int idIndex = fieldsIndexMap.get(idColumn);
-
-            for(String line : fileContents)
-            {
-                if(line.startsWith("#") || line.isEmpty())
-                    continue;
-
-                String[] items = line.split(delim, -1);
-                ids.add(items[idIndex]);
-            }
+            List<String> fileContents = Files.readAllLines(new File(filename).toPath());
+            return loadDelimitedIdFile(fileContents, idColumn, delim);
         }
         catch (IOException e)
         {
             LOGGER.error("failed to read {} file({}): {}", idColumn, filename, e.toString());
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    @VisibleForTesting
+    public static List<String> loadDelimitedIdFile(final List<String> fileContents, final String idColumn, final String delim)
+    {
+        final List<String> ids = Lists.newArrayList();
+
+        String firstLine = fileContents.get(0);
+        int columnCount = firstLine.split(delim, -1).length;
+        int idIndex = -1;
+
+        if(firstLine.contains(idColumn))
+        {
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(firstLine, delim);
+            idIndex = fieldsIndexMap.get(idColumn);
+            fileContents.remove(0);
+        }
+        else
+        {
+            if(columnCount > 1)
+                return ids;
+
+            idIndex = 0;
+        }
+
+        for(String line : fileContents)
+        {
+            if(line.startsWith("#") || line.isEmpty())
+                continue;
+
+            String[] items = line.split(delim, -1);
+            ids.add(items[idIndex]);
         }
 
         return ids;
     }
 
-    @NotNull
-    public static <E extends Enum<E>> E defaultEnumValue(@NotNull final CommandLine cmd, @NotNull final String argument,
-            @NotNull final E defaultValue) throws ParseException
-    {
-        if(cmd.hasOption(argument))
-        {
-            final String optionValue = cmd.getOptionValue(argument);
-            try
-            {
-                final E value = E.valueOf(defaultValue.getDeclaringClass(), optionValue);
-                if(!value.equals(defaultValue))
-                {
-                    LOGGER.info("Using non default value {} for parameter {}", optionValue, argument);
-                }
-
-                return value;
-            } catch(IllegalArgumentException e)
-            {
-                throw new ParseException("Invalid validation stringency: " + optionValue);
-            }
-        }
-
-        return defaultValue;
-    }
-
-    public static boolean containsFlag(@NotNull final CommandLine cmd, @NotNull final String opt)
+    public static boolean containsFlag(final CommandLine cmd, final String opt)
     {
         if(cmd.hasOption(opt))
         {
