@@ -192,7 +192,7 @@ public class PurpleApplication
         }
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        PPL_LOGGER.info("Purple complete, run time({}s)", format("%.1fs", timeTakenMs/1000.0));
+        PPL_LOGGER.info("Purple complete, run time({}s)", format("%.1f", timeTakenMs/1000.0));
         mExecutorService.shutdown();
     }
 

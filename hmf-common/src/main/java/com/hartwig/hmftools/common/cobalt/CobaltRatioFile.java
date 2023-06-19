@@ -113,18 +113,29 @@ public final class CobaltRatioFile
                 String[] values = line.split(TSV_DELIM, -1);
 
                 String chromosome = values[chrIndex];
+
+                int refReadCount = Integer.parseInt(values[refReadCountIndex]);
+
                 double initialRefGCRatio = Double.parseDouble(values[refGcRatioIndex]);
                 double initialRefGCDiploidRatio = Double.parseDouble(values[refGcDiplodRatioIndex]);
+
+                if(refReadCount == -1)
+                {
+                    // revert to a default ref ratio where no information is available (ie in tumor/panel only)
+                    initialRefGCRatio = 1;
+                    initialRefGCDiploidRatio = 1;
+                }
 
                 double refGcRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCRatio);
                 double refGcDiploadRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCDiploidRatio);
                 double tumorGCRatio = hasTumor ? Double.parseDouble(values[tumorGcRatioIndex]) : refGcDiploadRatio;
+                int tumorReadCount = Integer.parseInt(values[tumorReadCountIndex]);
 
                 CobaltRatio ratio = ImmutableCobaltRatio.builder()
                         .chromosome(chromosome)
                         .position(Integer.parseInt(values[posIndex]))
-                        .referenceReadCount(Integer.parseInt(values[refReadCountIndex]))
-                        .tumorReadCount(Integer.parseInt(values[tumorReadCountIndex]))
+                        .referenceReadCount(refReadCount)
+                        .tumorReadCount(tumorReadCount)
                         .tumorGCRatio(tumorGCRatio)
                         .referenceGCRatio(refGcRatio)
                         .referenceGCDiploidRatio(refGcDiploadRatio)
