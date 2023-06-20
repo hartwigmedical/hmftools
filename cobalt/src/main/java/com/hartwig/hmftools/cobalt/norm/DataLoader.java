@@ -75,7 +75,7 @@ public class DataLoader
                 if(cobaltRatios == null)
                     continue;
 
-                double wgsGcRatio = wgsGcRatio(amberGender, chrStr);
+                double wgsGcRatio = wgsGcRatio(amberGender, chromosome);
 
                 int cobaltIndex = 0;
 
@@ -117,11 +117,11 @@ public class DataLoader
         }
     }
 
-    private static double wgsGcRatio(final Gender amberGender, final String chromosome)
+    private static double wgsGcRatio(final Gender amberGender, final HumanChromosome chromosome)
     {
-        if(chromosome.equals("X"))
+        if(chromosome == HumanChromosome._X)
             return amberGender == Gender.FEMALE ? 1 : 0.5;
-        else if(chromosome.equals("Y"))
+        else if(chromosome == HumanChromosome._Y)
             return amberGender == Gender.FEMALE ? 0 : 0.5;
         else
             return 1;
