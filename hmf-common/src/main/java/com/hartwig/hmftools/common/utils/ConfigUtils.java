@@ -12,6 +12,7 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -46,6 +47,18 @@ public class ConfigUtils
         else if(cmd.hasOption(LOG_LEVEL))
         {
             Configurator.setRootLevel(Level.valueOf(cmd.getOptionValue(LOG_LEVEL)));
+        }
+    }
+
+    public static void setLogLevel(final ConfigBuilder configBuilder)
+    {
+        if(configBuilder.hasFlag(LOG_DEBUG))
+        {
+            Configurator.setRootLevel(Level.DEBUG);
+        }
+        else if(configBuilder.hasValue(LOG_LEVEL))
+        {
+            Configurator.setRootLevel(Level.valueOf(configBuilder.getValue(LOG_LEVEL)));
         }
     }
 
