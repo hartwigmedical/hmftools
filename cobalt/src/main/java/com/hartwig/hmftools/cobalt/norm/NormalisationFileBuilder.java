@@ -178,5 +178,4 @@ public class NormalisationFileBuilder
         final CommandLineParser parser = new DefaultParser();
         return parser.parse(options, args);
     }
-
 }

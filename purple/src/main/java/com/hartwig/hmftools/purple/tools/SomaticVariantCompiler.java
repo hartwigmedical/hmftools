@@ -118,7 +118,7 @@ public class SomaticVariantCompiler
                 String fieldValue = variantContext.getAttributeAsString(field, "");
                 sj.add(fieldValue);
             }
-            
+
             writer.write(sj.toString());
             writer.newLine();
 

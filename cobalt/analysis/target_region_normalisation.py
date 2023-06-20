@@ -158,8 +158,8 @@ def create_normalisation_df(cobalt_ratio_df, row_mask) -> pd.DataFrame:
     # use this normalisation to calculate relative enrichment per region
     cobalt_ratio_df['relativeEnrichment'] = cobalt_ratio_df['tumorGCRatio_panel'] / cobalt_ratio_df['tumorGCRatio_wgs']
 
-    cobalt_ratio_file = 'cobalt_ratio_df.tsv'
-    cobalt_ratio_df.to_csv(cobalt_ratio_file, sep="\t", index=False)
+    # cobalt_ratio_file = 'cobalt_ratio_df.tsv'
+    # cobalt_ratio_df.to_csv(cobalt_ratio_file, sep="\t", index=False)
 
     print(f"calculating relative enrichment")
 
