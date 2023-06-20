@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sage;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageCommon.calcMemoryUsage;
 import static com.hartwig.hmftools.sage.SageCommon.logMemoryUsage;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.hla.HlaCommon;

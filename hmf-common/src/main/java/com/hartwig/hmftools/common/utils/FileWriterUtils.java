@@ -16,6 +16,8 @@ import java.nio.file.Paths;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
@@ -23,16 +25,32 @@ import org.jetbrains.annotations.NotNull;
 public final class FileWriterUtils
 {
     public static final String OUTPUT_DIR = "output_dir";
+    public static final String OUTPUT_DIR_DESC = "Output directory";
     public static final String OUTPUT_ID = "output_id";
+    public static final String OUTPUT_ID_DESC = "Output file suffix";
+
+    public static void addOutputOptions(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addConfigItem(OUTPUT_DIR, OUTPUT_DIR_DESC);
+        configBuilder.addConfigItem(OUTPUT_ID, OUTPUT_ID_DESC);
+    }
+
+    public static String parseOutputDir(final ConfigBuilder configBuilder)
+    {
+        String outputDir = configBuilder.getValue(OUTPUT_DIR);
+        if(outputDir == null)
+            return null;
+
+        return checkAddDirSeparator(outputDir);
+    }
 
     public static void addOutputDir(final Options options)
     {
-        options.addOption(OUTPUT_DIR, true, "Output directory");
+        options.addOption(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
     }
-
     public static void addOutputId(final Options options)
     {
-        options.addOption(OUTPUT_ID, true, "Output file suffix");
+        options.addOption(OUTPUT_ID, true, OUTPUT_ID_DESC);
     }
 
     public static void addOutputOptions(final Options options)
@@ -41,7 +59,7 @@ public final class FileWriterUtils
         addOutputId(options);
     }
 
-    public static String parseOutputDir(@NotNull final CommandLine cmd)
+    public static String parseOutputDir(final CommandLine cmd)
     {
         String outputDir = cmd.getOptionValue(OUTPUT_DIR);
         if(outputDir == null)

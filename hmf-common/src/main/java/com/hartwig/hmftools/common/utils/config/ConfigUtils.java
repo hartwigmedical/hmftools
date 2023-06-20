@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.utils;
+package com.hartwig.hmftools.common.utils.config;
 
 import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
@@ -12,7 +12,6 @@ import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -25,17 +24,28 @@ import org.jetbrains.annotations.NotNull;
 public class ConfigUtils
 {
     public static final String LOG_DEBUG = "log_debug";
+    public static final String LOG_DEBUG_DESC = "Log at DEBUG level";
+
     public static final String LOG_LEVEL = "log_level";
+    public static final String LOG_LEVEL_DESC = "Specify log level: ERROR, WARN, INFO, DEBUG or TRACE";
 
     public static final String SAMPLE_ID_FILE = "sample_id_file";
+    public static final String SAMPLE_ID_FILE_DESC = "Sample ID CSV file with 'SampleId' column";
+
     public static final String SAMPLE_ID_COLUMN = "SampleId";
 
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);
 
     public static void addLoggingOptions(final Options options)
     {
-        options.addOption(LOG_DEBUG, false, "Log at DEBUG level");
-        options.addOption(LOG_LEVEL, true, "Specify log level: ERROR, WARN, INFO, DEBUG or TRACE");
+        options.addOption(LOG_DEBUG, false, LOG_DEBUG_DESC);
+        options.addOption(LOG_LEVEL, true, LOG_LEVEL_DESC);
+    }
+
+    public static void addLoggingOptions(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addFlagItem(LOG_DEBUG, LOG_DEBUG_DESC);
+        configBuilder.addConfigItem(LOG_LEVEL, LOG_LEVEL_DESC);
     }
 
     public static void setLogLevel(final CommandLine cmd)
@@ -64,7 +74,12 @@ public class ConfigUtils
 
     public static void addSampleIdFile(final Options options)
     {
-        options.addOption(SAMPLE_ID_FILE, true, "Sample ID CSV file with 'SampleId' column");
+        options.addOption(SAMPLE_ID_FILE, true, SAMPLE_ID_FILE_DESC);
+    }
+
+    public static void addSampleIdFile(final ConfigBuilder configBuilder, boolean required)
+    {
+        configBuilder.addPathItem(SAMPLE_ID_FILE, required, SAMPLE_ID_FILE_DESC);
     }
 
     public static double getConfigValue(@NotNull final CommandLine cmd, final String configName, double defaultValue)
@@ -80,6 +95,14 @@ public class ConfigUtils
     public static boolean getConfigValue(@NotNull final CommandLine cmd, final String configName, boolean defaultValue)
     {
         return cmd.hasOption(configName) ? Boolean.parseBoolean(cmd.getOptionValue(configName)) : defaultValue;
+    }
+
+    public static List<String> loadSampleIdsFile(final ConfigBuilder configBuilder)
+    {
+        if(!configBuilder.hasValue(SAMPLE_ID_FILE))
+            return Lists.newArrayList();
+
+        return loadSampleIdsFile(configBuilder.getValue(SAMPLE_ID_FILE));
     }
 
     public static List<String> loadSampleIdsFile(final CommandLine cmd)

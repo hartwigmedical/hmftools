@@ -2,10 +2,15 @@ package com.hartwig.hmftools.purple.tools;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
@@ -26,6 +31,7 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -45,19 +51,16 @@ public class HrdDetectionAnalyser
 
     private final BufferedWriter mWriter;
 
-    private static final String PURPLE_DATA_DIR = "purple_dir";
-    private static final String CHORD_DIR = "chord_dir";
-
-    public HrdDetectionAnalyser(final CommandLine cmd)
+    public HrdDetectionAnalyser(final ConfigBuilder configBuilder)
     {
-        mSampleIds = loadSampleIdsFile(cmd);
-        mPurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIR);
-        mChordDir = cmd.getOptionValue(CHORD_DIR);
-        mThreads = parseThreads(cmd);
+        mSampleIds = loadSampleIdsFile(configBuilder);
+        mPurpleDataDir = configBuilder.getValue(PURPLE_DIR);
+        mChordDir = configBuilder.getValue(CHORD_DIR);
+        mThreads = configBuilder.getInteger(THREADS);
 
         mHrdDetection = new HrdDetection();
 
-        mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_DIR));
+        mWriter = initialiseWriter(parseOutputDir(configBuilder));
     }
 
     public void run()
@@ -184,19 +187,21 @@ public class HrdDetectionAnalyser
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = new Options();
-        addSampleIdFile(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addSampleIdFile(configBuilder, true);
+        configBuilder.addConfigItem(PURPLE_DIR, true, PURPLE_DIR_DESC);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
 
-        options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");
-        addLoggingOptions(options);
-        addOutputOptions(options);
-        addThreadOptions(options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logItems();
+            System.exit(1);
+        }
 
-        final CommandLine cmd = createCommandLine(args, options);
+        setLogLevel(configBuilder);
 
-        setLogLevel(cmd);
-
-        HrdDetectionAnalyser hrdDetectionAnalyser = new HrdDetectionAnalyser(cmd);
+        HrdDetectionAnalyser hrdDetectionAnalyser = new HrdDetectionAnalyser(configBuilder);
         hrdDetectionAnalyser.run();
     }
 

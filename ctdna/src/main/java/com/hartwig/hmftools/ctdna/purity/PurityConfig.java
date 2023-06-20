@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.ctdna.purity;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;

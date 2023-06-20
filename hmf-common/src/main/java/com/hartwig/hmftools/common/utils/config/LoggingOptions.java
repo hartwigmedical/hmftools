@@ -4,7 +4,6 @@ import org.apache.logging.log4j.Level;
 
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.Parameter;
-import com.hartwig.hmftools.common.utils.ConfigUtils;
 
 //
 // This is for use with jcommander:

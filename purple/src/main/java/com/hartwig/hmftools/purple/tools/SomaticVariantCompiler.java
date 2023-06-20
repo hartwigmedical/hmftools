@@ -2,14 +2,15 @@ package com.hartwig.hmftools.purple.tools;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedWriter;
@@ -19,14 +20,9 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -38,16 +34,15 @@ public class SomaticVariantCompiler
     private final String mPurpleDir;
 
     private static final String OUTPUT_FILE = "output_file";
-    private static final String PURPLE_DIR = "purple_dir";
     private static final String REQUIRED_FIELDS = "required_fields";
 
-    public SomaticVariantCompiler(final CommandLine cmd)
+    public SomaticVariantCompiler(final ConfigBuilder configBuilder)
     {
-        mSampleIds = loadSampleIdsFile(cmd);
-        mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
-        mPurpleDir = cmd.getOptionValue(PURPLE_DIR);
+        mSampleIds = loadSampleIdsFile(configBuilder.getValue(SAMPLE_ID_FILE));
+        mOutputFile = configBuilder.getValue(OUTPUT_FILE);
+        mPurpleDir = configBuilder.getValue(PURPLE_DIR);
 
-        mRequiredFields = Arrays.stream(cmd.getOptionValue(REQUIRED_FIELDS).split(",", -1)).collect(Collectors.toList());
+        mRequiredFields = Arrays.stream(configBuilder.getValue(REQUIRED_FIELDS).split(",", -1)).collect(Collectors.toList());
     }
 
     public void run()
@@ -128,26 +123,24 @@ public class SomaticVariantCompiler
         PPL_LOGGER.debug("sample({}) loaded {} variants", sampleId, variantCount);
     }
 
-    public static void main(final String[] args) throws ParseException
+    public static void main(final String[] args)
     {
-        final Options options = new Options();
-        addLoggingOptions(options);
-        addSampleIdFile(options);
-        options.addOption(OUTPUT_FILE, true, "Output filename");
-        options.addOption(PURPLE_DIR, true, "Path to purple files");
-        options.addOption(REQUIRED_FIELDS, true, "Required VCF fields separated by ','");
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addSampleIdFile(configBuilder, true);
+        configBuilder.addPathItem(OUTPUT_FILE, true, "Output filename");
+        configBuilder.addConfigItem(REQUIRED_FIELDS, false, "Required VCF fields separated by ','");
+        configBuilder.addConfigItem(PURPLE_DIR, true, PURPLE_DIR_DESC);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logItems();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        SomaticVariantCompiler somaticVariantCompiler = new SomaticVariantCompiler(cmd);
+        SomaticVariantCompiler somaticVariantCompiler = new SomaticVariantCompiler(configBuilder);
         somaticVariantCompiler.run();
-    }
-
-    private static CommandLine createCommandLine(final String[] args, final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

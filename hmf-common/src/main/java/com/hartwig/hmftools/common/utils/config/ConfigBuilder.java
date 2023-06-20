@@ -36,9 +36,9 @@ public class ConfigBuilder
 
     public void addConfigItem(final ConfigItem item) { mItems.add(item); }
 
-    public void addConfigItem(final String name, final String description, final String defaultValue)
+    public void addConfigItem(final String name, final String description)
     {
-        addConfigItem(STRING, name, false, description, defaultValue);
+        addConfigItem(STRING, name, false, description, null);
     }
 
     public void addFlagItem(final String name, final String description)

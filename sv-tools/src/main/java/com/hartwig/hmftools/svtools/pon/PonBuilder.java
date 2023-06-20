@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svtools.pon;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.chrEnd;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.chrStart;
@@ -14,15 +14,12 @@ import static com.hartwig.hmftools.svtools.pon.PonLocations.orientation;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.TaskExecutor;

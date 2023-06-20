@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.visualiser;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
 
 import com.hartwig.hmftools.common.utils.Doubles;
