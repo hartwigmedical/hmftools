@@ -237,7 +237,7 @@ public class SomaticStream
             // write enriched variants to VCF
             for(SomaticVariant variant : mSomaticVariants.variants())
             {
-                if(!tumorOnly || variant.isPass())
+                if(!tumorOnly || variant.isPass() || mConfig.WriteAllSomatics)
                     mVcfWriter.add(variant.context());
             }
 

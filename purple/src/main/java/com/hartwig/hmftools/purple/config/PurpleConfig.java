@@ -48,6 +48,7 @@ public class PurpleConfig
 
     // debug only
     public final boolean FilterSomaticsOnGene;
+    public final boolean WriteAllSomatics;
     public final List<String> SpecificChromosomes;
     public final List<ChrBaseRegion> SpecificRegions;
 
@@ -63,6 +64,7 @@ public class PurpleConfig
     public static String DRIVERS_ONLY = "drivers_only";
     public static String FILTER_SOMATICS_ON_GENE = "filter_somatics_on_gene";
     public static final String TIER_FILTERS = "tier_filters";
+    public static final String WRITE_ALL_SOMATICS = "write_all_somatics";
 
     public PurpleConfig(final String version, final CommandLine cmd)
     {
@@ -120,6 +122,7 @@ public class PurpleConfig
         RunDrivers = DriverGenePanelConfig.isConfigured(cmd);
         DriversOnly = cmd.hasOption(DRIVERS_ONLY);
         FilterSomaticsOnGene = cmd.hasOption(FILTER_SOMATICS_ON_GENE);
+        WriteAllSomatics = cmd.hasOption(WRITE_ALL_SOMATICS);
 
         PPL_LOGGER.info("reference({}) tumor({}) {}",
                 ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",
@@ -199,6 +202,7 @@ public class PurpleConfig
                 "Path to Amber output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
         options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
+        options.addOption(WRITE_ALL_SOMATICS, false, "Write all variants regardless of filters");
         options.addOption(FILTER_SOMATICS_ON_GENE, false, "Only load and enrich somatic variants with a gene impact");
         options.addOption(TIER_FILTERS, true, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
 
