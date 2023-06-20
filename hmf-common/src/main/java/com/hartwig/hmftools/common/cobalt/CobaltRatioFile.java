@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.cobalt;
 
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedReader;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter;
@@ -41,13 +42,13 @@ public final class CobaltRatioFile
     @NotNull
     public static String generateFilenameForWriting(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
     @NotNull
     public static String generateFilenameForReading(final String basePath, final String sample)
     {
-        String filename = basePath + File.separator + sample + EXTENSION;
+        String filename = checkAddDirSeparator(basePath) + sample + EXTENSION;
         if(new File(filename).exists())
         {
             return filename;

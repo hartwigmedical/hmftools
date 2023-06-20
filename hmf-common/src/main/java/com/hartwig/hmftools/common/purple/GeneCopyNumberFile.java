@@ -25,7 +25,7 @@ public final class GeneCopyNumberFile
 
     public static String generateFilenameForWriting(final String basePath, final String sample)
     {
-        return checkAddDirSeparator(basePath) + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
     public static String generateFilename(final String basePath, final String sample)
