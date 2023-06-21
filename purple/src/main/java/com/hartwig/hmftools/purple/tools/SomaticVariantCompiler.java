@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.tools;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
@@ -24,17 +25,21 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticVariantCompiler
 {
     private final List<String> mSampleIds;
-    private final List<String> mRequiredFields;
+    private final List<String> mCommonFields;
+    private final List<String> mGenotypeFields;
     private final String mOutputFile;
     private final String mPurpleDir;
 
     private static final String OUTPUT_FILE = "output_file";
-    private static final String REQUIRED_FIELDS = "required_fields";
+    private static final String COMMON_FIELDS = "common_fields";
+    private static final String GENOTYPE_FIELDS = "genotype_fields";
 
     public SomaticVariantCompiler(final ConfigBuilder configBuilder)
     {
@@ -42,7 +47,8 @@ public class SomaticVariantCompiler
         mOutputFile = configBuilder.getValue(OUTPUT_FILE);
         mPurpleDir = configBuilder.getValue(PURPLE_DIR);
 
-        mRequiredFields = Arrays.stream(configBuilder.getValue(REQUIRED_FIELDS).split(",", -1)).collect(Collectors.toList());
+        mCommonFields = Arrays.stream(configBuilder.getValue(COMMON_FIELDS).split(",", -1)).collect(Collectors.toList());
+        mGenotypeFields = Arrays.stream(configBuilder.getValue(GENOTYPE_FIELDS).split(",", -1)).collect(Collectors.toList());
     }
 
     public void run()
@@ -56,7 +62,12 @@ public class SomaticVariantCompiler
             StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add("SampleId").add("VariantInfo").add("Type").add("Tier").add("Qual").add("Filters");
 
-            for(String field : mRequiredFields)
+            for(String field : mCommonFields)
+            {
+                sj.add(field);
+            }
+
+            for(String field : mGenotypeFields)
             {
                 sj.add(field);
             }
@@ -108,10 +119,35 @@ public class SomaticVariantCompiler
             sj.add(String.valueOf(variant.qual()));
             sj.add(variant.filter());
 
-            for(String field : mRequiredFields)
+            for(String field : mCommonFields)
             {
                 String fieldValue = variantContext.getAttributeAsString(field, "");
                 sj.add(fieldValue);
+            }
+
+            for(String field : mGenotypeFields)
+            {
+                StringJoiner gtSj = new StringJoiner(ITEM_DELIM);
+
+                for(Genotype genotypeContext : variantContext.getGenotypes())
+                {
+                    if(field.equals("AD"))
+                    {
+                        gtSj.add(String.valueOf(genotypeContext.getAD()[1]));
+                    }
+                    else if(field.equals("DP"))
+                    {
+                        gtSj.add(String.valueOf(genotypeContext.getDP()));
+                    }
+                    else
+                    {
+                        Object fieldValue = genotypeContext.getExtendedAttribute(field, null);
+                        String fieldStr = fieldValue != null ? fieldValue.toString() : "";
+                        gtSj.add(fieldStr);
+                    }
+                }
+
+                sj.add(gtSj.toString());
             }
 
             writer.write(sj.toString());
@@ -128,7 +164,8 @@ public class SomaticVariantCompiler
         ConfigBuilder configBuilder = new ConfigBuilder();
         addSampleIdFile(configBuilder, true);
         configBuilder.addPathItem(OUTPUT_FILE, true, "Output filename");
-        configBuilder.addConfigItem(REQUIRED_FIELDS, false, "Required VCF fields separated by ','");
+        configBuilder.addConfigItem(COMMON_FIELDS, false, "Required VCF fields separated by ','");
+        configBuilder.addConfigItem(GENOTYPE_FIELDS, false, "Required VCF genotype fields separated by ','");
         configBuilder.addConfigItem(PURPLE_DIR, true, PURPLE_DIR_DESC);
         addLoggingOptions(configBuilder);
 

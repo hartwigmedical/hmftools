@@ -52,7 +52,7 @@ public class SomaticVariantEnrichment implements Callable
 
         for(SomaticVariant variant : mVariants)
         {
-            if(tumorOnly && variant.isFiltered())
+            if(tumorOnly && variant.isFiltered() && !mConfig.WriteAllSomatics)
                 continue;
 
             enrich(variant);

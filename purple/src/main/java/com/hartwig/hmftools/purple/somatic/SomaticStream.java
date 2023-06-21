@@ -217,11 +217,14 @@ public class SomaticStream
             // various processing for charting, TMB/L calcs, drivers
             for(SomaticVariant variant : mSomaticVariants.variants())
             {
-                boolean isValidChromosome = HumanChromosome.contains(variant.chromosome());
+                if(!HumanChromosome.contains(variant.chromosome()))
+                    continue;
 
-                if(isValidChromosome && variant.isPass())
-                {
+                if(variant.isPass() || mConfig.WriteAllSomatics)
                     mSomaticGermlineLikelihood.processVariant(variant, purityAdjuster.purity());
+
+                if(variant.isPass())
+                {
                     mTumorMutationalLoad.processVariant(variant);
                     mMicrosatelliteIndels.processVariant(variant);
                     checkDrivers(variant, true); // sets reportable flag if applicable

@@ -121,7 +121,7 @@ public class ConfigBuilder
             }
             else if(item.Type == PATH && item.hasValue() && !Files.exists(Paths.get(item.value())))
             {
-                LOGGER.error("invalid config({}) path({})", item.Name, item.value());
+                LOGGER.error("invalid path for config({} = {})", item.Name, item.value());
                 allValid = false;
             }
             else
@@ -136,7 +136,7 @@ public class ConfigBuilder
                 }
                 catch(Exception e)
                 {
-                    LOGGER.error("invalid config({}:{}) value({})", item.Name, item.Type, item.value());
+                    LOGGER.error("invalid type for config({}:{} = {})", item.Name, item.Type, item.value());
                     allValid = false;
                 }
             }
@@ -160,7 +160,7 @@ public class ConfigBuilder
             {
                 if(argument.startsWith(mConfigPrefix))
                 {
-                    LOGGER.error("config item({}) has invalid argument {}", matchedItem.Name, argument);
+                    LOGGER.error("config item({}) has invalid argument: {}", matchedItem.Name, argument);
                     return false;
                 }
 
@@ -174,7 +174,7 @@ public class ConfigBuilder
 
                 if(matchedItem == null)
                 {
-                    LOGGER.error("unexpected config item {}", argument);
+                    LOGGER.error("unregistered config item: {}", argument);
                     return false;
                 }
 
@@ -186,7 +186,7 @@ public class ConfigBuilder
             }
             else
             {
-                LOGGER.error("expected config value at invalid argument {}", argument);
+                LOGGER.error("expecting config name but encountered invalid argument: {}", argument);
                 return false;
             }
         }
@@ -196,6 +196,8 @@ public class ConfigBuilder
 
     public void logItems()
     {
+        LOGGER.info("{} registered config items:", mItems.size());
+
         for(ConfigItem item : mItems)
         {
             LOGGER.info("{}: type({}) default({}) required({}) desc: {}",
