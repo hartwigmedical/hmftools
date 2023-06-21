@@ -13,6 +13,9 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.DEFAULT_PROBE_LENGTH;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.generateMutationSequence;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.LOW_QUAL_NOISE_CUTOFF;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MAX_REPEAT_COUNT;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MIN_QUAL_PER_AD;
@@ -537,7 +540,17 @@ public class SomaticVariants
         if(subclonalLikelihood > MAX_SUBCLONAL_LIKELIHOOD)
             return true;
 
+        // check GC content
+        if(mConfig.RefGenome != null && mConfig.GcRatioMin > 0)
+        {
+            String variantRefContext = generateMutationSequence(
+                    mConfig.RefGenome, DEFAULT_PROBE_LENGTH, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+            double gcRatio = calcGcPercent(variantRefContext);
+
+            if(gcRatio < mConfig.GcRatioMin)
+                return false;
+        }
+
         return false;
     }
-
 }

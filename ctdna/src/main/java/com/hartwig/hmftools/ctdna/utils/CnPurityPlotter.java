@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ctdna.utils;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.CN_SEGMENT_FILE_ID;
@@ -8,23 +9,20 @@ import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.SUMMARY_FILE_ID;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.ctdna.purity.CopyNumberProfile;
 import com.hartwig.hmftools.ctdna.purity.PurityConfig;
 import com.hartwig.hmftools.ctdna.purity.SampleData;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 public class CnPurityPlotter
 {
     private final PurityConfig mConfig;
 
-    public CnPurityPlotter(final CommandLine cmd)
+    public CnPurityPlotter(final ConfigBuilder configBuilder)
     {
-        mConfig = new PurityConfig(cmd);
+        mConfig = new PurityConfig(configBuilder);
 
         if(mConfig.Samples.isEmpty())
             System.exit(1);
@@ -57,22 +55,22 @@ public class CnPurityPlotter
 
     public static void main(final String[] args) throws ParseException
     {
-        final Options options = new Options();
-        PurityConfig.addCommandLineOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        PurityConfig.addConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        addLoggingOptions(configBuilder);
 
-        setLogLevel(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logItems();
+            System.exit(1);
+        }
 
-        CnPurityPlotter cnPurityPlotter = new CnPurityPlotter(cmd);
+        setLogLevel(configBuilder);
+
+        CnPurityPlotter cnPurityPlotter = new CnPurityPlotter(configBuilder);
         cnPurityPlotter.run();
 
         CT_LOGGER.info("CtDNA CN fit plotting complete");
-    }
-
-    private static CommandLine createCommandLine(final String[] args, final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

@@ -3,6 +3,10 @@ package com.hartwig.hmftools.ctdna.probe;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
@@ -12,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,6 +24,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -49,9 +55,7 @@ public class PvConfig
 
     // config strings
     public static final String SAMPLE = "sample";
-    private static final String LINX_DIR = "linx_dir";
     private static final String LINX_GERMLINE_DIR = "linx_germline_dir";
-    private static final String PURPLE_DIR = "purple_dir";
     private static final String REFERENCE_VARIANTS_FILE = "ref_variants";
     private static final String VAF_THRESHOLD = "vaf_min";
     private static final String FRAG_COUNT_THRESHOLD = "frag_count_min";
@@ -62,7 +66,6 @@ public class PvConfig
     private static final String WRITE_ALL = "write_all";
 
     private static final int DEFAULT_PROBE_COUNT = 500;
-    private static final int DEFAULT_PROBE_LENGTH = 120;
     private static final double DEFAULT_VAF_MIN = 0.05;
     private static final int DEFAULT_FRAG_COUNT_MIN = 11;
     private static final int DEFAULT_NON_REPORTABLE_SV_COUNT = 30;
@@ -76,40 +79,40 @@ public class PvConfig
     public static final int MAX_INSERT_BASES = 60;
     public static final int MAX_INDEL_LENGTH = 32;
 
-    public PvConfig(final CommandLine cmd)
+    public PvConfig(final ConfigBuilder configBuilder)
     {
         SampleIds = Lists.newArrayList();
 
-        if(cmd.hasOption(SAMPLE))
+        if(configBuilder.hasValue(SAMPLE))
         {
-            SampleIds.add(cmd.getOptionValue(SAMPLE));
+            SampleIds.add(configBuilder.getValue(SAMPLE));
         }
         else
         {
-            SampleIds.addAll(loadSampleIdsFile(cmd));
+            SampleIds.addAll(loadSampleIdsFile(configBuilder));
         }
 
-        PurpleDir = cmd.getOptionValue(PURPLE_DIR);
-        LinxDir = cmd.getOptionValue(LINX_DIR);
-        LinxGermlineDir = cmd.getOptionValue(LINX_GERMLINE_DIR);
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
-        ReferenceVariantsFile = cmd.getOptionValue(REFERENCE_VARIANTS_FILE);
+        PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
+        LinxDir = configBuilder.getValue(LINX_DIR_CFG);
+        LinxGermlineDir = configBuilder.getValue(LINX_GERMLINE_DIR);
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
+        ReferenceVariantsFile = configBuilder.getValue(REFERENCE_VARIANTS_FILE);
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         CT_LOGGER.info("refGenome({}), purpleDir({}) linxDir({})", RefGenVersion, PurpleDir, LinxDir);
         CT_LOGGER.info("output({})", OutputDir);
 
-        ProbeCount = Integer.parseInt(cmd.getOptionValue(PROBE_COUNT, String.valueOf(DEFAULT_PROBE_COUNT)));
-        ProbeLength = Integer.parseInt(cmd.getOptionValue(PROBE_LENGTH, String.valueOf(DEFAULT_PROBE_LENGTH)));
-        NonReportableSvCount = Integer.parseInt(cmd.getOptionValue(NON_REPORTABLE_SV_COUNT, String.valueOf(DEFAULT_NON_REPORTABLE_SV_COUNT)));
-        SubclonalCount = Integer.parseInt(cmd.getOptionValue(SUBCLONAL_COUNT, "0"));
-        VafMin = Double.parseDouble(cmd.getOptionValue(VAF_THRESHOLD, String.valueOf(DEFAULT_VAF_MIN)));
-        FragmentCountMin = Integer.parseInt(cmd.getOptionValue(FRAG_COUNT_THRESHOLD, String.valueOf(DEFAULT_FRAG_COUNT_MIN)));
-        WriteAll = cmd.hasOption(WRITE_ALL);
-        Threads = parseThreads(cmd);
+        ProbeCount = configBuilder.getInteger(PROBE_COUNT);
+        ProbeLength = configBuilder.getInteger(PROBE_LENGTH);
+        NonReportableSvCount = configBuilder.getInteger(NON_REPORTABLE_SV_COUNT);
+        SubclonalCount = configBuilder.getInteger(SUBCLONAL_COUNT);
+        VafMin = configBuilder.getDecimal(VAF_THRESHOLD);
+        FragmentCountMin = configBuilder.getInteger(FRAG_COUNT_THRESHOLD);
+        WriteAll = configBuilder.hasFlag(WRITE_ALL);
+        Threads = parseThreads(configBuilder);
     }
 
     public boolean isMultiSample() { return SampleIds.size() > 1; }
@@ -124,10 +127,10 @@ public class PvConfig
     {
         if(SampleIds.size() == 1)
         {
-            if(!checkFilePath(PURPLE_DIR, PurpleDir, true))
+            if(!checkFilePath(PURPLE_DIR_CFG, PurpleDir, true))
                 return false;
 
-            if(!checkFilePath(LINX_DIR, LinxDir, true) || !checkFilePath(LINX_GERMLINE_DIR, LinxDir, true))
+            if(!checkFilePath(LINX_DIR_CFG, LinxDir, true) || !checkFilePath(LINX_GERMLINE_DIR, LinxDir, true))
                 return false;
         }
 
@@ -189,29 +192,36 @@ public class PvConfig
         Threads = 1;
     }
 
-    public static Options createCmdLineOptions()
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
+        configBuilder.addConfigItem(SAMPLE, false, "Tumor sample ID");
+        addSampleIdFile(configBuilder, false);
+        configBuilder.addConfigItem(LINX_DIR_CFG, true, LINX_DIR_DESC);
+        configBuilder.addConfigItem(LINX_GERMLINE_DIR, true, "Linx germline directory");
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        addRefGenomeConfig(configBuilder, true);
+        configBuilder.addConfigItem(REFERENCE_VARIANTS_FILE, false, "Reference variants file");
+        configBuilder.addDecimalItem(VAF_THRESHOLD, false, "VAF threshold, default: " + DEFAULT_VAF_MIN, DEFAULT_VAF_MIN);
 
-        options.addOption(SAMPLE, true, "Tumor sample ID");
-        addSampleIdFile(options);
-        options.addOption(LINX_DIR, true, "Linx directory");
-        options.addOption(LINX_GERMLINE_DIR, true, "Linx germlin directory");
-        options.addOption(PURPLE_DIR, true, "Purple directory");
-        addRefGenomeConfig(options);
-        options.addOption(REFERENCE_VARIANTS_FILE, true, "Reference variants file");
-        options.addOption(VAF_THRESHOLD, true, "VAF threshold, default: " + DEFAULT_VAF_MIN);
-        options.addOption(FRAG_COUNT_THRESHOLD, true, "Fragment count threshold, default: " + DEFAULT_FRAG_COUNT_MIN);
-        options.addOption(PROBE_COUNT, true, "Probe count, default: " + DEFAULT_PROBE_COUNT);
-        options.addOption(PROBE_LENGTH, true, "Probe length, default: " + DEFAULT_PROBE_LENGTH);
-        options.addOption(NON_REPORTABLE_SV_COUNT, true, "Max count of non-reportable SVs, default: " + DEFAULT_NON_REPORTABLE_SV_COUNT);
-        options.addOption(SUBCLONAL_COUNT, true, "Max count of subclonal mutations, default(0)");
-        options.addOption(WRITE_ALL, false, "Write all variants to file");
+        configBuilder.addIntegerItem(
+                FRAG_COUNT_THRESHOLD, true, "Fragment count threshold, default: " + DEFAULT_FRAG_COUNT_MIN,
+                DEFAULT_FRAG_COUNT_MIN);
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
-        addThreadOptions(options, 1);
+        configBuilder.addIntegerItem(PROBE_COUNT, true, "Probe count, default: " + DEFAULT_PROBE_COUNT,
+                DEFAULT_PROBE_COUNT);
 
-        return options;
+        configBuilder.addIntegerItem(PROBE_LENGTH, true, "Probe length, default: " + DEFAULT_PROBE_LENGTH,
+                DEFAULT_PROBE_LENGTH);
+
+        configBuilder.addIntegerItem(
+                NON_REPORTABLE_SV_COUNT, true,
+                "Max count of non-reportable SVs, default: " + DEFAULT_NON_REPORTABLE_SV_COUNT, DEFAULT_NON_REPORTABLE_SV_COUNT);
+
+        configBuilder.addIntegerItem(SUBCLONAL_COUNT, false, "Max count of subclonal mutations, default(0)", 0);
+
+        configBuilder.addFlagItem(WRITE_ALL, "Write all variants to file");
+
+        addOutputOptions(configBuilder);
+        addThreadOptions(configBuilder);
     }
 }

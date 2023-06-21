@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.AMP_DEL;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.FUSION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_SV;
@@ -145,8 +146,8 @@ public class StructuralVariant extends Variant
     public String otherData()
     {
         return format("GcRefMin=%.2f GcRefMax=%.2f",
-                mRefSequences.stream().mapToDouble(x -> VariantUtils.calcGcPercent(x)).min().orElse(0),
-                mRefSequences.stream().mapToDouble(x -> VariantUtils.calcGcPercent(x)).max().orElse(0));
+                mRefSequences.stream().mapToDouble(x -> calcGcPercent(x)).min().orElse(0),
+                mRefSequences.stream().mapToDouble(x -> calcGcPercent(x)).max().orElse(0));
     }
 
     protected static List<String> generateSvReferenceSequences(
@@ -315,7 +316,7 @@ public class StructuralVariant extends Variant
 
         for(String refSequence : mRefSequences)
         {
-            double gcRatio = VariantUtils.calcGcPercent(refSequence);
+            double gcRatio = calcGcPercent(refSequence);
 
             if(gcRatio < DEFAULT_GC_THRESHOLD_MIN || gcRatio > DEFAULT_GC_THRESHOLD_MAX)
                 return false;

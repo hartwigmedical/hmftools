@@ -4,14 +4,13 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -54,8 +53,8 @@ public class HrdDetectionAnalyser
     public HrdDetectionAnalyser(final ConfigBuilder configBuilder)
     {
         mSampleIds = loadSampleIdsFile(configBuilder);
-        mPurpleDataDir = configBuilder.getValue(PURPLE_DIR);
-        mChordDir = configBuilder.getValue(CHORD_DIR);
+        mPurpleDataDir = configBuilder.getValue(PURPLE_DIR_CFG);
+        mChordDir = configBuilder.getValue(CHORD_DIR_CFG);
         mThreads = configBuilder.getInteger(THREADS);
 
         mHrdDetection = new HrdDetection();
@@ -189,7 +188,7 @@ public class HrdDetectionAnalyser
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         addSampleIdFile(configBuilder, true);
-        configBuilder.addConfigItem(PURPLE_DIR, true, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
 

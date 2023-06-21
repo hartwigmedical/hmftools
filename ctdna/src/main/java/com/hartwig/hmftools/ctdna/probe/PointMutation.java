@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.generateMutationSequence;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_CODING_MUTATION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.REPORTABLE_MUTATION;
@@ -100,7 +102,7 @@ public class PointMutation extends Variant
     public double vaf() { return mVariantDecorator.adjustedVaf(); }
 
     @Override
-    public double gc() { return VariantUtils.calcGcPercent(mSequence); }
+    public double gc() { return calcGcPercent(mSequence); }
 
     @Override
     public String otherData()
@@ -128,34 +130,8 @@ public class PointMutation extends Variant
     public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
     {
         mSequence = generateMutationSequence(
-                refGenome, config, mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(),
+                refGenome, config.ProbeLength, mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(),
                 mVariantDecorator.alt());
-    }
-
-    protected static String generateMutationSequence(
-            final RefGenomeInterface refGenome, final PvConfig config,
-            final String chromosome, final int position, final String ref, final String alt)
-    {
-        int altLength = alt.length();
-        int refLength = ref.length();
-        int startLength = config.ProbeLength / 2 - altLength / 2;
-        int startPos = position - startLength;
-
-        String basesStart = refGenome.getBaseString(chromosome, startPos, position - 1);
-        int endBaseLength = config.ProbeLength - basesStart.length() - altLength;
-
-        int postPosition = position + refLength;
-        String basesEnd = refGenome.getBaseString(chromosome, postPosition, postPosition + endBaseLength - 1);
-
-        String sequence = basesStart + alt + basesEnd;
-
-        if(sequence.length() != config.ProbeLength)
-        {
-            CT_LOGGER.error("variant({}:{} {}->{}) invalid sequenceLength({}): {}",
-                    chromosome, position, ref, alt, sequence.length(), sequence);
-        }
-
-        return sequence;
     }
 
     private double subclonalLikelihood()

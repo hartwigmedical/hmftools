@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.ctdna.probe;
 
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
 import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.NOT_SET;
 import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.SELECTED;
 
@@ -35,7 +36,7 @@ public abstract class Variant
 
     abstract double vaf();
 
-    public double gc() { return VariantUtils.calcGcPercent(sequence()); }
+    public double gc() { return calcGcPercent(sequence()); }
 
     String otherData() { return ""; }
 

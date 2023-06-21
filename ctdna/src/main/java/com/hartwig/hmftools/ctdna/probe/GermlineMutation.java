@@ -3,8 +3,8 @@ package com.hartwig.hmftools.ctdna.probe;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.generateMutationSequence;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.GERMLINE_MUTATION;
-import static com.hartwig.hmftools.ctdna.probe.PointMutation.generateMutationSequence;
 
 import java.util.List;
 
@@ -63,7 +63,7 @@ public class GermlineMutation extends Variant
     public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
     {
         String sequence = generateMutationSequence(
-                refGenome, config, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
+                refGenome, config.ProbeLength, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
         setSequence(sequence);
     }
 
@@ -82,7 +82,7 @@ public class GermlineMutation extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadGermlineMutations(final String sampleId, final PvConfig config) throws Exception
+    public static List<Variant> loadGermlineMutations(final String sampleId, final PvConfig config)
     {
         List<Variant> variants = Lists.newArrayList();
 

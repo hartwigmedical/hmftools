@@ -104,6 +104,13 @@ public class ConfigBuilder
     public String getValue(final String name) { return getItem(name).value(); }
     public boolean hasValue(final String name) { return getItem(name).hasValue(); }
 
+    public String getValue(final String name, final String defaultValue)
+    {
+        // provides a default even if one hasn't been set
+        ConfigItem item = getItem(name);
+        return item.hasValue() ? item.value() : defaultValue;
+    }
+
     public double getDecimal(final String name) { return getItem(name).decimal(); }
     public int getInteger(final String name) { return getItem(name).integer(); }
     public boolean hasFlag(final String name) { return getItem(name).bool(); }

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
@@ -13,11 +14,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 public class PurityEstimator
@@ -25,9 +23,9 @@ public class PurityEstimator
     private final PurityConfig mConfig;
     private final ResultsWriter mResultsWriter;
 
-    public PurityEstimator(final CommandLine cmd)
+    public PurityEstimator(final ConfigBuilder configBuilder)
     {
-        mConfig = new PurityConfig(cmd);
+        mConfig = new PurityConfig(configBuilder);
 
         if(mConfig.Samples.isEmpty())
             System.exit(1);
@@ -87,6 +85,8 @@ public class PurityEstimator
                     break;
             }
         }
+
+        CT_LOGGER.info("CtDNA purity estimator complete");
     }
 
     private class PurityTask implements Callable
@@ -153,24 +153,22 @@ public class PurityEstimator
         }
     }
 
-    public static void main(final String[] args) throws ParseException
+    public static void main(final String[] args)
     {
-        final Options options = new Options();
-        PurityConfig.addCommandLineOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        PurityConfig.addConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        addLoggingOptions(configBuilder);
 
-        setLogLevel(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logItems();
+            System.exit(1);
+        }
 
-        PurityEstimator purityEstimator = new PurityEstimator(cmd);
+        setLogLevel(configBuilder);
+
+        PurityEstimator purityEstimator = new PurityEstimator(configBuilder);
         purityEstimator.run();
-
-        CT_LOGGER.info("CtDNA purity estimator complete");
-    }
-
-    private static CommandLine createCommandLine(final String[] args, final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

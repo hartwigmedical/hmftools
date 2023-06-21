@@ -4,30 +4,28 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.createCmdLineOptions;
-import static com.hartwig.hmftools.ctdna.probe.VariantUtils.calcGcPercent;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class ProbeFinder
@@ -37,9 +35,9 @@ public class ProbeFinder
     private final RefGenomeInterface mRefGenome;
     private final BufferedWriter mWriter;
 
-    public ProbeFinder(final CommandLine cmd)
+    public ProbeFinder(final ConfigBuilder configBuilder)
     {
-        mConfig = new PvConfig(cmd);
+        mConfig = new PvConfig(configBuilder);
         mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
 
         mCommonVariants = Lists.newArrayList();
@@ -183,21 +181,25 @@ public class ProbeFinder
                 filename += "." + mConfig.OutputId;
             }
 
-            filename += ".csv";
+            filename += TSV_EXTENSION;
 
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            if(mConfig.isMultiSample())
-                writer.write("SampleId,");
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            writer.write("Category,Status,Variant,Reported,CopyNumber,Vaf,TumorFrags,PhasedVariants,Gene");
-            writer.write(",Type,Sequence,GcPercent,OtherData");
+            if(mConfig.isMultiSample())
+                sj.add("SampleId");
+
+            sj.add("Category").add("Status").add("Variant").add("Reported").add("CopyNumber").add("Vaf").add("TumorFrags");
+            sj.add("PhasedVariants").add("Gene").add("Type").add("Sequence").add("GcPercent").add("OtherData");
+
+            writer.write(sj.toString());
             writer.newLine();
             return writer;
         }
         catch(IOException e)
         {
-            CT_LOGGER.error(" failed to initialise output file: {}", e.toString());
+            CT_LOGGER.error("failed to initialise output file: {}", e.toString());
             return null;
         }
     }
@@ -214,18 +216,40 @@ public class ProbeFinder
                 if(!mConfig.WriteAll && !variant.isSelected())
                     continue;
 
-                String variantInfo = mConfig.isMultiSample() ? format("%s,", sampleId) : "";
+                StringJoiner variantInfo = new StringJoiner(TSV_DELIM);
 
-                variantInfo += format("%s,%s,%s,%s,%.2f,%.2f,%d,%s,%s",
-                        variant.categoryType(), variant.selectionStatus(), variant.description(), variant.reported(),
-                        variant.copyNumber(), variant.vaf(), variant.tumorFragments(), variant.hasPhaseVariants(), variant.gene());
+                if(mConfig.isMultiSample())
+                    variantInfo.add(sampleId);
 
-                mWriter.write(format("%s,%s,%s,%.2f,%s", variantInfo, "ALT", variant.sequence(), variant.gc(), variant.otherData()));
+                variantInfo.add(variant.categoryType().toString());
+                variantInfo.add(variant.selectionStatus().toString());
+                variantInfo.add(variant.description());
+                variantInfo.add(String.valueOf(variant.reported()));
+                variantInfo.add(format("%.2f", variant.copyNumber()));
+                variantInfo.add(format("%.2f", variant.vaf()));
+                variantInfo.add(String.valueOf(variant.tumorFragments()));
+                variantInfo.add(String.valueOf(variant.hasPhaseVariants()));
+                variantInfo.add(variant.gene());
+
+                StringJoiner sj = new StringJoiner(TSV_DELIM);
+                sj.add(variantInfo.toString());
+                sj.add("ALT");
+                sj.add(variant.sequence());
+                sj.add(format("%.2f", variant.gc()));
+                sj.add(variant.otherData());
+
+                mWriter.write(sj.toString());
                 mWriter.newLine();
 
                 for(String refSequence : variant.refSequences())
                 {
-                    mWriter.write(format("%s,%s,%s,%.2f", variantInfo, "REF", refSequence, calcGcPercent(refSequence)));
+                    StringJoiner refSj = new StringJoiner(TSV_DELIM);
+                    refSj.add(variantInfo.toString());
+                    refSj.add("REF");
+                    refSj.add(refSequence);
+                    refSj.add(format("%.2f", calcGcPercent(refSequence)));
+                    refSj.add("");
+                    mWriter.write(refSj.toString());
                     mWriter.newLine();
                 }
             }
@@ -241,30 +265,20 @@ public class ProbeFinder
         final VersionInfo version = new VersionInfo("ctdna.version");
         CT_LOGGER.info("ProbeVariantSelection version: {}", version.version());
 
-        final Options options = createCmdLineOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        PvConfig.addConfig(configBuilder);
 
-        try
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            ProbeFinder application = new ProbeFinder(cmd);
-            application.run();
-        }
-        catch(ParseException e)
-        {
-            CT_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("PrimerVariantSelection", options);
+            configBuilder.logItems();
             System.exit(1);
         }
-    }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        setLogLevel(configBuilder);
+
+        ProbeFinder application = new ProbeFinder(configBuilder);
+        application.run();
     }
 }

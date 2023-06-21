@@ -12,6 +12,8 @@ public class PurityConstants
     public static final double MAX_COPY_NUMBER = 6;
     public static final double CLONAL_COPY_NUMBER_MARGIN = 0.2;
 
+    public static final double DEFAULT_GC_RATIO_MIN = 0.4;
+
     public static final double DEFAULT_NOISE_READS_PER_MILLION = 30;
     public static final double DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND = 1;
 

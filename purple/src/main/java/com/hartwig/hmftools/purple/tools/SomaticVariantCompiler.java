@@ -3,7 +3,7 @@ package com.hartwig.hmftools.purple.tools;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -26,7 +26,6 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticVariantCompiler
@@ -45,7 +44,7 @@ public class SomaticVariantCompiler
     {
         mSampleIds = loadSampleIdsFile(configBuilder.getValue(SAMPLE_ID_FILE));
         mOutputFile = configBuilder.getValue(OUTPUT_FILE);
-        mPurpleDir = configBuilder.getValue(PURPLE_DIR);
+        mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
 
         mCommonFields = Arrays.stream(configBuilder.getValue(COMMON_FIELDS).split(",", -1)).collect(Collectors.toList());
         mGenotypeFields = Arrays.stream(configBuilder.getValue(GENOTYPE_FIELDS).split(",", -1)).collect(Collectors.toList());
@@ -166,7 +165,7 @@ public class SomaticVariantCompiler
         configBuilder.addPathItem(OUTPUT_FILE, true, "Output filename");
         configBuilder.addConfigItem(COMMON_FIELDS, false, "Required VCF fields separated by ','");
         configBuilder.addConfigItem(GENOTYPE_FIELDS, false, "Required VCF genotype fields separated by ','");
-        configBuilder.addConfigItem(PURPLE_DIR, true, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
