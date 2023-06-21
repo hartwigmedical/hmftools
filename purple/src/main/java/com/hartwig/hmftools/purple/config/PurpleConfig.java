@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.purple.config;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
@@ -20,13 +22,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.purple.RunMode;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantTier;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.jetbrains.annotations.NotNull;
 
 public class PurpleConfig
 {
@@ -39,6 +40,7 @@ public class PurpleConfig
     public final boolean RunDrivers;
     public final boolean DriversOnly;
 
+    public final SampleDataFiles SampleFiles;
     public final FittingConfig Fitting;
     public final SomaticFitConfig SomaticFitting;
     public final ChartConfig Charting;
@@ -66,46 +68,36 @@ public class PurpleConfig
     public static final String TIER_FILTERS = "tier_filters";
     public static final String WRITE_ALL_SOMATICS = "write_all_somatics";
 
-    public PurpleConfig(final String version, final CommandLine cmd)
+    public PurpleConfig(final String version, final ConfigBuilder configBuilder)
     {
         mIsValid = true;
 
         Version = version;
 
-        final StringJoiner missingJoiner = new StringJoiner(", ");
-
-        String tumorId = cmd.getOptionValue(TUMOR_SAMPLE);
-        ReferenceId = cmd.getOptionValue(REF_SAMPLE);
-
+        String tumorId = configBuilder.getValue(TUMOR_SAMPLE);
+        ReferenceId = configBuilder.getValue(REF_SAMPLE);
         TumorId = tumorId != null ? tumorId : ReferenceId;
 
-        if(TumorId == null)
-            missingJoiner.add(TUMOR_SAMPLE);
+        if(TumorId == null && ReferenceId == null)
+        {
+            mIsValid = false;
+        }
 
+        String outputDir = configBuilder.getValue(OUTPUT_DIRECTORY);
         String sampleDir = "";
 
-        if(cmd.hasOption(SAMPLE_DIR))
+        if(configBuilder.hasValue(SAMPLE_DIR))
         {
-            sampleDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DIR));
-            OutputDir = checkAddDirSeparator(sampleDir + cmd.getOptionValue(OUTPUT_DIRECTORY, ""));
+            sampleDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DIR));
+            OutputDir = checkAddDirSeparator(sampleDir + outputDir);
         }
         else
         {
-            OutputDir = checkAddDirSeparator(parameter(cmd, OUTPUT_DIRECTORY, missingJoiner));
+            OutputDir = checkAddDirSeparator(outputDir);
         }
 
-        parameter(cmd, ENSEMBL_DATA_DIR, missingJoiner);
-
-        final String missing = missingJoiner.toString();
-
-        if(!missing.isEmpty())
-        {
-            mIsValid = false;
-            PPL_LOGGER.error("Missing the following parameters: " + missing);
-        }
-
-        final File outputDir = new File(OutputDir);
-        if(!outputDir.exists() && !outputDir.mkdirs())
+        final File outputPath = new File(OutputDir);
+        if(!outputPath.exists() && !outputPath.mkdirs())
         {
             mIsValid = false;
             PPL_LOGGER.error("unable to write directory " + OutputDir);
@@ -113,16 +105,18 @@ public class PurpleConfig
 
         PPL_LOGGER.info("output directory: {}", OutputDir);
 
-        Charting = new ChartConfig(cmd, OutputDir);
-        Fitting = new FittingConfig(cmd);
-        SomaticFitting = new SomaticFitConfig(cmd);
-        TargetRegionsMode = cmd.hasOption(TARGET_REGION_BED);
-        Threads = parseThreads(cmd, 1);
+        SampleFiles = new SampleDataFiles(configBuilder, TumorId);
 
-        RunDrivers = DriverGenePanelConfig.isConfigured(cmd);
-        DriversOnly = cmd.hasOption(DRIVERS_ONLY);
-        FilterSomaticsOnGene = cmd.hasOption(FILTER_SOMATICS_ON_GENE);
-        WriteAllSomatics = cmd.hasOption(WRITE_ALL_SOMATICS);
+        Charting = new ChartConfig(configBuilder, OutputDir);
+        Fitting = new FittingConfig(configBuilder);
+        SomaticFitting = new SomaticFitConfig(configBuilder);
+        TargetRegionsMode = configBuilder.hasValue(TARGET_REGION_BED);
+        Threads = parseThreads(configBuilder);
+
+        RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);
+        DriversOnly = configBuilder.hasFlag(DRIVERS_ONLY);
+        FilterSomaticsOnGene = configBuilder.hasFlag(FILTER_SOMATICS_ON_GENE);
+        WriteAllSomatics = configBuilder.hasFlag(WRITE_ALL_SOMATICS);
 
         PPL_LOGGER.info("reference({}) tumor({}) {}",
                 ReferenceId != null ? ReferenceId : "NONE", TumorId != null ? TumorId : "NONE",
@@ -130,9 +124,9 @@ public class PurpleConfig
 
         TierQualFilters = Maps.newHashMap();
 
-        if(cmd.hasOption(TIER_FILTERS))
+        if(configBuilder.hasFlag(TIER_FILTERS))
         {
-            String[] tierFilterStrings = cmd.getOptionValue(TIER_FILTERS).split(";", -1);
+            String[] tierFilterStrings = configBuilder.getValue(TIER_FILTERS).split(";", -1);
 
             for(String tierFilter : tierFilterStrings)
             {
@@ -148,16 +142,15 @@ public class PurpleConfig
 
         try
         {
-            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, PPL_LOGGER);
+            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, PPL_LOGGER);
             Collections.sort(SpecificRegions);
         }
         catch(ParseException e)
         {
             PPL_LOGGER.error("invalid specific regions({}) chromosomes({}) config",
-                    cmd.getOptionValue(SPECIFIC_REGIONS, ""), cmd.getOptionValue(SPECIFIC_CHROMOSOMES, ""));
+                    configBuilder.getValue(SPECIFIC_REGIONS), configBuilder.getValue(SPECIFIC_CHROMOSOMES));
             mIsValid = false;
         }
-
     }
 
     public boolean isValid() { return mIsValid; }
@@ -175,43 +168,42 @@ public class PurpleConfig
         return tumorOnlyMode() ? RunMode.TUMOR : (germlineMode() ? RunMode.GERMLINE : RunMode.TUMOR_GERMLINE);
     }
 
-    public static void addOptions(@NotNull Options options)
+    public static void addOptions(final ConfigBuilder configBuilder)
     {
-        options.addOption(
-                REF_SAMPLE, true,
-                "Name of the reference sample. This should correspond to the value used in Amber and Cobalt");
+        configBuilder.addConfigItem(
+                REF_SAMPLE, "Name of the reference sample. This should correspond to the value used in Amber and Cobalt");
 
-        options.addOption(
-                TUMOR_SAMPLE, true,
+        configBuilder.addConfigItem(
+                TUMOR_SAMPLE,
                 "Name of the tumor sample. This should correspond to the value used in Amber and Cobalt");
 
-        options.addOption(
+        configBuilder.addConfigItem(
                 OUTPUT_DIRECTORY, true,
-                "Path to the output directory. Required if <run_dir> not set, otherwise defaults to run_dir/purple/");
+                "Path to the output directory. If <sample_dir> is set, then is sample_dir/output_dir/",
+                "");
 
-        options.addOption(
-                SAMPLE_DIR, true,
-                "Path to the sample's directory where expect to find Cobalt, Amber, Gripss etc directories");
+        configBuilder.addFlagItem(DRIVERS_ONLY, "Only run the driver routine");
+        configBuilder.addFlagItem(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
+        configBuilder.addFlagItem(FILTER_SOMATICS_ON_GENE, "Only load and enrich somatic variants with a gene impact");
+        configBuilder.addConfigItem(TIER_FILTERS, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
 
-        options.addOption(
-                COBALT, true,
-                "Path to Cobalt output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt");
+        FittingConfig.addConfig(configBuilder);
+        SomaticFitConfig.addConfig(configBuilder);
+        ReferenceData.addConfig(configBuilder);
+        ChartConfig.addConfig(configBuilder);
+        SampleDataFiles.addConfig(configBuilder);
+        addThreadOptions(configBuilder);
+        addSpecificChromosomesRegionsConfig(configBuilder);
+    }
 
-        options.addOption(
-                AMBER, true,
-                "Path to Amber output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
+    protected static void addDecimalConfigItem(final ConfigBuilder configBuilder, final String name, final String desc, double defaultValue)
+    {
+        configBuilder.addDecimalItem(name, false, format("%s, default=%.3g)", desc, defaultValue), defaultValue);
+    }
 
-        options.addOption(DRIVERS_ONLY, false, "Only run the driver routine");
-        options.addOption(WRITE_ALL_SOMATICS, false, "Write all variants regardless of filters");
-        options.addOption(FILTER_SOMATICS_ON_GENE, false, "Only load and enrich somatic variants with a gene impact");
-        options.addOption(TIER_FILTERS, true, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
-
-        FittingConfig.addOptions(options);
-        SomaticFitConfig.addOptions(options);
-        ReferenceData.addOptions(options);
-        ChartConfig.addOptions(options);
-        SampleDataFiles.addOptions(options);
-        addSpecificChromosomesRegionsConfig(options);
+    protected static void addIntegerConfigItem(final ConfigBuilder configBuilder, final String name, final String desc, int defaultValue)
+    {
+        configBuilder.addIntegerItem(name, false, format("%s, default=%d)", desc, defaultValue), defaultValue);
     }
 
     public boolean excludeOnSpecificRegion(final String chromosome, final int position)

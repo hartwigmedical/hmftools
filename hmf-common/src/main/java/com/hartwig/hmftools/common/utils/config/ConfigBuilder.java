@@ -36,9 +36,26 @@ public class ConfigBuilder
 
     public void addConfigItem(final ConfigItem item) { mItems.add(item); }
 
+    public void addConfigItem(
+            final ConfigItemType type, final String name, final boolean required, final String description, final String defaultValue)
+    {
+        mItems.add(new ConfigItem(type, name, required, description, defaultValue));
+    }
+
+    // convenience methods
     public void addConfigItem(final String name, final String description)
     {
         addConfigItem(STRING, name, false, description, null);
+    }
+
+    public void addDecimalItem(final String name, final boolean required, final String description, double defaultValue)
+    {
+        addConfigItem(DECIMAL, name, required, description, String.valueOf(defaultValue));
+    }
+
+    public void addIntegerItem(final String name, final boolean required, final String description, int defaultValue)
+    {
+        addConfigItem(INTEGER, name, required, description, String.valueOf(defaultValue));
     }
 
     public void addFlagItem(final String name, final String description)
@@ -71,11 +88,6 @@ public class ConfigBuilder
         addConfigItem(STRING, name, true, description, null);
     }
 
-    public void addConfigItem(
-            final ConfigItemType type, final String name, final boolean required, final String description, final String defaultValue)
-    {
-        mItems.add(new ConfigItem(type, name, required, description, defaultValue));
-    }
 
     public ConfigItem getItem(final String name)
     {
@@ -107,7 +119,7 @@ public class ConfigBuilder
                 LOGGER.error("missing config({}) desc({})", item.Name, item.Description);
                 allValid = false;
             }
-            else if(item.Type == PATH && !Files.exists(Paths.get(item.value())))
+            else if(item.Type == PATH && item.hasValue() && !Files.exists(Paths.get(item.value())))
             {
                 LOGGER.error("invalid config({}) path({})", item.Name, item.value());
                 allValid = false;

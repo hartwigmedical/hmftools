@@ -33,7 +33,7 @@ public class ConfigItem
             mDefaultValue = defaultValue;
         }
 
-        mValue = mDefaultValue != null ? mDefaultValue : "";
+        mValue = mDefaultValue; // can be null
         mHasValue = false;
     }
 
@@ -51,7 +51,7 @@ public class ConfigItem
     public int integer() { return Integer.parseInt(mValue); }
     public boolean bool() { return Boolean.parseBoolean(mValue); }
 
-    public boolean missing() { return Required && mValue.isEmpty(); }
+    public boolean missing() { return Required && !mHasValue; }
 
     public void clearValue()
     {
@@ -61,7 +61,7 @@ public class ConfigItem
 
     public String toString()
     {
-        return format("%s:%s required(%s) value(%s) default(%s) desc(%s)",
-                Type, Name, Required, mValue, mDefaultValue != null ? mDefaultValue : "none", Description);
+        return format("%s %s required(%s) value(%s) default(%s) desc(%s)",
+                Name, Type, Required, mValue, mDefaultValue != null ? mDefaultValue : "none", Description);
     }
 }

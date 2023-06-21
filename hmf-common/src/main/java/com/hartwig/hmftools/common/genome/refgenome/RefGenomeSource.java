@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
@@ -28,6 +30,12 @@ public class RefGenomeSource implements RefGenomeInterface
     {
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
+    }
+
+    public static void addRefGenomeConfig(final ConfigBuilder configBuilder, boolean required)
+    {
+        configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
+        configBuilder.addPathItem(REF_GENOME, required, REF_GENOME_CFG_DESC);
     }
 
     public RefGenomeSource(final IndexedFastaSequenceFile refGenome)

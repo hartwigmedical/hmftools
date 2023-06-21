@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
@@ -29,10 +30,16 @@ public final class GCProfileFactory
     public static final int WINDOW_SIZE = 1000;
 
     public static final String GC_PROFILE = "gc_profile";
+    public static final String GC_PROFILE_DESC = "Path to GC profile";
+
+    public static void addGcProfilePath(final ConfigBuilder configBuilder, boolean required)
+    {
+        configBuilder.addPathItem(GC_PROFILE, required, GC_PROFILE_DESC);
+    }
 
     public static void addGcProfilePath(final Options options)
     {
-        options.addOption(GC_PROFILE, true, "Path to GC profile");
+        options.addOption(GC_PROFILE, true, GC_PROFILE_DESC);
     }
 
     public static Multimap<Chromosome, GCProfile> loadGCContent(final String fileName) throws IOException

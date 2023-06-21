@@ -2,6 +2,8 @@ package com.hartwig.hmftools.purple.config;
 
 import java.io.File;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
@@ -18,18 +20,18 @@ public class ChartConfig
     public final String PlotDirectory;
     public final String CircosDirectory;
 
-    public ChartConfig(final CommandLine cmd, final String outputDir)
+    public ChartConfig(final ConfigBuilder configBuilder, final String outputDir)
     {
-        Disabled = cmd.hasOption(DISABLE);
-        PlotDirectory = outputDir + File.separator + "plot";
-        CircosDirectory = outputDir + File.separator + "circos";
-        CircosBinary = cmd.getOptionValue(CIRCOS);
+        Disabled = configBuilder.hasFlag(DISABLE);
+        PlotDirectory = outputDir + "plot";
+        CircosDirectory = outputDir + "circos";
+        CircosBinary = configBuilder.getValue(CIRCOS);
     }
 
-    public static void addOptions(@NotNull Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(CIRCOS, true, "Location of circos binary");
-        options.addOption(DISABLE, false, "Disable charts");
+        configBuilder.addPathItem(CIRCOS, false, "Location of circos binary");
+        configBuilder.addFlagItem(DISABLE, "Disable charts");
     }
 
 }

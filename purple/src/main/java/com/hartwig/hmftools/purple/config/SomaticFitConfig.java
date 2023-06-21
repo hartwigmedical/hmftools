@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.purple.config.PurpleConfig.addDecimalConfigItem;
+import static com.hartwig.hmftools.purple.config.PurpleConfig.addIntegerConfigItem;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.HIGHLY_DIPLOID_PERCENTAGE_DEFAULT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PEAK_DEFAULT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PURITY_DEFAULT;
@@ -8,9 +10,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PUR
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_VARIANTS_DEFAULT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_PENALTY_WEIGHT_DEFAULT;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class SomaticFitConfig
 {
@@ -28,30 +28,39 @@ public class SomaticFitConfig
     public double SomaticPenaltyWeight;
     public double HighlyDiploidPercentage;
 
-    public SomaticFitConfig(final CommandLine cmd)
+    public SomaticFitConfig(final ConfigBuilder configBuilder)
     {
-        MinTotalVariants = getConfigValue(cmd, SOMATIC_MIN_TOTAL, SOMATIC_MIN_VARIANTS_DEFAULT);
-        MinPeakVariants = getConfigValue(cmd, SOMATIC_MIN_PEAK, SOMATIC_MIN_PEAK_DEFAULT);
-        MinSomaticPurity = getConfigValue(cmd, SOMATIC_MIN_PURITY, SOMATIC_MIN_PURITY_DEFAULT);
-        MinSomaticPuritySpread = getConfigValue(cmd, SOMATIC_MIN_PURITY_SPREAD, SOMATIC_MIN_PURITY_SPREAD_DEFAULT);
-        SomaticPenaltyWeight = getConfigValue(cmd, SOMATIC_PENALTY_WEIGHT, SOMATIC_PENALTY_WEIGHT_DEFAULT);
-        HighlyDiploidPercentage = getConfigValue(cmd, HIGHLY_DIPLOID_PERCENTAGE, HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
+        MinTotalVariants = configBuilder.getInteger(SOMATIC_MIN_TOTAL);
+        MinPeakVariants = configBuilder.getInteger(SOMATIC_MIN_PEAK);
+        MinSomaticPurity = configBuilder.getDecimal(SOMATIC_MIN_PURITY);
+        MinSomaticPuritySpread = configBuilder.getDecimal(SOMATIC_MIN_PURITY_SPREAD);
+        SomaticPenaltyWeight = configBuilder.getDecimal(SOMATIC_PENALTY_WEIGHT);
+        HighlyDiploidPercentage = configBuilder.getDecimal(HIGHLY_DIPLOID_PERCENTAGE);
     }
 
-    public static void addOptions(@NotNull Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(SOMATIC_MIN_PEAK, true,
-                "Minimum number of somatic variants to consider a peak. Default " + SOMATIC_MIN_PEAK_DEFAULT);
-        options.addOption(SOMATIC_MIN_TOTAL, true,
-                "Minimum number of somatic variants required to assist highly diploid fits. Default " + SOMATIC_MIN_VARIANTS_DEFAULT);
-        options.addOption(SOMATIC_MIN_PURITY, true,
-                "Somatic fit will not be used if both somatic and fitted purities are less than this value. Default "
-                        + SOMATIC_MIN_PURITY_DEFAULT);
-        options.addOption(SOMATIC_MIN_PURITY_SPREAD, true,
-                "Minimum spread within candidate purities before somatics can be used. Default " + SOMATIC_MIN_PURITY_SPREAD_DEFAULT);
-        options.addOption(SOMATIC_PENALTY_WEIGHT, true,
-                "Proportion of somatic deviation to include in fitted purity score. Default " + SOMATIC_PENALTY_WEIGHT_DEFAULT);
-        options.addOption(HIGHLY_DIPLOID_PERCENTAGE, true,
-                "Proportion of genome that must be diploid before using somatic fit. Default " + HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
+        addIntegerConfigItem(
+                configBuilder, SOMATIC_MIN_PEAK, "Minimum number of somatic variants to consider a peak", SOMATIC_MIN_PEAK_DEFAULT);
+
+        addIntegerConfigItem(
+                configBuilder, SOMATIC_MIN_TOTAL,
+                "Minimum number of somatic variants required to assist highly diploid fits", SOMATIC_MIN_VARIANTS_DEFAULT);
+
+        addDecimalConfigItem(
+                configBuilder, SOMATIC_MIN_PURITY, "Minimum spread within candidate purities before somatics can be used",
+                SOMATIC_MIN_PURITY_DEFAULT);
+
+        addDecimalConfigItem(
+                configBuilder, SOMATIC_MIN_PURITY_SPREAD, "Minimum spread within candidate purities before somatics can be used",
+                SOMATIC_MIN_PURITY_SPREAD_DEFAULT);
+
+        addDecimalConfigItem(
+                configBuilder, SOMATIC_PENALTY_WEIGHT, "Proportion of somatic deviation to include in fitted purity score",
+                SOMATIC_PENALTY_WEIGHT_DEFAULT);
+
+        addDecimalConfigItem(
+                configBuilder, HIGHLY_DIPLOID_PERCENTAGE, "Proportion of genome that must be diploid before using somatic fit",
+                HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
     }
 }

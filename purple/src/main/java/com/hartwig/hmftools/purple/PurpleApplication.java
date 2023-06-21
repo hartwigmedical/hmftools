@@ -11,8 +11,6 @@ import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.PurpleSummaryData.createPurity;
 import static com.hartwig.hmftools.purple.Segmentation.validateObservedRegions;
@@ -45,6 +43,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
@@ -89,13 +88,6 @@ import com.hartwig.hmftools.purple.somatic.SomaticVariantCache;
 import com.hartwig.hmftools.purple.germline.GermlineSvCache;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PurpleApplication
@@ -103,7 +95,6 @@ public class PurpleApplication
     private final VersionInfo mPurpleVersion;
     private final ExecutorService mExecutorService;
     private final ReferenceData mReferenceData;
-    private final CommandLine mCmdLineArgs;
     private final PurpleConfig mConfig;
 
     private final GermlineVariants mGermlineVariants;
@@ -111,22 +102,13 @@ public class PurpleApplication
 
     private static final String VERSION = "version";
 
-    private PurpleApplication(final Options options, final String... args) throws ParseException, IOException
+    private PurpleApplication(final ConfigBuilder configBuilder) throws IOException
     {
         mPurpleVersion = new VersionInfo("purple.version");
         PPL_LOGGER.info("Purple version: {}", mPurpleVersion.version());
 
-        mCmdLineArgs = createCommandLine(options, args);
-
-        if(mCmdLineArgs.hasOption(VERSION))
-        {
-            System.exit(0);
-        }
-
-        setLogLevel(mCmdLineArgs);
-
         // load config
-        mConfig = new PurpleConfig(mPurpleVersion.version(), mCmdLineArgs);
+        mConfig = new PurpleConfig(mPurpleVersion.version(), configBuilder);
 
         if(!mConfig.isValid())
         {
@@ -135,7 +117,7 @@ public class PurpleApplication
         }
 
         // and common reference data
-        mReferenceData = new ReferenceData(mCmdLineArgs, mConfig);
+        mReferenceData = new ReferenceData(configBuilder, mConfig);
 
         if(!mReferenceData.isValid())
         {
@@ -169,19 +151,17 @@ public class PurpleApplication
             }
             else
             {
-                final SampleDataFiles sampleDataFiles = new SampleDataFiles(mCmdLineArgs, mConfig.TumorId);
-
-                if(!sampleDataFiles.hasValidSampleNames(mConfig))
+                if(!mConfig.SampleFiles.hasValidSampleNames(mConfig))
                     System.exit(1);
 
-                final SampleData sampleData = loadSampleData(mConfig.ReferenceId, mConfig.TumorId, sampleDataFiles);
+                final SampleData sampleData = loadSampleData();
 
                 if(sampleData == null)
                     System.exit(1);
 
                 PPL_LOGGER.debug("post-data-loading memory({}mb)", calcMemoryUsage());
 
-                performFit(mConfig.ReferenceId, mConfig.TumorId, sampleDataFiles, sampleData);
+                performFit(sampleData);
             }
         }
         catch(Exception e)
@@ -196,8 +176,11 @@ public class PurpleApplication
         mExecutorService.shutdown();
     }
 
-    private SampleData loadSampleData(final String referenceId, final String tumorId, final SampleDataFiles sampleDataFiles) throws Exception
+    private SampleData loadSampleData() throws Exception
     {
+        String referenceId = mConfig.ReferenceId;
+        String tumorId = mConfig.TumorId;
+        SampleDataFiles sampleDataFiles = mConfig.SampleFiles;
         SampleData sampleData = null;
 
         final SomaticVariantCache somaticVariantCache = new SomaticVariantCache(mConfig);
@@ -233,10 +216,12 @@ public class PurpleApplication
         return sampleData;
     }
 
-    private void performFit(
-            final String referenceId, final String tumorId,
-            final SampleDataFiles sampleDataFiles, final SampleData sampleData) throws Exception
+    private void performFit(final SampleData sampleData) throws Exception
     {
+        String referenceId = mConfig.ReferenceId;
+        String tumorId = mConfig.TumorId;
+        SampleDataFiles sampleDataFiles = mConfig.SampleFiles;
+
         final AmberData amberData = sampleData.Amber;
         final CobaltData cobaltData = sampleData.Cobalt;
 
@@ -624,40 +609,21 @@ public class PurpleApplication
 
     public static void main(final String... args) throws IOException
     {
-        final Options options = createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        try
+        PurpleConfig.addOptions(configBuilder);
+
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
         {
-            PurpleApplication purpleApplication = new PurpleApplication(options, args);
-            purpleApplication.run();
-        }
-        catch(ParseException e)
-        {
-            PPL_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("PurpleApplication", options);
+            configBuilder.logItems();
             System.exit(1);
         }
-    }
 
-    @NotNull
-    private static Options createOptions()
-    {
-        final Options options = new Options();
-        PurpleConfig.addOptions(options);
+        setLogLevel(configBuilder);
 
-        addLoggingOptions(options);
-        addThreadOptions(options);
-        addThreadOptions(options);
-        options.addOption(VERSION, false, "Exit after displaying version info.");
-
-        return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final Options options, @NotNull final String... args) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        PurpleApplication purpleApplication = new PurpleApplication(configBuilder);
+        purpleApplication.run();
     }
 }

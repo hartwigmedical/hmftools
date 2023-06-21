@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTra
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -60,6 +62,11 @@ public class EnsemblDataCache
         this(cmd.getOptionValue(ENSEMBL_DATA_DIR), refGenomeVersion);
     }
 
+    public EnsemblDataCache(final ConfigBuilder configBuilder)
+    {
+        this(configBuilder.getValue(ENSEMBL_DATA_DIR), RefGenomeVersion.from(configBuilder));
+    }
+
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
     {
         mDataPath = checkAddDirSeparator(dataPath);
@@ -79,6 +86,16 @@ public class EnsemblDataCache
         mRequireGeneSynonyms = false;
         mDownstreamGeneAnnotations = Maps.newHashMap();
         mAlternativeGeneData = Lists.newArrayList();
+    }
+
+    public static void addEnsemblDir(final ConfigBuilder configBuilder)
+    {
+        addEnsemblDir(configBuilder, false);
+    }
+
+    public static void addEnsemblDir(final ConfigBuilder configBuilder, boolean required)
+    {
+        configBuilder.addPathItem(ENSEMBL_DATA_DIR, required, ENSEMBL_DATA_DIR_CFG);
     }
 
     public static void addEnsemblDir(final Options options)

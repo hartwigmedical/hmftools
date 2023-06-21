@@ -45,6 +45,8 @@ public class TaskExecutor
                 ConfigItemType.INTEGER, THREADS, false, threadDescription(defaultCount), String.valueOf(defaultCount));
     }
 
+    public static int parseThreads(final ConfigBuilder configBuilder) { return configBuilder.getInteger(THREADS); }
+
     public static void addThreadOptions(final Options options)
     {
         addThreadOptions(options, DEFAULT_THREAD_COUNT);

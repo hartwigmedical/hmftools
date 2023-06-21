@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,12 +15,14 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 {
@@ -143,6 +146,12 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
     public static final String SUB_ITEM_DELIM = ":";
     public static final String POS_ITEM_DELIM = "-";
 
+    public static void addSpecificChromosomesRegionsConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addConfigItem(SPECIFIC_CHROMOSOMES, SPECIFIC_CHROMOSOMES_DESC);
+        configBuilder.addConfigItem(SPECIFIC_REGIONS, SPECIFIC_REGIONS_DESC);
+    }
+
     public static void addSpecificChromosomesRegionsConfig(final Options options)
     {
         options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
@@ -151,13 +160,18 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
     public static List<ChrBaseRegion> loadSpecificRegions(final CommandLine cmd) throws ParseException
     {
+        return loadSpecificRegions(cmd.getOptionValue(SPECIFIC_REGIONS));
+    }
+
+    public static List<ChrBaseRegion> loadSpecificRegions(@Nullable final String specificRegionsStr) throws ParseException
+    {
         List<ChrBaseRegion> regions = Lists.newArrayList();
 
-        if(!cmd.hasOption(SPECIFIC_REGIONS))
+        if(specificRegionsStr == null)
             return regions;
 
-        // expected format: chromosome:positionStart:positionEnd, separated by ';'
-        final List<String> regionStrs = Arrays.stream(cmd.getOptionValue(SPECIFIC_REGIONS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
+        // expected format: chromosome:positionStart-positionEnd, separated by ';'
+        final List<String> regionStrs = Arrays.stream(specificRegionsStr.split(ITEM_DELIM, -1)).collect(Collectors.toList());
         for(String regionStr : regionStrs)
         {
             final String[] items = regionStr.split(SUB_ITEM_DELIM);
@@ -196,16 +210,39 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
     public static List<String> loadSpecificChromsomes(final CommandLine cmd)
     {
-        return cmd.hasOption(SPECIFIC_CHROMOSOMES) ?
-                Arrays.stream(cmd.getOptionValue(SPECIFIC_CHROMOSOMES).split(ITEM_DELIM)).collect(Collectors.toList()) : Lists.newArrayList();
+        return loadSpecificChromsomes(cmd.getOptionValue(SPECIFIC_CHROMOSOMES));
+    }
+
+    public static List<String> loadSpecificChromsomes(final String specificChromosomesStr)
+    {
+        if(specificChromosomesStr == null || specificChromosomesStr.isEmpty())
+            return Collections.emptyList();
+
+        return Arrays.stream(specificChromosomesStr.split(ITEM_DELIM)).collect(Collectors.toList());
+    }
+
+    public static void loadSpecificChromsomesOrRegions(
+            final ConfigBuilder configBuilder, final List<String> chromosomes, final List<ChrBaseRegion> regions, final Logger logger)
+            throws ParseException
+    {
+        loadSpecificChromsomesOrRegions(
+                configBuilder.getValue(SPECIFIC_REGIONS), configBuilder.getValue(SPECIFIC_CHROMOSOMES), chromosomes, regions, logger);
     }
 
     public static void loadSpecificChromsomesOrRegions(
             final CommandLine cmd, final List<String> chromosomes, final List<ChrBaseRegion> regions, final Logger logger) throws ParseException
     {
-        if(cmd.hasOption(SPECIFIC_REGIONS))
+        loadSpecificChromsomesOrRegions(
+                cmd.getOptionValue(SPECIFIC_REGIONS), cmd.getOptionValue(SPECIFIC_CHROMOSOMES), chromosomes, regions, logger);
+    }
+
+    private static void loadSpecificChromsomesOrRegions(
+            @Nullable final String specificRegionsStr, @Nullable final String specificChromosomesStr,
+            final List<String> chromosomes, final List<ChrBaseRegion> regions, final Logger logger)  throws ParseException
+    {
+        if(specificRegionsStr != null && !specificRegionsStr.isEmpty())
         {
-            regions.addAll(ChrBaseRegion.loadSpecificRegions(cmd));
+            regions.addAll(ChrBaseRegion.loadSpecificRegions(specificRegionsStr));
 
             for(ChrBaseRegion region : regions)
             {
@@ -215,10 +252,10 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
                     chromosomes.add(region.Chromosome);
             }
         }
-        else if(cmd.hasOption(SPECIFIC_CHROMOSOMES))
+        else if(specificChromosomesStr != null && !specificChromosomesStr.isEmpty())
         {
-            logger.info("filtering for specific chromosomes: {}", cmd.getOptionValue(SPECIFIC_CHROMOSOMES));
-            chromosomes.addAll(loadSpecificChromsomes(cmd));
+            logger.info("filtering for specific chromosomes: {}", specificChromosomesStr);
+            chromosomes.addAll(loadSpecificChromsomes(specificChromosomesStr));
         }
     }
 }
