@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cobalt.count;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,9 +14,13 @@ import java.util.concurrent.Future;
 import com.hartwig.hmftools.cobalt.Chromosome;
 import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
 import com.hartwig.hmftools.cobalt.CobaltColumns;
+import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
+import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
 
+import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
 
+import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import tech.tablesaw.api.*;
 
@@ -29,7 +34,7 @@ public class BamReadCounter
 
     private final ExecutorService mExecutorService;
     private final SamReaderFactory mReaderFactory;
-    private final Collection<Chromosome> mChromosomes;
+    private Collection<Chromosome> mChromosomes = null;
 
     private final ChromosomePositionCodec mChromosomePosCodec;
 
@@ -39,26 +44,26 @@ public class BamReadCounter
     public BamReadCounter(
             final int windowSize, final int minMappingQuality,
             final ExecutorService executorService, final SamReaderFactory readerFactory,
-            final Collection<Chromosome> chromosomes,
             ChromosomePositionCodec chromosomePosCodec)
     {
         mWindowSize = windowSize;
         mMinMappingQuality = minMappingQuality;
         mExecutorService = executorService;
         mReaderFactory = readerFactory;
-        mChromosomes = chromosomes;
         mChromosomePosCodec = chromosomePosCodec;
     }
 
     public void generateCounts(
             @Nullable final String referenceBam, @Nullable final String tumorBam)
-            throws ExecutionException, InterruptedException
+            throws ExecutionException, InterruptedException, IOException
     {
         if (referenceBam == null && tumorBam == null)
         {
             CB_LOGGER.error("No bam file supplied");
             return;
         }
+
+        mChromosomes = loadChromosomes(mReaderFactory, referenceBam, tumorBam);
 
         List<Future<ChromosomeReadCount>> tumorFutures = null;
         List<Future<ChromosomeReadCount>> referenceFutures = null;
@@ -127,5 +132,22 @@ public class BamReadCounter
         mChromosomePosCodec.addEncodedChrPosColumn(readCounts, false);
 
         return readCounts;
+    }
+
+    private Collection<Chromosome> loadChromosomes(final SamReaderFactory readerFactory,
+            @Nullable final String referenceBam,
+            @Nullable final String tumorBam) throws IOException
+    {
+        Collection<Chromosome> chromosomes = new ArrayList<>();
+
+        Validate.isTrue(referenceBam != null || tumorBam != null);
+
+        try (SamReader reader = readerFactory.open(new File(referenceBam != null ? referenceBam : tumorBam)))
+        {
+            final List<ChromosomeLength> chromosomeLengths = ChromosomeLengthFactory.create(reader.getFileHeader());
+            chromosomeLengths.forEach(o -> chromosomes.add(new Chromosome(o.chromosome(), o.length())));
+        }
+
+        return chromosomes;
     }
 }

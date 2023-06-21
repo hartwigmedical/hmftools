@@ -10,9 +10,7 @@ import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentati
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,8 +25,6 @@ import com.hartwig.hmftools.cobalt.count.BamReadCounter;
 import com.hartwig.hmftools.cobalt.diploid.DiploidRegionLoader;
 import com.hartwig.hmftools.cobalt.ratio.RatioSupplier;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
-import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GCProfileFactory;
@@ -38,7 +34,6 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import tech.tablesaw.api.*;
@@ -108,20 +103,21 @@ public class CobaltApplication
         {
             final SamReaderFactory readerFactory = readerFactory(mConfig);
 
-            final Collection<Chromosome> chromosomes = loadChromosomes(readerFactory);
-
             var chromosomePosCodec = new ChromosomePositionCodec();
 
             final BamReadCounter bamReadCounter = new BamReadCounter(
                     WINDOW_SIZE, mConfig.MinMappingQuality,
-                    executorService, readerFactory, chromosomes, chromosomePosCodec);
+                    executorService, readerFactory, chromosomePosCodec);
 
             bamReadCounter.generateCounts(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
+
+            Table referenceReadCounts = bamReadCounter.getReferenceCounts();
+            Table tumorReadCounts = bamReadCounter.getTumorCounts();
 
             final Table gcProfiles = loadGCContent(chromosomePosCodec);
 
             final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
-                    gcProfiles, bamReadCounter.getReferenceCounts(), bamReadCounter.getTumorCounts(),
+                    gcProfiles, referenceReadCounts, tumorReadCounts,
                     chromosomePosCodec);
 
             if (mConfig.TargetRegionPath != null)
@@ -174,19 +170,6 @@ public class CobaltApplication
             return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomePath)));
         }
         return readerFactory;
-    }
-
-    private Collection<Chromosome> loadChromosomes(final SamReaderFactory readerFactory) throws IOException
-    {
-        Collection<Chromosome> chromosomes = new ArrayList<>();
-
-        try(SamReader reader = readerFactory.open(new File(mConfig.ReferenceBamPath != null ? mConfig.ReferenceBamPath : mConfig.TumorBamPath)))
-        {
-            final List<ChromosomeLength> chromosomeLengths = ChromosomeLengthFactory.create(reader.getFileHeader());
-            chromosomeLengths.forEach(o -> chromosomes.add(new Chromosome(o.chromosome(), o.length())));
-        }
-
-        return chromosomes;
     }
 
     @NotNull
