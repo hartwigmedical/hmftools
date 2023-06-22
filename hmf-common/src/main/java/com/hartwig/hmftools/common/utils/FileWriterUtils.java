@@ -35,6 +35,11 @@ public final class FileWriterUtils
         configBuilder.addConfigItem(OUTPUT_ID, OUTPUT_ID_DESC);
     }
 
+    public static void addOutputDir(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addConfigItem(OUTPUT_DIR, OUTPUT_DIR_DESC);
+    }
+
     public static String parseOutputDir(final ConfigBuilder configBuilder)
     {
         String outputDir = configBuilder.getValue(OUTPUT_DIR);
@@ -48,6 +53,7 @@ public final class FileWriterUtils
     {
         options.addOption(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
     }
+
     public static void addOutputId(final Options options)
     {
         options.addOption(OUTPUT_ID, true, OUTPUT_ID_DESC);

@@ -196,16 +196,6 @@ public class PurpleConfig
         addSpecificChromosomesRegionsConfig(configBuilder);
     }
 
-    protected static void addDecimalConfigItem(final ConfigBuilder configBuilder, final String name, final String desc, double defaultValue)
-    {
-        configBuilder.addDecimalItem(name, false, format("%s, default=%.3g)", desc, defaultValue), defaultValue);
-    }
-
-    protected static void addIntegerConfigItem(final ConfigBuilder configBuilder, final String name, final String desc, int defaultValue)
-    {
-        configBuilder.addIntegerItem(name, false, format("%s, default=%d)", desc, defaultValue), defaultValue);
-    }
-
     public boolean excludeOnSpecificRegion(final String chromosome, final int position)
     {
         if(!SpecificRegions.isEmpty())

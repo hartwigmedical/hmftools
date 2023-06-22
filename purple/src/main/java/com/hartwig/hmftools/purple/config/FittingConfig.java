@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.purple.config;
 
-import static com.hartwig.hmftools.purple.config.PurpleConfig.addDecimalConfigItem;
-import static com.hartwig.hmftools.purple.config.PurpleConfig.addIntegerConfigItem;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE;
 
@@ -90,54 +88,49 @@ public class FittingConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        addDecimalConfigItem(configBuilder, MIN_PURITY, "Minimum purity", MIN_PURITY_DEFAULT);
-        addDecimalConfigItem(configBuilder, MAX_PURITY, "Maximum purity", MAX_PURITY_DEFAULT);
-        addDecimalConfigItem(configBuilder, PURITY_INCREMENT, "Purity increment", PURITY_INCREMENT_DEFAULT);
-        addDecimalConfigItem(configBuilder, MIN_PLOIDY, "Minimum ploidy", MIN_PLOIDY_DEFAULT);
-        addDecimalConfigItem(configBuilder, MAX_PLOIDY, "Maximum ploidy", MAX_PLOIDY_DEFAULT);
+        configBuilder.addDecimalItem(MIN_PURITY, "Minimum purity", MIN_PURITY_DEFAULT);
+        configBuilder.addDecimalItem(MAX_PURITY, "Maximum purity", MAX_PURITY_DEFAULT);
+        configBuilder.addDecimalItem(PURITY_INCREMENT, "Purity increment", PURITY_INCREMENT_DEFAULT);
+        configBuilder.addDecimalItem(MIN_PLOIDY, "Minimum ploidy", MIN_PLOIDY_DEFAULT);
+        configBuilder.addDecimalItem(MAX_PLOIDY, "Maximum ploidy", MAX_PLOIDY_DEFAULT);
 
-        addIntegerConfigItem(
-                configBuilder, MIN_DIPLOID_TUMOR_RATIO_COUNT,
+        configBuilder.addIntegerItem(
+                MIN_DIPLOID_TUMOR_RATIO_COUNT,
                 "Minimum ratio count while smoothing before diploid regions become suspect",
                 MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT);
 
-        addIntegerConfigItem(
-                configBuilder,
+        configBuilder.addIntegerItem(
                 MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE,
                 "Minimum ratio count while smoothing before diploid regions become suspect while approaching centromere",
                 MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT);
 
-        addDecimalConfigItem(
-                configBuilder, PLOIDY_PENALTY_FACTOR, "Penalty factor to apply to the number of copy number events",
+        configBuilder.addDecimalItem(PLOIDY_PENALTY_FACTOR, "Penalty factor to apply to the number of copy number events",
                 PLOIDY_PENALTY_FACTOR_DEFAULT);
 
-        addDecimalConfigItem(
-                configBuilder,
+        configBuilder.addDecimalItem(
                 PLOIDY_PENALTY_STANDARD_DEVIATION,
                 "Standard deviation of normal distribution modelling ploidy deviation from whole number",
                 PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
 
-        addDecimalConfigItem(
-                configBuilder, PLOIDY_PENALTY_MIN_STANDARD_DEVIATION,
+        configBuilder.addDecimalItem(
+                PLOIDY_PENALTY_MIN_STANDARD_DEVIATION,
                 "Minimum ploidy penalty standard deviation to be applied", PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT);
 
-        addDecimalConfigItem(
-                configBuilder,
+        configBuilder.addDecimalItem(
                 PLOIDY_PENALTY_SUB_MIN_ADDITIONAL,
                 "Additional penalty to apply to major allele < 1 or minor allele < 0",
                 PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT);
 
-        addDecimalConfigItem(
-                configBuilder,
+        configBuilder.addDecimalItem(
                 PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER,
                 "Penalty multiplier applied to major allele < 1", PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT);
 
-        addDecimalConfigItem(configBuilder, PLOIDY_PENALTY_MIN, "Minimum ploidy penalty", PLOIDY_PENALTY_MIN_DEFAULT);
+        configBuilder.addDecimalItem(PLOIDY_PENALTY_MIN, "Minimum ploidy penalty", PLOIDY_PENALTY_MIN_DEFAULT);
 
-        addIntegerConfigItem(
-                configBuilder, CFG_MIN_MATE_QUAL_SCORE, "SV recovery non-SGL min qual score", DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE);
+        configBuilder.addIntegerItem(
+                CFG_MIN_MATE_QUAL_SCORE, "SV recovery non-SGL min qual score", DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE);
 
-        addIntegerConfigItem(
-                configBuilder, CFG_MIN_SGL_QUAL_SCORE, "SV recovery SGL min qual score", DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE);
+        configBuilder.addIntegerItem(
+                CFG_MIN_SGL_QUAL_SCORE, "SV recovery SGL min qual score", DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE);
     }
 }

@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.utils.config;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.FLAG;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
@@ -53,9 +55,19 @@ public class ConfigBuilder
         addConfigItem(DECIMAL, name, required, description, String.valueOf(defaultValue));
     }
 
+    public void addDecimalItem(final String name, final String desc, double defaultValue)
+    {
+        addDecimalItem(name, false, format("%s, default=%.3g", desc, defaultValue), defaultValue);
+    }
+
     public void addIntegerItem(final String name, final boolean required, final String description, int defaultValue)
     {
         addConfigItem(INTEGER, name, required, description, String.valueOf(defaultValue));
+    }
+
+    public void addIntegerItem(final String name, final String desc, int defaultValue)
+    {
+        addIntegerItem(name, false, format("%s, default=%d", desc, defaultValue), defaultValue);
     }
 
     public void addFlagItem(final String name, final String description)

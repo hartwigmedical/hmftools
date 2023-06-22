@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.purple.config;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
-import static com.hartwig.hmftools.purple.config.PurpleConfig.addDecimalConfigItem;
-import static com.hartwig.hmftools.purple.config.PurpleConfig.addIntegerConfigItem;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.HIGHLY_DIPLOID_PERCENTAGE_DEFAULT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PEAK_DEFAULT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SOMATIC_MIN_PURITY_DEFAULT;
@@ -40,27 +37,26 @@ public class SomaticFitConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        addIntegerConfigItem(
-                configBuilder, SOMATIC_MIN_PEAK, "Minimum number of somatic variants to consider a peak", SOMATIC_MIN_PEAK_DEFAULT);
+        configBuilder.addIntegerItem(
+                SOMATIC_MIN_PEAK, "Minimum number of somatic variants to consider a peak", SOMATIC_MIN_PEAK_DEFAULT);
 
-        addIntegerConfigItem(
-                configBuilder, SOMATIC_MIN_TOTAL,
+        configBuilder.addIntegerItem(SOMATIC_MIN_TOTAL,
                 "Minimum number of somatic variants required to assist highly diploid fits", SOMATIC_MIN_VARIANTS_DEFAULT);
 
-        addDecimalConfigItem(
-                configBuilder, SOMATIC_MIN_PURITY, "Minimum spread within candidate purities before somatics can be used",
+        configBuilder.addDecimalItem(
+                SOMATIC_MIN_PURITY, "Minimum spread within candidate purities before somatics can be used",
                 SOMATIC_MIN_PURITY_DEFAULT);
 
-        addDecimalConfigItem(
-                configBuilder, SOMATIC_MIN_PURITY_SPREAD, "Minimum spread within candidate purities before somatics can be used",
+        configBuilder.addDecimalItem(
+                SOMATIC_MIN_PURITY_SPREAD, "Minimum spread within candidate purities before somatics can be used",
                 SOMATIC_MIN_PURITY_SPREAD_DEFAULT);
 
-        addDecimalConfigItem(
-                configBuilder, SOMATIC_PENALTY_WEIGHT, "Proportion of somatic deviation to include in fitted purity score",
+        configBuilder.addDecimalItem(
+                SOMATIC_PENALTY_WEIGHT, "Proportion of somatic deviation to include in fitted purity score",
                 SOMATIC_PENALTY_WEIGHT_DEFAULT);
 
-        addDecimalConfigItem(
-                configBuilder, HIGHLY_DIPLOID_PERCENTAGE, "Proportion of genome that must be diploid before using somatic fit",
+        configBuilder.addDecimalItem(
+                HIGHLY_DIPLOID_PERCENTAGE, "Proportion of genome that must be diploid before using somatic fit",
                 HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
     }
 }
