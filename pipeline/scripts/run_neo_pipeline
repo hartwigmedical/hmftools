@@ -77,7 +77,7 @@ echo "  memory: ${max_memory}"
 purple_somatic_vcf=${purple_dir}/${sample_id}.purple.somatic.vcf.gz
 purple_sv_vcf=${purple_dir}/${sample_id}.purple.sv.vcf.gz
 isofox_transcript_data=${isofox_dir}/${sample_id}.isf.transcript_data.csv
-lilac_coverage=${lilac_dir}/${sample_id}.lilac.csv
+lilac_coverage=${lilac_dir}/${sample_id}.lilac.tsv
 
 if [[ ! -f "${purple_somatic_vcf}" ]]; then
   echo "Missing Purple somatic VCF, exiting"
@@ -175,16 +175,16 @@ java -jar ${neo_jar} ${args}
 
 # Run Isofox to annotate fusions with RNA
 
-neo_data_csv=${output_dir}/${sample_id}.neo.neo_data.csv
+neo_data_tsv=${output_dir}/${sample_id}.neo.neo_data.tsv
 
-if [[ ! -f "${neo_data_csv}" ]]; then
+if [[ ! -f "${neo_data_tsv}" ]]; then
   echo "Failed to run Neo-Finder, exiting"
   exit
 fi
 
 args="-sample ${sample_id} \
     -functions NEO_EPITOPES \
-    -neoepitope_file ${neo_data_csv} \
+    -neoepitope_file ${neo_data_tsv} \
     -bam_file ${sample_rna_bam} \
     -ref_genome ${ref_genome} \
     -ref_genome_version ${ref_genome_version} \
