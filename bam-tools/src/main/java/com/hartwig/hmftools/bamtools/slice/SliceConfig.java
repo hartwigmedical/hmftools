@@ -113,5 +113,6 @@ public class SliceConfig
         configBuilder.addFlagItem(WRITE_BAM, "Write BAM file for sliced region");
         configBuilder.addFlagItem(WRITE_READS, "Write CSV reads file for sliced region");
         configBuilder.addConfigItem(LOG_READ_IDS, "Log specific read IDs, separated by ';'");
+        configBuilder.addFlagItem(PERF_DEBUG, "Detailed performance tracking and logging");
     }
 }
