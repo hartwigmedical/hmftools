@@ -19,7 +19,7 @@ public class ReadCache
 
     public Map<String,List<RemotePosition>> chrRemotePositions() { return mChrRemotePositions; }
 
-    public void addReadGroup(final List<RemotePosition> otherReadPositions)
+    public synchronized void addReadGroup(final List<RemotePosition> otherReadPositions)
     {
         for(RemotePosition remotePosition : otherReadPositions)
         {

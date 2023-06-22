@@ -19,6 +19,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
@@ -50,17 +51,17 @@ public class SliceConfig
     private static final String WRITE_BAM = "write_bam";
     private static final String WRITE_READS = "write_reads";
 
-    public SliceConfig(final CommandLine cmd)
+    public SliceConfig(final ConfigBuilder configBuilder)
     {
         mIsValid = true;
 
-        SampleId = cmd.getOptionValue(SAMPLE);
-        BamFile = cmd.getOptionValue(BAM_FILE);
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
-        WriteReads = cmd.hasOption(WRITE_READS);
-        WriteBam = cmd.hasOption(WRITE_BAM) || !WriteReads;
+        SampleId = configBuilder.getValue(SAMPLE);
+        BamFile = configBuilder.getValue(BAM_FILE);
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
+        WriteReads = configBuilder.hasFlag(WRITE_READS);
+        WriteBam = configBuilder.hasFlag(WRITE_BAM) || !WriteReads;
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -69,17 +70,17 @@ public class SliceConfig
             mIsValid = false;
         }
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         BT_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         BT_LOGGER.info("output({})", OutputDir);
 
-        PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
+        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
-        mIsValid &= loadSpecificRegionsConfig(cmd, SpecificChromosomes, SpecificRegions);
+        mIsValid &= loadSpecificRegionsConfig(configBuilder, SpecificChromosomes, SpecificRegions);
 
         if(SpecificRegions.isEmpty())
         {
@@ -87,9 +88,9 @@ public class SliceConfig
             mIsValid = false;
         }
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
 
-        PerfDebug = cmd.hasOption(PERF_DEBUG);
+        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
     }
 
     public boolean isValid()
@@ -104,18 +105,13 @@ public class SliceConfig
     public String formFilename(final String fileType) { return CommonUtils.formFilename(SampleId, BamFile, OutputDir, OutputId, fileType); }
 
 
-    public static Options createCmdLineOptions()
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
+        addCommonCommandOptions(configBuilder);
 
-        addCommonCommandOptions(options);
-
-        options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
-        options.addOption(WRITE_BAM, false, "Write BAM file for sliced region");
-        options.addOption(WRITE_READS, false, "Write CSV reads file for sliced region");
-
-        options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
-
-        return options;
+        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addFlagItem(WRITE_BAM, "Write BAM file for sliced region");
+        configBuilder.addFlagItem(WRITE_READS, "Write CSV reads file for sliced region");
+        configBuilder.addConfigItem(LOG_READ_IDS, "Log specific read IDs, separated by ';'");
     }
 }

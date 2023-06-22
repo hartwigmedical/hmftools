@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 import java.io.File;
@@ -22,6 +24,8 @@ import java.util.StringJoiner;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.*;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.*;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -254,23 +258,37 @@ public class UnmappableRegionsCalculator
 
     public static void main(String[] args) throws Exception
     {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logItems();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+
         Options options = new Options();
         CommandLineParser parser = new DefaultParser();
 
         // Add options
-        addRefGenomeConfig(options);
-        addOutputDir(options);
-        options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
-        CommandLine cmd = parser.parse(options, args);
+        addRefGenomeConfig(configBuilder, true);
+        addOutputDir(configBuilder);
+        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
-        String outputBedPath = cmd.getOptionValue(OUTPUT_DIR) + "genome_unmappable_regions." + cmd.getOptionValue(REF_GENOME_VERSION) + ".bed";
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(configBuilder);
+        String outputDir = parseOutputDir(configBuilder);
+
+        String outputBedPath = outputDir + "genome_unmappable_regions." + refGenomeVersion.identifier() + ".bed";
 
         UnmappableRegionsCalculator unmappableRegionsCalculator = new UnmappableRegionsCalculator(
-            cmd.getOptionValue(REF_GENOME), outputBedPath);
+                configBuilder.getValue(REF_GENOME), outputBedPath);
 
-        unmappableRegionsCalculator.setRefGenomeVersion(RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION)));
+        unmappableRegionsCalculator.setRefGenomeVersion(refGenomeVersion);
 
-        int partitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
+        int partitionSize = configBuilder.getInteger(PARTITION_SIZE);
         unmappableRegionsCalculator.setPartitionSize(partitionSize);
         unmappableRegionsCalculator.run();
     }

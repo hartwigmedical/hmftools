@@ -14,10 +14,10 @@ import java.util.List;
 
 import com.hartwig.hmftools.bamtools.metrics.MetricsConfig;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,31 +39,31 @@ public final class CommonUtils
 
     public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 
-    public static void addCommonCommandOptions(final Options options)
+    public static void addCommonCommandOptions(final ConfigBuilder configBuilder)
     {
-        addOutputOptions(options);
-        addLoggingOptions(options);
-        addThreadOptions(options);
-        addRefGenomeConfig(options);;
-        addSpecificChromosomesRegionsConfig(options);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
+        addRefGenomeConfig(configBuilder, true);;
+        addSpecificChromosomesRegionsConfig(configBuilder);
 
-        options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(BAM_FILE, true, "BAM file location");
-        options.addOption(REGIONS_BED_FILE, true, "BED file with regions to analyse");
+        configBuilder.addConfigItem(SAMPLE, "Tumor sample ID");
+        configBuilder.addPathItem(BAM_FILE, true, "BAM file location");
+        configBuilder.addPathItem(REGIONS_BED_FILE, false, "BED file with regions to analyse");
     }
 
     public static boolean loadSpecificRegionsConfig(
-            final CommandLine cmd, final List<String> specificChromosomes, final List<ChrBaseRegion> specificRegions)
+            final ConfigBuilder configBuilder, final List<String> specificChromosomes, final List<ChrBaseRegion> specificRegions)
     {
-        if(cmd.hasOption(REGIONS_BED_FILE))
+        if(configBuilder.hasValue(REGIONS_BED_FILE))
         {
-            return BedFileReader.loadBedFile(cmd.getOptionValue(REGIONS_BED_FILE), specificRegions);
+            return BedFileReader.loadBedFile(configBuilder.getValue(REGIONS_BED_FILE), specificRegions);
         }
         else
         {
             try
             {
-                loadSpecificChromsomesOrRegions(cmd, specificChromosomes, specificRegions, BT_LOGGER);
+                loadSpecificChromsomesOrRegions(configBuilder, specificChromosomes, specificRegions, BT_LOGGER);
             }
             catch(Exception e)
             {

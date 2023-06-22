@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.PartitionTask.partitionChromosome;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
@@ -30,9 +32,9 @@ public class BamCompare
 {
     private final CompareConfig mConfig;
 
-    public BamCompare(final CommandLine cmd)
+    public BamCompare(final ConfigBuilder configBuilder)
     {
-        mConfig = new CompareConfig(cmd);
+        mConfig = new CompareConfig(configBuilder);
     }
 
     public void run()
@@ -101,30 +103,18 @@ public class BamCompare
         final VersionInfo version = new VersionInfo("bam-tools.version");
         BT_LOGGER.info("BamTools version: {}", version.version());
 
-        final Options options = CompareConfig.createCmdLineOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        CompareConfig.addConfig(configBuilder);
 
-        try
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            BamCompare bamCompare = new BamCompare(cmd);
-            bamCompare.run();
-        }
-        catch(ParseException e)
-        {
-            BT_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("BamCompare", options);
+            configBuilder.logItems();
             System.exit(1);
         }
-    }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        setLogLevel(configBuilder);
+
+        BamCompare bamCompare = new BamCompare(configBuilder);
+        bamCompare.run();
     }
 }

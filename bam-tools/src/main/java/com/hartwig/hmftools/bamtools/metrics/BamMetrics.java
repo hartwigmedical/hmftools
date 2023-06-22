@@ -15,24 +15,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class BamMetrics
 {
     private final MetricsConfig mConfig;
 
-    public BamMetrics(final CommandLine cmd)
+    public BamMetrics(final ConfigBuilder configBuilder)
     {
-        mConfig = new MetricsConfig(cmd);
+        mConfig = new MetricsConfig(configBuilder);
     }
 
     public void run()
@@ -113,30 +108,18 @@ public class BamMetrics
         final VersionInfo version = new VersionInfo("bam-tools.version");
         BT_LOGGER.info("BamTools version: {}", version.version());
 
-        final Options options = MetricsConfig.createCmdLineOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        MetricsConfig.addConfig(configBuilder);
 
-        try
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            BamMetrics bamMetrtics = new BamMetrics(cmd);
-            bamMetrtics.run();
-        }
-        catch(ParseException e)
-        {
-            BT_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("BamMetrics", options);
+            configBuilder.logItems();
             System.exit(1);
         }
-    }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        setLogLevel(configBuilder);
+
+        BamMetrics bamMetrtics = new BamMetrics(configBuilder);
+        bamMetrtics.run();
     }
 }

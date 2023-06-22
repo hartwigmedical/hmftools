@@ -1,12 +1,18 @@
 package com.hartwig.hmftools.common.genome.bed;
 
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedReader;
 
+import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +38,17 @@ public final class BedFileReader
 
     public static List<ChrBaseRegion> loadBedFile(final String filename) throws Exception
     {
-        List<ChrBaseRegion> regions = loadBedFile(Files.readAllLines(Paths.get(filename)));
+        BufferedReader reader = createBufferedReader(filename);
+
+        List<String> lines = Lists.newArrayList();
+        String line = null;
+
+        while((line = reader.readLine()) != null)
+        {
+            lines.add(line);
+        }
+
+        List<ChrBaseRegion> regions = loadBedFile(lines);
         LOGGER.info("loaded {} regions from BED file {}", regions.size(), filename);
         return regions;
     }

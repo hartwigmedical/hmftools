@@ -33,10 +33,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class MetricsConfig
 {
@@ -82,24 +80,24 @@ public class MetricsConfig
     private static final int DEFAULT_BASE_QUAL_THRESHOLD = 10;
     private static final int DEFAULT_MAX_COVERAGE = 250;
 
-    public MetricsConfig(final CommandLine cmd)
+    public MetricsConfig(final ConfigBuilder configBuilder)
     {
         mIsValid = true;
 
-        SampleId = cmd.getOptionValue(SAMPLE);
-        BamFile = cmd.getOptionValue(BAM_FILE);
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
+        SampleId =  configBuilder.getValue(SAMPLE);
+        BamFile =  configBuilder.getValue(BAM_FILE);
+        RefGenomeFile =  configBuilder.getValue(REF_GENOME);
 
-        if(cmd.hasOption(OUTPUT_DIR))
+        if(configBuilder.hasValue(OUTPUT_DIR))
         {
-            OutputDir = parseOutputDir(cmd);
+            OutputDir = parseOutputDir(configBuilder);
         }
         else
         {
             OutputDir = checkAddDirSeparator(Paths.get(BamFile).getParent().toString());
         }
 
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
+        OutputId =  configBuilder.getValue(OUTPUT_ID);
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -108,17 +106,18 @@ public class MetricsConfig
             mIsValid = false;
         }
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         BT_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         BT_LOGGER.info("output({})", OutputDir);
 
-        PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
-        MapQualityThreshold = Integer.parseInt(cmd.getOptionValue(MAP_QUAL_THRESHOLD, String.valueOf(DEFAULT_MAP_QUAL_THRESHOLD)));
-        BaseQualityThreshold = Integer.parseInt(cmd.getOptionValue(BASE_QUAL_THRESHOLD, String.valueOf(DEFAULT_BASE_QUAL_THRESHOLD)));
-        MaxCoverage = Integer.parseInt(cmd.getOptionValue(MAX_COVERAGE, String.valueOf(DEFAULT_MAX_COVERAGE)));
-        ExcludeZeroCoverage = cmd.hasOption(EXCLUDE_ZERO_COVERAGE);
-        WriteOldStyle = cmd.hasOption(WRITE_OLD_STYLE);
+        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
+
+        MapQualityThreshold = configBuilder.getInteger(MAP_QUAL_THRESHOLD);
+        BaseQualityThreshold = configBuilder.getInteger(BASE_QUAL_THRESHOLD);
+        MaxCoverage = configBuilder.getInteger(MAX_COVERAGE);
+        ExcludeZeroCoverage = configBuilder.hasFlag(EXCLUDE_ZERO_COVERAGE);
+        WriteOldStyle = configBuilder.hasFlag(WRITE_OLD_STYLE);
 
         UnmappableRegions = Lists.newArrayList();
         loadUnmappableRegions();
@@ -126,19 +125,19 @@ public class MetricsConfig
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
-        mIsValid &= loadSpecificRegionsConfig(cmd, SpecificChromosomes, SpecificRegions);
+        mIsValid &= loadSpecificRegionsConfig(configBuilder, SpecificChromosomes, SpecificRegions);
 
         if(mIsValid && !SpecificRegions.isEmpty())
         {
             mergeChrBaseRegionOverlaps(SpecificRegions, true);
         }
 
-        LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
-                Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
+        LogReadIds = configBuilder.hasValue(LOG_READ_IDS) ?
+                Arrays.stream(configBuilder.getValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
 
-        PerfDebug = cmd.hasOption(PERF_DEBUG);
+        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
     }
 
     public boolean isValid()
@@ -173,22 +172,18 @@ public class MetricsConfig
         return CommonUtils.formFilename(SampleId, BamFile, OutputDir, OutputId, fileType);
     }
 
-    public static Options createCmdLineOptions()
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
+        addCommonCommandOptions(configBuilder);
 
-        addCommonCommandOptions(options);
-
-        options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
-        options.addOption(MAP_QUAL_THRESHOLD, true, "Map quality threshold, default: " + DEFAULT_MAP_QUAL_THRESHOLD);
-        options.addOption(BASE_QUAL_THRESHOLD, true, "Base quality threshold, default: " + DEFAULT_BASE_QUAL_THRESHOLD);
-        options.addOption(MAX_COVERAGE, true, "Max coverage, default: " + DEFAULT_MAX_COVERAGE);
-        options.addOption(EXCLUDE_ZERO_COVERAGE, false, "Exclude bases with zero coverage");
-        options.addOption(WRITE_OLD_STYLE, false, "Write data in same format as Picard CollectWgsMetrics");
-        options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
-        options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
-
-        return options;
+        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addIntegerItem(MAP_QUAL_THRESHOLD, "Map quality threshold", DEFAULT_MAP_QUAL_THRESHOLD);
+        configBuilder.addIntegerItem(BASE_QUAL_THRESHOLD, "Base quality threshold", DEFAULT_BASE_QUAL_THRESHOLD);
+        configBuilder.addIntegerItem(MAX_COVERAGE, "Max coverage", DEFAULT_MAX_COVERAGE);
+        configBuilder.addFlagItem(EXCLUDE_ZERO_COVERAGE, "Exclude bases with zero coverage");
+        configBuilder.addFlagItem(WRITE_OLD_STYLE, "Write data in same format as Picard CollectWgsMetrics");
+        configBuilder.addConfigItem(LOG_READ_IDS, "Log specific read IDs, separated by ';'");
+        configBuilder.addFlagItem(PERF_DEBUG, "Detailed performance tracking and logging");
     }
 
     @VisibleForTesting

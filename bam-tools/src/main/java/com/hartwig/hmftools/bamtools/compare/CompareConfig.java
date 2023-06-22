@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.CommandLine;
@@ -43,12 +44,12 @@ public class CompareConfig
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 100000;
 
-    public CompareConfig(final CommandLine cmd)
+    public CompareConfig(final ConfigBuilder configBuilder)
     {
-        OutputFile = cmd.getOptionValue(OUTPUT_FILE);
-        RefBamFile = cmd.getOptionValue(REF_BAM_FILE);
-        NewBamFile = cmd.getOptionValue(NEW_BAM_FILE);
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
+        OutputFile =  configBuilder.getValue(OUTPUT_FILE);
+        RefBamFile =  configBuilder.getValue(REF_BAM_FILE);
+        NewBamFile =  configBuilder.getValue(NEW_BAM_FILE);
+        RefGenomeFile =  configBuilder.getValue(REF_GENOME);
 
         if(RefBamFile == null || NewBamFile == null || OutputFile == null || RefGenomeFile == null)
         {
@@ -57,37 +58,34 @@ public class CompareConfig
             System.exit(1);
         }
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         BT_LOGGER.info("refGenome({}), bam({})", RefGenVersion, RefBamFile);
         BT_LOGGER.info("output file({})", OutputFile);
 
-        PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
+        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
-        if(!loadSpecificRegionsConfig(cmd, SpecificChromosomes, SpecificRegions))
+        if(!loadSpecificRegionsConfig(configBuilder, SpecificChromosomes, SpecificRegions))
             System.exit(1);
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
 
-        LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
-                Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
+        LogReadIds = configBuilder.hasValue(LOG_READ_IDS) ?
+                Arrays.stream( configBuilder.getValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
     }
 
-    public static Options createCmdLineOptions()
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
+        addCommonCommandOptions(configBuilder);
 
-        addCommonCommandOptions(options);
+        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
-        options.addOption(OUTPUT_FILE, true, "Output comparison file");
-        options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
-        options.addOption(REF_BAM_FILE, true, "Ref BAM file");
-        options.addOption(NEW_BAM_FILE, true, "New BAM file");
-        options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
-
-        return options;
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
+        configBuilder.addRequiredConfigItem(REF_BAM_FILE, "Ref BAM file");
+        configBuilder.addRequiredConfigItem(NEW_BAM_FILE,"New BAM file");
+        configBuilder.addConfigItem(LOG_READ_IDS, "Log specific read IDs, separated by ';'");
     }
 }
