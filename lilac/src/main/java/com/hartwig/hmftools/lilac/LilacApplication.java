@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
@@ -34,6 +35,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.lilac.coverage.HlaYCoverage;
 import com.hartwig.hmftools.lilac.evidence.Candidates;
@@ -82,12 +84,6 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class LilacApplication
@@ -166,12 +162,6 @@ public class LilacApplication
 
     public boolean run()
     {
-        if(!mConfig.isValid())
-        {
-            LL_LOGGER.warn("invalid config, exiting");
-            System.exit(1);
-        }
-
         final VersionInfo version = new VersionInfo("lilac.version");
         LL_LOGGER.info("Lilac version({}), key parameters:", version.version());
         mConfig.logParams();
@@ -731,43 +721,33 @@ public class LilacApplication
             LL_LOGGER.debug("{} memory({}mb)", stage, calcMemoryUsage());
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = LilacConfig.createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        try
+        LilacConfig.addConfig(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            LilacApplication lilac = new LilacApplication(new LilacConfig(cmd));
-
-            long startTime = System.currentTimeMillis();
-
-            if(lilac.run())
-            {
-                lilac.writeFileOutputs();
-            }
-
-            long endTime = System.currentTimeMillis();
-            double runTime = (endTime - startTime) / 1000.0;
-
-            LL_LOGGER.info("Lilac complete, run time({}s)", String.format("%.2f", runTime));
-        }
-        catch(ParseException e)
-        {
-            LL_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("LilacApplication", options);
+            configBuilder.logItems();
             System.exit(1);
         }
-    }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        setLogLevel(configBuilder);
+
+        LilacApplication lilac = new LilacApplication(new LilacConfig(configBuilder));
+
+        long startTime = System.currentTimeMillis();
+
+        if(lilac.run())
+        {
+            lilac.writeFileOutputs();
+        }
+
+        long endTime = System.currentTimeMillis();
+        double runTime = (endTime - startTime) / 1000.0;
+
+        LL_LOGGER.info("Lilac complete, run time({}s)", String.format("%.2f", runTime));
     }
 }

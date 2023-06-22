@@ -5,10 +5,12 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
@@ -35,16 +37,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -70,14 +69,21 @@ public class GenerateReferenceSequences
     {
         LL_LOGGER.info("generating HLA sequence reference data");
 
-        Options options = new Options();
-        options.addOption(RESOURCE_DIR, true, "Path to resource files");
-        options.addOption(OUTPUT_DIR, true, "Path to output");
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        configBuilder.addPathItem(RESOURCE_DIR, true, "Path to resource files");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        GenerateReferenceSequences seqGenerator = new GenerateReferenceSequences(cmd.getOptionValue(RESOURCE_DIR));
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logItems();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+
+        GenerateReferenceSequences seqGenerator = new GenerateReferenceSequences(configBuilder.getValue(RESOURCE_DIR));
 
         EXCLUDED_ALLELES.clear();
 
@@ -87,7 +93,7 @@ public class GenerateReferenceSequences
             System.exit(1);
         }
 
-        final String outputDir = parseOutputDir(cmd);
+        final String outputDir = parseOutputDir(configBuilder);
         seqGenerator.rewriteRefData(outputDir);
 
         LL_LOGGER.info("reference data written");

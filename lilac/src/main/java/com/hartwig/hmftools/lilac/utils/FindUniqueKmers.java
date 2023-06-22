@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.lilac.utils;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConfig.LOG_DEBUG;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
+import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR_DESC;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
@@ -17,16 +18,13 @@ import java.nio.file.Files;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.hla.HlaAlleleCache;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceFile;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,10 +43,10 @@ public class FindUniqueKmers
     private static final int KMER_MIN = 8;
     private static final int KMER_MAX = 20;
 
-    public FindUniqueKmers(final CommandLine cmd)
+    public FindUniqueKmers(final ConfigBuilder configBuilder)
     {
         mAlleleCache = new HlaAlleleCache();
-        mResourceDir = cmd.getOptionValue(RESOURCE_DIR);
+        mResourceDir = configBuilder.getValue(RESOURCE_DIR);
 
         mAminoAcidSequences = Lists.newArrayList();
         mHlaYAminoAcidSequences = Lists.newArrayList();
@@ -59,7 +57,8 @@ public class FindUniqueKmers
 
     public void run()
     {
-        // loadAminoAcidSequences();
+        LL_LOGGER.info("finding unique K-mer sequences");
+
         loadNucleotideSequences();
 
         LL_LOGGER.info("analysing {} HLA-Y alleles");
@@ -78,7 +77,7 @@ public class FindUniqueKmers
             LL_LOGGER.info("unique loci search complete");
         }
 
-        LL_LOGGER.info("HLA-Y analysis complete");
+        LL_LOGGER.info("search complete");
     }
 
     private void findUniqueKmers(final HlaSequence sequence)
@@ -261,23 +260,22 @@ public class FindUniqueKmers
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        LL_LOGGER.info("finding unique K-mer sequences");
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        Options options = new Options();
-        options.addOption(RESOURCE_DIR, true, "Path to resource files");
-        options.addOption(OUTPUT_DIR, true, "Path to output");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
+        configBuilder.addPathItem(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logItems();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        FindUniqueKmers findUniqueKmers = new FindUniqueKmers(cmd);
-        findUniqueKmers.run();;
-
-
-        LL_LOGGER.info("reference data written");
+        FindUniqueKmers findUniqueKmers = new FindUniqueKmers(configBuilder);
+        findUniqueKmers.run();
     }
 
 }

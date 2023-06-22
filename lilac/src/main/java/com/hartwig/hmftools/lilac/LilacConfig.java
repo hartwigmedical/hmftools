@@ -6,8 +6,8 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
 import java.nio.file.Files;
@@ -37,11 +38,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class LilacConfig
 {
@@ -84,10 +82,9 @@ public class LilacConfig
     // limit analysis from full data set to these + other configured alleles, for testing purposes
     public final List<HlaAllele> RestrictedAlleles;
 
-    private final CommandLine mCmdLineArgs;
-
     // config strings
     public static final String RESOURCE_DIR = "resource_dir";
+    public static final String RESOURCE_DIR_DESC = "Path to resource files";
 
     private static final String SAMPLE = "sample";
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
@@ -96,9 +93,7 @@ public class LilacConfig
     private static final String RNA_BAM = "rna_bam";
     private static final String RUN_ID = "run_id";
 
-    private static final String PURPLE_DIR = "purple_dir";
     private static final String SOMATIC_VCF = "somatic_vcf";
-    private static final String COHORT_SOMATIC_VCF = "cohort_somatic_file";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
 
     // constant overrides
@@ -115,7 +110,6 @@ public class LilacConfig
     private static final String ACTUAL_ALLELES = "actual_alleles";
     private static final String RESTRICTED_ALLELES = "restricted_alleles";
     private static final String DEBUG_PHASING = "debug_phasing";
-    public static final String LOG_DEBUG = "log_debug";
     public static final String RUN_VALIDATION = "run_validation";
     public static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
     public static final String WRITE_ALL_FILES = "write_all_files";
@@ -124,15 +118,13 @@ public class LilacConfig
 
     public static final Logger LL_LOGGER = LogManager.getLogger(LilacConfig.class);;
 
-    public LilacConfig(final CommandLine cmd)
+    public LilacConfig(final ConfigBuilder configBuilder)
     {
-        mCmdLineArgs = cmd;
+        Sample = configBuilder.getValue(SAMPLE);
 
-        Sample = cmd.getOptionValue(SAMPLE);
-
-        if(cmd.hasOption(SAMPLE_DATA_DIR))
+        if(configBuilder.hasValue(SAMPLE_DATA_DIR))
         {
-            SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR));
+            SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR));
 
             OutputDir = SampleDataDir;
 
@@ -147,30 +139,30 @@ public class LilacConfig
         {
             SampleDataDir = "";
 
-            if(!cmd.hasOption(REFERENCE_BAM) && cmd.hasOption(TUMOR_BAM))
+            if(!configBuilder.hasValue(REFERENCE_BAM) && configBuilder.hasValue(TUMOR_BAM))
             {
                 // interpret this as tumor-only mode
-                ReferenceBam = cmd.getOptionValue(TUMOR_BAM, "");
+                ReferenceBam = configBuilder.getValue(TUMOR_BAM, "");
                 TumorBam = "";
             }
             else
             {
-                ReferenceBam = cmd.getOptionValue(REFERENCE_BAM, "");
-                TumorBam = cmd.getOptionValue(TUMOR_BAM, "");
+                ReferenceBam = configBuilder.getValue(REFERENCE_BAM, "");
+                TumorBam = configBuilder.getValue(TUMOR_BAM, "");
             }
 
-            RnaBam = cmd.getOptionValue(RNA_BAM, "");
-            OutputDir = parseOutputDir(cmd);
+            RnaBam = configBuilder.getValue(RNA_BAM, "");
+            OutputDir = parseOutputDir(configBuilder);
         }
 
-        if(cmd.hasOption(SOMATIC_VCF) && cmd.hasOption(GENE_COPY_NUMBER))
+        if(configBuilder.hasValue(SOMATIC_VCF) && configBuilder.hasValue(GENE_COPY_NUMBER))
         {
-            SomaticVariantsFile = cmd.getOptionValue(SOMATIC_VCF);
-            CopyNumberFile = cmd.getOptionValue(GENE_COPY_NUMBER);
+            SomaticVariantsFile = configBuilder.getValue(SOMATIC_VCF);
+            CopyNumberFile = configBuilder.getValue(GENE_COPY_NUMBER);
         }
-        else if(cmd.hasOption(PURPLE_DIR))
+        else if(configBuilder.hasValue(PURPLE_DIR_CFG))
         {
-            String purpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR));
+            String purpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG));
             SomaticVariantsFile = PurpleCommon.purpleSomaticVcfFile(purpleDir, Sample);
             CopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, Sample);
         }
@@ -188,35 +180,41 @@ public class LilacConfig
             CopyNumberFile = "";
         }
 
-        RunId = cmd.getOptionValue(RUN_ID, "");
+        RunId = configBuilder.getValue(RUN_ID, "");
 
-        ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR));
-        RefGenome = cmd.getOptionValue(REF_GENOME, "");
+        ResourceDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_DIR));
+        RefGenome = configBuilder.getValue(REF_GENOME, "");
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        MinBaseQual = getConfigValue(cmd, MIN_BASE_QUAL, DEFAULT_MIN_BASE_QUAL);
-        MinEvidence = getConfigValue(cmd, MIN_EVIDENCE, DEFAULT_MIN_EVIDENCE);
-        MinEvidenceFactor = getConfigValue(cmd, MIN_EVIDENCE_FACTOR, DEFAULT_MIN_EVIDENCE_FACTOR);
-        MinHighQualEvidenceFactor = getConfigValue(cmd, MIN_HIGH_QUAL_EVIDENCE_FACTOR, DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
-        HlaYPercentThreshold = getConfigValue(cmd, HLA_Y_THRESHOLD, DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
+        MinBaseQual = configBuilder.getInteger(MIN_BASE_QUAL);
+        MinEvidence = configBuilder.getInteger(MIN_EVIDENCE);
+        MinEvidenceFactor = configBuilder.getDecimal(MIN_EVIDENCE_FACTOR);
+        MinHighQualEvidenceFactor = configBuilder.getDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+        HlaYPercentThreshold = configBuilder.getDecimal(HLA_Y_THRESHOLD);
 
-        MinFragmentsPerAllele = getConfigValue(cmd, MIN_FRAGMENTS_PER_ALLELE, DEFAULT_FRAGS_PER_ALLELE);
-        MinFragmentsToRemoveSingle = getConfigValue(cmd, MIN_FRAGMENTS_TO_REMOVE_SINGLE, DEFAULT_FRAGS_REMOVE_SGL);
-        FatalLowCoverage = getConfigValue(cmd, FATAL_LOW_COVERAGE, DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD);
+        MinFragmentsPerAllele = configBuilder.getInteger(MIN_FRAGMENTS_PER_ALLELE);
+        MinFragmentsToRemoveSingle = configBuilder.getInteger(MIN_FRAGMENTS_TO_REMOVE_SINGLE);
+        FatalLowCoverage = configBuilder.getInteger(FATAL_LOW_COVERAGE);
 
-        TopScoreThreshold = min(getConfigValue(cmd, TOP_SCORE_THRESHOLD, DEFAULT_TOP_SCORE_THRESHOLD), 0.5);
+        TopScoreThreshold = min(configBuilder.getDecimal(TOP_SCORE_THRESHOLD), 0.5);
 
-        ActualAlleles = parseAlleleList(cmd.getOptionValue(ACTUAL_ALLELES));
-        RestrictedAlleles = parseAlleleList(cmd.getOptionValue(RESTRICTED_ALLELES));
-        MaxEliminationCandidates = Integer.parseInt(cmd.getOptionValue(MAX_ELIM_CANDIDATES, "0"));
+        ActualAlleles = parseAlleleList(configBuilder.getValue(ACTUAL_ALLELES));
+        RestrictedAlleles = parseAlleleList(configBuilder.getValue(RESTRICTED_ALLELES));
+        MaxEliminationCandidates = configBuilder.getInteger(MAX_ELIM_CANDIDATES);
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
 
-        DebugPhasing = cmd.hasOption(DEBUG_PHASING);
-        RunValidation = cmd.hasOption(RUN_VALIDATION);
-        WriteAllFiles = cmd.hasOption(WRITE_ALL_FILES);
-        LogPerfCalcs = cmd.hasOption(LOG_PERF_CALCS);
+        DebugPhasing = configBuilder.hasFlag(DEBUG_PHASING);
+        RunValidation = configBuilder.hasFlag(RUN_VALIDATION);
+        WriteAllFiles = configBuilder.hasFlag(WRITE_ALL_FILES);
+        LogPerfCalcs = configBuilder.hasFlag(LOG_PERF_CALCS);
+
+        if(!checkCreateOutputDir(OutputDir))
+        {
+            LL_LOGGER.error("failed to create output directory: {}", OutputDir);
+            System.exit(1);
+        }
     }
 
     private String checkFileExists(final String filename)
@@ -228,38 +226,6 @@ public class LilacConfig
 
     public double calcMinEvidence(int totalFragments) { return max(MinEvidence, totalFragments * MinEvidenceFactor); }
     public double calcMinHighQualEvidence(int totalFragments) { return totalFragments * MinHighQualEvidenceFactor; }
-
-    public boolean isValid()
-    {
-        if(mCmdLineArgs == null)
-            return true;
-
-        if(ReferenceBam.isEmpty() || !Files.exists(Paths.get(ReferenceBam)))
-        {
-            LL_LOGGER.error("missing or invalid reference BAM");
-            return false;
-        }
-
-        if(RefGenome.isEmpty() || !Files.exists(Paths.get(ResourceDir)))
-        {
-            LL_LOGGER.error("missing or invalid reference genome");
-            return false;
-        }
-
-        if(ResourceDir.isEmpty() || !Files.exists(Paths.get(ResourceDir)))
-        {
-            LL_LOGGER.error("missing resource file directory");
-            return false;
-        }
-
-        if(!checkCreateOutputDir(OutputDir))
-        {
-            LL_LOGGER.error("failed to create output directory: {}", OutputDir);
-            return false;
-        }
-
-        return true;
-    }
 
     public void logParams()
     {
@@ -288,8 +254,6 @@ public class LilacConfig
 
     public LilacConfig(final String sampleId)
     {
-        mCmdLineArgs = null;
-
         OutputDir = "";
         Sample = sampleId;
         ReferenceBam = "";
@@ -326,59 +290,56 @@ public class LilacConfig
         LogPerfCalcs = false;
     }
 
-    @NotNull
-    public static Options createOptions()
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        Options options = new Options();
-        options.addOption(SAMPLE, true, "Name of sample");
-        options.addOption(SAMPLE_DATA_DIR, true,"Path to all sample files");
-        options.addOption(REFERENCE_BAM, true,"Path to reference/normal BAM");
-        options.addOption(TUMOR_BAM, true,"Path to tumor BAM");
-        options.addOption(RNA_BAM, true,"Analyse tumor BAM only");
-        options.addOption(RUN_ID, true,"Only search for HLA-Y fragments");
-        options.addOption(RESOURCE_DIR, true,"Path to resource files");
+        configBuilder.addRequiredConfigItem(SAMPLE, "Name of sample");
+        configBuilder.addPathItem(SAMPLE_DATA_DIR, false, "Path to all sample files");
+        configBuilder.addPathItem(REFERENCE_BAM, false,"Path to reference/normal BAM");
+        configBuilder.addPathItem(TUMOR_BAM, false,"Path to tumor BAM");
+        configBuilder.addPathItem(RNA_BAM, false,"Analyse tumor BAM only");
+        configBuilder.addConfigItem(RUN_ID, false,"Only search for HLA-Y fragments", "");
+        configBuilder.addPathItem(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
 
-        options.addOption(MIN_BASE_QUAL, true,"Min base quality threshold, default: " + DEFAULT_MIN_BASE_QUAL);
+        configBuilder.addIntegerItem(MIN_BASE_QUAL, false,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
 
-        options.addOption(MIN_EVIDENCE, true,"Min fragment evidence required, default: " + DEFAULT_MIN_EVIDENCE);
+        configBuilder.addIntegerItem(MIN_EVIDENCE, false, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE);
 
-        options.addOption(
-                MIN_HIGH_QUAL_EVIDENCE_FACTOR, true,
-                "Min high-qual fragment evidence factor, default: " + DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+        configBuilder.addDecimalItem(
+                MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
 
-        options.addOption(
-                MIN_EVIDENCE_FACTOR, true,"Min fragment evidence factor, default: " + DEFAULT_MIN_EVIDENCE_FACTOR);
+        configBuilder.addDecimalItem(
+                MIN_EVIDENCE_FACTOR, "Min fragment evidence factor", DEFAULT_MIN_EVIDENCE_FACTOR);
 
-        options.addOption(
-                MIN_FRAGMENTS_PER_ALLELE, true,"Min fragments per allele, default: " + DEFAULT_FRAGS_PER_ALLELE);
+        configBuilder.addIntegerItem(
+                MIN_FRAGMENTS_PER_ALLELE, false,"Min fragments per allele", DEFAULT_FRAGS_PER_ALLELE);
 
-        options.addOption(
-                MIN_FRAGMENTS_TO_REMOVE_SINGLE, true,"Min fragments to remote single, default: " + DEFAULT_FRAGS_REMOVE_SGL);
+        configBuilder.addIntegerItem(
+                MIN_FRAGMENTS_TO_REMOVE_SINGLE, false,"Min fragments to remote single", DEFAULT_FRAGS_REMOVE_SGL);
 
-        options.addOption(
-                FATAL_LOW_COVERAGE, true,"Fatal low coverage, default: " + DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD);
+        configBuilder.addIntegerItem(
+                FATAL_LOW_COVERAGE, false,"Fatal low coverage", DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD);
 
-        options.addOption(
-                HLA_Y_THRESHOLD, true,"HLA-Y percent threshold, default: " + DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
+        configBuilder.addDecimalItem(HLA_Y_THRESHOLD, "HLA-Y percent threshold", DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
 
-        options.addOption(TOP_SCORE_THRESHOLD, true,"Max distance from top score");
-        options.addOption(ACTUAL_ALLELES, true,"Comma separated known actual alleles for the sample");
-        options.addOption(RESTRICTED_ALLELES, true,"Comma separated restricted analysis allele list");
-        options.addOption(MAX_ELIM_CANDIDATES, true, "Revert to only common alleles if candidate allele count exceeds this after elimination");
-        options.addOption(GENE_COPY_NUMBER, true,"Path to gene copy number file");
-        options.addOption(PURPLE_DIR, true,"Path to somatic VCF");
-        options.addOption(SOMATIC_VCF, true,"Path to sample Purple data");
-        options.addOption(COHORT_SOMATIC_VCF, true,"Cohort somatic variants file");
-        options.addOption(DEBUG_PHASING, false, "More detailed logging of phasing");
-        options.addOption(RUN_VALIDATION, false, "Run validation checks");
-        options.addOption(WRITE_ALL_FILES, false,"Write more detailed output files");
-        options.addOption(LOG_PERF_CALCS, false,"Log performance metrics");
+        configBuilder.addDecimalItem(TOP_SCORE_THRESHOLD, "Max distance from top score", DEFAULT_TOP_SCORE_THRESHOLD);
+        configBuilder.addConfigItem(ACTUAL_ALLELES,"Comma separated known actual alleles for the sample");
+        configBuilder.addConfigItem(RESTRICTED_ALLELES,"Comma separated restricted analysis allele list");
 
-        addRefGenomeConfig(options);
-        addOutputDir(options);
-        addLoggingOptions(options);
-        addThreadOptions(options);
-        return options;
+        configBuilder.addIntegerItem(
+                MAX_ELIM_CANDIDATES, false,
+                "Revert to only common alleles if candidate allele count exceeds this after elimination", 0);
+
+        configBuilder.addPathItem(GENE_COPY_NUMBER, false,"Path to gene copy number file");
+        configBuilder.addPathItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPathItem(SOMATIC_VCF, false,"Path to sample Purple somatic VCF");
+        configBuilder.addFlagItem(DEBUG_PHASING, "More detailed logging of phasing");
+        configBuilder.addFlagItem(RUN_VALIDATION, "Run validation checks");
+        configBuilder.addFlagItem(WRITE_ALL_FILES, "Write more detailed output files");
+        configBuilder.addFlagItem(LOG_PERF_CALCS,"Log performance metrics");
+
+        addRefGenomeConfig(configBuilder, true);
+        addOutputDir(configBuilder);
+        addThreadOptions(configBuilder);
     }
 
     private final List<HlaAllele> parseAlleleList(final String allelesStr)
