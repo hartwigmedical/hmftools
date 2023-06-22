@@ -193,7 +193,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         if (readCandidates.isEmpty())
             throw IllegalArgumentException("read candidate list is empty")
 
-        return readCandidates.maxByOrNull({ r -> r.similarityScore })?.templateAnchorSequence ?: ""
+        return readCandidates.maxByOrNull({ r -> r.similarityScore })?.templateAnchorSequence ?: String()
     }
 
     // NOTE: the anchor range could be outside the layout
@@ -242,9 +242,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
                     .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
             ))
 
-        sLogger.info("building layouts from {} reads", layoutReads.size)
-
-        val layoutTree = LayoutTree(minBaseQuality.toByte(), minMatchedBases)
+        val layoutTree = LayoutTree(minBaseQuality.toByte(), minMatchedBases, CiderConstants.LAYOUT_MIN_SUPPORT_TO_SEAL_NODE)
 
         // go through the read data list, and add one by one to the list of clusters
         // if there are multiple clusters that matches, we choose the highest one
@@ -255,7 +253,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
 
         val readLayouts: List<ReadLayout> = layoutTree.buildReadLayouts({ read: LayoutTree.Read -> read.source as VjLayoutRead })
 
-        sLogger.info("built {} layouts from {} reads", readLayouts.size, layoutReads.size)
+        sLogger.info("built {} {} layouts from {} reads", readLayouts.size, geneType, layoutReads.size)
 
         return readLayouts
     }
