@@ -23,6 +23,8 @@ public class SomaticVariant
     public final List<GenotypeFragments> Samples;
     public final boolean PassFilters;
 
+    private double mSequenceVcRatio;
+
     public SomaticVariant(
             final String chromosome, final int position, final String ref, final String alt, final VariantTier tier,
             final VariantType type, final int repeatCount, final double mappability, final double subclonalPerc, final boolean passFilters)
@@ -38,12 +40,16 @@ public class SomaticVariant
         SubclonalPerc = subclonalPerc;
         Samples = Lists.newArrayList();
         PassFilters = passFilters;
+        mSequenceVcRatio = 0;
     }
 
     public GenotypeFragments findGenotypeData(final String sampleId)
     {
         return Samples.stream().filter(x -> x.SampleName.equals(sampleId)).findFirst().orElse(null);
     }
+
+    public void setSequenceGcRatio(double ratio) { mSequenceVcRatio = ratio; }
+    public double sequenceGcRatio() { return mSequenceVcRatio; }
 
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }
 }

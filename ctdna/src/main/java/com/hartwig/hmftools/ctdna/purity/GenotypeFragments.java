@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.ctdna.purity;
 
+import static java.lang.String.format;
+
 public class GenotypeFragments
 {
     public final String SampleName;
@@ -22,4 +24,7 @@ public class GenotypeFragments
     {
         return AlleleCount > 0 ? QualTotal / AlleleCount : 0;
     }
+
+    public String toString() { return format("%d/%d umi(ref=%d allele=%d)",
+            AlleleCount, Depth, UmiCounts.refTotal(), UmiCounts.alleleTotal()); }
 }

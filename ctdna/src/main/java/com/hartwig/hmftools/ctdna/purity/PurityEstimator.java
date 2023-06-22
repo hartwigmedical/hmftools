@@ -16,8 +16,6 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.ParseException;
-
 public class PurityEstimator
 {
     private final PurityConfig mConfig;

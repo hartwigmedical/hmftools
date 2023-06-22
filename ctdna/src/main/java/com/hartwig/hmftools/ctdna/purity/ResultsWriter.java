@@ -93,7 +93,7 @@ public class ResultsWriter
             sj.add("SampleId").add("Chromosome").add("Position").add("Ref").add("Alt");
             sj.add("Filter").add("Tier").add("Type").add("RepeatCount").add("Mappability").add("SubclonalPerc");
             sj.add("TumorDP").add("TumorAD");
-            sj.add("SampleDP").add("SampleAD").add("SampleRefDual").add("SampleAlleleDual").add("SampleQualPerAD");
+            sj.add("SampleDP").add("SampleAD").add("SampleRefDual").add("SampleAlleleDual").add("SampleQualPerAD").add("SeqGcRatio");
             writer.write(sj.toString());
             writer.newLine();
 
@@ -129,6 +129,7 @@ public class ResultsWriter
             sj.add(String.valueOf(sampleData.UmiCounts.total())).add(String.valueOf(sampleData.UmiCounts.alleleTotal()));
             sj.add(String.valueOf(sampleData.UmiCounts.RefDual)).add(String.valueOf(sampleData.UmiCounts.AlleleDual));
             sj.add(format("%.1f", sampleData.qualPerAlleleFragment()));
+            sj.add(format("%.3f", variant.sequenceGcRatio()));
 
             mVariantWriter.write(sj.toString());
 

@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.ctdna.purity;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.pow;
 import static java.lang.Math.round;
-import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
@@ -21,7 +18,9 @@ import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MAX_REPEAT_COUNT
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MIN_QUAL_PER_AD;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.PURPLE_CTDNA_SOMATIC_VCF_ID;
-import static com.hartwig.hmftools.ctdna.purity.PurityConstants.SAMPLE_ALLELE_OUTLIER_PROBABIILTY;
+import static com.hartwig.hmftools.ctdna.purity.PurityConstants.VARIANT_OUTLIER_MIN_AD;
+import static com.hartwig.hmftools.ctdna.purity.PurityConstants.VARIANT_OUTLIER_MIN_AD_PERC;
+import static com.hartwig.hmftools.ctdna.purity.PurityConstants.VARIANT_OUTLIER_VAF_MULTIPLE;
 import static com.hartwig.hmftools.ctdna.purity.SomaticPurityCalc.LOW_PROBABILITY;
 import static com.hartwig.hmftools.ctdna.purity.SomaticPurityCalc.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.ctdna.purity.SomaticVariantResult.INVALID_RESULT;
@@ -36,8 +35,6 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-
-import org.apache.commons.math3.distribution.PoissonDistribution;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -143,8 +140,16 @@ public class SomaticVariants
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
         double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
+        double sequenceGcRatio = -1;
 
-        boolean isFiltered = filterVariant(variant, subclonalLikelihood);
+        if(mConfig.RefGenome != null)
+        {
+            String variantRefContext = generateMutationSequence(
+                    mConfig.RefGenome, DEFAULT_PROBE_LENGTH, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+            sequenceGcRatio = calcGcPercent(variantRefContext);
+        }
+
+        boolean isFiltered = filterVariant(variant, subclonalLikelihood, sequenceGcRatio);
 
         SomaticVariant somaticVariant = null;
 
@@ -158,6 +163,9 @@ public class SomaticVariants
                 somaticVariant = new SomaticVariant(
                         variant.chromosome(), variant.position(), variant.ref(), variant.alt(), variant.tier(),
                         variant.type(), variant.repeatCount(), variant.mappability(), subclonalLikelihood, !isFiltered);
+
+                somaticVariant.setSequenceGcRatio(sequenceGcRatio);
+
                 mVariants.add(somaticVariant);
             }
 
@@ -198,9 +206,7 @@ public class SomaticVariants
         UmiTypeCounts umiTypeCounts = new UmiTypeCounts();
 
         // double sampleTumorAlleleRatio = calcTumorSampleAlleleRatio(sampleId);
-        // double sampleTumorVafRatio = calcTumorSampleVafRatio(sampleId);
-
-        VafStatistics vafStatistics = calcTumorSampleVafStatistics(sampleId);
+        SampleMetrics sampleMetrics = calcSampleMetrics(sampleId);
 
         for(SomaticVariant variant : mVariants)
         {
@@ -216,12 +222,7 @@ public class SomaticVariants
 
             if(useForTotals)
             {
-                // useForTotals = !variantIsVafOutlier(vafStatistics, variant, tumorFragData, sampleFragData);
-
-                /*
-                useForTotals = !variantIsVafOutlier(
-                        sampleTumorAlleleRatio, tumorFragData.AlleleCount, sampleFragData.UmiCounts.alleleTotal());
-                 */
+                useForTotals = !variantIsVafOutlier(sampleMetrics, variant, sampleFragData);
             }
 
             if(mConfig.WriteFilteredSomatics || useForTotals)
@@ -295,122 +296,23 @@ public class SomaticVariants
                 tumorVaf, adjustedTumorVaf, allFragsResult, dualFragsResult, lodFragsResult);
     }
 
-    private class VafStatistics
+    private class SampleMetrics
     {
-        public final double MeanRatio;
-        public final double StandardDeviation;
+        public final int AllelFragTotal;
+        public final double AverageVaf;
 
-        public VafStatistics(final double meanRatio, final double standardDeviation)
+        public SampleMetrics(final int allelFragTotal, final double averageVaf)
         {
-            MeanRatio = meanRatio;
-            StandardDeviation = standardDeviation;
+            AllelFragTotal = allelFragTotal;
+            AverageVaf = averageVaf;
         }
     }
 
-    private VafStatistics calcTumorSampleVafStatistics(final String sampleId)
+    private SampleMetrics calcSampleMetrics(final String sampleId)
     {
-        double vafRatioTotal = 0;
-        List<Double> vafRatios = Lists.newArrayList();
-
-        for(SomaticVariant variant : mVariants)
-        {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-            GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
-
-            if(sampleFragData == null || tumorFragData == null)
-                continue;
-
-            if(useVariantForPurityCalcs(variant, sampleFragData))
-            {
-                if(tumorFragData.Depth == 0 || sampleFragData.UmiCounts.total() == 0)
-                    continue;
-
-                /*
-                double tumorVaf = tumorFragData.AlleleCount / (double)tumorFragData.Depth;
-                double sampleVaf = sampleFragData.UmiCounts.alleleTotal() / (double)sampleFragData.UmiCounts.total();
-
-                if(tumorVaf == 0 || sampleVaf == 0)
-                    continue;
-
-                double variantVafRatio = sampleVaf / tumorVaf;
-
-                vafRatios.add(variantVafRatio);
-                vafRatioTotal += variantVafRatio;
-                */
-
-                int tumorAllele = tumorFragData.AlleleCount;
-                int sampleAllele = sampleFragData.UmiCounts.alleleTotal();
-
-                if(tumorAllele == 0 || sampleAllele == 0)
-                    continue;
-
-                double alleleRatio = sampleAllele / (double)tumorAllele;
-
-                vafRatios.add(alleleRatio);
-                vafRatioTotal += alleleRatio;
-            }
-        }
-
-        if(vafRatios.size() <= 1)
-            return new VafStatistics(0, 0);
-
-        int variantCount = vafRatios.size();
-        double meanRatio = vafRatioTotal / variantCount;
-        double diffTotal = 0;
-
-        for(double variantVafRatio : vafRatios)
-        {
-            diffTotal += pow(abs(variantVafRatio - meanRatio), 2);
-        }
-
-        double stdDev = sqrt(diffTotal / (variantCount - 1));
-        return new VafStatistics(meanRatio, stdDev);
-    }
-
-    private boolean variantIsVafOutlier(
-            final VafStatistics vafStatistics, final SomaticVariant variant,
-            final GenotypeFragments tumorFragData, final GenotypeFragments sampleFragData)
-    {
-        if(vafStatistics.MeanRatio == 0 || vafStatistics.StandardDeviation == 0)
-            return false;
-
-        int sampleAlleleCount = sampleFragData.AlleleCount;
-
-        if(sampleAlleleCount <= 1)
-            return false;
-
-        /*
-        double tumorVaf = tumorFragData.AlleleCount / (double)tumorFragData.Depth;
-        double sampleVaf = sampleFragData.UmiCounts.alleleTotal() / (double)sampleFragData.UmiCounts.total();
-        double variantVafRatio = sampleVaf / tumorVaf;
-
-        if(variantVafRatio < vafStatistics.MeanRatio + 3 * vafStatistics.StandardDeviation)
-            return false;
-         */
-
-        int tumorAllele = tumorFragData.AlleleCount;
-        int sampleAllele = sampleFragData.UmiCounts.alleleTotal();
-
-        if(tumorAllele == 0 || sampleAllele == 0)
-            return false;
-
-        double alleleRatio = sampleAllele / (double)tumorAllele;
-
-        if(alleleRatio < vafStatistics.MeanRatio + 3 * vafStatistics.StandardDeviation)
-            return false;
-
-        CT_LOGGER.info(format("sample(%s) variant(%s) allele(tumor=%d sample=%d ratio=%.3f) mean(%.3f) stdDev(%.3f) is outlier",
-                sampleFragData.SampleName, variant.toString(), tumorFragData.AlleleCount,
-                sampleFragData.UmiCounts.alleleTotal(), alleleRatio, vafStatistics.MeanRatio, vafStatistics.StandardDeviation));
-
-        return true;
-
-    }
-
-    private double calcTumorSampleVafRatio(final String sampleId)
-    {
-        double tumorVafTotal = 0;
         double sampleVafTotal = 0;
+        int sampleVafCount = 0;
+        int sampleAlleleFragsTotal = 0;
 
         for(SomaticVariant variant : mVariants)
         {
@@ -422,96 +324,51 @@ public class SomaticVariants
 
             if(useVariantForPurityCalcs(variant, sampleFragData))
             {
-                if(tumorFragData.Depth == 0 || sampleFragData.UmiCounts.total() == 0)
-                    continue;
+                int depth = sampleFragData.UmiCounts.total();
+                int alleleFrags = sampleFragData.UmiCounts.alleleTotal();
 
-                tumorVafTotal += tumorFragData.AlleleCount / (double)tumorFragData.Depth;
-                sampleVafTotal += sampleFragData.UmiCounts.alleleTotal() / (double)sampleFragData.UmiCounts.total();
+                if(depth > 0)
+                {
+                    sampleVafTotal += alleleFrags / (double)depth;
+                    ++sampleVafCount;
+
+                    sampleAlleleFragsTotal += alleleFrags;
+                }
             }
         }
 
-        return tumorVafTotal > 0 ? sampleVafTotal / tumorVafTotal : 0;
-    }
-
-    private double calcTumorSampleAlleleRatio(final String sampleId)
-    {
-        int tumorFragments = 0;
-        int sampleFragments = 0;
-
-        for(SomaticVariant variant : mVariants)
-        {
-            GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-            GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
-
-            if(sampleFragData == null || tumorFragData == null)
-                continue;
-
-            if(useVariantForPurityCalcs(variant, sampleFragData))
-            {
-                if(tumorFragData.Depth == 0 || sampleFragData.UmiCounts.total() == 0)
-                    continue;
-
-                double tumorVaf = tumorFragData.AlleleCount / (double)tumorFragData.Depth;;
-                double sampleVaf = sampleFragData.UmiCounts.alleleTotal() / (double)sampleFragData.UmiCounts.total();
-
-                tumorFragments += tumorVaf;
-                sampleFragments += sampleVaf;
-            }
-        }
-
-        return tumorFragments > 0 ? sampleFragments / (double)tumorFragments : 0;
+        double averageVaf = sampleVafCount > 0 ? sampleVafTotal / sampleVafCount : 0;
+        return new SampleMetrics(sampleAlleleFragsTotal, averageVaf);
     }
 
     private boolean variantIsVafOutlier(
-            double sampleTumorVafRatio, final SomaticVariant variant,
-            final GenotypeFragments tumorFragData, final GenotypeFragments sampleFragData)
+            final SampleMetrics sampleMetrics, final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
-        int sampleAlleleCount = sampleFragData.AlleleCount;
+        int depth = sampleFragData.UmiCounts.total();
 
-        if(sampleAlleleCount == 1)
+        if(depth == 0)
             return false;
 
-        double tumorVaf = tumorFragData.AlleleCount / (double)tumorFragData.Depth;
-        double expectedVaf = tumorVaf / sampleTumorVafRatio;
-        double expectedCount = expectedVaf * sampleFragData.UmiCounts.total();
+        int alleleFrags = sampleFragData.UmiCounts.alleleTotal();
 
-        // poison ( AD cfDNA,sum(AD cfDNA) / sum(AD tumor)*AD tumor, true)
-        // double expectedCount = sampleTumorVafRatio * tumorAlleleCount;
-
-        if(sampleAlleleCount <= expectedCount)
+        if(alleleFrags < VARIANT_OUTLIER_MIN_AD)
             return false;
 
-        if(expectedCount == 0)
-            return sampleAlleleCount > 10;
+        double allelePerc = alleleFrags / (double)sampleMetrics.AllelFragTotal;
 
-        PoissonDistribution poisson = new PoissonDistribution(expectedCount);
-        double probability = 1 - poisson.cumulativeProbability(sampleAlleleCount - 1);
-
-        if(probability > SAMPLE_ALLELE_OUTLIER_PROBABIILTY)
+        if(allelePerc < VARIANT_OUTLIER_MIN_AD_PERC)
             return false;
 
-        CT_LOGGER.info(format("sample(%s) variant(%s) tumor(%d vaf=%.3f) sample(%d/%d expVaf=%.3f expCount=%.0f) ratio(%.3g) is outlier",
-                sampleFragData.SampleName, variant.toString(), tumorFragData.AlleleCount, tumorVaf,
-                sampleFragData.UmiCounts.alleleTotal(), sampleFragData.UmiCounts.total(),
-                expectedVaf, expectedCount, sampleTumorVafRatio));
+        double variantVaf = alleleFrags / (double)depth;
+
+        if(variantVaf < sampleMetrics.AverageVaf * VARIANT_OUTLIER_VAF_MULTIPLE)
+            return false;
+
+        CT_LOGGER.info(format("sample(%s) variant(%s) vaf(%d/%d=%.3f perc=%.2f) sample(alleleTotal=%d avgVaf=%.3g) is outlier",
+                sampleFragData.SampleName, variant.toString(), alleleFrags, depth, variantVaf, allelePerc,
+                sampleMetrics.AllelFragTotal, sampleMetrics.AverageVaf));
 
         return true;
-    }
-
-    private boolean variantIsVafOutlier(double sampleTumorAlleleRatio, int tumorAlleleCount, int sampleAlleleCount)
-    {
-        if(sampleAlleleCount == 1)
-            return false;
-
-        // poison ( AD cfDNA,sum(AD cfDNA) / sum(AD tumor)*AD tumor, true)
-        double expectedCount = sampleTumorAlleleRatio * tumorAlleleCount;
-
-        if(sampleAlleleCount <= expectedCount)
-            return false;
-
-        PoissonDistribution poisson = new PoissonDistribution(expectedCount);
-        double probability = 1 - poisson.cumulativeProbability(sampleAlleleCount - 1);
-        return probability < SAMPLE_ALLELE_OUTLIER_PROBABIILTY;
     }
 
     private boolean useVariantForPurityCalcs(final SomaticVariant variant, final GenotypeFragments sampleFragData)
@@ -520,7 +377,7 @@ public class SomaticVariants
                 && (sampleFragData.qualPerAlleleFragment() > MIN_QUAL_PER_AD || sampleFragData.UmiCounts.alleleTotal() == 0);
     }
 
-    private boolean filterVariant(final VariantContextDecorator variant, double subclonalLikelihood)
+    private boolean filterVariant(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
     {
         if(variant.context().isFiltered())
             return true;
@@ -541,15 +398,8 @@ public class SomaticVariants
             return true;
 
         // check GC content
-        if(mConfig.RefGenome != null && mConfig.GcRatioMin > 0)
-        {
-            String variantRefContext = generateMutationSequence(
-                    mConfig.RefGenome, DEFAULT_PROBE_LENGTH, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
-            double gcRatio = calcGcPercent(variantRefContext);
-
-            if(gcRatio < mConfig.GcRatioMin)
-                return false;
-        }
+        if(mConfig.GcRatioMin > 0 && sequenceGcRatio >= 0 && sequenceGcRatio < mConfig.GcRatioMin)
+            return true;
 
         return false;
     }

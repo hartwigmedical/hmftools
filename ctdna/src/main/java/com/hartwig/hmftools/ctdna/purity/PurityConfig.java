@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.ctdna.purity;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
@@ -170,9 +171,13 @@ public class PurityConfig
         {
             fileName += "ctdna_cohort.";
         }
+        else if(Samples.get(0).CtDnaSamples.size() > 1)
+        {
+            fileName += format("%s.ctdna.", Samples.get(0).PatientId);
+        }
         else
         {
-            fileName += Samples.get(0).PatientId + ".ctdna.";
+            fileName += format("%s_%s.ctdna.", Samples.get(0).PatientId, Samples.get(0).CtDnaSamples.get(0));
         }
 
         fileName += fileType;
