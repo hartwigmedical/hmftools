@@ -23,7 +23,7 @@ class LayoutTreeTest
     fun testAddReadSimple1()
     {
         // test very simple add high qual reads
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
         val seq1 = "CAGGT"
         val baseQual1 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
 
@@ -58,7 +58,7 @@ class LayoutTreeTest
     fun testAddReadWrongOrder()
     {
         // test very simple add high qual reads
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
 
         layoutTree.tryAddRead(LayoutTree.Read("r2", 
             "CAGCT", SAMUtils.fastqToPhred("FFFFF"), 4))
@@ -70,7 +70,7 @@ class LayoutTreeTest
         assertEquals(6, layoutTree.numLevels)
 
         // check we can get the same layout
-        var layouts = layoutTree.buildReadLayouts(layoutReadCreateFunc)
+        val layouts = layoutTree.buildReadLayouts(layoutReadCreateFunc)
 
         assertEquals(2, layouts.size)
         assertEquals("CAGCT", layouts.first().consensusSequence())
@@ -84,7 +84,7 @@ class LayoutTreeTest
     fun testAddReadSimpleBranch()
     {
         // test very simple add high qual reads
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
         val seq1 = "CAGGT"
         val baseQual1 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
 
@@ -111,7 +111,7 @@ class LayoutTreeTest
     {
         // if we encounter a low qual mismatch, and can put it into other branch it is accepted
 
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
         val seq1 = "CAGGT"
         val baseQual1 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
 
@@ -138,7 +138,7 @@ class LayoutTreeTest
     {
         // we first add the low qual one and then high qual one
 
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
         val seq1 = "CATAT"
         val baseQual1 = SAMUtils.fastqToPhred("FF::F") // F is 37, : is 25
 
@@ -165,7 +165,7 @@ class LayoutTreeTest
     {
         // we encounter a low qual branch that needs to be confirmed
 
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
 
         val seq1 = "CAGCT"
         val baseQual1 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
@@ -200,7 +200,7 @@ class LayoutTreeTest
     {
         // we encounter a low qual branch that needs to be confirmed
 
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
 
         val seq1 = "CAGCT"
         val baseQual1 = SAMUtils.fastqToPhred("FF:FF") // F is 37, : is 25
@@ -253,7 +253,7 @@ class LayoutTreeTest
         // We want to short that all the reads except AGCTA should go the same layout.
         // There should be 2 layouts at the end, AGCTA and GCAGCTGAA
 
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
 
         layoutTree.tryAddRead(LayoutTree.Read("r1", 
             "GCAGCT", SAMUtils.fastqToPhred("FFFFFF"), 5))
@@ -296,7 +296,7 @@ class LayoutTreeTest
         //   \ C1-A1-G1-C1-T1-G1-G1-A1-C1
         //    -------T1-C1-C1-A1
 
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
 
         val seq1 = "CAGCTGGAC"
         val baseQual1 = SAMUtils.fastqToPhred("F".repeat(seq1.length)) // F is 37, : is 25
@@ -342,7 +342,7 @@ class LayoutTreeTest
         //            \
         //             T3-C3-C1-A1
 
-        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES)
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
 
         val seq1 = "CAGCT"
         val baseQual1 = SAMUtils.fastqToPhred("FF:FF") // F is 37, : is 25
@@ -372,9 +372,68 @@ class LayoutTreeTest
         assertEquals("11011", layouts[1].highQualSupportString())
     }
 
+    @Test
+    fun testCannotAddToSealedNode()
+    {
+        // we have following reads
+        // GCAGCT
+        //  CAGCT
+        //   AGCTGA
+        //   AGCTGA
+        //   AGCTAA  <---- this read cannot be added to the same branch since G is sealed
+        //      |
+        //   aligned pos
+
+        // resulting in following tree:
+        // root
+        //   \
+        //    G1-C2-A4-G4-C4-T4-G2-A2
+        //   \
+        //          A1-G1-C1-T1-A1-A1
+
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, 2)
+
+        layoutTree.tryAddRead(LayoutTree.Read("r1",
+            "GCAGCT", SAMUtils.fastqToPhred("FFFFFF"), 5))
+
+        layoutTree.tryAddRead(LayoutTree.Read("r2",
+            "CAGCT", SAMUtils.fastqToPhred("FFFFF"), 4))
+
+        layoutTree.tryAddRead(LayoutTree.Read("r3",
+            "AGCTGA", SAMUtils.fastqToPhred("FFFFFF"), 3))
+
+        layoutTree.tryAddRead(LayoutTree.Read("r4",
+            "AGCTGA", SAMUtils.fastqToPhred("FFFFFF"), 3))
+
+        layoutTree.tryAddRead(LayoutTree.Read("r5",
+            "AGCTAA", SAMUtils.fastqToPhred("FFFFFF"), 3))
+
+        // now want to check that the layoutTree root has two children
+        assertEquals(2, layoutTree.root.children.size)
+
+        // should have 2 sequences
+        val layouts = layoutTree.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
+        assertEquals(2, layouts.size)
+        assertEquals("GCAGCTGA", layouts[0].consensusSequence())
+        assertEquals("12444422", layouts[0].highQualSupportString())
+
+        // 4 reads in first layout
+        assertEquals(4, layouts[0].reads.size)
+        assertEquals(5, layouts[0].alignedPosition)
+
+
+        assertEquals("AGCTAA", layouts[1].consensusSequence())
+        assertEquals("111111", layouts[1].highQualSupportString())
+
+        // 1 read in second layout
+        assertEquals(1, layouts[1].reads.size)
+        assertEquals(3, layouts[1].alignedPosition)
+    }
+
     companion object
     {
         const val MIN_BASE_QUALITY = 30.toByte()
         const val MIN_OVERLAP_BASES = 3
+        const val MIN_SUPPORT_TO_SEAL_NODE = 3
     }
 }

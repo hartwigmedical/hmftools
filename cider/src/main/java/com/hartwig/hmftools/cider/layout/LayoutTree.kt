@@ -99,7 +99,10 @@ import kotlin.collections.ArrayList
 // Next consider we have a read CCA, where should it be added? It should be added to the top branch
 // since top branch has higher support. We have to test both branches when it can go to more than one place
 //
-class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
+// Another important note is that we should not be adding branches to nodes that are already highly supported
+// Once a node has a certain number of base support they should be sealed.
+//
+class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int, var minSupportToSealNode: Int)
 {
     class Read (
         // have a source that allows us to refer back to where this comes from
@@ -166,6 +169,19 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         return node.base == base || baseQuality < minBaseQuality || node.highQualBase == UNKNOWN_BASE || base == UNKNOWN_BASE
     }
 
+    fun createChild(parent: Node, lvl: Int) : Node
+    {
+        require(parent === root || lvl == parent.position + 1)
+
+        // check that we are not adding children to a sealed node
+        require(parent === root || !isNodeSealed(parent))
+
+        val child = Node(lvl, parent)
+        parent.children.add(child)
+        getOrCreateLevelNodes(lvl).add(child)
+        return child
+    }
+
     fun getOrCreateLevelNodes(level: Int) : MutableList<Node>
     {
         while (levelNodes.size <= level)
@@ -173,6 +189,11 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
             levelNodes.add(ArrayList())
         }
         return levelNodes[level]
+    }
+
+    fun isNodeSealed(node: Node) : Boolean
+    {
+        return node.children.any { n -> n.highQualityCount >= minSupportToSealNode }
     }
 
     private fun checkUpdateAlignedPosition(readAlignedPos: Int)
@@ -226,6 +247,8 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
 
             if (bestBranch != null)
             {
+                require(bestBranch.parent!!.children.contains(bestBranch))
+                require(levelNodes[bestBranch.position].contains(bestBranch))
                 addReadToBranch(read, bestBranch)
                 return true
             }
@@ -247,6 +270,8 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
     // We test to see if the first minOverlapLength bases matches with this branch
     // The definition of matching is either the base is low quality, or the bases must be the
     // same if both are high quality.
+    // Once the first min overlap length matches, we test the rest of the sequence to determine
+    // if it requires branching any nodes that are sealed
     private fun overlapsBranch(read: Read, branchRoot: Node) : Boolean
     {
         val readLayoutPos = toLayoutPosition(read.alignedPosition)
@@ -261,11 +286,20 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
             return false
         }
 
-        loop@ for (i in 1 until Math.min(minOverlapLength, read.sequence.length))
+        // in the following we check for 2 things. Firstly if the min overlap has been satisfied.
+        // And if minoverlap has been satisfied, we want to check if the rest of the sequences
+        // can be added to the tree without branching a node that is sealed
+        loop@ for (i in 1 until read.sequence.length)
         {
             val baseQual: Byte = read.baseQualities[i]
             val base: Char = read.sequence[i]
             val highQualBase: Char = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
+
+            if (i >= minOverlapLength && currentNode.children.isEmpty())
+            {
+                // we reached the end of this tree, need to extend it, that is totally fine
+                break
+            }
 
             for (node in currentNode.children)
             {
@@ -279,28 +313,36 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
 
             if (highQualBase == UNKNOWN_BASE)
             {
+                // we should have already protected against this case with previous check
+                assert(i < minOverlapLength || currentNode.children.isNotEmpty())
+
                 // can't really match anything, match the one with highest number of support
-                // if there is no children then return false
+                // if there is no node then return false
                 currentNode = currentNode.children.maxOrNull() ?: return false
                 continue@loop
             }
-            else
+            // if we cannot find one then see if any is unknown base match
+            for (node in currentNode.children)
             {
-                // if we cannot find one then see if any is unknown base match
-                for (node in currentNode.children)
+                if (node.highQualBase == UNKNOWN_BASE)
                 {
-                    if (node.highQualBase == UNKNOWN_BASE)
-                    {
-                        // we found a node we can assign to
-                        currentNode = node
-                        continue@loop
-                    }
+                    // we found a node we can assign to
+                    currentNode = node
+                    continue@loop
                 }
+            }
+
+            if (i >= minOverlapLength)
+            {
+                // if we get to here we need to see if we can add a branch off this node. We can
+                // only add branch if the node is not sealed
+                return !isNodeSealed(currentNode)
             }
 
             // cannot find a child
             return false
         }
+
         return true
     }
 
@@ -369,10 +411,6 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
                     {
                         current.base = highQualBase
                         current.highQualBase = highQualBase
-
-                        // any time a base go from N to known base we have to see if such
-                        // branch already exist and if so, merge them
-                        tryMergeWithSibling(current)
                     }
                 }
                 current = current.parent!!
@@ -382,7 +420,8 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         }
 
         // the read does not match any leaf node. This means that we can follow this branch
-        // until a mismatch occur and we create a new sub branch from there.
+        // until a mismatch occur and we create a new subbranch from there.
+        // node that this logic has to match the overlap function
         var currentNode = branchRoot
         for (i in 1 until read.sequence.length)
         {
@@ -394,34 +433,52 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
 
             var child: Node? = null
 
-            if (highQualBase == UNKNOWN_BASE)
-            {
-                // this is the secret sauce here. We always create a new child node if
-                // we have a low qual base. This allow subsequence reads to match here even
-                // if this base does not match
-                currentNode = createChild(currentNode, level)
-                currentNode.base = base
-                continue
-            }
-
             for (c in currentNode.children)
             {
-                if (c.highQualBase == highQualBase)
+                if (c.base == base)
                 {
                     // we found a node we can assign to
-                    c.highQualityCount++
                     child = c
+                    if (highQualBase != UNKNOWN_BASE)
+                    {
+                        c.highQualBase = highQualBase
+                        c.highQualityCount++
+                    }
                     break
                 }
             }
 
             if (child == null)
             {
+                if (highQualBase == UNKNOWN_BASE)
+                {
+                    // if it is unknown, we just put it into the branch with highest support
+                    // this is not entirely correct, but seems to work just fine
+                    child = currentNode.children.maxByOrNull { n -> n.highQualityCount }
+                }
+                else
+                {
+                    // we find a branch with unknown base
+                    child = currentNode.children.find { n -> n.highQualBase == UNKNOWN_BASE }
+                }
+            }
+
+            if (child == null)
+            {
+                if (isNodeSealed(currentNode))
+                {
+                    overlapsBranch(read, branchRoot)
+                }
+
                 // create a new one
                 child = createChild(currentNode, level)
                 child.base = base
                 child.highQualBase = highQualBase
-                child.highQualityCount++
+
+                if (highQualBase != UNKNOWN_BASE)
+                {
+                    child.highQualityCount++
+                }
             }
 
             currentNode = child
@@ -458,132 +515,45 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
         }
     }
 
-    // we have a node that we just went from unknown / low qual base to high qual base
-    // we try to merge it with sibling.
-    private fun tryMergeWithSibling(node: Node)
+    private fun removeNode(node: Node)
     {
-        // we cannot merge children of root. They can have different positions
-        if (node.parent == null || node.parent === root)
-            return
+        // remove it from the nodes level list
+        assert(levelNodes[node.position].contains(node))
+        val removed = levelNodes[node.position].remove(node)
 
-        for (sibling in node.parent!!.children)
-        {
-            if (sibling === node)
-                continue
-
-            if (sibling.highQualBase == node.highQualBase)
-            {
-                // we can merge them
-                mergeNodes(sibling, node)
-                break
-            }
-        }
+        require(removed)
     }
 
-    private fun mergeNodes(nodeTo: Node, nodeFrom: Node)
+    // visit all the nodes in depth first manner
+    fun depthFirstVisit(startNode: Node, visitor: (Node) -> Unit)
     {
-        require(nodeTo.position == nodeFrom.position)
-
-        nodeTo.highQualityCount += nodeFrom.highQualityCount
-        nodeTo.parent!!.children.removeIf({ n -> n === nodeFrom })
-
-        for (r in nodeFrom.reads)
-        {
-            if (!nodeTo.reads.any({ o -> o === r }))
-            {
-                nodeTo.reads.add(r)
-            }
-        }
-
-        for (childFrom in nodeFrom.children)
-        {
-            var merged = false
-            for (childTo in nodeTo.children)
-            {
-                if (childFrom.highQualBase != UNKNOWN_BASE &&
-                    childFrom.highQualBase == childTo.highQualBase)
-                {
-                    mergeNodes(childTo, childFrom)
-                    merged = true
-                    break
-                }
-            }
-            if (!merged)
-            {
-                nodeTo.children.add(childFrom)
-                childFrom.parent = nodeTo
-                continue
-            }
-        }
-    }
-
-    fun createChild(parent: Node, lvl: Int) : Node
-    {
-        require(parent === root || lvl == parent.position + 1)
-        val child = Node(lvl, parent)
-        parent.children.add(child)
-        getOrCreateLevelNodes(lvl).add(child)
-        return child
-    }
-
-    // trim away branches that have low support
-    fun trimBranches(minHighQualSupport: Int)
-    {
-        // start from root
-        val toVisit = ArrayList<Node>()
-
-        for (node: Node in toVisit)
-        {
-            // can't merge branch if only one child
-            if (node.children.size <= 1)
-            {
-                continue
-            }
-
-            for (child: Node in node.children)
-            {
-                // if any of the child has low support, try to
-                // put it into the other child
-                if (child.highQualityCount < minHighQualSupport)
-                {
-                    // we go through the siblings and see if we can reassign this
-                    // read to the other ones
-                    for (siblings: Node in node.children)
-                    {
-                        if (child == siblings)
-                            continue
-
-                    }
-                }
-            }
-        }
-    }
-
-    // for every node we sort the children descending order by highQualityCount
-    fun sortNodeChildren()
-    {
-        sLogger.info("sorting children")
-
         // depth first traversal
         val indexStack = Stack<Int>()
-        var current: Node? = root
+        var current: Node = startNode
         indexStack.push(0)
 
-        while (current != null)
+        while (true)
         {
             val childIndex: Int = indexStack.peek()
+            if (childIndex == 0)
+            {
+                // first time we visit this node
+                // NOTE: we must allow visitor to modify the children at this
+                //       point. Never assume children list stays the same
+                visitor(current)
+            }
+
             if (childIndex == current.children.size)
             {
                 // finished with this node
+                if (current == startNode)
+                {
+                    // we are back to the start node
+                    return
+                }
                 indexStack.pop()
-                current = current.parent
+                current = current.parent!!
                 continue
-            }
-
-            if (childIndex == 0)
-            {
-                // first time we visit this node, sort all children
-                current.children.sortByDescending( { n -> n.highQualityCount } )
             }
             // update current node index
             indexStack.push(indexStack.pop() + 1)
@@ -592,8 +562,66 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
             indexStack.push(0)
             current = current.children[childIndex]
         }
+    }
 
-        sLogger.info("finished sorting children")
+    // for every node we sort the children descending order by highQualityCount
+    fun sortNodeChildren()
+    {
+        sLogger.debug("sorting children")
+
+        depthFirstVisit(root, { n -> n.children.sortByDescending( { c -> c.highQualityCount } )})
+        sLogger.debug("finished sorting children")
+    }
+
+    // We try to reassign reads by removing branches that are not the top branch and try to re add the
+    // reads to the tree. This will progressively seal more and more nodes until we cannot reassign
+    // any reads
+    fun reassignReads()
+    {
+        val original = minSupportToSealNode
+
+        for (i in 0 until 10) // try maximum of 10 rounds
+        {
+            val readsToReassign = ArrayList<Read>()
+
+            // depth first traversal, we visit every leaf node and build a layout from it
+            depthFirstVisit(root) { node: Node ->
+                if (node !== root && node.children.size > 1 && isNodeSealed(node))
+                {
+                    // we choose just 1 child and remove the rest
+                    val childToKeep: Node = node.children.maxByOrNull { n -> n.highQualityCount }!!
+
+                    for (c in node.children)
+                    {
+                        if (c !== childToKeep)
+                        {
+                            // put all reads into the reassign list
+                            depthFirstVisit(c) { n: Node -> readsToReassign.addAll(n.reads) }
+                            removeNode(c)
+                        }
+                    }
+                    node.children.clear()
+                    node.children.add(childToKeep)
+                }
+            }
+
+            if (readsToReassign.isEmpty())
+            {
+                break
+            }
+
+            sLogger.debug("reassigning {} reads", readsToReassign.size)
+
+            // now re add all those reads
+            for (r in readsToReassign)
+            {
+                tryAddRead(r)
+            }
+
+            minSupportToSealNode = (minSupportToSealNode - 1).coerceAtLeast(1)
+        }
+
+        minSupportToSealNode = original
     }
 
     // we do depth first traversal, by following the path with highest support
@@ -603,41 +631,18 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int)
     {
         // first have to sort every node children from highest to lowest support
         sortNodeChildren()
+        reassignReads()
 
         val layouts = ArrayList<ReadLayout>()
 
         val leafNodes = ArrayList<Node>()
 
         // depth first traversal, we visit every leaf node and build a layout from it
-        val indexStack = Stack<Int>()
-        var current: Node? = root
-        indexStack.push(0)
-
-        while (current != null)
-        {
-            if (current.children.isEmpty())
+        depthFirstVisit(root) { node: Node ->
+            if (node.children.isEmpty() && node !== root)
             {
-                // this is a leaf
-                leafNodes.add(current)
-            }
-
-            // which child are we up to?
-            val childIndex: Int = indexStack.peek()
-            if (childIndex == current.children.size)
-            {
-                // finished with this node
-                indexStack.pop()
-                current = current.parent
-            }
-            else
-            {
-                // update current node index
-                indexStack.push(indexStack.pop() + 1)
-
-                // add child node index
-                indexStack.push(0)
-
-                current = current.children[childIndex]
+                // this is a leaf node
+                leafNodes.add(node)
             }
         }
 

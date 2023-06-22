@@ -20,6 +20,7 @@ object CiderConstants
     const val LAYOUT_MIN_READ_OVERLAP_BASES: Int = 20
     const val MIN_VJ_LAYOUT_JOIN_OVERLAP_BASES: Int = 20
     const val MIN_ANCHOR_LENGTH_BASES: Int = 3
+    const val LAYOUT_MIN_SUPPORT_TO_SEAL_NODE: Int = 4
 
     // minimum fraction of reads that support a certain base in a layout
     const val MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION: Double = 0.02
