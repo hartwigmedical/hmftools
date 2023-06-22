@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -197,9 +198,11 @@ public class PurityConfig
         configBuilder.addConfigItem(TUMOR_ID, false, "Original tumor sample ID");
         configBuilder.addConfigItem(CTDNA_SAMPLES, false, "List of ctDNA sample IDs separated by ','");
 
+        StringJoiner sj = new StringJoiner(", ");
+        Arrays.stream(PurityMethod.values()).forEach(x -> sj.add(x.toString()));
         configBuilder.addConfigItem(
                 PURITY_METHODS, false,
-                "List of purity methods separated by ',' default(all) from: " + PurityMethod.values());
+                "List of purity methods separated by ',' default(all) from: " + sj);
 
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR, true, "Sample data directory for all files");

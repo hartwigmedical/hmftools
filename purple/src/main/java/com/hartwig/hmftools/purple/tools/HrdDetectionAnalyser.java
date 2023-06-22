@@ -194,7 +194,7 @@ public class HrdDetectionAnalyser
 
         if(!configBuilder.parseCommandLine(args))
         {
-            configBuilder.logItems();
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
 

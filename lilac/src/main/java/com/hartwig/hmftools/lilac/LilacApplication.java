@@ -730,7 +730,7 @@ public class LilacApplication
 
         if(!configBuilder.parseCommandLine(args))
         {
-            configBuilder.logItems();
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
 

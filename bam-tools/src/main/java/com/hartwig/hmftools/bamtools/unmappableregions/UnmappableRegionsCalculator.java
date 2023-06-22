@@ -27,7 +27,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.*;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
@@ -264,7 +263,7 @@ public class UnmappableRegionsCalculator
 
         if(!configBuilder.parseCommandLine(args))
         {
-            configBuilder.logItems();
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
 

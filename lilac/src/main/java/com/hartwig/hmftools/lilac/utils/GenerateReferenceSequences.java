@@ -77,7 +77,7 @@ public class GenerateReferenceSequences
 
         if(!configBuilder.parseCommandLine(args))
         {
-            configBuilder.logItems();
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
 

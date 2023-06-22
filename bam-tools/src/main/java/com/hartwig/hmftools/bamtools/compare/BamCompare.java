@@ -20,12 +20,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class BamCompare
@@ -108,7 +102,7 @@ public class BamCompare
 
         if(!configBuilder.parseCommandLine(args))
         {
-            configBuilder.logItems();
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
 

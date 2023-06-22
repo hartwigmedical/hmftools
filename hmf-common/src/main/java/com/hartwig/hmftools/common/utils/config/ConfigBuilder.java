@@ -11,8 +11,10 @@ import static com.hartwig.hmftools.common.utils.config.ConfigItemType.STRING;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,9 +23,18 @@ public class ConfigBuilder
 {
     private final String mConfigPrefix;
     private final List<ConfigItem> mItems;
+    private final Set<ErrorType> mErrors;
 
     private static final String DEFAULT_CONFIG_PREFIX = "-";
     private static final Logger LOGGER = LogManager.getLogger(ConfigBuilder.class);
+
+    private enum ErrorType
+    {
+        INVALID_PATH,
+        INVALID_TYPE,
+        MISSING_REQUIRED,
+        INCORRECT_ARGUMENT;
+    }
 
     public ConfigBuilder()
     {
@@ -33,6 +44,7 @@ public class ConfigBuilder
     public ConfigBuilder(final String prefix)
     {
         mItems = Lists.newArrayList();
+        mErrors = Sets.newHashSet();
         mConfigPrefix = prefix;
     }
 
@@ -90,11 +102,6 @@ public class ConfigBuilder
         addConfigItem(STRING, name, required, description, defaultValue);
     }
 
-    public void addRequiredConfigItem(final ConfigItemType type, final String name, final String description)
-    {
-        addConfigItem(type, name, true, description, null);
-    }
-
     public void addRequiredConfigItem(final String name, final String description)
     {
         addConfigItem(STRING, name, true, description, null);
@@ -129,19 +136,17 @@ public class ConfigBuilder
 
     public boolean isValid()
     {
-        boolean allValid = true;
-
         for(ConfigItem item : mItems)
         {
             if(item.missing())
             {
-                LOGGER.error("missing config({}) desc({})", item.Name, item.Description);
-                allValid = false;
+                LOGGER.error("missing required config: {}: {}", item.Name, item.Description);
+                mErrors.add(ErrorType.MISSING_REQUIRED);
             }
             else if(item.Type == PATH && item.hasValue() && !Files.exists(Paths.get(item.value())))
             {
-                LOGGER.error("invalid path for config({} = {})", item.Name, item.value());
-                allValid = false;
+                LOGGER.error("invalid path for config: {} = {}", item.Name, item.value());
+                mErrors.add(ErrorType.INVALID_PATH);
             }
             else
             {
@@ -155,13 +160,13 @@ public class ConfigBuilder
                 }
                 catch(Exception e)
                 {
-                    LOGGER.error("invalid type for config({}:{} = {})", item.Name, item.Type, item.value());
-                    allValid = false;
+                    LOGGER.error("invalid type for config: {}: {} = {}", item.Name, item.Type, item.value());
+                    mErrors.add(ErrorType.INVALID_TYPE);
                 }
             }
         }
 
-        return allValid;
+        return mErrors.isEmpty();
     }
 
     public boolean parseCommandLine(final String[] args)
@@ -180,6 +185,7 @@ public class ConfigBuilder
                 if(argument.startsWith(mConfigPrefix))
                 {
                     LOGGER.error("config item({}) has invalid argument: {}", matchedItem.Name, argument);
+                    mErrors.add(ErrorType.INCORRECT_ARGUMENT);
                     return false;
                 }
 
@@ -194,6 +200,7 @@ public class ConfigBuilder
                 if(matchedItem == null)
                 {
                     LOGGER.error("unregistered config item: {}", argument);
+                    mErrors.add(ErrorType.INCORRECT_ARGUMENT);
                     return false;
                 }
 
@@ -206,11 +213,23 @@ public class ConfigBuilder
             else
             {
                 LOGGER.error("expecting config name but encountered invalid argument: {}", argument);
+                mErrors.add(ErrorType.INCORRECT_ARGUMENT);
                 return false;
             }
         }
 
         return isValid();
+    }
+
+    public void logInvalidDetails()
+    {
+        if(mErrors.isEmpty())
+            return;
+
+        if(mErrors.contains(ErrorType.INCORRECT_ARGUMENT))
+        {
+            logItems();
+        }
     }
 
     public void logItems()
@@ -219,14 +238,27 @@ public class ConfigBuilder
 
         for(ConfigItem item : mItems)
         {
-            LOGGER.info("{}: type({}) default({}) required({}) desc: {}",
-                    item.Name, item.Type, item.defaultValue() != null ? item.defaultValue() : "none",
-                    item.Required, item.Description);
+            StringBuilder sb = new StringBuilder();
+            sb.append(format(" -%s:", item.Name));
+
+            if(item.Type != STRING)
+                sb.append(format(" type(%s)", item.Type));
+
+            if(item.defaultValue() != null && item.Type != FLAG)
+                sb.append(format(" default(%s)", item.defaultValue()));
+
+            if(item.Required)
+                sb.append(" REQUIRED");
+
+            sb.append(format(" desc(%s)", item.Description));
+
+            LOGGER.info(sb.toString());
         }
     }
 
     public void clearValues()
     {
+        mErrors.clear();
         mItems.forEach(x -> x.clearValue());
     }
 }
