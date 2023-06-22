@@ -1,9 +1,15 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
@@ -32,10 +38,7 @@ import org.jooq.Result;
 
 public class LoadPurpleSomaticVariants
 {
-    private static final String SAMPLE_ID_FILE = "sample_id_file";
-    private static final String REFERENCE = "reference";
     private static final String RNA = "rna";
-    private static final String PURPLE_DIR = "purple_dir";
     private static final String DRY_RUN = "dry_run";
 
     public static void main(@NotNull String[] args)
@@ -58,7 +61,7 @@ public class LoadPurpleSomaticVariants
             List<String> sampleIds = cmd.hasOption(SAMPLE_ID_FILE) ? ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)) : null;
             String referenceId = cmd.getOptionValue(REFERENCE);
             String rnaId = cmd.getOptionValue(RNA);
-            String purpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR));
+            String purpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR_CFG));
 
             boolean dryRunOnly = cmd.hasOption(DRY_RUN);
 
@@ -174,12 +177,12 @@ public class LoadPurpleSomaticVariants
     private static Options createOptions()
     {
         Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(SAMPLE_ID_FILE, true, "CSV with SampleId");
-        options.addOption(REFERENCE, true, "Reference ID");
+        options.addOption(SAMPLE, true, SAMPLE);
+        options.addOption(SAMPLE_ID_FILE, true, SAMPLE_ID_FILE_DESC);
+        options.addOption(REFERENCE, true, REFERENCE_DESC);
         options.addOption(RNA, true, "RNA sample ID");
         options.addOption(DRY_RUN, false, "Only examine differences in counts");
-        options.addOption(PURPLE_DIR, true, "Path to the Purple directory");
+        options.addOption(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         addDatabaseCmdLineArgs(options);
         ConfigUtils.addLoggingOptions(options);
         return options;

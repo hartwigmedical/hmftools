@@ -67,7 +67,7 @@ public abstract class LinxDriver
 
         for(int i = 0; i < lines.size(); ++i)
         {
-            String[] values = lines.get(i).split(TSV_DELIM);
+            String[] values = lines.get(i).split(TSV_DELIM, -1);
 
             drivers.add(ImmutableLinxDriver.builder()
                     .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))

@@ -48,12 +48,23 @@ public class ConfigBuilder
         mConfigPrefix = prefix;
     }
 
-    public void addConfigItem(final ConfigItem item) { mItems.add(item); }
+    public void addConfigItem(final ConfigItem item)
+    {
+        ConfigItem matched = mItems.stream().filter(x -> x.Name.equals(item.Name)).findFirst().orElse(null);
+
+        if(matched != null)
+        {
+            LOGGER.warn("registering config item({}) again", matched);
+            return;
+        }
+
+        mItems.add(item);
+    }
 
     public void addConfigItem(
             final ConfigItemType type, final String name, final boolean required, final String description, final String defaultValue)
     {
-        mItems.add(new ConfigItem(type, name, required, description, defaultValue));
+        addConfigItem(new ConfigItem(type, name, required, description, defaultValue));
     }
 
     // convenience methods
@@ -106,7 +117,6 @@ public class ConfigBuilder
     {
         addConfigItem(STRING, name, true, description, null);
     }
-
 
     public ConfigItem getItem(final String name)
     {

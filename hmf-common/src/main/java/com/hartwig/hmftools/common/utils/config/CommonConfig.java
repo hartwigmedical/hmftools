@@ -4,6 +4,15 @@ import static java.lang.String.format;
 
 public final class CommonConfig
 {
+    public static final String SAMPLE = "sample";
+    public static final String SAMPLE_DESC = "Sample ID";
+
+    public static final String TUMOR = "tumor";
+    public static final String TUMOR_DESC = "Tumor ID";
+
+    public static final String REFERENCE = "reference";
+    public static final String REFERENCE_DESC = "Reference ID";
+
     public static final String PURPLE_DIR_CFG = toolDirectory("purple");
     public static final String PURPLE_DIR_DESC = toolDirectoryDesc("purple");
 

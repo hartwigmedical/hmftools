@@ -38,6 +38,7 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
@@ -73,6 +74,10 @@ public class DatabaseAccess implements AutoCloseable
     public static final String DB_USER = "db_user";
     public static final String DB_PASS = "db_pass";
     public static final String DB_URL = "db_url";
+
+    private static final String DB_USER_DESC = "Database username";
+    private static final String DB_PASS_DESC = "Database password";
+    private static final String DB_URL_DESC = "Database url";
 
     public static final String DB_DEFAULT_ARGS = "?serverTimezone=UTC&useSSL=false";
 
@@ -165,6 +170,13 @@ public class DatabaseAccess implements AutoCloseable
         this.virusInterpreterDAO = new VirusInterpreterDAO(context);
     }
 
+    public static void addDatabaseCmdLineArgs(final ConfigBuilder configBuilder, boolean isRequired)
+    {
+        configBuilder.addConfigItem(DB_USER, isRequired, DB_USER_DESC);
+        configBuilder.addConfigItem(DB_PASS, isRequired, DB_PASS_DESC);
+        configBuilder.addConfigItem(DB_URL, isRequired, DB_URL_DESC);
+    }
+
     public static void addDatabaseCmdLineArgs(@NotNull Options options)
     {
         addDatabaseCmdLineArgs(options, false);
@@ -175,6 +187,22 @@ public class DatabaseAccess implements AutoCloseable
         options.addOption(Option.builder(DB_USER).desc("Database username").hasArg(true).required(isRequired).build());
         options.addOption(Option.builder(DB_PASS).desc("Database password").hasArg(true).required(isRequired).build());
         options.addOption(Option.builder(DB_URL).desc("Database url").hasArg(true).required(isRequired).build());
+    }
+
+    public static boolean hasDatabaseConfig(final ConfigBuilder configBuilder)
+    {
+        return configBuilder.hasValue(DB_URL) && configBuilder.hasValue(DB_USER) && configBuilder.hasValue(DB_PASS);
+    }
+
+    public static DatabaseAccess databaseAccess(final ConfigBuilder configBuilder) throws SQLException
+    {
+        return databaseAccess(configBuilder, false);
+    }
+
+    public static DatabaseAccess databaseAccess(final ConfigBuilder configBuilder, boolean applyDefaultArgs) throws SQLException
+    {
+        return databaseAccess(
+                configBuilder.getValue(DB_USER), configBuilder.getValue(DB_PASS), configBuilder.getValue(DB_URL), applyDefaultArgs);
     }
 
     public static boolean hasDatabaseConfig(@NotNull CommandLine cmd)
@@ -188,12 +216,14 @@ public class DatabaseAccess implements AutoCloseable
         return databaseAccess(cmd, false);
     }
 
-    @NotNull
     public static DatabaseAccess databaseAccess(@NotNull CommandLine cmd, boolean applyDefaultArgs) throws SQLException
     {
-        String userName = cmd.getOptionValue(DB_USER);
-        String password = cmd.getOptionValue(DB_PASS);
-        String databaseUrl = cmd.getOptionValue(DB_URL);
+        return databaseAccess(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS), cmd.getOptionValue(DB_URL), applyDefaultArgs);
+    }
+
+    private static DatabaseAccess databaseAccess(
+            final String userName, final String password, final String databaseUrl, boolean applyDefaultArgs) throws SQLException
+    {
         String jdbcUrl = "jdbc:" + databaseUrl;
 
         if(applyDefaultArgs && !jdbcUrl.contains("serverTimezone") && !jdbcUrl.contains("useSSL"))
@@ -205,12 +235,27 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @Nullable
+    public static DatabaseAccess createDatabaseAccess(final ConfigBuilder configBuilder)
+    {
+        if(!hasDatabaseConfig(configBuilder))
+            return null;
+
+        try
+        {
+            return databaseAccess(configBuilder, true);
+        }
+        catch(SQLException e)
+        {
+            LOGGER.error("DB connection failed: {}", e.toString());
+            return null;
+        }
+    }
+
+    @Nullable
     public static DatabaseAccess createDatabaseAccess(@NotNull CommandLine cmd)
     {
         if(!hasDatabaseConfig(cmd))
-        {
             return null;
-        }
 
         try
         {

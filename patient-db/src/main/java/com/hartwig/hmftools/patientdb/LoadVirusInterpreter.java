@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
@@ -19,8 +19,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadVirusInterpreter

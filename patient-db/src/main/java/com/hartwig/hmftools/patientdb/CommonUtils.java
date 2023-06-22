@@ -8,8 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CommonUtils
 {
-    public static final String SAMPLE = "sample";
-
     public static final Logger LOGGER = LogManager.getLogger(CommonUtils.class);
 
     private CommonUtils() {}

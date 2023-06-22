@@ -4,8 +4,15 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFil
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
@@ -34,15 +41,13 @@ import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.patientdb.dao.BufferedWriter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -52,28 +57,33 @@ import htsjdk.variant.vcf.VCFCodec;
 
 public class LoadPurpleData 
 {
-    private static final String REFERENCE = "reference";
     private static final String RNA_SAMPLE = "rna";
-
-    private static final String PURPLE_DIR = "purple_dir";
 
     private static final String SOMATIC_ONLY = "somatic_only";
     private static final String GERMLINE_ONLY = "germline_only";
 
     public static void main(@NotNull String[] args)
     {
-        Options options = createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addConfig(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+        logVersion();
 
         try
         {
-            CommandLine cmd = new DefaultParser().parse(options, args);
-            DatabaseAccess dbAccess = databaseAccess(cmd);
 
-            logVersion();
+            DatabaseAccess dbAccess = databaseAccess(configBuilder);
 
-            String sampleId = cmd.getOptionValue(SAMPLE);
-            String referenceId = cmd.getOptionValue(REFERENCE);
-            String rnaId = cmd.getOptionValue(RNA_SAMPLE);
+            String sampleId = configBuilder.getValue(SAMPLE);
+            String referenceId = configBuilder.getValue(REFERENCE);
+            String rnaId = configBuilder.getValue(RNA_SAMPLE);
 
             if(sampleId == null && referenceId == null)
             {
@@ -84,7 +94,7 @@ public class LoadPurpleData
             if(sampleId == null)
                 sampleId = referenceId;
 
-            String purpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR));
+            String purpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG));
 
             if(!Files.exists(Paths.get(purpleDir)))
             {
@@ -92,8 +102,8 @@ public class LoadPurpleData
                 System.exit(1);
             }
 
-            boolean loadGermline = !cmd.hasOption(SOMATIC_ONLY);
-            boolean loadSomatic = !cmd.hasOption(GERMLINE_ONLY);
+            boolean loadGermline = !configBuilder.hasFlag(SOMATIC_ONLY);
+            boolean loadSomatic = !configBuilder.hasFlag(GERMLINE_ONLY);
 
             LOGGER.info("loading sample({}) {} Purple data from {}",
                     sampleId,
@@ -261,17 +271,15 @@ public class LoadPurpleData
         return true;
     }
 
-    @NotNull
-    private static Options createOptions()
+    private static void addConfig(final ConfigBuilder configBuilder)
     {
-        Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(REFERENCE, true, "Reference ID");
-        options.addOption(RNA_SAMPLE, true, "RNA sample ID");
-        options.addOption(PURPLE_DIR, true, "Path to the Purple directory");
-        options.addOption(SOMATIC_ONLY, false, "Only load somatic data");
-        options.addOption(GERMLINE_ONLY, false, "Only load germline data");
-        addDatabaseCmdLineArgs(options);
-        return options;
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
+        configBuilder.addConfigItem(RNA_SAMPLE, "RNA sample ID");
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addFlagItem(SOMATIC_ONLY, "Only load somatic data");
+        configBuilder.addFlagItem(GERMLINE_ONLY, "Only load germline data");
+        addDatabaseCmdLineArgs(configBuilder, true);
+        addLoggingOptions(configBuilder);
     }
 }

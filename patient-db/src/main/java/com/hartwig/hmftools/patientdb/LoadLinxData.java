@@ -2,7 +2,12 @@ package com.hartwig.hmftools.patientdb;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_GERMLINE;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
-import static com.hartwig.hmftools.patientdb.CommonUtils.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.hasMissingFiles;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
@@ -24,29 +29,33 @@ import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadLinxData
 {
-    private static final String LINX_DIR = "linx_dir";
-
     private static final String SOMATIC_ONLY = "somatic_only";
     private static final String GERMLINE_ONLY = "germline_only";
 
     public static void main(@NotNull String[] args) throws ParseException, IOException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
-        DatabaseAccess dbAccess = createDatabaseAccess(cmd);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addConfig(configBuilder);
 
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
         logVersion();
+
+        DatabaseAccess dbAccess = createDatabaseAccess(configBuilder);
 
         if(dbAccess == null)
         {
@@ -54,11 +63,11 @@ public class LoadLinxData
             System.exit(1);
         }
 
-        String sampleId = cmd.getOptionValue(SAMPLE);
-        String linxDir = cmd.getOptionValue(LINX_DIR);
+        String sampleId = configBuilder.getValue(SAMPLE);
+        String linxDir = configBuilder.getValue(LINX_DIR_CFG);
 
-        boolean loadGermline = !cmd.hasOption(SOMATIC_ONLY);
-        boolean loadSomatic = !cmd.hasOption(GERMLINE_ONLY);
+        boolean loadGermline = !configBuilder.hasFlag(SOMATIC_ONLY);
+        boolean loadSomatic = !configBuilder.hasFlag(GERMLINE_ONLY);
 
         dbAccess.context().transaction(tr ->
         {
@@ -160,16 +169,13 @@ public class LoadLinxData
         }
     }
 
-    @NotNull
-    private static Options createOptions()
+    private static void addConfig(final ConfigBuilder configBuilder)
     {
-        Options options = new Options();
-        addDatabaseCmdLineArgs(options);
-        options.addOption(SAMPLE, true, "Name of the tumor sample");
-        options.addOption(LINX_DIR, true, "Directory to read LINX data from");
-        options.addOption(SOMATIC_ONLY, false, "Only load somatic data");
-        options.addOption(GERMLINE_ONLY, false, "Only load germline data");
-
-        return options;
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(LINX_DIR_CFG, true, LINX_DIR_DESC);
+        configBuilder.addFlagItem(SOMATIC_ONLY, "Only load somatic data");
+        configBuilder.addFlagItem(GERMLINE_ONLY, "Only load germline data");
+        addDatabaseCmdLineArgs(configBuilder, true);
+        addLoggingOptions(configBuilder);
     }
 }
