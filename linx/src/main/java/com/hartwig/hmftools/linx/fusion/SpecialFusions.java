@@ -106,9 +106,6 @@ public class SpecialFusions
     {
         List<GeneFusion> fusions = Lists.newArrayList();
 
-        // always report SVs by themselves
-        final List<SvVarData> knownPairSglCandidates = Lists.newArrayList();
-
         List<KnownFusionData> enhancerTargets = mKnownFusionCache.getDataByType(PROMISCUOUS_ENHANCER_TARGET);
 
         if(enhancerTargets.isEmpty())
@@ -116,9 +113,6 @@ public class SpecialFusions
 
         for(final SvVarData var : svList)
         {
-            // if(var.isSglBreakend() && !var.getGenesList(true).isEmpty())
-            //    knownPairSglCandidates.add(var);
-
             if(var.isSglBreakend())
                 continue;
 
@@ -134,11 +128,6 @@ public class SpecialFusions
             }
 
         }
-
-        /*
-        if(!knownPairSglCandidates.isEmpty())
-            fusions.addAll(findKnownPairSglFusions(knownPairSglCandidates));
-        */
 
         return fusions;
     }
@@ -164,12 +153,9 @@ public class SpecialFusions
         boolean otherIsStart = seIndex == SE_END;
         List<BreakendGeneData> upstreamGenes = var.getGenesList(otherIsStart);
 
-        if(!upstreamGenes.isEmpty())
-        {
-            BreakendGeneData gene = upstreamGenes.get(0);
-            upTrans = gene.canonical();
-        }
-        else
+        upTrans = upstreamGenes.stream().map(x -> x.canonical()).filter(x -> x != null).findFirst().orElse(null);
+
+        if(upTrans == null)
         {
             GeneData geneData = new GeneData(
                     "", "", otherBreakend.chromosome(), POS_STRAND,
