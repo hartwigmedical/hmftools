@@ -5,8 +5,14 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -25,22 +31,19 @@ import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.samtools.BamUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
 import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -85,7 +88,6 @@ public class MarkDupsConfig
     public static final Logger MD_LOGGER = LogManager.getLogger(MarkDupsConfig.class);
 
     // config strings
-    private static final String SAMPLE = "sample";
     private  static final String BAM_FILE = "bam_file";
     private static final String PARTITION_SIZE = "partition_size";
     private static final String BUFFER_SIZE = "buffer_size";
@@ -94,30 +96,28 @@ public class MarkDupsConfig
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String WRITE_BAM = "write_bam";
 
-    private static final String LOG_READ_IDS = "log_read_ids";
-    private static final String PERF_DEBUG = "perf_debug";
     private static final String RUN_CHECKS = "run_checks";
     private static final String WRITE_STATS = "write_stats";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
 
-    public MarkDupsConfig(final CommandLine cmd)
+    public MarkDupsConfig(final ConfigBuilder configBuilder)
     {
         mIsValid = true;
-        SampleId = cmd.getOptionValue(SAMPLE);
-        BamFile = cmd.getOptionValue(BAM_FILE);
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
+        SampleId = configBuilder.getValue(SAMPLE);
+        BamFile = configBuilder.getValue(BAM_FILE);
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenome = loadRefGenome(RefGenomeFile);
 
-        if(cmd.hasOption(OUTPUT_DIR))
+        if(configBuilder.hasValue(OUTPUT_DIR))
         {
-            OutputDir = parseOutputDir(cmd);
+            OutputDir = parseOutputDir(configBuilder);
         }
         else
         {
             OutputDir = checkAddDirSeparator(Paths.get(BamFile).getParent().toString());
         }
 
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
         if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -126,18 +126,18 @@ public class MarkDupsConfig
             mIsValid = false;
         }
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         MD_LOGGER.info("output({})", OutputDir);
 
-        PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_PARTITION_SIZE)));
-        BufferSize = Integer.parseInt(cmd.getOptionValue(BUFFER_SIZE, String.valueOf(DEFAULT_POS_BUFFER_SIZE)));
-        BamStringency = BamUtils.validationStringency(cmd);
+        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
+        BufferSize = configBuilder.getInteger(BUFFER_SIZE);
+        BamStringency = BamUtils.validationStringency(configBuilder);
 
-        NoMateCigar = cmd.hasOption(NO_MATE_CIGAR);
-        UMIs = UmiConfig.from(cmd);
-        FormConsensus = !UMIs.Enabled && !NoMateCigar && cmd.hasOption(FORM_CONSENSUS);
+        NoMateCigar = configBuilder.hasFlag(NO_MATE_CIGAR);
+        UMIs = UmiConfig.from(configBuilder);
+        FormConsensus = !UMIs.Enabled && !NoMateCigar && configBuilder.hasFlag(FORM_CONSENSUS);
         IdGenerator = new GroupIdGenerator();
 
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
@@ -148,31 +148,29 @@ public class MarkDupsConfig
 
         try
         {
-            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, MD_LOGGER);
+            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, MD_LOGGER);
             Collections.sort(SpecificRegions);
         }
         catch(ParseException e)
         {
             MD_LOGGER.error("invalid specific regions({}) chromosomes({}) config",
-                    cmd.getOptionValue(SPECIFIC_REGIONS, ""), cmd.getOptionValue(SPECIFIC_CHROMOSOMES, ""));
+                    configBuilder.getValue(SPECIFIC_REGIONS, ""), configBuilder.getValue(SPECIFIC_CHROMOSOMES, ""));
             mIsValid = false;
         }
 
         SpecificRegionsFilterType = !SpecificChromosomes.isEmpty() || !SpecificRegions.isEmpty() ?
-                FilterReadsType.valueOf(cmd.getOptionValue(SPECIFIC_REGION_FILTER_TYPE, FilterReadsType.READ.toString())) :
+                FilterReadsType.valueOf(configBuilder.getValue(SPECIFIC_REGION_FILTER_TYPE, FilterReadsType.READ.toString())) :
                 FilterReadsType.NONE;
 
-        WriteBam = cmd.hasOption(WRITE_BAM) || !cmd.hasOption(READ_OUTPUTS);
-        LogReadType = ReadOutput.valueOf(cmd.getOptionValue(READ_OUTPUTS, ReadOutput.NONE.toString()));
+        WriteBam = configBuilder.hasFlag(WRITE_BAM) || !configBuilder.hasFlag(READ_OUTPUTS);
+        LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, ReadOutput.NONE.toString()));
 
-        LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
-                Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
+        LogReadIds = parseLogReadIds(configBuilder);
+        Threads = parseThreads(configBuilder);
 
-        Threads = parseThreads(cmd);
-
-        WriteStats = cmd.hasOption(WRITE_STATS);
-        PerfDebug = cmd.hasOption(PERF_DEBUG);
-        RunChecks = cmd.hasOption(RUN_CHECKS);
+        WriteStats = configBuilder.hasFlag(WRITE_STATS);
+        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
+        RunChecks = configBuilder.hasFlag(RUN_CHECKS);
 
         if(RunChecks)
         {
@@ -216,33 +214,33 @@ public class MarkDupsConfig
 
     public boolean runReadChecks() { return RunChecks && (!SpecificChromosomes.isEmpty() || !SpecificRegions.isEmpty()); }
 
-    public static Options createCmdLineOptions()
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(BAM_FILE, true, "BAM file location");
-        addRefGenomeConfig(options);;
-        options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_PARTITION_SIZE);
-        options.addOption(BUFFER_SIZE, true, "Read buffer size, default: " + DEFAULT_POS_BUFFER_SIZE);
-        options.addOption(READ_OUTPUTS, true, "Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'");
-        options.addOption(WRITE_BAM, false, "Write BAM, default true if not write read output");
-        options.addOption(FORM_CONSENSUS, false, "Form consensus reads from duplicate groups without UMIs");
-        options.addOption(NO_MATE_CIGAR, false, "Mate CIGAR not set by aligner, make no attempt to use it");
-        addValidationStringencyOption(options);
-        UmiConfig.addCommandLineOptions(options);
-        addThreadOptions(options);
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addPathItem(BAM_FILE, true, "BAM file location");
+        addRefGenomeConfig(configBuilder, true);
+        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
+        configBuilder.addIntegerItem(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
+        configBuilder.addConfigItem(
+                READ_OUTPUTS, false,"Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'",
+                ReadOutput.NONE.toString());
 
-        addSpecificChromosomesRegionsConfig(options);
-        options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
-        options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
-        options.addOption(RUN_CHECKS, false, "Run duplicate mismatch checks");
-        options.addOption(WRITE_STATS, false, "Write duplicate and UMI-group stats");
-        options.addOption(SPECIFIC_REGION_FILTER_TYPE, true, "Used with specific regions, to filter mates or supps");
+        configBuilder.addFlagItem(WRITE_BAM, "Write BAM, default is true if not writing other read TSV output");
+        configBuilder.addFlagItem(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
+        configBuilder.addFlagItem(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
+        addValidationStringencyOption(configBuilder);
+        UmiConfig.addConfig(configBuilder);
+        addThreadOptions(configBuilder);
 
-        return options;
+        addSpecificChromosomesRegionsConfig(configBuilder);
+        configBuilder.addConfigItem(LOG_READ_IDS,LOG_READ_IDS_DESC);
+        configBuilder.addFlagItem(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addFlagItem(RUN_CHECKS, "Run duplicate mismatch checks");
+        configBuilder.addFlagItem(WRITE_STATS, "Write duplicate and UMI-group stats");
+        configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
     }
 
     public MarkDupsConfig(

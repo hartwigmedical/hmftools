@@ -12,10 +12,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.markdups.common.Constants;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class UmiConfig
 {
@@ -55,18 +53,17 @@ public class UmiConfig
     public boolean hasDefinedUmis() { return !mDefinedUmis.isEmpty(); }
     public void addDefinedUmis(final Set<String> umis) { mDefinedUmis.addAll(umis); }
 
-    public static UmiConfig from(final CommandLine cmd)
+    public static UmiConfig from(final ConfigBuilder configBuilder)
     {
         UmiConfig umiConfig = new UmiConfig(
-                cmd.hasOption(UMI_ENABLED),
-                cmd.hasOption(UMI_DUPLEX),
-                cmd.getOptionValue(UMI_DUPLEX_DELIM, String.valueOf(Constants.DEFAULT_DUPLEX_UMI_DELIM)),
-                cmd.hasOption(UMI_BASE_DIFF_STATS));
+                configBuilder.hasFlag(UMI_ENABLED),
+                configBuilder.hasFlag(UMI_DUPLEX),
+                configBuilder.getValue(UMI_DUPLEX_DELIM),
+                configBuilder.hasFlag(UMI_BASE_DIFF_STATS));
 
-        String definedUmiIdsFilename = cmd.getOptionValue(UMI_DEFINED_IDS);
-
-        if(definedUmiIdsFilename != null)
+        if(configBuilder.hasValue(UMI_DEFINED_IDS))
         {
+            String definedUmiIdsFilename = configBuilder.getValue(UMI_DEFINED_IDS);
             try
             {
                 List<String> umis = Files.readAllLines(Paths.get(definedUmiIdsFilename));
@@ -123,12 +120,15 @@ public class UmiConfig
         return items[items.length - 1];
     }
 
-    public static void addCommandLineOptions(final Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(UMI_ENABLED, false, "Use UMIs for duplicates");
-        options.addOption(UMI_DUPLEX, false, "UMI duplex enabled");
-        options.addOption(UMI_DEFINED_IDS, true, "Optional set of defined UMI IDs in file");
-        options.addOption(UMI_BASE_DIFF_STATS, false, "Record base difference stats");
-        options.addOption(UMI_DUPLEX_DELIM, true, "UMI duplex delimiter (default '-'");
+        configBuilder.addFlagItem(UMI_ENABLED, "Use UMIs for duplicates");
+        configBuilder.addFlagItem(UMI_DUPLEX, "UMI duplex enabled");
+        configBuilder.addPathItem(UMI_DEFINED_IDS, false, "Optional set of defined UMI IDs in file");
+        configBuilder.addFlagItem(UMI_BASE_DIFF_STATS, "Record base difference stats");
+        configBuilder.addConfigItem(
+                UMI_DUPLEX_DELIM, false,
+                "UMI duplex delimiter, default: " + Constants.DEFAULT_DUPLEX_UMI_DELIM,
+                String.valueOf(Constants.DEFAULT_DUPLEX_UMI_DELIM));
     }
 }

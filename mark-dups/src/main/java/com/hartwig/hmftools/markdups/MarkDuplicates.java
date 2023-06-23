@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +16,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.markdups.common.PartitionData;
@@ -24,7 +26,6 @@ import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
@@ -33,9 +34,9 @@ public class MarkDuplicates
 {
     private final MarkDupsConfig mConfig;
 
-    public MarkDuplicates(final CommandLine cmd)
+    public MarkDuplicates(final ConfigBuilder configBuilder)
     {
-        mConfig = new MarkDupsConfig(cmd);
+        mConfig = new MarkDupsConfig(configBuilder);
     }
 
     public void run()
@@ -161,33 +162,25 @@ public class MarkDuplicates
 
     public static void main(@NotNull final String[] args)
     {
-        final VersionInfo version = new VersionInfo("mark-dups.version");
-        MD_LOGGER.info("MarkDups version: {}", version.version());
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addConfig(configBuilder);
 
-        final Options options = MarkDupsConfig.createCmdLineOptions();
-
-        try
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            MarkDuplicates markDuplicates = new MarkDuplicates(cmd);
-            markDuplicates.run();
-        }
-        catch(ParseException e)
-        {
-            MD_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("MarkDuplicates", options);
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
+
+        setLogLevel(configBuilder);
+        logVersion();
+
+        MarkDuplicates markDuplicates = new MarkDuplicates(configBuilder);
+        markDuplicates.run();
     }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
+    public static void logVersion()
     {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        final VersionInfo version = new VersionInfo("mark-dups.version");
+        MD_LOGGER.info("MarkDups version: {}", version.version());
     }
 }

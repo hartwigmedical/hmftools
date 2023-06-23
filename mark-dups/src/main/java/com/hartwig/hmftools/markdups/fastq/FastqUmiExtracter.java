@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedRe
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.markdups.MarkDuplicates.logVersion;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 
@@ -20,12 +21,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigItemType;
+
 import org.jetbrains.annotations.NotNull;
 
 public class FastqUmiExtracter
@@ -45,12 +43,12 @@ public class FastqUmiExtracter
     private static final String FASTQ_FILES_DELIM = ";";
     private static final int LINE_LOG_COUNT = 1000000;
 
-    public FastqUmiExtracter(final CommandLine cmd)
+    public FastqUmiExtracter(final ConfigBuilder configBuilder)
     {
-        mFastqFiles = cmd.getOptionValue(FASTQ_FILES);
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
-        mUmiLength = Integer.parseInt(cmd.getOptionValue(UMI_LENGTH));
+        mFastqFiles = configBuilder.getValue(FASTQ_FILES);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
+        mUmiLength = configBuilder.getInteger(UMI_LENGTH);
     }
 
     public void run()
@@ -246,40 +244,23 @@ public class FastqUmiExtracter
 
     public static void main(@NotNull final String[] args)
     {
-        // final VersionInfo version = new VersionInfo("fastq-tools.version");
-        // MD_LOGGER.info("BamTools version: {}", version.version());
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        final Options options = new Options();
+        configBuilder.addConfigItem(FASTQ_FILES, true, "Fastq file-pair path, separated by delim ','");
+        configBuilder.addConfigItem(ConfigItemType.INTEGER, UMI_LENGTH, true, "UMI length", null);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
-        //addThreadOptions(options);
-        //addRefGenomeConfig(options);;
-        options.addOption(FASTQ_FILES, true, "Fastq file-pair path, separated by delim ','");
-        options.addOption(UMI_LENGTH, true, "UMI length");
-
-        try
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            FastqUmiExtracter fastqUmiExtracter = new FastqUmiExtracter(cmd);
-            fastqUmiExtracter.run();
-        }
-        catch(ParseException e)
-        {
-            MD_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("FastqUmiExtracter", options);
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
-    }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        setLogLevel(configBuilder);
+        logVersion();
+
+        FastqUmiExtracter fastqUmiExtracter = new FastqUmiExtracter(configBuilder);
+        fastqUmiExtracter.run();
     }
 }

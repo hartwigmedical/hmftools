@@ -2,6 +2,15 @@ package com.hartwig.hmftools.common.utils.config;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.Lists;
+
 public final class CommonConfig
 {
     public static final String SAMPLE = "sample";
@@ -12,6 +21,12 @@ public final class CommonConfig
 
     public static final String REFERENCE = "reference";
     public static final String REFERENCE_DESC = "Reference ID";
+
+    public static final String LOG_READ_IDS = "log_read_ids";
+    public static final String LOG_READ_IDS_DESC = "Log specific read IDs, separated by ';'";
+
+    public static final String PERF_DEBUG = "perf_debug";
+    public static final String PERF_DEBUG_DESC = "Detailed performance tracking and logging";
 
     public static final String PURPLE_DIR_CFG = toolDirectory("purple");
     public static final String PURPLE_DIR_DESC = toolDirectoryDesc("purple");
@@ -36,4 +51,13 @@ public final class CommonConfig
 
     private static String toolDirectory(final String toolName) { return format("%s_dir", toolName); }
     private static String toolDirectoryDesc(final String toolName) { return format("Path to %s pipeline files", toolName); }
+
+    public static List<String> parseLogReadIds(final ConfigBuilder configBuilder)
+    {
+        if(configBuilder.hasValue(LOG_READ_IDS))
+            return Arrays.stream(configBuilder.getValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList());
+        else
+            return Collections.emptyList();
+
+    }
 }
