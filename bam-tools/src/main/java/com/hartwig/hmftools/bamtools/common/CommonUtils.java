@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.bamtools.common;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
@@ -27,11 +29,9 @@ public final class CommonUtils
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;
 
     // config strings
-    public static final String SAMPLE = "sample";
     public static final String BAM_FILE = "bam_file";
     public static final String PARTITION_SIZE = "partition_size";
     public static final String REGIONS_BED_FILE = "regions_bed_file";
-    public static final String LOG_READ_IDS = "log_read_ids";
 
     public static final String BAM_FILE_TYPE = "bam";
 
@@ -47,7 +47,7 @@ public final class CommonUtils
         addRefGenomeConfig(configBuilder, true);;
         addSpecificChromosomesRegionsConfig(configBuilder);
 
-        configBuilder.addConfigItem(SAMPLE, "Tumor sample ID");
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addPathItem(BAM_FILE, true, "BAM file location");
         configBuilder.addPathItem(REGIONS_BED_FILE, false, "BED file with regions to analyse");
     }

@@ -3,9 +3,7 @@ package com.hartwig.hmftools.bamtools.metrics;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.LOG_READ_IDS;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.SAMPLE;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandOptions;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
@@ -17,6 +15,12 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.mergeChrBaseRegionOverlaps;
 
 import java.io.BufferedReader;
@@ -74,8 +78,6 @@ public class MetricsConfig
     private static final String EXCLUDE_ZERO_COVERAGE = "exclude_zero_coverage";
     private static final String WRITE_OLD_STYLE = "write_old_style";
 
-    public static final String PERF_DEBUG = "perf_debug";
-
     private static final int DEFAULT_MAP_QUAL_THRESHOLD = 20;
     private static final int DEFAULT_BASE_QUAL_THRESHOLD = 10;
     private static final int DEFAULT_MAX_COVERAGE = 250;
@@ -132,8 +134,7 @@ public class MetricsConfig
             mergeChrBaseRegionOverlaps(SpecificRegions, true);
         }
 
-        LogReadIds = configBuilder.hasValue(LOG_READ_IDS) ?
-                Arrays.stream(configBuilder.getValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
+        LogReadIds = parseLogReadIds(configBuilder);
 
         Threads = parseThreads(configBuilder);
 
@@ -182,8 +183,8 @@ public class MetricsConfig
         configBuilder.addIntegerItem(MAX_COVERAGE, "Max coverage", DEFAULT_MAX_COVERAGE);
         configBuilder.addFlagItem(EXCLUDE_ZERO_COVERAGE, "Exclude bases with zero coverage");
         configBuilder.addFlagItem(WRITE_OLD_STYLE, "Write data in same format as Picard CollectWgsMetrics");
-        configBuilder.addConfigItem(LOG_READ_IDS, "Log specific read IDs, separated by ';'");
-        configBuilder.addFlagItem(PERF_DEBUG, "Detailed performance tracking and logging");
+        configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
+        configBuilder.addFlagItem(PERF_DEBUG, PERF_DEBUG_DESC);
     }
 
     @VisibleForTesting
