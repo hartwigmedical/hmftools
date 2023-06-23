@@ -3,8 +3,8 @@ package com.hartwig.hmftools.id;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,30 +29,28 @@ public class HmfIdConfig
     public static final String DATA_DELIM = ",";
     private static final int DEFAULT_PRECOMPUTE_COUNT = 50000;
 
-    public HmfIdConfig(final CommandLine cmd)
+    public HmfIdConfig(final ConfigBuilder configBuilder)
     {
-        Password = cmd.getOptionValue(PASSWORD);
-        NewPassword = cmd.getOptionValue(NEW_PASSWORD, Password);
-        InputHashFile = cmd.getOptionValue(HASH_FILE_IN);
-        OutputHashFile = cmd.getOptionValue(HASH_FILE_OUT);
-        Restore = cmd.hasOption(RESTORE);
-        MaxPrecomputeCount = Integer.parseInt(cmd.getOptionValue(MAX_SAMPLE_COUNT, String.valueOf(DEFAULT_PRECOMPUTE_COUNT)));
+        Password = configBuilder.getValue(PASSWORD);
+        NewPassword = configBuilder.getValue(NEW_PASSWORD, Password);
+        InputHashFile = configBuilder.getValue(HASH_FILE_IN);
+        OutputHashFile = configBuilder.getValue(HASH_FILE_OUT);
+        Restore = configBuilder.hasFlag(RESTORE);
+        MaxPrecomputeCount = configBuilder.getInteger(MAX_SAMPLE_COUNT);
     }
 
-    public static void addCmdLineArgs(final Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(PASSWORD, true, "Password for ?");
-        options.addOption(NEW_PASSWORD, true, "New password");
-        options.addOption(HASH_FILE_IN, true, "Input sample hash file");
-        options.addOption(HASH_FILE_OUT, true, "Output sample hash file");
-        options.addOption(RESTORE, false, "");
+        configBuilder.addConfigItem(PASSWORD, true, "Password for ?");
+        configBuilder.addConfigItem(NEW_PASSWORD, false, "New password");
+        configBuilder.addPathItem(HASH_FILE_IN, true, "Input sample hash file");
+        configBuilder.addConfigItem(HASH_FILE_OUT, true, "Output sample hash file");
+        configBuilder.addFlagItem(RESTORE, "Restore routine");
 
-        options.addOption(
-                MAX_SAMPLE_COUNT, true,
-                "Maximum supported precomputed sample hash count, default: " + DEFAULT_PRECOMPUTE_COUNT);
+        configBuilder.addIntegerItem(MAX_SAMPLE_COUNT, "Maximum supported precomputed sample hash count", DEFAULT_PRECOMPUTE_COUNT);
 
-        addDatabaseCmdLineArgs(options);
-        addLoggingOptions(options);
+        addDatabaseCmdLineArgs(configBuilder, true);
+        addLoggingOptions(configBuilder);
     }
 
 }
