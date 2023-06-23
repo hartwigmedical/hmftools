@@ -309,7 +309,7 @@ public class SvConfig
         configBuilder.addConfigItem(WRITE_TYPES, "Write types: " + WriteType.values().toString());
         configBuilder.addFlagItem(UNPAIRED_READS, "Unpaired reads ignores non-expect junction support");
         addSpecificChromosomesRegionsConfig(configBuilder);
-        configBuilder.addConfigItem(LOG_READ_IDS, true, LOG_READ_IDS_DESC);
+        configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         configBuilder.addIntegerItem(MAX_PARTITION_READS, "Limit to stop processing reads in partition, for debug", 0);
         configBuilder.addFlagItem(CAPTURE_DEPTH, "Capture depth for junctions");
         configBuilder.addFlagItem(NO_CACHE_BAM, "Write a BAM to cache candidate reads");

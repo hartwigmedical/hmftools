@@ -108,7 +108,7 @@ public class AppendConfig
         ReadFilterConfig.addConfig(configBuilder);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
-        configBuilder.addConfigItem(LOG_READ_IDS, true, LOG_READ_IDS_DESC);
+        configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);

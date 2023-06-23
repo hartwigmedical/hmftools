@@ -109,7 +109,6 @@ public class HighDepthFinder
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         HighDepthConfig.addConfig(configBuilder);
-        addSpecificChromosomesRegionsConfig(configBuilder);
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
 

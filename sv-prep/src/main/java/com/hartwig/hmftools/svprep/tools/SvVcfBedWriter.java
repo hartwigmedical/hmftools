@@ -107,7 +107,7 @@ public class SvVcfBedWriter
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         configBuilder.addPathItem(INPUT_VCF, true, "Input VCF");
-        configBuilder.addPathItem(OUTPUT_BED, true, "Output BED");
+        configBuilder.addConfigItem(OUTPUT_BED, true, "Output BED");
         addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))

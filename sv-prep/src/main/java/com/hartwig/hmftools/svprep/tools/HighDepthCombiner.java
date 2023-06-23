@@ -13,6 +13,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
@@ -726,7 +728,7 @@ public class HighDepthCombiner
         configBuilder.addPathItem(REF_BLACKLIST_FILE, false, "Reference blacklist file to include");
         configBuilder.addIntegerItem(MIN_SAMPLE_COUNT, false, "Min sample count to produce region", DEFAULT_MIN_SAMPLE_COUNT);
         configBuilder.addFlagItem(REMOVE_GENE_OVERLAPS, "Remove high depth regions that overlap driver or fusion genes");
-        // configBuilder.addConfigItem(REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
         addGenePanelOption(configBuilder, false);
         addKnownFusionFileOption(configBuilder);
         addEnsemblDir(configBuilder);
