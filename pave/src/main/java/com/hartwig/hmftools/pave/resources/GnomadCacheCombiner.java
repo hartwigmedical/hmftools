@@ -21,12 +21,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class GnomadCacheCombiner
@@ -38,11 +34,11 @@ public class GnomadCacheCombiner
     private static final String GNOMAD_DIR_1 = "gnomad_dir_1";
     private static final String GNOMAD_DIR_2 = "gnomad_dir_2";
 
-    public GnomadCacheCombiner(final CommandLine cmd)
+    public GnomadCacheCombiner(ConfigBuilder configBuilder)
     {
-        mOutputDir = parseOutputDir(cmd);
-        mGnomadDir1 = checkAddDirSeparator(cmd.getOptionValue(GNOMAD_DIR_1));
-        mGnomadDir2 = checkAddDirSeparator(cmd.getOptionValue(GNOMAD_DIR_2));
+        mOutputDir = parseOutputDir(configBuilder);
+        mGnomadDir1 = checkAddDirSeparator(configBuilder.getValue(GNOMAD_DIR_1));
+        mGnomadDir2 = checkAddDirSeparator(configBuilder.getValue(GNOMAD_DIR_2));
     }
 
     public void run()
@@ -212,26 +208,24 @@ public class GnomadCacheCombiner
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        Options options = new Options();
-        options.addOption(GNOMAD_DIR_1, true, "Gnomad VCF input file");
-        options.addOption(GNOMAD_DIR_2, true, "Gnomad VCF input file");
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        final CommandLine cmd = createCommandLine(args, options);
-        setLogLevel(cmd);
+        configBuilder.addPathItem(GNOMAD_DIR_1, true, "Gnomad VCF input file");
+        configBuilder.addPathItem(GNOMAD_DIR_2, true, "Gnomad VCF input file");
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        GnomadCacheCombiner gnomadCacheBuilder = new GnomadCacheCombiner(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+
+        GnomadCacheCombiner gnomadCacheBuilder = new GnomadCacheCombiner(configBuilder);
         gnomadCacheBuilder.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

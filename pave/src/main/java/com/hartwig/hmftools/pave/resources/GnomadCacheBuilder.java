@@ -16,11 +16,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
+
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -43,13 +41,13 @@ public class GnomadCacheBuilder
 
     public static final String GNOMAD_FILE_ID = "gnomad_variants";
 
-    public GnomadCacheBuilder(final CommandLine cmd)
+    public GnomadCacheBuilder(final ConfigBuilder configBuilder)
     {
-        mOutputDir = parseOutputDir(cmd);
-        mInputVcf = cmd.getOptionValue(GNOMAD_FILE);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
-        mSpecificChromosome = cmd.getOptionValue(SPECIFIC_CHROMOSOME, "");
-        mFreqThreshold = Double.parseDouble(cmd.getOptionValue(FREQ_THRESHOLD, "0"));
+        mOutputDir = parseOutputDir(configBuilder);
+        mInputVcf = configBuilder.getValue(GNOMAD_FILE);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
+        mSpecificChromosome = configBuilder.getValue(SPECIFIC_CHROMOSOME, "");
+        mFreqThreshold = configBuilder.getDecimal(FREQ_THRESHOLD);
     }
 
     public static String formFileId(final String dir, final String chromosome, final String outputId)
@@ -81,8 +79,7 @@ public class GnomadCacheBuilder
 
         try
         {
-            final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
-                    mInputVcf, new VCFCodec(), false);
+            VcfFileReader reader = new VcfFileReader(mInputVcf);
 
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
@@ -143,27 +140,29 @@ public class GnomadCacheBuilder
         PV_LOGGER.info("Gnomad file parse complete");
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        Options options = new Options();
-        options.addOption(GNOMAD_FILE, true, "Gnomad VCF input file");
-        options.addOption(FREQ_THRESHOLD, true, "Population frequency (AF) threshold to write VCF entry");
-        options.addOption(SPECIFIC_CHROMOSOME, true, "Produce file per chromosome");
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        final CommandLine cmd = createCommandLine(args, options);
-        setLogLevel(cmd);
+        configBuilder.addPathItem(GNOMAD_FILE, true, "Gnomad VCF input file");
 
-        GnomadCacheBuilder gnomadCacheBuilder = new GnomadCacheBuilder(cmd);
+        configBuilder.addDecimalItem(
+                FREQ_THRESHOLD, false, "Population frequency (AF) threshold to write VCF entry", 0);
+
+        configBuilder.addFlagItem(SPECIFIC_CHROMOSOME, "Produce file per chromosome");
+
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+
+        GnomadCacheBuilder gnomadCacheBuilder = new GnomadCacheBuilder(configBuilder);
         gnomadCacheBuilder.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

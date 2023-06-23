@@ -163,6 +163,11 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         return loadSpecificRegions(cmd.getOptionValue(SPECIFIC_REGIONS));
     }
 
+    public static List<ChrBaseRegion> loadSpecificRegions(final ConfigBuilder configBuilder) throws ParseException
+    {
+        return loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS));
+    }
+
     public static List<ChrBaseRegion> loadSpecificRegions(@Nullable final String specificRegionsStr) throws ParseException
     {
         List<ChrBaseRegion> regions = Lists.newArrayList();

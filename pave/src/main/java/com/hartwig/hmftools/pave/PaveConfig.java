@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
@@ -19,17 +18,15 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.pave.annotation.Blacklistings;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
 import com.hartwig.hmftools.pave.annotation.Mappability;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class PaveConfig
 {
@@ -49,7 +46,6 @@ public class PaveConfig
     public final boolean SetReportable;
     public final List<ChrBaseRegion> SpecificRegions;
 
-    private static final String SAMPLE = "sample";
     private static final String VCF_FILE = "vcf_file";
     private static final String OUTPUT_VCF_FILE = "output_vcf_file";
 
@@ -67,36 +63,36 @@ public class PaveConfig
 
     public static final Logger PV_LOGGER = LogManager.getLogger(PaveConfig.class);
 
-    public PaveConfig(final CommandLine cmd)
+    public PaveConfig(final ConfigBuilder configBuilder)
     {
-        SampleId = cmd.getOptionValue(SAMPLE);
-        VcfFile = cmd.getOptionValue(VCF_FILE);
+        SampleId = configBuilder.getValue(SAMPLE);
+        VcfFile = configBuilder.getValue(VCF_FILE);
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        OutputVcfFile = cmd.getOptionValue(OUTPUT_VCF_FILE);
+        OutputVcfFile = configBuilder.getValue(OUTPUT_VCF_FILE);
 
-        WriteTranscriptFile = SampleId != null && cmd.hasOption(WRITE_TRANSCRIPT_DATA);
-        WriteDiffs = cmd.hasOption(WRITE_DIFFS);
-        OnlyCanonical = cmd.hasOption(ONLY_CANONCIAL);
-        ReadPassOnly = cmd.hasOption(READ_PASS_ONLY);
-        WritePassOnly = cmd.hasOption(WRITE_PASS_ONLY);
-        SetReportable = cmd.hasOption(SET_REPORTABLE);
+        WriteTranscriptFile = SampleId != null && configBuilder.hasFlag(WRITE_TRANSCRIPT_DATA);
+        WriteDiffs = configBuilder.hasFlag(WRITE_DIFFS);
+        OnlyCanonical = configBuilder.hasFlag(ONLY_CANONCIAL);
+        ReadPassOnly = configBuilder.hasFlag(READ_PASS_ONLY);
+        WritePassOnly = configBuilder.hasFlag(WRITE_PASS_ONLY);
+        SetReportable = configBuilder.hasFlag(SET_REPORTABLE);
 
         SpecificRegions = Lists.newArrayList();
 
         try
         {
-            SpecificRegions.addAll(loadSpecificRegions(cmd));
+            SpecificRegions.addAll(loadSpecificRegions(configBuilder));
         }
         catch(Exception e)
         {
             PV_LOGGER.error("failed to load specific regions");
         }
 
-        if(cmd.hasOption(OUTPUT_DIR))
+        if(configBuilder.hasValue(OUTPUT_DIR))
         {
-            OutputDir = parseOutputDir(cmd);
+            OutputDir = parseOutputDir(configBuilder);
         }
         else
         {
@@ -112,38 +108,34 @@ public class PaveConfig
         return true;
     }
 
-    @NotNull
-    public static Options createOptions()
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        Options options = new Options();
-        options.addOption(SAMPLE, true, "Name of sample");
-        options.addOption(VCF_FILE, true, "VCF input file");
-        options.addOption(OUTPUT_VCF_FILE, true, "Option VCF output file, otherwise will append 'pave' suffix to input filename");
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
+        configBuilder.addPathItem(VCF_FILE, true, "VCF input file");
+        configBuilder.addConfigItem(
+                OUTPUT_VCF_FILE, false, "Option VCF output file, otherwise will append 'pave' suffix to input filename");
 
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        addEnsemblDir(options);
-        DriverGenePanelConfig.addGenePanelOption(false, options);
-        options.addOption(PON_FILE, true, "PON entries");
-        options.addOption(PON_ARTEFACTS_FILE, true, "PON artefacts to filter");
-        options.addOption(PON_FILTERS, true, "PON filters per tier, format: TIER:MAX_SAMPLES:MAX_COUNT separated by ';'");
+        addRefGenomeConfig(configBuilder, true);
+        addEnsemblDir(configBuilder, true);
+        DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
+        configBuilder.addPathItem(PON_FILE, false, "PON entries");
+        configBuilder.addPathItem(PON_ARTEFACTS_FILE, false, "PON artefacts to filter");
+        configBuilder.addConfigItem(PON_FILTERS, "PON filters per tier, format: TIER:MAX_SAMPLES:MAX_COUNT separated by ';'");
 
-        options.addOption(WRITE_DIFFS, false, "Only write transcript diffs to CSV file");
-        options.addOption(WRITE_TRANSCRIPT_DATA, false, "Write variant impacts per transcript to TSV");
-        options.addOption(ONLY_CANONCIAL, false, "Only check canonical transcripts");
-        options.addOption(READ_PASS_ONLY, false, "Filter incoming variants to PASS only");
-        options.addOption(WRITE_PASS_ONLY, false, "Only annotate passing variants");
-        options.addOption(SET_REPORTABLE, false, "Set reportable and hotspot flags");
+        configBuilder.addFlagItem(WRITE_DIFFS, "Only write transcript diffs to CSV file");
+        configBuilder.addFlagItem(WRITE_TRANSCRIPT_DATA, "Write variant impacts per transcript to TSV");
+        configBuilder.addFlagItem(ONLY_CANONCIAL, "Only check canonical transcripts");
+        configBuilder.addFlagItem(READ_PASS_ONLY, "Filter incoming variants to PASS only");
+        configBuilder.addFlagItem(WRITE_PASS_ONLY, "Only annotate passing variants");
+        configBuilder.addFlagItem(SET_REPORTABLE, "Set reportable and hotspot flags");
 
-        GnomadAnnotation.addCmdLineArgs(options);
-        Mappability.addCmdLineArgs(options);
-        ClinvarAnnotation.addCmdLineArgs(options);
-        Blacklistings.addCmdLineArgs(options);
-        addSpecificChromosomesRegionsConfig(options);
+        GnomadAnnotation.addConfig(configBuilder);
+        Mappability.addConfig(configBuilder);
+        ClinvarAnnotation.addConfig(configBuilder);
+        Blacklistings.addConfig(configBuilder);
+        addSpecificChromosomesRegionsConfig(configBuilder);
 
-        addOutputDir(options);
-        addLoggingOptions(options);
-
-        return options;
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
     }
 }

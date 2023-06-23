@@ -10,11 +10,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.pave.VariantData;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
@@ -35,7 +33,7 @@ public class Mappability
     public static final String MAPPABILITY = "MAPPABILITY";
     public static final String MAPPABILITY_DESC = "GEM mappability in 150 base window";
 
-    public Mappability(final CommandLine cmd)
+    public Mappability(final ConfigBuilder configBuilder)
     {
         mFileReader = null;
         mCurrentChromosome = "";
@@ -44,9 +42,9 @@ public class Mappability
         mNextChromosomeEntry = null;
         mHasValidData = true;
 
-        if(cmd.hasOption(MAPPABILITY_BED))
+        if(configBuilder.hasValue(MAPPABILITY_BED))
         {
-            initialiseFile(cmd.getOptionValue(MAPPABILITY_BED));
+            initialiseFile(configBuilder.getValue(MAPPABILITY_BED));
         }
     }
 
@@ -113,9 +111,9 @@ public class Mappability
         header.addMetaDataLine(new VCFInfoHeaderLine(MAPPABILITY, 1, VCFHeaderLineType.Float, MAPPABILITY_DESC));
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(MAPPABILITY_BED, true, "Mappability BED file");
+        configBuilder.addPathItem(MAPPABILITY_BED, false, "Mappability BED file");
     }
 
     private void initialiseFile(final String filename)

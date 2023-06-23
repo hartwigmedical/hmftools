@@ -9,11 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.pave.VariantData;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -36,20 +35,20 @@ public class Blacklistings
     private static final String BLACKLIST_BED_FLAG = "BLACKLIST_BED";
     private static final String BLACKLIST_VCF_FLAG = "BLACKLIST_VCF";
 
-    public Blacklistings(final CommandLine cmd)
+    public Blacklistings(final ConfigBuilder configBuilder)
     {
         mBedRegions = Lists.newArrayList();
         mVcfEntries = Lists.newArrayList();
         mHasValidData = true;
 
-        if(cmd.hasOption(BLACKLIST_BED))
+        if(configBuilder.hasValue(BLACKLIST_BED))
         {
-            loadBedEntries(cmd.getOptionValue(BLACKLIST_BED));
+            loadBedEntries(configBuilder.getValue(BLACKLIST_BED));
         }
 
-        if(cmd.hasOption(BLACKLIST_VCF))
+        if(configBuilder.hasValue(BLACKLIST_VCF))
         {
-            loadVcfEntries(cmd.getOptionValue(BLACKLIST_VCF));
+            loadVcfEntries(configBuilder.getValue(BLACKLIST_VCF));
         }
     }
 
@@ -143,10 +142,10 @@ public class Blacklistings
                 BLACKLIST_VCF_FLAG, 0, VCFHeaderLineType.Flag, "Sites listed in Blacklist VCF"));
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(BLACKLIST_BED, true, "Blacklist BED file");
-        options.addOption(BLACKLIST_VCF, true, "Blacklist VCF file");
+        configBuilder.addPathItem(BLACKLIST_BED, false, "Blacklist BED file");
+        configBuilder.addPathItem(BLACKLIST_VCF, false, "Blacklist VCF file");
     }
 
     private class VcfEntry

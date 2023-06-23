@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.pave.annotation;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ_DESC;
@@ -24,10 +22,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.pave.VariantData;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
@@ -51,34 +47,25 @@ public class GnomadAnnotation
 
     private static final double DEFAULT_PON_FILTER_THRESHOLD = 0.00015;
 
-    public GnomadAnnotation(final CommandLine cmd)
+    public GnomadAnnotation(final ConfigBuilder configBuilder)
     {
         mFrequencies = Maps.newHashMap();
         mChromosomeFiles = Maps.newHashMap();
 
-        if(cmd != null)
-        {
-            mRefGenomeVersion = RefGenomeVersion.from(cmd);
-            mLoadChromosomeOnDemand = cmd.hasOption(GNOMAD_LOAD_CHR_ON_DEMAND);
+        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
+        mLoadChromosomeOnDemand = configBuilder.hasFlag(GNOMAD_LOAD_CHR_ON_DEMAND);
 
-            if(cmd.hasOption(GNOMAD_FREQUENCY_FILE))
-            {
-                loadFrequency(cmd.getOptionValue(GNOMAD_FREQUENCY_FILE), null);
-            }
-            else if(cmd.hasOption(GNOMAD_FREQUENCY_DIR))
-            {
-                String gnomadDir = cmd.getOptionValue(GNOMAD_FREQUENCY_DIR);
-                loadAllFrequencyFiles(gnomadDir);
-            }
-
-            mPonFilterThreshold = Double.parseDouble(cmd.getOptionValue(GNOMAD_PON_FILTER, String.valueOf(DEFAULT_PON_FILTER_THRESHOLD)));
-        }
-        else
+        if(configBuilder.hasValue(GNOMAD_FREQUENCY_FILE))
         {
-            mRefGenomeVersion = V37;
-            mLoadChromosomeOnDemand = false;
-            mPonFilterThreshold = 0;
+            loadFrequency(configBuilder.getValue(GNOMAD_FREQUENCY_FILE), null);
         }
+        else if(configBuilder.hasValue(GNOMAD_FREQUENCY_DIR))
+        {
+            String gnomadDir = configBuilder.getValue(GNOMAD_FREQUENCY_DIR);
+            loadAllFrequencyFiles(gnomadDir);
+        }
+
+        mPonFilterThreshold = configBuilder.getDecimal(GNOMAD_PON_FILTER);
     }
 
     public boolean hasData() { return !mFrequencies.isEmpty() || !mChromosomeFiles.isEmpty(); }
@@ -272,12 +259,14 @@ public class GnomadAnnotation
         }
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(GNOMAD_FREQUENCY_FILE, true, "Gnomad frequency file");
-        options.addOption(GNOMAD_FREQUENCY_DIR, true, "Gnomad frequency directory");
-        options.addOption(GNOMAD_LOAD_CHR_ON_DEMAND, false, "Gnomad load frequency files by chromosome on demand");
-        options.addOption(GNOMAD_PON_FILTER, true, "Gnomad PON frequency filter (default: 0.00015)");
+        configBuilder.addPathItem(GNOMAD_FREQUENCY_FILE, false, "Gnomad frequency file");
+        configBuilder.addPathItem(GNOMAD_FREQUENCY_DIR, false, "Gnomad frequency directory");
+        configBuilder.addFlagItem(GNOMAD_LOAD_CHR_ON_DEMAND, "Gnomad load frequency files by chromosome on demand");
+
+        configBuilder.addDecimalItem(
+                GNOMAD_PON_FILTER, false, "Gnomad PON frequency filter", DEFAULT_PON_FILTER_THRESHOLD);
     }
 
     public static void addHeader(final VCFHeader header)

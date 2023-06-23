@@ -22,6 +22,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -32,11 +33,6 @@ import com.hartwig.hmftools.pave.annotation.Mappability;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 import com.hartwig.hmftools.pave.annotation.Reportability;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -60,31 +56,31 @@ public class PaveApplication
     private VcfWriter mVcfWriter;
     private final TranscriptWriter mTranscriptWriter;
 
-    public PaveApplication(final CommandLine cmd)
+    public PaveApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("pave.version");
         PV_LOGGER.info("Pave version: {}", version.version());
 
-        mConfig = new PaveConfig(cmd);
+        mConfig = new PaveConfig(configBuilder);
 
         mGeneDataCache = new GeneDataCache(
-                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
-                cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), true);
+                configBuilder.getValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
+                configBuilder.getValue(DRIVER_GENE_PANEL_OPTION), true);
 
-        mGnomadAnnotation = new GnomadAnnotation(cmd);
+        mGnomadAnnotation = new GnomadAnnotation(configBuilder);
 
-        mPon = new PonAnnotation(cmd.getOptionValue(PON_FILE), true);
-        mPon.loadFilters(cmd.getOptionValue(PON_FILTERS));
+        mPon = new PonAnnotation(configBuilder.getValue(PON_FILE), true);
+        mPon.loadFilters(configBuilder.getValue(PON_FILTERS));
 
-        mPonArtefacts = new PonAnnotation(cmd.getOptionValue(PON_ARTEFACTS_FILE), false);
+        mPonArtefacts = new PonAnnotation(configBuilder.getValue(PON_ARTEFACTS_FILE), false);
 
-        mMappability = new Mappability(cmd);
-        mClinvar = new ClinvarAnnotation(cmd);
-        mBlacklistings = new Blacklistings(cmd);
+        mMappability = new Mappability(configBuilder);
+        mClinvar = new ClinvarAnnotation(configBuilder);
+        mBlacklistings = new Blacklistings(configBuilder);
 
         mImpactBuilder = new VariantImpactBuilder(mGeneDataCache);
 
-        RefGenomeInterface refGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
+        RefGenomeInterface refGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
         mImpactClassifier = new ImpactClassifier(refGenome);
 
@@ -349,31 +345,18 @@ public class PaveApplication
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = PaveConfig.createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        PaveConfig.addConfig(configBuilder);
 
-        try
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            PaveApplication paveApplication = new PaveApplication(cmd);
-            paveApplication.run();
-        }
-        catch(ParseException e)
-        {
-            PV_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("PaveApplication", options);
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
-    }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
+        setLogLevel(configBuilder);
 
+        PaveApplication paveApplication = new PaveApplication(configBuilder);
+        paveApplication.run();
+    }
 }

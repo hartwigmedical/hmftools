@@ -20,17 +20,14 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class MappabilityBuilder
@@ -39,11 +36,11 @@ public class MappabilityBuilder
     private final String mInputFile;
     private final RefGenomeVersion mRefGenomeVersion;
 
-    public MappabilityBuilder(final CommandLine cmd)
+    public MappabilityBuilder(final ConfigBuilder configBuilder)
     {
-        mOutputDir = parseOutputDir(cmd);
-        mInputFile = cmd.getOptionValue(MAPPABILITY_BED);
-        mRefGenomeVersion = RefGenomeVersion.from(cmd);
+        mOutputDir = parseOutputDir(configBuilder);
+        mInputFile = configBuilder.getValue(MAPPABILITY_BED);
+        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
     }
 
     public void run()
@@ -140,24 +137,22 @@ public class MappabilityBuilder
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        Options options = new Options();
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(MAPPABILITY_BED, true, "Mappability bed file");
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        final CommandLine cmd = createCommandLine(args, options);
-        setLogLevel(cmd);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addPathItem(MAPPABILITY_BED, true, "Mappability bed file");
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        MappabilityBuilder mappabilityBuilder = new MappabilityBuilder(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+
+        MappabilityBuilder mappabilityBuilder = new MappabilityBuilder(configBuilder);
         mappabilityBuilder.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

@@ -2,28 +2,21 @@ package com.hartwig.hmftools.pave.annotation;
 
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.pave.VariantData;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.compress.utils.Lists;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
@@ -41,14 +34,14 @@ public class ClinvarAnnotation
     public static final String CLNSIG_DESC = "Clinical significance for this single variant";
     public static final String CLNSIGCONF_DESC = "Conflicting clinical significance for this single variant";
 
-    public ClinvarAnnotation(final CommandLine cmd)
+    public ClinvarAnnotation(final ConfigBuilder configBuilder)
     {
         mChrEntries = Maps.newHashMap();
         mHasValidData = true;
 
-        if(cmd.hasOption(CLINVAR_VCF))
+        if(configBuilder.hasValue(CLINVAR_VCF))
         {
-            loadEntries(cmd.getOptionValue(CLINVAR_VCF));
+            loadEntries(configBuilder.getValue(CLINVAR_VCF));
         }
     }
 
@@ -85,9 +78,9 @@ public class ClinvarAnnotation
         header.addMetaDataLine(new VCFInfoHeaderLine(CLNSIGCONF, UNBOUNDED, VCFHeaderLineType.String, CLNSIGCONF_DESC));
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(CLINVAR_VCF, true, "Clinvar annotation VCF");
+        configBuilder.addPathItem(CLINVAR_VCF, false, "Clinvar annotation VCF");
     }
 
     private void loadEntries(final String filename)

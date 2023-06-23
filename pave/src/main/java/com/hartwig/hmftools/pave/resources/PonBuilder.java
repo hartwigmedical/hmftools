@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
@@ -23,9 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 
 import org.apache.commons.cli.CommandLine;
@@ -33,7 +36,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -62,27 +64,27 @@ public class PonBuilder
     private static final String MIN_SAMPLES = "min_samples";
     private static final String MANUAL_ENTRIES = "manual_entries";
 
-    public PonBuilder(final CommandLine cmd)
+    public PonBuilder(final ConfigBuilder configBuilder)
     {
-        mSampleIds = loadSampleIdsFile(cmd);
-        mVcfPath = cmd.getOptionValue(VCF_PATH);
-        mOutputDir = parseOutputDir(cmd);
+        mSampleIds = loadSampleIdsFile(configBuilder);
+        mVcfPath = configBuilder.getValue(VCF_PATH);
+        mOutputDir = parseOutputDir(configBuilder);
 
-        mQualCutoff = Integer.parseInt(cmd.getOptionValue(QUAL_CUTOFF));
-        mMinSamples = Integer.parseInt(cmd.getOptionValue(MIN_SAMPLES));
+        mQualCutoff = configBuilder.getInteger(QUAL_CUTOFF);
+        mMinSamples = configBuilder.getInteger(MIN_SAMPLES);
 
-        mRefGenomeVersion = RefGenomeVersion.from(cmd);
+        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
-        mExistingPon = new PonAnnotation(cmd.getOptionValue(PON_FILE), true);
+        mExistingPon = new PonAnnotation(configBuilder.getValue(PON_FILE), true);
 
         mChrVariantsMap = Maps.newHashMap();
 
         mLastChromosome = "";
         mLastIndex = 0;
 
-        if(cmd.hasOption(MANUAL_ENTRIES))
+        if(configBuilder.hasValue(MANUAL_ENTRIES))
         {
-            String[] entries = cmd.getOptionValue(MANUAL_ENTRIES).split(";", -1);
+            String[] entries = configBuilder.getValue(MANUAL_ENTRIES).split(ITEM_DELIM, -1);
 
             for(String entry : entries)
             {
@@ -292,23 +294,27 @@ public class PonBuilder
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = new Options();
-        addSampleIdFile(options);
-        options.addOption(VCF_PATH, true, "VCF path for samples");
-        options.addOption(MIN_SAMPLES, true, "Min samples for variant to be included in PON");
-        options.addOption(QUAL_CUTOFF, true, "Qual cut-off for variant inclusion");
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(MANUAL_ENTRIES, true, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
-        options.addOption(PON_FILE, true, "PON entries");
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addSampleIdFile(configBuilder, true);
+        configBuilder.addConfigItem(VCF_PATH, true, "VCF path for samples");
+        configBuilder.addIntegerItem(MIN_SAMPLES, false, "Min samples for variant to be included in PON", 3);
+        configBuilder.addIntegerItem(QUAL_CUTOFF, false, "Qual cut-off for variant inclusion", 100);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addConfigItem(MANUAL_ENTRIES, false, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
+        configBuilder.addPathItem(PON_FILE, false, "PON entries");
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        PonBuilder ponBuilder = new PonBuilder(cmd);
+        PonBuilder ponBuilder = new PonBuilder(configBuilder);
         ponBuilder.run();
 
         PV_LOGGER.info("Pave PON building from VCFs complete");
