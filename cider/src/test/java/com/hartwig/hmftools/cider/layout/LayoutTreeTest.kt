@@ -430,6 +430,76 @@ class LayoutTreeTest
         assertEquals(3, layouts[1].alignedPosition)
     }
 
+    @Test
+    fun testReassignedReads()
+    {
+        // test that reads can be reassigned correctly
+        // we have following reads
+        // 1. GCAGCT
+        // 2.   AGCTGAA   <---- this read needs to be reassigned
+        // 3.   AGCTAA
+        // 4.    GCTAAC
+        // 5.  TAGCTGA
+        //        |
+        //     aligned pos
+
+        // first 4 reads will go into one branch, read 5 will go to another
+        // resulting in following tree:
+        // root
+        //   \
+        //    G1-C1-A3-G4-C4-T4-G1-A1-A1
+        //                     \A2-A2-C1
+        //   \
+        //    ---T1-A1-G1-C1-T1-G1-A1
+        //
+        // After first pass, read 3 will be reassigned to the 2nd branch
+        // resulting in the following tree:
+        // root
+        //   \
+        //    G1-C2-A4-G4-C4-T4-A2-A2-C1
+        //   \
+        //    ---T1-A2-G2-C2-T2-G2-A2-A1
+        // we want to test that the reassignment occurred correctly
+
+        val layoutTree = LayoutTree(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
+
+        layoutTree.tryAddRead(LayoutTree.Read("r1",
+            "GCAGCT", SAMUtils.fastqToPhred("FFFFFF"), 4))
+
+        layoutTree.tryAddRead(LayoutTree.Read("r2",
+            "AGCTGAA", SAMUtils.fastqToPhred("FFFFFFF"), 2))
+
+        layoutTree.tryAddRead(LayoutTree.Read("r3",
+            "AGCTAA", SAMUtils.fastqToPhred("FFFFFF"), 2))
+
+        layoutTree.tryAddRead(LayoutTree.Read("r4",
+            "GCTAAC", SAMUtils.fastqToPhred("FFFFFF"), 1))
+
+        layoutTree.tryAddRead(LayoutTree.Read("r5",
+            "TAGCTGA", SAMUtils.fastqToPhred("FFFFFFF"), 3))
+
+        // now want to check that the layoutTree root has two children
+        assertEquals(2, layoutTree.root.children.size)
+
+        // should have 2 sequences
+        val layouts = layoutTree.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
+        assertEquals(2, layouts.size)
+        assertEquals("GCAGCTAAC", layouts[0].consensusSequence())
+        //assertEquals("12444422", layouts[0].highQualSupportString())
+
+        // 3 reads in first layout
+        assertEquals(3, layouts[0].reads.size)
+        assertEquals(4, layouts[0].alignedPosition)
+
+
+        assertEquals("TAGCTGAA", layouts[1].consensusSequence())
+        assertEquals("12222221", layouts[1].highQualSupportString())
+
+        // 2 read in second layout, after reassignment
+        assertEquals(2, layouts[1].reads.size)
+        assertEquals(3, layouts[1].alignedPosition)
+    }
+
     companion object
     {
         const val MIN_BASE_QUALITY = 30.toByte()
