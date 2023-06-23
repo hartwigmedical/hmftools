@@ -11,9 +11,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class TargetRegions
 {
@@ -21,12 +19,12 @@ public class TargetRegions
 
     private static final String TARGET_REGIONS_BED = "target_regions_bed";
 
-    public TargetRegions(final CommandLine cmd)
+    public TargetRegions(final ConfigBuilder configBuilder)
     {
         mTargetRegions = Maps.newHashMap();
 
-        if(cmd != null && cmd.hasOption(TARGET_REGIONS_BED))
-            loadTargetRegionsBed(cmd.getOptionValue(TARGET_REGIONS_BED));
+        if(configBuilder.hasValue(TARGET_REGIONS_BED))
+            loadTargetRegionsBed(configBuilder.getValue(TARGET_REGIONS_BED));
     }
 
     public boolean hasTargetRegions() { return !mTargetRegions.isEmpty(); }
@@ -72,9 +70,8 @@ public class TargetRegions
         }
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(TARGET_REGIONS_BED, true, "Target regions BED file");
+        configBuilder.addPathItem(TARGET_REGIONS_BED, false, "Target regions BED file");
     }
-
 }

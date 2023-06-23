@@ -14,9 +14,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-
-import org.apache.commons.cli.Options;
 
 public class RepeatMaskAnnotations
 {
@@ -40,9 +39,9 @@ public class RepeatMaskAnnotations
         mChrDataMap = Maps.newHashMap();
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(REPEAT_MASK_FILE, true, REPEAT_MASK_FILE_DESC);
+        configBuilder.addPathItem(REPEAT_MASK_FILE, false, REPEAT_MASK_FILE_DESC);
     }
 
     public boolean hasData() { return !mChrDataMap.isEmpty(); }

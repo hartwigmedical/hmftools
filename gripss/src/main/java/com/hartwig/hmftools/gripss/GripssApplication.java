@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
+import static com.hartwig.hmftools.gripss.GripssConfig.addConfig;
 import static com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.gripss.common.Breakend;
@@ -37,11 +39,6 @@ import com.hartwig.hmftools.gripss.links.LinkStore;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -67,7 +64,8 @@ public class GripssApplication
     private final FilterCache mFilterCache;
 
     public GripssApplication(
-            final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome, final CommandLine cmd)
+            final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome,
+            final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("gripss.version");
         GR_LOGGER.info("Gripss version: {}", version.version());
@@ -78,9 +76,9 @@ public class GripssApplication
         mRefGenome = refGenome;
 
         GR_LOGGER.info("loading reference data");
-        mPonCache = new PonCache(cmd);
-        mHotspotCache = new HotspotCache(cmd);
-        mTargetRegions = new TargetRegions(cmd);
+        mPonCache = new PonCache(configBuilder);
+        mHotspotCache = new HotspotCache(configBuilder);
+        mTargetRegions = new TargetRegions(configBuilder);
 
         mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache, mTargetRegions, mConfig.GermlineMode);
         mSoftFilters = new SoftFilters(mFilterConstants, mConfig.GermlineMode);
@@ -91,20 +89,20 @@ public class GripssApplication
         mFilterCache = new FilterCache();
         mRepeatMaskAnnotations = new RepeatMaskAnnotations();
 
-        if(cmd.hasOption(REPEAT_MASK_FILE))
+        if(configBuilder.hasValue(REPEAT_MASK_FILE))
         {
-            if(!mRepeatMaskAnnotations.load(cmd.getOptionValue(REPEAT_MASK_FILE), mConfig.RefGenVersion))
+            if(!mRepeatMaskAnnotations.load(configBuilder.getValue(REPEAT_MASK_FILE), mConfig.RefGenVersion))
                 System.exit(1);
         }
     }
 
-    public static GripssApplication fromCommandArgs(final CommandLine cmd)
+    public static GripssApplication fromCommandArgs(final ConfigBuilder configBuilder)
     {
-        GripssConfig config = new GripssConfig(cmd);
-        FilterConstants filterConstants = FilterConstants.from(cmd);
-        RefGenomeInterface refGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
+        GripssConfig config = new GripssConfig(configBuilder);
+        FilterConstants filterConstants = FilterConstants.from(configBuilder);
+        RefGenomeInterface refGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
-        return new GripssApplication(config, filterConstants, refGenome, cmd);
+        return new GripssApplication(config, filterConstants, refGenome, configBuilder);
     }
 
     public void run()
@@ -122,6 +120,8 @@ public class GripssApplication
         }
 
         processVcf(mConfig.VcfFile);
+
+        GR_LOGGER.info("Gripss run complete");
     }
 
     private void processVcf(final String vcfFile)
@@ -364,33 +364,18 @@ public class GripssApplication
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = new Options();
-        GripssConfig.addCommandLineOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addConfig(configBuilder);
 
-        try
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            GripssApplication gripss = GripssApplication.fromCommandArgs(cmd);
-            gripss.run();
-
-            GR_LOGGER.info("Gripss run complete");
-        }
-        catch(ParseException e)
-        {
-            GR_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("GripssApplication", options);
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
-    }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        setLogLevel(configBuilder);
+
+        GripssApplication gripss = GripssApplication.fromCommandArgs(configBuilder);
+        gripss.run();
     }
 }

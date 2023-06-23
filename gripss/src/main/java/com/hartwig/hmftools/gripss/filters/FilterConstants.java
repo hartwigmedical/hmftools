@@ -6,10 +6,8 @@ import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegions;
 import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class FilterConstants
 {
@@ -76,32 +74,27 @@ public class FilterConstants
     public static final String PON_DISTANCE = "pon_distance";
     private static final String FILTER_SGLS = "filter_sgls";
 
-    public static FilterConstants from(final CommandLine cmd)
+    public static FilterConstants from(final ConfigBuilder configBuilder)
     {
-        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd);
+        RefGenomeVersion refGenVersion = RefGenomeVersion.from(configBuilder);
 
         return new FilterConstants(
-                Integer.parseInt(cmd.getOptionValue(HARD_MIN_TUMOR_QUAL_CFG, String.valueOf(DEFAULT_HARD_MIN_TUMOR_QUAL))),
-                Integer.parseInt(cmd.getOptionValue(
-                        HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_CFG, String.valueOf(DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT))),
-                Double.parseDouble(cmd.getOptionValue(
-                        HARD_MAX_NORMAL_RELATIVE_SUPPORT_CFG, String.valueOf(DEFAULT_HARD_MAX_NORMAL_RELATIVE_SUPPORT))),
-                Double.parseDouble(cmd.getOptionValue(
-                        SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG, String.valueOf(DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT))),
-                Double.parseDouble(
-                        cmd.getOptionValue(MIN_NORMAL_COVERAGE_CFG, String.valueOf(DEFAULT_MIN_NORMAL_COVERAGE))),
+                configBuilder.getInteger(HARD_MIN_TUMOR_QUAL_CFG),
+                configBuilder.getInteger(HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_CFG),
+                configBuilder.getDecimal(HARD_MAX_NORMAL_RELATIVE_SUPPORT_CFG),
+                configBuilder.getDecimal(SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG),
+                configBuilder.getDecimal(MIN_NORMAL_COVERAGE_CFG),
                 DEFAULT_MIN_TUMOR_AF_SGL,
-                Double.parseDouble(cmd.getOptionValue(MIN_TUMOR_AF_CFG, String.valueOf(DEFAULT_MIN_TUMOR_AF))),
-                Double.parseDouble(cmd.getOptionValue(MAX_SHORT_STRAND_BIAS_CFG, String.valueOf(DEFAULT_MAX_SHORT_STRAND_BIAS))),
-                Integer.parseInt(cmd.getOptionValue(MIN_QUAL_BREAK_END_CFG, String.valueOf(DEFAULT_MIN_QUAL_BREAK_END))),
-                Integer.parseInt(cmd.getOptionValue(MIN_QUAL_BREAK_POINT_CFG, String.valueOf(DEFAULT_MIN_QUAL_BREAK_POINT))),
-                Integer.parseInt(cmd.getOptionValue(
-                        MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, String.valueOf(DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION))),
-                Integer.parseInt(cmd.getOptionValue(MAX_HOM_LENGTH_SHORT_INV_CFG, String.valueOf(DEFAULT_MAX_HOM_LENGTH_SHORT_INV))),
-                Integer.parseInt(cmd.getOptionValue(MIN_LENGTH_CFG, String.valueOf(DEFAULT_MIN_LENGTH))),
-                Integer.parseInt(cmd.getOptionValue(PON_DISTANCE, String.valueOf(DEFAULT_PON_DISTANCE))),
+                configBuilder.getDecimal(MIN_TUMOR_AF_CFG),
+                configBuilder.getDecimal(MAX_SHORT_STRAND_BIAS_CFG),
+                configBuilder.getInteger(MIN_QUAL_BREAK_END_CFG),
+                configBuilder.getInteger(MIN_QUAL_BREAK_POINT_CFG),
+                configBuilder.getInteger(MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION),
+                configBuilder.getInteger(MAX_HOM_LENGTH_SHORT_INV_CFG),
+                configBuilder.getInteger(MIN_LENGTH_CFG),
+                configBuilder.getInteger(PON_DISTANCE),
                 getPolyGRegions(refGenVersion), refGenVersion == V37 ? PMS2_V37 : PMS2_V38,
-                cmd.hasOption(FILTER_SGLS));
+                configBuilder.hasFlag(FILTER_SGLS));
     }
 
     public FilterConstants(
@@ -134,22 +127,34 @@ public class FilterConstants
         return PolyGcRegions.stream().anyMatch(x -> x.containsPosition(chromosome, position));
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(HARD_MIN_TUMOR_QUAL_CFG, true, "Hard min tumor qual");
-        options.addOption(HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_CFG, true, "Hard max normal absolute support");
-        options.addOption(HARD_MAX_NORMAL_RELATIVE_SUPPORT_CFG, true, "Hard max normal relative support");
-        options.addOption(SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG, true, "Soft max normal relative support");
-        options.addOption(MIN_NORMAL_COVERAGE_CFG, true, "Min normal coverage");
-        options.addOption(MIN_TUMOR_AF_CFG, true, "Min tumor allelic frequency for non-SGLs");
-        options.addOption(MAX_SHORT_STRAND_BIAS_CFG, true, "Max short strand bias");
-        options.addOption(MIN_QUAL_BREAK_END_CFG, true, "Min qual break end");
-        options.addOption(MIN_QUAL_BREAK_POINT_CFG, true, "Min qual break point");
-        options.addOption(MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, true, "Min qual rescue mobile element insertions");
-        options.addOption(MAX_HOM_LENGTH_SHORT_INV_CFG, true, "Max homology length short inversion");
-        options.addOption(MIN_LENGTH_CFG, true, "Min length");
-        options.addOption(PON_DISTANCE, true, "PON permitted margin");
-        options.addOption(FILTER_SGLS, false, "Filter SGLs from VCF, intended for tumor-only mode");
-    }
+        configBuilder.addIntegerItem(HARD_MIN_TUMOR_QUAL_CFG, "Hard min tumor qual", DEFAULT_HARD_MIN_TUMOR_QUAL);
 
+        configBuilder.addIntegerItem(
+                HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_CFG, "Hard max normal absolute support", DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT);
+
+        configBuilder.addDecimalItem(
+                HARD_MAX_NORMAL_RELATIVE_SUPPORT_CFG, "Hard max normal relative support", DEFAULT_HARD_MAX_NORMAL_RELATIVE_SUPPORT);
+
+        configBuilder.addDecimalItem(
+                SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG, "Soft max normal relative support", DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT);
+
+        configBuilder.addDecimalItem(MIN_NORMAL_COVERAGE_CFG, "Min normal coverage", DEFAULT_MIN_NORMAL_COVERAGE);
+        configBuilder.addDecimalItem(MIN_TUMOR_AF_CFG, "Min tumor allelic frequency for non-SGLs", DEFAULT_MIN_TUMOR_AF);
+        configBuilder.addDecimalItem(MAX_SHORT_STRAND_BIAS_CFG, "Max short strand bias", DEFAULT_MAX_SHORT_STRAND_BIAS);
+        configBuilder.addIntegerItem(MIN_QUAL_BREAK_END_CFG, "Min qual break end", DEFAULT_MIN_QUAL_BREAK_END);
+        configBuilder.addIntegerItem(MIN_QUAL_BREAK_POINT_CFG, "Min qual break point", DEFAULT_MIN_QUAL_BREAK_POINT);
+
+        configBuilder.addIntegerItem(
+                MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, "Min qual rescue mobile element insertions",
+                DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION);
+
+        configBuilder.addIntegerItem(
+                MAX_HOM_LENGTH_SHORT_INV_CFG, "Max homology length short inversion", DEFAULT_MAX_HOM_LENGTH_SHORT_INV);
+
+        configBuilder.addIntegerItem(MIN_LENGTH_CFG, "Min length", DEFAULT_MIN_LENGTH);
+        configBuilder.addIntegerItem(PON_DISTANCE, "PON permitted margin", DEFAULT_PON_DISTANCE);
+        configBuilder.addFlagItem(FILTER_SGLS, "Filter SGLs from VCF, intended for tumor-only mode");
+    }
 }

@@ -14,20 +14,17 @@ import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_PON_DISTANCE;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class PonCache
 {
@@ -46,11 +43,10 @@ public class PonCache
     private static final String GERMLINE_PON_BED_SGL_FILE = "pon_sgl_file";
     private static final String GERMLINE_PON_MARGIN = "pon_margin";
 
-    public PonCache(final CommandLine cmd)
+    public PonCache(final ConfigBuilder configBuilder)
     {
-        this(Integer.parseInt(cmd.getOptionValue(GERMLINE_PON_MARGIN, String.valueOf(DEFAULT_PON_DISTANCE))),
-                cmd.getOptionValue(GERMLINE_PON_BED_SV_FILE),
-                cmd.getOptionValue(GERMLINE_PON_BED_SGL_FILE));
+        this(configBuilder.getInteger(GERMLINE_PON_MARGIN), configBuilder.getValue(GERMLINE_PON_BED_SV_FILE),
+                configBuilder.getValue(GERMLINE_PON_BED_SGL_FILE));
     }
 
     public PonCache(final int margin, final String ponSvFile, final String ponSglFile)
@@ -406,11 +402,12 @@ public class PonCache
         mSglRegions.clear();
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(GERMLINE_PON_BED_SV_FILE, true, "PON for SV positions");
-        options.addOption(GERMLINE_PON_BED_SGL_FILE, true, "PON for SGL positions");
-        options.addOption(GERMLINE_PON_MARGIN, true, "PON permitted matching position margin");
+        configBuilder.addPathItem(GERMLINE_PON_BED_SV_FILE, false, "PON for SV positions");
+        configBuilder.addPathItem(GERMLINE_PON_BED_SGL_FILE, false, "PON for SGL positions");
+        configBuilder.addIntegerItem(
+                GERMLINE_PON_MARGIN, false, "PON permitted matching position margin", DEFAULT_PON_DISTANCE);
     }
 
     private class PonSvRegion

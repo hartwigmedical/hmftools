@@ -208,6 +208,11 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         return regions;
     }
 
+    public static List<String> loadSpecificChromsomes(final ConfigBuilder configBuilder)
+    {
+        return loadSpecificChromsomes(configBuilder.getValue(SPECIFIC_CHROMOSOMES));
+    }
+
     public static List<String> loadSpecificChromsomes(final CommandLine cmd)
     {
         return loadSpecificChromsomes(cmd.getOptionValue(SPECIFIC_CHROMOSOMES));

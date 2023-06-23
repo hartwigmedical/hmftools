@@ -9,6 +9,9 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -20,8 +23,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
-import static com.hartwig.hmftools.gripss.GripssConfig.REFERENCE;
-import static com.hartwig.hmftools.gripss.GripssConfig.SAMPLE;
 import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
@@ -53,6 +54,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.gripss.VariantBuilder;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
@@ -60,11 +62,6 @@ import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.TargetRegions;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -109,25 +106,25 @@ public class GripssCompareVcfs
     private static final int DEFAULT_MAX_DIFF = 20;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
 
-    public GripssCompareVcfs(final CommandLine cmd)
+    public GripssCompareVcfs(final ConfigBuilder configBuilder)
     {
-        mSampleId = cmd.getOptionValue(SAMPLE);
-        mReferenceId = cmd.getOptionValue(REFERENCE, "");
-        mOriginalVcf = cmd.getOptionValue(ORIGINAL_VCF);
-        mNewVcf = cmd.getOptionValue(NEW_VCF);
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
+        mSampleId = configBuilder.getValue(SAMPLE);
+        mReferenceId = configBuilder.getValue(REFERENCE, "");
+        mOriginalVcf = configBuilder.getValue(ORIGINAL_VCF);
+        mNewVcf = configBuilder.getValue(NEW_VCF);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
 
         mOriginalSvData = Maps.newHashMap();
         mOriginalCoordsSvData = Maps.newHashMap();
 
-        mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd), new TargetRegions(null), false);
+        mVariantBuilder = new VariantBuilder(null, new HotspotCache(configBuilder), new TargetRegions(null), false);
 
-        mIgnorePonDiff = cmd.hasOption(IGNORE_PON_DIFF);
-        mKeyByCoords = cmd.hasOption(KEY_BY_COORDS);
-        mWriteAllDiffs = cmd.hasOption(WRITE_ALL_DIFFS);
-        mGridssDiffsOnly = cmd.hasOption(GRIDSS_ONLY);
-        mRefDepthDiffsOnly = cmd.hasOption(REF_DEPTH_ONLY);
+        mIgnorePonDiff = configBuilder.hasFlag(IGNORE_PON_DIFF);
+        mKeyByCoords = configBuilder.hasFlag(KEY_BY_COORDS);
+        mWriteAllDiffs = configBuilder.hasFlag(WRITE_ALL_DIFFS);
+        mGridssDiffsOnly = configBuilder.hasFlag(GRIDSS_ONLY);
+        mRefDepthDiffsOnly = configBuilder.hasFlag(REF_DEPTH_ONLY);
 
         mVcfCheckFields = Lists.newArrayList();
         addComparisonFields();
@@ -615,35 +612,33 @@ public class GripssCompareVcfs
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(SAMPLE, true, "Name of the tumor sample");
-        options.addOption(ORIGINAL_VCF, true, "Optional, name of the reference sample");
-        options.addOption(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
-        options.addOption(IGNORE_PON_DIFF, false, "Ignore diffs if just PON filter");
-        options.addOption(KEY_BY_COORDS, false, "Match SVs on coords rather than VcfId");
-        options.addOption(WRITE_ALL_DIFFS, false, "Write all VCF field diffs, not just the first");
-        options.addOption(GRIDSS_ONLY, false, "Only compare fields written by Grids (ie no Gripss)");
-        options.addOption(REF_DEPTH_ONLY, false, "Only compare reference depth fields");
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        final CommandLine cmd = createCommandLine(args, options);
+        setLogLevel(configBuilder);
 
-        setLogLevel(cmd);
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addPathItem(ORIGINAL_VCF, true, "Optional, name of the reference sample");
+        configBuilder.addPathItem(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
+        configBuilder.addFlagItem(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");
+        configBuilder.addFlagItem(KEY_BY_COORDS, "Match SVs on coords rather than VcfId");
+        configBuilder.addFlagItem(WRITE_ALL_DIFFS, "Write all VCF field diffs, not just the first");
+        configBuilder.addFlagItem(GRIDSS_ONLY, "Only compare fields written by Grids (ie no Gripss)");
+        configBuilder.addFlagItem(REF_DEPTH_ONLY, "Only compare reference depth fields");
 
-        GripssCompareVcfs gripssCompare = new GripssCompareVcfs(cmd);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        GripssCompareVcfs gripssCompare = new GripssCompareVcfs(configBuilder);
         gripssCompare.run();
 
         GR_LOGGER.info("Gripss compare VCFs complete");
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.gripss.utils;
 
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -24,14 +23,10 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,16 +40,16 @@ public class RepeatMaskTester
     private static final String SV_DATA_FILE = "sv_data_file";
     private static final String OUTPUT_FILE = "output_file";
 
-    public RepeatMaskTester(final CommandLine cmd)
+    public RepeatMaskTester(final ConfigBuilder configBuilder)
     {
         mRmAnnotation = new RepeatMaskAnnotations();
-        mSvDataFile = cmd.getOptionValue(SV_DATA_FILE);
+        mSvDataFile = configBuilder.getValue(SV_DATA_FILE);
 
-        if(!mRmAnnotation.load(cmd.getOptionValue(REPEAT_MASK_FILE), RefGenomeVersion.V37))
+        if(!mRmAnnotation.load(configBuilder.getValue(REPEAT_MASK_FILE), RefGenomeVersion.V37))
             System.exit(1);
 
-        mWriter = initialiseOutput(cmd.getOptionValue(OUTPUT_FILE));
-        mThreads = parseThreads(cmd);
+        mWriter = initialiseOutput(configBuilder.getValue(OUTPUT_FILE));
+        mThreads = parseThreads(configBuilder);
     }
 
     public void run()
@@ -261,32 +256,27 @@ public class RepeatMaskTester
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(SV_DATA_FILE, true, "File with SV data");
-        options.addOption(OUTPUT_FILE, true, "Output matching file");
-        addThreadOptions(options);
-        RepeatMaskAnnotations.addCmdLineArgs(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addPathItem(SV_DATA_FILE, true, "File with SV data");
+        configBuilder.addPathItem(OUTPUT_FILE, true, "Output matching file");
+        addThreadOptions(configBuilder);
+        RepeatMaskAnnotations.addConfig(configBuilder);
 
-        // addOutputOptions(options);
-        addLoggingOptions(options);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
         GR_LOGGER.info("running Gripss repeat-mask annotation tester");
 
-        RepeatMaskTester repeatMaskTester = new RepeatMaskTester(cmd);
+        RepeatMaskTester repeatMaskTester = new RepeatMaskTester(configBuilder);
         repeatMaskTester.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }
