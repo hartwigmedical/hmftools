@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna.purity;
+package com.hartwig.hmftools.ctdna.purity.cn;
 
 public class GcRatioData implements Comparable<GcRatioData>
 {

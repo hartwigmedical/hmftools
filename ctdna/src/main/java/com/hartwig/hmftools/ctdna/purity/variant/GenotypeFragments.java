@@ -1,6 +1,8 @@
-package com.hartwig.hmftools.ctdna.purity;
+package com.hartwig.hmftools.ctdna.purity.variant;
 
 import static java.lang.String.format;
+
+import com.hartwig.hmftools.ctdna.purity.variant.UmiTypeCounts;
 
 public class GenotypeFragments
 {

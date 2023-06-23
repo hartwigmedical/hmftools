@@ -15,6 +15,10 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.ctdna.purity.cn.CnPurityResult;
+import com.hartwig.hmftools.ctdna.purity.cn.CopyNumberProfile;
+import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariantResult;
+import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariants;
 
 public class PurityEstimator
 {

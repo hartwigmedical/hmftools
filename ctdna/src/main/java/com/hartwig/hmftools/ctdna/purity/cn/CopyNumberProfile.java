@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna.purity;
+package com.hartwig.hmftools.ctdna.purity.cn;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -8,7 +8,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Integers.median;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.ctdna.purity.CnPurityResult.INVALID_RESULT;
+import static com.hartwig.hmftools.ctdna.purity.cn.CnPurityResult.INVALID_RESULT;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.CLONAL_COPY_NUMBER_MARGIN;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MAX_COPY_NUMBER;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.CN_SEGMENT_FILE_ID;
@@ -33,9 +33,9 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
-
-import org.apache.logging.log4j.Level;
+import com.hartwig.hmftools.ctdna.purity.PurityConfig;
+import com.hartwig.hmftools.ctdna.purity.ResultsWriter;
+import com.hartwig.hmftools.ctdna.purity.SampleData;
 
 public class CopyNumberProfile
 {

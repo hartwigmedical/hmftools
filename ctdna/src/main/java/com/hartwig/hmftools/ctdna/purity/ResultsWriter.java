@@ -12,6 +12,11 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.ctdna.purity.cn.CnPurityResult;
+import com.hartwig.hmftools.ctdna.purity.cn.CopyNumberGcData;
+import com.hartwig.hmftools.ctdna.purity.variant.GenotypeFragments;
+import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariant;
+import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariantResult;
 
 public class ResultsWriter
 {

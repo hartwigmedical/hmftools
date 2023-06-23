@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna.purity;
+package com.hartwig.hmftools.ctdna.purity.variant;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 

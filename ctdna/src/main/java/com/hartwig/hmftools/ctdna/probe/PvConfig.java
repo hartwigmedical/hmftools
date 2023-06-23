@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
@@ -25,9 +24,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class PvConfig
 {
@@ -201,7 +197,8 @@ public class PvConfig
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addConfigItem(REFERENCE_VARIANTS_FILE, false, "Reference variants file");
-        configBuilder.addDecimalItem(VAF_THRESHOLD, false, "VAF threshold, default: " + DEFAULT_VAF_MIN, DEFAULT_VAF_MIN);
+
+        configBuilder.addDecimalItem(VAF_THRESHOLD, false, "VAF threshold", DEFAULT_VAF_MIN);
 
         configBuilder.addIntegerItem(
                 FRAG_COUNT_THRESHOLD, true, "Fragment count threshold, default: " + DEFAULT_FRAG_COUNT_MIN,

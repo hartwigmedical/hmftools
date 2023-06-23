@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna.purity;
+package com.hartwig.hmftools.ctdna.purity.variant;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

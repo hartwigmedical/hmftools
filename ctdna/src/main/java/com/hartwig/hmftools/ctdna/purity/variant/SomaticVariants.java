@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.ctdna.purity;
+package com.hartwig.hmftools.ctdna.purity.variant;
 
 import static java.lang.Math.round;
 import static java.lang.String.format;
@@ -21,9 +21,9 @@ import static com.hartwig.hmftools.ctdna.purity.PurityConstants.PURPLE_CTDNA_SOM
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.VARIANT_OUTLIER_MIN_AD;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.VARIANT_OUTLIER_MIN_AD_PERC;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.VARIANT_OUTLIER_VAF_MULTIPLE;
-import static com.hartwig.hmftools.ctdna.purity.SomaticPurityCalc.LOW_PROBABILITY;
-import static com.hartwig.hmftools.ctdna.purity.SomaticPurityCalc.calcPoissonNoiseValue;
-import static com.hartwig.hmftools.ctdna.purity.SomaticVariantResult.INVALID_RESULT;
+import static com.hartwig.hmftools.ctdna.purity.variant.SomaticPurityCalc.LOW_PROBABILITY;
+import static com.hartwig.hmftools.ctdna.purity.variant.SomaticPurityCalc.calcPoissonNoiseValue;
+import static com.hartwig.hmftools.ctdna.purity.variant.SomaticVariantResult.INVALID_RESULT;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -35,6 +35,9 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.ctdna.purity.PurityConfig;
+import com.hartwig.hmftools.ctdna.purity.ResultsWriter;
+import com.hartwig.hmftools.ctdna.purity.SampleData;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
