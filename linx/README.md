@@ -71,8 +71,8 @@ Argument  | Description
 sv_vcf | Full path and filename for the SV VCF, otherwill will use the Purple SV VCF (ie SAMPLE_ID.purple.vcf.gz) in the configured Purple directory
 proximity_distance | minimum distance to cluster SVs (default = 5000)
 chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (default = 0, ie no limit)
-write_vis_data | write output to for generation of Circos clustering and chaining plots
 write_all_vis_fusions | Write visualiser data for all fusions including non-reportable 
+no_vis_files | Disable writing visualiser files
 annotations | Multi-sample annotations for specific analyses: DOUBLE_MINUTES, CANDIDATE_VIS_DOUBLE_MINUTES, LINE_CHAINS, UNDER_CLUSTERING
 log_reportable_fusion | only log reportable fusions
 fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)

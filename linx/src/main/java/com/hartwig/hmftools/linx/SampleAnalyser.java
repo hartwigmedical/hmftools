@@ -123,8 +123,7 @@ public class SampleAnalyser implements Callable
         mDriverGeneAnnotator = mConfig.RunDrivers ?
                 new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, mCnDataLoader, cohortDataWriter, mVisSampleData) : null;
 
-        mFusionAnalyser = new FusionDisruptionAnalyser(
-                config, ensemblDataCache, dbAccess, fusionResources, cohortDataWriter, mVisSampleData);
+        mFusionAnalyser = new FusionDisruptionAnalyser(config, ensemblDataCache, fusionResources, cohortDataWriter, mVisSampleData);
 
         mAllVariants = Lists.newArrayList();
 

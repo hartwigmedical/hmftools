@@ -19,13 +19,13 @@ public class RnaMatchWriter
 {
     private BufferedWriter mWriter;
 
-    public RnaMatchWriter(final String outputDir, final String outputId)
+    public RnaMatchWriter(final String outputDir)
     {
         if(outputDir != null)
-            initialiseWriter(outputDir, outputId);
+            initialiseWriter(outputDir);
     }
 
-    private void initialiseWriter(final String outputDir, final String outputId)
+    private void initialiseWriter(final String outputDir)
     {
         try
         {
@@ -33,7 +33,7 @@ public class RnaMatchWriter
             {
                 String outputFilename = outputDir;
 
-                outputFilename += String.format("LNX_RNA_FUSION_MATCH_%s.csv", outputId);
+                outputFilename += String.format("LNX_RNA_FUSION_MATCH.csv");
 
                 mWriter = createBufferedWriter(outputFilename, false);
 

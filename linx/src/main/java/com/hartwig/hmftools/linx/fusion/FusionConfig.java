@@ -3,7 +3,6 @@ package com.hartwig.hmftools.linx.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -16,7 +15,7 @@ public class FusionConfig
 
     public static boolean LOG_INVALID_REASON = false;
 
-    // dynmamic parameters
+    // dynamic parameters
     public boolean AllowExonSkipping;
     public boolean RequirePhaseMatch;
     public boolean RequireUpstreamBiotypes;
@@ -32,13 +31,13 @@ public class FusionConfig
     public FusionConfig(final ConfigBuilder configBuilder)
     {
         PRE_GENE_PROMOTOR_DISTANCE = configBuilder.getInteger(PRE_GENE_BREAKEND_DISTANCE);
+        LOG_INVALID_REASON = configBuilder.hasFlag(LOG_INVALID_REASONS);
 
         LogReportableOnly = configBuilder.hasFlag(LOG_REPORTABLE_ONLY);
         RequirePhaseMatch = configBuilder.hasFlag(SKIP_UNPHASED_FUSIONS);
         LogAllPotentials = configBuilder.hasFlag(LOG_ALL_POTENTIALS);
         WriteAllVisFusions = configBuilder.hasFlag(WRITE_ALL_VIS_FUSIONS);
         RequireUpstreamBiotypes = true;
-        LOG_INVALID_REASON = configBuilder.hasFlag(LOG_INVALID_REASONS);
         AllowExonSkipping = true;
     }
 
@@ -63,7 +62,6 @@ public class FusionConfig
         configBuilder.addFlagItem(WRITE_NEO_EPITOPES, "Search for neo-epitopes from fusions");
 
         configBuilder.addConfigItem(RNA_FUSIONS_FILE, "Sample RNA fusion data to match vs Linx fusions");
-        configBuilder.addConfigItem(RNA_FILE_SOURCE, "RNA fusion source: ISOFOX, ARRIBA or STARFUSION");
 
         configBuilder.addFlagItem(LOG_REPORTABLE_ONLY, "Only write out reportable fusions");
         configBuilder.addFlagItem(LOG_ALL_POTENTIALS, "Log all potential fusions");

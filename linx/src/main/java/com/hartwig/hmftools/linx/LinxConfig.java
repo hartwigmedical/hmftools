@@ -7,6 +7,10 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
@@ -14,18 +18,17 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSepar
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.linx.types.LinxConstants.DEFAULT_PROXIMITY_DISTANCE;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.linx.analysis.AnnotationExtension;
 
 import org.apache.logging.log4j.LogManager;
@@ -67,15 +70,12 @@ public class LinxConfig
     public static final String SAMPLE_DATA_DIR = "sample_data_dir";
     public static final String PURPLE_DATA_DIR = "purple_dir";
     public static final String VCF_FILE = "sv_vcf";
-    public static final String SAMPLE = "sample";
-    public static final String UPLOAD_TO_DB = "upload_to_db"; // true by default when in single-sample mode, false for batch
 
     // clustering analysis options
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String ANNOTATION_EXTENSIONS = "annotations";
 
-    private static final String INDEL_ANNOTATIONS = "indel_annotation";
     public static final String GERMLINE = "germline";
 
     // reference files
@@ -96,7 +96,8 @@ public class LinxConfig
     {
         CmdLineConfig = configBuilder;
 
-        mSampleIds = sampleListFromConfigStr(configBuilder.getValue(SAMPLE));
+        mSampleIds = Lists.newArrayList();
+        setSamplesFromConfig(configBuilder);
 
         String svVcfFile = configBuilder.getValue(VCF_FILE, "");
 
@@ -158,37 +159,26 @@ public class LinxConfig
     }
 
     public final List<String> getSampleIds() { return mSampleIds; }
-    public void setSampleIds(final List<String> list) { mSampleIds.addAll(list); }
-
     public boolean hasMultipleSamples() { return mSampleIds.size() > 1; }
     public boolean isSingleSample() { return mSampleIds.size() == 1; }
 
     public boolean loadSampleDataFromFile() { return (!PurpleDataPath.isEmpty() && SvVcfFile != null) || IsGermline; }
 
-    public static List<String> sampleListFromConfigStr(final String configSampleStr)
+    private void setSamplesFromConfig(final ConfigBuilder configBuilder)
     {
-        final List<String> sampleIds = Lists.newArrayList();
-
-        if(configSampleStr != null && !configSampleStr.equals("*"))
+        if(configBuilder.hasValue(SAMPLE))
         {
-            if(configSampleStr.contains(","))
-            {
-                String[] tumorList = configSampleStr.split(",");
-                sampleIds.addAll(Arrays.stream(tumorList).collect(Collectors.toList()));
-            }
-            else if(configSampleStr.contains(".csv"))
-            {
-                sampleIds.addAll(ConfigUtils.loadSampleIdsFile(configSampleStr));
-                LNX_LOGGER.info("Loaded {} specific sample IDs", sampleIds.size());
-            }
-            else
-            {
-                // assume refers to a single sample
-                sampleIds.add(configSampleStr);
-            }
-        }
+            String configStr = configBuilder.getValue(SAMPLE);
 
-        return sampleIds;
+            if(configStr.contains(CSV_DELIM))
+                Arrays.stream(configStr.split(CSV_DELIM, -1)).forEach(x -> mSampleIds.add(x));
+            else
+                mSampleIds.add(configStr);
+        }
+        else
+        {
+            mSampleIds.addAll(loadSampleIdsFile(configBuilder));
+        }
     }
 
     public boolean hasValidSampleDataSource(final ConfigBuilder configBuilder)
@@ -245,19 +235,22 @@ public class LinxConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(SAMPLE, false, "Sample Id, or list separated by ','");
+        configBuilder.addConfigItem(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
         configBuilder.addConfigItem(PURPLE_DATA_DIR, "Sample purple data directory");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR, "Directory for per-sample SV data, default is to use output_dir");
-        configBuilder.addConfigItem(SAMPLE, true, "Sample Id, or list separated by ';' or '*' for all in DB");
         configBuilder.addConfigItem(RefGenomeVersion.REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
         configBuilder.addConfigItem(VCF_FILE, "Path to the PURPLE structural variant VCF file");
         configBuilder.addPathItem(DRIVER_GENE_PANEL_OPTION, false, DRIVER_GENE_PANEL_OPTION_DESC);
-        configBuilder.addIntegerItem(CLUSTER_BASE_DISTANCE, false, "Clustering base distance", DEFAULT_PROXIMITY_DISTANCE);
-        configBuilder.addPathItem(LINE_ELEMENT_FILE, false, "Line Elements file");
-        configBuilder.addPathItem(FRAGILE_SITE_FILE, false, "Fragile Site file");
+        configBuilder.addPathItem(LINE_ELEMENT_FILE, false, "Line elements file");
+        configBuilder.addPathItem(FRAGILE_SITE_FILE, false, "Fragile site file");
         configBuilder.addFlagItem(GERMLINE, "Process germline SVs");
-        configBuilder.addPathItem(GENE_ID_FILE, false, "Limit to Ensembl gene ids specified in file");
+
+        configBuilder.addIntegerItem(CLUSTER_BASE_DISTANCE, false, "Clustering base distance", DEFAULT_PROXIMITY_DISTANCE);
         configBuilder.addIntegerItem(CHAINING_SV_LIMIT, false, "Max cluster size for chaining", 0);
         configBuilder.addConfigItem(ANNOTATION_EXTENSIONS, "String list of annotations");
+
+        configBuilder.addPathItem(GENE_ID_FILE, false, "Limit to Ensembl gene ids specified in file");
 
         LinxOutput.addConfig(configBuilder);
         configBuilder.addFlagItem(LOG_VERBOSE, "Log extra detail");

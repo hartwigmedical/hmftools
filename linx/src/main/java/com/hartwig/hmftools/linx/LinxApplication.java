@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutpu
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
+import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfig;
 
 import java.io.IOException;
 import java.util.List;
@@ -45,12 +46,21 @@ public class LinxApplication
 
         long startTime = System.currentTimeMillis();
 
-        final DatabaseAccess dbAccess = createDatabaseAccess(configBuilder);
-
         List<String> samplesList = config.getSampleIds();
 
-        if(dbAccess == null && !config.hasValidSampleDataSource(configBuilder))
-            return;
+        DatabaseAccess dbAccess = null;
+
+        if(hasDatabaseConfig(configBuilder))
+        {
+            dbAccess = createDatabaseAccess(configBuilder);
+        }
+        else
+        {
+            if(!config.hasValidSampleDataSource(configBuilder))
+            {
+                System.exit(1);
+            }
+        }
 
         if(samplesList.isEmpty())
         {

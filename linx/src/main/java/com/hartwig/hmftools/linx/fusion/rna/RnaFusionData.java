@@ -77,12 +77,12 @@ public class RnaFusionData
     private String mChainInfo;
 
     public RnaFusionData(
-            final String sampleId, final String source, final String fusionId, final String[] geneIds, final String[] geneNames,
+            final String sampleId, final String fusionId, final String[] geneIds, final String[] geneNames,
             final String[] chromosomes, final int[] positions, final byte[] orientations,
             int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes, int cohortCount, final String otherData)
     {
         SampleId = sampleId;
-        Source = source;
+        Source = "ISOFOX"; // previously could have been Arriba
         FusionId = fusionId;
         GeneIds = geneIds;
         GeneNames = geneNames;

@@ -8,13 +8,12 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.streamStr;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.RNA_FUSION_SOURCE_ISOFOX;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.getRnaSourceDelimiter;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.loadRnaFusion;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.checkRnaPhasedTranscripts;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.findExonMatch;
@@ -62,7 +61,6 @@ public class RnaFusionMapper
     private final Map<GeneFusion,String> mDnaInvalidFusions;
 
     public static final String RNA_FUSIONS_FILE = "rna_fusions_file";
-    public static final String RNA_FILE_SOURCE = "rna_file_source";
 
     public RnaFusionMapper(final String outputDir, final ConfigBuilder configBuilder, final EnsemblDataCache geneTransCache,
             FusionFinder fusionFinder, final List<GeneFusion> dnaFusions, final Map<GeneFusion,String> dnaInvalidFusions)
@@ -74,19 +72,14 @@ public class RnaFusionMapper
         mDnaInvalidFusions = dnaInvalidFusions;
         mAnnotator = new RnaFusionAnnotator(geneTransCache);
 
-        String fileSource = configBuilder.getValue(RNA_FILE_SOURCE, RNA_FUSION_SOURCE_ISOFOX);
+        loadSampleRnaData(configBuilder.getValue(RNA_FUSIONS_FILE));
 
-        final String rnaDataFile = configBuilder.getValue(RNA_FUSIONS_FILE);
-        loadSampleRnaData(fileSource, rnaDataFile);
-
-        mWriter = new RnaMatchWriter(outputDir, fileSource);
+        mWriter = new RnaMatchWriter(outputDir);
 
         mFusionConfig = new FusionConfig();
         mFusionConfig.RequirePhaseMatch = false;
         mFusionConfig.AllowExonSkipping = false;
     }
-
-    public final Map<String, List<RnaFusionData>> getSampleRnaData() { return mSampleRnaData; }
 
     public void assessRnaFusions(final String sampleId, Map<String, List<SvBreakend>> chrBreakendMap)
     {
@@ -589,13 +582,13 @@ public class RnaFusionMapper
         checkRnaPhasedTranscripts(rnaFusion);
     }
 
-    public boolean loadSampleRnaData(final String source, final String filename)
+    public boolean loadSampleRnaData(final String filename)
     {
         try
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(lines.get(0), getRnaSourceDelimiter(source));
+            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(lines.get(0), CSV_DELIM);
 
             lines.remove(0);
 
@@ -605,7 +598,7 @@ public class RnaFusionMapper
 
             for(String data : lines)
             {
-                RnaFusionData rnaData = loadRnaFusion(source, recordCount, data, fieldIndexMap);
+                RnaFusionData rnaData = loadRnaFusion(data, fieldIndexMap);
                 ++recordCount;
 
                 if(currentSampleId.isEmpty() || !currentSampleId.equals(rnaData.SampleId))

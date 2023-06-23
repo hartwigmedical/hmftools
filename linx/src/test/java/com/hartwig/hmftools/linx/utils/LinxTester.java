@@ -97,7 +97,7 @@ public class LinxTester
     public void initialiseFusions(final EnsemblDataCache ensemblDataCache)
     {
         FusionAnalyser = new FusionDisruptionAnalyser(
-                Config, ensemblDataCache, null, new FusionResources(Config.CmdLineConfig), CohortWriter, VisData);
+                Config, ensemblDataCache, new FusionResources(Config.CmdLineConfig), CohortWriter, VisData);
     }
 
     public void initialiseDriverGeneAnnotator(final EnsemblDataCache ensemblDataCache)

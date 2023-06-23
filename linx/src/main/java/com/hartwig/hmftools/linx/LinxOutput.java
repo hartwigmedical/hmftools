@@ -20,8 +20,9 @@ public class LinxOutput
     private static final String WRITE_SINGLE_SV_CLUSTERS = "write_single_sv_clusters";
     private static final String WRITE_CLUSTER_HISTORY = "write_cluster_history";
     private static final String WRITE_LINKS = "write_links";
-    private static final String WRITE_VISUALISATION_DATA = "write_vis_data";
+    private static final String WRITE_VIS_DATA = "write_vis_data";
     private static final String WRITE_COHORT_FILES = "write_cohort";
+    private static final String NO_VIS_FILES = "no_vis_files";
     private static final String LOG_CHAIN_MAX_SIZE = "log_chain_size";
 
     public static final char ITEM_DELIM_CHR = ';';
@@ -40,7 +41,8 @@ public class LinxOutput
         }
         else
         {
-            WriteVisualisationData = configBuilder.hasFlag(WRITE_VISUALISATION_DATA) || defaultWrite;
+            WriteVisualisationData = (configBuilder.hasFlag(WRITE_VIS_DATA) || defaultWrite) && !configBuilder.hasFlag(NO_VIS_FILES);
+
             WriteSvData = configBuilder.hasFlag(WRITE_SV_DATA) || defaultWrite;
             WriteClusterHistory = configBuilder.hasFlag(WRITE_CLUSTER_HISTORY);
             WriteSingleSVClusters = configBuilder.hasFlag(WRITE_SINGLE_SV_CLUSTERS) || defaultWrite;
@@ -59,8 +61,9 @@ public class LinxOutput
         configBuilder.addFlagItem(WRITE_LINKS, "Optional: write chain links (batch-mode)");
         configBuilder.addFlagItem(WRITE_CLUSTER_HISTORY, "Optional: write clustering history (batch-mode)");
         configBuilder.addFlagItem(WRITE_SINGLE_SV_CLUSTERS, "Optional: write cluster data for single SV clusters (batch-mode)");
-        configBuilder.addFlagItem(WRITE_VISUALISATION_DATA, "Optional: write files for Circos (batch-mode)");
+        configBuilder.addFlagItem(WRITE_VIS_DATA, "Optional: write files for Circos (batch-mode)");
         configBuilder.addFlagItem(WRITE_COHORT_FILES, "Optional: write cohort files even for single sample");
+        configBuilder.addFlagItem(NO_VIS_FILES, "Disable visualiser files output");
 
         configBuilder.addIntegerItem(
                 LOG_CHAIN_MAX_SIZE, false,

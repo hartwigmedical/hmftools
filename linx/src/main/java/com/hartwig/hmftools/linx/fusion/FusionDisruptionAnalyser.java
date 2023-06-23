@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
@@ -43,10 +42,6 @@ import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisFusion;
 import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
-
-import org.jetbrains.annotations.Nullable;
 
 public class FusionDisruptionAnalyser
 {
@@ -59,7 +54,6 @@ public class FusionDisruptionAnalyser
     private final String mOutputDir;
     private final EnsemblDataCache mGeneDataCache;
     private final LinxConfig mConfig;
-    private final DatabaseAccess mDbAccess;
 
     private final boolean mRunFusions;
     private final FusionConfig mFusionConfig;
@@ -75,14 +69,13 @@ public class FusionDisruptionAnalyser
     private PerformanceCounter mPerfCounter;
 
     public FusionDisruptionAnalyser(
-            final LinxConfig config, final EnsemblDataCache ensemblDataCache, final DatabaseAccess dbAccess,
-            final FusionResources fusionResources, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
+            final LinxConfig config, final EnsemblDataCache ensemblDataCache, final FusionResources fusionResources,
+            final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
         mOutputDir = config.OutputDataPath;
 
         mConfig = config;
         mGeneDataCache = ensemblDataCache;
-        mDbAccess = dbAccess;
 
         mFusionConfig = new FusionConfig(config.CmdLineConfig);
         mRunFusions = mConfig.RunFusions;
