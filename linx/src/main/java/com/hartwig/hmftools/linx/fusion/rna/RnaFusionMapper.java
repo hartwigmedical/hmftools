@@ -36,18 +36,16 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.linx.fusion.FusionConfig;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
-import com.hartwig.hmftools.linx.fusion.FusionParameters;
 import com.hartwig.hmftools.linx.fusion.GeneFusion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
-
-import org.apache.commons.cli.CommandLine;
 
 public class RnaFusionMapper
 {
@@ -66,7 +64,7 @@ public class RnaFusionMapper
     public static final String RNA_FUSIONS_FILE = "rna_fusions_file";
     public static final String RNA_FILE_SOURCE = "rna_file_source";
 
-    public RnaFusionMapper(final String outputDir, final CommandLine cmdLineArgs, final EnsemblDataCache geneTransCache,
+    public RnaFusionMapper(final String outputDir, final ConfigBuilder configBuilder, final EnsemblDataCache geneTransCache,
             FusionFinder fusionFinder, final List<GeneFusion> dnaFusions, final Map<GeneFusion,String> dnaInvalidFusions)
     {
         mSampleRnaData = Maps.newHashMap();
@@ -76,13 +74,10 @@ public class RnaFusionMapper
         mDnaInvalidFusions = dnaInvalidFusions;
         mAnnotator = new RnaFusionAnnotator(geneTransCache);
 
-        final String fileSource = cmdLineArgs.getOptionValue(RNA_FILE_SOURCE, RNA_FUSION_SOURCE_ISOFOX);
+        String fileSource = configBuilder.getValue(RNA_FILE_SOURCE, RNA_FUSION_SOURCE_ISOFOX);
 
-        if(cmdLineArgs != null)
-        {
-            final String rnaDataFile = cmdLineArgs.getOptionValue(RNA_FUSIONS_FILE);
-            loadSampleRnaData(fileSource, rnaDataFile);
-        }
+        final String rnaDataFile = configBuilder.getValue(RNA_FUSIONS_FILE);
+        loadSampleRnaData(fileSource, rnaDataFile);
 
         mWriter = new RnaMatchWriter(outputDir, fileSource);
 

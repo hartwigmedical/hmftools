@@ -355,9 +355,6 @@ public class CohortDataWriter
             writer.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
             writer.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcSameOrient,AcComplexOther");
 
-            if(mConfig.IndelAnnotation)
-                writer.write(",IndelCount,IndelProb");
-
             writer.newLine();
             return writer;
         }
@@ -456,11 +453,6 @@ public class CohortDataWriter
                         armClusterData[ArmClusterType.FOLDBACK_DSB.ordinal()], armClusterData[ArmClusterType.COMPLEX_FOLDBACK.ordinal()],
                         armClusterData[ArmClusterType.COMPLEX_LINE.ordinal()], armClusterData[ArmClusterType.SAME_ORIENT.ordinal()],
                         armClusterData[ArmClusterType.COMPLEX_OTHER.ordinal()]));
-
-                if(mConfig.IndelAnnotation)
-                {
-                    writer.write(String.format(",%d,%f", metrics.IndelCount, metrics.IndelProbability));
-                }
 
                 writer.newLine();
 

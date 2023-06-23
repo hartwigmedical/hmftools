@@ -8,10 +8,10 @@ import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 
 import java.util.List;
 import java.util.Map;
@@ -28,7 +28,7 @@ import com.hartwig.hmftools.linx.types.SvVarData;
 
 // common utility methods for SVs
 
-public class SvUtilities {
+public final class SvUtilities {
 
     public static final int NO_LENGTH = -1;
 

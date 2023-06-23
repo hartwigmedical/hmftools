@@ -2,14 +2,11 @@ package com.hartwig.hmftools.linx;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.MIN_SAMPLE_PURITY;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -23,35 +20,22 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.linx.fusion.FusionConfig;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class LinxApplication
 {
-    private static final String FILTER_QC_PASS = "filter_qc_pass";
-
-    public LinxApplication(final CommandLine cmd)
+    public LinxApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("linx.version");
         LNX_LOGGER.info("LINX version: {}", version.version());
 
-        if(!LinxConfig.validConfig(cmd))
-        {
-            LNX_LOGGER.error("exiting on invalid config");
-            return;
-        }
-
-        LinxConfig config = new LinxConfig(cmd);
+        LinxConfig config = new LinxConfig(configBuilder);
 
         if(!checkCreateOutputDir(config.OutputDataPath))
         {
@@ -61,22 +45,12 @@ public class LinxApplication
 
         long startTime = System.currentTimeMillis();
 
-        final DatabaseAccess dbAccess = createDatabaseAccess(cmd);
+        final DatabaseAccess dbAccess = createDatabaseAccess(configBuilder);
 
         List<String> samplesList = config.getSampleIds();
 
-        if(dbAccess == null && !config.hasValidSampleDataSource(cmd))
+        if(dbAccess == null && !config.hasValidSampleDataSource(configBuilder))
             return;
-
-        if(samplesList.isEmpty())
-        {
-            boolean filterQCPassOnly = cmd.hasOption(FILTER_QC_PASS);
-            samplesList = getStructuralVariantSamplesList(dbAccess, filterQCPassOnly);
-
-            LNX_LOGGER.info("retrieved {} samples {}", samplesList.size(), filterQCPassOnly ? "QC-pass-filtered" : "");
-
-            config.setSampleIds(samplesList);
-        }
 
         if(samplesList.isEmpty())
         {
@@ -88,7 +62,7 @@ public class LinxApplication
                 config.IsGermline ? "germline SV" : "SV",
                 config.hasMultipleSamples() ? String.format("%d samples", samplesList.size()) : samplesList.get(0));
 
-        FusionResources fusionResources = new FusionResources(cmd);
+        FusionResources fusionResources = new FusionResources(configBuilder);
 
         if(config.RunFusions && !fusionResources.knownFusionCache().hasValidData())
         {
@@ -96,17 +70,7 @@ public class LinxApplication
             System.exit(1);
         }
 
-        if(!cmd.hasOption(ENSEMBL_DATA_DIR))
-        {
-            if(config.RunFusions || config.RunDrivers || config.IsGermline)
-            {
-                LNX_LOGGER.info("missing Ensembl data cache, exiting");
-                System.exit(1);
-            }
-        }
-
-        final EnsemblDataCache ensemblDataCache = cmd.hasOption(ENSEMBL_DATA_DIR) ?
-                new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), REF_GENOME_VERSION) : null;
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(configBuilder);
 
         if(ensemblDataCache != null)
         {
@@ -201,7 +165,6 @@ public class LinxApplication
             sampleAnalyser.processSamples();
         }
 
-        svAnnotators.close();
         cohortDataWriter.close();
 
         if(config.hasMultipleSamples())
@@ -247,57 +210,24 @@ public class LinxApplication
         }
     }
 
-    private static List<String> getStructuralVariantSamplesList(@NotNull DatabaseAccess dbAccess, boolean filterQCPassOnly)
-    {
-        final List<String> sampleIds = filterQCPassOnly ? dbAccess.readPurpleSampleListPassingQC(MIN_SAMPLE_PURITY) : dbAccess.readPurpleSampleList();
-
-        if(!sampleIds.isEmpty())
-            return sampleIds;
-
-        return dbAccess.readStructuralVariantSampleList("");
-    }
-
     public static void main(@NotNull final String[] args)
     {
-        final Options options = createBasicOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        LinxConfig.addConfig(configBuilder);
+        FusionConfig.addConfig(configBuilder);
 
-        try
+        addDatabaseCmdLineArgs(configBuilder, false);
+        addEnsemblDir(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            new LinxApplication(cmd);
-        }
-        catch(ParseException e)
-        {
-            LNX_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("LinxApplication", options);
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
 
-    }
+        setLogLevel(configBuilder);
 
-    private static Options createBasicOptions()
-    {
-        final Options options = new Options();
-        addDatabaseCmdLineArgs(options);
-        addEnsemblDir(options);
-        options.addOption(FILTER_QC_PASS, false, "Optional: If present will filter out QC-fail sample");
-
-        // allow sub-components to add their specific config
-        LinxConfig.addCmdLineArgs(options);
-        addKnownFusionFileOption(options);
-        FusionConfig.addCmdLineArgs(options);
-
-        return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        new LinxApplication(configBuilder);
     }
 }

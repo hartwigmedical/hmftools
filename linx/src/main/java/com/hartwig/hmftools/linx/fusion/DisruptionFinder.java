@@ -836,9 +836,9 @@ public class DisruptionFinder implements CohortFileInterface
         }
     }
 
-    public void writeGermlineDisruptions(final String sampleId, final String outputDir, final DatabaseAccess dbAccess)
+    public void writeGermlineDisruptions(final String sampleId, final String outputDir)
     {
-        mGermlineDisruptions.writeGermlineSVs(mDisruptions, sampleId, outputDir, dbAccess);
+        mGermlineDisruptions.writeGermlineSVs(mDisruptions, sampleId, outputDir);
     }
 
     public static double getUndisruptedCopyNumber(final SvBreakend breakend)

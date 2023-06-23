@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.linx;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class LinxOutput
 {
@@ -27,9 +26,9 @@ public class LinxOutput
 
     public static final char ITEM_DELIM_CHR = ';';
 
-    public LinxOutput(final CommandLine cmd, boolean defaultWrite)
+    public LinxOutput(final ConfigBuilder configBuilder, boolean defaultWrite)
     {
-        WriteAll = cmd.hasOption(WRITE_ALL);
+        WriteAll = configBuilder.hasFlag(WRITE_ALL);
 
         if(WriteAll)
         {
@@ -41,28 +40,31 @@ public class LinxOutput
         }
         else
         {
-            WriteVisualisationData = cmd.hasOption(WRITE_VISUALISATION_DATA) || defaultWrite;
-            WriteSvData = cmd.hasOption(WRITE_SV_DATA) || defaultWrite;
-            WriteClusterHistory = cmd.hasOption(WRITE_CLUSTER_HISTORY);
-            WriteSingleSVClusters = cmd.hasOption(WRITE_SINGLE_SV_CLUSTERS) || defaultWrite;
-            WriteLinks = cmd.hasOption(WRITE_LINKS) || defaultWrite;
+            WriteVisualisationData = configBuilder.hasFlag(WRITE_VISUALISATION_DATA) || defaultWrite;
+            WriteSvData = configBuilder.hasFlag(WRITE_SV_DATA) || defaultWrite;
+            WriteClusterHistory = configBuilder.hasFlag(WRITE_CLUSTER_HISTORY);
+            WriteSingleSVClusters = configBuilder.hasFlag(WRITE_SINGLE_SV_CLUSTERS) || defaultWrite;
+            WriteLinks = configBuilder.hasFlag(WRITE_LINKS) || defaultWrite;
         }
 
-        WriteCohortFiles = cmd.hasOption(WRITE_COHORT_FILES);
+        WriteCohortFiles = configBuilder.hasFlag(WRITE_COHORT_FILES);
 
-        LogChainingMaxSize = Integer.parseInt(cmd.getOptionValue(LOG_CHAIN_MAX_SIZE, "0"));
+        LogChainingMaxSize = configBuilder.getInteger(LOG_CHAIN_MAX_SIZE);
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(WRITE_ALL, false, "Optional: write all batch-run output files");
-        options.addOption(WRITE_SV_DATA, false, "Optional: include all SV table fields (batch-mode)");
-        options.addOption(WRITE_LINKS, false, "Optional: write chain links (batch-mode)");
-        options.addOption(WRITE_CLUSTER_HISTORY, false, "Optional: write clustering history (batch-mode)");
-        options.addOption(WRITE_SINGLE_SV_CLUSTERS, false, "Optional: write cluster data for single SV clusters (batch-mode)");
-        options.addOption(WRITE_VISUALISATION_DATA, false, "Optional: write files for Circos (batch-mode)");
-        options.addOption(WRITE_COHORT_FILES, false, "Optional: write cohort files even for single sample");
-        options.addOption(LOG_CHAIN_MAX_SIZE, true, "Write file with chaining diagnostics for chains less than this (off by default)");
+        configBuilder.addFlagItem(WRITE_ALL, "Optional: write all batch-run output files");
+        configBuilder.addFlagItem(WRITE_SV_DATA, "Optional: include all SV table fields (batch-mode)");
+        configBuilder.addFlagItem(WRITE_LINKS, "Optional: write chain links (batch-mode)");
+        configBuilder.addFlagItem(WRITE_CLUSTER_HISTORY, "Optional: write clustering history (batch-mode)");
+        configBuilder.addFlagItem(WRITE_SINGLE_SV_CLUSTERS, "Optional: write cluster data for single SV clusters (batch-mode)");
+        configBuilder.addFlagItem(WRITE_VISUALISATION_DATA, "Optional: write files for Circos (batch-mode)");
+        configBuilder.addFlagItem(WRITE_COHORT_FILES, "Optional: write cohort files even for single sample");
+
+        configBuilder.addIntegerItem(
+                LOG_CHAIN_MAX_SIZE, false,
+                "Write file with chaining diagnostics for chains less than this, zero is disabled", 0);
     }
 
     public LinxOutput()

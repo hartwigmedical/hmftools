@@ -21,6 +21,7 @@ import com.hartwig.hmftools.linx.cn.CnSegmentBuilder;
 import com.hartwig.hmftools.linx.cn.LohEvent;
 import com.hartwig.hmftools.linx.cn.SvCNData;
 import com.hartwig.hmftools.linx.drivers.DriverGeneAnnotator;
+import com.hartwig.hmftools.linx.fusion.FusionConfig;
 import com.hartwig.hmftools.linx.fusion.FusionDisruptionAnalyser;
 import com.hartwig.hmftools.linx.fusion.FusionResources;
 import com.hartwig.hmftools.linx.types.SvBreakend;
@@ -55,6 +56,8 @@ public class LinxTester
     public LinxTester(boolean isGermline)
     {
         Config = new LinxConfig(isGermline);
+        LinxConfig.addConfig(Config.CmdLineConfig);
+        FusionConfig.addConfig(Config.CmdLineConfig);
         Config.AnnotationExtensions.add(DOUBLE_MINUTES);
 
         Analyser = new ClusterAnalyser(Config, null);
@@ -94,7 +97,7 @@ public class LinxTester
     public void initialiseFusions(final EnsemblDataCache ensemblDataCache)
     {
         FusionAnalyser = new FusionDisruptionAnalyser(
-                null, Config, ensemblDataCache, null, new FusionResources(null), CohortWriter, VisData);
+                Config, ensemblDataCache, null, new FusionResources(Config.CmdLineConfig), CohortWriter, VisData);
     }
 
     public void initialiseDriverGeneAnnotator(final EnsemblDataCache ensemblDataCache)

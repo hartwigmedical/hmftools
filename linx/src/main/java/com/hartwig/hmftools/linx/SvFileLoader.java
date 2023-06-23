@@ -32,8 +32,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 
 public final class SvFileLoader
 {
-    public static List<StructuralVariantData> loadSampleSvDataFromFile(
-            final LinxConfig config, final String sampleId, final CommandLine cmd)
+    public static List<StructuralVariantData> loadSampleSvDataFromFile(final LinxConfig config, final String sampleId)
     {
         String vcfFile = config.SvVcfFile.contains("*") ? config.SvVcfFile.replaceAll("\\*", sampleId) : config.SvVcfFile;
 

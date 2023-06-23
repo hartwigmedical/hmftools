@@ -331,7 +331,7 @@ public class GermlineDisruptions
     }
 
     public void writeGermlineSVs(
-            final List<SvDisruptionData> standardDisruptions, final String sampleId, final String outputDir, final DatabaseAccess dbAccess)
+            final List<SvDisruptionData> standardDisruptions, final String sampleId, final String outputDir)
     {
         List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
         List<DriverCatalog> drivers = Lists.newArrayList();
@@ -354,14 +354,6 @@ public class GermlineDisruptions
             {
                 LNX_LOGGER.error("failed to write germline SV file: {}", e.toString());
             }
-        }
-
-        if(dbAccess != null)
-        {
-            LNX_LOGGER.info("uploading {} germline SVs to database", germlineSVs.size());
-            dbAccess.writeGermlineSVs(sampleId, germlineSVs);
-
-            dbAccess.writeLinxDriverCatalog(sampleId, drivers, DRIVERS_LINX_GERMLINE);
         }
     }
 

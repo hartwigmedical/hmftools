@@ -124,7 +124,7 @@ public class SampleAnalyser implements Callable
                 new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, mCnDataLoader, cohortDataWriter, mVisSampleData) : null;
 
         mFusionAnalyser = new FusionDisruptionAnalyser(
-                config.CmdLineArgs, config, ensemblDataCache, dbAccess, fusionResources, cohortDataWriter, mVisSampleData);
+                config, ensemblDataCache, dbAccess, fusionResources, cohortDataWriter, mVisSampleData);
 
         mAllVariants = Lists.newArrayList();
 
@@ -216,7 +216,7 @@ public class SampleAnalyser implements Callable
         mVisSampleData.setSampleId(sampleId);
 
         final List<StructuralVariantData> svRecords = mConfig.loadSampleDataFromFile() ?
-                loadSampleSvDataFromFile(mConfig, mCurrentSampleId, mConfig.CmdLineArgs) : mDbAccess.readStructuralVariantData(mCurrentSampleId);
+                loadSampleSvDataFromFile(mConfig, mCurrentSampleId) : mDbAccess.readStructuralVariantData(mCurrentSampleId);
 
         final List<SvVarData> svDataList = createSvData(svRecords, mConfig);
 
@@ -318,8 +318,6 @@ public class SampleAnalyser implements Callable
             buildGermlineCopyNumberData();
         }
 
-        mSvAnnotators.KataegisAnnotator.annotateVariants(mCurrentSampleId, mAnalyser.getState().getChrBreakendMap());
-
         mPerfCounters.get(PERF_COUNTER_PREP).stop();
 
         mPerfCounters.get(PERF_COUNTER_CLUSTER).start();
@@ -337,14 +335,6 @@ public class SampleAnalyser implements Callable
 
         mSvAnnotators.PseudoGeneFinder.checkPseudoGeneAnnotations(mAnalyser.getClusters(), mVisSampleData);
 
-        if(mSvAnnotators.IndelAnnotator != null)
-        {
-            mSvAnnotators.IndelAnnotator.loadIndels(mCurrentSampleId);
-
-            if(!mSvAnnotators.IndelAnnotator.exceedsThresholds())
-                mAnalyser.getClusters().forEach(x -> mSvAnnotators.IndelAnnotator.annotateCluster(x));
-        }
-
         mPerfCounters.get(PERF_COUNTER_ANNOTATE).stop();
     }
 
@@ -357,7 +347,7 @@ public class SampleAnalyser implements Callable
 
         mPerfCounters.get(PERF_COUNTER_WRITE).start();
 
-        boolean prepareSampleData = mConfig.isSingleSample() || mConfig.UploadToDB;
+        boolean prepareSampleData = mConfig.isSingleSample();
 
         List<SvCluster> allClusters = mAnalyser.getAllClusters();
 
@@ -416,24 +406,7 @@ public class SampleAnalyser implements Callable
             }
         }
 
-        if(!mConfig.IsGermline && mConfig.UploadToDB && mDbAccess != null)
-        {
-            writeToDatabase(mCurrentSampleId, mDbAccess, linxSvData, clusterData, linksData, driverCatalogs, linxDrivers);
-        }
-
         mPerfCounters.get(PERF_COUNTER_WRITE).stop();
-    }
-
-    private synchronized static void writeToDatabase(
-            final String sampleId, final DatabaseAccess dbAccess,
-            final List<LinxSvAnnotation> linxSvData, final List<LinxCluster> clusterData, final List<LinxLink> linksData,
-            final List<DriverCatalog> driverCatalogs, final List<LinxDriver> linxDrivers)
-    {
-        dbAccess.writeSvLinxData(sampleId, linxSvData);
-        dbAccess.writeSvClusters(sampleId, clusterData);
-        dbAccess.writeSvLinks(sampleId, linksData);
-        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalogs, DRIVERS_LINX_SOMATIC);
-        dbAccess.writeSvDrivers(sampleId, linxDrivers);
     }
 
     public void writeSampleWithNoSVs()
