@@ -22,6 +22,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -57,6 +58,11 @@ public class KnownFusionCache
 
         // initialise to avoid having to check for null
         Arrays.stream(KnownFusionType.values()).filter(x -> x != NONE).forEach(x -> mDataByType.put(x, Lists.newArrayList()));
+    }
+
+    public static void addKnownFusionFileOption(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addPathItem(KNOWN_FUSIONS_FILE, false, KNOWN_FUSIONS_FILE_DESC);
     }
 
     public static void addKnownFusionFileOption(final Options options)
@@ -198,7 +204,15 @@ public class KnownFusionCache
         if(cmd == null || !cmd.hasOption(KNOWN_FUSIONS_FILE))
             return true;
 
-        if(!loadFile(cmd.getOptionValue(KNOWN_FUSIONS_FILE)))
+        return loadFromFile(cmd.getOptionValue(KNOWN_FUSIONS_FILE));
+    }
+
+    public boolean loadFromFile(final String filename)
+    {
+        if(filename == null)
+            return true;
+
+        if(!loadFile(filename))
         {
             mHasValidData = false;
             return false;

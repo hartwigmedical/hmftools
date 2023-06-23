@@ -4,6 +4,13 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
@@ -41,12 +48,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.samtools.BamUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadFilterConfig;
 import com.hartwig.hmftools.svprep.reads.ReadFilters;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import htsjdk.samtools.ValidationStringency;
@@ -93,7 +99,6 @@ public class SvConfig
     private boolean mIsValid;
 
     // config strings
-    public static final String SAMPLE = "sample";
     public static final String BAM_FILE = "bam_file";
     private static final String KNOWN_FUSION_BED = "known_fusion_bed";
     public static final String BLACKLIST_BED = "blacklist_bed";
@@ -105,26 +110,24 @@ public class SvConfig
     private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
     private static final String PARTITION_SIZE = "partition_size";
 
-    public static final String LOG_READ_IDS = "log_read_ids";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String CAPTURE_DEPTH = "capture_depth";
     private static final String TRACK_REMOTES = "track_remotes";
     private static final String NO_CACHE_BAM = "no_cache_bam";
     private static final String NO_CLEAN_UP = "no_clean_up";
     private static final String NO_TRIM_READ_ID = "no_trim_read_id";
-    private static final String PERF_DEBUG = "perf_debug";
     private static final String JUNCTION_FRAGS_CAP = "junction_frags_cap";
     private static final String UNPAIRED_READS = "unpaired_reads";
 
-    public SvConfig(final CommandLine cmd)
+    public SvConfig(final ConfigBuilder configBuilder)
     {
         mIsValid = true;
 
-        SampleId = cmd.getOptionValue(SAMPLE);
-        BamFile = cmd.getOptionValue(BAM_FILE);
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
+        SampleId = configBuilder.getValue(SAMPLE);
+        BamFile = configBuilder.getValue(BAM_FILE);
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
         if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -133,26 +136,26 @@ public class SvConfig
             mIsValid = false;
         }
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         SV_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         SV_LOGGER.info("output({})", OutputDir);
 
-        Hotspots = new HotspotCache(cmd.getOptionValue(KNOWN_FUSION_BED));
-        Blacklist = new BlacklistLocations(cmd.getOptionValue(BLACKLIST_BED));
+        Hotspots = new HotspotCache(configBuilder.getValue(KNOWN_FUSION_BED));
+        Blacklist = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
 
-        ExistingJunctionFile = cmd.getOptionValue(EXISTING_JUNCTION_FILE);
+        ExistingJunctionFile = configBuilder.getValue(EXISTING_JUNCTION_FILE);
 
-        PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
-        ReadLength = Integer.parseInt(cmd.getOptionValue(READ_LENGTH, String.valueOf(DEFAULT_READ_LENGTH)));
+        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
+        ReadLength = configBuilder.getInteger(READ_LENGTH);
 
-        ReadFiltering = new ReadFilters(ReadFilterConfig.from(cmd));
+        ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
 
         WriteTypes = Sets.newHashSet();
 
-        if(cmd.hasOption(WRITE_TYPES))
+        if(configBuilder.hasValue(WRITE_TYPES))
         {
-            String[] writeTypes = cmd.getOptionValue(WRITE_TYPES).split(ITEM_DELIM, -1);
+            String[] writeTypes = configBuilder.getValue(WRITE_TYPES).split(ITEM_DELIM, -1);
             Arrays.stream(writeTypes).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
         }
         else
@@ -161,36 +164,35 @@ public class SvConfig
             WriteTypes.add(WriteType.BAM);
         }
 
-        CalcFragmentLength = cmd.hasOption(CALC_FRAG_LENGTH) || WriteTypes.contains(FRAGMENT_LENGTH_DIST);
-        BamStringency = BamUtils.validationStringency(cmd);
+        CalcFragmentLength = configBuilder.hasFlag(CALC_FRAG_LENGTH) || WriteTypes.contains(FRAGMENT_LENGTH_DIST);
+        BamStringency = BamUtils.validationStringency(configBuilder);
 
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
         try
         {
-            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, SV_LOGGER);
+            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, SV_LOGGER);
         }
         catch(ParseException e)
         {
             mIsValid = false;
         }
 
-        LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
-                Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
+        LogReadIds = parseLogReadIds(configBuilder);
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
 
         // optimisations and debug
-        TrimReadId = !cmd.hasOption(NO_TRIM_READ_ID) && SpecificRegions.isEmpty();
-        UnpairedReads = cmd.hasOption(UNPAIRED_READS);
-        UseCacheBam = !cmd.hasOption(NO_CACHE_BAM) && SpecificRegions.isEmpty();
-        MaxPartitionReads = Integer.parseInt(cmd.getOptionValue(MAX_PARTITION_READS, "0"));
-        JunctionFragmentCap = Integer.parseInt(cmd.getOptionValue(JUNCTION_FRAGS_CAP, "0"));
-        CaptureDepth = cmd.hasOption(CAPTURE_DEPTH);
-        TrackRemotes = cmd.hasOption(TRACK_REMOTES);
-        NoCleanUp = cmd.hasOption(NO_CLEAN_UP);
-        PerfDebug = cmd.hasOption(PERF_DEBUG);
+        TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && SpecificRegions.isEmpty();
+        UnpairedReads = configBuilder.hasFlag(UNPAIRED_READS);
+        UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && SpecificRegions.isEmpty();
+        MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
+        JunctionFragmentCap = configBuilder.getInteger(JUNCTION_FRAGS_CAP);
+        CaptureDepth = configBuilder.hasFlag(CAPTURE_DEPTH);
+        TrackRemotes = configBuilder.hasFlag(TRACK_REMOTES);
+        NoCleanUp = configBuilder.hasFlag(NO_CLEAN_UP);
+        PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
     }
 
     public boolean isValid()
@@ -293,37 +295,33 @@ public class SvConfig
         JunctionFragmentCap = 0;
     }
 
-    public static Options createCmdLineOptions()
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
-        addOutputOptions(options);
-        addLoggingOptions(options);
-
-        options.addOption(SAMPLE, true, "Tumor sample ID");
-        options.addOption(BAM_FILE, true, "BAM file location");
-        addRefGenomeConfig(options);
-        options.addOption(KNOWN_FUSION_BED, true, "Known fusion hotspot BED file");
-        options.addOption(BLACKLIST_BED, true, "Blacklist regions BED file");
-        options.addOption(EXISTING_JUNCTION_FILE, true, "Load existing junction file to find supporting reads");
-        options.addOption(READ_LENGTH, true, "Read length, default: " + DEFAULT_READ_LENGTH);
-        options.addOption(PARTITION_SIZE, true, "Partition size, default: " + DEFAULT_CHR_PARTITION_SIZE);
-        options.addOption(CALC_FRAG_LENGTH, false, "Calculate distribution for fragment length");
-        options.addOption(WRITE_TYPES, true, "Write types: " + WriteType.values().toString());
-        options.addOption(UNPAIRED_READS, false, "Unpaired reads ignores non-expect junction support");
-        addSpecificChromosomesRegionsConfig(options);
-        options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
-        options.addOption(MAX_PARTITION_READS, true, "Limit to stop processing reads in partition, for debug");
-        options.addOption(CAPTURE_DEPTH, false, "Capture depth for junctions");
-        options.addOption(NO_CACHE_BAM, false, "Write a BAM to cache candidate reads");
-        options.addOption(TRACK_REMOTES, false, "Track support for remote junctions");
-        options.addOption(NO_TRIM_READ_ID, false, "Use a shortened readId internally");
-        options.addOption(NO_CLEAN_UP, false, "Keep candidate cache files");
-        options.addOption(PERF_DEBUG, false, "Detailed performance tracking and logging");
-        options.addOption(JUNCTION_FRAGS_CAP, true, "Limit to supporting reads added to a junction");
-        addValidationStringencyOption(options);
-        ReadFilterConfig.addCmdLineArgs(options);
-        addThreadOptions(options);
-
-        return options;
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addPathItem(BAM_FILE, true, "BAM file location");
+        addRefGenomeConfig(configBuilder, true);
+        configBuilder.addPathItem(KNOWN_FUSION_BED, false, "Known fusion hotspot BED file");
+        configBuilder.addPathItem(BLACKLIST_BED, false, "Blacklist regions BED file");
+        configBuilder.addPathItem(EXISTING_JUNCTION_FILE, false, "Load existing junction file to find supporting reads");
+        configBuilder.addIntegerItem(READ_LENGTH, false, "Read length", DEFAULT_READ_LENGTH);
+        configBuilder.addIntegerItem(PARTITION_SIZE, false, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addFlagItem(CALC_FRAG_LENGTH, "Calculate distribution for fragment length");
+        configBuilder.addConfigItem(WRITE_TYPES, "Write types: " + WriteType.values().toString());
+        configBuilder.addFlagItem(UNPAIRED_READS, "Unpaired reads ignores non-expect junction support");
+        addSpecificChromosomesRegionsConfig(configBuilder);
+        configBuilder.addConfigItem(LOG_READ_IDS, true, LOG_READ_IDS_DESC);
+        configBuilder.addIntegerItem(MAX_PARTITION_READS, "Limit to stop processing reads in partition, for debug", 0);
+        configBuilder.addFlagItem(CAPTURE_DEPTH, "Capture depth for junctions");
+        configBuilder.addFlagItem(NO_CACHE_BAM, "Write a BAM to cache candidate reads");
+        configBuilder.addFlagItem(TRACK_REMOTES, "Track support for remote junctions");
+        configBuilder.addFlagItem(NO_TRIM_READ_ID, "Disable use of a shortened readId internally");
+        configBuilder.addFlagItem(NO_CLEAN_UP, "Keep candidate cache BAM files");
+        configBuilder.addFlagItem(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addIntegerItem(JUNCTION_FRAGS_CAP, "Limit to supporting reads added to a junction", 0);
+        addValidationStringencyOption(configBuilder);
+        ReadFilterConfig.addConfig(configBuilder);
+        addThreadOptions(configBuilder);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
     }
 }

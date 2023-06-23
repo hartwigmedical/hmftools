@@ -6,12 +6,14 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 import static com.hartwig.hmftools.svprep.append.AppendConstants.BREAKEND_PROXIMITY;
 
 import java.io.BufferedWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.apache.commons.cli.CommandLine;
@@ -28,10 +30,10 @@ public class SvVcfBedWriter
     private static final String INPUT_VCF = "input_vcf";
     private static final String OUTPUT_BED = "output_bed";
 
-    public static void writeBedFromSvVcf(final CommandLine cmd)
+    public static void writeBedFromSvVcf(final ConfigBuilder configBuilder)
     {
-        String inputVcf = cmd.getOptionValue(INPUT_VCF);
-        String outputBed = cmd.getOptionValue(OUTPUT_BED);
+        String inputVcf = configBuilder.getValue(INPUT_VCF);
+        String outputBed = configBuilder.getValue(OUTPUT_BED);
 
         if(inputVcf == null || outputBed == null || !Files.exists(Paths.get(inputVcf)))
         {
@@ -101,24 +103,22 @@ public class SvVcfBedWriter
         SV_LOGGER.info("wrote {} SV breakends entries to {}", breakendCount, outputBed);
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(INPUT_VCF, true, "Input VCF");
-        options.addOption(OUTPUT_BED, true, "Output BED");
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addPathItem(INPUT_VCF, true, "Input VCF");
+        configBuilder.addPathItem(OUTPUT_BED, true, "Output BED");
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
+        logVersion();
 
-        writeBedFromSvVcf(cmd);
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        writeBedFromSvVcf(configBuilder);
     }
 }

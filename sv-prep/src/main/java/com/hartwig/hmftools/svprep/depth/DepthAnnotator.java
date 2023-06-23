@@ -8,10 +8,9 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPA
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE_DESC;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -26,6 +25,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
@@ -53,9 +53,9 @@ public class DepthAnnotator
     private final Map<String,List<VariantContext>> mChrVariantMap;
     private final List<ChrBaseRegion> mExcludedRegions;
 
-    public DepthAnnotator(final CommandLine cmd)
+    public DepthAnnotator(final ConfigBuilder configBuilder)
     {
-        mConfig = new DepthConfig(cmd);
+        mConfig = new DepthConfig(configBuilder);
         mChrVariantMap = Maps.newHashMap();
         mSampleVcfGenotypeIds = Maps.newHashMap();
         mExcludedRegions = ExcludedRegions.getPolyGRegions(mConfig.RefGenVersion);
@@ -352,18 +352,21 @@ public class DepthAnnotator
         return mConfig.SpecificRegions.stream().noneMatch(x -> x.containsPosition(variant.getContig(), variant.getStart()));
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        DepthConfig.addOptions(options);
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        DepthConfig.addConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
+        logVersion();
 
-        DepthAnnotator bamSvSlicer = new DepthAnnotator(cmd);
+        DepthAnnotator bamSvSlicer = new DepthAnnotator(configBuilder);
         bamSvSlicer.run();
     }
 

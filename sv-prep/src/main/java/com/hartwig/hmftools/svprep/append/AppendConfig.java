@@ -3,32 +3,32 @@ package com.hartwig.hmftools.svprep.append;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.BAM_FILE;
-import static com.hartwig.hmftools.svprep.SvConfig.LOG_READ_IDS;
-import static com.hartwig.hmftools.svprep.SvConfig.SAMPLE;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadFilterConfig;
 import com.hartwig.hmftools.svprep.reads.ReadFilters;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 public class AppendConfig
@@ -52,34 +52,33 @@ public class AppendConfig
     public static final String INPUT_VCF = "input_vcf";
     public static final String OUTPUT_VCF = "output_vcf";
 
-    public AppendConfig(final CommandLine cmd)
+    public AppendConfig(final ConfigBuilder configBuilder)
     {
-        SampleId = cmd.getOptionValue(SAMPLE);
-        BamFile = cmd.getOptionValue(BAM_FILE);
-        RefGenomeFile = cmd.getOptionValue(REF_GENOME);
-        InputVcf = cmd.getOptionValue(INPUT_VCF);
-        OutputVcf = cmd.getOptionValue(OUTPUT_VCF);
+        SampleId = configBuilder.getValue(SAMPLE);
+        BamFile = configBuilder.getValue(BAM_FILE);
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
+        InputVcf = configBuilder.getValue(INPUT_VCF);
+        OutputVcf = configBuilder.getValue(OUTPUT_VCF);
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
         SV_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
 
-        ReadFiltering = new ReadFilters(ReadFilterConfig.from(cmd));
+        ReadFiltering = new ReadFilters(ReadFilterConfig.from(configBuilder));
 
         SpecificRegions = Lists.newArrayList();
 
         try
         {
-            SpecificRegions.addAll(loadSpecificRegions(cmd));
+            SpecificRegions.addAll(loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS)));
         }
         catch(ParseException e)
         {
             System.exit(1);
         }
 
-        LogReadIds = cmd.hasOption(LOG_READ_IDS) ?
-                Arrays.stream(cmd.getOptionValue(LOG_READ_IDS).split(ITEM_DELIM, -1)).collect(Collectors.toList()) : Lists.newArrayList();
+        LogReadIds = parseLogReadIds(configBuilder);
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
     }
 
     public boolean isValid()
@@ -98,25 +97,20 @@ public class AppendConfig
         return true;
     }
 
-    public static Options createCmdLineOptions()
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addPathItem(BAM_FILE, true, "BAM file location");
+        configBuilder.addPathItem(INPUT_VCF, true, "Input VCF");
+        configBuilder.addConfigItem(OUTPUT_VCF, true, "Output VCF");
+        addRefGenomeConfig(configBuilder, true);
+        addValidationStringencyOption(configBuilder);
+        ReadFilterConfig.addConfig(configBuilder);
 
-        options.addOption(SAMPLE, true, "Sample ID to append to existing VCF");
-        options.addOption(BAM_FILE, true, "BAM file location");
-        options.addOption(INPUT_VCF, true, "Input VCF");
-        options.addOption(OUTPUT_VCF, true, "Output VCF");
-        addRefGenomeConfig(options);
-        addValidationStringencyOption(options);
-        ReadFilterConfig.addCmdLineArgs(options);
-
-        addSpecificChromosomesRegionsConfig(options);
-        options.addOption(LOG_READ_IDS, true, "Log specific read IDs, separated by ';'");
-        addThreadOptions(options);
-
-        return options;
+        addSpecificChromosomesRegionsConfig(configBuilder);
+        configBuilder.addConfigItem(LOG_READ_IDS, true, LOG_READ_IDS_DESC);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
     }
-
 }

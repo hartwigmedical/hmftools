@@ -10,10 +10,9 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
@@ -24,10 +23,12 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 import static com.hartwig.hmftools.svprep.tools.HighDepthConfig.HIGH_DEPTH_REGION_MAX_GAP;
 
 import java.io.BufferedWriter;
@@ -51,14 +52,11 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sv.ExcludedRegions;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -91,10 +89,10 @@ public class HighDepthCombiner
     private static final int MIN_REGION_LENGTH = 11;
     private static final int PANEL_HIGH_DEPTH_THRESHOLD = 2000;
 
-    public HighDepthCombiner(final CommandLine cmd)
+    public HighDepthCombiner(final ConfigBuilder configBuilder)
     {
-        List<String> sampleIds = loadSampleIdsFile(cmd);
-        String highDepthFiles = cmd.getOptionValue(HIGH_DEPTH_FILES);
+        List<String> sampleIds = loadSampleIdsFile(configBuilder);
+        String highDepthFiles = configBuilder.getValue(HIGH_DEPTH_FILES);
 
         mInputFiles = Lists.newArrayList();
 
@@ -103,25 +101,25 @@ public class HighDepthCombiner
             mInputFiles.add(highDepthFiles.replaceAll("\\*", sampleId));
         }
 
-        mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_FILE));
-        mMinSampleCount = Integer.parseInt(cmd.getOptionValue(MIN_SAMPLE_COUNT, String.valueOf(DEFAULT_MIN_SAMPLE_COUNT)));
-        mRemoveGeneOverlaps = cmd.hasOption(REMOVE_GENE_OVERLAPS);
+        mWriter = initialiseWriter(configBuilder.getValue(OUTPUT_FILE));
+        mMinSampleCount = configBuilder.getInteger(MIN_SAMPLE_COUNT);
+        mRemoveGeneOverlaps = configBuilder.hasFlag(REMOVE_GENE_OVERLAPS);
 
         mChrSampleHighDepthRegions = Maps.newHashMap();
         mChrCombinedRegions = Maps.newHashMap();
         mFinalRegions = Maps.newHashMap();
 
-        mRefefenceBlacklist = new BlacklistLocations(cmd.getOptionValue(REF_BLACKLIST_FILE));
-        mRefGenVersion = RefGenomeVersion.from(cmd);
+        mRefefenceBlacklist = new BlacklistLocations(configBuilder.getValue(REF_BLACKLIST_FILE));
+        mRefGenVersion = RefGenomeVersion.from(configBuilder);
 
         mKnownFusionCache = new KnownFusionCache();
-        mKnownFusionCache.loadFromFile(cmd);
+        mKnownFusionCache.loadFromFile(configBuilder.getValue(KNOWN_FUSIONS_FILE));
 
-        mDriverGenes = DriverGenePanelConfig.loadDriverGenes(cmd);
+        mDriverGenes = DriverGenePanelConfig.loadDriverGenes(configBuilder);
 
-        if(cmd.hasOption(ENSEMBL_DATA_DIR))
+        if(configBuilder.hasValue(ENSEMBL_DATA_DIR))
         {
-            mEnsemblDataCache = new EnsemblDataCache(cmd, mRefGenVersion);
+            mEnsemblDataCache = new EnsemblDataCache(configBuilder);
             mEnsemblDataCache.load(true);
         }
         else
@@ -133,7 +131,7 @@ public class HighDepthCombiner
 
         try
         {
-            mSpecificRegions.addAll(loadSpecificRegions(cmd));
+            mSpecificRegions.addAll(loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS)));
         }
         catch(ParseException e)
         {
@@ -719,35 +717,33 @@ public class HighDepthCombiner
         SV_LOGGER.info("loaded {} high-depth regions from {} files", totalRegions, mInputFiles.size());
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addSampleIdFile(options);
-        options.addOption(HIGH_DEPTH_FILES, true, "High depth sample file(s), use '*' in for sampleId");
-        options.addOption(OUTPUT_FILE, true, "Output file");
-        options.addOption(REF_BLACKLIST_FILE, true, "Reference blacklist file to include");
-        options.addOption(MIN_SAMPLE_COUNT, true, "Min sample count to produce region");
-        options.addOption(REMOVE_GENE_OVERLAPS, false, "Remove high depth regions that overlap driver or fusion genes");
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        addGenePanelOption(false, options);
-        addKnownFusionFileOption(options);
-        addEnsemblDir(options);
-        addOutputOptions(options);
-        addLoggingOptions(options);
-        addSpecificChromosomesRegionsConfig(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addSampleIdFile(configBuilder, true);
+        configBuilder.addConfigItem(HIGH_DEPTH_FILES, true, "High depth sample file(s), use '*' in for sampleId");
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file");
+        configBuilder.addPathItem(REF_BLACKLIST_FILE, false, "Reference blacklist file to include");
+        configBuilder.addIntegerItem(MIN_SAMPLE_COUNT, false, "Min sample count to produce region", DEFAULT_MIN_SAMPLE_COUNT);
+        configBuilder.addFlagItem(REMOVE_GENE_OVERLAPS, "Remove high depth regions that overlap driver or fusion genes");
+        // configBuilder.addConfigItem(REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
+        addGenePanelOption(configBuilder, false);
+        addKnownFusionFileOption(configBuilder);
+        addEnsemblDir(configBuilder);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+        addSpecificChromosomesRegionsConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
+        logVersion();
 
-        HighDepthCombiner highDepthCombiner = new HighDepthCombiner(cmd);
+        HighDepthCombiner highDepthCombiner = new HighDepthCombiner(configBuilder);
         highDepthCombiner.run();
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

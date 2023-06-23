@@ -236,7 +236,7 @@ public class MarkDupsConfig
         addThreadOptions(configBuilder);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
-        configBuilder.addConfigItem(LOG_READ_IDS,LOG_READ_IDS_DESC);
+        configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlagItem(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addFlagItem(RUN_CHECKS, "Run duplicate mismatch checks");
         configBuilder.addFlagItem(WRITE_STATS, "Write duplicate and UMI-group stats");

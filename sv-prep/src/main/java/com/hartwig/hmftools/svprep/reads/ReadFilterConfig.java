@@ -16,8 +16,9 @@ import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_SUPPORTING_READ_DISTANCE;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class ReadFilterConfig
 {
@@ -77,10 +78,10 @@ public class ReadFilterConfig
     public int fragmentLengthMin() { return mFragmentLengthMin; }
     public int maxSupportingFragmentDistance() { return mMaxSupportingFragmentDistance; }
 
-    public static ReadFilterConfig from(final CommandLine cmd)
+    public static ReadFilterConfig from(final ConfigBuilder configBuilder)
     {
         return new ReadFilterConfig(
-                configValue(cmd, CFG_MIN_ALIGN_BASES, MIN_ALIGNMENT_BASES),
+                configBuilder.getInteger(CFG_MIN_ALIGN_BASES),
                 MIN_MAP_QUALITY,
                 MIN_INSERT_ALIGNMENT_OVERLAP,
                 MIN_SOFT_CLIP_LENGTH,
@@ -88,7 +89,7 @@ public class ReadFilterConfig
                 MIN_SOFT_CLIP_HIGH_QUAL_PERC,
                 MIN_SUPPORTING_READ_DISTANCE,
                 MIN_INDEL_LENGTH,
-                configValue(cmd, CFG_MIN_JUNCTION_FRAGS, MIN_JUNCTION_SUPPORT));
+                configBuilder.getInteger(CFG_MIN_JUNCTION_FRAGS));
     }
 
     private static int configValue(final CommandLine cmd, final String config, final int defaultValue)
@@ -96,12 +97,12 @@ public class ReadFilterConfig
         return cmd != null ? Integer.parseInt(cmd.getOptionValue(config, String.valueOf(defaultValue))) : defaultValue;
     }
 
-    public static void addCmdLineArgs(final Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(
-                CFG_MIN_ALIGN_BASES, true, "Junction fragment min aligned bases, default: " + MIN_ALIGNMENT_BASES);
+        configBuilder.addIntegerItem(
+                CFG_MIN_ALIGN_BASES, false, "Junction fragment min aligned bases", MIN_ALIGNMENT_BASES);
 
-        options.addOption(
-                CFG_MIN_JUNCTION_FRAGS, true, "Required fragments to keep a junction, default: " + MIN_JUNCTION_SUPPORT);
+        configBuilder.addIntegerItem(
+                CFG_MIN_JUNCTION_FRAGS, false, "Required fragments to keep a junction", MIN_JUNCTION_SUPPORT);
     }
 }

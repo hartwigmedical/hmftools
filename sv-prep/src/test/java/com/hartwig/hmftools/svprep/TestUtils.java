@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadFilterConfig;
 
@@ -24,8 +25,14 @@ public final class TestUtils
     public static final ChrBaseRegion REGION_2 = new ChrBaseRegion(CHR_1, REGION_1.end() + 1, REGION_1.end() + PARTITION_SIZE);
     public static final ChrBaseRegion REGION_3 = new ChrBaseRegion(CHR_1, REGION_2.end() + 1, REGION_2.end() + PARTITION_SIZE);
 
+    public static final ConfigBuilder READ_FILTERS_CONFIG = new ConfigBuilder();
 
-    public static final ReadFilterConfig READ_FILTERS = ReadFilterConfig.from(null);
+    static
+    {
+        ReadFilterConfig.addConfig(READ_FILTERS_CONFIG);
+    }
+
+    public static final ReadFilterConfig READ_FILTERS = ReadFilterConfig.from(READ_FILTERS_CONFIG);
     public static final HotspotCache HOTSPOT_CACHE = new HotspotCache(null);
     public static final BlacklistLocations BLACKLIST_LOCATIONS = new BlacklistLocations(null);
 

@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.BLACKLIST_BED;
+import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -32,14 +33,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -62,14 +59,14 @@ public class BlacklistExplorer
     private static final String VCF_FILE = "vcf_file";
     private static final String OUTPUT_FILE = "output_file";
 
-    public BlacklistExplorer(final CommandLine cmd)
+    public BlacklistExplorer(final ConfigBuilder configBuilder)
     {
-        mSampleIds = loadSampleIdsFile(cmd);
-        mVcfFilename = cmd.getOptionValue(VCF_FILE);
-        mBlacklistLocations = new BlacklistLocations(cmd.getOptionValue(BLACKLIST_BED));
-        mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
+        mSampleIds = loadSampleIdsFile(configBuilder);
+        mVcfFilename = configBuilder.getValue(VCF_FILE);
+        mBlacklistLocations = new BlacklistLocations(configBuilder.getValue(BLACKLIST_BED));
+        mOutputFile = configBuilder.getValue(OUTPUT_FILE);
         mWriter = initialiseWriter();
-        mThreads = parseThreads(cmd);
+        mThreads = parseThreads(configBuilder);
     }
 
     public void run()
@@ -251,30 +248,29 @@ public class BlacklistExplorer
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addSampleIdFile(options);
-        options.addOption(VCF_FILE, true, "VCF file, can use '*' in place of sampleIds");
-        options.addOption(BLACKLIST_BED, true, "Blacklist BED file");
-        options.addOption(OUTPUT_FILE, true, "Output filename");
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
-        addThreadOptions(options);
+        addSampleIdFile(configBuilder, false);
+        configBuilder.addConfigItem(VCF_FILE, true, "VCF file, can use '*' in place of sampleIds");
+        configBuilder.addPathItem(BLACKLIST_BED, false, "Blacklist BED file");
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
 
-        final CommandLine cmd = createCommandLine(args, options);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
 
-        setLogLevel(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        BlacklistExplorer blacklistExplorer = new BlacklistExplorer(cmd);
+        setLogLevel(configBuilder);
+        logVersion();
+
+        BlacklistExplorer blacklistExplorer = new BlacklistExplorer(configBuilder);
         blacklistExplorer.run();
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

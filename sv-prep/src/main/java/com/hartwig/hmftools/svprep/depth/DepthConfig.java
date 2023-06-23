@@ -3,13 +3,14 @@ package com.hartwig.hmftools.svprep.depth;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
@@ -22,10 +23,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.samtools.BamUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import htsjdk.samtools.ValidationStringency;
@@ -59,35 +59,35 @@ public class DepthConfig
     protected static final int DEFAULT_PROXIMITY_DISTANCE = 2000;
     protected static final double DEFAULT_VAF_CAP = 0.001;
 
-    public DepthConfig(final CommandLine cmd)
+    public DepthConfig(final ConfigBuilder configBuilder)
     {
-        InputVcf = cmd.getOptionValue(INPUT_VCF);
-        OutputVcf = cmd.getOptionValue(OUTPUT_VCF);
+        InputVcf = configBuilder.getValue(INPUT_VCF);
+        OutputVcf = configBuilder.getValue(OUTPUT_VCF);
 
-        Samples = Arrays.stream(cmd.getOptionValue(SAMPLES).split(DELIM, -1)).collect(Collectors.toList());
-        BamFiles = Arrays.stream(cmd.getOptionValue(BAM_FILES).split(DELIM, -1)).collect(Collectors.toList());
+        Samples = Arrays.stream(configBuilder.getValue(SAMPLES).split(DELIM, -1)).collect(Collectors.toList());
+        BamFiles = Arrays.stream(configBuilder.getValue(BAM_FILES).split(DELIM, -1)).collect(Collectors.toList());
 
-        RefGenome = cmd.getOptionValue(REF_GENOME);
-        RefGenVersion = RefGenomeVersion.from(cmd);
-        VafCap = Double.parseDouble(cmd.getOptionValue(VAF_CAP, String.valueOf(DEFAULT_VAF_CAP)));
-        ProximityDistance = Integer.parseInt(cmd.getOptionValue(PROXIMITY_DISTANCE, String.valueOf(DEFAULT_PROXIMITY_DISTANCE)));
-        BamStringency = BamUtils.validationStringency(cmd);
-        PerfLogTime = Double.parseDouble(cmd.getOptionValue(PERF_LOG_TIME, "0"));
+        RefGenome = configBuilder.getValue(REF_GENOME);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
+        VafCap = configBuilder.getDecimal(VAF_CAP);
+        ProximityDistance = configBuilder.getInteger(PROXIMITY_DISTANCE);
+        BamStringency = BamUtils.validationStringency(configBuilder);
+        PerfLogTime = configBuilder.getDecimal(PERF_LOG_TIME);
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
 
         SpecificRegions = Lists.newArrayList();
 
         try
         {
-            SpecificRegions.addAll(loadSpecificRegions(cmd));
+            SpecificRegions.addAll(loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS)));
         }
         catch(ParseException e)
         {
             SV_LOGGER.error("failed to load specific regions");
         }
 
-        VcfTagPrefix = cmd.getOptionValue(VCF_TAG_PREFIX);
+        VcfTagPrefix = configBuilder.getValue(VCF_TAG_PREFIX);
     }
 
     public String getVcfTag(final String vcfTag)
@@ -95,29 +95,28 @@ public class DepthConfig
         return VcfTagPrefix != null ? format("%s_%s", VcfTagPrefix, vcfTag) : vcfTag;
     }
 
-    public static void addOptions(final Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(INPUT_VCF, true, "Input VCF File");
-        options.addOption(SAMPLES, true, "Sample IDs corresponding to BAM files");
-        options.addOption(BAM_FILES, true, "BAM file(s) to slice for depth");
-        options.addOption(OUTPUT_VCF, true, "Output VCF File");
-        options.addOption(VCF_TAG_PREFIX, true, "VCF tag prefix for testing & comparison");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addPathItem(INPUT_VCF, true, "Input VCF File");
+        configBuilder.addConfigItem(SAMPLES, true, "Sample IDs corresponding to BAM files");
+        configBuilder.addConfigItem(BAM_FILES, true, "BAM file(s) to slice for depth");
+        configBuilder.addConfigItem(OUTPUT_VCF, true, "Output VCF File");
+        configBuilder.addConfigItem(VCF_TAG_PREFIX, "VCF tag prefix for testing & comparison");
+        addRefGenomeConfig(configBuilder, true);
 
-        options.addOption(
-                VAF_CAP, true,
-                "Ref support depth limit as function of variant fragments, default = " + DEFAULT_VAF_CAP);
+        configBuilder.addDecimalItem(
+                VAF_CAP, false, "Ref support depth limit as function of variant fragments", DEFAULT_VAF_CAP);
 
-        options.addOption(
-                PROXIMITY_DISTANCE, true,
-                "Proximity distance to group variants, default = " + DEFAULT_PROXIMITY_DISTANCE);
+        configBuilder.addIntegerItem(
+                PROXIMITY_DISTANCE, false, "Proximity distance to group variants", DEFAULT_PROXIMITY_DISTANCE);
 
-        addValidationStringencyOption(options);
-        addSpecificChromosomesRegionsConfig(options);
-        addThreadOptions(options);
+        addValidationStringencyOption(configBuilder);
+        addSpecificChromosomesRegionsConfig(configBuilder);
+        addThreadOptions(configBuilder);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        options.addOption(PERF_LOG_TIME, true, "Performance log time threshold (seconds)");
+        configBuilder.addDecimalItem(PERF_LOG_TIME, false, "Performance log time threshold (seconds)", 0);
     }
 
     public DepthConfig(double vcfCap, int proximityDistance)

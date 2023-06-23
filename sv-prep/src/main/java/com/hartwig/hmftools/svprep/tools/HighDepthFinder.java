@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWri
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -19,12 +20,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class HighDepthFinder
@@ -32,9 +29,9 @@ public class HighDepthFinder
     private final HighDepthConfig mConfig;
     private final BufferedWriter mWriter;
 
-    public HighDepthFinder(final CommandLine cmd)
+    public HighDepthFinder(final ConfigBuilder configBuilder)
     {
-        mConfig = new HighDepthConfig(cmd);
+        mConfig = new HighDepthConfig(configBuilder);
         mWriter = initialiseWriter(mConfig.OutputFile);
     }
 
@@ -108,26 +105,24 @@ public class HighDepthFinder
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        HighDepthConfig.addOptions(options);
-        addSpecificChromosomesRegionsConfig(options);
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        HighDepthConfig.addConfig(configBuilder);
+        addSpecificChromosomesRegionsConfig(configBuilder);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
+        logVersion();
 
-        HighDepthFinder highDepthFinder = new HighDepthFinder(cmd);
+        HighDepthFinder highDepthFinder = new HighDepthFinder(configBuilder);
         highDepthFinder.run();
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

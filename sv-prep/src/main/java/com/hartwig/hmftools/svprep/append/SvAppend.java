@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 import static com.hartwig.hmftools.svprep.append.AppendConstants.BREAKEND_PROXIMITY;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.apache.commons.cli.CommandLine;
@@ -30,11 +32,11 @@ public class SvAppend
     private final AppendConfig mConfig;
     private final Map<String,List<BreakendData>> mChrBreakendMap;
 
-    public SvAppend(final CommandLine cmd)
+    public SvAppend(final ConfigBuilder configBuilder)
     {
         mChrBreakendMap = Maps.newHashMap();
 
-        mConfig = new AppendConfig(cmd);
+        mConfig = new AppendConfig(configBuilder);
     }
 
     public void run()
@@ -128,14 +130,21 @@ public class SvAppend
         return true;
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = AppendConfig.createCmdLineOptions();
-        final CommandLine cmd = createCommandLine(args, options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        AppendConfig.addConfig(configBuilder);
 
-        setLogLevel(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        SvAppend svAppender = new SvAppend(cmd);
+        setLogLevel(configBuilder);
+        logVersion();
+
+        SvAppend svAppender = new SvAppend(configBuilder);
         svAppender.run();
     }
 

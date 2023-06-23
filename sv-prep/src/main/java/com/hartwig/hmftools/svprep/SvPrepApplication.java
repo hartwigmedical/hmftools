@@ -4,17 +4,11 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvConfig.createCmdLineOptions;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class SvPrepApplication
@@ -24,9 +18,9 @@ public class SvPrepApplication
     private final SpanningReadCache mSpanningReadCache;
     private final ExistingJunctionCache mExistingJunctionCache;
 
-    public SvPrepApplication(final CommandLine cmd)
+    public SvPrepApplication(final ConfigBuilder configBuilder)
     {
-        mConfig = new SvConfig(cmd);
+        mConfig = new SvConfig(configBuilder);
         mWriter = new ResultsWriter(mConfig);
         mSpanningReadCache = new SpanningReadCache(mConfig);
         mExistingJunctionCache = new ExistingJunctionCache();
@@ -119,33 +113,25 @@ public class SvPrepApplication
 
     public static void main(@NotNull final String[] args)
     {
-        final VersionInfo version = new VersionInfo("sv-prep.version");
-        SV_LOGGER.info("SvPrep version: {}", version.version());
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        SvConfig.addConfig(configBuilder);
 
-        final Options options = createCmdLineOptions();
-
-        try
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            SvPrepApplication svPrep = new SvPrepApplication(cmd);
-            svPrep.run();
-        }
-        catch(ParseException e)
-        {
-            SV_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SvPrep", options);
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
+
+        setLogLevel(configBuilder);
+        logVersion();
+
+        SvPrepApplication svPrep = new SvPrepApplication(configBuilder);
+        svPrep.run();
     }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
+    public static void logVersion()
     {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        final VersionInfo version = new VersionInfo("sv-prep.version");
+        SV_LOGGER.info("SvPrep version: {}", version.version());
     }
 }

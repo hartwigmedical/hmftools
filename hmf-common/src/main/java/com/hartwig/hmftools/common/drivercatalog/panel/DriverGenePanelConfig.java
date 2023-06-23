@@ -30,6 +30,21 @@ public final class DriverGenePanelConfig
         return configBuilder.hasValue(DRIVER_GENE_PANEL_OPTION);
     }
 
+    public static List<DriverGene> loadDriverGenes(final ConfigBuilder configBuilder)
+    {
+        if(!isConfigured(configBuilder))
+            return Lists.newArrayList();
+
+        try
+        {
+            return DriverGeneFile.read(configBuilder.getValue(DRIVER_GENE_PANEL_OPTION));
+        }
+        catch(IOException e)
+        {
+            return Lists.newArrayList();
+        }
+    }
+
     public static void addGenePanelOption(boolean isRequired, final Options options)
     {
         Option genePanelOption = new Option(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
