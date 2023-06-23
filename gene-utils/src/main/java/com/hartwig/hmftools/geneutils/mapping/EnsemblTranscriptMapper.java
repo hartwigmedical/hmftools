@@ -3,13 +3,16 @@ package com.hartwig.hmftools.geneutils.mapping;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -23,9 +26,8 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
@@ -41,11 +43,11 @@ public class EnsemblTranscriptMapper
     private final List<String> mSpecificGeneIds;
     private final BufferedWriter mWriter;
 
-    public EnsemblTranscriptMapper(final CommandLine cmd)
+    public EnsemblTranscriptMapper(final ConfigBuilder configBuilder)
     {
-        String outputDir = parseOutputDir(cmd);
-        String ensemblDirSrc = cmd.getOptionValue(ENSEMBL_DIR_SRC);
-        String ensemblDirDest = cmd.getOptionValue(ENSEMBL_DIR_DEST);
+        String outputDir = parseOutputDir(configBuilder);
+        String ensemblDirSrc = configBuilder.getValue(ENSEMBL_DIR_SRC);
+        String ensemblDirDest = configBuilder.getValue(ENSEMBL_DIR_DEST);
 
         if(outputDir == null || ensemblDirSrc == null || ensemblDirDest == null)
         {
@@ -55,9 +57,9 @@ public class EnsemblTranscriptMapper
 
         mSpecificGeneIds = Lists.newArrayList();
 
-        if(cmd.hasOption(SPECIFIC_GENE_IDS))
+        if(configBuilder.hasValue(SPECIFIC_GENE_IDS))
         {
-            String specificGeneIds = cmd.getOptionValue(SPECIFIC_GENE_IDS);
+            String specificGeneIds = configBuilder.getValue(SPECIFIC_GENE_IDS);
             GU_LOGGER.info("loaded specific gene id(s): {}", specificGeneIds);
             Arrays.stream(specificGeneIds.split(";")).forEach(x -> mSpecificGeneIds.add(x));
         }
@@ -257,25 +259,24 @@ public class EnsemblTranscriptMapper
 
     public static void main(String[] args) throws ParseException
     {
-        final Options options = createOptions();
-        final CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addPathItem(ENSEMBL_DIR_SRC, true, "Ensembl data cache dir for ref-genome v37");
+        configBuilder.addPathItem(ENSEMBL_DIR_DEST, true, "Ensembl data cache dir for ref-genome v38");
+        configBuilder.addConfigItem(SPECIFIC_GENE_IDS, "Optional list of geneIds to map");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        setLogLevel(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        EnsemblTranscriptMapper transcriptMapper = new EnsemblTranscriptMapper(cmd);
+        setLogLevel(configBuilder);
+        logVersion();
+
+        EnsemblTranscriptMapper transcriptMapper = new EnsemblTranscriptMapper(configBuilder);
         transcriptMapper.run();
     }
-
-    private static Options createOptions()
-    {
-        final Options options = new Options();
-        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version (V37 or V38))");
-        options.addOption(ENSEMBL_DIR_SRC, true, "Ensembl data cache dir for ref-genome v37");
-        options.addOption(ENSEMBL_DIR_DEST, true, "Ensembl data cache dir for ref-genome v38");
-        options.addOption(SPECIFIC_GENE_IDS, true, "Optional list of geneIds to map");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-        return options;
-    }
-
 }

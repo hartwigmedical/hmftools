@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.geneutils.mapping;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -27,10 +27,8 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 
@@ -45,12 +43,12 @@ public class EnsemblCacheCompare
     private final List<String> mSpecificGeneNames;
     private final BufferedWriter mWriter;
 
-    public EnsemblCacheCompare(final CommandLine cmd)
+    public EnsemblCacheCompare(final ConfigBuilder configBuilder)
     {
-        String outputDir = parseOutputDir(cmd);
-        String outputId = cmd.getOptionValue(OUTPUT_ID);
-        String ensemblDirRef = cmd.getOptionValue(ENSEMBL_DIR_REF);
-        String ensemblDirNew = cmd.getOptionValue(ENSEMBL_DIR_NEW);
+        String outputDir = parseOutputDir(configBuilder);
+        String outputId = configBuilder.getValue(OUTPUT_ID);
+        String ensemblDirRef = configBuilder.getValue(ENSEMBL_DIR_REF);
+        String ensemblDirNew = configBuilder.getValue(ENSEMBL_DIR_NEW);
 
         if(outputDir == null || ensemblDirRef == null || ensemblDirNew == null)
         {
@@ -60,9 +58,9 @@ public class EnsemblCacheCompare
 
         mSpecificGeneNames = Lists.newArrayList();
 
-        if(cmd.hasOption(SPECIFIC_GENES))
+        if(configBuilder.hasValue(SPECIFIC_GENES))
         {
-            String specificGeneIds = cmd.getOptionValue(SPECIFIC_GENES);
+            String specificGeneIds = configBuilder.getValue(SPECIFIC_GENES);
             GU_LOGGER.info("loaded specific gene id(s): {}", specificGeneIds);
             Arrays.stream(specificGeneIds.split(";")).forEach(x -> mSpecificGeneNames.add(x));
         }
@@ -331,25 +329,24 @@ public class EnsemblCacheCompare
 
     public static void main(String[] args) throws ParseException
     {
-        final Options options = createOptions();
-        final CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        setLogLevel(cmd);
+        configBuilder.addPathItem(ENSEMBL_DIR_REF, true, "Ensembl data cache dir for ref-genome v37");
+        configBuilder.addPathItem(ENSEMBL_DIR_NEW, true, "Ensembl data cache dir for ref-genome v38");
+        configBuilder.addConfigItem(SPECIFIC_GENES, "Limit comparison to specific genes, separated by ','");
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        EnsemblCacheCompare cacheCompare = new EnsemblCacheCompare(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+        logVersion();
+
+        EnsemblCacheCompare cacheCompare = new EnsemblCacheCompare(configBuilder);
         cacheCompare.run();
     }
-
-    private static Options createOptions()
-    {
-        final Options options = new Options();
-        // options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version (V37 or V38))");
-        options.addOption(ENSEMBL_DIR_REF, true, "Ensembl data cache dir for ref-genome v37");
-        options.addOption(ENSEMBL_DIR_NEW, true, "Ensembl data cache dir for ref-genome v38");
-        options.addOption(SPECIFIC_GENES, true, "Limit comparison to specific genes, separated by ','");
-        addOutputOptions(options);
-        addLoggingOptions(options);
-        return options;
-    }
-
 }

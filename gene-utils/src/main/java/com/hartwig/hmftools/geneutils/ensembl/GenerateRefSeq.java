@@ -1,12 +1,14 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.writeRecordsAsTsv;
 import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.createEnsemblDbConnection;
@@ -16,11 +18,8 @@ import java.sql.SQLException;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -30,24 +29,29 @@ public class GenerateRefSeq
 {
     public static void main(String[] args) throws ParseException, IOException, SQLException
     {
-        final Options options = createOptions();
-        final CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        setLogLevel(cmd);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        EnsemblDAO.addCmdLineArgs(configBuilder);
+        addEnsemblDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        addOutputDir(configBuilder);
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(RefGenomeVersion.REF_GENOME_VERSION));
-        String outputDir = parseOutputDir(cmd);
-
-        if(refGenomeVersion == null || outputDir == null)
+        if(!configBuilder.parseCommandLine(args))
         {
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("HmfEnsemblResourceBuilder", options);
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
 
+        setLogLevel(configBuilder);
+        logVersion();
+
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(configBuilder);
+        String outputDir = parseOutputDir(configBuilder);
+
         GU_LOGGER.info("writing Ensembl gene panel and ref-seq data files, ref-genome-version({})", refGenomeVersion);
 
-        DSLContext context = createEnsemblDbConnection(cmd);
+        DSLContext context = createEnsemblDbConnection(configBuilder);
 
         if(context == null)
             System.exit(1);
@@ -68,16 +72,4 @@ public class GenerateRefSeq
         writeRecordsAsTsv(outputFile, refseqMappingResult);
         GU_LOGGER.info("written RefSeq mapping output to {}", outputFile);
     }
-
-    private static Options createOptions()
-    {
-        final Options options = new Options();
-        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        EnsemblDAO.addCmdLineArgs(options);
-        addEnsemblDir(options);
-        addLoggingOptions(options);
-        addOutputDir(options);
-        return options;
-    }
-
 }

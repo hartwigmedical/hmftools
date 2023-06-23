@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
@@ -38,12 +39,8 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -61,19 +58,19 @@ public class GenerateDriverGeneFiles
     private static final String SAGE_DIR = "sage";
     private static final String PANEL_GENE_OVERRIDES = "panel_gene_overrides";
 
-    public GenerateDriverGeneFiles(final CommandLine cmd)
+    public GenerateDriverGeneFiles(final ConfigBuilder configBuilder)
     {
         GU_LOGGER.info("starting driver gene panel generation");
 
-        mDriverGenePanelFile = cmd.getOptionValue(DRIVER_GENE_PANEL_TSV);
-        mResourceRepoDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_REPO_DIR));
-        mOutputDir = parseOutputDir(cmd);
+        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL_TSV);
+        mResourceRepoDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_REPO_DIR));
+        mOutputDir = parseOutputDir(configBuilder);
 
         mPanelGeneOverrides = Lists.newArrayList();
 
-        if(cmd.hasOption(PANEL_GENE_OVERRIDES))
+        if(configBuilder.hasValue(PANEL_GENE_OVERRIDES))
         {
-            Arrays.stream(cmd.getOptionValue(PANEL_GENE_OVERRIDES).split(",", -1)).forEach(x -> mPanelGeneOverrides.add(x));
+            Arrays.stream(configBuilder.getValue(PANEL_GENE_OVERRIDES).split(",", -1)).forEach(x -> mPanelGeneOverrides.add(x));
         }
     }
 
@@ -334,29 +331,26 @@ public class GenerateDriverGeneFiles
         return true;
     }
 
-    public static void main(String[] args) throws IOException, ParseException
+    public static void main(String[] args) throws IOException
     {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+
+        addGenePanelOption(configBuilder, true);
+        configBuilder.addPathItem(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
+        configBuilder.addConfigItem(PANEL_GENE_OVERRIDES, "List of comma-separated genes to include in panel");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
         logVersion();
 
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
-
-        setLogLevel(cmd);
-
-        GenerateDriverGeneFiles generator = new GenerateDriverGeneFiles(cmd);
+        GenerateDriverGeneFiles generator = new GenerateDriverGeneFiles(configBuilder);
         generator.run();
-    }
-
-    private static Options createOptions()
-    {
-        Options options = new Options();
-
-        options.addOption(DRIVER_GENE_PANEL_TSV, true, "File containing the driver gene panel for 37");
-        options.addOption(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
-        options.addOption(PANEL_GENE_OVERRIDES, true, "List of comma-separated genes to include in panel");
-        addOutputDir(options);
-        addLoggingOptions(options);
-
-        return options;
     }
 }

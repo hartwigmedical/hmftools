@@ -38,11 +38,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class GenerateFusionFiles
 {
@@ -53,13 +49,13 @@ public class GenerateFusionFiles
     private static final String KNOWN_FUSION_DB_FILE = "known_fusion_db_file";
     private static final int PRE_GENE_BUFFER = 10000;
 
-    public GenerateFusionFiles(final CommandLine cmd)
+    public GenerateFusionFiles(final ConfigBuilder configBuilder)
     {
         GU_LOGGER.info("starting known fusion file generation");
 
-        mKnownFusionDbFile = cmd.getOptionValue(KNOWN_FUSION_DB_FILE);
-        mResourceRepoDir = cmd.getOptionValue(RESOURCE_REPO_DIR);
-        mOutputDir = parseOutputDir(cmd);
+        mKnownFusionDbFile = configBuilder.getValue(KNOWN_FUSION_DB_FILE);
+        mResourceRepoDir = configBuilder.getValue(RESOURCE_REPO_DIR);
+        mOutputDir = parseOutputDir(configBuilder);
     }
 
     public void run()
@@ -494,28 +490,25 @@ public class GenerateFusionFiles
         }
     }
 
-    public static void main(String[] args) throws IOException, ParseException
+    public static void main(final String[] args)
     {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+
+        configBuilder.addPathItem(KNOWN_FUSION_DB_FILE, true, "File containing the driver gene panel for 37");
+        configBuilder.addPathItem(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
         logVersion();
 
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
-
-        setLogLevel(cmd);
-
-        GenerateFusionFiles generator = new GenerateFusionFiles(cmd);
+        GenerateFusionFiles generator = new GenerateFusionFiles(configBuilder);
         generator.run();
-    }
-
-    private static Options createOptions()
-    {
-        Options options = new Options();
-
-        options.addOption(KNOWN_FUSION_DB_FILE, true, "File containing the driver gene panel for 37");
-        options.addOption(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
-        addOutputDir(options);
-        addLoggingOptions(options);
-
-        return options;
     }
 }

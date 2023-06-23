@@ -1,8 +1,13 @@
 package com.hartwig.hmftools.geneutils.ensembl;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.writeRecordsAsTsv;
 import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.createEnsemblDbConnection;
@@ -11,11 +16,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -25,15 +27,29 @@ public class RunAdHocQuery
     private static final String QUERY_FILE = "query_file";
     private static final String OUTPUT_FILE = "output_file";
 
-    public static void main(String[] args) throws ParseException, IOException, SQLException
+    public static void main(String[] args) throws IOException, SQLException
     {
-        final Options options = createOptions();
-        final CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        setLogLevel(cmd);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC, V37.toString());
+        configBuilder.addPathItem(QUERY_FILE, true, "Ad-hoc query SQL file");
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file for test query results");
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(RefGenomeVersion.REF_GENOME_VERSION));
-        String outputFile = cmd.getOptionValue(OUTPUT_FILE);
+        EnsemblDAO.addCmdLineArgs(configBuilder);
+        addLoggingOptions(configBuilder);
+        addOutputDir(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+        logVersion();
+
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(configBuilder);
+        String outputFile = configBuilder.getValue(OUTPUT_FILE);
 
         if(refGenomeVersion == null || outputFile == null)
         {
@@ -41,14 +57,14 @@ public class RunAdHocQuery
             System.exit(1);
         }
 
-        DSLContext context = createEnsemblDbConnection(cmd);
+        DSLContext context = createEnsemblDbConnection(configBuilder);
 
         if(context == null)
             System.exit(1);
 
         GU_LOGGER.debug("database connection established");
 
-        String query = readQueryString(cmd.getOptionValue(QUERY_FILE));
+        String query = readQueryString(configBuilder.getValue(QUERY_FILE));
 
         final Result<Record> results = context.fetch(query);
 
@@ -57,16 +73,4 @@ public class RunAdHocQuery
 
         GU_LOGGER.info("complete");
     }
-
-    private static Options createOptions()
-    {
-        final Options options = new Options();
-        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version (V37 or V38))");
-        EnsemblDAO.addCmdLineArgs(options);
-        options.addOption(QUERY_FILE, true, "Ad-hoc query SQL file");
-        options.addOption(OUTPUT_FILE, true, "Output file for test query results");
-        addLoggingOptions(options);
-        return options;
-    }
-
 }

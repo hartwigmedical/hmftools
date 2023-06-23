@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_PROTEIN_FEATURE_DATA_FILE;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_EXON_DATA_FILE;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.codingBaseLength;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -38,9 +36,9 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -83,22 +81,34 @@ public class EnsemblDAO
 
     private static final String MAPPING_FILE = "gene_id_mapping_file";
 
-    public EnsemblDAO(final CommandLine cmd)
+    public EnsemblDAO(final ConfigBuilder configBuilder)
     {
-        mRefGenomeVersion = RefGenomeVersion.from(cmd);
+        this(
+                RefGenomeVersion.from(configBuilder),
+                configBuilder.getValue(HGNC_GENE_DATA_FILE),
+                configBuilder.getValue(REF_ENSEMBL_DIR),
+                configBuilder.getValue(MAPPING_FILE),
+                configBuilder.getValue(DB_USER), configBuilder.getValue(DB_PASS, ""), configBuilder.getValue(DB_URL));
+    }
+
+    public EnsemblDAO(
+            final RefGenomeVersion refGenomeVersion, final String hgncGeneFile, @Nullable final String refEnsemblDir,
+            @Nullable final String mappingFile, final String dbUser, final String dbPassword, final String dbUrl)
+    {
+        mRefGenomeVersion = refGenomeVersion;
         mGeneIdDataMap = Maps.newHashMap();
         mTranscriptIds = Sets.newHashSet();
 
-        mHgncGenes = new HgncGenes(cmd.getOptionValue(HGNC_GENE_DATA_FILE));
+        mHgncGenes = new HgncGenes(hgncGeneFile);
 
         mReferenceTranscriptMap = Maps.newHashMap();
         mReferenceGeneDataById = Maps.newHashMap();
         mReferenceGeneDataByName = Maps.newHashMap();
         mGeneIdMappingOverrides = Maps.newHashMap();
 
-        if(cmd.hasOption(REF_ENSEMBL_DIR))
+        if(refEnsemblDir != null)
         {
-            String ensemblDataDir = cmd.getOptionValue(REF_ENSEMBL_DIR);
+            String ensemblDataDir = refEnsemblDir;
 
             Map<String, List<GeneData>> chrGeneDataMap = Maps.newHashMap();
             List<String> restrictedGeneIds = Lists.newArrayList();
@@ -117,9 +127,9 @@ public class EnsemblDAO
             // EnsemblDataLoader.loadTranscriptData(ensemblDataDir, mReferenceTranscriptMap, restrictedGeneIds, true, true);
         }
 
-        loadGeneIdMappings(cmd.getOptionValue(MAPPING_FILE));
+        loadGeneIdMappings(mappingFile);
 
-        mDbContext = createEnsemblDbConnection(cmd);
+        mDbContext = createEnsemblDbConnection(dbUser, dbPassword, dbUrl);
 
         if(mDbContext == null)
         {
@@ -131,35 +141,44 @@ public class EnsemblDAO
         GU_LOGGER.info("refGenome({}) using coord system Id({})", mRefGenomeVersion, mCoordSystemId);
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addCmdLineArgs(final ConfigBuilder configBuilder)
     {
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version - 37 (default) or 38");
-        options.addOption(DB_PASS, true, "Ensembl DB password, leave out for anonymous connection");
-        options.addOption(DB_URL, true, "Ensembl DB URL");
-        options.addOption(DB_USER, true, "Ensembl DB username");
-        options.addOption(MAPPING_FILE, true, "Optional: mapping of v37 to v38 geneIds");
+        configBuilder.addConfigItem(DB_PASS, "Ensembl DB password, leave out for anonymous connection");
+        configBuilder.addConfigItem(DB_URL, true, "Ensembl DB URL");
+        configBuilder.addConfigItem(DB_USER, true, "Ensembl DB username");
+        configBuilder.addConfigItem(MAPPING_FILE, "Optional: mapping of v37 to v38 geneIds");
+    }
+
+    public static boolean hasDatabaseConfig(final ConfigBuilder configBuilder)
+    {
+        return configBuilder.hasValue(DB_URL) && configBuilder.hasValue(DB_USER);
     }
 
     public boolean isValid() { return mDbContext != null && mCoordSystemId > 0; }
 
-    public static boolean hasDatabaseConfig(final CommandLine cmd)
+    public static DSLContext createEnsemblDbConnection(final ConfigBuilder configBuilder)
     {
-        return cmd.hasOption(DB_URL) && cmd.hasOption(DB_USER);
+        return createEnsemblDbConnection(
+                configBuilder.getValue(DB_USER), configBuilder.getValue(DB_PASS,""), configBuilder.getValue(DB_URL));
     }
 
+    /*
     public static DSLContext createEnsemblDbConnection(final CommandLine cmd)
+    {
+        return createEnsemblDbConnection(cmd.getOptionValue(DB_USER), cmd.getOptionValue(DB_PASS, ""), cmd.getOptionValue(DB_URL));
+    }
+    */
+
+    public static DSLContext createEnsemblDbConnection(final String dbUser, final String dbPassword, final String dbUrl)
     {
         try
         {
-            final String userName = cmd.getOptionValue(DB_USER);
-            final String password = cmd.getOptionValue(DB_PASS, ""); // can be empty for an anonymous connection
-            final String databaseUrl = cmd.getOptionValue(DB_URL);
-            final String jdbcUrl = "jdbc:" + databaseUrl;
+            final String jdbcUrl = "jdbc:" + dbUrl;
 
             System.setProperty("org.jooq.no-logo", "true");
             System.setProperty("org.jooq.no-tips", "true");
 
-            Connection conn = DriverManager.getConnection(jdbcUrl, userName, password);
+            Connection conn = DriverManager.getConnection(jdbcUrl, dbUser, dbPassword);
             String catalog = conn.getCatalog();
 
             GU_LOGGER.info("connecting to database {}", catalog);

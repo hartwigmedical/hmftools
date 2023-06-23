@@ -5,7 +5,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.enforceChrPrefix;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -30,13 +32,10 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.geneutils.common.CommonUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +67,7 @@ public class GenerateTargetRegionsBed
 
     private static final Logger LOGGER = LogManager.getLogger(GenerateTargetRegionsBed.class);
 
-    public GenerateTargetRegionsBed(final CommandLine cmd)
+    public GenerateTargetRegionsBed(final ConfigBuilder configBuilder)
     {
         mCodingGenes = Lists.newArrayList();
         mSpecificRegions = Lists.newArrayList();
@@ -77,32 +76,35 @@ public class GenerateTargetRegionsBed
 
         mCombinedRegions = Maps.newHashMap();
 
-        mRefGenVersion = RefGenomeVersion.from(cmd);
-        mEnsemblDataCache = new EnsemblDataCache(cmd, mRefGenVersion);
+        mRefGenVersion = RefGenomeVersion.from(configBuilder);
+        mEnsemblDataCache = new EnsemblDataCache(configBuilder);
         mEnsemblDataCache.setRequiredData(true, false, false, false);
         mEnsemblDataCache.load(true);
 
-        mIncludeUTR = cmd.hasOption(INCLUDE_UTR);
+        mIncludeUTR = configBuilder.hasFlag(INCLUDE_UTR);
 
-        mSourceDir = checkAddDirSeparator(cmd.getOptionValue(SOURCE_DIR));
+        mSourceDir = checkAddDirSeparator(configBuilder.getValue(SOURCE_DIR));
+
+        String codingGeneFile = configBuilder.getValue(CODING_GENE_FILE);
 
         try
         {
-            final List<String> geneNames = Files.readAllLines(new File(mSourceDir + cmd.getOptionValue(CODING_GENE_FILE)).toPath());
+            final List<String> geneNames = Files.readAllLines(new File(mSourceDir + codingGeneFile).toPath());
             geneNames.stream()
                     .filter(x -> !x.equals("GeneName"))
                     .forEach(x -> mCodingGenes.add(mEnsemblDataCache.getGeneDataByName(x)));
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to load coding genes file({}): {}", cmd.getOptionValue(CODING_GENE_FILE), e.toString());
+            LOGGER.error("failed to load coding genes file({}): {}", codingGeneFile, e.toString());
         }
 
-        if(cmd.hasOption(TRANS_TSL_FILE))
+        if(configBuilder.hasValue(TRANS_TSL_FILE))
         {
+            String transTslFile = configBuilder.getValue(TRANS_TSL_FILE);
             try
             {
-                final List<String> transData = Files.readAllLines(new File(mSourceDir + cmd.getOptionValue(TRANS_TSL_FILE)).toPath());
+                final List<String> transData = Files.readAllLines(new File(mSourceDir + transTslFile).toPath());
                 transData.remove(0); // header
 
                 transData.stream().map(x -> x.split(",")).filter(x -> x.length == 2)
@@ -110,23 +112,23 @@ public class GenerateTargetRegionsBed
             }
             catch(IOException e)
             {
-                LOGGER.error("failed to load Ensembl TSL file({}): {}", cmd.getOptionValue(TRANS_TSL_FILE), e.toString());
+                LOGGER.error("failed to load Ensembl TSL file({}): {}", transTslFile, e.toString());
             }
         }
 
-        if(cmd.hasOption(SPECIFIC_REGIONS_FILE))
+        if(configBuilder.hasValue(SPECIFIC_REGIONS_FILE))
         {
-            loadSpecificRegions(mSourceDir + cmd.getOptionValue(SPECIFIC_REGIONS_FILE, ""));
+            loadSpecificRegions(mSourceDir + configBuilder.getValue(SPECIFIC_REGIONS_FILE));
         }
 
         final List<String> geneIds = mCodingGenes.stream().map(x -> x.GeneId).collect(Collectors.toList());
         mEnsemblDataCache.loadTranscriptData(geneIds);
 
-        mOutputFile = mSourceDir + cmd.getOptionValue(OUTPUT_FILE);
+        mOutputFile = mSourceDir + configBuilder.getValue(OUTPUT_FILE);
 
-        if(cmd.hasOption(COMPARISON_BED_FILES))
+        if(configBuilder.hasValue(COMPARISON_BED_FILES))
         {
-            mComparisonFiles.addAll(Arrays.stream(cmd.getOptionValue(COMPARISON_BED_FILES).split(";", -1)).collect(Collectors.toList()));
+            mComparisonFiles.addAll(Arrays.stream(configBuilder.getValue(COMPARISON_BED_FILES).split(";", -1)).collect(Collectors.toList()));
         }
     }
 
@@ -225,7 +227,7 @@ public class GenerateTargetRegionsBed
 
     private void loadSpecificRegions(final String filename)
     {
-        if(filename.isEmpty())
+        if(filename == null)
             return;
 
         try
@@ -414,36 +416,33 @@ public class GenerateTargetRegionsBed
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        options.addOption(SOURCE_DIR, true, "Path to all input and output files");
-        options.addOption(SPECIFIC_REGIONS_FILE, true, "Path to the Linx cohort SVs file");
-        options.addOption(CODING_GENE_FILE, true, "External LINE data sample counts");
-        options.addOption(TRANS_TSL_FILE, true, "Ensembl valid TSL transcript IDs");
-        options.addOption(COMPARISON_BED_FILES, true, "Comparison BED file");
-        options.addOption(INCLUDE_UTR, false, "Include UTR in bed regions");
-        options.addOption(OUTPUT_FILE, true, "Output BED filename");
-        addEnsemblDir(options);
-        addRefGenomeConfig(options);
-        addLoggingOptions(options);
+        configBuilder.addPathItem(SOURCE_DIR, true, "Path to all input and output files");
+        configBuilder.addConfigItem(CODING_GENE_FILE, true, "External LINE data sample counts");
+        configBuilder.addConfigItem(SPECIFIC_REGIONS_FILE, "Path to the Linx cohort SVs file");
+        configBuilder.addConfigItem(TRANS_TSL_FILE, "Ensembl valid TSL transcript IDs");
+        configBuilder.addConfigItem(COMPARISON_BED_FILES, "Comparison BED file");
+        configBuilder.addFlagItem(INCLUDE_UTR, "Include UTR in bed regions");
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output BED filename");
+        addEnsemblDir(configBuilder, true);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
+        CommonUtils.logVersion();
 
-        GenerateTargetRegionsBed generateTargetRegionsBed = new GenerateTargetRegionsBed(cmd);
+        GenerateTargetRegionsBed generateTargetRegionsBed = new GenerateTargetRegionsBed(configBuilder);
         generateTargetRegionsBed.run();
 
         LOGGER.info("BED region file generation complete");
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

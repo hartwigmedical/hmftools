@@ -3,7 +3,6 @@ package com.hartwig.hmftools.geneutils.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_TRANS_AMINO_ACIDS_FILE;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -13,12 +12,14 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -34,12 +35,8 @@ import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class ProteomeWriter
@@ -53,17 +50,17 @@ public class ProteomeWriter
 
     private BufferedWriter mWriter;
 
-    public ProteomeWriter(final CommandLine cmd)
+    public ProteomeWriter(final ConfigBuilder configBuilder)
     {
-        mCanonicalOnly = cmd.hasOption(CANONICAL_ONLY);
+        mCanonicalOnly = configBuilder.hasFlag(CANONICAL_ONLY);
 
-        mRefGenomeVersion = RefGenomeVersion.from(cmd);
-        mEnsemblDataCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RefGenomeVersion.V37);
+        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
+        mEnsemblDataCache = new EnsemblDataCache(configBuilder);
         mEnsemblDataCache.setRequiredData(true, false, false, mCanonicalOnly);
 
-        mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
+        mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
-        mWriter = initialiseWriter(parseOutputDir(cmd));
+        mWriter = initialiseWriter(parseOutputDir(configBuilder));
     }
 
     public void run()
@@ -223,27 +220,26 @@ public class ProteomeWriter
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addEnsemblDir(options);
-        addRefGenomeConfig(options);
-        addOutputDir(options);
-        options.addOption(CANONICAL_ONLY, false, "Only write canonical proteome");
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        final CommandLine cmd = createCommandLine(args, options);
+        addEnsemblDir(configBuilder, true);
+        addRefGenomeConfig(configBuilder, true);
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        configBuilder.addFlagItem(CANONICAL_ONLY, "Only write canonical proteome");
 
-        setLogLevel(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        ProteomeWriter proteomeWriter = new ProteomeWriter(cmd);
+        setLogLevel(configBuilder);
+        logVersion();
+
+        ProteomeWriter proteomeWriter = new ProteomeWriter(configBuilder);
         proteomeWriter.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }
