@@ -69,7 +69,7 @@ public class HighDepthConfig
         configBuilder.addIntegerItem(
                 HIGH_DEPTH_THRESHOLD, false, "Level for indicating high-depth", DEFAULT_HIGH_DEPTH_THRESHOLD);
 
-        configBuilder.addIntegerItem(PARTITION_SIZE, false, "Partition size, default", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addIntegerItem(PARTITION_SIZE, false, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         addThreadOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
     }

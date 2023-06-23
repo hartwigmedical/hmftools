@@ -452,8 +452,8 @@ public class LilacApplication
             nextSolution.getAlleles().stream().filter(x -> !winningAlleles.contains(x)).forEach(x -> nextSolutionInfo.add(x.toString()));
         }
 
-        LL_LOGGER.info("WINNERS_{}: {}, {}, {}, {}, {}, {}",
-                mConfig.RunId.isEmpty() ? "REF" : mConfig.RunId, mConfig.Sample, mRankedComplexes.size(),
+        LL_LOGGER.info("WINNERS_REF: {}, {}, {}, {}, {}, {}",
+                mConfig.Sample, mRankedComplexes.size(),
                 HlaAllele.toString(winningRefCoverage.getAlleles()), String.format("%.3f", scoreMargin), nextSolutionInfo, totalCoverages);
 
         // write fragment assignment data

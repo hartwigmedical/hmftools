@@ -47,7 +47,6 @@ public class LilacConfig
     public final String ReferenceBam;
     public final String TumorBam;
     public final String RnaBam;
-    public final String RunId;
 
     public final String ResourceDir;
     public final String RefGenome;
@@ -91,7 +90,6 @@ public class LilacConfig
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String TUMOR_BAM = "tumor_bam";
     private static final String RNA_BAM = "rna_bam";
-    private static final String RUN_ID = "run_id";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String GENE_COPY_NUMBER = "gene_copy_number";
@@ -180,8 +178,6 @@ public class LilacConfig
             CopyNumberFile = "";
         }
 
-        RunId = configBuilder.getValue(RUN_ID, "");
-
         ResourceDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_DIR));
         RefGenome = configBuilder.getValue(REF_GENOME, "");
 
@@ -263,7 +259,6 @@ public class LilacConfig
         SampleDataDir = "";
         RefGenome = "";
         RefGenVersion = V37;
-        RunId = "";
 
         MinBaseQual = DEFAULT_MIN_BASE_QUAL;
         MinEvidence = DEFAULT_MIN_EVIDENCE;
@@ -297,7 +292,6 @@ public class LilacConfig
         configBuilder.addPathItem(REFERENCE_BAM, false,"Path to reference/normal BAM");
         configBuilder.addPathItem(TUMOR_BAM, false,"Path to tumor BAM");
         configBuilder.addPathItem(RNA_BAM, false,"Analyse tumor BAM only");
-        configBuilder.addConfigItem(RUN_ID, false,"Only search for HLA-Y fragments", "");
         configBuilder.addPathItem(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
 
         configBuilder.addIntegerItem(MIN_BASE_QUAL, false,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
