@@ -137,6 +137,7 @@ public final class DriverGeneFile
                 .add("reportGermlineVariant")
                 .add("reportGermlineHotspot")
                 .add("reportGermlineDisruption")
+                .add("reportGermlineDeletion")
                 .add("additionalReportedTranscripts")
                 .add("reportPGX")
                 .toString();
@@ -157,6 +158,7 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportGermlineVariant()))
                 .add(String.valueOf(gene.reportGermlineHotspot()))
                 .add(String.valueOf(gene.reportGermlineDisruption()))
+                .add(String.valueOf(gene.reportGermlineDeletion()))
                 .add(otherReportableTransStr(gene.additionalReportedTranscripts()))
                 .add(String.valueOf(gene.reportPGX()))
                 .toString();
