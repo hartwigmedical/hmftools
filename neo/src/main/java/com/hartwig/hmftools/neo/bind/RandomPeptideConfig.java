@@ -3,7 +3,6 @@ package com.hartwig.hmftools.neo.bind;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_DIR;
 import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_ID;
@@ -14,12 +13,10 @@ import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_LIKELIHOOD_DIST;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_RAND_DIST;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.REQUIRED_OUTPUT_ALLELES;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.loadRequiredOutputAlleles;
-import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
 
 import java.util.List;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class RandomPeptideConfig
 {
@@ -37,37 +34,35 @@ public class RandomPeptideConfig
     private static final String WRITE_RAND_DIST = "write_rand_dist";
     private static final String RANDOM_PEPTIDES_FILE = "random_peptides_file";
 
-    public RandomPeptideConfig(final CommandLine cmd)
+    public RandomPeptideConfig(final ConfigBuilder configBuilder)
     {
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID, "");
-        RandomPeptidesFile = cmd.getOptionValue(RANDOM_PEPTIDES_FILE);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID, "");
+        RandomPeptidesFile = configBuilder.getValue(RANDOM_PEPTIDES_FILE);
 
-        String scoreFileDir = checkAddDirSeparator(cmd.getOptionValue(SCORE_FILE_DIR));
-        String scoreFileId = cmd.getOptionValue(SCORE_FILE_ID);
+        String scoreFileDir = checkAddDirSeparator(configBuilder.getValue(SCORE_FILE_DIR));
+        String scoreFileId = configBuilder.getValue(SCORE_FILE_ID);
 
-        ScoreDistributionFile = getScoringFilename(cmd, scoreFileDir, scoreFileId, FILE_ID_RAND_DIST);
-        LikelihoodDistributionFile = getScoringFilename(cmd, scoreFileDir, scoreFileId, FILE_ID_LIKELIHOOD_DIST);
-        ExpressionLikelihoodDistributionFile = getScoringFilename(cmd, scoreFileDir, scoreFileId, FILE_ID_EXP_LIKELIHOOD_DIST);
+        ScoreDistributionFile = getScoringFilename(configBuilder, scoreFileDir, scoreFileId, FILE_ID_RAND_DIST);
+        LikelihoodDistributionFile = getScoringFilename(configBuilder, scoreFileDir, scoreFileId, FILE_ID_LIKELIHOOD_DIST);
+        ExpressionLikelihoodDistributionFile = getScoringFilename(configBuilder, scoreFileDir, scoreFileId, FILE_ID_EXP_LIKELIHOOD_DIST);
 
-        WriteRandomDistribution = cmd.hasOption(WRITE_RAND_DIST);
+        WriteRandomDistribution = configBuilder.hasFlag(WRITE_RAND_DIST);
 
-        RequiredOutputAlleles = loadRequiredOutputAlleles(cmd.getOptionValue(REQUIRED_OUTPUT_ALLELES));
+        RequiredOutputAlleles = loadRequiredOutputAlleles(configBuilder.getValue(REQUIRED_OUTPUT_ALLELES));
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(RANDOM_PEPTIDES_FILE, true, "Random peptide file");
+        configBuilder.addPathItem(RANDOM_PEPTIDES_FILE, false, "Random peptide file");
 
-        options.addOption(scoreFileConfig(FILE_ID_RAND_DIST), true, "Random peptide distribution file");
-        options.addOption(scoreFileConfig(FILE_ID_LIKELIHOOD_DIST), true, "Random likelihood distribution file");
-        options.addOption(scoreFileConfig(FILE_ID_EXP_LIKELIHOOD_DIST), true, "Random expression likelihood distribution file");
+        configBuilder.addPathItem(scoreFileConfig(FILE_ID_RAND_DIST), false, "Random peptide distribution file");
+        configBuilder.addPathItem(scoreFileConfig(FILE_ID_LIKELIHOOD_DIST), false, "Random likelihood distribution file");
+        configBuilder.addPathItem(scoreFileConfig(FILE_ID_EXP_LIKELIHOOD_DIST), false, "Random expression likelihood distribution file");
 
-        options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
-        options.addOption(REQUIRED_OUTPUT_ALLELES, true, "Restricted set of alleles to write to file");
-        options.addOption(WRITE_RAND_DIST, false, "Write random peptide score distribution");
-        addThreadOptions(options);
+        configBuilder.addConfigItem(REQUIRED_OUTPUT_ALLELES, "Restricted set of alleles to write to file");
+        configBuilder.addFlagItem(WRITE_RAND_DIST, "Write random peptide score distribution");
     }
 }

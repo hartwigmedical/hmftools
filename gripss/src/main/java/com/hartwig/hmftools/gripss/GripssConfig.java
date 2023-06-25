@@ -20,6 +20,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
@@ -111,7 +112,7 @@ public class GripssConfig
         configBuilder.addFlagItem(GERMLINE, "Run in germline mode");
 
         addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
         addRefGenomeConfig(configBuilder, true);
 
         addSpecificChromosomesRegionsConfig(configBuilder);

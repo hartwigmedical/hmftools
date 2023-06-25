@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.commons.cli.ParseException;
@@ -114,7 +115,7 @@ public class DepthConfig
         addSpecificChromosomesRegionsConfig(configBuilder);
         addThreadOptions(configBuilder);
         addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         configBuilder.addDecimalItem(PERF_LOG_TIME, false, "Performance log time threshold (seconds)", 0);
     }

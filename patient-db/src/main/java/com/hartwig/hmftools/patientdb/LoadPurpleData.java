@@ -42,6 +42,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
@@ -280,6 +281,6 @@ public class LoadPurpleData
         configBuilder.addFlagItem(SOMATIC_ONLY, "Only load somatic data");
         configBuilder.addFlagItem(GERMLINE_ONLY, "Only load germline data");
         addDatabaseCmdLineArgs(configBuilder, true);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
     }
 }

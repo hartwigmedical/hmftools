@@ -17,9 +17,9 @@ import java.util.List;
 import com.hartwig.hmftools.bamtools.metrics.MetricsConfig;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -42,7 +42,7 @@ public final class CommonUtils
     public static void addCommonCommandOptions(final ConfigBuilder configBuilder)
     {
         addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
         addRefGenomeConfig(configBuilder, true);;
         addSpecificChromosomesRegionsConfig(configBuilder);

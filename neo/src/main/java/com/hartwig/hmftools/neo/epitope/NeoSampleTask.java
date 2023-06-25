@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFusion.generateFilename;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -103,8 +104,7 @@ public class NeoSampleTask implements Callable
         if(mConfig.SomaticVcf == null)
             return pointMutations;
 
-        String somaticVcf = mConfig.SomaticVcf.contains("*") ?
-                mConfig.SomaticVcf.replaceAll("\\*", mSampleId) : mConfig.SomaticVcf;
+        String somaticVcf = convertWildcardSamplePath(mConfig.SomaticVcf, mSampleId);
 
         if(!Files.exists(Paths.get(somaticVcf)))
         {
@@ -193,7 +193,8 @@ public class NeoSampleTask implements Callable
         if(mConfig.LinxDir == null)
             return fusions;
 
-        final String filename = generateFilename(mConfig.LinxDir, mSampleId);
+        String linxDir = convertWildcardSamplePath(mConfig.LinxDir, mSampleId);
+        final String filename = generateFilename(linxDir, mSampleId);
 
         if(!Files.exists(Paths.get(filename)))
         {

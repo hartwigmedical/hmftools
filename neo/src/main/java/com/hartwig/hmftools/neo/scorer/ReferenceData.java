@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
@@ -25,11 +26,11 @@ public class ReferenceData
     public final RnaExpressionMatrix TranscriptExpression;
     public final TpmMediansCache TpmMedians;
 
-    public ReferenceData(final CommandLine cmd)
+    public ReferenceData(final ConfigBuilder configBuilder)
     {
-        PeptideScorer = new BindScorer(new ScoreConfig(cmd));
+        PeptideScorer = new BindScorer(new ScoreConfig(configBuilder));
 
-        String cohortSampleTpmFile = cmd.getOptionValue(COHORT_SAMPLE_TPM_FILE);
+        String cohortSampleTpmFile = configBuilder.getValue(COHORT_SAMPLE_TPM_FILE);
 
         if(cohortSampleTpmFile != null)
         {
@@ -43,12 +44,12 @@ public class ReferenceData
 
         NE_LOGGER.info("loading cohort transcript medians");
 
-        String cohortTpmMediansFile = cmd.getOptionValue(COHORT_TPM_MEDIANS_FILE);
+        String cohortTpmMediansFile = configBuilder.getValue(COHORT_TPM_MEDIANS_FILE);
         TpmMedians = new TpmMediansCache(cohortTpmMediansFile);
 
         TransAminoAcidMap = Maps.newHashMap();
         EnsemblDataLoader.loadTranscriptAminoAcidData(
-                cmd.getOptionValue(ENSEMBL_DATA_DIR), TransAminoAcidMap, Lists.newArrayList(), false);
+                configBuilder.getValue(ENSEMBL_DATA_DIR), TransAminoAcidMap, Lists.newArrayList(), false);
     }
 
     public boolean peptideMatchesWildtype(final String peptide, final String transName)

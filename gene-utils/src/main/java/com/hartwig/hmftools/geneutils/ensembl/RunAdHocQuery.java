@@ -17,6 +17,7 @@ import java.sql.SQLException;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -36,7 +37,7 @@ public class RunAdHocQuery
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file for test query results");
 
         EnsemblDAO.addCmdLineArgs(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))

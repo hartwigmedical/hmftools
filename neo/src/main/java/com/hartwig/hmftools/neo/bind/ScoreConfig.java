@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_EXPRESSION_DIST;
@@ -12,8 +10,7 @@ import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_POS_WEIGHT;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.FILE_ID_RECOGNITION;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.formTrainingFilename;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class ScoreConfig
 {
@@ -48,40 +45,40 @@ public class ScoreConfig
     private static final String WRITE_PEPTIDE_SCORES = "write_peptide_scores";
     private static final String WRITE_SUMMARY_DATA = "write_summary_data";
 
-    public ScoreConfig(final CommandLine cmd)
+    public ScoreConfig(final ConfigBuilder configBuilder)
     {
-        ValidationDataFile = cmd.getOptionValue(VALIDATION_DATA_FILE);
+        ValidationDataFile = configBuilder.getValue(VALIDATION_DATA_FILE);
 
-        ScoreFileDir = checkAddDirSeparator(cmd.getOptionValue(SCORE_FILE_DIR));
-        ScoreFileId = cmd.getOptionValue(SCORE_FILE_ID);
+        ScoreFileDir = checkAddDirSeparator(configBuilder.getValue(SCORE_FILE_DIR));
+        ScoreFileId = configBuilder.getValue(SCORE_FILE_ID);
 
         // load reference files either by specific name or using the scoring data dir and file id
-        PosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_POS_WEIGHT);
-        FlankPosWeightsFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_FLANK_POS_WEIGHT);
-        BindLikelihoodFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_LIKELIHOOD);
-        RecognitionDataFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_RECOGNITION);
-        ExpressionLikelihoodFile = getScoringFilename(cmd, ScoreFileDir, ScoreFileId, FILE_ID_EXPRESSION_DIST);
+        PosWeightsFile = getScoringFilename(configBuilder, ScoreFileDir, ScoreFileId, FILE_ID_POS_WEIGHT);
+        FlankPosWeightsFile = getScoringFilename(configBuilder, ScoreFileDir, ScoreFileId, FILE_ID_FLANK_POS_WEIGHT);
+        BindLikelihoodFile = getScoringFilename(configBuilder, ScoreFileDir, ScoreFileId, FILE_ID_LIKELIHOOD);
+        RecognitionDataFile = getScoringFilename(configBuilder, ScoreFileDir, ScoreFileId, FILE_ID_RECOGNITION);
+        ExpressionLikelihoodFile = getScoringFilename(configBuilder, ScoreFileDir, ScoreFileId, FILE_ID_EXPRESSION_DIST);
 
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        RandomPeptides = new RandomPeptideConfig(cmd);
+        RandomPeptides = new RandomPeptideConfig(configBuilder);
 
-        WriteSummaryData = cmd.hasOption(WRITE_SUMMARY_DATA);
-        WritePeptideScores = cmd.hasOption(WRITE_PEPTIDE_SCORES);
+        WriteSummaryData = configBuilder.hasFlag(WRITE_SUMMARY_DATA);
+        WritePeptideScores = configBuilder.hasFlag(WRITE_PEPTIDE_SCORES);
 
-        CheckSelfRecognition = cmd.hasOption(CHECK_SELF_RECOGNITION)
+        CheckSelfRecognition = configBuilder.hasFlag(CHECK_SELF_RECOGNITION)
                 || (ValidationDataFile != null && ValidationDataFile.equals(RecognitionDataFile));
     }
 
     public static String scoreFileConfig(final String fileType) { return fileType + "_file"; }
 
     public static String getScoringFilename(
-            final CommandLine cmd, final String scoreFileDir, final String scoreFileId, final String fileType)
+            final ConfigBuilder configBuilder, final String scoreFileDir, final String scoreFileId, final String fileType)
     {
         // formFilename
         String configStr = scoreFileConfig(fileType);
-        String configValue = cmd.getOptionValue(configStr);
+        String configValue = configBuilder.getValue(configStr);
 
         if(scoreFileDir == null)
             return configValue;
@@ -92,24 +89,22 @@ public class ScoreConfig
             return formTrainingFilename(scoreFileDir, fileType, scoreFileId);
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        RandomPeptideConfig.addCmdLineArgs(options);
+        RandomPeptideConfig.addConfig(configBuilder);
 
-        options.addOption(SCORE_FILE_ID, true, "Reference file id for scoring instead of specifying individual files");
-        options.addOption(SCORE_FILE_DIR, true, "Reference file directory");
-        options.addOption(scoreFileConfig(FILE_ID_POS_WEIGHT), true, "Binding position weights file");
-        options.addOption(scoreFileConfig(FILE_ID_FLANK_POS_WEIGHT), true, "Binding flank weights file");
-        options.addOption(scoreFileConfig(FILE_ID_LIKELIHOOD), true, "Binding likelihood file");
-        options.addOption(scoreFileConfig(FILE_ID_EXPRESSION_DIST), true, "Expression likelihood file");
-        options.addOption(scoreFileConfig(FILE_ID_RECOGNITION), true, "Immunogenic pHLA recognition data file");
+        configBuilder.addConfigItem(SCORE_FILE_ID, false, "Reference file id for scoring instead of specifying individual files");
+        configBuilder.addPathItem(SCORE_FILE_DIR, false, "Reference file directory");
+        configBuilder.addPathItem(scoreFileConfig(FILE_ID_POS_WEIGHT), false, "Binding position weights file");
+        configBuilder.addPathItem(scoreFileConfig(FILE_ID_FLANK_POS_WEIGHT), false, "Binding flank weights file");
+        configBuilder.addPathItem(scoreFileConfig(FILE_ID_LIKELIHOOD), false, "Binding likelihood file");
+        configBuilder.addPathItem(scoreFileConfig(FILE_ID_EXPRESSION_DIST), false, "Expression likelihood file");
+        configBuilder.addPathItem(scoreFileConfig(FILE_ID_RECOGNITION), false, "Immunogenic pHLA recognition data file");
 
-        options.addOption(VALIDATION_DATA_FILE, true, "Validation data file");
+        configBuilder.addPathItem(VALIDATION_DATA_FILE, false, "Validation data file");
 
-        options.addOption(WRITE_SUMMARY_DATA, false, "Write summary results per allele");
-        options.addOption(WRITE_PEPTIDE_SCORES, false, "Write score and rank data per peptide");
-        options.addOption(CHECK_SELF_RECOGNITION, false, "Don't allow recognition with same peptide");
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        configBuilder.addFlagItem(WRITE_SUMMARY_DATA, "Write summary results per allele");
+        configBuilder.addFlagItem(WRITE_PEPTIDE_SCORES, "Write score and rank data per peptide");
+        configBuilder.addFlagItem(CHECK_SELF_RECOGNITION, "Don't allow recognition with same peptide");
     }
 }

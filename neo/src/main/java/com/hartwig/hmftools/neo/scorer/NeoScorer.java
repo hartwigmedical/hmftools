@@ -12,12 +12,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class NeoScorer
@@ -26,10 +22,10 @@ public class NeoScorer
     private final NeoDataWriter mWriters;
     private final ReferenceData mReferenceData;
 
-    public NeoScorer(final CommandLine cmd)
+    public NeoScorer(final ConfigBuilder configBuilder)
     {
-        mConfig = new NeoScorerConfig(cmd);
-        mReferenceData = new ReferenceData(cmd);
+        mConfig = new NeoScorerConfig(configBuilder);
+        mReferenceData = new ReferenceData(configBuilder);
 
         mWriters = new NeoDataWriter(mConfig);
     }
@@ -75,26 +71,22 @@ public class NeoScorer
         NE_LOGGER.info("Neo peptide scoring complete");
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+
+        NeoScorerConfig.addConfig(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
         logVersion();
 
-        final Options options = new Options();
-
-        NeoScorerConfig.addCmdLineArgs(options);
-
-        final CommandLine cmd = createCommandLine(args, options);
-
-        setLogLevel(cmd);
-
-        NeoScorer neoScorer = new NeoScorer(cmd);
+        NeoScorer neoScorer = new NeoScorer(configBuilder);
         neoScorer.run();
-    }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

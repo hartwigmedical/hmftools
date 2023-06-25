@@ -181,14 +181,9 @@ public class ConfigUtils
         return ids;
     }
 
-    public static boolean containsFlag(final CommandLine cmd, final String opt)
+    public static String convertWildcardSamplePath(final String samplePath, final String sampleId)
     {
-        if(cmd.hasOption(opt))
-        {
-            LOGGER.info("Using non default {} flag", opt);
-            return true;
-        }
-        return false;
+        return samplePath.replaceAll("\\*", sampleId);
     }
 
 }

@@ -36,6 +36,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -227,7 +228,7 @@ public class ProteomeWriter
         addEnsemblDir(configBuilder, true);
         addRefGenomeConfig(configBuilder, true);
         addOutputDir(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
         configBuilder.addFlagItem(CANONICAL_ONLY, "Only write canonical proteome");
 
         if(!configBuilder.parseCommandLine(args))

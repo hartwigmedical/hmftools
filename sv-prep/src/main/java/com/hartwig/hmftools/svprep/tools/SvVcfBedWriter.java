@@ -14,13 +14,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -108,7 +104,7 @@ public class SvVcfBedWriter
         ConfigBuilder configBuilder = new ConfigBuilder();
         configBuilder.addPathItem(INPUT_VCF, true, "Input VCF");
         configBuilder.addConfigItem(OUTPUT_BED, true, "Output BED");
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

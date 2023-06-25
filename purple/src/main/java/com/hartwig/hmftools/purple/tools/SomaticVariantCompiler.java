@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
@@ -166,7 +167,7 @@ public class SomaticVariantCompiler
         configBuilder.addConfigItem(COMMON_FIELDS, false, "Required VCF fields separated by ','");
         configBuilder.addConfigItem(GENOTYPE_FIELDS, false, "Required VCF genotype fields separated by ','");
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

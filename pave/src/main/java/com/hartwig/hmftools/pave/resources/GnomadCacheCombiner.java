@@ -22,6 +22,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -215,7 +216,7 @@ public class GnomadCacheCombiner
         configBuilder.addPathItem(GNOMAD_DIR_1, true, "Gnomad VCF input file");
         configBuilder.addPathItem(GNOMAD_DIR_2, true, "Gnomad VCF input file");
         addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

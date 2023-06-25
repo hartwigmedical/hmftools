@@ -16,12 +16,8 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class NeoEpitopeFinder
@@ -30,11 +26,11 @@ public class NeoEpitopeFinder
 
     private final EnsemblDataCache mGeneTransCache;
 
-    public NeoEpitopeFinder(final CommandLine cmd)
+    public NeoEpitopeFinder(final ConfigBuilder configBuilder)
     {
-        mConfig = new NeoConfig(cmd);
+        mConfig = new NeoConfig(configBuilder);
 
-        mGeneTransCache = new EnsemblDataCache(cmd, mConfig.RefGenVersion);
+        mGeneTransCache = new EnsemblDataCache(configBuilder);
         mGeneTransCache.setRequiredData(true, false, false, false);
         mGeneTransCache.setRestrictedGeneIdList(mConfig.RestrictedGeneIds);
         mGeneTransCache.load(false);
@@ -74,6 +70,8 @@ public class NeoEpitopeFinder
         {
             sampleTasks.forEach(x -> x.processSample());
         }
+
+        NE_LOGGER.info("Neo-epitope annotations complete");
     }
 
     public static BufferedWriter initialiseNeoepitopeWriter(final String outputDir, final String sampleId)
@@ -124,29 +122,22 @@ public class NeoEpitopeFinder
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+
+        NeoConfig.addCmdLineArgs(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
         logVersion();
 
-        final Options options = new Options();
-
-        NeoConfig.addCmdLineArgs(options);
-
-        final CommandLine cmd = createCommandLine(args, options);
-
-        setLogLevel(cmd);
-
-        NeoEpitopeFinder neoEpitopeFinder = new NeoEpitopeFinder(cmd);
+        NeoEpitopeFinder neoEpitopeFinder = new NeoEpitopeFinder(configBuilder);
         neoEpitopeFinder.run();
-
-        NE_LOGGER.info("Neo-epitope annotations complete");
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

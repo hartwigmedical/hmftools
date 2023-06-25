@@ -41,15 +41,12 @@ import com.hartwig.hmftools.common.aminoacid.BlosumMapping;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -67,15 +64,15 @@ public class PeptideProteomeSimilarity
 
     private static final String PEPTIDES_FILE = "peptides_file";
 
-    public PeptideProteomeSimilarity(final CommandLine cmd)
+    public PeptideProteomeSimilarity(final ConfigBuilder configBuilder)
     {
         mPeptideSimilarities = Lists.newArrayList();
-        loadPeptides(cmd.getOptionValue(PEPTIDES_FILE));
+        loadPeptides(configBuilder.getValue(PEPTIDES_FILE));
 
-        if(cmd.hasOption(ENSEMBL_DATA_DIR))
+        if(configBuilder.hasValue(ENSEMBL_DATA_DIR))
         {
             Map<String, TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
-            EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
+            EnsemblDataLoader.loadTranscriptAminoAcidData(configBuilder.getValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
             mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
         }
         else
@@ -83,20 +80,20 @@ public class PeptideProteomeSimilarity
             mTransAminoAcidMap = null;
         }
 
-        if(cmd.hasOption(PROTEOME_RANKS_FILE))
+        if(configBuilder.hasValue(PROTEOME_RANKS_FILE))
         {
-            mRankedProteomePeptides = new RankedProteomePeptides(cmd.getOptionValue(PROTEOME_RANKS_FILE));
+            mRankedProteomePeptides = new RankedProteomePeptides(configBuilder.getValue(PROTEOME_RANKS_FILE));
         }
         else
         {
             mRankedProteomePeptides = null;
         }
 
-        mScorer = new BindScorer(new ScoreConfig(cmd));
+        mScorer = new BindScorer(new ScoreConfig(configBuilder));
 
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
-        mThreads = parseThreads(cmd);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
+        mThreads = parseThreads(configBuilder);
     }
 
     public void run()
@@ -497,30 +494,26 @@ public class PeptideProteomeSimilarity
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addEnsemblDir(options);
-        options.addOption(PEPTIDES_FILE, true, "Peptides file");
-        options.addOption(PROTEOME_RANKS_FILE, true, "Proteome ranks file");
-        ScoreConfig.addCmdLineArgs(options);
-        addLoggingOptions(options);
-        addThreadOptions(options);
-        addOutputOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addEnsemblDir(configBuilder);
+        configBuilder.addPathItem(PEPTIDES_FILE, true, "Peptides file");
+        configBuilder.addPathItem(PROTEOME_RANKS_FILE, true, "Proteome ranks file");
+        ScoreConfig.registerConfig(configBuilder);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        PeptideProteomeSimilarity peptideProteomeSimilarity = new PeptideProteomeSimilarity(cmd);
+        PeptideProteomeSimilarity peptideProteomeSimilarity = new PeptideProteomeSimilarity(configBuilder);
         peptideProteomeSimilarity.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

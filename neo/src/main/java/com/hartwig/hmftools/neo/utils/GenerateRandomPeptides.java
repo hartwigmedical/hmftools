@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
@@ -38,13 +39,9 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // routine for generating random peptides from the ref-genome for a given set of lengths and alleles (optional)
@@ -80,9 +77,9 @@ public class GenerateRandomPeptides
 
     private static final int MAX_PER_GENE = 10;
 
-    public GenerateRandomPeptides(final CommandLine cmd)
+    public GenerateRandomPeptides(final ConfigBuilder configBuilder)
     {
-        String ensemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
+        String ensemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
         mEnsemblDataCache = new EnsemblDataCache(ensemblDataDir, RefGenomeVersion.V37);
         mEnsemblDataCache.setRequiredData(false, false, false, true);
 
@@ -91,23 +88,23 @@ public class GenerateRandomPeptides
         mTransAminoAcidMap = Maps.newHashMap();
         EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList(), true);
 
-        mTranscriptExpression = new TranscriptExpression(cmd.getOptionValue(IMMUNE_EXPRESSION_FILE));
+        mTranscriptExpression = new TranscriptExpression(configBuilder.getValue(IMMUNE_EXPRESSION_FILE));
 
         mUniquePeptides = Sets.newHashSet();
         mPeptideExclusions = Lists.newArrayList();
 
-        mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
-        mAssignAllelesByFreq = cmd.hasOption(ASSIGN_ALLELES_BY_FREQ);
+        mOutputFile = configBuilder.getValue(OUTPUT_FILE);
+        mAssignAllelesByFreq = configBuilder.hasFlag(ASSIGN_ALLELES_BY_FREQ);
 
         mPeptitdeLengthIndex = 0;
 
-        mRequiredPeptides = Integer.parseInt(cmd.getOptionValue(REQ_PEPTIDES));
+        mRequiredPeptides = configBuilder.getInteger(REQ_PEPTIDES);
 
         mPeptideLengths = Lists.newArrayList();
 
-        if(cmd.hasOption(PEPTIDES_LENGTHS))
+        if(configBuilder.hasValue(PEPTIDES_LENGTHS))
         {
-            Arrays.stream(cmd.getOptionValue(PEPTIDES_LENGTHS).split(";", -1))
+            Arrays.stream(configBuilder.getValue(PEPTIDES_LENGTHS).split(ITEM_DELIM, -1))
                     .forEach(x -> mPeptideLengths.add(Integer.parseInt(x)));
         }
         else
@@ -116,8 +113,8 @@ public class GenerateRandomPeptides
         }
 
         mAlleles = Lists.newArrayList();
-        loadAlleleFrequencies(cmd.getOptionValue(ALLELES_FILE));
-        loadPeptideExclusions(cmd.getOptionValue(PEPTIDE_EXCLUSIONS_FILE));
+        loadAlleleFrequencies(configBuilder.getValue(ALLELES_FILE));
+        loadPeptideExclusions(configBuilder.getValue(PEPTIDE_EXCLUSIONS_FILE));
 
         mRandom = new Random();
         mPeptideBaseGap = MAX_PER_GENE - (int)round(log10(mRequiredPeptides)); // smaller gaps when more peptides are required
@@ -358,33 +355,29 @@ public class GenerateRandomPeptides
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addEnsemblDir(options);
-        options.addOption(OUTPUT_FILE, true, "Output filename");
-        options.addOption(REQ_PEPTIDES, true, "Number of peptides to find randomly from the proteome");
-        options.addOption(PEPTIDES_LENGTHS, true, "Peptide lengths, separated by ';'");
-        options.addOption(ALLELES_FILE, true, "File with alleles to assign");
-        options.addOption(PEPTIDE_EXCLUSIONS_FILE, true, "File with training set peptides to avoid replicating");
-        options.addOption(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addEnsemblDir(configBuilder);
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
+        configBuilder.addIntegerItem(REQ_PEPTIDES, true, "Number of peptides to find randomly from the proteome", 0);
+        configBuilder.addConfigItem(PEPTIDES_LENGTHS, false, "Peptide lengths, separated by ';'");
+        configBuilder.addPathItem(ALLELES_FILE, true, "File with alleles to assign");
+        configBuilder.addPathItem(PEPTIDE_EXCLUSIONS_FILE, false, "File with training set peptides to avoid replicating");
+        configBuilder.addPathItem(IMMUNE_EXPRESSION_FILE, false, IMMUNE_EXPRESSION_FILE_CFG);
 
-        addLoggingOptions(options);
-        addOutputDir(options);
+        addLoggingOptions(configBuilder);
+        addOutputDir(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        GenerateRandomPeptides neoBinder = new GenerateRandomPeptides(cmd);
+        GenerateRandomPeptides neoBinder = new GenerateRandomPeptides(configBuilder);
         neoBinder.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

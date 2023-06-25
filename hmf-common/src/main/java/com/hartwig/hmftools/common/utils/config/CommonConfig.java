@@ -49,6 +49,9 @@ public final class CommonConfig
     public static final String ISOFOX_DIR_CFG = toolDirectory("isofox");
     public static final String ISOFOX_DIR_DESC = toolDirectoryDesc("isofox");
 
+    public static final String NEO_DIR_CFG = toolDirectory("neo");
+    public static final String NEO_DIR_DESC = toolDirectoryDesc("neo");
+
     private static String toolDirectory(final String toolName) { return format("%s_dir", toolName); }
     private static String toolDirectoryDesc(final String toolName) { return format("Path to %s pipeline files", toolName); }
 

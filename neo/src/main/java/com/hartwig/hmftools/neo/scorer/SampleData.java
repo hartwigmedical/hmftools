@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.neo.scorer;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.CANCER_TYPE;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.ISOFOX_DIR;
 import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.RNA_SOMATIC_VCF;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.SAMPLE;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-
-import org.apache.commons.cli.CommandLine;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class SampleData
 {
@@ -32,13 +31,13 @@ public class SampleData
         HasRna = hasRna;
     }
 
-    public static List<SampleData> loadFromConfig(final CommandLine cmd)
+    public static List<SampleData> loadFromConfig(final ConfigBuilder configBuilder)
     {
         List<SampleData> samples = Lists.newArrayList();
 
-        if(cmd.hasOption(SAMPLE_ID_FILE))
+        if(configBuilder.hasValue(SAMPLE_ID_FILE))
         {
-            String filename = cmd.getOptionValue(SAMPLE_ID_FILE);
+            String filename = configBuilder.getValue(SAMPLE_ID_FILE);
             try
             {
                 final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
@@ -72,11 +71,11 @@ public class SampleData
                 NE_LOGGER.error("failed to read sample ID file({}): {}", filename, e.toString());
             }
         }
-        else if(cmd.hasOption(SAMPLE))
+        else if(configBuilder.hasValue(SAMPLE))
         {
-            String sampleId = cmd.getOptionValue(SAMPLE);
-            String cancerType = cmd.getOptionValue(CANCER_TYPE, "");
-            boolean hasRna = cmd.hasOption(ISOFOX_DIR) && cmd.hasOption(RNA_SOMATIC_VCF);
+            String sampleId = configBuilder.getValue(SAMPLE);
+            String cancerType = configBuilder.getValue(CANCER_TYPE, "");
+            boolean hasRna = configBuilder.hasValue(ISOFOX_DIR_CFG) && configBuilder.hasValue(RNA_SOMATIC_VCF);
             samples.add(new SampleData(sampleId, cancerType, hasRna));
         }
 

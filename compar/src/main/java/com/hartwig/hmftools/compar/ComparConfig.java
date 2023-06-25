@@ -47,6 +47,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.logging.log4j.LogManager;
@@ -407,7 +408,7 @@ public class ComparConfig
 
         addDatabaseCmdLineArgs(configBuilder, false);
         addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
     }
 

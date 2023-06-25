@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
@@ -335,7 +336,7 @@ public class EnsemblCacheCompare
         configBuilder.addPathItem(ENSEMBL_DIR_NEW, true, "Ensembl data cache dir for ref-genome v38");
         configBuilder.addConfigItem(SPECIFIC_GENES, "Limit comparison to specific genes, separated by ','");
         addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

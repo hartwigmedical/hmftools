@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.containsFlag;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -207,7 +206,7 @@ public class SageConfig
 
         TrackUMIs = cmd.hasOption(TRACK_UMIS);
 
-        PanelOnly = containsFlag(cmd, PANEL_ONLY);
+        PanelOnly = cmd.hasOption(PANEL_ONLY);
         LogLpsData = cmd.hasOption(LOG_LPS_DATA);
         LogEvidenceReads = !SpecificRegions.isEmpty() && cmd.hasOption(LOG_EVIDENCE_READS);
 

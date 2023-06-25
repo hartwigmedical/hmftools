@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.StructuralVariantFusionDAO;
 
@@ -176,6 +177,6 @@ public class LoadLinxData
         configBuilder.addFlagItem(SOMATIC_ONLY, "Only load somatic data");
         configBuilder.addFlagItem(GERMLINE_ONLY, "Only load germline data");
         addDatabaseCmdLineArgs(configBuilder, true);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
     }
 }

@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 
@@ -258,7 +259,7 @@ public class BlacklistExplorer
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
 
         addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))

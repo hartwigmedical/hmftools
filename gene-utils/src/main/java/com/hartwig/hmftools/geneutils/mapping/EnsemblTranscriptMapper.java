@@ -27,8 +27,8 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 
@@ -265,7 +265,7 @@ public class EnsemblTranscriptMapper
         configBuilder.addPathItem(ENSEMBL_DIR_DEST, true, "Ensembl data cache dir for ref-genome v38");
         configBuilder.addConfigItem(SPECIFIC_GENE_IDS, "Optional list of geneIds to map");
         addOutputDir(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

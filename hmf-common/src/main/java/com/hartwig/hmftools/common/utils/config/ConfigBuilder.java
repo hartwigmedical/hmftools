@@ -153,10 +153,13 @@ public class ConfigBuilder
                 LOGGER.error("missing required config: {}: {}", item.Name, item.Description);
                 mErrors.add(ErrorType.MISSING_REQUIRED);
             }
-            else if(item.Type == PATH && item.hasValue() && !Files.exists(Paths.get(item.value())))
+            else if(item.Type == PATH)
             {
-                LOGGER.error("invalid path for config: {} = {}", item.Name, item.value());
-                mErrors.add(ErrorType.INVALID_PATH);
+                if(item.hasValue() && !item.value().contains("*") && !Files.exists(Paths.get(item.value())))
+                {
+                    LOGGER.error("invalid path for config: {} = {}", item.Name, item.value());
+                    mErrors.add(ErrorType.INVALID_PATH);
+                }
             }
             else
             {

@@ -36,14 +36,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class ExpressionAnalyser
@@ -66,23 +62,23 @@ public class ExpressionAnalyser
     private static final String VALIDATION_PEPTIDES_FILE = "validation_file";
     private static final String PEPTIDE_SEARCH_FILE = "peptide_search_file";
 
-    public ExpressionAnalyser(final CommandLine cmd)
+    public ExpressionAnalyser(final ConfigBuilder configBuilder)
     {
-        mTranscriptExpression = new TranscriptExpression(cmd.getOptionValue(IMMUNE_EXPRESSION_FILE));
+        mTranscriptExpression = new TranscriptExpression(configBuilder.getValue(IMMUNE_EXPRESSION_FILE));
 
-        mBinderPeptides = loadPeptideData(cmd.getOptionValue(VALIDATION_PEPTIDES_FILE), SOURCE_VALIDATION);
+        mBinderPeptides = loadPeptideData(configBuilder.getValue(VALIDATION_PEPTIDES_FILE), SOURCE_VALIDATION);
         mValidationAlleles = mBinderPeptides.stream().map(x -> x.Allele).collect(Collectors.toSet());
 
-        mProteomePeptides = loadPeptideData(cmd.getOptionValue(PROTEOME_PEPTIDES_FILE), SOURCE_PROTEOME);
+        mProteomePeptides = loadPeptideData(configBuilder.getValue(PROTEOME_PEPTIDES_FILE), SOURCE_PROTEOME);
 
-        mPeptideSearchDataMap = loadPeptideSearchData(cmd.getOptionValue(PEPTIDE_SEARCH_FILE));
+        mPeptideSearchDataMap = loadPeptideSearchData(configBuilder.getValue(PEPTIDE_SEARCH_FILE));
 
         mExpressionDistribution = new ExpressionDistribution();
 
-        mGenePropensity = new GenePropensity(mExpressionDistribution, cmd.getOptionValue(ENSEMBL_DATA_DIR));
+        mGenePropensity = new GenePropensity(mExpressionDistribution, configBuilder.getValue(ENSEMBL_DATA_DIR));
 
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
 
         String outputFile = BindCommon.formFilename(mOutputDir, "peptide_expression", mOutputId);
         mWriter = initialiseWriter(outputFile);
@@ -308,30 +304,26 @@ public class ExpressionAnalyser
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
-        options.addOption(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
-        options.addOption(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
-        options.addOption(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");
-        addEnsemblDir(options);
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addPathItem(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
+        configBuilder.addPathItem(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
+        configBuilder.addPathItem(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
+        configBuilder.addPathItem(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");
+        addEnsemblDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        ExpressionAnalyser expressionAnalyser = new ExpressionAnalyser(cmd);
+        ExpressionAnalyser expressionAnalyser = new ExpressionAnalyser(configBuilder);
         expressionAnalyser.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

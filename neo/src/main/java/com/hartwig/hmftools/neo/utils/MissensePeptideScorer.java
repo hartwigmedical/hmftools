@@ -41,6 +41,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
@@ -74,24 +75,24 @@ public class MissensePeptideScorer
     private static final String OUTPUT_FILE = "output_file";
     private static final String LIKELIHOOD_CUTOFF = "likelihood_cutoff";
 
-    public MissensePeptideScorer(final CommandLine cmd)
+    public MissensePeptideScorer(final ConfigBuilder configBuilder)
     {
-        mEnsemblDataCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR), RefGenomeVersion.V37);
+        mEnsemblDataCache = new EnsemblDataCache(configBuilder.getValue(ENSEMBL_DATA_DIR), RefGenomeVersion.V37);
         mEnsemblDataCache.setRequiredData(true, false, false, true);
 
-        mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
+        mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
         mPeptideLengths = new int[] { MIN_PEPTIDE_LENGTH, REF_PEPTIDE_LENGTH };
         mFlankLength = FLANK_AA_COUNT;
         mUniqiuePeptides = Sets.newHashSet();
         mPeptideData = Lists.newArrayList();
 
-        mPeptideScorer = cmd.hasOption(SCORE_FILE_DIR) ? new BindScorer(new ScoreConfig(cmd)) : null;
+        mPeptideScorer = configBuilder.hasValue(SCORE_FILE_DIR) ? new BindScorer(new ScoreConfig(configBuilder)) : null;
 
-        mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_FILE));
+        mWriter = initialiseWriter(configBuilder.getValue(OUTPUT_FILE));
 
-        mGeneIds = loadGeneIdsFile(cmd.getOptionValue(GENE_ID_FILE));
-        mLikelihoodCutoff = Double.parseDouble(cmd.getOptionValue(LIKELIHOOD_CUTOFF, "0.02"));
+        mGeneIds = loadGeneIdsFile(configBuilder.getValue(GENE_ID_FILE));
+        mLikelihoodCutoff = configBuilder.getDecimal(LIKELIHOOD_CUTOFF);
     }
 
     public void run()
@@ -472,31 +473,27 @@ public class MissensePeptideScorer
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addEnsemblDir(options);
-        ScoreConfig.addCmdLineArgs(options);
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(GENE_ID_FILE, true, "Gene IDs file");
-        options.addOption(OUTPUT_FILE, true, "Output filename");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        options.addOption(LIKELIHOOD_CUTOFF, true, "Likelihood cutoff to write an allele peptide result");
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addEnsemblDir(configBuilder);
+        ScoreConfig.registerConfig(configBuilder);
+        configBuilder.addPathItem(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        configBuilder.addPathItem(GENE_ID_FILE, false, "Gene IDs file");
+        configBuilder.addPathItem(OUTPUT_FILE, true, "Output filename");
+        configBuilder.addConfigItem(OUTPUT_DIR, true, "Output directory");
+        configBuilder.addDecimalItem(LIKELIHOOD_CUTOFF, false, "Likelihood cutoff to write an allele peptide result", 0.02);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        MissensePeptideScorer missensePeptideScorer = new MissensePeptideScorer(cmd);
+        MissensePeptideScorer missensePeptideScorer = new MissensePeptideScorer(configBuilder);
         missensePeptideScorer.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

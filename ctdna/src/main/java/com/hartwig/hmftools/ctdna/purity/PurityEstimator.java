@@ -15,6 +15,7 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.ctdna.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.ctdna.purity.cn.CopyNumberProfile;
 import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariantResult;
@@ -160,7 +161,7 @@ public class PurityEstimator
         ConfigBuilder configBuilder = new ConfigBuilder();
         PurityConfig.addConfig(configBuilder);
 
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

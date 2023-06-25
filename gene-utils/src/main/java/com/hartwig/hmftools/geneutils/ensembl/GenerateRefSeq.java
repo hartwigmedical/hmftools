@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import org.apache.commons.cli.ParseException;
 import org.jooq.DSLContext;
@@ -34,7 +35,7 @@ public class GenerateRefSeq
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         EnsemblDAO.addCmdLineArgs(configBuilder);
         addEnsemblDir(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))

@@ -39,6 +39,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionType;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 public class GenerateFusionFiles
 {
@@ -497,7 +498,7 @@ public class GenerateFusionFiles
         configBuilder.addPathItem(KNOWN_FUSION_DB_FILE, true, "File containing the driver gene panel for 37");
         configBuilder.addPathItem(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
         addOutputDir(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

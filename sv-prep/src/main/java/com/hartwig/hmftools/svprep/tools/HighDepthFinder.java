@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -110,7 +111,7 @@ public class HighDepthFinder
         ConfigBuilder configBuilder = new ConfigBuilder();
         HighDepthConfig.addConfig(configBuilder);
         addOutputOptions(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

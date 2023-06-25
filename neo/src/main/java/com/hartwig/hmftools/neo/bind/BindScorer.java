@@ -18,11 +18,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.stats.AucCalc;
 import com.hartwig.hmftools.common.stats.AucData;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
@@ -414,24 +411,20 @@ public class BindScorer
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+
+        ScoreConfig.registerConfig(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
         logVersion();
 
-        final Options options = new Options();
-
-        ScoreConfig.addCmdLineArgs(options);
-
-        final CommandLine cmd = createCommandLine(args, options);
-
-        setLogLevel(cmd);
-
-        BindScorer bindScorer = new BindScorer(new ScoreConfig(cmd));
+        BindScorer bindScorer = new BindScorer(new ScoreConfig(configBuilder));
         bindScorer.run();
-    }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

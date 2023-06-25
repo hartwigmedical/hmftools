@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -259,7 +260,7 @@ public class UnmappableRegionsCalculator
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

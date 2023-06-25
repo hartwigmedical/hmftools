@@ -28,12 +28,8 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class GenerateEnsemblDataCache
@@ -218,7 +214,7 @@ public class GenerateEnsemblDataCache
         configBuilder.addPathItem(HGNC_GENE_DATA_FILE, false, "HGNC gene data file");
         configBuilder.addPathItem(REF_ENSEMBL_DIR, false, "Ensembl data dir for canonical trans to use");
         EnsemblDAO.addCmdLineArgs(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))

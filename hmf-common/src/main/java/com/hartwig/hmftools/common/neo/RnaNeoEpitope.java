@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_TYPE;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,13 +47,11 @@ public class RnaNeoEpitope
 
     private static final String FILE_EXTENSION = ISF_FILE_ID + "neoepitope.tsv";
 
-    @NotNull
     public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + FILE_EXTENSION;
     }
 
-    @NotNull
     public static List<RnaNeoEpitope> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
@@ -63,7 +62,6 @@ public class RnaNeoEpitope
         Files.write(new File(filename).toPath(), toLines(neos));
     }
 
-    @NotNull
     private static List<String> toLines(final List<RnaNeoEpitope> neos)
     {
         final List<String> lines = Lists.newArrayList();

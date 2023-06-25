@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
@@ -277,7 +278,7 @@ public class EnsemblGeneMapper
         configBuilder.addPathItem(ENSEMBL_DIR_38, true, "Ensembl data cache dir for ref-genome v38");
         configBuilder.addPathItem(LIFT_OVER_INFO_FILE, false, "Unmatched v37 locations lifted-over to v38");
         addOutputDir(configBuilder);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

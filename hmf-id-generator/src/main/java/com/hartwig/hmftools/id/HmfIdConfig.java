@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +51,7 @@ public class HmfIdConfig
         configBuilder.addIntegerItem(MAX_SAMPLE_COUNT, "Maximum supported precomputed sample hash count", DEFAULT_PRECOMPUTE_COUNT);
 
         addDatabaseCmdLineArgs(configBuilder, true);
-        addLoggingOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
     }
 
 }

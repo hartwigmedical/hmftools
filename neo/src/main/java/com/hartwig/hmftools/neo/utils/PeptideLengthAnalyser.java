@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.utils;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
@@ -24,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -45,11 +47,11 @@ public class PeptideLengthAnalyser
 
     private static final String NMER_FREQ_FILE = "nmer_freq_file";
 
-    public PeptideLengthAnalyser(final CommandLine cmd)
+    public PeptideLengthAnalyser(final ConfigBuilder configBuilder)
     {
-        String dataFile = cmd.getOptionValue(NMER_FREQ_FILE);
+        String dataFile = configBuilder.getValue(NMER_FREQ_FILE);
 
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = parseOutputDir(configBuilder);
 
         mWriter = initProbWriter();
 
@@ -223,26 +225,23 @@ public class PeptideLengthAnalyser
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(NMER_FREQ_FILE, true, "N-mer frequency data file");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addPathItem(NMER_FREQ_FILE, true, "N-mer frequency data file");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        PeptideLengthAnalyser peptideLengthAnalyser = new PeptideLengthAnalyser(cmd);
+        PeptideLengthAnalyser peptideLengthAnalyser = new PeptideLengthAnalyser(configBuilder);
         peptideLengthAnalyser.run();
-    }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 
     private class BindPositionData

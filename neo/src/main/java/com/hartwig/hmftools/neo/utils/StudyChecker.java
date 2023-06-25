@@ -24,11 +24,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,11 +42,11 @@ public class StudyChecker
 
     private static final String STUDY_DATA_FILE = "study_data_file";
 
-    public StudyChecker(final CommandLine cmd)
+    public StudyChecker(final ConfigBuilder configBuilder)
     {
-        String dataFile = cmd.getOptionValue(STUDY_DATA_FILE);
+        String dataFile = configBuilder.getValue(STUDY_DATA_FILE);
 
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = parseOutputDir(configBuilder);
 
         mWriter = initProbWriter();
 
@@ -222,26 +219,23 @@ public class StudyChecker
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(STUDY_DATA_FILE, true, "Study binding data");
-        addOutputDir(options);
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addPathItem(STUDY_DATA_FILE, true, "Study binding data");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        StudyChecker studyChecker = new StudyChecker(cmd);
+        StudyChecker studyChecker = new StudyChecker(configBuilder);
         studyChecker.run();
-    }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 
     private class BindStudyData
