@@ -11,15 +11,18 @@ public class UmiTypeCounts
     public int AlleleSingle;
     public int AlleleDual;
 
+    public static final UmiTypeCounts NO_UMI_COUNTS = new UmiTypeCounts(
+            0, 0, 0, 0, 0, 0);
+
     public static UmiTypeCounts fromAttribute(final Object umiTypeCountsRaw)
     {
         if(umiTypeCountsRaw == null)
-            return new UmiTypeCounts(0, 0, 0, 0, 0, 0);
+            return NO_UMI_COUNTS;
 
         String[] umiValues = ((String)umiTypeCountsRaw).split(",", UMI_TYPE_COUNT);
 
         if(umiValues.length != UMI_TYPE_COUNT)
-            return new UmiTypeCounts(0, 0, 0, 0, 0, 0);
+            return NO_UMI_COUNTS;
 
         int index = 0;
         return new UmiTypeCounts(

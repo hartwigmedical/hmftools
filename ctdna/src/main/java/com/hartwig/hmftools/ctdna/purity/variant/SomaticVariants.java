@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.ctdna.purity.PurityConstants.VARIANT_OUTLIER_
 import static com.hartwig.hmftools.ctdna.purity.variant.SomaticPurityCalc.LOW_PROBABILITY;
 import static com.hartwig.hmftools.ctdna.purity.variant.SomaticPurityCalc.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.ctdna.purity.variant.SomaticVariantResult.INVALID_RESULT;
+import static com.hartwig.hmftools.ctdna.purity.variant.UmiTypeCounts.NO_UMI_COUNTS;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -192,12 +193,25 @@ public class SomaticVariants
                 }
             }
 
+            if(umiTypeCounts != NO_UMI_COUNTS)
+            {
+                // override basic AD and DP if umit totals are set
+                depth = umiTypeCounts.total();
+                alleleCount = umiTypeCounts.alleleTotal();
+            }
+
             somaticVariant.Samples.add(new GenotypeFragments(genotype.getSampleName(), alleleCount, depth, qualTotal, umiTypeCounts));
         }
     }
 
     public SomaticVariantResult processSample(final String sampleId, final PurityContext purityContext)
     {
+        if(mConfig.ApplyDropout)
+        {
+            DropoutRateModel dropoutRateModel = new DropoutRateModel(mConfig, mResultsWriter, mSample, mVariants);
+            dropoutRateModel.calculate(sampleId);
+        }
+
         // only include variants which satisfy the min avg qual check in the ctDNA sample
         SomaticVariantCounts tumorCounts = new SomaticVariantCounts();
         SomaticVariantCounts sampleCounts = new SomaticVariantCounts();
@@ -244,12 +258,12 @@ public class SomaticVariants
             tumorCounts.addAlleleFragmentCount(tumorFragData.AlleleCount, tumorFragData.QualTotal);
 
             // take the sample values
-            sampleCounts.addFragmentCount(sampleFragData.UmiCounts.total());
+            sampleCounts.addFragmentCount(sampleFragData.Depth);
             sampleCountsDual.addFragmentCount(sampleFragData.UmiCounts.dualTotal());
 
             umiTypeCounts.add(sampleFragData.UmiCounts);
 
-            sampleCounts.addAlleleFragmentCount(sampleFragData.UmiCounts.alleleTotal(), sampleFragData.QualTotal);
+            sampleCounts.addAlleleFragmentCount(sampleFragData.AlleleCount, sampleFragData.QualTotal);
             sampleCountsDual.addAlleleFragmentCount(sampleFragData.UmiCounts.AlleleDual, 0);
         }
 
@@ -327,12 +341,12 @@ public class SomaticVariants
 
             if(useVariantForPurityCalcs(variant, sampleFragData))
             {
-                int depth = sampleFragData.UmiCounts.total();
-                int alleleFrags = sampleFragData.UmiCounts.alleleTotal();
+                double depth = sampleFragData.Depth;
+                int alleleFrags = sampleFragData.AlleleCount;
 
                 if(depth > 0)
                 {
-                    sampleVafTotal += alleleFrags / (double)depth;
+                    sampleVafTotal += alleleFrags / depth;
                     ++sampleVafCount;
 
                     sampleAlleleFragsTotal += alleleFrags;
@@ -347,12 +361,10 @@ public class SomaticVariants
     private boolean variantIsVafOutlier(
             final SampleMetrics sampleMetrics, final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
-        int depth = sampleFragData.UmiCounts.total();
-
-        if(depth == 0)
+        if(sampleFragData.Depth == 0)
             return false;
 
-        int alleleFrags = sampleFragData.UmiCounts.alleleTotal();
+        int alleleFrags = sampleFragData.AlleleCount;
 
         if(alleleFrags < VARIANT_OUTLIER_MIN_AD)
             return false;
@@ -362,13 +374,13 @@ public class SomaticVariants
         if(allelePerc < VARIANT_OUTLIER_MIN_AD_PERC)
             return false;
 
-        double variantVaf = alleleFrags / (double)depth;
+        double variantVaf = sampleFragData.vaf();
 
         if(variantVaf < sampleMetrics.AverageVaf * VARIANT_OUTLIER_VAF_MULTIPLE)
             return false;
 
         CT_LOGGER.info(format("sample(%s) variant(%s) vaf(%d/%d=%.3f perc=%.2f) sample(alleleTotal=%d avgVaf=%.3g) is outlier",
-                sampleFragData.SampleName, variant.toString(), alleleFrags, depth, variantVaf, allelePerc,
+                sampleFragData.SampleName, variant.toString(), alleleFrags, sampleFragData.Depth, variantVaf, allelePerc,
                 sampleMetrics.AllelFragTotal, sampleMetrics.AverageVaf));
 
         return true;

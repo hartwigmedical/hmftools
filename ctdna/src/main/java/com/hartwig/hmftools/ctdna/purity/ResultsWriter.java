@@ -14,6 +14,7 @@ import java.util.StringJoiner;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.ctdna.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.ctdna.purity.cn.CopyNumberGcData;
+import com.hartwig.hmftools.ctdna.purity.variant.DropoutRateModel;
 import com.hartwig.hmftools.ctdna.purity.variant.GenotypeFragments;
 import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariant;
 import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariantResult;
@@ -24,10 +25,12 @@ public class ResultsWriter
     private final BufferedWriter mSampleWriter;
     private final BufferedWriter mVariantWriter;
     private final BufferedWriter mCnRatioWriter;
+    private final BufferedWriter mDropoutCalcWriter;
 
     public static final String SUMMARY_FILE_ID = "summary";
     public static final String SOMATICS_FILE_ID = "somatic_variants";
     public static final String CN_SEGMENT_FILE_ID = "cn_segments";
+    public static final String DROPOUT_FILE_ID = "dropout";
 
     public ResultsWriter(final PurityConfig config)
     {
@@ -35,7 +38,10 @@ public class ResultsWriter
         mSampleWriter = initialiseWriter();
         mVariantWriter = config.WriteSomatics ? initialiseVariantWriter() : null;
         mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
+        mDropoutCalcWriter = config.ApplyDropout ? DropoutRateModel.initialiseWriter(mConfig) : null;
     }
+
+    public BufferedWriter getDropoutWriter() { return mDropoutCalcWriter; }
 
     private BufferedWriter initialiseWriter()
     {
@@ -197,6 +203,7 @@ public class ResultsWriter
         closeBufferedWriter(mVariantWriter);
         closeBufferedWriter(mSampleWriter);
         closeBufferedWriter(mCnRatioWriter);
+        closeBufferedWriter(mDropoutCalcWriter);
     }
 
     public void flush()

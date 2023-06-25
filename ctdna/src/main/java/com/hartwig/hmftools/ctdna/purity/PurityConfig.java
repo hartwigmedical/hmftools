@@ -51,6 +51,7 @@ public class PurityConfig
     public final boolean WriteSomatics;
     public final boolean WriteCnRatios;
     public final boolean PlotCnFit;
+    public final boolean ApplyDropout;
     public final boolean WriteFilteredSomatics;
     public final double NoiseReadsPerMillion;
     public final double NoiseReadsPerMillionDualStrand;
@@ -71,6 +72,7 @@ public class PurityConfig
     private static final String PLOT_CN = "plot_cn_fit";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
+    private static final String APPLY_DROPOUT = "apply_dropout";
     private static final String GC_RATIO_MIN = "gc_ratio_min";
 
     public PurityConfig(final ConfigBuilder configBuilder)
@@ -104,6 +106,7 @@ public class PurityConfig
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
         GcRatioMin = configBuilder.getDecimal(GC_RATIO_MIN);
 
+        ApplyDropout = configBuilder.hasFlag(APPLY_DROPOUT);
         WriteSomatics = configBuilder.hasFlag(WRITE_VARIANTS);
         WriteCnRatios = configBuilder.hasFlag(WRITE_CN_RATIOS);
         WriteFilteredSomatics = configBuilder.hasFlag(INCLUDE_FILTERED_VARIANTS);
@@ -208,6 +211,7 @@ public class PurityConfig
         configBuilder.addConfigItem(SAMPLE_DATA_DIR, true, "Sample data directory for all files");
         configBuilder.addConfigItem(PURPLE_DIR, true, "Sample Purple directory");
         configBuilder.addConfigItem(COBALT_DIR, false, "Sample Cobalt directory");
+        configBuilder.addFlagItem(APPLY_DROPOUT, "Apply somatic drop-out logic");
         configBuilder.addFlagItem(WRITE_VARIANTS, "Write variants");
         configBuilder.addFlagItem(WRITE_CN_RATIOS, "Write copy number segment GC ratio summary");
         configBuilder.addFlagItem(PLOT_CN,"Plot copy number / GC ratio fit");
