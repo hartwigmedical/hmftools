@@ -134,18 +134,23 @@
                         </goals>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-meta-extensions</artifactId>
+                        <version>${jooq.version}</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
-                    <jdbc>
-                        <driver>com.mysql.cj.jdbc.Driver</driver>
-                        <url>jdbc:mysql://localhost:3306/hmfpatients_test?useSSL=false&amp;serverTimezone=CET</url>
-                        <user>build</user>
-                        <password>build</password>
-                    </jdbc>
                     <generator>
                         <database>
-                            <name>org.jooq.meta.mysql.MySQLDatabase</name>
-                            <includes>.*</includes>
-                            <inputSchema>hmfpatients_test</inputSchema>
+                            <name>org.jooq.meta.extensions.ddl.DDLDatabase</name>
+                            <properties>
+                                <property>
+                                    <key>scripts</key>
+                                    <value>src/main/resources/database.sql</value>
+                                </property>
+                            </properties>
                         </database>
                         <target>
                             <packageName>com.hartwig.hmftools.patientdb.database.hmfpatients</packageName>
