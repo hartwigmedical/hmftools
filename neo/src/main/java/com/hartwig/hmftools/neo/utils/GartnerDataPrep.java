@@ -46,7 +46,6 @@ import org.jetbrains.annotations.NotNull;
 public class GartnerDataPrep
 {
     private final String mOutputDir;
-    private final String mOutputId;
     private final List<Integer> mRequiredPeptideLengths;
 
     private final Map<String,List<String>> mPatientAlleles;
@@ -67,7 +66,6 @@ public class GartnerDataPrep
         mRequiredPeptideLengths = DEFAULT_PEPTIDE_LENGTHS;
 
         mOutputDir = parseOutputDir(configBuilder);
-        mOutputId = configBuilder.getValue(OUTPUT_ID);
     }
 
     public void run()
@@ -330,7 +328,7 @@ public class GartnerDataPrep
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        RandomPeptideConfig.addConfig(configBuilder);
+        // RandomPeptideConfig.addConfig(configBuilder);
         configBuilder.addPathItem(PATIENT_ALLELES_FILE, true, "MCF predictions file");
         configBuilder.addPathItem(MUTATIONS_FILE, true, "Binding validation file");
         configBuilder.addConfigItem(REQUIRED_PEPTIDE_LENGTHS, true, "Peptide lengths");

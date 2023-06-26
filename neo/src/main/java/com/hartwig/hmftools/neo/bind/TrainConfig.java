@@ -123,7 +123,7 @@ public class TrainConfig
         ApplyFlanks = configBuilder.hasFlag(APPLY_FLANKS);
         RunValidation = configBuilder.hasFlag(RUN_VALIDATION);
 
-        RandomPeptides = new RandomPeptideConfig(configBuilder);
+        RandomPeptides = RandomPeptideConfig.forWriting(configBuilder);
 
         WritePosWeightMatrix = configBuilder.hasFlag(WRITE_PW_MATRIX);
         WriteBindCounts = configBuilder.hasFlag(WRITE_BIND_COUNTS);
@@ -178,7 +178,7 @@ public class TrainConfig
         configBuilder.addPathItem(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
         configBuilder.addPathItem(EXP_LIKELIHOOD_FILE, false, "Expression likelihood file");
 
-        RandomPeptideConfig.addConfig(configBuilder);
+        RandomPeptideConfig.addConfigForWriting(configBuilder);
         CalcConstants.addConfig(configBuilder);
 
         configBuilder.addFlagItem(APPLY_FLANKS, "Use flanks for scoring if present");

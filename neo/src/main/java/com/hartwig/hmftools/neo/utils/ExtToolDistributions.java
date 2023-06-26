@@ -28,7 +28,6 @@ import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 import com.hartwig.hmftools.neo.bind.RandomPeptideDistribution;
 import com.hartwig.hmftools.neo.bind.ScoreDistributionData;
 
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // rather than use/trust McfFlurry's affinity and presentation score percentiles, rebuild a distribution for each of them using their
@@ -52,7 +51,7 @@ public class ExtToolDistributions
         mMcfPredictionsFile = configBuilder.getValue(PREDICTIONS_FILE);
         mValidationDataFile = configBuilder.getValue(VALIDATION_FILE);
 
-        mConfig = new RandomPeptideConfig(configBuilder);
+        mConfig = RandomPeptideConfig.forReading(configBuilder);
         mUsePresentation = configBuilder.hasFlag(USE_PRESENTATION);
 
         mRandomDistribution = new RandomPeptideDistribution(mConfig);
@@ -219,7 +218,7 @@ public class ExtToolDistributions
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        RandomPeptideConfig.addConfig(configBuilder);
+        RandomPeptideConfig.addConfigForReading(configBuilder);
         configBuilder.addPathItem(PREDICTIONS_FILE, true, "MCF predictions file");
         configBuilder.addPathItem(VALIDATION_FILE, true, "Binding validation file");
         configBuilder.addFlagItem(USE_PRESENTATION, "Rank and score using presentation instead of affinity");

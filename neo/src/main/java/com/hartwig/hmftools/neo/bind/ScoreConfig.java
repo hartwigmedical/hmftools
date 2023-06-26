@@ -62,7 +62,7 @@ public class ScoreConfig
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        RandomPeptides = new RandomPeptideConfig(configBuilder);
+        RandomPeptides = RandomPeptideConfig.forReading(configBuilder);
 
         WriteSummaryData = configBuilder.hasFlag(WRITE_SUMMARY_DATA);
         WritePeptideScores = configBuilder.hasFlag(WRITE_PEPTIDE_SCORES);
@@ -91,7 +91,7 @@ public class ScoreConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        RandomPeptideConfig.addConfig(configBuilder);
+        RandomPeptideConfig.addConfigForReading(configBuilder);
 
         configBuilder.addConfigItem(SCORE_FILE_ID, false, "Reference file id for scoring instead of specifying individual files");
         configBuilder.addPathItem(SCORE_FILE_DIR, false, "Reference file directory");
