@@ -8,8 +8,10 @@
         <artifactId>hmftools</artifactId>
         <version>local-SNAPSHOT</version>
     </parent>
-
     <artifactId>test-hmftools</artifactId>
+    <packaging>jar</packaging>
+    <version>local-SNAPSHOT</version>
+    <name>HMF Tools - test</name>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
