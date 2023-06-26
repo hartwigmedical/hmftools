@@ -21,4 +21,4 @@ SEMVER="${SEMVER_VERSION/${BASH_REMATCH[1]}-}"
 echo $BUILD_MODULE
 echo $SEMVER
 
-mvn versions:set -DnewVersion=${SEMVER}
+mvn -f ./${BUILD_MODULE}/pom.xml versions:set -DnewVersion=${SEMVER}
