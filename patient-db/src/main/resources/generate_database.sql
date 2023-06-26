@@ -597,7 +597,7 @@ CREATE TABLE germlineVariant
     ref varchar(255) NOT NULL,
     alt varchar(255) NOT NULL,
 
-    ## SAGE
+--    ### SAGE
     qual double precision not null,
     tier varchar(20) NOT NULL,
     germlineGenotype varchar(255) NOT NULL,
@@ -609,19 +609,19 @@ CREATE TABLE germlineVariant
     tumorTotalReadCount int NOT NULL,
     localPhaseSet varchar(50),
 
-    ### PURPLE ENRICHMENT
+--    ### PURPLE ENRICHMENT
     adjustedVaf DOUBLE PRECISION NOT NULL,
     variantCopyNumber DOUBLE PRECISION NOT NULL,
     copyNumber DOUBLE PRECISION NOT NULL,
     biallelic BOOLEAN NOT NULL,
     minorAlleleCopyNumber DOUBLE PRECISION NOT NULL,
 
-    ### PATHOGENIC
+--    ### PATHOGENIC
     clinvarInfo varchar(255) NOT NULL,
     pathogenicity varchar(255) NOT NULL,
     pathogenic BOOLEAN NOT NULL,
 
-    ## PAVE IMPACTS
+--    ### PAVE IMPACTS
     gene varchar(50) NOT NULL,
     genesAffected int not null,
     canonicalEffect varchar(255) NOT NULL,
@@ -632,13 +632,13 @@ CREATE TABLE germlineVariant
     otherTranscriptEffects varchar(255) NOT NULL,
     worstCodingEffect varchar(50) NOT NULL,
 
-    ### REF GENOME ENRICHMENT
+--    ### REF GENOME ENRICHMENT
     microhomology varchar(255) NOT NULL,
     repeatSequence varchar(255) NOT NULL,
     repeatCount int NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
 
-    ### DRIVER CATALOG
+--    ### DRIVER CATALOG
     hotspot varchar(20) NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
     reported BOOLEAN NOT NULL,
@@ -967,8 +967,8 @@ CREATE TABLE svBreakend
     sampleId varchar(50) NOT NULL,
     svId INT NOT NULL,
     startBreakend BOOLEAN NOT NULL,
-    gene VARCHAR(50) NOT NULL, # length here comes from ensembl db schema
-    transcriptId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
+    gene VARCHAR(50) NOT NULL, -- # length here comes from ensembl db schema
+    transcriptId VARCHAR(128) NOT NULL, -- # length here comes from ensembl db schema
     canonicalTranscript BOOLEAN NOT NULL,
     geneOrientation VARCHAR(20) NOT NULL,
     disruptive BOOLEAN NOT NULL,
@@ -1068,8 +1068,8 @@ CREATE TABLE svBreakendGermline
     sampleId varchar(50) NOT NULL,
     svId INT NOT NULL,
     startBreakend BOOLEAN NOT NULL,
-    gene VARCHAR(50) NOT NULL, # length here comes from ensembl db schema
-    transcriptId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
+    gene VARCHAR(50) NOT NULL, -- # length here comes from ensembl db schema
+    transcriptId VARCHAR(128) NOT NULL, -- # length here comes from ensembl db schema
     canonicalTranscript BOOLEAN NOT NULL,
     geneOrientation VARCHAR(20) NOT NULL,
     disruptive BOOLEAN NOT NULL,
