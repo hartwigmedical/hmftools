@@ -26,10 +26,10 @@ if ! [[ -d "$BUILD_MODULE" ]]; then
 fi
 
 # Version the appropriate files
-mvn -f "./${BUILD_MODULE}/pom.xml" versions:set -DnewVersion=${SEMVER}
+mvn -f "workspace/${BUILD_MODULE}/pom.xml" versions:set -DnewVersion=${SEMVER}
 
 # Step 2: compile, package, release
-mvn -f "./${BUILD_MODULE}/pom.xml" deploy -B
+mvn -f "workspace/${BUILD_MODULE}/pom.xml" deploy -B
 
 
 echo "done!"
