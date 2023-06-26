@@ -263,7 +263,7 @@ public class FindUniqueKmers
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        configBuilder.addPathItem(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
+        configBuilder.addPath(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

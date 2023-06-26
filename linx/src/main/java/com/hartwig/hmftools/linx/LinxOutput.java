@@ -56,17 +56,17 @@ public class LinxOutput
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addFlagItem(WRITE_ALL, "Optional: write all batch-run output files");
-        configBuilder.addFlagItem(WRITE_SV_DATA, "Optional: include all SV table fields (batch-mode)");
-        configBuilder.addFlagItem(WRITE_LINKS, "Optional: write chain links (batch-mode)");
-        configBuilder.addFlagItem(WRITE_CLUSTER_HISTORY, "Optional: write clustering history (batch-mode)");
-        configBuilder.addFlagItem(WRITE_SINGLE_SV_CLUSTERS, "Optional: write cluster data for single SV clusters (batch-mode)");
-        configBuilder.addFlagItem(WRITE_VIS_DATA, "Optional: write files for Circos (batch-mode)");
-        configBuilder.addFlagItem(WRITE_COHORT_FILES, "Optional: write cohort files even for single sample");
-        configBuilder.addFlagItem(NO_VIS_FILES, "Disable visualiser files output");
+        configBuilder.addFlag(WRITE_ALL, "Optional: write all batch-run output files");
+        configBuilder.addFlag(WRITE_SV_DATA, "Optional: include all SV table fields (batch-mode)");
+        configBuilder.addFlag(WRITE_LINKS, "Optional: write chain links (batch-mode)");
+        configBuilder.addFlag(WRITE_CLUSTER_HISTORY, "Optional: write clustering history (batch-mode)");
+        configBuilder.addFlag(WRITE_SINGLE_SV_CLUSTERS, "Optional: write cluster data for single SV clusters (batch-mode)");
+        configBuilder.addFlag(WRITE_VIS_DATA, "Optional: write files for Circos (batch-mode)");
+        configBuilder.addFlag(WRITE_COHORT_FILES, "Optional: write cohort files even for single sample");
+        configBuilder.addFlag(NO_VIS_FILES, "Disable visualiser files output");
 
-        configBuilder.addIntegerItem(
-                LOG_CHAIN_MAX_SIZE, false,
+        configBuilder.addInteger(
+                LOG_CHAIN_MAX_SIZE,
                 "Write file with chaining diagnostics for chains less than this, zero is disabled", 0);
     }
 

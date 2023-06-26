@@ -626,13 +626,13 @@ public class GripssCompareVcfs
         setLogLevel(configBuilder);
 
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addPathItem(ORIGINAL_VCF, true, "Optional, name of the reference sample");
-        configBuilder.addPathItem(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
-        configBuilder.addFlagItem(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");
-        configBuilder.addFlagItem(KEY_BY_COORDS, "Match SVs on coords rather than VcfId");
-        configBuilder.addFlagItem(WRITE_ALL_DIFFS, "Write all VCF field diffs, not just the first");
-        configBuilder.addFlagItem(GRIDSS_ONLY, "Only compare fields written by Grids (ie no Gripss)");
-        configBuilder.addFlagItem(REF_DEPTH_ONLY, "Only compare reference depth fields");
+        configBuilder.addPath(ORIGINAL_VCF, true, "Optional, name of the reference sample");
+        configBuilder.addPath(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
+        configBuilder.addFlag(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");
+        configBuilder.addFlag(KEY_BY_COORDS, "Match SVs on coords rather than VcfId");
+        configBuilder.addFlag(WRITE_ALL_DIFFS, "Write all VCF field diffs, not just the first");
+        configBuilder.addFlag(GRIDSS_ONLY, "Only compare fields written by Grids (ie no Gripss)");
+        configBuilder.addFlag(REF_DEPTH_ONLY, "Only compare reference depth fields");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

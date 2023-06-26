@@ -337,7 +337,7 @@ public class GenerateDriverGeneFiles
         ConfigBuilder configBuilder = new ConfigBuilder();
 
         addGenePanelOption(configBuilder, true);
-        configBuilder.addPathItem(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
+        configBuilder.addPath(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
         configBuilder.addConfigItem(PANEL_GENE_OVERRIDES, "List of comma-separated genes to include in panel");
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

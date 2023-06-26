@@ -15,7 +15,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public final class GCProfileFactory
 {
@@ -34,7 +33,7 @@ public final class GCProfileFactory
 
     public static void addGcProfilePath(final ConfigBuilder configBuilder, boolean required)
     {
-        configBuilder.addPathItem(GC_PROFILE, required, GC_PROFILE_DESC);
+        configBuilder.addPath(GC_PROFILE, required, GC_PROFILE_DESC);
     }
 
     public static void addGcProfilePath(final Options options)

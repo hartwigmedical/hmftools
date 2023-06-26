@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
@@ -22,7 +20,7 @@ public final class DriverGenePanelConfig
 
     public static void addGenePanelOption(final ConfigBuilder configBuilder, boolean isRequired)
     {
-        configBuilder.addPathItem(DRIVER_GENE_PANEL_OPTION, isRequired, DRIVER_GENE_PANEL_OPTION_DESC);
+        configBuilder.addPath(DRIVER_GENE_PANEL_OPTION, isRequired, DRIVER_GENE_PANEL_OPTION_DESC);
     }
 
     public static boolean isConfigured(final ConfigBuilder configBuilder)

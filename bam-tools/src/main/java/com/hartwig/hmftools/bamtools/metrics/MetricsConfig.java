@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
@@ -27,7 +26,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -177,14 +175,14 @@ public class MetricsConfig
     {
         addCommonCommandOptions(configBuilder);
 
-        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
-        configBuilder.addIntegerItem(MAP_QUAL_THRESHOLD, "Map quality threshold", DEFAULT_MAP_QUAL_THRESHOLD);
-        configBuilder.addIntegerItem(BASE_QUAL_THRESHOLD, "Base quality threshold", DEFAULT_BASE_QUAL_THRESHOLD);
-        configBuilder.addIntegerItem(MAX_COVERAGE, "Max coverage", DEFAULT_MAX_COVERAGE);
-        configBuilder.addFlagItem(EXCLUDE_ZERO_COVERAGE, "Exclude bases with zero coverage");
-        configBuilder.addFlagItem(WRITE_OLD_STYLE, "Write data in same format as Picard CollectWgsMetrics");
+        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addInteger(MAP_QUAL_THRESHOLD, "Map quality threshold", DEFAULT_MAP_QUAL_THRESHOLD);
+        configBuilder.addInteger(BASE_QUAL_THRESHOLD, "Base quality threshold", DEFAULT_BASE_QUAL_THRESHOLD);
+        configBuilder.addInteger(MAX_COVERAGE, "Max coverage", DEFAULT_MAX_COVERAGE);
+        configBuilder.addFlag(EXCLUDE_ZERO_COVERAGE, "Exclude bases with zero coverage");
+        configBuilder.addFlag(WRITE_OLD_STYLE, "Write data in same format as Picard CollectWgsMetrics");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
-        configBuilder.addFlagItem(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
     }
 
     @VisibleForTesting

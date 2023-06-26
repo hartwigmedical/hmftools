@@ -101,8 +101,8 @@ public class AppendConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addPathItem(BAM_FILE, true, "BAM file location");
-        configBuilder.addPathItem(INPUT_VCF, true, "Input VCF");
+        configBuilder.addPath(BAM_FILE, true, "BAM file location");
+        configBuilder.addPath(INPUT_VCF, true, "Input VCF");
         configBuilder.addConfigItem(OUTPUT_VCF, true, "Output VCF");
         addRefGenomeConfig(configBuilder, true);
         addValidationStringencyOption(configBuilder);

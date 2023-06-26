@@ -198,25 +198,21 @@ public class PvConfig
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addConfigItem(REFERENCE_VARIANTS_FILE, false, "Reference variants file");
 
-        configBuilder.addDecimalItem(VAF_THRESHOLD, false, "VAF threshold", DEFAULT_VAF_MIN);
+        configBuilder.addDecimal(VAF_THRESHOLD, "VAF threshold", DEFAULT_VAF_MIN);
 
-        configBuilder.addIntegerItem(
-                FRAG_COUNT_THRESHOLD, true, "Fragment count threshold, default: " + DEFAULT_FRAG_COUNT_MIN,
+        configBuilder.addInteger(
+                FRAG_COUNT_THRESHOLD, "Fragment count threshold",
                 DEFAULT_FRAG_COUNT_MIN);
 
-        configBuilder.addIntegerItem(PROBE_COUNT, true, "Probe count, default: " + DEFAULT_PROBE_COUNT,
-                DEFAULT_PROBE_COUNT);
+        configBuilder.addInteger(PROBE_COUNT, "Probe count", DEFAULT_PROBE_COUNT);
+        configBuilder.addInteger(PROBE_LENGTH, "Probe length", DEFAULT_PROBE_LENGTH);
 
-        configBuilder.addIntegerItem(PROBE_LENGTH, true, "Probe length, default: " + DEFAULT_PROBE_LENGTH,
-                DEFAULT_PROBE_LENGTH);
+        configBuilder.addInteger(
+                NON_REPORTABLE_SV_COUNT,"Max count of non-reportable SVs", DEFAULT_NON_REPORTABLE_SV_COUNT);
 
-        configBuilder.addIntegerItem(
-                NON_REPORTABLE_SV_COUNT, true,
-                "Max count of non-reportable SVs, default: " + DEFAULT_NON_REPORTABLE_SV_COUNT, DEFAULT_NON_REPORTABLE_SV_COUNT);
+        configBuilder.addInteger(SUBCLONAL_COUNT, "Max count of subclonal mutations, default(0)", 0);
 
-        configBuilder.addIntegerItem(SUBCLONAL_COUNT, false, "Max count of subclonal mutations, default(0)", 0);
-
-        configBuilder.addFlagItem(WRITE_ALL, "Write all variants to file");
+        configBuilder.addFlag(WRITE_ALL, "Write all variants to file");
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);

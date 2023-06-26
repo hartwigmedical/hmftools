@@ -173,26 +173,26 @@ public class TrainConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(TRAINING_DATA_FILE, true, "Training data file");
-        configBuilder.addPathItem(RECOGNITION_DATA_FILE, false, "Immunogenic recognition data file");
-        configBuilder.addPathItem(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
-        configBuilder.addPathItem(EXP_LIKELIHOOD_FILE, false, "Expression likelihood file");
+        configBuilder.addPath(TRAINING_DATA_FILE, true, "Training data file");
+        configBuilder.addPath(RECOGNITION_DATA_FILE, false, "Immunogenic recognition data file");
+        configBuilder.addPath(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
+        configBuilder.addPath(EXP_LIKELIHOOD_FILE, false, "Expression likelihood file");
 
         RandomPeptideConfig.addConfigForWriting(configBuilder);
         CalcConstants.addConfig(configBuilder);
 
-        configBuilder.addFlagItem(APPLY_FLANKS, "Use flanks for scoring if present");
-        configBuilder.addFlagItem(WRITE_PAIRS_DATA, "Calculate amino-acid pairs and their coocurrence");
-        configBuilder.addFlagItem(WRITE_PW_MATRIX, "Write computed amino-acid + position matrix data");
-        configBuilder.addFlagItem(WRITE_BIND_COUNTS, "Write interim bind counts data");
-        configBuilder.addFlagItem(WRITE_FREQ_DATA, "Write amino-acid + position frequency data");
-        configBuilder.addFlagItem(WRITE_LIKELIHOOD, "Write relative likelihood data");
-        configBuilder.addFlagItem(WRITE_PAN_LENGTH_DIST, "Write pan-peptide length distribution data");
+        configBuilder.addFlag(APPLY_FLANKS, "Use flanks for scoring if present");
+        configBuilder.addFlag(WRITE_PAIRS_DATA, "Calculate amino-acid pairs and their coocurrence");
+        configBuilder.addFlag(WRITE_PW_MATRIX, "Write computed amino-acid + position matrix data");
+        configBuilder.addFlag(WRITE_BIND_COUNTS, "Write interim bind counts data");
+        configBuilder.addFlag(WRITE_FREQ_DATA, "Write amino-acid + position frequency data");
+        configBuilder.addFlag(WRITE_LIKELIHOOD, "Write relative likelihood data");
+        configBuilder.addFlag(WRITE_PAN_LENGTH_DIST, "Write pan-peptide length distribution data");
 
         configBuilder.addConfigItem(REQUIRED_PEPTIDE_LENGTHS, false, "List of peptide-lengths separated by ';'");
         configBuilder.addConfigItem(LOG_CALC_ALLELES, false, "Log verbose calcs for alleles separated by ';'");
 
-        configBuilder.addFlagItem(RUN_VALIDATION, "Run validation routines");
+        configBuilder.addFlag(RUN_VALIDATION, "Run validation routines");
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);
     }

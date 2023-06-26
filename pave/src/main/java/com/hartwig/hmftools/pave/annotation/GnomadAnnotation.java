@@ -261,12 +261,10 @@ public class GnomadAnnotation
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(GNOMAD_FREQUENCY_FILE, false, "Gnomad frequency file");
-        configBuilder.addPathItem(GNOMAD_FREQUENCY_DIR, false, "Gnomad frequency directory");
-        configBuilder.addFlagItem(GNOMAD_LOAD_CHR_ON_DEMAND, "Gnomad load frequency files by chromosome on demand");
-
-        configBuilder.addDecimalItem(
-                GNOMAD_PON_FILTER, false, "Gnomad PON frequency filter", DEFAULT_PON_FILTER_THRESHOLD);
+        configBuilder.addPath(GNOMAD_FREQUENCY_FILE, false, "Gnomad frequency file");
+        configBuilder.addPath(GNOMAD_FREQUENCY_DIR, false, "Gnomad frequency directory");
+        configBuilder.addFlag(GNOMAD_LOAD_CHR_ON_DEMAND, "Gnomad load frequency files by chromosome on demand");
+        configBuilder.addDecimal(GNOMAD_PON_FILTER, "Gnomad PON frequency filter", DEFAULT_PON_FILTER_THRESHOLD);
     }
 
     public static void addHeader(final VCFHeader header)

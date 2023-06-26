@@ -211,8 +211,8 @@ public class GenerateEnsemblDataCache
         ConfigBuilder configBuilder = new ConfigBuilder();
 
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        configBuilder.addPathItem(HGNC_GENE_DATA_FILE, false, "HGNC gene data file");
-        configBuilder.addPathItem(REF_ENSEMBL_DIR, false, "Ensembl data dir for canonical trans to use");
+        configBuilder.addPath(HGNC_GENE_DATA_FILE, false, "HGNC gene data file");
+        configBuilder.addPath(REF_ENSEMBL_DIR, false, "Ensembl data dir for canonical trans to use");
         EnsemblDAO.addCmdLineArgs(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);

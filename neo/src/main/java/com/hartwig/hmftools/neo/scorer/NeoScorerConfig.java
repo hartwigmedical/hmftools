@@ -127,18 +127,18 @@ public class NeoScorerConfig
         addSampleIdFile(configBuilder, false);
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
         configBuilder.addConfigItem(CANCER_TYPE, false, "Cancer type for sample, matching those in cohort TPM medians file");
-        configBuilder.addPathItem(SAMPLE_DATA_DIR, false, "Directory for sample files");
-        configBuilder.addPathItem(NEO_DIR_CFG, false, NEO_DIR_DESC);
-        configBuilder.addPathItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPathItem(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
-        configBuilder.addPathItem(RNA_SOMATIC_VCF, false, "Directory for Purple somatic variant RNA-appended files");
+        configBuilder.addPath(SAMPLE_DATA_DIR, false, "Directory for sample files");
+        configBuilder.addPath(NEO_DIR_CFG, false, NEO_DIR_DESC);
+        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
+        configBuilder.addPath(RNA_SOMATIC_VCF, false, "Directory for Purple somatic variant RNA-appended files");
 
         configBuilder.addConfigItem(
                 RNA_SAMPLE_SUFFIX, false, "RNA sample suffix in Sage-appended VCF", RNA_SAMPLE_APPEND_SUFFIX);
 
-        configBuilder.addPathItem(ISOFOX_DIR_CFG, false, "Directory for Isofox files (Transcript expresion, Neoepitope coverage)");
-        configBuilder.addPathItem(COHORT_SAMPLE_TPM_FILE, false, "Cohort gene expression matrix");
-        configBuilder.addPathItem(COHORT_TPM_MEDIANS_FILE, false, "TPM medians per cancer type and pan-cancer");
+        configBuilder.addPath(ISOFOX_DIR_CFG, false, "Directory for Isofox files (Transcript expresion, Neoepitope coverage)");
+        configBuilder.addPath(COHORT_SAMPLE_TPM_FILE, false, "Cohort gene expression matrix");
+        configBuilder.addPath(COHORT_TPM_MEDIANS_FILE, false, "TPM medians per cancer type and pan-cancer");
 
         configBuilder.addConfigItem(PEPTIDE_LENGTHS, false, "Peptide length min-max, separated by '-', eg 8-12");
 
@@ -146,13 +146,11 @@ public class NeoScorerConfig
         ConfigUtils.addLoggingOptions(configBuilder);
         EnsemblDataCache.addEnsemblDir(configBuilder);
 
-        configBuilder.addDecimalItem(
-                LIKELIHOOD_THRESHOLD, false,
-                "Rank threshold to write full peptide data, default 0 (not applied)", 0);
+        configBuilder.addDecimal(
+                LIKELIHOOD_THRESHOLD, "Rank threshold to write full peptide data, default 0 (not applied)", 0);
 
-        configBuilder.addDecimalItem(
-                SIMILARITY_THRESHOLD, false,
-                "Immunogenic similarity threshold to write full peptide data", 10);
+        configBuilder.addDecimal(
+                SIMILARITY_THRESHOLD, "Immunogenic similarity threshold to write full peptide data", 10);
 
         configBuilder.addConfigItem(
                 WRITE_TYPES, false, "Valid types: ALLELE_PEPTIDE, PEPTIDE, NEOEPITOPE, SAMPLE_SUMMARY sep by ';'");

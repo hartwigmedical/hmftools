@@ -73,27 +73,27 @@ public class ConfigBuilder
         addConfigItem(STRING, name, false, description, null);
     }
 
-    public void addDecimalItem(final String name, final boolean required, final String description, double defaultValue)
+    public void addRequiredDecimal(final String name, final String description)
     {
-        addConfigItem(DECIMAL, name, required, description, String.valueOf(defaultValue));
+        addConfigItem(DECIMAL, name, true, description, null);
     }
 
-    public void addDecimalItem(final String name, final String desc, double defaultValue)
+    public void addDecimal(final String name, final String desc, double defaultValue)
     {
-        addDecimalItem(name, false, format("%s, default=%.3g", desc, defaultValue), defaultValue);
+        addConfigItem(DECIMAL, name, false, format("%s, default=%.3g", desc, defaultValue), String.valueOf(defaultValue));
     }
 
-    public void addIntegerItem(final String name, final boolean required, final String description, int defaultValue)
+    public void addRequiredInteger(final String name, final String description)
     {
-        addConfigItem(INTEGER, name, required, description, String.valueOf(defaultValue));
+        addConfigItem(INTEGER, name, true, description, null);
     }
 
-    public void addIntegerItem(final String name, final String desc, int defaultValue)
+    public void addInteger(final String name, final String description, int defaultValue)
     {
-        addIntegerItem(name, false, format("%s, default=%d", desc, defaultValue), defaultValue);
+        addConfigItem(INTEGER, name, false, format("%s, default=%d", description, defaultValue), String.valueOf(defaultValue));
     }
 
-    public void addFlagItem(final String name, final String description)
+    public void addFlag(final String name, final String description)
     {
         addConfigItem(FLAG, name, false, description, null);
     }
@@ -103,7 +103,7 @@ public class ConfigBuilder
         addConfigItem(STRING, name, required, description, null);
     }
 
-    public void addPathItem(final String name, final boolean required, final String description)
+    public void addPath(final String name, final boolean required, final String description)
     {
         addConfigItem(PATH, name, required, description, null);
     }

@@ -62,14 +62,14 @@ public class HighDepthConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(BAM_FILE, true, "BAM file to slice for high-depth");
+        configBuilder.addPath(BAM_FILE, true, "BAM file to slice for high-depth");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file");
         addRefGenomeConfig(configBuilder, true);
 
-        configBuilder.addIntegerItem(
-                HIGH_DEPTH_THRESHOLD, false, "Level for indicating high-depth", DEFAULT_HIGH_DEPTH_THRESHOLD);
+        configBuilder.addInteger(
+                HIGH_DEPTH_THRESHOLD, "Level for indicating high-depth", DEFAULT_HIGH_DEPTH_THRESHOLD);
 
-        configBuilder.addIntegerItem(PARTITION_SIZE, false, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         addThreadOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
     }

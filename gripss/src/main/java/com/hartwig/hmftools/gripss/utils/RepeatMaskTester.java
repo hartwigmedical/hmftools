@@ -260,8 +260,8 @@ public class RepeatMaskTester
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        configBuilder.addPathItem(SV_DATA_FILE, true, "File with SV data");
-        configBuilder.addPathItem(OUTPUT_FILE, true, "Output matching file");
+        configBuilder.addPath(SV_DATA_FILE, true, "File with SV data");
+        configBuilder.addPath(OUTPUT_FILE, true, "Output matching file");
         addThreadOptions(configBuilder);
         RepeatMaskAnnotations.addConfig(configBuilder);
 

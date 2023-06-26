@@ -33,7 +33,7 @@ public class RunAdHocQuery
         ConfigBuilder configBuilder = new ConfigBuilder();
 
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC, V37.toString());
-        configBuilder.addPathItem(QUERY_FILE, true, "Ad-hoc query SQL file");
+        configBuilder.addPath(QUERY_FILE, true, "Ad-hoc query SQL file");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file for test query results");
 
         EnsemblDAO.addCmdLineArgs(configBuilder);

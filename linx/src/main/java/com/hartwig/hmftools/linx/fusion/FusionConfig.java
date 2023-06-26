@@ -55,17 +55,17 @@ public class FusionConfig
     {
         addKnownFusionFileOption(configBuilder);
 
-        configBuilder.addIntegerItem(
+        configBuilder.addInteger(
                 PRE_GENE_BREAKEND_DISTANCE, "Distance after to a breakend to consider in a gene", DEFAULT_PRE_GENE_PROMOTOR_DISTANCE);
 
-        configBuilder.addFlagItem(SKIP_UNPHASED_FUSIONS, "Skip unphased fusions");
-        configBuilder.addFlagItem(WRITE_NEO_EPITOPES, "Search for neo-epitopes from fusions");
+        configBuilder.addFlag(SKIP_UNPHASED_FUSIONS, "Skip unphased fusions");
+        configBuilder.addFlag(WRITE_NEO_EPITOPES, "Search for neo-epitopes from fusions");
 
         configBuilder.addConfigItem(RNA_FUSIONS_FILE, "Sample RNA fusion data to match vs Linx fusions");
 
-        configBuilder.addFlagItem(LOG_REPORTABLE_ONLY, "Only write out reportable fusions");
-        configBuilder.addFlagItem(LOG_ALL_POTENTIALS, "Log all potential fusions");
-        configBuilder.addFlagItem(LOG_INVALID_REASONS, "Log reasons for not making a fusion between transcripts");
-        configBuilder.addFlagItem(WRITE_ALL_VIS_FUSIONS, "Write all fusions including non-reportable for visualiser");
+        configBuilder.addFlag(LOG_REPORTABLE_ONLY, "Only write out reportable fusions");
+        configBuilder.addFlag(LOG_ALL_POTENTIALS, "Log all potential fusions");
+        configBuilder.addFlag(LOG_INVALID_REASONS, "Log reasons for not making a fusion between transcripts");
+        configBuilder.addFlag(WRITE_ALL_VIS_FUSIONS, "Write all fusions including non-reportable for visualiser");
     }
 }

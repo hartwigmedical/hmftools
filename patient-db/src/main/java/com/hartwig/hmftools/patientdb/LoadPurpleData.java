@@ -278,8 +278,8 @@ public class LoadPurpleData
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
         configBuilder.addConfigItem(RNA_SAMPLE, "RNA sample ID");
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
-        configBuilder.addFlagItem(SOMATIC_ONLY, "Only load somatic data");
-        configBuilder.addFlagItem(GERMLINE_ONLY, "Only load germline data");
+        configBuilder.addFlag(SOMATIC_ONLY, "Only load somatic data");
+        configBuilder.addFlag(GERMLINE_ONLY, "Only load germline data");
         addDatabaseCmdLineArgs(configBuilder, true);
         ConfigUtils.addLoggingOptions(configBuilder);
     }

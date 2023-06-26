@@ -298,11 +298,11 @@ public class PonBuilder
         ConfigBuilder configBuilder = new ConfigBuilder();
         addSampleIdFile(configBuilder, true);
         configBuilder.addConfigItem(VCF_PATH, true, "VCF path for samples");
-        configBuilder.addIntegerItem(MIN_SAMPLES, false, "Min samples for variant to be included in PON", 3);
-        configBuilder.addIntegerItem(QUAL_CUTOFF, false, "Qual cut-off for variant inclusion", 100);
+        configBuilder.addInteger(MIN_SAMPLES, "Min samples for variant to be included in PON", 3);
+        configBuilder.addInteger(QUAL_CUTOFF, "Qual cut-off for variant inclusion", 100);
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         configBuilder.addConfigItem(MANUAL_ENTRIES, false, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
-        configBuilder.addPathItem(PON_FILE, false, "PON entries");
+        configBuilder.addPath(PON_FILE, false, "PON entries");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

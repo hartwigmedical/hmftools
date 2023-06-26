@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
@@ -31,16 +30,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.PeptideData;
-import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class GartnerDataPrep
@@ -329,8 +321,8 @@ public class GartnerDataPrep
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         // RandomPeptideConfig.addConfig(configBuilder);
-        configBuilder.addPathItem(PATIENT_ALLELES_FILE, true, "MCF predictions file");
-        configBuilder.addPathItem(MUTATIONS_FILE, true, "Binding validation file");
+        configBuilder.addPath(PATIENT_ALLELES_FILE, true, "MCF predictions file");
+        configBuilder.addPath(MUTATIONS_FILE, true, "Binding validation file");
         configBuilder.addConfigItem(REQUIRED_PEPTIDE_LENGTHS, true, "Peptide lengths");
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);

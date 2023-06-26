@@ -41,7 +41,7 @@ public class RepeatMaskAnnotations
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(REPEAT_MASK_FILE, false, REPEAT_MASK_FILE_DESC);
+        configBuilder.addPath(REPEAT_MASK_FILE, false, REPEAT_MASK_FILE_DESC);
     }
 
     public boolean hasData() { return !mChrDataMap.isEmpty(); }

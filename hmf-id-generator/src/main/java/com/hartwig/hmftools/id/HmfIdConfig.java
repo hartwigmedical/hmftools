@@ -44,11 +44,11 @@ public class HmfIdConfig
     {
         configBuilder.addConfigItem(PASSWORD, true, "Password for ?");
         configBuilder.addConfigItem(NEW_PASSWORD, false, "New password");
-        configBuilder.addPathItem(HASH_FILE_IN, true, "Input sample hash file");
+        configBuilder.addPath(HASH_FILE_IN, true, "Input sample hash file");
         configBuilder.addConfigItem(HASH_FILE_OUT, true, "Output sample hash file");
-        configBuilder.addFlagItem(RESTORE, "Restore routine");
+        configBuilder.addFlag(RESTORE, "Restore routine");
 
-        configBuilder.addIntegerItem(MAX_SAMPLE_COUNT, "Maximum supported precomputed sample hash count", DEFAULT_PRECOMPUTE_COUNT);
+        configBuilder.addInteger(MAX_SAMPLE_COUNT, "Maximum supported precomputed sample hash count", DEFAULT_PRECOMPUTE_COUNT);
 
         addDatabaseCmdLineArgs(configBuilder, true);
         ConfigUtils.addLoggingOptions(configBuilder);

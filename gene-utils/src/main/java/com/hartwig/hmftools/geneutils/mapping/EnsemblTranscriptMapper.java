@@ -261,8 +261,8 @@ public class EnsemblTranscriptMapper
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        configBuilder.addPathItem(ENSEMBL_DIR_SRC, true, "Ensembl data cache dir for ref-genome v37");
-        configBuilder.addPathItem(ENSEMBL_DIR_DEST, true, "Ensembl data cache dir for ref-genome v38");
+        configBuilder.addPath(ENSEMBL_DIR_SRC, true, "Ensembl data cache dir for ref-genome v37");
+        configBuilder.addPath(ENSEMBL_DIR_DEST, true, "Ensembl data cache dir for ref-genome v38");
         configBuilder.addConfigItem(SPECIFIC_GENE_IDS, "Optional list of geneIds to map");
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

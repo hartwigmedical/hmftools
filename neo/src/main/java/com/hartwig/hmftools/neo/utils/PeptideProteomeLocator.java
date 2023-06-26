@@ -40,11 +40,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class PeptideProteomeLocator
@@ -311,10 +306,10 @@ public class PeptideProteomeLocator
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        configBuilder.addPathItem(PEPTIDE_FILE, true, "Peptides to search for");
-        configBuilder.addIntegerItem(FLANK_LENGTH, "Number of amino acid flanks to retrieve", 0);
-        configBuilder.addFlagItem(FIND_REPEATS, "Look for repeated matches");
-        configBuilder.addPathItem(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
+        configBuilder.addPath(PEPTIDE_FILE, true, "Peptides to search for");
+        configBuilder.addInteger(FLANK_LENGTH, "Number of amino acid flanks to retrieve", 0);
+        configBuilder.addFlag(FIND_REPEATS, "Look for repeated matches");
+        configBuilder.addPath(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
         addEnsemblDir(configBuilder);
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);

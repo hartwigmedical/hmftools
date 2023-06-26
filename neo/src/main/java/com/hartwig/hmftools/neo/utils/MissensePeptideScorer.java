@@ -46,11 +46,6 @@ import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
@@ -478,11 +473,11 @@ public class MissensePeptideScorer
         ConfigBuilder configBuilder = new ConfigBuilder();
         addEnsemblDir(configBuilder);
         ScoreConfig.registerConfig(configBuilder);
-        configBuilder.addPathItem(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        configBuilder.addPathItem(GENE_ID_FILE, false, "Gene IDs file");
-        configBuilder.addPathItem(OUTPUT_FILE, true, "Output filename");
+        configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        configBuilder.addPath(GENE_ID_FILE, false, "Gene IDs file");
+        configBuilder.addPath(OUTPUT_FILE, true, "Output filename");
         configBuilder.addConfigItem(OUTPUT_DIR, true, "Output directory");
-        configBuilder.addDecimalItem(LIKELIHOOD_CUTOFF, false, "Likelihood cutoff to write an allele peptide result", 0.02);
+        configBuilder.addDecimal(LIKELIHOOD_CUTOFF, "Likelihood cutoff to write an allele peptide result", 0.02);
         addLoggingOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))

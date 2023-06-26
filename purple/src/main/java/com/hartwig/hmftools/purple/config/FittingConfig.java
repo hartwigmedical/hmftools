@@ -88,49 +88,49 @@ public class FittingConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addDecimalItem(MIN_PURITY, "Minimum purity", MIN_PURITY_DEFAULT);
-        configBuilder.addDecimalItem(MAX_PURITY, "Maximum purity", MAX_PURITY_DEFAULT);
-        configBuilder.addDecimalItem(PURITY_INCREMENT, "Purity increment", PURITY_INCREMENT_DEFAULT);
-        configBuilder.addDecimalItem(MIN_PLOIDY, "Minimum ploidy", MIN_PLOIDY_DEFAULT);
-        configBuilder.addDecimalItem(MAX_PLOIDY, "Maximum ploidy", MAX_PLOIDY_DEFAULT);
+        configBuilder.addDecimal(MIN_PURITY, "Minimum purity", MIN_PURITY_DEFAULT);
+        configBuilder.addDecimal(MAX_PURITY, "Maximum purity", MAX_PURITY_DEFAULT);
+        configBuilder.addDecimal(PURITY_INCREMENT, "Purity increment", PURITY_INCREMENT_DEFAULT);
+        configBuilder.addDecimal(MIN_PLOIDY, "Minimum ploidy", MIN_PLOIDY_DEFAULT);
+        configBuilder.addDecimal(MAX_PLOIDY, "Maximum ploidy", MAX_PLOIDY_DEFAULT);
 
-        configBuilder.addIntegerItem(
+        configBuilder.addInteger(
                 MIN_DIPLOID_TUMOR_RATIO_COUNT,
                 "Minimum ratio count while smoothing before diploid regions become suspect",
                 MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT);
 
-        configBuilder.addIntegerItem(
+        configBuilder.addInteger(
                 MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE,
                 "Minimum ratio count while smoothing before diploid regions become suspect while approaching centromere",
                 MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT);
 
-        configBuilder.addDecimalItem(PLOIDY_PENALTY_FACTOR, "Penalty factor to apply to the number of copy number events",
-                PLOIDY_PENALTY_FACTOR_DEFAULT);
+        configBuilder.addDecimal(
+                PLOIDY_PENALTY_FACTOR, "Penalty factor to apply to the number of copy number events", PLOIDY_PENALTY_FACTOR_DEFAULT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 PLOIDY_PENALTY_STANDARD_DEVIATION,
                 "Standard deviation of normal distribution modelling ploidy deviation from whole number",
                 PLOIDY_PENALTY_STANDARD_DEVIATION_DEFAULT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 PLOIDY_PENALTY_MIN_STANDARD_DEVIATION,
                 "Minimum ploidy penalty standard deviation to be applied", PLOIDY_PENALTY_MIN_STANDARD_DEVIATION_DEFAULT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 PLOIDY_PENALTY_SUB_MIN_ADDITIONAL,
                 "Additional penalty to apply to major allele < 1 or minor allele < 0",
                 PLOIDY_PENALTY_SUB_MIN_ADDITIONAL_DEFAULT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER,
                 "Penalty multiplier applied to major allele < 1", PLOIDY_PENALTY_SUB_ONE_MAJOR_ALLELE_MULTIPLIER_DEFAULT);
 
-        configBuilder.addDecimalItem(PLOIDY_PENALTY_MIN, "Minimum ploidy penalty", PLOIDY_PENALTY_MIN_DEFAULT);
+        configBuilder.addDecimal(PLOIDY_PENALTY_MIN, "Minimum ploidy penalty", PLOIDY_PENALTY_MIN_DEFAULT);
 
-        configBuilder.addIntegerItem(
+        configBuilder.addInteger(
                 CFG_MIN_MATE_QUAL_SCORE, "SV recovery non-SGL min qual score", DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE);
 
-        configBuilder.addIntegerItem(
+        configBuilder.addInteger(
                 CFG_MIN_SGL_QUAL_SCORE, "SV recovery SGL min qual score", DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE);
     }
 }

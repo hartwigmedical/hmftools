@@ -288,48 +288,37 @@ public class LilacConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addRequiredConfigItem(SAMPLE, "Name of sample");
-        configBuilder.addPathItem(SAMPLE_DATA_DIR, false, "Path to all sample files");
-        configBuilder.addPathItem(REFERENCE_BAM, false,"Path to reference/normal BAM");
-        configBuilder.addPathItem(TUMOR_BAM, false,"Path to tumor BAM");
-        configBuilder.addPathItem(RNA_BAM, false,"Analyse tumor BAM only");
-        configBuilder.addPathItem(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
+        configBuilder.addPath(SAMPLE_DATA_DIR, false, "Path to all sample files");
+        configBuilder.addPath(REFERENCE_BAM, false,"Path to reference/normal BAM");
+        configBuilder.addPath(TUMOR_BAM, false,"Path to tumor BAM");
+        configBuilder.addPath(RNA_BAM, false,"Analyse tumor BAM only");
+        configBuilder.addPath(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
 
-        configBuilder.addIntegerItem(MIN_BASE_QUAL, false,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
+        configBuilder.addInteger(MIN_BASE_QUAL,"Min base quality threshold", DEFAULT_MIN_BASE_QUAL);
+        configBuilder.addInteger(MIN_EVIDENCE, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE);
+        configBuilder.addDecimal(MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
+        configBuilder.addDecimal(MIN_EVIDENCE_FACTOR, "Min fragment evidence factor", DEFAULT_MIN_EVIDENCE_FACTOR);
+        configBuilder.addInteger(MIN_FRAGMENTS_PER_ALLELE,"Min fragments per allele", DEFAULT_FRAGS_PER_ALLELE);
+        configBuilder.addInteger(MIN_FRAGMENTS_TO_REMOVE_SINGLE,"Min fragments to remote single", DEFAULT_FRAGS_REMOVE_SGL);
 
-        configBuilder.addIntegerItem(MIN_EVIDENCE, false, "Min fragment evidence required", DEFAULT_MIN_EVIDENCE);
+        configBuilder.addInteger(FATAL_LOW_COVERAGE,"Fatal low coverage", DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD);
+        configBuilder.addDecimal(HLA_Y_THRESHOLD, "HLA-Y percent threshold", DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
 
-        configBuilder.addDecimalItem(
-                MIN_HIGH_QUAL_EVIDENCE_FACTOR, "Min high-qual fragment evidence factor", DEFAULT_MIN_HIGH_QUAL_EVIDENCE_FACTOR);
-
-        configBuilder.addDecimalItem(
-                MIN_EVIDENCE_FACTOR, "Min fragment evidence factor", DEFAULT_MIN_EVIDENCE_FACTOR);
-
-        configBuilder.addIntegerItem(
-                MIN_FRAGMENTS_PER_ALLELE, false,"Min fragments per allele", DEFAULT_FRAGS_PER_ALLELE);
-
-        configBuilder.addIntegerItem(
-                MIN_FRAGMENTS_TO_REMOVE_SINGLE, false,"Min fragments to remote single", DEFAULT_FRAGS_REMOVE_SGL);
-
-        configBuilder.addIntegerItem(
-                FATAL_LOW_COVERAGE, false,"Fatal low coverage", DEFAULT_FATAL_LOW_COVERAGE_THRESHOLD);
-
-        configBuilder.addDecimalItem(HLA_Y_THRESHOLD, "HLA-Y percent threshold", DEFAULT_HLA_Y_FRAGMENT_THRESHOLD);
-
-        configBuilder.addDecimalItem(TOP_SCORE_THRESHOLD, "Max distance from top score", DEFAULT_TOP_SCORE_THRESHOLD);
+        configBuilder.addDecimal(TOP_SCORE_THRESHOLD, "Max distance from top score", DEFAULT_TOP_SCORE_THRESHOLD);
         configBuilder.addConfigItem(ACTUAL_ALLELES,"Comma separated known actual alleles for the sample");
         configBuilder.addConfigItem(RESTRICTED_ALLELES,"Comma separated restricted analysis allele list");
 
-        configBuilder.addIntegerItem(
-                MAX_ELIM_CANDIDATES, false,
+        configBuilder.addInteger(
+                MAX_ELIM_CANDIDATES,
                 "Revert to only common alleles if candidate allele count exceeds this after elimination", 0);
 
-        configBuilder.addPathItem(GENE_COPY_NUMBER, false,"Path to gene copy number file");
-        configBuilder.addPathItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPathItem(SOMATIC_VCF, false,"Path to sample Purple somatic VCF");
-        configBuilder.addFlagItem(DEBUG_PHASING, "More detailed logging of phasing");
-        configBuilder.addFlagItem(RUN_VALIDATION, "Run validation checks");
-        configBuilder.addFlagItem(WRITE_ALL_FILES, "Write more detailed output files");
-        configBuilder.addFlagItem(LOG_PERF_CALCS,"Log performance metrics");
+        configBuilder.addPath(GENE_COPY_NUMBER, false,"Path to gene copy number file");
+        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(SOMATIC_VCF, false,"Path to sample Purple somatic VCF");
+        configBuilder.addFlag(DEBUG_PHASING, "More detailed logging of phasing");
+        configBuilder.addFlag(RUN_VALIDATION, "Run validation checks");
+        configBuilder.addFlag(WRITE_ALL_FILES, "Write more detailed output files");
+        configBuilder.addFlag(LOG_PERF_CALCS,"Log performance metrics");
 
         addRefGenomeConfig(configBuilder, true);
         addOutputDir(configBuilder);

@@ -67,9 +67,9 @@ public class RandomPeptideConfig
 
     public static void addConfigForReading(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(scoreFileConfig(FILE_ID_RAND_DIST), false, "Random peptide distribution file");
-        configBuilder.addPathItem(scoreFileConfig(FILE_ID_LIKELIHOOD_DIST), false, "Random likelihood distribution file");
-        configBuilder.addPathItem(scoreFileConfig(FILE_ID_EXP_LIKELIHOOD_DIST), false, "Random expression likelihood distribution file");
+        configBuilder.addPath(scoreFileConfig(FILE_ID_RAND_DIST), false, "Random peptide distribution file");
+        configBuilder.addPath(scoreFileConfig(FILE_ID_LIKELIHOOD_DIST), false, "Random likelihood distribution file");
+        configBuilder.addPath(scoreFileConfig(FILE_ID_EXP_LIKELIHOOD_DIST), false, "Random expression likelihood distribution file");
     }
 
     public static RandomPeptideConfig forWriting(final ConfigBuilder configBuilder)
@@ -90,8 +90,8 @@ public class RandomPeptideConfig
 
     public static void addConfigForWriting(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(RANDOM_PEPTIDES_FILE, false, "Random peptide file");
+        configBuilder.addPath(RANDOM_PEPTIDES_FILE, false, "Random peptide file");
         configBuilder.addConfigItem(REQUIRED_OUTPUT_ALLELES, "Restricted set of alleles to write to file");
-        configBuilder.addFlagItem(WRITE_RAND_DIST, "Write random peptide score distribution");
+        configBuilder.addFlag(WRITE_RAND_DIST, "Write random peptide score distribution");
     }
 }

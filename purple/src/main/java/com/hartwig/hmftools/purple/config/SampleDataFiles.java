@@ -16,9 +16,6 @@ import java.nio.file.Paths;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.ParseException;
-
 import htsjdk.variant.vcf.VCFFileReader;
 
 public class SampleDataFiles
@@ -43,19 +40,19 @@ public class SampleDataFiles
 
     static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(SAMPLE_DIR, false,"Path to the sample's directory where expect to find Cobalt, Amber, Gripss etc directories");
+        configBuilder.addPath(SAMPLE_DIR, false,"Path to the sample's directory where expect to find Cobalt, Amber, Gripss etc directories");
 
-        configBuilder.addPathItem(COBALT,false,
+        configBuilder.addPath(COBALT,false,
                 "Path to COBALT output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt");
 
-        configBuilder.addPathItem(AMBER, false,
+        configBuilder.addPath(AMBER, false,
                 "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
-        configBuilder.addPathItem(SOMATIC_SV_VCF, false, "Optional location of somatic SV VCF");
-        configBuilder.addPathItem(GERMLINE_SV_VCF, false, "Optional location of germline SV VCF to annotate");
-        configBuilder.addPathItem(SV_RECOVERY_VCF, false, "Optional location of failing structural variants that may be recovered");
-        configBuilder.addPathItem(GERMLINE_VARIANTS, false, "Optional location of germline variants to enrich and process in driver catalog.");
-        configBuilder.addPathItem(SOMATIC_VARIANTS, false, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
+        configBuilder.addPath(SOMATIC_SV_VCF, false, "Optional location of somatic SV VCF");
+        configBuilder.addPath(GERMLINE_SV_VCF, false, "Optional location of germline SV VCF to annotate");
+        configBuilder.addPath(SV_RECOVERY_VCF, false, "Optional location of failing structural variants that may be recovered");
+        configBuilder.addPath(GERMLINE_VARIANTS, false, "Optional location of germline variants to enrich and process in driver catalog.");
+        configBuilder.addPath(SOMATIC_VARIANTS, false, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
     }
 
     public SampleDataFiles(final ConfigBuilder configBuilder, final String sampleId)

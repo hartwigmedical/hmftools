@@ -174,8 +174,8 @@ public class LoadLinxData
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(LINX_DIR_CFG, true, LINX_DIR_DESC);
-        configBuilder.addFlagItem(SOMATIC_ONLY, "Only load somatic data");
-        configBuilder.addFlagItem(GERMLINE_ONLY, "Only load germline data");
+        configBuilder.addFlag(SOMATIC_ONLY, "Only load somatic data");
+        configBuilder.addFlag(GERMLINE_ONLY, "Only load germline data");
         addDatabaseCmdLineArgs(configBuilder, true);
         ConfigUtils.addLoggingOptions(configBuilder);
     }

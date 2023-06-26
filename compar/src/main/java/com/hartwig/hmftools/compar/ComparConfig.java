@@ -402,8 +402,8 @@ public class ComparConfig
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, NEW_SOURCE), false, "Database configurations for new data");
         configBuilder.addConfigItem(formConfigSourceStr(FILE_SOURCE, REF_SOURCE), false, "File locations for reference data");
         configBuilder.addConfigItem(formConfigSourceStr(FILE_SOURCE, NEW_SOURCE), false, "File locations for new data");
-        configBuilder.addFlagItem(WRITE_DETAILED_FILES, "Write per-type details files");
-        configBuilder.addFlagItem(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
+        configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
+        configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addConfigItem(LIFTOVER_MAPPING_FILE, LIFTOVER_MAPPING_FILE_DESC);
 
         addDatabaseCmdLineArgs(configBuilder, false);

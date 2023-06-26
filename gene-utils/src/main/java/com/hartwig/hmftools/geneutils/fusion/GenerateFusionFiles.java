@@ -495,8 +495,8 @@ public class GenerateFusionFiles
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        configBuilder.addPathItem(KNOWN_FUSION_DB_FILE, true, "File containing the driver gene panel for 37");
-        configBuilder.addPathItem(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
+        configBuilder.addPath(KNOWN_FUSION_DB_FILE, true, "File containing the driver gene panel for 37");
+        configBuilder.addPath(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

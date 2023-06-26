@@ -106,9 +106,9 @@ public class SliceConfig
     {
         addCommonCommandOptions(configBuilder);
 
-        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
-        configBuilder.addFlagItem(WRITE_BAM, "Write BAM file for sliced region");
-        configBuilder.addFlagItem(WRITE_READS, "Write CSV reads file for sliced region");
-        configBuilder.addFlagItem(PERF_DEBUG, "Detailed performance tracking and logging");
+        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addFlag(WRITE_BAM, "Write BAM file for sliced region");
+        configBuilder.addFlag(WRITE_READS, "Write CSV reads file for sliced region");
+        configBuilder.addFlag(PERF_DEBUG, "Detailed performance tracking and logging");
     }
 }

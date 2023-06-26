@@ -182,9 +182,9 @@ public class PurpleConfig
                 "Path to the output directory. If <sample_dir> is set, then is sample_dir/output_dir/",
                 "");
 
-        configBuilder.addFlagItem(DRIVERS_ONLY, "Only run the driver routine");
-        configBuilder.addFlagItem(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
-        configBuilder.addFlagItem(FILTER_SOMATICS_ON_GENE, "Only load and enrich somatic variants with a gene impact");
+        configBuilder.addFlag(DRIVERS_ONLY, "Only run the driver routine");
+        configBuilder.addFlag(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
+        configBuilder.addFlag(FILTER_SOMATICS_ON_GENE, "Only load and enrich somatic variants with a gene impact");
         configBuilder.addConfigItem(TIER_FILTERS, "Variant qual filters by tier, format: TIER_A=QUAL;TIER_A=QUAL etc");
 
         FittingConfig.addConfig(configBuilder);

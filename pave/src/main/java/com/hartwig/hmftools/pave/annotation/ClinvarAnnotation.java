@@ -13,7 +13,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.pave.VariantData;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -80,7 +79,7 @@ public class ClinvarAnnotation
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(CLINVAR_VCF, false, "Clinvar annotation VCF");
+        configBuilder.addPath(CLINVAR_VCF, false, "Clinvar annotation VCF");
     }
 
     private void loadEntries(final String filename)

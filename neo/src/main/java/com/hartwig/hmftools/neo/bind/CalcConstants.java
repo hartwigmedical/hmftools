@@ -49,18 +49,18 @@ public class CalcConstants
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addDecimalItem(PEP_LEN_WEIGHT_FACTOR, false, "Length weight factor", DEFAULT_PEP_LEN_WEIGHT_FACTOR);
-        configBuilder.addDecimalItem(PEP_LEN_WEIGHT_MAX, false, "Length weight max", DEFAULT_PEP_LEN_WEIGHT_MAX);
+        configBuilder.addDecimal(PEP_LEN_WEIGHT_FACTOR, "Length weight factor", DEFAULT_PEP_LEN_WEIGHT_FACTOR);
+        configBuilder.addDecimal(PEP_LEN_WEIGHT_MAX, "Length weight max", DEFAULT_PEP_LEN_WEIGHT_MAX);
 
-        configBuilder.addDecimalItem(
-                ALLELE_MOTIF_WEIGHT_FACTOR, false, "Allele motif weight factor", DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR);
+        configBuilder.addDecimal(
+                ALLELE_MOTIF_WEIGHT_FACTOR, "Allele motif weight factor", DEFAULT_ALLELE_MOTIF_WEIGHT_FACTOR);
 
-        configBuilder.addDecimalItem(
-                ALLELE_MOTIF_WEIGHT_MAX, false, "Allele motif weight max", DEFAULT_ALLELE_MOTIF_WEIGHT_MAX);
+        configBuilder.addDecimal(
+                ALLELE_MOTIF_WEIGHT_MAX, "Allele motif weight max", DEFAULT_ALLELE_MOTIF_WEIGHT_MAX);
 
-        configBuilder.addDecimalItem(NOISE_PROB, false, "Noise target probability", 0);
+        configBuilder.addDecimal(NOISE_PROB, "Noise target probability", 0);
 
-        configBuilder.addDecimalItem(NOISE_WEIGHT, false, "Noise weight", 0);
+        configBuilder.addDecimal(NOISE_WEIGHT, "Noise weight", 0);
     }
 
 }

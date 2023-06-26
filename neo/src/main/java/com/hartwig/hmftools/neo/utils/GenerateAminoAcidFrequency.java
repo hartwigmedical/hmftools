@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // class for generating amino acid frequencies from the proteome
@@ -94,7 +93,7 @@ public class GenerateAminoAcidFrequency
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         addEnsemblDir(configBuilder);
-        configBuilder.addPathItem(AMINO_ACID_FREQ_FILE, true, "Output filename");
+        configBuilder.addPath(AMINO_ACID_FREQ_FILE, true, "Output filename");
         addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);
 

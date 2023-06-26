@@ -112,23 +112,23 @@ public class PaveConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
-        configBuilder.addPathItem(VCF_FILE, true, "VCF input file");
+        configBuilder.addPath(VCF_FILE, true, "VCF input file");
         configBuilder.addConfigItem(
                 OUTPUT_VCF_FILE, false, "Option VCF output file, otherwise will append 'pave' suffix to input filename");
 
         addRefGenomeConfig(configBuilder, true);
         addEnsemblDir(configBuilder, true);
         DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
-        configBuilder.addPathItem(PON_FILE, false, "PON entries");
-        configBuilder.addPathItem(PON_ARTEFACTS_FILE, false, "PON artefacts to filter");
+        configBuilder.addPath(PON_FILE, false, "PON entries");
+        configBuilder.addPath(PON_ARTEFACTS_FILE, false, "PON artefacts to filter");
         configBuilder.addConfigItem(PON_FILTERS, "PON filters per tier, format: TIER:MAX_SAMPLES:MAX_COUNT separated by ';'");
 
-        configBuilder.addFlagItem(WRITE_DIFFS, "Only write transcript diffs to CSV file");
-        configBuilder.addFlagItem(WRITE_TRANSCRIPT_DATA, "Write variant impacts per transcript to TSV");
-        configBuilder.addFlagItem(ONLY_CANONCIAL, "Only check canonical transcripts");
-        configBuilder.addFlagItem(READ_PASS_ONLY, "Filter incoming variants to PASS only");
-        configBuilder.addFlagItem(WRITE_PASS_ONLY, "Only annotate passing variants");
-        configBuilder.addFlagItem(SET_REPORTABLE, "Set reportable and hotspot flags");
+        configBuilder.addFlag(WRITE_DIFFS, "Only write transcript diffs to CSV file");
+        configBuilder.addFlag(WRITE_TRANSCRIPT_DATA, "Write variant impacts per transcript to TSV");
+        configBuilder.addFlag(ONLY_CANONCIAL, "Only check canonical transcripts");
+        configBuilder.addFlag(READ_PASS_ONLY, "Filter incoming variants to PASS only");
+        configBuilder.addFlag(WRITE_PASS_ONLY, "Only annotate passing variants");
+        configBuilder.addFlag(SET_REPORTABLE, "Set reportable and hotspot flags");
 
         GnomadAnnotation.addConfig(configBuilder);
         Mappability.addConfig(configBuilder);

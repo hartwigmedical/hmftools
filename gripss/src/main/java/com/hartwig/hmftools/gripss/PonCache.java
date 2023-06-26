@@ -404,10 +404,10 @@ public class PonCache
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(GERMLINE_PON_BED_SV_FILE, false, "PON for SV positions");
-        configBuilder.addPathItem(GERMLINE_PON_BED_SGL_FILE, false, "PON for SGL positions");
-        configBuilder.addIntegerItem(
-                GERMLINE_PON_MARGIN, false, "PON permitted matching position margin", DEFAULT_PON_DISTANCE);
+        configBuilder.addPath(GERMLINE_PON_BED_SV_FILE, false, "PON for SV positions");
+        configBuilder.addPath(GERMLINE_PON_BED_SGL_FILE, false, "PON for SGL positions");
+        configBuilder.addInteger(
+                GERMLINE_PON_MARGIN, "PON permitted matching position margin", DEFAULT_PON_DISTANCE);
     }
 
     private class PonSvRegion

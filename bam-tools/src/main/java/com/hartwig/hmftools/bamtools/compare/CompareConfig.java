@@ -76,7 +76,7 @@ public class CompareConfig
     {
         addCommonCommandOptions(configBuilder);
 
-        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
         configBuilder.addRequiredConfigItem(REF_BAM_FILE, "Ref BAM file");

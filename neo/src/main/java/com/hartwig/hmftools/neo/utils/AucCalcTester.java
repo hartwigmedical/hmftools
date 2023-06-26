@@ -26,8 +26,8 @@ public class AucCalcTester
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        configBuilder.addPathItem(DATA_FILE, true, "Input filename");
-        configBuilder.addFlagItem(IS_PERCENTILE, "In percentile or rank form");
+        configBuilder.addPath(DATA_FILE, true, "Input filename");
+        configBuilder.addFlag(IS_PERCENTILE, "In percentile or rank form");
         configBuilder.addConfigItem(OUTPUT_DIR, true, "Output directory");
         addLoggingOptions(configBuilder);
 

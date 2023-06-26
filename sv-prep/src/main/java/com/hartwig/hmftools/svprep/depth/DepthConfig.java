@@ -98,18 +98,15 @@ public class DepthConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(INPUT_VCF, true, "Input VCF File");
+        configBuilder.addPath(INPUT_VCF, true, "Input VCF File");
         configBuilder.addConfigItem(SAMPLES, true, "Sample IDs corresponding to BAM files");
         configBuilder.addConfigItem(BAM_FILES, true, "BAM file(s) to slice for depth");
         configBuilder.addConfigItem(OUTPUT_VCF, true, "Output VCF File");
         configBuilder.addConfigItem(VCF_TAG_PREFIX, "VCF tag prefix for testing & comparison");
         addRefGenomeConfig(configBuilder, true);
 
-        configBuilder.addDecimalItem(
-                VAF_CAP, false, "Ref support depth limit as function of variant fragments", DEFAULT_VAF_CAP);
-
-        configBuilder.addIntegerItem(
-                PROXIMITY_DISTANCE, false, "Proximity distance to group variants", DEFAULT_PROXIMITY_DISTANCE);
+        configBuilder.addDecimal(VAF_CAP, "Ref support depth limit as function of variant fragments", DEFAULT_VAF_CAP);
+        configBuilder.addInteger(PROXIMITY_DISTANCE, "Proximity distance to group variants", DEFAULT_PROXIMITY_DISTANCE);
 
         addValidationStringencyOption(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
@@ -117,7 +114,7 @@ public class DepthConfig
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 
-        configBuilder.addDecimalItem(PERF_LOG_TIME, false, "Performance log time threshold (seconds)", 0);
+        configBuilder.addDecimal(PERF_LOG_TIME, "Performance log time threshold (seconds)", 0);
     }
 
     public DepthConfig(double vcfCap, int proximityDistance)

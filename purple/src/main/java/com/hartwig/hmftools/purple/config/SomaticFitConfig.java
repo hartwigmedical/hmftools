@@ -37,25 +37,25 @@ public class SomaticFitConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addIntegerItem(
+        configBuilder.addInteger(
                 SOMATIC_MIN_PEAK, "Minimum number of somatic variants to consider a peak", SOMATIC_MIN_PEAK_DEFAULT);
 
-        configBuilder.addIntegerItem(SOMATIC_MIN_TOTAL,
+        configBuilder.addInteger(SOMATIC_MIN_TOTAL,
                 "Minimum number of somatic variants required to assist highly diploid fits", SOMATIC_MIN_VARIANTS_DEFAULT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 SOMATIC_MIN_PURITY, "Minimum spread within candidate purities before somatics can be used",
                 SOMATIC_MIN_PURITY_DEFAULT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 SOMATIC_MIN_PURITY_SPREAD, "Minimum spread within candidate purities before somatics can be used",
                 SOMATIC_MIN_PURITY_SPREAD_DEFAULT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 SOMATIC_PENALTY_WEIGHT, "Proportion of somatic deviation to include in fitted purity score",
                 SOMATIC_PENALTY_WEIGHT_DEFAULT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 HIGHLY_DIPLOID_PERCENTAGE, "Proportion of genome that must be diploid before using somatic fit",
                 HIGHLY_DIPLOID_PERCENTAGE_DEFAULT);
     }

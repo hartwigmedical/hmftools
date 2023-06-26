@@ -307,10 +307,10 @@ public class ExpressionAnalyser
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        configBuilder.addPathItem(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
-        configBuilder.addPathItem(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
-        configBuilder.addPathItem(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
-        configBuilder.addPathItem(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");
+        configBuilder.addPath(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
+        configBuilder.addPath(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
+        configBuilder.addPath(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
+        configBuilder.addPath(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");
         addEnsemblDir(configBuilder);
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);

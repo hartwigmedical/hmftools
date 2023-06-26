@@ -192,6 +192,6 @@ public class HotspotCache
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(KNOWN_HOTSPOT_FILE, false, "Known fusion BED file");
+        configBuilder.addPath(KNOWN_HOTSPOT_FILE, false, "Known fusion BED file");
     }
 }

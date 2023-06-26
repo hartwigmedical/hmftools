@@ -26,7 +26,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // looks for outlier studies in allele-peptide binding training data
@@ -222,7 +221,7 @@ public class StudyChecker
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        configBuilder.addPathItem(STUDY_DATA_FILE, true, "Study binding data");
+        configBuilder.addPath(STUDY_DATA_FILE, true, "Study binding data");
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);
 

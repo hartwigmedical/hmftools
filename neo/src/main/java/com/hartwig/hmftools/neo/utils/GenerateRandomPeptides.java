@@ -360,11 +360,11 @@ public class GenerateRandomPeptides
         ConfigBuilder configBuilder = new ConfigBuilder();
         addEnsemblDir(configBuilder);
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
-        configBuilder.addIntegerItem(REQ_PEPTIDES, true, "Number of peptides to find randomly from the proteome", 0);
+        configBuilder.addRequiredInteger(REQ_PEPTIDES, "Number of peptides to find randomly from the proteome");
         configBuilder.addConfigItem(PEPTIDES_LENGTHS, false, "Peptide lengths, separated by ';'");
-        configBuilder.addPathItem(ALLELES_FILE, true, "File with alleles to assign");
-        configBuilder.addPathItem(PEPTIDE_EXCLUSIONS_FILE, false, "File with training set peptides to avoid replicating");
-        configBuilder.addPathItem(IMMUNE_EXPRESSION_FILE, false, IMMUNE_EXPRESSION_FILE_CFG);
+        configBuilder.addPath(ALLELES_FILE, true, "File with alleles to assign");
+        configBuilder.addPath(PEPTIDE_EXCLUSIONS_FILE, false, "File with training set peptides to avoid replicating");
+        configBuilder.addPath(IMMUNE_EXPRESSION_FILE, false, IMMUNE_EXPRESSION_FILE_CFG);
 
         addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);

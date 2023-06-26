@@ -99,10 +99,7 @@ public class ReadFilterConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addIntegerItem(
-                CFG_MIN_ALIGN_BASES, false, "Junction fragment min aligned bases", MIN_ALIGNMENT_BASES);
-
-        configBuilder.addIntegerItem(
-                CFG_MIN_JUNCTION_FRAGS, false, "Required fragments to keep a junction", MIN_JUNCTION_SUPPORT);
+        configBuilder.addInteger(CFG_MIN_ALIGN_BASES, "Junction fragment min aligned bases", MIN_ALIGNMENT_BASES);
+        configBuilder.addInteger(CFG_MIN_JUNCTION_FRAGS, "Required fragments to keep a junction", MIN_JUNCTION_SUPPORT);
     }
 }

@@ -221,26 +221,26 @@ public class MarkDupsConfig
         ConfigUtils.addLoggingOptions(configBuilder);
 
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addPathItem(BAM_FILE, true, "BAM file location");
+        configBuilder.addPath(BAM_FILE, true, "BAM file location");
         addRefGenomeConfig(configBuilder, true);
-        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
-        configBuilder.addIntegerItem(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
+        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
+        configBuilder.addInteger(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
         configBuilder.addConfigItem(
                 READ_OUTPUTS, false,"Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'",
                 ReadOutput.NONE.toString());
 
-        configBuilder.addFlagItem(WRITE_BAM, "Write BAM, default is true if not writing other read TSV output");
-        configBuilder.addFlagItem(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
-        configBuilder.addFlagItem(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
+        configBuilder.addFlag(WRITE_BAM, "Write BAM, default is true if not writing other read TSV output");
+        configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
+        configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
         addThreadOptions(configBuilder);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
-        configBuilder.addFlagItem(PERF_DEBUG, PERF_DEBUG_DESC);
-        configBuilder.addFlagItem(RUN_CHECKS, "Run duplicate mismatch checks");
-        configBuilder.addFlagItem(WRITE_STATS, "Write duplicate and UMI-group stats");
+        configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
+        configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
+        configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
     }
 

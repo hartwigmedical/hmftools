@@ -163,7 +163,7 @@ public class SomaticVariantCompiler
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         addSampleIdFile(configBuilder, true);
-        configBuilder.addPathItem(OUTPUT_FILE, true, "Output filename");
+        configBuilder.addPath(OUTPUT_FILE, true, "Output filename");
         configBuilder.addConfigItem(COMMON_FIELDS, false, "Required VCF fields separated by ','");
         configBuilder.addConfigItem(GENOTYPE_FIELDS, false, "Required VCF genotype fields separated by ','");
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);

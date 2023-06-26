@@ -332,8 +332,8 @@ public class EnsemblCacheCompare
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        configBuilder.addPathItem(ENSEMBL_DIR_REF, true, "Ensembl data cache dir for ref-genome v37");
-        configBuilder.addPathItem(ENSEMBL_DIR_NEW, true, "Ensembl data cache dir for ref-genome v38");
+        configBuilder.addPath(ENSEMBL_DIR_REF, true, "Ensembl data cache dir for ref-genome v37");
+        configBuilder.addPath(ENSEMBL_DIR_NEW, true, "Ensembl data cache dir for ref-genome v38");
         configBuilder.addConfigItem(SPECIFIC_GENES, "Limit comparison to specific genes, separated by ','");
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

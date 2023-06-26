@@ -254,10 +254,10 @@ public class ReferenceData
         configBuilder.addConfigItem(SOMATIC_HOTSPOT, false, "Path to somatic hotspot VCF", "");
         configBuilder.addConfigItem(GERMLINE_HOTSPOT, false, "Path to germline hotspot VCF", "");
         addGcProfilePath(configBuilder, false);
-        configBuilder.addPathItem(COHORT_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
-        configBuilder.addPathItem(TARGET_REGION_BED, false, "Target regions BED file");
-        configBuilder.addPathItem(TARGET_REGIONS_RATIOS, false, "Path to target regions ratios file");
-        configBuilder.addPathItem(TARGET_REGION_MSI_INDELS, false, "Path to target regions MSI INDELs file");
+        configBuilder.addPath(COHORT_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
+        configBuilder.addPath(TARGET_REGION_BED, false, "Target regions BED file");
+        configBuilder.addPath(TARGET_REGIONS_RATIOS, false, "Path to target regions ratios file");
+        configBuilder.addPath(TARGET_REGION_MSI_INDELS, false, "Path to target regions MSI INDELs file");
         EnsemblDataCache.addEnsemblDir(configBuilder, true);
         DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
     }

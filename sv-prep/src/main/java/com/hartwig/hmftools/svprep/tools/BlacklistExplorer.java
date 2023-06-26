@@ -255,7 +255,7 @@ public class BlacklistExplorer
 
         addSampleIdFile(configBuilder, false);
         configBuilder.addConfigItem(VCF_FILE, true, "VCF file, can use '*' in place of sampleIds");
-        configBuilder.addPathItem(BLACKLIST_BED, false, "Blacklist BED file");
+        configBuilder.addPath(BLACKLIST_BED, false, "Blacklist BED file");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
 
         addOutputOptions(configBuilder);

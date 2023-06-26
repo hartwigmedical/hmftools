@@ -241,19 +241,19 @@ public class LinxConfig
         configBuilder.addConfigItem(SAMPLE_DATA_DIR, "Directory for per-sample SV data, default is to use output_dir");
         configBuilder.addConfigItem(RefGenomeVersion.REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
         configBuilder.addConfigItem(VCF_FILE, "Path to the PURPLE structural variant VCF file");
-        configBuilder.addPathItem(DRIVER_GENE_PANEL_OPTION, false, DRIVER_GENE_PANEL_OPTION_DESC);
-        configBuilder.addPathItem(LINE_ELEMENT_FILE, false, "Line elements file");
-        configBuilder.addPathItem(FRAGILE_SITE_FILE, false, "Fragile site file");
-        configBuilder.addFlagItem(GERMLINE, "Process germline SVs");
+        configBuilder.addPath(DRIVER_GENE_PANEL_OPTION, false, DRIVER_GENE_PANEL_OPTION_DESC);
+        configBuilder.addPath(LINE_ELEMENT_FILE, false, "Line elements file");
+        configBuilder.addPath(FRAGILE_SITE_FILE, false, "Fragile site file");
+        configBuilder.addFlag(GERMLINE, "Process germline SVs");
 
-        configBuilder.addIntegerItem(CLUSTER_BASE_DISTANCE, false, "Clustering base distance", DEFAULT_PROXIMITY_DISTANCE);
-        configBuilder.addIntegerItem(CHAINING_SV_LIMIT, false, "Max cluster size for chaining", 0);
+        configBuilder.addInteger(CLUSTER_BASE_DISTANCE, "Clustering base distance", DEFAULT_PROXIMITY_DISTANCE);
+        configBuilder.addInteger(CHAINING_SV_LIMIT, "Max cluster size for chaining", 0);
         configBuilder.addConfigItem(ANNOTATION_EXTENSIONS, "String list of annotations");
 
-        configBuilder.addPathItem(GENE_ID_FILE, false, "Limit to Ensembl gene ids specified in file");
+        configBuilder.addPath(GENE_ID_FILE, false, "Limit to Ensembl gene ids specified in file");
 
         LinxOutput.addConfig(configBuilder);
-        configBuilder.addFlagItem(LOG_VERBOSE, "Log extra detail");
+        configBuilder.addFlag(LOG_VERBOSE, "Log extra detail");
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);
     }

@@ -122,10 +122,10 @@ public class UmiConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addFlagItem(UMI_ENABLED, "Use UMIs for duplicates");
-        configBuilder.addFlagItem(UMI_DUPLEX, "UMI duplex enabled");
-        configBuilder.addPathItem(UMI_DEFINED_IDS, false, "Optional set of defined UMI IDs in file");
-        configBuilder.addFlagItem(UMI_BASE_DIFF_STATS, "Record base difference stats");
+        configBuilder.addFlag(UMI_ENABLED, "Use UMIs for duplicates");
+        configBuilder.addFlag(UMI_DUPLEX, "UMI duplex enabled");
+        configBuilder.addPath(UMI_DEFINED_IDS, false, "Optional set of defined UMI IDs in file");
+        configBuilder.addFlag(UMI_BASE_DIFF_STATS, "Record base difference stats");
         configBuilder.addConfigItem(
                 UMI_DUPLEX_DELIM, false,
                 "UMI duplex delimiter, default: " + Constants.DEFAULT_DUPLEX_UMI_DELIM,

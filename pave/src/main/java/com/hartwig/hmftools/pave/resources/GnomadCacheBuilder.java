@@ -142,12 +142,9 @@ public class GnomadCacheBuilder
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        configBuilder.addPathItem(GNOMAD_FILE, true, "Gnomad VCF input file");
-
-        configBuilder.addDecimalItem(
-                FREQ_THRESHOLD, false, "Population frequency (AF) threshold to write VCF entry", 0);
-
-        configBuilder.addFlagItem(SPECIFIC_CHROMOSOME, "Produce file per chromosome");
+        configBuilder.addPath(GNOMAD_FILE, true, "Gnomad VCF input file");
+        configBuilder.addDecimal(FREQ_THRESHOLD, "Population frequency (AF) threshold to write VCF entry", 0);
+        configBuilder.addFlag(SPECIFIC_CHROMOSOME, "Produce file per chromosome");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

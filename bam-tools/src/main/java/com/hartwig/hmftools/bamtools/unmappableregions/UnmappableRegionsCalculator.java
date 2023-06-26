@@ -276,7 +276,7 @@ public class UnmappableRegionsCalculator
         // Add options
         addRefGenomeConfig(configBuilder, true);
         addOutputDir(configBuilder);
-        configBuilder.addIntegerItem(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(configBuilder);
         String outputDir = parseOutputDir(configBuilder);

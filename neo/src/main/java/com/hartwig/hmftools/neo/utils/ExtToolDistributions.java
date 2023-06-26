@@ -219,9 +219,9 @@ public class ExtToolDistributions
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         RandomPeptideConfig.addConfigForReading(configBuilder);
-        configBuilder.addPathItem(PREDICTIONS_FILE, true, "MCF predictions file");
-        configBuilder.addPathItem(VALIDATION_FILE, true, "Binding validation file");
-        configBuilder.addFlagItem(USE_PRESENTATION, "Rank and score using presentation instead of affinity");
+        configBuilder.addPath(PREDICTIONS_FILE, true, "MCF predictions file");
+        configBuilder.addPath(VALIDATION_FILE, true, "Binding validation file");
+        configBuilder.addFlag(USE_PRESENTATION, "Rank and score using presentation instead of affinity");
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);
 

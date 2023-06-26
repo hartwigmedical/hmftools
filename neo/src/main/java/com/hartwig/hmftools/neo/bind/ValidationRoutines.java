@@ -474,7 +474,7 @@ public class ValidationRoutines
         ConfigBuilder configBuilder = new ConfigBuilder();
 
         TrainConfig.addConfig(configBuilder);
-        configBuilder.addPathItem(TEST_ALLELES_FILE, false, "List of alleles to leave out, otherwise will do all in training set");
+        configBuilder.addPath(TEST_ALLELES_FILE, false, "List of alleles to leave out, otherwise will do all in training set");
         addThreadOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))

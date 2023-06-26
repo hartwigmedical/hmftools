@@ -315,8 +315,8 @@ public class RankProteomePeptides
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        configBuilder.addPathItem(ALLELE_FILE, true, "Peptides to search for");
-        configBuilder.addDecimalItem(RANK_CUTOFF, false, "Number of amino acid flanks to retrieve", 0.01);
+        configBuilder.addPath(ALLELE_FILE, true, "Peptides to search for");
+        configBuilder.addDecimal(RANK_CUTOFF, "Number of amino acid flanks to retrieve", 0.01);
         ScoreConfig.registerConfig(configBuilder);
         addEnsemblDir(configBuilder);
         addLoggingOptions(configBuilder);

@@ -94,17 +94,17 @@ public class ScoreConfig
         RandomPeptideConfig.addConfigForReading(configBuilder);
 
         configBuilder.addConfigItem(SCORE_FILE_ID, false, "Reference file id for scoring instead of specifying individual files");
-        configBuilder.addPathItem(SCORE_FILE_DIR, false, "Reference file directory");
-        configBuilder.addPathItem(scoreFileConfig(FILE_ID_POS_WEIGHT), false, "Binding position weights file");
-        configBuilder.addPathItem(scoreFileConfig(FILE_ID_FLANK_POS_WEIGHT), false, "Binding flank weights file");
-        configBuilder.addPathItem(scoreFileConfig(FILE_ID_LIKELIHOOD), false, "Binding likelihood file");
-        configBuilder.addPathItem(scoreFileConfig(FILE_ID_EXPRESSION_DIST), false, "Expression likelihood file");
-        configBuilder.addPathItem(scoreFileConfig(FILE_ID_RECOGNITION), false, "Immunogenic pHLA recognition data file");
+        configBuilder.addPath(SCORE_FILE_DIR, false, "Reference file directory");
+        configBuilder.addPath(scoreFileConfig(FILE_ID_POS_WEIGHT), false, "Binding position weights file");
+        configBuilder.addPath(scoreFileConfig(FILE_ID_FLANK_POS_WEIGHT), false, "Binding flank weights file");
+        configBuilder.addPath(scoreFileConfig(FILE_ID_LIKELIHOOD), false, "Binding likelihood file");
+        configBuilder.addPath(scoreFileConfig(FILE_ID_EXPRESSION_DIST), false, "Expression likelihood file");
+        configBuilder.addPath(scoreFileConfig(FILE_ID_RECOGNITION), false, "Immunogenic pHLA recognition data file");
 
-        configBuilder.addPathItem(VALIDATION_DATA_FILE, false, "Validation data file");
+        configBuilder.addPath(VALIDATION_DATA_FILE, false, "Validation data file");
 
-        configBuilder.addFlagItem(WRITE_SUMMARY_DATA, "Write summary results per allele");
-        configBuilder.addFlagItem(WRITE_PEPTIDE_SCORES, "Write score and rank data per peptide");
-        configBuilder.addFlagItem(CHECK_SELF_RECOGNITION, "Don't allow recognition with same peptide");
+        configBuilder.addFlag(WRITE_SUMMARY_DATA, "Write summary results per allele");
+        configBuilder.addFlag(WRITE_PEPTIDE_SCORES, "Write score and rank data per peptide");
+        configBuilder.addFlag(CHECK_SELF_RECOGNITION, "Don't allow recognition with same peptide");
     }
 }

@@ -144,8 +144,8 @@ public class Blacklistings
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(BLACKLIST_BED, false, "Blacklist BED file");
-        configBuilder.addPathItem(BLACKLIST_VCF, false, "Blacklist VCF file");
+        configBuilder.addPath(BLACKLIST_BED, false, "Blacklist BED file");
+        configBuilder.addPath(BLACKLIST_VCF, false, "Blacklist VCF file");
     }
 
     private class VcfEntry

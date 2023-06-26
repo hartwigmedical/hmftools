@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTra
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -95,7 +94,7 @@ public class EnsemblDataCache
 
     public static void addEnsemblDir(final ConfigBuilder configBuilder, boolean required)
     {
-        configBuilder.addPathItem(ENSEMBL_DATA_DIR, required, ENSEMBL_DATA_DIR_CFG);
+        configBuilder.addPath(ENSEMBL_DATA_DIR, required, ENSEMBL_DATA_DIR_CFG);
     }
 
     public static void addEnsemblDir(final Options options)

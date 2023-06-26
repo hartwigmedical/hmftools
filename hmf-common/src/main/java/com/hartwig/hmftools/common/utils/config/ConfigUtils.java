@@ -44,7 +44,7 @@ public class ConfigUtils
 
     public static void addLoggingOptions(final ConfigBuilder configBuilder)
     {
-        configBuilder.addFlagItem(LOG_DEBUG, LOG_DEBUG_DESC);
+        configBuilder.addFlag(LOG_DEBUG, LOG_DEBUG_DESC);
         configBuilder.addConfigItem(LOG_LEVEL, LOG_LEVEL_DESC);
     }
 
@@ -79,7 +79,7 @@ public class ConfigUtils
 
     public static void addSampleIdFile(final ConfigBuilder configBuilder, boolean required)
     {
-        configBuilder.addPathItem(SAMPLE_ID_FILE, required, SAMPLE_ID_FILE_DESC);
+        configBuilder.addPath(SAMPLE_ID_FILE, required, SAMPLE_ID_FILE_DESC);
     }
 
     public static double getConfigValue(@NotNull final CommandLine cmd, final String configName, double defaultValue)

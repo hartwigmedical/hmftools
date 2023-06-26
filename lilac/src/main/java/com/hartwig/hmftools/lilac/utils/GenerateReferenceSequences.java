@@ -72,7 +72,7 @@ public class GenerateReferenceSequences
 
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        configBuilder.addPathItem(RESOURCE_DIR, true, "Path to resource files");
+        configBuilder.addPath(RESOURCE_DIR, true, "Path to resource files");
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

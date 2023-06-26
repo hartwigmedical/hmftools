@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
@@ -27,11 +26,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // runs Fisher exact test to look for co-occurrence in amino-acid position vs peptide length
@@ -228,7 +222,7 @@ public class PeptideLengthAnalyser
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        configBuilder.addPathItem(NMER_FREQ_FILE, true, "N-mer frequency data file");
+        configBuilder.addPath(NMER_FREQ_FILE, true, "N-mer frequency data file");
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);
 

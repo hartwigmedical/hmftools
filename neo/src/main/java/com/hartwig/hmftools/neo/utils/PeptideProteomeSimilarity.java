@@ -47,7 +47,6 @@ import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class PeptideProteomeSimilarity
@@ -498,8 +497,8 @@ public class PeptideProteomeSimilarity
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         addEnsemblDir(configBuilder);
-        configBuilder.addPathItem(PEPTIDES_FILE, true, "Peptides file");
-        configBuilder.addPathItem(PROTEOME_RANKS_FILE, true, "Proteome ranks file");
+        configBuilder.addPath(PEPTIDES_FILE, true, "Peptides file");
+        configBuilder.addPath(PROTEOME_RANKS_FILE, true, "Proteome ranks file");
         ScoreConfig.registerConfig(configBuilder);
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);

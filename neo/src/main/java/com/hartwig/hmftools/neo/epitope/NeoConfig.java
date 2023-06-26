@@ -87,14 +87,14 @@ public class NeoConfig
         configBuilder.addConfigItem(SAMPLE, false, "Sample - Id(s) separated by ';' or CSV file");
         addSampleIdFile(configBuilder, false);
         configBuilder.addConfigItem(CANCER_TYPE, false, "Tumor cancer type (optional) - to retrieve cancer median TPM");
-        configBuilder.addPathItem(LINX_DIR_CFG, true, "Linx neoepitope directory");
-        configBuilder.addPathItem(SOMATIC_VCF, true, "Purple somatic VCF (use '*') as required");
-        configBuilder.addFlagItem(WRITE_TRANS_DATA, "Write transcript data for each neo-epitope");
+        configBuilder.addPath(LINX_DIR_CFG, true, "Linx neoepitope directory");
+        configBuilder.addPath(SOMATIC_VCF, true, "Purple somatic VCF (use '*') as required");
+        configBuilder.addFlag(WRITE_TRANS_DATA, "Write transcript data for each neo-epitope");
 
         configBuilder.addConfigItem(
                 REQ_AMINO_ACIDS, false, format("Number of amino acids in neo-epitopes", DEFAULT_AMINO_ACID_REF_COUNT));
 
-        configBuilder.addPathItem(GENE_ID_FILE, false, "Restrict to specific genes");
+        configBuilder.addPath(GENE_ID_FILE, false, "Restrict to specific genes");
 
         addRefGenomeConfig(configBuilder, true);
         EnsemblDataCache.addEnsemblDir(configBuilder);

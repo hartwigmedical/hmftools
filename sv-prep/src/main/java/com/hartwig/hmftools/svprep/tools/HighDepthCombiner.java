@@ -726,9 +726,9 @@ public class HighDepthCombiner
         addSampleIdFile(configBuilder, true);
         configBuilder.addConfigItem(HIGH_DEPTH_FILES, true, "High depth sample file(s), use '*' in for sampleId");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file");
-        configBuilder.addPathItem(REF_BLACKLIST_FILE, false, "Reference blacklist file to include");
-        configBuilder.addIntegerItem(MIN_SAMPLE_COUNT, false, "Min sample count to produce region", DEFAULT_MIN_SAMPLE_COUNT);
-        configBuilder.addFlagItem(REMOVE_GENE_OVERLAPS, "Remove high depth regions that overlap driver or fusion genes");
+        configBuilder.addPath(REF_BLACKLIST_FILE, false, "Reference blacklist file to include");
+        configBuilder.addInteger(MIN_SAMPLE_COUNT, "Min sample count to produce region", DEFAULT_MIN_SAMPLE_COUNT);
+        configBuilder.addFlag(REMOVE_GENE_OVERLAPS, "Remove high depth regions that overlap driver or fusion genes");
         configBuilder.addConfigItem(REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
         addGenePanelOption(configBuilder, false);
         addKnownFusionFileOption(configBuilder);

@@ -1,12 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
-import java.io.File;
-
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public class ChartConfig
 {
@@ -30,8 +24,8 @@ public class ChartConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(CIRCOS, false, "Location of circos binary");
-        configBuilder.addFlagItem(DISABLE, "Disable charts");
+        configBuilder.addPath(CIRCOS, false, "Location of circos binary");
+        configBuilder.addFlag(DISABLE, "Disable charts");
     }
 
 }

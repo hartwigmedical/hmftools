@@ -72,6 +72,6 @@ public class TargetRegions
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(TARGET_REGIONS_BED, false, "Target regions BED file");
+        configBuilder.addPath(TARGET_REGIONS_BED, false, "Target regions BED file");
     }
 }

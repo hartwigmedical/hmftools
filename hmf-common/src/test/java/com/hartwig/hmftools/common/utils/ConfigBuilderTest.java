@@ -21,7 +21,7 @@ public class ConfigBuilderTest
         configBuilder.addConfigItem(STRING, "item1", false, "desc1", "defaultValue");
         configBuilder.addConfigItem(DECIMAL, "item2", true, "desc2", "defaultValue");
         configBuilder.addConfigItem(INTEGER, "item3", false, "desc3", "defaultValue");
-        configBuilder.addFlagItem("item4", "desc5");
+        configBuilder.addFlag("item4", "desc5");
         configBuilder.addRequiredConfigItem("item5", "desc5");
 
         String[] args = new String[9];

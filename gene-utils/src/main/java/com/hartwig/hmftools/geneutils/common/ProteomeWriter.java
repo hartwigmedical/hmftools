@@ -229,7 +229,7 @@ public class ProteomeWriter
         addRefGenomeConfig(configBuilder, true);
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
-        configBuilder.addFlagItem(CANONICAL_ONLY, "Only write canonical proteome");
+        configBuilder.addFlag(CANONICAL_ONLY, "Only write canonical proteome");
 
         if(!configBuilder.parseCommandLine(args))
         {

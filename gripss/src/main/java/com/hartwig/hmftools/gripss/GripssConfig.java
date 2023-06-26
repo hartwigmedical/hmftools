@@ -108,8 +108,8 @@ public class GripssConfig
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
-        configBuilder.addPathItem(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
-        configBuilder.addFlagItem(GERMLINE, "Run in germline mode");
+        configBuilder.addPath(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
+        configBuilder.addFlag(GERMLINE, "Run in germline mode");
 
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);

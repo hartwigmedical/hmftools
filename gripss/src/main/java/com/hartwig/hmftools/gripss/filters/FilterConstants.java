@@ -129,32 +129,32 @@ public class FilterConstants
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addIntegerItem(HARD_MIN_TUMOR_QUAL_CFG, "Hard min tumor qual", DEFAULT_HARD_MIN_TUMOR_QUAL);
+        configBuilder.addInteger(HARD_MIN_TUMOR_QUAL_CFG, "Hard min tumor qual", DEFAULT_HARD_MIN_TUMOR_QUAL);
 
-        configBuilder.addIntegerItem(
+        configBuilder.addInteger(
                 HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_CFG, "Hard max normal absolute support", DEFAULT_HARD_MAX_NORMAL_ABSOLUTE_SUPPORT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 HARD_MAX_NORMAL_RELATIVE_SUPPORT_CFG, "Hard max normal relative support", DEFAULT_HARD_MAX_NORMAL_RELATIVE_SUPPORT);
 
-        configBuilder.addDecimalItem(
+        configBuilder.addDecimal(
                 SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG, "Soft max normal relative support", DEFAULT_SOFT_MAX_NORMAL_RELATIVE_SUPPORT);
 
-        configBuilder.addDecimalItem(MIN_NORMAL_COVERAGE_CFG, "Min normal coverage", DEFAULT_MIN_NORMAL_COVERAGE);
-        configBuilder.addDecimalItem(MIN_TUMOR_AF_CFG, "Min tumor allelic frequency for non-SGLs", DEFAULT_MIN_TUMOR_AF);
-        configBuilder.addDecimalItem(MAX_SHORT_STRAND_BIAS_CFG, "Max short strand bias", DEFAULT_MAX_SHORT_STRAND_BIAS);
-        configBuilder.addIntegerItem(MIN_QUAL_BREAK_END_CFG, "Min qual break end", DEFAULT_MIN_QUAL_BREAK_END);
-        configBuilder.addIntegerItem(MIN_QUAL_BREAK_POINT_CFG, "Min qual break point", DEFAULT_MIN_QUAL_BREAK_POINT);
+        configBuilder.addDecimal(MIN_NORMAL_COVERAGE_CFG, "Min normal coverage", DEFAULT_MIN_NORMAL_COVERAGE);
+        configBuilder.addDecimal(MIN_TUMOR_AF_CFG, "Min tumor allelic frequency for non-SGLs", DEFAULT_MIN_TUMOR_AF);
+        configBuilder.addDecimal(MAX_SHORT_STRAND_BIAS_CFG, "Max short strand bias", DEFAULT_MAX_SHORT_STRAND_BIAS);
+        configBuilder.addInteger(MIN_QUAL_BREAK_END_CFG, "Min qual break end", DEFAULT_MIN_QUAL_BREAK_END);
+        configBuilder.addInteger(MIN_QUAL_BREAK_POINT_CFG, "Min qual break point", DEFAULT_MIN_QUAL_BREAK_POINT);
 
-        configBuilder.addIntegerItem(
+        configBuilder.addInteger(
                 MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, "Min qual rescue mobile element insertions",
                 DEFAULT_MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION);
 
-        configBuilder.addIntegerItem(
+        configBuilder.addInteger(
                 MAX_HOM_LENGTH_SHORT_INV_CFG, "Max homology length short inversion", DEFAULT_MAX_HOM_LENGTH_SHORT_INV);
 
-        configBuilder.addIntegerItem(MIN_LENGTH_CFG, "Min length", DEFAULT_MIN_LENGTH);
-        configBuilder.addIntegerItem(PON_DISTANCE, "PON permitted margin", DEFAULT_PON_DISTANCE);
-        configBuilder.addFlagItem(FILTER_SGLS, "Filter SGLs from VCF, intended for tumor-only mode");
+        configBuilder.addInteger(MIN_LENGTH_CFG, "Min length", DEFAULT_MIN_LENGTH);
+        configBuilder.addInteger(PON_DISTANCE, "PON permitted margin", DEFAULT_PON_DISTANCE);
+        configBuilder.addFlag(FILTER_SGLS, "Filter SGLs from VCF, intended for tumor-only mode");
     }
 }

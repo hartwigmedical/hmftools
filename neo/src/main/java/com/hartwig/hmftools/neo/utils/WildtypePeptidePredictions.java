@@ -156,8 +156,8 @@ public class WildtypePeptidePredictions
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         addEnsemblDir(configBuilder);
-        configBuilder.addPathItem(OUTPUT_FILE, true, "Output filename");
-        configBuilder.addPathItem(PREDICTIONS_DIR, true, "McfFlurry predictions directory");
+        configBuilder.addPath(OUTPUT_FILE, true, "Output filename");
+        configBuilder.addPath(PREDICTIONS_DIR, true, "McfFlurry predictions directory");
 
         addOutputDir(configBuilder);
         addLoggingOptions(configBuilder);

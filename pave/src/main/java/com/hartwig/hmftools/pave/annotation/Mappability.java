@@ -113,7 +113,7 @@ public class Mappability
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(MAPPABILITY_BED, false, "Mappability BED file");
+        configBuilder.addPath(MAPPABILITY_BED, false, "Mappability BED file");
     }
 
     private void initialiseFile(final String filename)

@@ -421,12 +421,12 @@ public class GenerateTargetRegionsBed
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        configBuilder.addPathItem(SOURCE_DIR, true, "Path to all input and output files");
+        configBuilder.addPath(SOURCE_DIR, true, "Path to all input and output files");
         configBuilder.addConfigItem(CODING_GENE_FILE, true, "External LINE data sample counts");
         configBuilder.addConfigItem(SPECIFIC_REGIONS_FILE, "Path to the Linx cohort SVs file");
         configBuilder.addConfigItem(TRANS_TSL_FILE, "Ensembl valid TSL transcript IDs");
         configBuilder.addConfigItem(COMPARISON_BED_FILES, "Comparison BED file");
-        configBuilder.addFlagItem(INCLUDE_UTR, "Include UTR in bed regions");
+        configBuilder.addFlag(INCLUDE_UTR, "Include UTR in bed regions");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output BED filename");
         addEnsemblDir(configBuilder, true);
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());

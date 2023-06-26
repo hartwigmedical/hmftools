@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
@@ -62,7 +61,7 @@ public class KnownFusionCache
 
     public static void addKnownFusionFileOption(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPathItem(KNOWN_FUSIONS_FILE, false, KNOWN_FUSIONS_FILE_DESC);
+        configBuilder.addPath(KNOWN_FUSIONS_FILE, false, KNOWN_FUSIONS_FILE_DESC);
     }
 
     public static void addKnownFusionFileOption(final Options options)

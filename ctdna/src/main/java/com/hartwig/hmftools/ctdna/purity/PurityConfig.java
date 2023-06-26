@@ -211,26 +211,22 @@ public class PurityConfig
         configBuilder.addConfigItem(SAMPLE_DATA_DIR, true, "Sample data directory for all files");
         configBuilder.addConfigItem(PURPLE_DIR, true, "Sample Purple directory");
         configBuilder.addConfigItem(COBALT_DIR, false, "Sample Cobalt directory");
-        configBuilder.addFlagItem(APPLY_DROPOUT, "Apply somatic drop-out logic");
-        configBuilder.addFlagItem(WRITE_VARIANTS, "Write variants");
-        configBuilder.addFlagItem(WRITE_CN_RATIOS, "Write copy number segment GC ratio summary");
-        configBuilder.addFlagItem(PLOT_CN,"Plot copy number / GC ratio fit");
-        configBuilder.addFlagItem(INCLUDE_FILTERED_VARIANTS, "Include filtered somatic variants in output (not purity calcs)");
+        configBuilder.addFlag(APPLY_DROPOUT, "Apply somatic drop-out logic");
+        configBuilder.addFlag(WRITE_VARIANTS, "Write variants");
+        configBuilder.addFlag(WRITE_CN_RATIOS, "Write copy number segment GC ratio summary");
+        configBuilder.addFlag(PLOT_CN,"Plot copy number / GC ratio fit");
+        configBuilder.addFlag(INCLUDE_FILTERED_VARIANTS, "Include filtered somatic variants in output (not purity calcs)");
 
         addRefGenomeConfig(configBuilder, false);
 
-        configBuilder.addDecimalItem(
-                NOISE_READS_PER_MILLION, false,
-                "Expected reads-per-million from noise, default: " + DEFAULT_NOISE_READS_PER_MILLION,
-                DEFAULT_NOISE_READS_PER_MILLION);
+        configBuilder.addDecimal(
+                NOISE_READS_PER_MILLION, "Expected reads-per-million from noise", DEFAULT_NOISE_READS_PER_MILLION);
 
-        configBuilder.addDecimalItem(
-                NOISE_READS_PER_MILLION_DUAL, false,
-                "Expected reads-per-million from noise for dual-strand reads, default: " + DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND,
-                DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND);
+        configBuilder.addDecimal(
+                NOISE_READS_PER_MILLION_DUAL,
+                "Expected reads-per-million from noise for dual-strand reads", DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND);
 
-        configBuilder.addDecimalItem(
-                GC_RATIO_MIN, false, "GC ratio minimum permitted, default: " + DEFAULT_GC_RATIO_MIN, DEFAULT_GC_RATIO_MIN);
+        configBuilder.addDecimal( GC_RATIO_MIN,"GC ratio minimum permitted", DEFAULT_GC_RATIO_MIN);
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);

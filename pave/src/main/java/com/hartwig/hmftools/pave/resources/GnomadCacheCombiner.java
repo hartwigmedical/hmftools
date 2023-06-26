@@ -213,8 +213,8 @@ public class GnomadCacheCombiner
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        configBuilder.addPathItem(GNOMAD_DIR_1, true, "Gnomad VCF input file");
-        configBuilder.addPathItem(GNOMAD_DIR_2, true, "Gnomad VCF input file");
+        configBuilder.addPath(GNOMAD_DIR_1, true, "Gnomad VCF input file");
+        configBuilder.addPath(GNOMAD_DIR_2, true, "Gnomad VCF input file");
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

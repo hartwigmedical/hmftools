@@ -274,9 +274,9 @@ public class EnsemblGeneMapper
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        configBuilder.addPathItem(ENSEMBL_DIR_37, true, "Ensembl data cache dir for ref-genome v37");
-        configBuilder.addPathItem(ENSEMBL_DIR_38, true, "Ensembl data cache dir for ref-genome v38");
-        configBuilder.addPathItem(LIFT_OVER_INFO_FILE, false, "Unmatched v37 locations lifted-over to v38");
+        configBuilder.addPath(ENSEMBL_DIR_37, true, "Ensembl data cache dir for ref-genome v37");
+        configBuilder.addPath(ENSEMBL_DIR_38, true, "Ensembl data cache dir for ref-genome v38");
+        configBuilder.addPath(LIFT_OVER_INFO_FILE, false, "Unmatched v37 locations lifted-over to v38");
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

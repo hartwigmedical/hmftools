@@ -141,7 +141,7 @@ public class MappabilityBuilder
         ConfigBuilder configBuilder = new ConfigBuilder();
 
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        configBuilder.addPathItem(MAPPABILITY_BED, true, "Mappability bed file");
+        configBuilder.addPath(MAPPABILITY_BED, true, "Mappability bed file");
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

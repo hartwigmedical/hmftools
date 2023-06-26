@@ -48,8 +48,8 @@ public final class CommonUtils
         addSpecificChromosomesRegionsConfig(configBuilder);
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
-        configBuilder.addPathItem(BAM_FILE, true, "BAM file location");
-        configBuilder.addPathItem(REGIONS_BED_FILE, false, "BED file with regions to analyse");
+        configBuilder.addPath(BAM_FILE, true, "BAM file location");
+        configBuilder.addPath(REGIONS_BED_FILE, false, "BED file with regions to analyse");
     }
 
     public static boolean loadSpecificRegionsConfig(
