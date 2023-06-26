@@ -30,7 +30,7 @@ AMBER
 ```
 COBALT
 ```
--target_region ${target_region_normalisation}
+-target_region Target Regions Normalisation file
 -pcf_gamma 15
 ```
 SAGE
@@ -46,7 +46,7 @@ GRIPSS
 -hard_min_tumor_qual 200 
 -min_qual_break_point 1000
 -min_qual_break_end 1000
--filter_sgls
+-target_regions_bed= Target Regions BED file
 ```
 PURPLE
 ```
