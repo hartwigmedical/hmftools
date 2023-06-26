@@ -1,8 +1,13 @@
 steps:
-  - id: 'Set version, release'
-    name: 'maven:3.9.2-eclipse-temurin-11'
-    entrypoint: 'sh'
-    args: ['workspace/hmftools-build.sh', '$TAG_NAME']
+#  - id: 'Set version, release'
+#    name: 'maven:3.9.2-eclipse-temurin-11'
+#    entrypoint: 'sh'
+#    args: ['workspace/hmftools-build.sh', '$TAG_NAME']
+  - name: 'alpine'
+    entrypoint: 'ls'
+    args: ['-a']
+  - name: 'alpine'
+    entrypoint: 'pwd'
 timeout: 4800s
 logsBucket: 'gs://hmf-build-logs'
 options:
