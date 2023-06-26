@@ -40,6 +40,7 @@
         <module>sv-tools</module>
         <module>teal</module>
         <module>virus-interpreter</module>
+        <module>test-hmftools</module>
     </modules>
 
     <properties>
