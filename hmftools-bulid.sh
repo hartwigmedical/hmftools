@@ -10,7 +10,7 @@ fi
 
 SEMVER_VERSION="$1"
 # The regex pattern is <module_name>-<semver>
-SEMVER_REGEX="^([a-zA-Z0-9_]+)-([0-9]+)\.([0-9]+)\.([0-9]+)(-(alpha|beta)\.[0-9]+)?$"
+SEMVER_REGEX="^([a-zA-Z0-9_-]+)-([0-9]+)\.([0-9]+)\.([0-9]+)(-(alpha|beta)\.[0-9]+)?$"
 if ! [[ "$SEMVER_VERSION" =~ $SEMVER_REGEX ]]; then
   echo "Invalid semver version: $SEMVER_VERSION"
   exit 1
