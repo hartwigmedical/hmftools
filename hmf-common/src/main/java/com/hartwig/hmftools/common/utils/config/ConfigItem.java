@@ -14,6 +14,7 @@ public class ConfigItem
     private String mValue;
     private boolean mHasValue;
     private String mDefaultValue;
+    private String mPathPrefixConfig;
 
     public ConfigItem(final ConfigItemType type, final String name, final boolean required, final String description,
             final String defaultValue)
@@ -35,6 +36,7 @@ public class ConfigItem
 
         mValue = mDefaultValue; // can be null
         mHasValue = false;
+        mPathPrefixConfig = null;
     }
 
     public void setValue(final String value)
@@ -58,6 +60,9 @@ public class ConfigItem
         mValue = mDefaultValue;
         mHasValue = false;
     }
+
+    public String pathPrefixName() { return mPathPrefixConfig; }
+    public void setPathPrefixName(final String prefix) { mPathPrefixConfig = prefix; }
 
     public String toString()
     {

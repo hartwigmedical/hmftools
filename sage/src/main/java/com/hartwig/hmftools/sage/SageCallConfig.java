@@ -126,16 +126,14 @@ public class SageCallConfig
         configBuilder.addConfigItem(TUMOR, true, "Tumor sample, or collection separated by ','");
         configBuilder.addConfigItem(TUMOR_BAM, true, "Tumor bam file(s)");
 
-
-        configBuilder.addConfigItem(HIGH_CONFIDENCE_BED, false, "High confidence regions bed file");
         configBuilder.addPath(RESOURCE_DIR, false, "Path to Sage resource files");
-        configBuilder.addConfigItem(PANEL_BED, false, "Panel regions bed file");
-        configBuilder.addConfigItem(PANEL_ONLY, false, "Only examine panel for variants");
-        configBuilder.addConfigItem(HOTSPOTS, false, "Hotspots");
-        configBuilder.addConfigItem(COVERAGE_BED, false, "Coverage is calculated for optionally supplied bed");
+        configBuilder.addPrefixedPath(HIGH_CONFIDENCE_BED, false, "High confidence regions bed file", RESOURCE_DIR);
+        configBuilder.addPrefixedPath(PANEL_BED, false, "Panel regions bed file", RESOURCE_DIR);
+        configBuilder.addPrefixedPath(HOTSPOTS, false, "Hotspots", RESOURCE_DIR);
+        configBuilder.addPrefixedPath(COVERAGE_BED, false, "Coverage is calculated for optionally supplied bed", RESOURCE_DIR);
+        configBuilder.addFlag(PANEL_ONLY, "Only examine panel for variants");
 
         registerCommonConfig(configBuilder);
-        FilterConfig.registerConfig(configBuilder);
         addEnsemblDir(configBuilder);
 
         // debug

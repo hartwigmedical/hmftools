@@ -246,9 +246,7 @@ public class SageConfig
         configBuilder.addPath(SAMPLE_DATA_DIR, false, "Path to sample data files");
         configBuilder.addConfigItem(OUTPUT_VCF, true, "Output vcf");
 
-        // addRefGenomeConfig(configBuilder, true);
-        configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
-        configBuilder.addConfigItem(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        addRefGenomeConfig(configBuilder, true);
 
         // is this common?
         configBuilder.addInteger(

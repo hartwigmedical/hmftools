@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.utils.config;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.FLAG;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.INTEGER;
@@ -108,6 +109,14 @@ public class ConfigBuilder
         addConfigItem(PATH, name, required, description, null);
     }
 
+    // add a config path item with an optional path prefix set from another item
+    public void addPrefixedPath(final String name, final boolean required, final String description, final String prefixConfig)
+    {
+        ConfigItem item = new ConfigItem(PATH, name, required, description, null);
+        item.setPathPrefixName(prefixConfig);
+        addConfigItem(item);
+    }
+
     public void addConfigItem(final String name, final boolean required, final String description, final String defaultValue)
     {
         addConfigItem(STRING, name, required, description, defaultValue);
@@ -155,7 +164,7 @@ public class ConfigBuilder
             }
             else if(item.Type == PATH)
             {
-                if(item.hasValue() && !item.value().contains("*") && !Files.exists(Paths.get(item.value())))
+                if(!isValidPath(item))
                 {
                     LOGGER.error("invalid path for config: {} = {}", item.Name, item.value());
                     mErrors.add(ErrorType.INVALID_PATH);
@@ -180,6 +189,24 @@ public class ConfigBuilder
         }
 
         return mErrors.isEmpty();
+    }
+
+    private boolean isValidPath(final ConfigItem item)
+    {
+        if(!item.hasValue() || item.value().contains("*"))
+            return true;
+
+        String path = item.value();
+
+        ConfigItem pathPrefixConfigItem = item.pathPrefixName() != null ? getItem(item.pathPrefixName()) : null;
+
+        if(pathPrefixConfigItem != null && pathPrefixConfigItem.hasValue())
+        {
+            String pathPrefix = checkAddDirSeparator(pathPrefixConfigItem.value());
+            path = pathPrefix + path;
+        }
+
+        return Files.exists(Paths.get(path));
     }
 
     public boolean parseCommandLine(final String[] args)
