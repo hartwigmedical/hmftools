@@ -1,17 +1,17 @@
 package com.hartwig.hmftools.common.rna;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.getDoubleValue;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.getLongValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getDoubleValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getLongValue;
 
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.FileReaderUtils;
+import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
 import org.immutables.value.Value;
 

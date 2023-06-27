@@ -22,10 +22,9 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_CN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_INFO;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_TYPE;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.extractTranscriptNames;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.scorer.AlleleCoverage.EXPECTED_ALLELE_COUNT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;

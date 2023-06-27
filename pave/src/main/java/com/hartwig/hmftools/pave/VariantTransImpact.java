@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.effectsToString;
 
 import java.util.List;

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.getIntValue;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getValue;
 
 import java.io.File;
 import java.io.IOException;

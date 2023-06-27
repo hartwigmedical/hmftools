@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.amber;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.*;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,7 +20,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.primitives.Doubles;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.FileReaderUtils;
+import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
 import org.jetbrains.annotations.NotNull;
 

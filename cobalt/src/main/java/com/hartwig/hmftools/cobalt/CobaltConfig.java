@@ -3,8 +3,8 @@ package com.hartwig.hmftools.cobalt;
 import static com.hartwig.hmftools.cobalt.CobaltConstants.DEFAULT_MIN_MAPPING_QUALITY;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 
 import java.io.File;
 

@@ -7,8 +7,8 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcAbsDiffs;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcLinearLeastSquares;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -17,7 +17,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.utils.MatrixFile;
-import com.hartwig.hmftools.common.utils.MatrixUtils;
 
 import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;

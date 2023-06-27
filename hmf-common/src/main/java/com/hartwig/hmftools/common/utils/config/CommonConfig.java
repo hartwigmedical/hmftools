@@ -2,14 +2,12 @@ package com.hartwig.hmftools.common.utils.config;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.google.common.collect.Lists;
 
 public final class CommonConfig
 {

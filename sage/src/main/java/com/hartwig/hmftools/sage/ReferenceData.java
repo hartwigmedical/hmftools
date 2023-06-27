@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 

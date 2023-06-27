@@ -24,7 +24,7 @@ import java.util.StringJoiner;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.*;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.*;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.*;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 

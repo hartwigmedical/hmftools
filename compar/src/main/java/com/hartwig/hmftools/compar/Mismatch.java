@@ -2,8 +2,8 @@ package com.hartwig.hmftools.compar;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
 
 import java.util.List;

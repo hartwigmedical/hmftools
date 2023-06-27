@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 

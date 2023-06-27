@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.cobalt;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedReader;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
 import java.io.File;

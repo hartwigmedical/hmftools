@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.common.hla;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.checkFileExtensionRename;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.inferFileDelimiter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.checkFileExtensionRename;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;

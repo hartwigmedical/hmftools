@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pave.annotation;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.io.BufferedReader;

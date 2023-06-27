@@ -11,7 +11,7 @@ import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.primer.*
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
-import com.hartwig.hmftools.common.utils.FileWriterUtils
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
 import com.hartwig.hmftools.common.utils.config.LoggingOptions
 import com.hartwig.hmftools.common.utils.version.VersionInfo

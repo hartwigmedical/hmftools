@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.rna;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

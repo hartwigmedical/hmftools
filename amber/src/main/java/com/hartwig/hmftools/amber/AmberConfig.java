@@ -2,7 +2,7 @@ package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.amber.AmberConstants.*;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkCreateOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.linx.fusion.rna;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 
 import java.util.Map;
 

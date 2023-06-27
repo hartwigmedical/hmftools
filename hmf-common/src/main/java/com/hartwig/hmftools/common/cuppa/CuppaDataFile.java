@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

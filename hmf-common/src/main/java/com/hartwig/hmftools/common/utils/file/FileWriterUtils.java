@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.utils;
+package com.hartwig.hmftools.common.utils.file;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

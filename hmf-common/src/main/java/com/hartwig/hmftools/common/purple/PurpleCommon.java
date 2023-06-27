@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
 import org.jetbrains.annotations.NotNull;
 

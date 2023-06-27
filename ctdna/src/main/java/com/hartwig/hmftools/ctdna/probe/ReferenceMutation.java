@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.REFERENCE;
 

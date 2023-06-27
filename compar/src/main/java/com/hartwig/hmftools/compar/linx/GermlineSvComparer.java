@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.compar.Category.GERMLINE_SV;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;

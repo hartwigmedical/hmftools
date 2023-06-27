@@ -11,10 +11,10 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_5_PRIM
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_EXON;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.SKIPPED_EXONS;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.UNKNOWN;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;

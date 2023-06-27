@@ -3,7 +3,6 @@ package com.hartwig.hmftools.ctdna.purity.variant;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
-import static java.lang.Math.log;
 import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -11,7 +10,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DROPOUT_RATE_MIN_DEPTH;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DROPOUT_RATE_PROBABILITY;
@@ -26,7 +25,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ctdna.purity.PurityConfig;
 import com.hartwig.hmftools.ctdna.purity.ResultsWriter;
 import com.hartwig.hmftools.ctdna.purity.SampleData;
-import com.hartwig.hmftools.ctdna.purity.cn.CnPurityResult;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 

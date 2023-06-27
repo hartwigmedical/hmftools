@@ -2,7 +2,7 @@ package com.hartwig.hmftools.ctdna.purity.cn;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;

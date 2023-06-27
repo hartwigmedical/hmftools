@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.amber;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.cohort.mapping;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;

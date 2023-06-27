@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.utils;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_COLUMN;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
-import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.qc;
 
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
@@ -11,7 +11,6 @@ import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;

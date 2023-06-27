@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache
 import com.hartwig.hmftools.common.gene.GeneData
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.utils.FileWriterUtils
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
 import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter
 import htsjdk.samtools.reference.FastaSequenceFile

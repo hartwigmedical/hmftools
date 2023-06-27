@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.utils;
 
 import static java.util.stream.Collectors.toList;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.initialiseSV;
 

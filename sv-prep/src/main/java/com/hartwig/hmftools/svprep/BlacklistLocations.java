@@ -1,9 +1,8 @@
 package com.hartwig.hmftools.svprep;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.svprep.SvCommon.BED_DELIM;
-import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.io.BufferedReader;

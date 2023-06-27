@@ -3,8 +3,8 @@ package com.hartwig.hmftools.fastqtools;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
 
 import org.apache.commons.cli.CommandLine;
@@ -16,7 +16,7 @@ import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 
 import java.io.BufferedReader;

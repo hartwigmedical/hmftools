@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.lilac.variant;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
@@ -20,7 +18,6 @@ import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.read.BamReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
-import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
 
 import htsjdk.samtools.util.CloseableIterator;
@@ -28,8 +25,6 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;

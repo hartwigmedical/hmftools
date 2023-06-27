@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.id;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.id.HmfIdConfig.DATA_DELIM;
 import static com.hartwig.hmftools.id.HmfIdConfig.ID_LOGGER;
 import static com.hartwig.hmftools.id.HmfIdConfig.addConfig;

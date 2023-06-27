@@ -11,7 +11,7 @@ import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_VALUE;
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.isOldCategoryClassifierType;
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.mapOldCategoryType;
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.mapOldDataType;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 
 import java.util.List;
 import java.util.Map;

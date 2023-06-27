@@ -3,7 +3,7 @@ package com.hartwig.hmftools.svtools.pon;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.chrEnd;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.chrStart;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.chromosome;

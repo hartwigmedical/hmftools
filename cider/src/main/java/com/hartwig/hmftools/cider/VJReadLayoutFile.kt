@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
-import com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter
 import htsjdk.samtools.SAMUtils
 import java.io.BufferedWriter
 import java.io.File

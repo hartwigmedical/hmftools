@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.isofox;
 
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.IOException;
 import java.nio.file.Files;

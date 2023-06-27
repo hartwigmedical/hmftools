@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.neo.utils;
 
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.codingBaseLength;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.formFilename;
 import static com.hartwig.hmftools.neo.bind.BindConstants.STRONG_BINDER_LIKELIHOOD;

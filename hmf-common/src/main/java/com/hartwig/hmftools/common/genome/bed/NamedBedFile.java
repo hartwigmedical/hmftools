@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.genome.bed;
 
-import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 

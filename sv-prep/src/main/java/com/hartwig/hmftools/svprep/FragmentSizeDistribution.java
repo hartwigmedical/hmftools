@@ -5,9 +5,8 @@ import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_MAX_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_MIN_QUAL;
@@ -26,8 +25,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
