@@ -17,7 +17,7 @@ The input for Isofox is mapped paired end reads (we use STAR for our aligner).
 ### A note on duplicates, highly expressed genes, raw and adjusted TPM
 We recommend to mark duplicates in your pipeline. They are included in gene and transcript expression data (to avoid bias against highly expressed genes) but excluded from novel splice junction analysis.  
 
-We find that 6 genes in particular (RN7SL2, RN7SL1, RN7SL3, RN7SL4P, RN7SL5P & RN7SK) and are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts. Isofox excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.  For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.  We suggest to use the adjusted TPM for expression analysis.
+We find that 6 genes in particular (RN7SL2, RN7SL1, RN7SL3, RN7SL4P, RN7SL5P & RN7SK) are highly expressed across our cohort and at variable rates - in extreme samples these can account for >75% of all transcripts. Isofox excludes these genes from our GC bias calculations and to determine a normalisation factor for "adjusted TPM" so that they don't dominate expression differences.  For any given sample, AdjustedTPM = rawTPM x constant with the constant determined by the normalisation (which excludes the 6 genes and also limits all other genes to 1% contribution). The adjusted TPMs no longer sum to 1M transcripts, but should be more comparable across samples.  We suggest to use the adjusted TPM for expression analysis.
 
 In addition, any junction which maps in the Poly-G region of LINC00486 is filtered from all analyses (v38: chr2:32,916,190-32,916,630; v37: 2:33,141,260-33,141,700) as they are likely the result of Poly-G sequencer artefacts.
 
@@ -34,7 +34,7 @@ The full list of non default parameters we use internally is:
 --alignSplicedMateMapLminOverLmate 0.33 --alignSplicedMateMapLmin 35 --alignSJstitchMismatchNmax 5 -1 5 5
 ```
 
-STAR allows setting of the `—outFilterMultimapNmax` parameter to specify the maximum number of multimaps to allow for an alignment and we use the default value (10).   STAR will mark one of the multi-mappable reads as primary and the remainder as secondary reads. MAPQ by default in STAR for mappable reads to 255, whereas multi-mappable reads will have qual scores of 3 or less. For transcript abundance only, Isofox counts both primary and secondary reads at all locations, but reduces the weight of the reads to reflect the multi-mapping  (MAPQ 3 = 50%,  MAPQ 2 = 33%, MAPQ 1 = 20%, MAPQ 0 => 10%).    Reads with MAPQ of <10 are excluded from novel splice junction and chimeric analysis
+STAR allows setting of the `—outFilterMultimapNmax` parameter to specify the maximum number of multimaps to allow for an alignment, and we use the default value (10).   STAR will mark one of the multi-mappable reads as primary and the remainder as secondary reads. By default, STAR sets MAPQ for mappable reads to 255, whereas multi-mappable reads will have qual scores of 3 or less. For transcript abundance only, Isofox counts both primary and secondary reads at all locations, but reduces the weight of the reads to reflect the multi-mapping  (MAPQ 3 = 50%,  MAPQ 2 = 33%, MAPQ 1 = 20%, MAPQ 0 => 10%).    Reads with MAPQ of <10 are excluded from novel splice junction and chimeric analysis
 
 ## Configuration
 The functions of Isofox are controlled by the 'functions' argument:
@@ -43,7 +43,7 @@ The functions of Isofox are controlled by the 'functions' argument:
 - RETAINED_INTRONS: identify retained introns
 - FUSIONS: identify fusions
 
-These can be run concurrently or independently depending on the values set for this argument. By default they are all run.
+These can be run concurrently or independently depending on the values set for this argument. By default, they are all run.
 
 ### Mandatory
 Argument | Description
@@ -77,7 +77,7 @@ The expression function in Isofox depends on the calculation of expected rates f
 
 Each release of Isofox will be accompanied by a set of pre-computed cache files (see HMF Resource link above). 
 
-Likewise if GC bias adjustments are to be applied (config: apply_gc_bias_adjust), a pre-computed file of GC ratios per transcript is available for download.
+Likewise, if GC bias adjustments are to be applied (config: apply_gc_bias_adjust), a pre-computed file of GC ratios per transcript is available for download.
 
 
 The output file is approximately 120MB.
@@ -94,7 +94,7 @@ single_map_qual | Default 255, discard reads with map quality below this unless 
 enriched_gene_ids | By default includes: ENSG00000265150;ENSG00000258486;ENSG00000202198;ENSG00000266037;ENSG00000263740;ENSG00000265735
 
 ### Optional output files:
-By default the following files are not generated.
+By default, the following files are not generated.
 
 Argument | Description
 ---|---
@@ -204,7 +204,7 @@ The fragment length distribution of the sample is measured by sampling the inser
 
 #### A. Expected rates per category
 
-For each transcript in a group of overlapping genes, Isofox measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in Isofox, but generally referred to as an equivalence class in other tools such as Salmon). For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as a independent transcript that could be expressed.  
+For each transcript in a group of overlapping genes, Isofox measures the expected proportion of fragments that have been randomly sampled from that transcript with lengths matching the length distribution of the sample that match a specific subset of transcripts (termed a 'category' in Isofox, but generally referred to as an equivalence class in other tools such as Salmon). For any gene, that contains at least 1 transcript with more than 1 exon an 'UNSPLICED' transcript of that gene is also considered as an independent transcript that could be expressed.  
 
 The proportion is calculated by determining which category or set of transcripts that fragments of length {50,75,100,125,150,200,250,300,400,550} bases starting at each possible base in the transcript in question could be a part of.  This is then weighted by the empirically observed fragment length distribution.
 
@@ -259,7 +259,7 @@ Expected GC distribution for sample is calculated as the sum of the estimated di
 
 #### B. Adjust expected rates for biases and re-estimate abundances per transcript
 
-The calculated biases are applied as a weighting to each raw fragment based on it's GC, positional and fragment length characteristics.  Steps 4 and 5 are then repeated.
+The calculated biases are applied as a weighting to each raw fragment based on its GC, positional and fragment length characteristics.  Steps 4 and 5 are then repeated.
 
 
 ### 7. Counting and characterisation of novel splice junctions
@@ -283,7 +283,7 @@ Below figure shows examples of the novel splice junction event types (and of ret
 ![Novel SJ and Retained Intron](src/main/resources/readme/novel_splice_junctions_and_retained_intron.png)
 
 In the case of overlapping genes, we assign the novel splice junction to one of the genes using the following priority rules in order
-* Genes with matching splice site at a least one end
+* Genes with matching splice site at at least one end
 * Genes on strand such that splice motif matches canonical splice motif (GT-AG)
 * Gene with most transcripts
 
@@ -302,7 +302,7 @@ We also search explicitly for evidence of retained introns, ie where reads overl
 
 #### A. Identify candidate chimeric junctions
 
-Any junction supported with either a supplementary alignment or a spliced alignment which either links 2 known splice sites which are not present in any single ensemble gene OR links 2 known splice sites that are not spliced in a known ensembl transcript but create a known fusion pair (eg. GOPC_ROS1) OR extends at least 500kb beyond the range of a single gene is treated as a candidate chimeric junction. For a list of known pathogenic fusions only, Isofox also searches for candidate locations without split alignments supported only by discordant read pairs.   To reduce memory consumption and false positives, we hard filter candidates with only 1 read support except for known pathogenic fusions and candidates with at least one end matching a known splice site.
+Any junction supported with either a supplementary alignment or a spliced alignment which either links 2 known splice sites which are not present in any single ensemble gene OR links 2 known splice sites that are not spliced in a known ensembl transcript but create a known fusion pair (e.g. GOPC_ROS1) OR extends at least 500kb beyond the range of a single gene is treated as a candidate chimeric junction. For a list of known pathogenic fusions only, Isofox also searches for candidate locations without split alignments supported only by discordant read pairs.   To reduce memory consumption and false positives, we hard filter candidates with only 1 read support except for known pathogenic fusions and candidates with at least one end matching a known splice site.
 
 The chimeric junction is oriented by the splice site type of the 2 breakends:  a location matching a donor splice site is set to be the 'up' breakend and a location matching the acceptor site is set to be the down breakend. If no splice site exists at either breakend, then the direction is inferred by looking for canonical donor and acceptor sequences.
 
@@ -313,16 +313,16 @@ If either end of the chimeric junction overlaps more than 1 gene, then select on
 
 #### B. Count support
 
-Isofox counts 3 categories all fragments supporting the break junction broken into 3 categories:
-* Split - any fragment with a supplementary alignment or splice junction at the exact break junction
-* Realigned - any fragment that has both reads mapped on one end of the chimeric junction, without a supplementary but exactly matches the reference at the other side of the candidate junction and overlaps the breakpoint by at least 3 bases but not more than 10 bases.  If the overlapping bases are consistent with multiple candidate junctions they may be double counted.						
-* Discordant pairs:  any fragment with 1 read mapped at either end of the chimeric junction in the appropriate orientation which cannot be classified as split or realigned and which with the chimeric junction implies a fragment length of <550 bases either unspliced or on a known transcript. If the discordant pairs are consistent with multiple junctions they may be double counted	
+Isofox counts all fragments supporting the break junction, split into 3 categories:
+* Split - any fragment with a supplementary alignment or splice junction at the exact break junction.
+* Realigned - any fragment that has both reads mapped on one end of the chimeric junction without a supplementary alignment, but exactly matches the reference at the other side of the candidate junction and overlaps the breakpoint by at least 3 bases but not more than 10 bases.  If the overlapping bases are consistent with multiple candidate junctions they may be double counted.						
+* Discordant pairs:  any fragment with 1 read mapped at either end of the chimeric junction in the appropriate orientation which cannot be classified as split or realigned and which with the chimeric junction implies a fragment length of <550 bases either unspliced or on a known transcript. If the discordant pairs are consistent with multiple junctions they may be double counted.
 
-Isofox also determines the coverage at both breakends and the max anchor length on either side of the break junction (ie. the maximum number of distinct matched bases by any 1 junction supporting fragment on that side of the chimeric junction).  An allelic frequency at each breakend is calculated as (split + realigned) / coverage.
+Isofox also determines the coverage at both breakends and the max anchor length on either side of the break junction (i.e. the maximum number of distinct matched bases by any 1 junction supporting fragment on that side of the chimeric junction).  An allelic frequency at each breakend is calculated as (split + realigned) / coverage.
 
 #### C. Filtering
 
-4 filters are applied in Isofox to remove likely artefacts from our chimeric junctions output.  The filters are tiered such that we achieve maximum sensitivity for fusions with highest prior likelihood whilst still containing. Known pathogenic fusion partners are given the highest sensitivity followed by known splice site to known splice site, follow by canonical splice pairings (GT-AG) and lastly any other non-canonical splice pairing.
+4 filters are applied in Isofox to remove likely artefacts from our chimeric junctions output.  The filters are tiered such that we achieve maximum sensitivity for fusions with high prior likelihood whilst still filtering out most artefacts. Known pathogenic fusion partners are given the highest sensitivity followed by known splice site to known splice site, follow by canonical splice pairings (GT-AG) and lastly any other non-canonical splice pairing.
 
 The filters and thresholds per tier are as follows:
 
@@ -341,7 +341,7 @@ max_cohort_frequency*** | count of observations in cohort | NA if known;  5 if e
 
 ### 10. Cohort frequency
 
-We have determined a cohort frequency for each chimeric junction, novel splice junctions and novel retained introns across a cohort of 2030 samples.  The purpose of this is created to estimate population level frequencies of each of the 'novel' features. 
+We have determined a cohort frequency for each chimeric junction, novel splice junctions and novel retained introns across a cohort of 2030 samples.  The purpose of this is to estimate population level frequencies of each of the 'novel' features. 
 
 For each chimeric junction and novel splice junction  we count
 * Number of unique samples with 2 or more supporting fragments at that novel splice junction
