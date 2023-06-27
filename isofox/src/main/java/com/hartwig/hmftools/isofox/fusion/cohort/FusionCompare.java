@@ -32,15 +32,10 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.FusionUtils;
-import com.hartwig.hmftools.isofox.loader.DataLoaderConfig;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class FusionCompare
@@ -62,16 +57,16 @@ public class FusionCompare
     private static final String FUSION_FILE_NEW = "fusions_new";
     private static final String MIN_SPLIT_FRAGS = "min_split_frags";
 
-    public FusionCompare(final CommandLine cmd)
+    public FusionCompare(final ConfigBuilder configBuilder)
     {
-        mFusionFileOrig = cmd.getOptionValue(FUSION_FILE_ORIG);
-        mFusionFileNew = cmd.getOptionValue(FUSION_FILE_NEW);
-        mMinSplitFrags = Integer.parseInt(cmd.getOptionValue(MIN_SPLIT_FRAGS, "0"));
+        mFusionFileOrig = configBuilder.getValue(FUSION_FILE_ORIG);
+        mFusionFileNew = configBuilder.getValue(FUSION_FILE_NEW);
+        mMinSplitFrags = configBuilder.getInteger(MIN_SPLIT_FRAGS);
 
-        if(cmd.hasOption(KNOWN_FUSIONS_FILE))
+        if(configBuilder.hasValue(KNOWN_FUSIONS_FILE))
         {
             mKnownFusionCache = new KnownFusionCache();
-            mKnownFusionCache.loadFromFile(cmd);
+            mKnownFusionCache.loadFromFile(configBuilder);
         }
         else
         {
@@ -83,10 +78,10 @@ public class FusionCompare
         mUnmatchOrig = 0;
         mUnmatchNew = 0;
 
-        mSampleIds = loadSampleIdsFile(cmd);
+        mSampleIds = loadSampleIdsFile(configBuilder);
 
-        String outputDir = parseOutputDir(cmd);
-        mWriter = initialiseWriter(outputDir, cmd.getOptionValue(OUTPUT_ID));
+        String outputDir = parseOutputDir(configBuilder);
+        mWriter = initialiseWriter(outputDir, configBuilder.getValue(OUTPUT_ID));
     }
 
     public void run()
@@ -423,25 +418,27 @@ public class FusionCompare
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = DataLoaderConfig.createCmdLineOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        options.addOption(FUSION_FILE_ORIG, true, "Original fusions file");
-        options.addOption(FUSION_FILE_NEW, true, "New fusions file");
-        addSampleIdFile(options);
-        options.addOption(MIN_SPLIT_FRAGS, true, "Min split frags for comparisons");
-        addKnownFusionFileOption(options);
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        configBuilder.addPath(FUSION_FILE_ORIG, true, "Original fusions file");
+        configBuilder.addPath(FUSION_FILE_NEW, true, "New fusions file");
+        addSampleIdFile(configBuilder, true);
+        configBuilder.addInteger(MIN_SPLIT_FRAGS, "Min split frags for comparisons", 0);
+        addKnownFusionFileOption(configBuilder);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        FusionCompare fusionCompare = new FusionCompare(cmd);
+        FusionCompare fusionCompare = new FusionCompare(configBuilder);
         fusionCompare.run();
     }
-
 }

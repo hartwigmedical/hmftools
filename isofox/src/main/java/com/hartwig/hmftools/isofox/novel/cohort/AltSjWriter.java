@@ -15,9 +15,8 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class AltSjWriter
 {
@@ -32,21 +31,20 @@ public class AltSjWriter
     private static final String ALT_SJ_WRITE_COHORT_FREQ = "alt_sj_write_cohort_freq";
     private static final String ALT_SJ_COHORT_FREQ_VERBOSE = "alt_sj_cohort_freq_verbose";
 
-    public AltSjWriter(final CohortConfig config, final CommandLine cmd, boolean freqByCancerType)
+    public AltSjWriter(final CohortConfig config, final ConfigBuilder configBuilder, boolean freqByCancerType)
     {
         mConfig = config;
 
-        mCombinedDataWriter = cmd.hasOption(ALT_SJ_WRITE_COMBINED_COHORT) ? initCombinedDataWriter() : null;
-
-        mVerboseCohortFrequency = cmd.hasOption(ALT_SJ_COHORT_FREQ_VERBOSE);
-        mCohortFrequencyWriter = cmd.hasOption(ALT_SJ_WRITE_COHORT_FREQ) ? initCohortFrequencies(freqByCancerType) : null;
+        mCombinedDataWriter = configBuilder.hasFlag(ALT_SJ_WRITE_COMBINED_COHORT) ? initCombinedDataWriter() : null;
+        mVerboseCohortFrequency = configBuilder.hasFlag(ALT_SJ_COHORT_FREQ_VERBOSE);
+        mCohortFrequencyWriter = configBuilder.hasFlag(ALT_SJ_WRITE_COHORT_FREQ) ? initCohortFrequencies(freqByCancerType) : null;
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(ALT_SJ_WRITE_COHORT_FREQ, false, "Combined alt SJs from multiple samples into a single file");
-        options.addOption(ALT_SJ_WRITE_COMBINED_COHORT, false, "Combined alt SJs from multiple samples into a single file");
-        options.addOption(ALT_SJ_COHORT_FREQ_VERBOSE, false, "Combined alt SJs from multiple samples into a single file");
+        configBuilder.addFlag(ALT_SJ_WRITE_COHORT_FREQ, "Combined alt SJs from multiple samples into a single file");
+        configBuilder.addFlag(ALT_SJ_WRITE_COMBINED_COHORT, "Combined alt SJs from multiple samples into a single file");
+        configBuilder.addFlag(ALT_SJ_COHORT_FREQ_VERBOSE, "Combined alt SJs from multiple samples into a single file");
     }
 
     public void close()

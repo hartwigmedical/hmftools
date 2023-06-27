@@ -7,11 +7,8 @@ import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.createCmdLineOptions;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.validConfigPaths;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.logVersion;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.PRIORITISED_CHROMOSOMES;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NEO_EPITOPES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.READ_COUNTS;
@@ -37,8 +34,8 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -48,19 +45,12 @@ import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
-import com.hartwig.hmftools.isofox.expression.ExpressionCacheTask;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.neo.NeoEpitopeReader;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class Isofox
@@ -76,14 +66,14 @@ public class Isofox
     private final List<FragmentSize> mFragmentLengthDistribution;
     private final PerformanceTracking mPerfTracking;
 
-    public Isofox(final IsofoxConfig config, final CommandLine cmd)
+    public Isofox(final IsofoxConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
 
         mResultsWriter = new ResultsWriter(mConfig);
         mPerfTracking = new PerformanceTracking(mConfig);
 
-        mGeneTransCache = new EnsemblDataCache(cmd, config.RefGenVersion);
+        mGeneTransCache = new EnsemblDataCache(configBuilder);
 
         if(!mConfig.Filters.RestrictedGeneIds.isEmpty())
         {
@@ -97,8 +87,7 @@ public class Isofox
 
         mExpectedCountsCache = mConfig.ExpCountsFile != null || mConfig.applyGcBiasAdjust() ? new ExpectedCountsCache(mConfig) : null;
 
-        mGcTranscriptCalcs = mConfig.runFunction(EXPECTED_GC_COUNTS) || mConfig.applyGcBiasAdjust() ?
-                new GcTranscriptCalculator(mConfig, mGeneTransCache) : null;
+        mGcTranscriptCalcs = mConfig.applyGcBiasAdjust() ? new GcTranscriptCalculator(mConfig, mGeneTransCache) : null;
 
         mFusionTaskManager = mConfig.runFunction(FUSIONS) ? new FusionTaskManager(mConfig, mGeneTransCache) : null;
 
@@ -108,27 +97,15 @@ public class Isofox
 
     public boolean runAnalysis()
     {
+        long startTime = System.currentTimeMillis();
+
         // all other routines split work by chromosome
-        final Map<String,List<GeneData>> chrGeneMap = getChromosomeGeneLists();
+        Map<String,List<GeneData>> chrGeneMap = getChromosomeGeneLists();
 
         if(chrGeneMap.isEmpty())
         {
             ISF_LOGGER.error("no chromosome tasks created");
             return false;
-        }
-
-        // first execute non-core tasks
-        if(mConfig.runFunction(EXPECTED_GC_COUNTS))
-        {
-            boolean status = generateGcRatios(chrGeneMap);
-            return status;
-        }
-
-        if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
-        {
-            boolean status = generateExpectedCounts(chrGeneMap);
-            mResultsWriter.close();
-            return status;
         }
 
         if(mConfig.runFunction(NEO_EPITOPES))
@@ -149,6 +126,10 @@ public class Isofox
         if(!allocateBamFragments(chrGeneMap))
             return false;
 
+        long timeTakenMs = System.currentTimeMillis() - startTime;
+        double timeTakeMins = timeTakenMs / 60000.0;
+
+        ISF_LOGGER.info("Isofox complete, mins({})", String.format("%.3f", timeTakeMins));
         return true;
     }
 
@@ -418,47 +399,6 @@ public class Isofox
         combinedPc.logStats();
     }
 
-    private boolean generateGcRatios(final Map<String,List<GeneData>> chrGeneMap)
-    {
-        ISF_LOGGER.info("generating GC counts cache");
-
-        // mTranscriptGcRatios.generateExpectedCounts(mChromosome, mGeneDataList);
-        final List<GcTranscriptCalculator> taskList = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
-
-        mGcTranscriptCalcs.initialiseWriter();
-
-        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
-        {
-            GcTranscriptCalculator gcCalcs = new GcTranscriptCalculator(mConfig, mGeneTransCache);
-            gcCalcs.initialise(entry.getKey(), entry.getValue(), mGcTranscriptCalcs.getWriter());
-            taskList.add(gcCalcs);
-            callableList.add(gcCalcs);
-        }
-
-        boolean taskStatus = TaskExecutor.executeTasks(callableList, mConfig.Threads);
-        mGcTranscriptCalcs.close();
-        return taskStatus;
-    }
-
-    private boolean generateExpectedCounts(final Map<String,List<GeneData>> chrGeneMap)
-    {
-        ISF_LOGGER.info("generating expected transcript counts cache");
-
-        final List<ExpressionCacheTask> taskList = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
-
-        for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
-        {
-            ExpressionCacheTask expressionTask = new ExpressionCacheTask(mConfig, mGeneTransCache, mResultsWriter);
-            expressionTask.initialise(entry.getKey(), entry.getValue());
-            taskList.add(expressionTask);
-            callableList.add(expressionTask);
-        }
-
-        return TaskExecutor.executeTasks(callableList, mConfig.Threads);
-    }
-
     private boolean countBamReads(final Map<String,List<GeneData>> chrGeneMap)
     {
         ISF_LOGGER.info("basic BAM read counts");
@@ -477,61 +417,34 @@ public class Isofox
         return TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
-    public static void main(@NotNull final String[] args) throws Exception
+    public static void main(@NotNull final String[] args)
     {
-        final VersionInfo version = new VersionInfo("isofox.version");
-        ISF_LOGGER.info("Isofox version: {}", version.version());
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        IsofoxConfig.registerConfig(configBuilder);
 
-        final Options options = createCmdLineOptions();
-
-        try
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            if(!validConfigPaths(cmd))
-            {
-                ISF_LOGGER.error("invalid input files or paths, exiting");
-                return;
-            }
-
-            IsofoxConfig config = new IsofoxConfig(cmd);
-
-            if(!config.isValid())
-            {
-                ISF_LOGGER.error("missing config options, exiting");
-                return;
-            }
-
-            Isofox isofox = new Isofox(config, cmd);
-
-            long startTime = System.currentTimeMillis();
-
-            if(!isofox.runAnalysis())
-            {
-                ISF_LOGGER.info("Isofox RNA analysis failed");
-                return;
-            }
-
-            long timeTakenMs = System.currentTimeMillis() - startTime;
-            double timeTakeMins = timeTakenMs / 60000.0;
-
-            ISF_LOGGER.info("Isofox complete, mins({})", String.format("%.3f", timeTakeMins));
-        }
-        catch(ParseException e)
-        {
-            ISF_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Isofox", options);
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
-    }
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        setLogLevel(configBuilder);
+        logVersion();
+
+        IsofoxConfig config = new IsofoxConfig(configBuilder);
+
+        if(!config.isValid())
+        {
+            ISF_LOGGER.error("missing config options, exiting");
+            System.exit(1);
+        }
+
+        Isofox isofox = new Isofox(config, configBuilder);
+
+        if(!isofox.runAnalysis())
+        {
+            ISF_LOGGER.info("Isofox RNA analysis failed");
+            System.exit(1);
+        }
     }
 }

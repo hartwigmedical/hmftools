@@ -53,14 +53,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.jooq.Record;
 import org.jooq.Result;
 
@@ -93,13 +92,13 @@ public class SpliceVariantMatcher
     private static final int CLOSE_ALT_SJ_DISTANCE = 5;
     private static final int ALT_SJ_MISALIGN_BUFFER = 5;
 
-    public SpliceVariantMatcher(final CohortConfig config, final CommandLine cmd)
+    public SpliceVariantMatcher(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mFieldsMap = Maps.newHashMap();
         mGeneDataMap = Maps.newHashMap();
 
-        boolean allTranscripts = cmd.hasOption(INCLUDE_ALL_TRANSCRIPTS);
+        boolean allTranscripts = configBuilder.hasValue(INCLUDE_ALL_TRANSCRIPTS);
 
         mGeneTransCache = new EnsemblDataCache(mConfig.EnsemblDataCache, RefGenomeVersion.V37);
         mGeneTransCache.setRequiredData(true, false, false, !allTranscripts);
@@ -110,15 +109,15 @@ public class SpliceVariantMatcher
 
         mMatchTypes = Lists.newArrayList();
 
-        if(cmd.hasOption(SPLICE_VARIANT_TYPES))
+        if(configBuilder.hasValue(SPLICE_VARIANT_TYPES))
         {
-            Arrays.stream(cmd.getOptionValue(SPLICE_VARIANT_TYPES).split(";", -1))
+            Arrays.stream(configBuilder.getValue(SPLICE_VARIANT_TYPES).split(";", -1))
                     .map(x -> SpliceVariantMatchType.valueOf(x)).forEach(x -> mMatchTypes.add(x));
         }
 
         initialiseWriter();
 
-        mDataCache = new SpliceVariantCache(config, cmd);
+        mDataCache = new SpliceVariantCache(config, configBuilder);
 
         for(String geneId : mConfig.RestrictedGeneIds)
         {
@@ -130,17 +129,17 @@ public class SpliceVariantMatcher
             }
         }
 
-        mSpliceSiteCache = new SpliceSiteCache(config, cmd);
+        mSpliceSiteCache = new SpliceSiteCache(config, configBuilder);
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(SOMATIC_VARIANT_FILE, true, "File with somatic variants potentially affecting splicing");
-        options.addOption(SV_BREAKEND_FILE, true, "File with cached SV positions");
-        options.addOption(COHORT_ALT_SJ_FILE, true, "Cohort frequency for alt SJs");
-        options.addOption(WRITE_VARIANT_CACHE, false, "Write out somatic variants for subsequent non-DB loading");
-        options.addOption(INCLUDE_ALL_TRANSCRIPTS, false, "Consider all transcripts, not just canonical (default: false)");
-        options.addOption(SPLICE_VARIANT_TYPES, true, "Types to include in analysis: NOVEL, DISRUPTION, empty=ALL");
+        configBuilder.addPath(SOMATIC_VARIANT_FILE, false, "File with somatic variants potentially affecting splicing");
+        configBuilder.addPath(SV_BREAKEND_FILE, true, "File with cached SV positions");
+        configBuilder.addPath(COHORT_ALT_SJ_FILE, true, "Cohort frequency for alt SJs");
+        configBuilder.addFlag(WRITE_VARIANT_CACHE, "Write out somatic variants for subsequent non-DB loading");
+        configBuilder.addFlag(INCLUDE_ALL_TRANSCRIPTS, "Consider all transcripts, not just canonical (default: false)");
+        configBuilder.addConfigItem(SPLICE_VARIANT_TYPES, true, "Types to include in analysis: NOVEL, DISRUPTION, empty=ALL");
     }
 
     public void processAltSpliceJunctions()

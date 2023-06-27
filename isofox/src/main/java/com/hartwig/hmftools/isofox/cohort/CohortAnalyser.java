@@ -4,9 +4,9 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.logVersion;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SUMMARY;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.cohort.CohortConfig.isValid;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.loadFile;
 
@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortCompare;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionMatrix;
@@ -30,25 +31,20 @@ import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.isofox.unmapped.UmrCohortAnalyser;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class CohortAnalyser
 {
     private final CohortConfig mConfig;
-    private final CommandLine mCmdLineArgs;
+    private final ConfigBuilder mCmdLineArgs;
 
-    public CohortAnalyser(final CommandLine cmdLineArgs)
+    public CohortAnalyser(final ConfigBuilder configBuilder)
     {
-        mCmdLineArgs = cmdLineArgs;
-        mConfig = new CohortConfig(cmdLineArgs);
+        mCmdLineArgs = configBuilder;
+        mConfig = new CohortConfig(configBuilder);
     }
 
-    public boolean load()
+    public boolean run()
     {
         if(!mConfig.SampleData.isValid())
             return false;
@@ -144,6 +140,8 @@ public class CohortAnalyser
             }
         }
 
+        ISF_LOGGER.info("Isofox cohort analyser complete");
+
         return true;
     }
 
@@ -185,29 +183,27 @@ public class CohortAnalyser
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = CohortConfig.createCmdLineOptions();
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        CohortConfig.registerConfig(configBuilder);
 
-        if(!isValid(cmd))
+        if(!configBuilder.parseCommandLine(args))
         {
-            ISF_LOGGER.error("missing or invalid config options");
-            return;
+            configBuilder.logInvalidDetails();
+            System.exit(1);
         }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
+        logVersion();
 
-        CohortAnalyser cohortAnalyser = new CohortAnalyser(cmd);
+        CohortAnalyser cohortAnalyser = new CohortAnalyser(configBuilder);
 
-        if(!cohortAnalyser.load())
+        if(!cohortAnalyser.run())
         {
             ISF_LOGGER.info("Isofox cohort analyser failed");
-            return;
+            System.exit(1);
         }
-
-        ISF_LOGGER.info("Isofox cohort analyser complete");
     }
 
 }

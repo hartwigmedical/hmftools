@@ -11,8 +11,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_GENE_PERC_CONTRIBUTION;
 import static com.hartwig.hmftools.isofox.expression.CategoryCountsData.hasGeneIdentifier;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.formTranscriptDefinitions;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.writeExpectedRates;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.formTranscriptDefinitions;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -296,11 +295,6 @@ public class TranscriptExpression
             applyFragmentLengthDistributionToExpectedCounts(geneSetCountsData);
 
         formTranscriptDefinitions(geneSetCountsData, mCurrentExpRatesData);
-
-        if(mConfig.WriteExpectedRates)
-        {
-            writeExpectedRates(mResultsWriter.getExpRatesWriter(), mCurrentExpRatesData);
-        }
     }
 
     private double[] generateReadCounts(final GeneCollectionSummary geneSummaryData)
@@ -418,5 +412,4 @@ public class TranscriptExpression
             ISF_LOGGER.error("failed to write category counts data file: {}", e.toString());
         }
     }
-
 }

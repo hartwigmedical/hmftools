@@ -198,6 +198,14 @@ public class KnownFusionCache
         return mIgRegionData.stream().anyMatch(x -> x.withinGeneRegion(chromosome, position));
     }
 
+    public boolean loadFromFile(final ConfigBuilder configBuilder)
+    {
+        if(!configBuilder.hasValue(KNOWN_FUSIONS_FILE))
+            return true;
+
+        return loadFromFile(configBuilder.getValue(KNOWN_FUSIONS_FILE));
+    }
+
     public boolean loadFromFile(final CommandLine cmd)
     {
         if(cmd == null || !cmd.hasOption(KNOWN_FUSIONS_FILE))

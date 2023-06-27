@@ -88,7 +88,7 @@ public class SampleLoaderTask implements Callable
 
         mSampleIds = Lists.newArrayList();
 
-        mDbAccess = createDatabaseAccess(mConfig.CmdLineArgs);
+        mDbAccess = createDatabaseAccess(mConfig.ConfigItems);
 
         if(mDbAccess == null)
         {

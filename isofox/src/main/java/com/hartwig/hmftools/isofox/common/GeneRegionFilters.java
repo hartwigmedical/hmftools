@@ -17,11 +17,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConstants;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import htsjdk.samtools.SAMRecord;
@@ -60,18 +59,18 @@ public class GeneRegionFilters
         ExcludedRegion = getPolyGRegion(refGenomeVersion);
     }
 
-    public static void addCommandLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(RESTRICTED_GENE_IDS, true, "Optional list of Ensmebl GeneIds separated by ';'");
-        options.addOption(ENRICHED_GENE_IDS, true, "Optional list of geneIds to treat as enriched");
-        addSpecificChromosomesRegionsConfig(options);
+        configBuilder.addConfigItem(RESTRICTED_GENE_IDS, "List of Ensmebl GeneIds separated by ';'");
+        configBuilder.addConfigItem(ENRICHED_GENE_IDS, "List of geneIds to treat as enriched");
+        addSpecificChromosomesRegionsConfig(configBuilder);
     }
 
-    public void loadConfig(final CommandLine cmd) throws Exception
+    public void loadConfig(final ConfigBuilder configBuilder)
     {
-        if(cmd.hasOption(ENRICHED_GENE_IDS))
+        if(configBuilder.hasValue(ENRICHED_GENE_IDS))
         {
-            Arrays.stream(cmd.getOptionValue(ENRICHED_GENE_IDS).split(ITEM_DELIM)).forEach(x -> EnrichedGeneIds.add(x));
+            Arrays.stream(configBuilder.getValue(ENRICHED_GENE_IDS).split(ITEM_DELIM)).forEach(x -> EnrichedGeneIds.add(x));
         }
         else
         {
@@ -80,9 +79,9 @@ public class GeneRegionFilters
 
         IsofoxConstants.populateImmuneRegions(ImmuneGeneRegions, mRefGenomeVersion);
 
-        if(cmd.hasOption(GENE_ID_FILE))
+        if(configBuilder.hasValue(GENE_ID_FILE))
         {
-            final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
+            final String inputFile = configBuilder.getValue(GENE_ID_FILE);
             RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
 
             if(!RestrictedGeneIds.isEmpty())
@@ -90,14 +89,14 @@ public class GeneRegionFilters
                 ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
             }
         }
-        else if(cmd.hasOption(RESTRICTED_GENE_IDS))
+        else if(configBuilder.hasValue(RESTRICTED_GENE_IDS))
         {
-            RestrictedGeneIds.addAll(Arrays.stream(cmd.getOptionValue(RESTRICTED_GENE_IDS).split(ITEM_DELIM)).collect(Collectors.toList()));
+            RestrictedGeneIds.addAll(Arrays.stream(configBuilder.getValue(RESTRICTED_GENE_IDS).split(ITEM_DELIM)).collect(Collectors.toList()));
         }
 
         try
         {
-            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, ISF_LOGGER);
+            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, ISF_LOGGER);
         }
         catch(ParseException e)
         {

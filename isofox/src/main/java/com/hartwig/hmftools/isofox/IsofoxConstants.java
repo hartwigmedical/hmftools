@@ -62,4 +62,6 @@ public class IsofoxConstants
         else
             regions.add(new ChrBaseRegion("6", 29690552, 33111102));
     }
+
+    public static final String DEFAULT_EXPECTED_RATE_LENGTHS = "50-1;75-1;100-1;125-1;150-1;200-1;250-1;300-1;400-1;550-1";
 }

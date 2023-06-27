@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -25,7 +26,6 @@ import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -51,7 +51,7 @@ import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.common.TransExonRef;
-import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
+import com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon;
 import com.hartwig.hmftools.isofox.expression.TranscriptExpression;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.novel.AltSpliceJunctionFinder;
@@ -85,7 +85,7 @@ public class ResultsWriter
     private BufferedWriter mSpliceSiteWriter;
     private BufferedWriter mUnamppedReadsWriter;
 
-    public static final String DELIMITER = ",";
+    public static final String DELIMITER = CSV_DELIM;
 
     public ResultsWriter(final IsofoxConfig config)
     {
@@ -138,45 +138,37 @@ public class ResultsWriter
         if(mConfig.OutputDir == null)
             return;
 
-        if(mConfig.runFunction(EXPECTED_TRANS_COUNTS) || mConfig.WriteExpectedRates)
-        {
-            mExpRateWriter = ExpectedRatesGenerator.createWriter(mConfig);
-        }
-
         if(mConfig.WriteFragmentLengthsByGene)
         {
             mGeneFragLengthWriter = FragmentSizeCalcs.createGeneFragmentLengthWriter(mConfig);
             return;
         }
 
-        if(!mConfig.generateExpectedDataOnly())
+        if(mConfig.WriteReadData)
         {
-            if(mConfig.WriteReadData)
-            {
-                if(mConfig.runFunction(READ_COUNTS))
-                    mReadDataWriter = BamReadCounter.createReadDataWriter(mConfig);
-                else
-                    mReadDataWriter = FragmentAllocator.createReadDataWriter(mConfig);
-            }
-
-            if(mConfig.WriteSpliceSiteData)
-                mSpliceSiteWriter = SpliceSiteCounter.createWriter(mConfig);
-
-            if(mConfig.runFunction(ALT_SPLICE_JUNCTIONS))
-                mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
-
-            if(mConfig.runFunction(RETAINED_INTRONS))
-                mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
-
-            if(mConfig.WriteGcData)
-                mReadGcRatioWriter = GcRatioCounts.createReadGcRatioWriter(mConfig);
-
-            if(mConfig.WriteTransComboData)
-                mCategoryCountsWriter = TranscriptExpression.createWriter(mConfig);
-
-            if(mConfig.runFunction(UNMAPPED_READS))
-                mUnamppedReadsWriter = UmrFinder.createWriter(mConfig);
+            if(mConfig.runFunction(READ_COUNTS))
+                mReadDataWriter = BamReadCounter.createReadDataWriter(mConfig);
+            else
+                mReadDataWriter = FragmentAllocator.createReadDataWriter(mConfig);
         }
+
+        if(mConfig.WriteSpliceSiteData)
+            mSpliceSiteWriter = SpliceSiteCounter.createWriter(mConfig);
+
+        if(mConfig.runFunction(ALT_SPLICE_JUNCTIONS))
+            mAltSpliceJunctionWriter = AltSpliceJunctionFinder.createWriter(mConfig);
+
+        if(mConfig.runFunction(RETAINED_INTRONS))
+            mRetainedIntronWriter = RetainedIntronFinder.createWriter(mConfig);
+
+        if(mConfig.WriteGcData)
+            mReadGcRatioWriter = GcRatioCounts.createReadGcRatioWriter(mConfig);
+
+        if(mConfig.WriteTransComboData)
+            mCategoryCountsWriter = TranscriptExpression.createWriter(mConfig);
+
+        if(mConfig.runFunction(UNMAPPED_READS))
+            mUnamppedReadsWriter = UmrFinder.createWriter(mConfig);
     }
 
     public BufferedWriter getExpRatesWriter() { return mExpRateWriter;}

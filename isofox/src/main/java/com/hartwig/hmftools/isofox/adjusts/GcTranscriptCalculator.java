@@ -13,7 +13,6 @@ import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcCount;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatio;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.calcGcRatioFromReadRegions;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.isGC;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_GC_COUNTS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
@@ -71,7 +70,8 @@ public class GcTranscriptCalculator implements Callable
 
         mWriter = null;
 
-        mTotalExpectedCounts = mConfig.runFunction(EXPECTED_GC_COUNTS) ? new double[mTranscriptFitGcCounts.size()] : null;
+        mTotalExpectedCounts = null;
+        // mTotalExpectedCounts = mConfig.runFunction(EXPECTED_GC_COUNTS) ? new double[mTranscriptFitGcCounts.size()] : null;
     }
 
     public void initialise(final String chromosome, final List<GeneData> geneDataList, final BufferedWriter writer)

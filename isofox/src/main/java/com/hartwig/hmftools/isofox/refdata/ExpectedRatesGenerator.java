@@ -1,45 +1,42 @@
-package com.hartwig.hmftools.isofox.expression;
+package com.hartwig.hmftools.isofox.refdata;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
+import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.FragmentAllocator.calcFragmentLength;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.UNSPLICED;
-import static com.hartwig.hmftools.isofox.IsofoxFunction.EXPECTED_TRANS_COUNTS;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.EXP_COUNT_LENGTH_HEADER;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.formTranscriptDefinitions;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.results.ResultsWriter;
-import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
+import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
 
 public class ExpectedRatesGenerator
 {
-    private final IsofoxConfig mConfig;
+    private final RefDataConfig mConfig;
 
     // map of transcript or unspliced gene to all expected category counts covering it (and others)
     private final Map<String,List<CategoryCountsData>> mTransCategoryCountsMap;
@@ -60,7 +57,7 @@ public class ExpectedRatesGenerator
     public static final int FL_LENGTH = 0;
     public static final int FL_FREQUENCY = 1;
 
-    public ExpectedRatesGenerator(final IsofoxConfig config, final ResultsWriter resultsWriter)
+    public ExpectedRatesGenerator(final RefDataConfig config, final RefDataWriter resultsWriter)
     {
         mConfig = config;
         mCurrentFragSize = 0;
@@ -74,11 +71,6 @@ public class ExpectedRatesGenerator
         mGeneCollection = null;
 
         mExpRateWriter = resultsWriter != null ? resultsWriter.getExpRatesWriter() : null;
-    }
-
-    public static ExpectedRatesGenerator from(final IsofoxConfig config)
-    {
-        return new ExpectedRatesGenerator(config, null);
     }
 
     public List<CategoryCountsData> getTransComboData() { return mTransCategoryCounts; }
@@ -102,19 +94,19 @@ public class ExpectedRatesGenerator
             mCurrentFragSize = flData.Length;
             mCurrentFragFrequency = flData.Frequency;
 
-            for (TranscriptData transData : transDataList)
+            for(TranscriptData transData : transDataList)
             {
                 boolean endOfTrans = false;
                 List<TranscriptData> candidateTrans = Lists.newArrayList(transDataList);
                 candidateTrans.remove(transData);
 
-                for (ExonData exon : transData.exons())
+                for(ExonData exon : transData.exons())
                 {
-                    for (int startPos = exon.Start; startPos <= exon.End; ++startPos)
+                    for(int startPos = exon.Start; startPos <= exon.End; ++startPos)
                     {
                         cullTranscripts(candidateTrans, startPos);
 
-                        if (!allocateTranscriptCounts(transData, transDataList, startPos))
+                        if(!allocateTranscriptCounts(transData, transDataList, startPos))
                         {
                             endOfTrans = true;
                             break;
@@ -208,22 +200,7 @@ public class ExpectedRatesGenerator
 
         buildUniqueCategoryCounts();
 
-        if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
-        {
-            writeExpectedCounts(mExpRateWriter, geneCollection.chrId(), mTransCategoryCounts);
-        }
-        else
-        {
-            formTranscriptDefinitions(mTransCategoryCounts, mCurrentExpRatesData);
-
-            if(mConfig.applyExpectedCounts())
-                mCurrentExpRatesData.getTranscriptDefinitions().cacheTranspose();
-
-            if(mConfig.WriteExpectedRates)
-            {
-                writeExpectedRates(mExpRateWriter, mCurrentExpRatesData);
-            }
-        }
+        writeExpectedCounts(mExpRateWriter, geneCollection.chrId(), mTransCategoryCounts);
     }
 
     private void buildUniqueCategoryCounts()
@@ -383,16 +360,12 @@ public class ExpectedRatesGenerator
         {
             matchingCounts = new CategoryCountsData(transcripts, unsplicedGenes);
 
-            if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
-                matchingCounts.initialiseLengthCounts(mConfig.FragmentSizeData.size());
+            matchingCounts.initialiseLengthCounts(mConfig.FragmentSizeData.size());
 
             transComboDataList.add(matchingCounts);
         }
 
-        if(mConfig.runFunction(EXPECTED_TRANS_COUNTS))
-            matchingCounts.addFragLengthCounts(mCurrentFragFrequency, mFragSizeIndex);
-        else
-            matchingCounts.addCounts(mCurrentFragFrequency);
+        matchingCounts.addFragLengthCounts(mCurrentFragFrequency, mFragSizeIndex);
     }
 
     public FragmentMatchType generateImpliedFragment(
@@ -637,93 +610,6 @@ public class ExpectedRatesGenerator
         return true;
     }
 
-    public static void formTranscriptDefinitions(final List<CategoryCountsData> categoryCountsData, ExpectedRatesData expRatesData)
-    {
-        // convert fragment counts in each category per transcript into the equivalent of a signature per transcript
-        collectCategories(categoryCountsData, expRatesData);
-
-        final Map<String,List<CategoryCountsData>> transGeneCountsMap = createTransComboDataMap(categoryCountsData);
-
-        int categoryCount = expRatesData.Categories.size();
-
-        transGeneCountsMap.keySet().forEach(x -> expRatesData.TranscriptIds.add(x));
-
-        expRatesData.initialiseTranscriptDefinitions();
-
-        for(int transIndex = 0; transIndex < expRatesData.TranscriptIds.size(); ++transIndex)
-        {
-            final String transId = expRatesData.TranscriptIds.get(transIndex);
-
-            double[] categoryCounts = new double[categoryCount];
-
-            final List<CategoryCountsData> transCounts = transGeneCountsMap.get(transId);
-
-            for(CategoryCountsData tcData : transCounts)
-            {
-                final String transKey = tcData.combinedKey();
-                double fragmentCount = tcData.fragmentCount();
-
-                if(fragmentCount > 0)
-                {
-                    int categoryId = expRatesData.getCategoryIndex(transKey);
-
-                    if(categoryId < 0)
-                    {
-                        ISF_LOGGER.error("invalid category index from transKey({})", transKey);
-                        return;
-                    }
-
-                    categoryCounts[categoryId] = fragmentCount;
-                }
-            }
-
-            // convert counts to ratios and add against this transcript definition
-            convertToPercentages(categoryCounts);
-            expRatesData.getTranscriptDefinitions().setCol(transIndex, categoryCounts);
-        }
-    }
-
-    private static void collectCategories(
-            final List<CategoryCountsData> categoryCountsData, ExpectedRatesData expRatesData)
-    {
-        for(final CategoryCountsData tcData : categoryCountsData)
-        {
-            final String transKey = tcData.combinedKey();
-
-            if(tcData.fragmentCount() > 0 || tcData.transcriptIds().isEmpty()) // force inclusion of unspliced gene categories
-            {
-                expRatesData.addCategory(transKey);
-            }
-        }
-    }
-
-    public static final Map<String,List<CategoryCountsData>> createTransComboDataMap(final List<CategoryCountsData> categoryCountsData)
-    {
-        final Map<String,List<CategoryCountsData>> transGeneCountsMap = Maps.newHashMap();
-
-        for(final CategoryCountsData tcData : categoryCountsData)
-        {
-            final Set<String> geneTransNames = Sets.newHashSet();
-            tcData.unsplicedGeneIds().forEach(x -> geneTransNames.add(x));
-            tcData.transcriptIds().forEach(x -> geneTransNames.add(String.valueOf(x)));
-
-            for(String geneTransName : geneTransNames)
-            {
-                List<CategoryCountsData> countsList = transGeneCountsMap.get(geneTransName);
-                if(countsList == null)
-                {
-                    transGeneCountsMap.put(geneTransName, Lists.newArrayList(tcData));
-                }
-                else
-                {
-                    countsList.add(tcData);
-                }
-            }
-        }
-
-        return transGeneCountsMap;
-    }
-
     public void setFragmentLengthData(int length, int frequency)
     {
         mCurrentFragSize = length;
@@ -731,37 +617,20 @@ public class ExpectedRatesGenerator
         mReadLength = mConfig.ReadLength;
     }
 
-    public static final String EXP_COUNT_LENGTH_HEADER = "Length_";
-
-    public static BufferedWriter createWriter(final IsofoxConfig config)
+    public static BufferedWriter createWriter(final RefDataConfig config)
     {
         try
         {
-            String outputFileName;
-
-            if(config.runFunction(EXPECTED_TRANS_COUNTS))
-            {
-                outputFileName = String.format("%sread_%d_%s", config.OutputDir, config.ReadLength, "exp_counts.csv");
-            }
-            else
-            {
-                outputFileName = config.formOutputFile("exp_rates.csv");
-            }
+            String outputFileName = String.format("%sread_%d_exp_counts.%s.csv",
+                    config.OutputDir, config.ReadLength, config.RefGenVersion.identifier());
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            if(config.runFunction(EXPECTED_TRANS_COUNTS))
-            {
-                writer.write("GeneSetId,Category");
+            writer.write("GeneSetId,Category");
 
-                for(FragmentSize fragLength : config.FragmentSizeData)
-                {
-                    writer.write(String.format(",%s%d", EXP_COUNT_LENGTH_HEADER, fragLength.Length));
-                }
-            }
-            else
+            for(FragmentSize fragLength : config.FragmentSizeData)
             {
-                writer.write("GeneSetId,Category,Rate");
+                writer.write(String.format(",%s%d", EXP_COUNT_LENGTH_HEADER, fragLength.Length));
             }
 
             writer.newLine();
@@ -802,47 +671,12 @@ public class ExpectedRatesGenerator
         }
     }
 
-    public synchronized static void writeExpectedRates(
-            final BufferedWriter writer, final ExpectedRatesData expExpData)
+    @VisibleForTesting
+    public void populateExpectedRates()
     {
-        if(writer == null)
-            return;
-
-        if(expExpData.getTranscriptDefinitions() == null || expExpData.Categories.isEmpty() || expExpData.TranscriptIds.isEmpty())
-            return;
-
-        try
-        {
-            final Matrix transcriptDefinitions = expExpData.getTranscriptDefinitions();
-            final List<String> categories = expExpData.Categories;
-            final List<String> transcriptIds = expExpData.TranscriptIds;
-
-            for(int i = 0; i < transcriptDefinitions.Cols; ++i)
-            {
-                final String transcriptId = transcriptIds.get(i);
-
-                for(int j = 0; j < transcriptDefinitions.Rows; ++j)
-                {
-                    final String category = categories.get(j);
-
-                    double expRate = transcriptDefinitions.get(j, i);
-
-                    if(expRate < 0.0001)
-                        continue;
-
-                    writer.write(String.format("%s,%s,%s,%.4f",
-                            expExpData.Id, transcriptId, category, expRate));
-                    writer.newLine();
-                }
-            }
-        }
-        catch(IOException e)
-        {
-            ISF_LOGGER.error("failed to write transcript expected rates file: {}", e.toString());
-        }
+        formTranscriptDefinitions(mTransCategoryCounts, mCurrentExpRatesData);
     }
 
     @VisibleForTesting
     public Map<String,List<CategoryCountsData>> getTransComboDataMap() { return mTransCategoryCountsMap; }
-
 }

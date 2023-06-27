@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.isofox.loader;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
@@ -22,15 +24,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class DataLoaderConfig
 {
-    public static final String SAMPLE = "sample";
-
     public static final String SAMPLE_DATA_DIRECTORY = "sample_data_dir";
     public static final String GENE_DATA_DIRECTORY = "gene_data_dir";
     public static final String ALT_SJ_DATA_DIRECTORY = "alt_sj_data_dir";
@@ -60,28 +58,28 @@ public class DataLoaderConfig
     public final Map<String,String> SampleCancerTypes;
     public final Integer Threads;
 
-    public final CommandLine CmdLineArgs;
+    public final ConfigBuilder ConfigItems;
 
-    public DataLoaderConfig(final CommandLine cmd)
+    public DataLoaderConfig(final ConfigBuilder configBuilder)
     {
-        CmdLineArgs = cmd;
+        ConfigItems = configBuilder;
         SampleIds = Lists.newArrayList();
         PrimaryCancerTypes = Lists.newArrayList();
         LoadTypes = Lists.newArrayList();
         SampleCancerTypes = Maps.newHashMap();
 
-        if(cmd.hasOption(SAMPLE))
+        if(configBuilder.hasValue(SAMPLE))
         {
-            addSampleInfo(cmd.getOptionValue(SAMPLE));
+            addSampleInfo(configBuilder.getValue(SAMPLE));
         }
-        else if(cmd.hasOption(SAMPLE_ID_FILE))
+        else if(configBuilder.hasValue(SAMPLE_ID_FILE))
         {
-            loadSampleDataFile(cmd.getOptionValue(SAMPLE_ID_FILE));
+            loadSampleDataFile(configBuilder.getValue(SAMPLE_ID_FILE));
         }
 
-        if(cmd.hasOption(LOAD_TYPES))
+        if(configBuilder.hasValue(LOAD_TYPES))
         {
-            LoadTypes.addAll(Arrays.stream(cmd.getOptionValue(LOAD_TYPES)
+            LoadTypes.addAll(Arrays.stream(configBuilder.getValue(LOAD_TYPES)
                     .split(ITEM_DELIM, -1))
                     .map(x -> DataLoadType.valueOf(x))
                     .collect(Collectors.toList()));
@@ -89,11 +87,11 @@ public class DataLoaderConfig
             ISF_LOGGER.info("loading types: {}", LoadTypes);
         }
 
-        if(cmd.hasOption(CANCER_TYPES_FILE))
+        if(configBuilder.hasValue(CANCER_TYPES_FILE))
         {
             try
             {
-                final List<String> lines = Files.readAllLines(Paths.get(cmd.getOptionValue(CANCER_TYPES_FILE)));
+                final List<String> lines = Files.readAllLines(Paths.get(configBuilder.getValue(CANCER_TYPES_FILE)));
                 lines.stream().filter(x -> !x.equals("CancerType")).forEach(x -> PrimaryCancerTypes.add(x));
                 ISF_LOGGER.info("loaded {} known cancer types", PrimaryCancerTypes.size());
             }
@@ -103,29 +101,29 @@ public class DataLoaderConfig
             }
         }
 
-        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIRECTORY));
-        GeneDistributionFile = cmd.getOptionValue(GENE_DIST_FILE);
-        AltSjCohortFile = cmd.getOptionValue(ALT_SJ_COHORT_FILE);
+        SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIRECTORY));
+        GeneDistributionFile = configBuilder.getValue(GENE_DIST_FILE);
+        AltSjCohortFile = configBuilder.getValue(ALT_SJ_COHORT_FILE);
 
-        GeneDataDir = cmd.hasOption(GENE_DATA_DIRECTORY) ?
-                checkAddDirSeparator(cmd.getOptionValue(GENE_DATA_DIRECTORY)) : SampleDataDir;
+        GeneDataDir = configBuilder.hasValue(GENE_DATA_DIRECTORY) ?
+                checkAddDirSeparator(configBuilder.getValue(GENE_DATA_DIRECTORY)) : SampleDataDir;
 
-        AltSjDataDir = cmd.hasOption(ALT_SJ_DATA_DIRECTORY) ?
-                checkAddDirSeparator(cmd.getOptionValue(ALT_SJ_DATA_DIRECTORY)) : SampleDataDir;
+        AltSjDataDir = configBuilder.hasValue(ALT_SJ_DATA_DIRECTORY) ?
+                checkAddDirSeparator(configBuilder.getValue(ALT_SJ_DATA_DIRECTORY)) : SampleDataDir;
 
-        FusionDataDir = cmd.hasOption(FUSION_DATA_DIRECTORY) ?
-                checkAddDirSeparator(cmd.getOptionValue(FUSION_DATA_DIRECTORY)) : SampleDataDir;
+        FusionDataDir = configBuilder.hasValue(FUSION_DATA_DIRECTORY) ?
+                checkAddDirSeparator(configBuilder.getValue(FUSION_DATA_DIRECTORY)) : SampleDataDir;
 
-        StatisticsDataDir = cmd.hasOption(STATISTICS_DATA_DIRECTORY) ?
-                checkAddDirSeparator(cmd.getOptionValue(STATISTICS_DATA_DIRECTORY)) : SampleDataDir;
+        StatisticsDataDir = configBuilder.hasValue(STATISTICS_DATA_DIRECTORY) ?
+                checkAddDirSeparator(configBuilder.getValue(STATISTICS_DATA_DIRECTORY)) : SampleDataDir;
 
         RestrictedGeneIds = Lists.newArrayList();
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
 
-        if(cmd.hasOption(GENE_ID_FILE))
+        if(configBuilder.hasValue(GENE_ID_FILE))
         {
-            final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
+            final String inputFile = configBuilder.getValue(GENE_ID_FILE);
             RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
             ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
@@ -193,26 +191,23 @@ public class DataLoaderConfig
         return RestrictedGeneIds.isEmpty() || RestrictedGeneIds.contains(geneId);
     }
 
-    public static Options createCmdLineOptions()
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
-        options.addOption(SAMPLE, true, "Sample tumor ID");
-        options.addOption(SAMPLE_ID_FILE, true, "File with list of samples and cancer types to load data for");
-        options.addOption(LOAD_TYPES, true, "Load specific types only (default=ALL)");
-        options.addOption(SAMPLE_DATA_DIRECTORY, true, "Sample data directory");
-        options.addOption(GENE_DATA_DIRECTORY, true, "Gene data directory, will use sample data dir if not present");
-        options.addOption(ALT_SJ_DATA_DIRECTORY, true, "Alt-SJ data directory, will use sample data dir if not present");
-        options.addOption(FUSION_DATA_DIRECTORY, true, "Fusion data directory, will use sample data dir if not present");
-        options.addOption(STATISTICS_DATA_DIRECTORY, true, "Summary statistics data directory, will use sample data dir if not present");
-        options.addOption(CANCER_TYPES_FILE, true, "Primary cancer types (otherwise will use 'Other' for sample");
-        options.addOption(GENE_DIST_FILE, true, "Gene distribution for medians and percentile data");
-        options.addOption(ALT_SJ_COHORT_FILE, true, "Alternate splice junction cohort file");
-        options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        configBuilder.addConfigItem(SAMPLE_ID_FILE, "File with list of samples and cancer types to load data for");
+        configBuilder.addConfigItem(LOAD_TYPES, "Load specific types only (default=ALL)");
+        configBuilder.addPath(SAMPLE_DATA_DIRECTORY, false, "Sample data directory");
+        configBuilder.addPath(GENE_DATA_DIRECTORY, false, "Gene data directory, will use sample data dir if not present");
+        configBuilder.addPath(ALT_SJ_DATA_DIRECTORY, false, "Alt-SJ data directory, will use sample data dir if not present");
+        configBuilder.addPath(FUSION_DATA_DIRECTORY, false, "Fusion data directory, will use sample data dir if not present");
+        configBuilder.addPath(STATISTICS_DATA_DIRECTORY, false, "Summary statistics data directory, will use sample data dir if not present");
+        configBuilder.addPath(CANCER_TYPES_FILE, false, "Primary cancer types (otherwise will use 'Other' for sample");
+        configBuilder.addPath(GENE_DIST_FILE, false, "Gene distribution for medians and percentile data");
+        configBuilder.addPath(ALT_SJ_COHORT_FILE, false, "Alternate splice junction cohort file");
+        configBuilder.addPath(GENE_ID_FILE, false, "Optional CSV file of genes to analyse");
 
-        addLoggingOptions(options);
-        addThreadOptions(options);
-        addDatabaseCmdLineArgs(options);
-
-        return options;
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
+        addDatabaseCmdLineArgs(configBuilder, true);
     }
 }

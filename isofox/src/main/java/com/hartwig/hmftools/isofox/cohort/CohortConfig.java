@@ -9,8 +9,8 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
@@ -48,9 +49,6 @@ import com.hartwig.hmftools.isofox.novel.cohort.SpliceSiteCache;
 import com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher;
 import com.hartwig.hmftools.isofox.unmapped.UmrCohortAnalyser;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class CohortConfig
 {
@@ -90,18 +88,18 @@ public class CohortConfig
 
     public final int Threads;
 
-    public CohortConfig(final CommandLine cmd)
+    public CohortConfig(final ConfigBuilder configBuilder)
     {
-        RootDataDir = checkAddDirSeparator(cmd.getOptionValue(ROOT_DATA_DIRECTORY, ""));;
+        RootDataDir = checkAddDirSeparator(configBuilder.getValue(ROOT_DATA_DIRECTORY, ""));;
 
-        UseSampleDirectories = cmd.hasOption(USE_SAMPLE_DIRS);
-        AllAvailableFiles = !UseSampleDirectories && cmd.hasOption(ALL_AVAILABLE_FILES);
-        FailOnMissingSample = cmd.hasOption(FAIL_MISSING);
+        UseSampleDirectories = configBuilder.hasFlag(USE_SAMPLE_DIRS);
+        AllAvailableFiles = !UseSampleDirectories && configBuilder.hasFlag(ALL_AVAILABLE_FILES);
+        FailOnMissingSample = configBuilder.hasFlag(FAIL_MISSING);
 
-        OutputDir = parseOutputDir(cmd);
-        OutputIdentifier = cmd.getOptionValue(OUTPUT_ID);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputIdentifier = configBuilder.getValue(OUTPUT_ID);
 
-        final String sampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE);
+        final String sampleDataFile = configBuilder.getValue(SAMPLE_DATA_FILE);
 
         SampleData = new SampleDataCache(sampleDataFile);
 
@@ -110,41 +108,41 @@ public class CohortConfig
             ISF_LOGGER.warn("invalid sample data file({})", sampleDataFile);
         }
 
-        AnalysisTypes = Arrays.stream(cmd.getOptionValue(ANALYSIS_TYPES).split(ITEM_DELIM))
+        AnalysisTypes = Arrays.stream(configBuilder.getValue(ANALYSIS_TYPES).split(ITEM_DELIM))
                 .map(x -> AnalysisType.valueOf(x)).collect(Collectors.toList());
 
         RestrictedGeneIds = Lists.newArrayList();
         ExcludedGeneIds = Lists.newArrayList();
 
-        if(cmd.hasOption(GENE_ID_FILE))
+        if(configBuilder.hasValue(GENE_ID_FILE))
         {
-            final String inputFile = cmd.getOptionValue(GENE_ID_FILE);
+            final String inputFile = configBuilder.getValue(GENE_ID_FILE);
             RestrictedGeneIds.addAll(loadGeneIdsFile(inputFile));
             ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
         }
 
-        if(cmd.hasOption(EXCLUDED_GENE_ID_FILE))
+        if(configBuilder.hasValue(EXCLUDED_GENE_ID_FILE))
         {
-            final String inputFile = cmd.getOptionValue(EXCLUDED_GENE_ID_FILE);
+            final String inputFile = configBuilder.getValue(EXCLUDED_GENE_ID_FILE);
             ExcludedGeneIds.addAll(loadGeneIdsFile(inputFile));
             ISF_LOGGER.info("file({}) loaded {} excluded genes", inputFile, ExcludedGeneIds.size());
         }
 
-        EnsemblDataCache = cmd.getOptionValue(ENSEMBL_DATA_DIR);
+        EnsemblDataCache = configBuilder.getValue(ENSEMBL_DATA_DIR);
 
-        RefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
+        RefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
         ConvertUnmatchedCancerToOther = true;
 
-        SampleMutationsFile = cmd.getOptionValue(SAMPLE_MUT_FILE);
+        SampleMutationsFile = configBuilder.getValue(SAMPLE_MUT_FILE);
 
-        Fusions = AnalysisTypes.contains(FUSION) ? new FusionCohortConfig(cmd) : null;
+        Fusions = AnalysisTypes.contains(FUSION) ? new FusionCohortConfig(configBuilder) : null;
 
-        Expression = requiresExpressionConfig(AnalysisTypes) ? new ExpressionCohortConfig(cmd) : null;
+        Expression = requiresExpressionConfig(AnalysisTypes) ? new ExpressionCohortConfig(configBuilder) : null;
 
-        DbAccess = createDatabaseAccess(cmd);
+        DbAccess = createDatabaseAccess(configBuilder);
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
     }
 
     private static boolean requiresExpressionConfig(final List<AnalysisType> analysisTypes)
@@ -152,16 +150,6 @@ public class CohortConfig
         return analysisTypes.contains(GENE_EXPRESSION_COMPARE)
                 || analysisTypes.contains(EXTERNAL_EXPRESSION_COMPARE) || analysisTypes.contains(GENE_EXPRESSION_MATRIX)
                 || analysisTypes.contains(TRANSCRIPT_EXPRESSION_MATRIX) || analysisTypes.contains(EXPRESSION_DISTRIBUTION);
-    }
-
-    public static boolean isValid(final CommandLine cmd)
-    {
-        if(!cmd.hasOption(OUTPUT_DIR) || !cmd.hasOption(SAMPLE_DATA_FILE) || !cmd.hasOption(ANALYSIS_TYPES))
-        {
-            return false;
-        }
-
-        return true;
     }
 
     public String formCohortFilename(final String fileId)
@@ -218,39 +206,36 @@ public class CohortConfig
         return true;
     }
 
-    public static Options createCmdLineOptions()
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
-        options.addOption(ROOT_DATA_DIRECTORY, true, "Root data directory for input files or sample directories");
-        options.addOption(SAMPLE_DATA_FILE, true, "File with list of samples and cancer types to load data for");
-        options.addOption(USE_SAMPLE_DIRS, false, "File with list of samples to load data for");
-        options.addOption(FAIL_MISSING, false, "Exit if sample input file isn't found");
-        options.addOption(ALL_AVAILABLE_FILES, false, "Load all files in root directory matching expeted Isofox file names");
-        options.addOption(ANALYSIS_TYPES, true, "List of data types to load & process");
-        addEnsemblDir(options);
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
-        options.addOption(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
-        options.addOption(OUTPUT_ID, true, "Optionally add identifier to output files");
+        configBuilder.addPath(ROOT_DATA_DIRECTORY, true, "Root data directory for input files or sample directories");
+        configBuilder.addConfigItem(SAMPLE_DATA_FILE, true, "File with list of samples and cancer types to load data for");
+        configBuilder.addFlag(USE_SAMPLE_DIRS, "File with list of samples to load data for");
+        configBuilder.addFlag(FAIL_MISSING, "Exit if sample input file isn't found");
+        configBuilder.addFlag(ALL_AVAILABLE_FILES, "Load all files in root directory matching expected Isofox file names");
+        configBuilder.addConfigItem(ANALYSIS_TYPES, true, "List of data types to load & process");
+        addEnsemblDir(configBuilder);
+        configBuilder.addConfigItem(REF_GENOME, REF_GENOME_CFG_DESC);
+        configBuilder.addPath(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
+        configBuilder.addPath(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
+        configBuilder.addConfigItem(OUTPUT_ID, true, OUTPUT_ID_DESC);
 
-        options.addOption(SAMPLE_MUT_FILE, true, "Sample mutations by gene and cancer type");
+        configBuilder.addConfigItem(SAMPLE_MUT_FILE, true, "Sample mutations by gene and cancer type");
 
-        AltSjCohortAnalyser.addCmdLineOptions(options);
-        SpliceVariantMatcher.addCmdLineOptions(options);
-        FusionCohortConfig.addCmdLineOptions(options);
-        ExpressionCohortConfig.addCmdLineOptions(options);
-        ExpressionCohortDistribution.addCmdLineOptions(options);
-        SpliceSiteCache.addCmdLineOptions(options);
-        AltSjCohortMatrix.addCmdLineOptions(options);
-        RecurrentVariantFinder.addCmdLineOptions(options);
-        UmrCohortAnalyser.addCmdLineOptions(options);
+        AltSjCohortAnalyser.registerConfig(configBuilder);
+        SpliceVariantMatcher.registerConfig(configBuilder);
+        FusionCohortConfig.registerConfig(configBuilder);
+        ExpressionCohortConfig.registerConfig(configBuilder);
+        ExpressionCohortDistribution.registerConfig(configBuilder);
+        SpliceSiteCache.registerConfig(configBuilder);
+        AltSjCohortMatrix.registerConfig(configBuilder);
+        RecurrentVariantFinder.registerConfig(configBuilder);
+        UmrCohortAnalyser.registerConfig(configBuilder);
 
-        addDatabaseCmdLineArgs(options);
+        addDatabaseCmdLineArgs(configBuilder, false);
 
-        addOutputDir(options);
-        addLoggingOptions(options);
-        addThreadOptions(options);
-
-        return options;
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
     }
 }

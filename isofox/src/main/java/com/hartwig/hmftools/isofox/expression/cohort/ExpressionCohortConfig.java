@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class ExpressionCohortConfig
 {
@@ -43,39 +42,39 @@ public class ExpressionCohortConfig
     public static final String EXT_SOURCE_SALMON = "SALMON";
     public static final String EXT_SOURCE_RSEM = "RSEM";
 
-    public ExpressionCohortConfig(final CommandLine cmd)
+    public ExpressionCohortConfig(final ConfigBuilder configBuilder)
     {
-        WriteSampleGeneDistributionData = cmd.hasOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA);
-        TpmThreshold = Double.parseDouble(cmd.getOptionValue(TPM_THRESHOLD, "0"));
-        TpmRounding = Double.parseDouble(cmd.getOptionValue(TPM_ROUNDING, "2"));
-        UseLogTpm = cmd.hasOption(USE_LOG_TPM);
+        WriteSampleGeneDistributionData = configBuilder.hasFlag(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA);
+        TpmThreshold = configBuilder.getDecimal(TPM_THRESHOLD);
+        TpmRounding = configBuilder.getDecimal(TPM_ROUNDING);
+        UseLogTpm = configBuilder.hasValue(USE_LOG_TPM);
 
-        GeneExpMatrixFile = cmd.getOptionValue(GENE_EXP_MATRIX_FILE);
-        CohortTransFile = cmd.getOptionValue(COHORT_TRANS_FILE);
-        CancerTransFile = cmd.getOptionValue(CANCER_TRANS_FILE);
-        TranscriptScope = cmd.hasOption(EXTERNAL_COMPARE_TRANSCRIPTS);
+        GeneExpMatrixFile = configBuilder.getValue(GENE_EXP_MATRIX_FILE);
+        CohortTransFile = configBuilder.getValue(COHORT_TRANS_FILE);
+        CancerTransFile = configBuilder.getValue(CANCER_TRANS_FILE);
+        TranscriptScope = configBuilder.hasFlag(EXTERNAL_COMPARE_TRANSCRIPTS);
 
-        ExternalSource = cmd.getOptionValue(EXTERNAL_SOURCE);
-        CancerGeneFiles = cmd.getOptionValue(CANCER_GENE_FILES);
-        DistributionByCancerType = cmd.hasOption(DIST_BY_CANCER_TYPE);
-        LogElevatedDistributions = cmd.hasOption(LOG_ELEVATED_DIST);
-        ApplyTpmWriteLimit = cmd.hasOption(APPLY_TPM_WRITE_THRESHOLD);
+        ExternalSource = configBuilder.getValue(EXTERNAL_SOURCE);
+        CancerGeneFiles = configBuilder.getValue(CANCER_GENE_FILES);
+        DistributionByCancerType = configBuilder.hasFlag(DIST_BY_CANCER_TYPE);
+        LogElevatedDistributions = configBuilder.hasFlag(LOG_ELEVATED_DIST);
+        ApplyTpmWriteLimit = configBuilder.hasFlag(APPLY_TPM_WRITE_THRESHOLD);
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(EXTERNAL_SOURCE, true, "List of sources to compare fusions between");
-        options.addOption(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA, false, "Write per-sample gene distribution data file");
-        options.addOption(GENE_EXP_MATRIX_FILE, true, "Cohort gene expression file");
-        options.addOption(COHORT_TRANS_FILE, true, "Cohort transcript distribution file");
-        options.addOption(CANCER_TRANS_FILE, true, "Cancer transcript distribution file");
-        options.addOption(EXTERNAL_COMPARE_TRANSCRIPTS, false, "Compare at transcript level, other default is by gene");
-        options.addOption(TPM_ROUNDING, true, "TPM/FPM rounding factor, base-10 integer (default=2, ie 1%)");
-        options.addOption(TPM_THRESHOLD, true, "Only write transcripts with TPM greater than this");
-        options.addOption(USE_LOG_TPM, false, "Convert TPM to log");
-        options.addOption(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
-        options.addOption(DIST_BY_CANCER_TYPE, false, "Produce cancer gene distributions");
-        options.addOption(LOG_ELEVATED_DIST, false, "Log elevated gene distributions");
-        options.addOption(APPLY_TPM_WRITE_THRESHOLD, false, "Log elevated gene distributions");
+        configBuilder.addConfigItem(EXTERNAL_SOURCE, "List of sources to compare fusions between");
+        configBuilder.addFlag(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA, "Write per-sample gene distribution data file");
+        configBuilder.addPath(GENE_EXP_MATRIX_FILE, false, "Cohort gene expression file");
+        configBuilder.addPath(COHORT_TRANS_FILE, true, "Cohort transcript distribution file");
+        configBuilder.addPath(CANCER_TRANS_FILE, true, "Cancer transcript distribution file");
+        configBuilder.addConfigItem(EXTERNAL_COMPARE_TRANSCRIPTS, false, "Compare at transcript level, other default is by gene");
+        configBuilder.addDecimal(TPM_ROUNDING, "TPM/FPM rounding factor, base-10 integer (2 = 1%)", 2);
+        configBuilder.addDecimal(TPM_THRESHOLD, "Only write transcripts with TPM greater than this", 0);
+        configBuilder.addFlag(USE_LOG_TPM, "Convert TPM to log");
+        configBuilder.addConfigItem(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
+        configBuilder.addFlag(DIST_BY_CANCER_TYPE, "Produce cancer gene distributions");
+        configBuilder.addFlag(LOG_ELEVATED_DIST, "Log elevated gene distributions");
+        configBuilder.addFlag(APPLY_TPM_WRITE_THRESHOLD, "Log elevated gene distributions");
     }
 }

@@ -28,11 +28,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class AltSjCohortMatrix
 {
@@ -60,19 +58,19 @@ public class AltSjCohortMatrix
     private static final String ALT_SJ_WRITE_SAMPLE_MATRIX = "alt_sj_write_sample_matrix";
     private static final String ALT_SJ_MIN_FRAGS = "alt_sj_min_frags";
 
-    public AltSjCohortMatrix(final CohortConfig config, final CommandLine cmd)
+    public AltSjCohortMatrix(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mAltSjDataMap = Maps.newHashMap();
         mAltSjMatrixIndexMap = Maps.newHashMap();
         mAltSjDataList = Lists.newArrayList();
 
-        mMinFragments = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS, "1"));
-        mLoadCanonical = cmd.hasOption(ALT_SJ_LOAD_CANONICAL);
+        mMinFragments = configBuilder.getInteger(ALT_SJ_MIN_FRAGS);
+        mLoadCanonical = configBuilder.hasFlag(ALT_SJ_LOAD_CANONICAL);
 
-        if(cmd.hasOption(ALT_SJ_COHORT_SITES_FILE))
+        if(configBuilder.hasValue(ALT_SJ_COHORT_SITES_FILE))
         {
-            loadCohortSites(cmd.getOptionValue(ALT_SJ_COHORT_SITES_FILE));
+            loadCohortSites(configBuilder.getValue(ALT_SJ_COHORT_SITES_FILE));
         }
 
         int altSjSiteCount = mAltSjDataMap.size();
@@ -82,7 +80,7 @@ public class AltSjCohortMatrix
 
         mCancerTypes = mConfig.SampleData.CancerTypeSamples.keySet().stream().collect(Collectors.toList());
 
-        if(cmd.hasOption(ALT_SJ_WRITE_CANCER_MATRIX))
+        if(configBuilder.hasFlag(ALT_SJ_WRITE_CANCER_MATRIX))
         {
             int cancerCount = mCancerTypes.size();
             mCancerMatrixData = new int[altSjSiteCount][cancerCount];
@@ -97,7 +95,7 @@ public class AltSjCohortMatrix
         mSampleMatrixIndexMap = Maps.newHashMap();
         mSampleMatrixData = null;
 
-        if(cmd.hasOption(ALT_SJ_WRITE_SAMPLE_MATRIX))
+        if(configBuilder.hasFlag(ALT_SJ_WRITE_SAMPLE_MATRIX))
         {
             int sampleCount = mConfig.SampleData.SampleIds.size();
             mSampleMatrixData = new int[altSjSiteCount][sampleCount];
@@ -110,13 +108,13 @@ public class AltSjCohortMatrix
         }
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(ALT_SJ_COHORT_SITES_FILE, true, "Alt-SJ reoccurring sites in cohort to filter by");
-        options.addOption(ALT_SJ_WRITE_CANCER_MATRIX, false, "Write cancer matrix for cohort alt-SJs");
-        options.addOption(ALT_SJ_WRITE_SAMPLE_MATRIX, false, "Write sample matrix for cohort alt-SJs");
-        options.addOption(ALT_SJ_MIN_FRAGS, true, "Min frag count supporting alt-SJs");
-        options.addOption(ALT_SJ_LOAD_CANONICAL, false, ALT_SJ_LOAD_CANONICAL_DESC);
+        configBuilder.addPath(ALT_SJ_COHORT_SITES_FILE, true, "Alt-SJ reoccurring sites in cohort to filter by");
+        configBuilder.addFlag(ALT_SJ_WRITE_CANCER_MATRIX, "Write cancer matrix for cohort alt-SJs");
+        configBuilder.addFlag(ALT_SJ_WRITE_SAMPLE_MATRIX, "Write sample matrix for cohort alt-SJs");
+        configBuilder.addInteger(ALT_SJ_MIN_FRAGS, "Min frag count supporting alt-SJs", 1);
+        configBuilder.addFlag(ALT_SJ_LOAD_CANONICAL, ALT_SJ_LOAD_CANONICAL_DESC);
     }
 
     private static final int LOG_CHECK = 100;

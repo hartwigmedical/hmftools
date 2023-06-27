@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.isofox.expression;
+package com.hartwig.hmftools.isofox.refdata;
 
 import static com.hartwig.hmftools.isofox.ChromosomeTaskExecutor.findNextOverlappingGenes;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -11,14 +11,12 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
-import com.hartwig.hmftools.isofox.results.ResultsWriter;
 
 public class ExpressionCacheTask implements Callable
 {
-    private final IsofoxConfig mConfig;
+    private final RefDataConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
 
     private final ExpectedRatesGenerator mExpRatesGenerator;
@@ -32,16 +30,16 @@ public class ExpressionCacheTask implements Callable
 
     private final PerformanceCounter mPerfCounter;
 
-    public ExpressionCacheTask(final IsofoxConfig config, final EnsemblDataCache geneTransCache, final ResultsWriter resultsWriter)
+    public ExpressionCacheTask(final RefDataConfig config, final EnsemblDataCache ensemblDataCache, final RefDataWriter writer)
     {
         mConfig = config;
-        mGeneTransCache = geneTransCache;
+        mGeneTransCache = ensemblDataCache;
 
         mGeneDataList = Lists.newArrayList();
         mChromosome = "";
         mCurrentGeneIndex = 0;
 
-        mExpRatesGenerator = new ExpectedRatesGenerator(mConfig, resultsWriter);
+        mExpRatesGenerator = new ExpectedRatesGenerator(mConfig, writer);
 
         mPerfCounter = new PerformanceCounter("ExpressionCacheGeneration");
     }
@@ -83,7 +81,7 @@ public class ExpressionCacheTask implements Callable
 
             for(GeneReadData geneReadData : geneReadDataList)
             {
-                if(mConfig.Filters.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
+                if(mConfig.EnrichedGeneIds.contains(geneReadData.GeneData.GeneId))
                 {
                     geneCollection.setEnrichedTranscripts(mGeneTransCache.getTranscripts(geneReadData.GeneData.GeneId));
                 }

@@ -30,11 +30,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class AltSjCohortAnalyser
 {
@@ -61,31 +59,31 @@ public class AltSjCohortAnalyser
     public static final String ALT_SJ_LOAD_CANONICAL = "alt_sj_load_canonical";
     public static final String ALT_SJ_LOAD_CANONICAL_DESC = "Load canonical splice junction files isntead of alts";
 
-    public AltSjCohortAnalyser(final CohortConfig config, final CommandLine cmd)
+    public AltSjCohortAnalyser(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mAltSpliceJunctions = Maps.newHashMap();
 
-        mMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
-        mMinCancerSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_CANCER_SAMPLES, "0"));
-        mMinFragments = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS, "0"));
-        mLoadCanonical = cmd.hasOption(ALT_SJ_LOAD_CANONICAL);
-        mKnownSitesOnly = cmd.hasOption(ALT_SJ_KNOWN_SITES_ONLY);
+        mMinSampleThreshold = configBuilder.getInteger(ALT_SJ_MIN_SAMPLES);
+        mMinCancerSampleThreshold = configBuilder.getInteger(ALT_SJ_MIN_CANCER_SAMPLES);
+        mMinFragments = configBuilder.getInteger(ALT_SJ_MIN_FRAGS);
+        mLoadCanonical = configBuilder.hasFlag(ALT_SJ_LOAD_CANONICAL);
+        mKnownSitesOnly = configBuilder.hasFlag(ALT_SJ_KNOWN_SITES_ONLY);
 
         mAltSjFilter = new AltSjFilter(mConfig.RestrictedGeneIds, mConfig.ExcludedGeneIds, mMinFragments);
 
         boolean freqByCancerType = mConfig.SampleData.CancerTypeSamples.size() > 1 && mMinCancerSampleThreshold > 0;
-        mWriter = new AltSjWriter(config, cmd, freqByCancerType);
+        mWriter = new AltSjWriter(config, configBuilder, freqByCancerType);
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min number of samples to report an alt SJ");
-        options.addOption(ALT_SJ_MIN_CANCER_SAMPLES, true, "Min number of samples to report an alt SJ");
-        options.addOption(ALT_SJ_MIN_FRAGS, true, "Min frag count supporting alt-SJs outside gene panel");
-        options.addOption(ALT_SJ_LOAD_CANONICAL, false, ALT_SJ_LOAD_CANONICAL_DESC);
-        options.addOption(ALT_SJ_KNOWN_SITES_ONLY, false, "Only write alt SJs if at least one site is a known splice site");
-        AltSjWriter.addCmdLineOptions(options);
+        configBuilder.addInteger(ALT_SJ_MIN_SAMPLES, "Min number of samples to report an alt SJ", 0);
+        configBuilder.addInteger(ALT_SJ_MIN_CANCER_SAMPLES, "Min number of samples to report an alt SJ", 0);
+        configBuilder.addInteger(ALT_SJ_MIN_FRAGS, "Min frag count supporting alt-SJs outside gene panel", 0);
+        configBuilder.addFlag(ALT_SJ_LOAD_CANONICAL, ALT_SJ_LOAD_CANONICAL_DESC);
+        configBuilder.addFlag(ALT_SJ_KNOWN_SITES_ONLY, "Only write alt SJs if at least one site is a known splice site");
+        AltSjWriter.registerConfig(configBuilder);
     }
 
     public void processAltSpliceJunctions()
