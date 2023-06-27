@@ -9,17 +9,21 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 
 public class VcfWriter
 {
-    private final SageConfig mConfig;
+    private final List<String> mTumorIds;
+    private final List<String> mReferenceIds;
     private final VariantVCF mVcfFile;
 
     // state to write variants in order
     private int mLastWrittenIndex;
     private final List<CompleteVariants> mCompletedVariants;
 
-    public VcfWriter(final SageConfig config, final ReferenceData refData)
+    public VcfWriter(
+            final String version, final String outputFile, final List<String> tumorIds, final List<String> referenceIds,
+            final ReferenceData refData)
     {
-        mConfig = config;
-        mVcfFile = new VariantVCF(refData.RefGenome, config);
+        mTumorIds = tumorIds;
+        mReferenceIds = referenceIds;
+        mVcfFile = new VariantVCF(refData.RefGenome, version, outputFile, tumorIds, referenceIds);
         mCompletedVariants = Lists.newArrayList();
         mLastWrittenIndex = -1;
     }
@@ -52,7 +56,7 @@ public class VcfWriter
 
     private void writeVariants(final List<SageVariant> variants)
     {
-        variants.forEach(x -> mVcfFile.write(VariantContextFactory.create(x, mConfig.ReferenceIds, mConfig.TumorIds)));
+        variants.forEach(x -> mVcfFile.write(VariantContextFactory.create(x, mReferenceIds, mTumorIds)));
     }
 
     private void checkQueue()

@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.coverage;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.sage.SageCommon.DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.BufferedWriter;
@@ -25,7 +25,7 @@ public final class ExonMedianDepth
             {
                 for(ExonCoverage exonCoverage : geneCoverage.exonCoverage())
                 {
-                    StringJoiner data = new StringJoiner(DELIM);
+                    StringJoiner data = new StringJoiner(TSV_DELIM);
                     data.add(geneCoverage.geneName());
                     data.add(exonCoverage.chromosome());
                     data.add(String.valueOf(exonCoverage.start()));
@@ -47,7 +47,7 @@ public final class ExonMedianDepth
 
     private static String header()
     {
-        StringJoiner header = new StringJoiner(DELIM);
+        StringJoiner header = new StringJoiner(TSV_DELIM);
         header.add("gene");
         header.add("chromosome");
         header.add("posStart");

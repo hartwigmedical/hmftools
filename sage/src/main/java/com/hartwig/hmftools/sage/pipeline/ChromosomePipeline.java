@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.ReferenceData;
+import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.coverage.Coverage;
@@ -36,7 +37,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class ChromosomePipeline implements AutoCloseable
 {
     private final String mChromosome;
-    private final SageConfig mConfig;
+    private final SageCallConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenome;
 
     private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
@@ -54,13 +55,13 @@ public class ChromosomePipeline implements AutoCloseable
     private final List<BaseRegion> mHighConfidenceRegions;
 
     public ChromosomePipeline(
-            final String chromosome, final SageConfig config,
+            final String chromosome, final SageCallConfig config,
             final ReferenceData refData, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
             final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter)
     {
         mChromosome = chromosome;
         mConfig = config;
-        mRefGenome = loadRefGenome(config.RefGenomeFile);
+        mRefGenome = loadRefGenome(config.Common.RefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
@@ -79,7 +80,7 @@ public class ChromosomePipeline implements AutoCloseable
         mRegionResults = new RegionResults(vcfWriter);
 
         // split chromosome into partitions, filtering for the panel if in use
-        ChromosomePartition chrPartition = new ChromosomePartition(config, mRefGenome);
+        ChromosomePartition chrPartition = new ChromosomePartition(config.Common, mRefGenome);
         List<ChrBaseRegion> partitionedRegions = chrPartition.partition(mChromosome);
 
         int taskId = 0;
@@ -110,7 +111,7 @@ public class ChromosomePipeline implements AutoCloseable
 
         List<Thread> workers = new ArrayList<>();
 
-        for(int i = 0; i < min(mPartitions.size(), mConfig.Threads); ++i)
+        for(int i = 0; i < min(mPartitions.size(), mConfig.Common.Threads); ++i)
         {
             workers.add(new RegionThread(
                     mChromosome, mConfig, mQualityRecalibrationMap, mCoverage, mPhaseSetCounter,
@@ -136,13 +137,13 @@ public class ChromosomePipeline implements AutoCloseable
 
         mVcfWriter.flushChromosome();
 
-        if(mConfig.logPerfStats())
+        if(mConfig.Common.logPerfStats())
         {
             mRegionResults.logPerfCounters();
             SG_LOGGER.debug("chromosome({}) max memory({})", mChromosome, mRegionResults.maxMemoryUsage());
         }
 
-        if(mConfig.SyncFragments)
+        if(mConfig.Common.SyncFragments)
             mRegionResults.logSynCounts();
 
         SG_LOGGER.info("chromosome({}) analysis complete", mChromosome);

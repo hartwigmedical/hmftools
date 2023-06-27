@@ -45,12 +45,13 @@ public class SamSlicerFactory
         mSamSlicers.put(sampleId, samSlicer);
     }
 
-    public void buildBamReaders(final SageConfig config, final IndexedFastaSequenceFile refGenome)
+    public void buildBamReaders(
+            final List<String> tumorIds, final List<String> tumorBams, final SageConfig config, final IndexedFastaSequenceFile refGenome)
     {
-        List<String> allSamples = Lists.newArrayList(config.TumorIds);
+        List<String> allSamples = Lists.newArrayList(tumorIds);
         allSamples.addAll(config.ReferenceIds);
 
-        List<String> allBams = Lists.newArrayList(config.TumorBams);
+        List<String> allBams = Lists.newArrayList(tumorBams);
         allBams.addAll(config.ReferenceBams);
 
         for(int i = 0; i < allSamples.size(); i++)

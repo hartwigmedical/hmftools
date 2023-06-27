@@ -272,9 +272,10 @@ public class VariantFilters
 
     private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
-    public static boolean checkFinalFilters(final SageVariant variant, final Set<Integer> passingPhaseSets, final SageConfig config)
+    public static boolean checkFinalFilters(
+            final SageVariant variant, final Set<Integer> passingPhaseSets, final SageConfig config, boolean panelOnly)
     {
-        if(config.PanelOnly && !PANEL_ONLY_TIERS.contains(variant.tier()))
+        if(panelOnly && !PANEL_ONLY_TIERS.contains(variant.tier()))
             return false;
 
         if(variant.isPassing())

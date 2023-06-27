@@ -32,6 +32,9 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class BaseQualityRecalibration
 {
     private final SageConfig mConfig;
+    private final String mPanelBedFile;
+    private final List<String> mTumorIds;
+    private final List<String> mTumorBams;
     private final IndexedFastaSequenceFile mRefGenome;
 
     private final Map<String,QualityRecalibrationMap> mSampleRecalibrationMap;
@@ -39,10 +42,15 @@ public class BaseQualityRecalibration
     private final BaseQualityResults mResults;
     private boolean mIsValid;
 
-    public BaseQualityRecalibration(final SageConfig config, final IndexedFastaSequenceFile refGenome)
+    public BaseQualityRecalibration(
+            final SageConfig config, final IndexedFastaSequenceFile refGenome, final String panelBedFile,
+            final List<String> tumorIds, final List<String> tumorBams)
     {
         mConfig = config;
         mRefGenome = refGenome;
+        mTumorBams = tumorBams;
+        mTumorIds = tumorIds;
+        mPanelBedFile = panelBedFile;
 
         mSampleRecalibrationMap = Maps.newHashMap();
         mRegions = new ConcurrentLinkedQueue<>();
@@ -53,14 +61,6 @@ public class BaseQualityRecalibration
     public boolean isValid(){ return mIsValid; }
 
     public Map<String,QualityRecalibrationMap> getSampleRecalibrationMap() { return mSampleRecalibrationMap; }
-
-    public static Map<String,QualityRecalibrationMap> buildQualityRecalibrationMap(
-            final SageConfig config, final IndexedFastaSequenceFile refGenome)
-    {
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(config, refGenome);
-        baseQualityRecalibration.produceRecalibrationMap();
-        return baseQualityRecalibration.getSampleRecalibrationMap();
-    }
 
     public void produceRecalibrationMap()
     {
@@ -75,7 +75,7 @@ public class BaseQualityRecalibration
             Map<String,String> sampleFileNames = Maps.newHashMap();
             String outputDir = mConfig.formOutputDir();
             mConfig.ReferenceIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(x, outputDir)));
-            mConfig.TumorIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(x, outputDir)));
+            mTumorIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(x, outputDir)));
 
             for(Map.Entry<String,String> entry : sampleFileNames.entrySet())
             {
@@ -104,9 +104,9 @@ public class BaseQualityRecalibration
             processSample(mConfig.ReferenceIds.get(i), mConfig.ReferenceBams.get(i), regions);
         }
 
-        for(int i = 0; i < mConfig.TumorIds.size(); i++)
+        for(int i = 0; i < mTumorIds.size(); i++)
         {
-            processSample(mConfig.TumorIds.get(i), mConfig.TumorBams.get(i), regions);
+            processSample(mTumorIds.get(i), mTumorBams.get(i), regions);
         }
 
         if(mConfig.logPerfStats())
@@ -164,7 +164,7 @@ public class BaseQualityRecalibration
             mSampleRecalibrationMap.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
         }
 
-        for(String sample : mConfig.TumorIds)
+        for(String sample : mTumorIds)
         {
             mSampleRecalibrationMap.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
         }
@@ -211,7 +211,7 @@ public class BaseQualityRecalibration
         int taskId = 1;
 
         // form regions from 2MB per chromosome and additionally include the coding panel
-        Map<Chromosome,List<BaseRegion>> panelBed = !mConfig.PanelBed.isEmpty() ? loadBedFile(mConfig.PanelBed) : null;
+        Map<Chromosome,List<BaseRegion>> panelBed = !mPanelBedFile.isEmpty() ? loadBedFile(mPanelBedFile) : null;
 
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {

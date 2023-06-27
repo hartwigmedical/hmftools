@@ -28,7 +28,7 @@ import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class SageApplication implements AutoCloseable
 {
-    private final SageConfig mConfig;
+    private final SageCallConfig mConfig;
     private final ReferenceData mRefData;
 
     private final PhaseSetCounter mPhaseSetCounter;
@@ -39,7 +39,7 @@ public class SageApplication implements AutoCloseable
         final VersionInfo version = new VersionInfo("sage.version");
         SG_LOGGER.info("Sage version: {}", version.version());
 
-        mConfig = new SageConfig(false, version.version(), configBuilder);
+        mConfig = new SageCallConfig(version.version(), configBuilder);
 
         if(!mConfig.isValid())
         {
@@ -57,17 +57,18 @@ public class SageApplication implements AutoCloseable
 
         mPhaseSetCounter = new PhaseSetCounter();
 
-        mVcfWriter = new VcfWriter(mConfig, mRefData);
+        mVcfWriter = new VcfWriter(mConfig.Common.Version, mConfig.Common.OutputFile, mConfig.TumorIds, mConfig.Common.ReferenceIds, mRefData);
 
-        SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
+        SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
     }
 
     private void run() throws IOException
     {
         long startTime = System.currentTimeMillis();
-        final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values(), mConfig);
+        final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values(), mConfig.Common);
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mRefData.RefGenome);
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
+                mConfig.Common, mRefData.RefGenome, mConfig.PanelBed, mConfig.TumorIds, mConfig.TumorBams);
         baseQualityRecalibration.produceRecalibrationMap();
 
         if(!baseQualityRecalibration.isValid())
@@ -76,7 +77,7 @@ public class SageApplication implements AutoCloseable
         final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
         int initMemory = calcMemoryUsage(false);
-        logMemoryUsage(mConfig, "BQR", initMemory);
+        logMemoryUsage(mConfig.Common.PerfWarnTime, "BQR", initMemory);
         System.gc();
 
         int maxTaskMemory = 0;
@@ -86,7 +87,7 @@ public class SageApplication implements AutoCloseable
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 
-            if(!mConfig.processChromosome(chromosome))
+            if(!mConfig.Common.processChromosome(chromosome))
                 continue;
 
             final ChromosomePipeline pipeline = new ChromosomePipeline(
@@ -97,7 +98,7 @@ public class SageApplication implements AutoCloseable
             System.gc();
         }
 
-        coverage.writeFiles(mConfig.OutputFile);
+        coverage.writeFiles(mConfig.Common.OutputFile);
 
         long timeTakenMs = System.currentTimeMillis() - startTime;
         double timeTakeMins = timeTakenMs / 60000.0;
@@ -108,10 +109,10 @@ public class SageApplication implements AutoCloseable
 
     private SAMSequenceDictionary dictionary() throws IOException
     {
-        final String bam = mConfig.ReferenceBams.isEmpty() ? mConfig.TumorBams.get(0) : mConfig.ReferenceBams.get(0);
+        final String bam = mConfig.Common.ReferenceBams.isEmpty() ? mConfig.TumorBams.get(0) : mConfig.Common.ReferenceBams.get(0);
 
         SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.BamStringency)
+                .validationStringency(mConfig.Common.BamStringency)
                 .referenceSource(new ReferenceSource(mRefData.RefGenome))
                 .open(new File(bam));
 
@@ -132,7 +133,7 @@ public class SageApplication implements AutoCloseable
     public static void main(final String... args) throws IOException
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        SageConfig.registerConfig(configBuilder);
+        SageCallConfig.registerConfig(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {

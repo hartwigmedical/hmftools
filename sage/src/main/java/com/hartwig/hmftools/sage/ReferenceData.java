@@ -28,8 +28,6 @@ import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 
-import org.apache.commons.cli.CommandLine;
-
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class ReferenceData
@@ -45,9 +43,9 @@ public class ReferenceData
 
     public final IndexedFastaSequenceFile RefGenome;
 
-    private final SageConfig mConfig;
+    private final SageCallConfig mConfig;
 
-    public ReferenceData(final SageConfig config, final ConfigBuilder configBuilder)
+    public ReferenceData(final SageCallConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
 
@@ -57,12 +55,12 @@ public class ReferenceData
         HighConfidence = Maps.newHashMap();
         ChromosomeTranscripts = Maps.newHashMap();
 
-        RefGenome = loadRefGenome(config.RefGenomeFile);
+        RefGenome = loadRefGenome(config.Common.RefGenomeFile);
 
         GeneDataCache = new EnsemblDataCache(configBuilder);
         loadGeneData();
 
-        HlaCommon.populateGeneData(GeneDataCache.getChrGeneDataMap().get(hlaChromosome(config.RefGenVersion)));
+        HlaCommon.populateGeneData(GeneDataCache.getChrGeneDataMap().get(hlaChromosome(config.Common.RefGenVersion)));
     }
 
     public static IndexedFastaSequenceFile loadRefGenome(final String refGenomeFile)
@@ -87,10 +85,10 @@ public class ReferenceData
         {
             String chromosome = entry.getKey();
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
+            if(!mConfig.Common.SpecificChromosomes.isEmpty() && !mConfig.Common.SpecificChromosomes.contains(chromosome))
                 continue;
 
-            if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chromosome)))
+            if(!mConfig.Common.SpecificRegions.isEmpty() && mConfig.Common.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chromosome)))
                 continue;
 
             List<GeneData> geneDataList = entry.getValue();
@@ -100,7 +98,7 @@ public class ReferenceData
 
             for(GeneData geneData : geneDataList)
             {
-                if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream()
+                if(!mConfig.Common.SpecificRegions.isEmpty() && mConfig.Common.SpecificRegions.stream()
                         .noneMatch(x -> positionsOverlap(x.start(), x.end(), geneData.GeneStart, geneData.GeneEnd)))
                 {
                     continue;

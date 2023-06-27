@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -38,7 +39,7 @@ public class RegionTask
     private final int mTaskId;
     private final RegionResults mResults;
 
-    private final SageConfig mConfig;
+    private final SageCallConfig mConfig;
     private final RefGenomeInterface mRefGenome;
 
     private final CandidateStage mCandidateState;
@@ -55,7 +56,7 @@ public class RegionTask
     public static final int PC_VARIANTS = 2;
 
     public RegionTask(
-            final int taskId, final ChrBaseRegion region, final RegionResults results, final SageConfig config, final RefGenomeInterface refGenome,
+            final int taskId, final ChrBaseRegion region, final RegionResults results, final SageCallConfig config, final RefGenomeInterface refGenome,
             final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions, final List<TranscriptData> transcripts,
             final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
             final PhaseSetCounter phaseSetCounter, final Coverage coverage, final SamSlicerFactory samSlicerFactory)
@@ -67,7 +68,7 @@ public class RegionTask
         mRefGenome = refGenome;
 
         mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
-        mEvidenceStage = new EvidenceStage(config, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
+        mEvidenceStage = new EvidenceStage(config.Common, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
 
         mVariantDeduper = new VariantDeduper(transcripts);
 
@@ -92,7 +93,7 @@ public class RegionTask
         List<Candidate> initialCandidates = mCandidateState.findCandidates(mRegion, refSequence);
         mPerfCounters.get(PC_CANDIDATES).stop();
 
-        if(mConfig.PerfWarnTime > 0 && mPerfCounters.get(PC_CANDIDATES).getLastTime() > mConfig.PerfWarnTime)
+        if(mConfig.Common.PerfWarnTime > 0 && mPerfCounters.get(PC_CANDIDATES).getLastTime() > mConfig.Common.PerfWarnTime)
         {
             SG_LOGGER.warn("region({}) candidate({}) reads({}) processing time({})",
                     mRegion, initialCandidates.size(), mCandidateState.totalReadsProcessed(),
@@ -115,13 +116,13 @@ public class RegionTask
         List<Candidate> finalCandidates = tumorEvidence.filterCandidates();
 
         ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
-                (mRegion, "normal", mConfig.ReferenceIds, finalCandidates, false);
+                (mRegion, "normal", mConfig.Common.ReferenceIds, finalCandidates, false);
 
         mPerfCounters.get(PC_EVIDENCE).stop();
 
         VariantPhaser variantPhaser = mEvidenceStage.getVariantPhaser();
 
-        if(mConfig.PerfWarnTime > 0 && mPerfCounters.get(PC_EVIDENCE).getLastTime() > mConfig.PerfWarnTime)
+        if(mConfig.Common.PerfWarnTime > 0 && mPerfCounters.get(PC_EVIDENCE).getLastTime() > mConfig.Common.PerfWarnTime)
         {
             SG_LOGGER.warn("region({}) evidence candidates({}) phasing(g={} c={}) hardFilter({}) processing time({})",
                     mRegion, finalCandidates.size(),  variantPhaser.getPhasingGroupCount(), variantPhaser.getPhasedCollections().size(),
@@ -134,7 +135,7 @@ public class RegionTask
         {
             mPerfCounters.get(PC_VARIANTS).start();
 
-            VariantFilters filters = new VariantFilters(mConfig.Filter);
+            VariantFilters filters = new VariantFilters(mConfig.Common.Filter);
 
             // combine normal and tumor together to create variants, then apply soft filters
             Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
@@ -144,7 +145,7 @@ public class RegionTask
             {
                 Candidate candidate = finalCandidates.get(candidateIndex);
 
-                final List<ReadContextCounter> normalReadCounters = !mConfig.ReferenceIds.isEmpty() ?
+                final List<ReadContextCounter> normalReadCounters = !mConfig.Common.ReferenceIds.isEmpty() ?
                         normalEvidence.getReadCounters(candidateIndex) : Lists.newArrayList();
 
                 final List<ReadContextCounter> tumorReadCounters = tumorEvidence.getFilteredReadCounters(candidateIndex);
@@ -183,7 +184,8 @@ public class RegionTask
         mSageVariants.stream().filter(x -> x.isPassing() && x.hasLocalPhaseSets()).forEach(x -> mPassingPhaseSets.addAll(x.localPhaseSets()));
 
         List<SageVariant> finalVariants = mSageVariants.stream()
-                .filter(x -> VariantFilters.checkFinalFilters(x, mPassingPhaseSets, mConfig)).collect(Collectors.toList());
+                .filter(x -> VariantFilters.checkFinalFilters(x, mPassingPhaseSets, mConfig.Common, mConfig.PanelOnly))
+                .collect(Collectors.toList());
 
         VariantPhaser.removeUninformativeLps(finalVariants, mPassingPhaseSets);
 
@@ -193,7 +195,7 @@ public class RegionTask
 
         mPerfCounters.add(mEvidenceStage.getVariantPhaser().getPerfCounter());
 
-        if(mConfig.logPerfStats())
+        if(mConfig.Common.logPerfStats())
             mResults.addPerfCounters(mPerfCounters);
 
         mResults.addMaxMemory(calcMemoryUsage(false));

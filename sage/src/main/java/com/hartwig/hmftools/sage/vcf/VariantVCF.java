@@ -89,11 +89,13 @@ public class VariantVCF implements AutoCloseable
     private final VariantContextWriter mWriter;
     private final Consumer<VariantContext> mConsumer;
 
-    public VariantVCF(final IndexedFastaSequenceFile reference, final SageConfig config)
+    public VariantVCF(
+            final IndexedFastaSequenceFile reference, final String version, final String outputFile,
+            final List<String> tumorIds, final List<String> referenceIds)
     {
         final SAMSequenceDictionary sequenceDictionary = reference.getSequenceDictionary();
 
-        mWriter = new VariantContextWriterBuilder().setOutputFile(config.OutputFile)
+        mWriter = new VariantContextWriterBuilder().setOutputFile(outputFile)
                 .modifyOption(Options.INDEX_ON_THE_FLY, true)
                 .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(sequenceDictionary)
@@ -101,7 +103,7 @@ public class VariantVCF implements AutoCloseable
         SomaticRefContextEnrichment enrichment = new SomaticRefContextEnrichment(reference, mWriter::add);
         mConsumer = enrichment;
 
-        final VCFHeader header = enrichment.enrichHeader(header(config));
+        final VCFHeader header = enrichment.enrichHeader(header(version, tumorIds, referenceIds));
 
         final SAMSequenceDictionary condensedDictionary = new SAMSequenceDictionary();
         for(SAMSequenceRecord sequence : sequenceDictionary.getSequences())
@@ -138,12 +140,12 @@ public class VariantVCF implements AutoCloseable
         mConsumer.accept(context);
     }
 
-    private static VCFHeader header(final SageConfig config)
+    private static VCFHeader header(final String version, final List<String> tumorIds, final List<String> referenceIds)
     {
         final List<String> samples = Lists.newArrayList();
-        samples.addAll(config.ReferenceIds);
-        samples.addAll(config.TumorIds);
-        return header(config.Version, samples);
+        samples.addAll(referenceIds);
+        samples.addAll(tumorIds);
+        return header(version, samples);
     }
 
     private static VCFHeader header(final String version, final List<String> allSamples)

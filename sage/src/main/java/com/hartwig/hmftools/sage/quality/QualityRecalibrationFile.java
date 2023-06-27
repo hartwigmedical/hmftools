@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.sage.SageCommon.DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
@@ -38,7 +38,7 @@ public final class QualityRecalibrationFile
 
     private static String toString(final QualityRecalibrationRecord baf)
     {
-        StringJoiner sj = new StringJoiner(DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(String.valueOf((char)baf.Key.Alt));
         sj.add(String.valueOf((char)baf.Key.Ref));
         sj.add(new String(baf.Key.TrinucleotideContext));
@@ -50,7 +50,7 @@ public final class QualityRecalibrationFile
 
     private static String header()
     {
-        return new StringJoiner(DELIM, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("alt")
                 .add("ref")
                 .add("trinucleotideContext")
@@ -69,12 +69,12 @@ public final class QualityRecalibrationFile
             List<String> lines = Files.readAllLines(new File(filename).toPath());
 
             String header = lines.get(0);
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, "\t");
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
             lines.remove(0);
 
             for(String line : lines)
             {
-                String[] values = line.split("\t", -1);
+                String[] values = line.split(TSV_DELIM, -1);
 
                 byte alt = values[fieldsIndexMap.get("alt")].getBytes()[0];
                 byte ref = values[fieldsIndexMap.get("ref")].getBytes()[0];

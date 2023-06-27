@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -21,7 +22,7 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 
 public class CandidateStage
 {
-    private final SageConfig mConfig;
+    private final SageCallConfig mConfig;
     private final List<VariantHotspot> mHotspots;
     private final List<BaseRegion> mPanelRegions;
     private final CandidateEvidence mCandidateEvidence;
@@ -29,7 +30,7 @@ public class CandidateStage
     private final SamSlicerFactory mSamSlicerFactory;
 
     public CandidateStage(
-            final SageConfig config, final List<VariantHotspot> hotspots,
+            final SageCallConfig config, final List<VariantHotspot> hotspots,
             final List<BaseRegion> panelRegions, final List<BaseRegion> highConfidenceRegions, final Coverage coverage,
             final SamSlicerFactory samSlicerFactory)
     {
@@ -39,7 +40,7 @@ public class CandidateStage
         mHighConfidenceRegions = highConfidenceRegions;
         mSamSlicerFactory = samSlicerFactory;
 
-        mCandidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, coverage);
+        mCandidateEvidence = new CandidateEvidence(config.Common, hotspots, panelRegions, coverage);
     }
 
     public int totalReadsProcessed() { return mCandidateEvidence.totalReadsProcessed(); }

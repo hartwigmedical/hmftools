@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.appendHeader;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,29 +46,29 @@ import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class SageAppendApplication
 {
-    private final SageConfig mConfig;
-    private final String mInputVcf;
+    private final SageAppendConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenome;
-    private final boolean mFilterToGenes;
 
     private static final double MIN_PRIOR_VERSION = 2.8;
-    private static final String INPUT_VCF = "input_vcf";
-    private static final String FILTER_TO_GENES = "require_gene";
 
     public SageAppendApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("sage.version");
         SG_LOGGER.info("SAGE version: {}", version.version());
 
-        mConfig = new SageConfig(true, version.version(), configBuilder);
-        mInputVcf = mConfig.SampleDataDir + configBuilder.getValue(INPUT_VCF);
-        mFilterToGenes = configBuilder.hasFlag(FILTER_TO_GENES);
+        mConfig = new SageAppendConfig(version.version(), configBuilder);
+
+        if(!mConfig.Common.isValid())
+        {
+            SG_LOGGER.error("invalid config");
+            System.exit(1);
+        }
 
         IndexedFastaSequenceFile refFastaSeqFile = null;
 
         try
         {
-            refFastaSeqFile = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
+            refFastaSeqFile = new IndexedFastaSequenceFile(new File(mConfig.Common.RefGenomeFile));
         }
         catch (IOException e)
         {
@@ -80,36 +81,27 @@ public class SageAppendApplication
 
     public void run() throws IOException, ExecutionException, InterruptedException
     {
-        // check config
-        if(mInputVcf == null || mInputVcf.isEmpty())
-        {
-            SG_LOGGER.error("no input VCF file specified");
-            System.exit(1);
-        }
-
-        if(mInputVcf.equals(mConfig.OutputFile))
+        if(mConfig.InputVcf.equals(mConfig.Common.OutputFile))
         {
             SG_LOGGER.error("input and output VCFs must be different");
             System.exit(1);
         }
 
-        if(mConfig.ReferenceIds.isEmpty())
+        if(mConfig.Common.ReferenceIds.isEmpty())
         {
             SG_LOGGER.error("missing reference Id must be supplied");
             System.exit(1);
         }
 
-        SG_LOGGER.info("reading and validating file: {}", mInputVcf);
+        SG_LOGGER.info("reading and validating file: {}", mConfig.InputVcf);
 
         long startTime = System.currentTimeMillis();
 
-        // mFilterToGenes
-
-        VcfFileReader vcfFileReader = new VcfFileReader(mInputVcf);
+        VcfFileReader vcfFileReader = new VcfFileReader(mConfig.InputVcf);
 
         if(!vcfFileReader.fileValid())
         {
-            SG_LOGGER.error("invalid input VCF({})", mInputVcf);
+            SG_LOGGER.error("invalid input VCF({})", mConfig.InputVcf);
             System.exit(1);
         }
 
@@ -126,7 +118,7 @@ public class SageAppendApplication
         {
             VariantContext variant = variantContext.fullyDecode(inputHeader, false);
 
-            if(mFilterToGenes)
+            if(mConfig.FilterToGenes)
             {
                 VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(variant);
 
@@ -141,8 +133,8 @@ public class SageAppendApplication
 
         SG_LOGGER.info("loaded {} variants", existingVariants.size());
 
-        SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
-        final VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig, inputHeader);
+        SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
+        final VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig.Common, inputHeader);
 
         if(existingVariants.isEmpty())
         {
@@ -153,7 +145,9 @@ public class SageAppendApplication
 
         final SAMSequenceDictionary dictionary = dictionary();
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mRefGenome);
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
+                mConfig.Common, mRefGenome, "", Collections.emptyList(), Collections.emptyList());
+
         baseQualityRecalibration.produceRecalibrationMap();
 
         if(!baseQualityRecalibration.isValid())
@@ -161,13 +155,13 @@ public class SageAppendApplication
 
         final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
-        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome);
+        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
 
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 
-            if(!mConfig.processChromosome(chromosome))
+            if(!mConfig.Common.processChromosome(chromosome))
                 continue;
 
             SG_LOGGER.info("processing chromosome({})", chromosome);
@@ -194,7 +188,7 @@ public class SageAppendApplication
             }
 
             final List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            TaskExecutor.executeTasks(callableList, mConfig.Common.Threads);
 
             for(RegionAppendTask regionTask : regionTasks)
             {
@@ -227,7 +221,7 @@ public class SageAppendApplication
 
         SG_LOGGER.info("existing VCF samples: {}", sj.toString());
 
-        for(String refSample : mConfig.ReferenceIds)
+        for(String refSample : mConfig.Common.ReferenceIds)
         {
             if(existingSamples.contains(refSample))
             {
@@ -268,10 +262,10 @@ public class SageAppendApplication
 
     private SAMSequenceDictionary dictionary() throws IOException
     {
-        final String bam = mConfig.ReferenceBams.get(0);
+        final String bam = mConfig.Common.ReferenceBams.get(0);
 
         SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.BamStringency)
+                .validationStringency(mConfig.Common.BamStringency)
                 .referenceSource(new ReferenceSource(mRefGenome)).open(new File(bam));
 
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
@@ -282,9 +276,7 @@ public class SageAppendApplication
     public static void main(String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        SageConfig.registerCommonConfig(configBuilder);
-        configBuilder.addPath(INPUT_VCF, true, "Path to input vcf");
-        configBuilder.addFlag(FILTER_TO_GENES, "Only process variants with gene annotations");
+        SageAppendConfig.registerConfig(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
         {
@@ -307,5 +299,4 @@ public class SageAppendApplication
             System.exit(1);
         }
     }
-
 }
