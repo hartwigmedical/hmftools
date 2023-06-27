@@ -189,7 +189,7 @@ args="-sample ${sample_id} \
     -ref_genome ${ref_genome} \
     -ref_genome_version ${ref_genome_version} \
     -ensembl_data_dir ${ensembl_dir} \
-    -output_dir ${output_dir} \
+    -output_dir ${isofox_dir} \
     -log_debug"
 
 echo "Running Isofox RNA fusion annotation with args: ${args}"
