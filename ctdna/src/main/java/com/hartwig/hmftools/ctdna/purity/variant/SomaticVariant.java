@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.ctdna.purity.variant;
 
+import static java.lang.CharSequence.compare;
 import static java.lang.String.format;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 
@@ -14,32 +18,26 @@ public class SomaticVariant
     public final int Position;
     public final String Ref;
     public final String Alt;
-    public final VariantTier Tier;
     public final VariantType Type;
-    public final int RepeatCount;
-    public final double Mappability;
     public final double SubclonalPerc;
 
     public final List<GenotypeFragments> Samples;
     public final boolean PassFilters;
 
+    private final VariantContextDecorator mVariant;
     private double mSequenceVcRatio;
 
-    public SomaticVariant(
-            final String chromosome, final int position, final String ref, final String alt, final VariantTier tier,
-            final VariantType type, final int repeatCount, final double mappability, final double subclonalPerc, final boolean passFilters)
+    public SomaticVariant(final VariantContextDecorator variant, final double subclonalPerc, final boolean passFilters)
     {
-        Chromosome = chromosome;
-        Position = position;
-        Ref = ref;
-        Alt = alt;
-        Tier = tier;
-        Type = type;
-        RepeatCount = repeatCount;
-        Mappability = mappability;
+        Chromosome = variant.chromosome();
+        Position = variant.position();
+        Ref = variant.ref();
+        Alt = variant.alt();
+        Type = variant.type();
         SubclonalPerc = subclonalPerc;
         Samples = Lists.newArrayList();
         PassFilters = passFilters;
+        mVariant = variant;
         mSequenceVcRatio = 0;
     }
 
@@ -50,6 +48,20 @@ public class SomaticVariant
 
     public void setSequenceGcRatio(double ratio) { mSequenceVcRatio = ratio; }
     public double sequenceGcRatio() { return mSequenceVcRatio; }
+
+    public VariantContextDecorator decorator() { return mVariant; }
+
+    /*
+        public final VariantTier Tier;
+        public final VariantType Type;
+        public final int RepeatCount;
+        public final double Mappability;
+        public final double SubclonalPerc;
+        public final String Gene;
+        public final CodingEffect Effect;
+        public final boolean Reported;
+        public final Hotspot HotspotStatus;
+     */
 
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }
 }

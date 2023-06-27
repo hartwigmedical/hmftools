@@ -164,9 +164,7 @@ public class SomaticVariants
 
             if(somaticVariant == null)
             {
-                somaticVariant = new SomaticVariant(
-                        variant.chromosome(), variant.position(), variant.ref(), variant.alt(), variant.tier(),
-                        variant.type(), variant.repeatCount(), variant.mappability(), subclonalLikelihood, !isFiltered);
+                somaticVariant = new SomaticVariant(variant, subclonalLikelihood, !isFiltered);
 
                 somaticVariant.setSequenceGcRatio(sequenceGcRatio);
 

@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.ctdna.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.ctdna.purity.cn.CopyNumberGcData;
 import com.hartwig.hmftools.ctdna.purity.variant.DropoutRateModel;
@@ -103,6 +106,7 @@ public class ResultsWriter
 
             sj.add("SampleId").add("Chromosome").add("Position").add("Ref").add("Alt");
             sj.add("Filter").add("Tier").add("Type").add("RepeatCount").add("Mappability").add("SubclonalPerc");
+            sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported").add("VCN").add("CopyNumber");
             sj.add("TumorDP").add("TumorAD");
             sj.add("SampleDP").add("SampleAD").add("SampleRefDual").add("SampleAlleleDual").add("SampleQualPerAD").add("SeqGcRatio");
             writer.write(sj.toString());
@@ -126,6 +130,9 @@ public class ResultsWriter
 
         try
         {
+            VariantContextDecorator decorator = variant.decorator();
+            VariantImpact variantImpact = decorator.variantImpact();
+
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             if(mConfig.multipleSamples())
@@ -133,11 +140,15 @@ public class ResultsWriter
 
             sj.add(sampleId).add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
 
-            sj.add(filter).add(variant.Tier.toString()).add(variant.Type.toString()).add(String.valueOf(variant.RepeatCount))
-                    .add(format("%.2f", variant.Mappability)).add(format("%.2f", variant.SubclonalPerc));
+            sj.add(filter).add(decorator.tier().toString()).add(variant.Type.toString()).add(String.valueOf(decorator.repeatCount()))
+                    .add(format("%.2f", decorator.mappability())).add(format("%.2f", variant.SubclonalPerc));
+
+            sj.add(variantImpact.CanonicalGeneName).add(variantImpact.CanonicalCodingEffect.toString())
+                    .add(Hotspot.fromVariant(decorator.context()).toString()).add(String.valueOf(decorator.reported()))
+                    .add(format("%.2f", decorator.variantCopyNumber())).add(format("%.2f", decorator.adjustedCopyNumber()));
 
             sj.add(String.valueOf(tumorData.Depth)).add(String.valueOf(tumorData.AlleleCount));
-            sj.add(String.valueOf(sampleData.UmiCounts.total())).add(String.valueOf(sampleData.UmiCounts.alleleTotal()));
+            sj.add(String.valueOf(sampleData.Depth)).add(String.valueOf(sampleData.AlleleCount));
             sj.add(String.valueOf(sampleData.UmiCounts.RefDual)).add(String.valueOf(sampleData.UmiCounts.AlleleDual));
             sj.add(format("%.1f", sampleData.qualPerAlleleFragment()));
             sj.add(format("%.3f", variant.sequenceGcRatio()));
