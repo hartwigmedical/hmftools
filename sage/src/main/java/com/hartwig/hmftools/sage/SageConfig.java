@@ -3,10 +3,12 @@ package com.hartwig.hmftools.sage;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -32,13 +34,12 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.samtools.BamUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.util.Strings;
 
@@ -120,46 +121,46 @@ public class SageConfig
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
 
-    public SageConfig(boolean appendMode, final String version, final CommandLine cmd)
+    public SageConfig(boolean appendMode, final String version, final ConfigBuilder configBuilder)
     {
         mIsValid = true;
         Version = version;
         
         AppendMode = appendMode;
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         ReferenceIds = Lists.newArrayList();
-        if(cmd.hasOption(REFERENCE))
+        if(configBuilder.hasValue(REFERENCE))
         {
-            ReferenceIds.addAll(Arrays.asList(cmd.getOptionValue(REFERENCE).split(",")));
+            ReferenceIds.addAll(Arrays.asList(configBuilder.getValue(REFERENCE).split(",")));
         }
 
         TumorIds = Lists.newArrayList();
-        if(cmd.hasOption(TUMOR))
+        if(!appendMode && configBuilder.hasValue(TUMOR))
         {
-            TumorIds.addAll(Arrays.asList(cmd.getOptionValue(TUMOR).split(",")));
+            TumorIds.addAll(Arrays.asList(configBuilder.getValue(TUMOR).split(",")));
         }
 
-        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
-        ResourceDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_DIR, ""));
+        SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR, ""));
+        ResourceDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_DIR, ""));
 
         ReferenceBams = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
 
-        if(cmd.hasOption(REFERENCE_BAM))
+        if(configBuilder.hasValue(REFERENCE_BAM))
         {
-            Arrays.stream(cmd.getOptionValue(REFERENCE_BAM, Strings.EMPTY).split(","))
+            Arrays.stream(configBuilder.getValue(REFERENCE_BAM, Strings.EMPTY).split(","))
                     .forEach(x -> ReferenceBams.add(SampleDataDir + x));
         }
 
-        if(cmd.hasOption(TUMOR_BAM))
+        if(!appendMode && configBuilder.hasValue(TUMOR_BAM))
         {
-            Arrays.stream(cmd.getOptionValue(TUMOR_BAM, Strings.EMPTY).split(","))
+            Arrays.stream(configBuilder.getValue(TUMOR_BAM, Strings.EMPTY).split(","))
                     .forEach(x -> TumorBams.add(SampleDataDir + x));
         }
 
-        IncludeMT = cmd.hasOption(INCLUDE_MT);
+        IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
 
         SpecificPositions = Sets.newHashSet();
         SpecificChromosomes = Lists.newArrayList();
@@ -167,68 +168,68 @@ public class SageConfig
 
         try
         {
-            loadSpecificChromsomesOrRegions(cmd, SpecificChromosomes, SpecificRegions, SG_LOGGER);
+            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, SG_LOGGER);
         }
         catch(ParseException e)
         {
             mIsValid = false;
         }
 
-        if(cmd.hasOption(SPECIFIC_POSITIONS))
+        if(configBuilder.hasValue(SPECIFIC_POSITIONS))
         {
-            final String positionList = cmd.getOptionValue(SPECIFIC_POSITIONS, Strings.EMPTY);
+            final String positionList = configBuilder.getValue(SPECIFIC_POSITIONS, Strings.EMPTY);
             if(!positionList.isEmpty())
             {
                 Arrays.stream(positionList.split(ITEM_DELIM)).forEach(x -> SpecificPositions.add(Integer.parseInt(x)));
             }
         }
 
-        OutputFile = SampleDataDir + cmd.getOptionValue(OUTPUT_VCF);
+        OutputFile = SampleDataDir + configBuilder.getValue(OUTPUT_VCF);
 
-        PanelBed = getReferenceFile(cmd, PANEL_BED);
-        CoverageBed = getReferenceFile(cmd, COVERAGE_BED);
-        HighConfidenceBed = getReferenceFile(cmd, HIGH_CONFIDENCE_BED);
-        Hotspots = getReferenceFile(cmd, HOTSPOTS);
-        RefGenomeFile = getReferenceFile(cmd, REF_GENOME);
+        PanelBed = getReferenceFile(configBuilder, PANEL_BED);
+        CoverageBed = getReferenceFile(configBuilder, COVERAGE_BED);
+        HighConfidenceBed = getReferenceFile(configBuilder, HIGH_CONFIDENCE_BED);
+        Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
+        RefGenomeFile = getReferenceFile(configBuilder, REF_GENOME);
 
-        BamStringency = BamUtils.validationStringency(cmd);
-        RegionSliceSize = getConfigValue(cmd, SLICE_SIZE, DEFAULT_SLICE_SIZE);
-        ReadContextFlankSize = getConfigValue(cmd, READ_CONTEXT_FLANK_SIZE, DEFAULT_READ_CONTEXT_FLANK_SIZE);
-        MinMapQuality = getConfigValue(cmd, MIN_MAP_QUALITY, DEFAULT_MIN_MAP_QUALITY);
-        MaxReadDepth = getConfigValue(cmd, MAX_READ_DEPTH, DEFAULT_MAX_READ_DEPTH);
-        MaxReadDepthPanel = getConfigValue(cmd, MAX_READ_DEPTH_PANEL, DEFAULT_MAX_READ_DEPTH_PANEL);
-        ExpectedReadLength = getConfigValue(cmd, EXPECTED_READ_LENGTH, 151);
-        SyncFragments = cmd.hasOption(SYNC_FRAGMENTS);
+        BamStringency = BamUtils.validationStringency(configBuilder);
+        RegionSliceSize = configBuilder.getInteger(SLICE_SIZE);
+        ReadContextFlankSize = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
+        MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
+        MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
+        MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
+        ExpectedReadLength = configBuilder.getInteger(EXPECTED_READ_LENGTH);
+        SyncFragments = configBuilder.hasFlag(SYNC_FRAGMENTS);
 
-        Filter = new FilterConfig(cmd);
-        Quality = new QualityConfig(cmd);
-        QualityRecalibration = new QualityRecalibrationConfig(cmd);
+        Filter = new FilterConfig(configBuilder);
+        Quality = new QualityConfig(configBuilder);
+        QualityRecalibration = new QualityRecalibrationConfig(configBuilder);
 
-        TrackUMIs = cmd.hasOption(TRACK_UMIS);
+        TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
 
-        PanelOnly = cmd.hasOption(PANEL_ONLY);
-        LogLpsData = cmd.hasOption(LOG_LPS_DATA);
-        LogEvidenceReads = !SpecificRegions.isEmpty() && cmd.hasOption(LOG_EVIDENCE_READS);
+        PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
+        LogLpsData = configBuilder.hasFlag(LOG_LPS_DATA);
+        LogEvidenceReads = !SpecificRegions.isEmpty() && configBuilder.hasFlag(LOG_EVIDENCE_READS);
 
         if(LogEvidenceReads)
         {
             SG_LOGGER.trace("READ_EV,SampleId,Chromosome,Position,Ref,Alt,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex");
         }
 
-        PerfWarnTime = Double.parseDouble(cmd.getOptionValue(PERF_WARN_TIME, "0"));
+        PerfWarnTime = configBuilder.getDecimal(PERF_WARN_TIME);
 
-        Threads = parseThreads(cmd);
+        Threads = parseThreads(configBuilder);
     }
 
-    private String getReferenceFile(final CommandLine cmd, final String config)
+    private String getReferenceFile(final ConfigBuilder configBuilder, final String config)
     {
-        if(!cmd.hasOption(config))
+        if(!configBuilder.hasValue(config))
             return "";
 
         if(ResourceDir.isEmpty())
-            return cmd.getOptionValue(config);
+            return configBuilder.getValue(config);
 
-        return ResourceDir + cmd.getOptionValue(config);
+        return ResourceDir + configBuilder.getValue(config);
     }
 
     public String formOutputDir()
@@ -318,57 +319,62 @@ public class SageConfig
 
     public boolean logPerfStats() { return PerfWarnTime > 0; }
 
-    public static Options createSageOptions()
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
-        options.addOption(TUMOR, true, "Tumor sample, or collection separated by ',\"");
-        options.addOption(TUMOR_BAM, true, "Tumor bam file");
-        options.addOption(READ_CONTEXT_FLANK_SIZE, true, "Size of read context flank [" + DEFAULT_READ_CONTEXT_FLANK_SIZE + "]");
+        configBuilder.addConfigItem(TUMOR, true, "Tumor sample, or collection separated by ','");
+        configBuilder.addConfigItem(TUMOR_BAM, true, "Tumor bam file(s)");
 
-        options.addOption(HIGH_CONFIDENCE_BED, true, "High confidence regions bed file");
-        options.addOption(PANEL_BED, true, "Panel regions bed file");
-        options.addOption(PANEL_ONLY, false, "Only examine panel for variants");
-        options.addOption(HOTSPOTS, true, "Hotspots");
-        options.addOption(COVERAGE_BED, true, "Coverage is calculated for optionally supplied bed");
-        options.addOption(LOG_LPS_DATA, false, "Log local phasing data");
-        options.addOption(PERF_WARN_TIME, true, "Log details of partitions taking longer than X seconds");
+        configBuilder.addInteger(
+                READ_CONTEXT_FLANK_SIZE, "Size of read context flank", DEFAULT_READ_CONTEXT_FLANK_SIZE);
 
-        commonOptions().getOptions().forEach(options::addOption);
-        FilterConfig.createOptions().getOptions().forEach(options::addOption);
-        addEnsemblDir(options);
-        return options;
+        configBuilder.addConfigItem(HIGH_CONFIDENCE_BED, false, "High confidence regions bed file");
+        configBuilder.addConfigItem(PANEL_BED, false, "Panel regions bed file");
+        configBuilder.addConfigItem(PANEL_ONLY, false, "Only examine panel for variants");
+        configBuilder.addConfigItem(HOTSPOTS, false, "Hotspots");
+        configBuilder.addConfigItem(COVERAGE_BED, false, "Coverage is calculated for optionally supplied bed");
+        configBuilder.addFlag(LOG_LPS_DATA, "Log local phasing data");
+        configBuilder.addDecimal(PERF_WARN_TIME, "Log details of partitions taking longer than X seconds", 0.0);
+
+        registerCommonConfig(configBuilder);
+        FilterConfig.registerConfig(configBuilder);
+        addEnsemblDir(configBuilder);
     }
 
-    public static Options commonOptions()
+    public static void registerCommonConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
-        addThreadOptions(options);
-        options.addOption(REFERENCE, true, "Reference sample, or collection separated by ',");
-        options.addOption(RESOURCE_DIR, true, "Resource files");
-        options.addOption(SAMPLE_DATA_DIR, true, "Path to sample data files");
-        options.addOption(REFERENCE_BAM, true, "Reference bam file");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, "Assembly, must be one of [37, 38]");
-        options.addOption(OUTPUT_VCF, true, "Output vcf");
-        options.addOption(MIN_MAP_QUALITY, true, "Min map quality to apply to non-hotspot variants [" + DEFAULT_MIN_MAP_QUALITY + "]");
-        options.addOption(EXPECTED_READ_LENGTH, true, "Expected read length [" + DEFAULT_READ_LENGTH + "]");
-        addSpecificChromosomesRegionsConfig(options);
-        options.addOption(SPECIFIC_POSITIONS, true, "Run for specific positions(s) separated by ';', for debug purposes");
-        options.addOption(INCLUDE_MT, false, "Call MT variants");
-        options.addOption(SLICE_SIZE, true, "Slice size [" + DEFAULT_SLICE_SIZE + "]");
+        configBuilder.addConfigItem(REFERENCE, false, "Reference sample, or collection separated by ','");
+        configBuilder.addConfigItem(REFERENCE_BAM, false, "Reference bam file");
 
-        options.addOption(MAX_READ_DEPTH, true, "Max depth to look for evidence [" + DEFAULT_MAX_READ_DEPTH + "]");
-        options.addOption(MAX_READ_DEPTH_PANEL, true, "Max depth to look for evidence in panel [" + DEFAULT_MAX_READ_DEPTH_PANEL + "]");
-        options.addOption(SYNC_FRAGMENTS, false, "Handle overlapping fragment reads in evidence phase");
-        options.addOption(TRACK_UMIS, false, "Record counts of UMI types");
-        options.addOption(LOG_EVIDENCE_READS, false, "Write evidence read data");
-        addValidationStringencyOption(options);
+        configBuilder.addPath(RESOURCE_DIR, false, "Resource files");
+        configBuilder.addPath(SAMPLE_DATA_DIR, false, "Path to sample data files");
+        configBuilder.addConfigItem(OUTPUT_VCF, true, "Output vcf");
 
-        QualityConfig.createOptions().getOptions().forEach(options::addOption);
-        QualityRecalibrationConfig.createOptions().getOptions().forEach(options::addOption);
+        // addRefGenomeConfig(configBuilder, true);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
+        configBuilder.addConfigItem(REF_GENOME, true, REF_GENOME_CFG_DESC);
 
-        addLoggingOptions(options);
-        return options;
+
+        configBuilder.addInteger(MIN_MAP_QUALITY, "Min map quality to apply to non-hotspot variants", DEFAULT_MIN_MAP_QUALITY);
+        configBuilder.addInteger(EXPECTED_READ_LENGTH, "Expected read length", DEFAULT_READ_LENGTH);
+        configBuilder.addFlag(INCLUDE_MT, "Call MT variants");
+        configBuilder.addInteger(SLICE_SIZE, "Slice size", DEFAULT_SLICE_SIZE);
+
+        configBuilder.addInteger(MAX_READ_DEPTH, "Max depth to look for evidence", DEFAULT_MAX_READ_DEPTH);
+        configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
+        configBuilder.addFlag(SYNC_FRAGMENTS, "Handle overlapping fragment reads in evidence phase");
+        configBuilder.addFlag(TRACK_UMIS, "Record counts of UMI types");
+        addValidationStringencyOption(configBuilder);
+
+        QualityConfig.registerConfig(configBuilder);
+        QualityRecalibrationConfig.registerConfig(configBuilder);
+
+        // debug
+        configBuilder.addConfigItem(SPECIFIC_POSITIONS, "Run for specific positions(s) separated by ';', for debug purposes");
+        addSpecificChromosomesRegionsConfig(configBuilder);
+        configBuilder.addFlag(LOG_EVIDENCE_READS, "Write evidence read data");
+
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
     }
 
     public SageConfig()

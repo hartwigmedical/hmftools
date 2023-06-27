@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.utils;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
@@ -28,16 +30,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -60,7 +58,6 @@ public class RnaHealthChecker
     private final int mThreads;
 
     private static final String VCF_PATH = "vcf_path";
-    private static final String SAMPLE = "sample";
     private static final String MIN_SUPPORT_FRAGS = "min_support";
     private static final String MIN_DEPTH_FRAGS = "min_depth";
     private static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
@@ -69,17 +66,17 @@ public class RnaHealthChecker
     private static final int DEFAULT_MIN_SUPPORT_FRAGS = 1;
     private static final String DEFAULT_RNA_SAMPLE_SUFFIX = "_RNA";
 
-    public RnaHealthChecker(final CommandLine cmd)
+    public RnaHealthChecker(final ConfigBuilder configBuilder)
     {
         mSampleIds = Lists.newArrayList();
 
-        if(cmd.hasOption(SAMPLE))
+        if(configBuilder.hasValue(SAMPLE))
         {
-            mSampleIds.add(cmd.getOptionValue(SAMPLE));
+            mSampleIds.add(configBuilder.getValue(SAMPLE));
         }
-        else if(cmd.hasOption(SAMPLE_ID_FILE))
+        else if(configBuilder.hasValue(SAMPLE_ID_FILE))
         {
-            mSampleIds.addAll(loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE)));
+            mSampleIds.addAll(loadSampleIdsFile(configBuilder));
         }
         else
         {
@@ -87,8 +84,8 @@ public class RnaHealthChecker
             System.exit(1);
         }
 
-        mVcfPath = cmd.getOptionValue(VCF_PATH);
-        mRnaSampleSuffix = cmd.getOptionValue(RNA_SAMPLE_SUFFIX, DEFAULT_RNA_SAMPLE_SUFFIX);
+        mVcfPath = configBuilder.getValue(VCF_PATH);
+        mRnaSampleSuffix = configBuilder.getValue(RNA_SAMPLE_SUFFIX, DEFAULT_RNA_SAMPLE_SUFFIX);
 
         if(mVcfPath == null)
         {
@@ -96,11 +93,11 @@ public class RnaHealthChecker
             System.exit(1);
         }
 
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = parseOutputDir(configBuilder);
 
-        mDepthThreshold = Integer.parseInt(cmd.getOptionValue(MIN_DEPTH_FRAGS, String.valueOf(DEFAULT_MIN_DEPTH_FRAGS)));
-        mSupportThreshold = Integer.parseInt(cmd.getOptionValue(MIN_SUPPORT_FRAGS, String.valueOf(DEFAULT_MIN_SUPPORT_FRAGS)));
-        mThreads = parseThreads(cmd);
+        mDepthThreshold = configBuilder.getInteger(MIN_DEPTH_FRAGS);
+        mSupportThreshold = configBuilder.getInteger(MIN_SUPPORT_FRAGS);
+        mThreads = parseThreads(configBuilder);
 
         mWriter = initialiseWriter();
     }
@@ -352,32 +349,34 @@ public class RnaHealthChecker
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(SAMPLE, true, "Sample name");
-        addSampleIdFile(options);
-        addThreadOptions(options);
-        options.addOption(VCF_PATH, true, "Original VCF file");
-        options.addOption(MIN_DEPTH_FRAGS, true, "Required min RNA depth");
-        options.addOption(MIN_SUPPORT_FRAGS, true, "Required min RNA allele fragments");
-        options.addOption(RNA_SAMPLE_SUFFIX, true, "RNA genotype sample name suffix, default: _RNA");
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
+        addSampleIdFile(configBuilder, false);
+        configBuilder.addPath(VCF_PATH, true, "Original VCF file");
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.addInteger(MIN_DEPTH_FRAGS, "Required min RNA depth", DEFAULT_MIN_DEPTH_FRAGS);
+        configBuilder.addInteger(MIN_SUPPORT_FRAGS, "Required min RNA allele fragments", DEFAULT_MIN_SUPPORT_FRAGS);
 
-        setLogLevel(cmd);
+        configBuilder.addConfigItem(
+                RNA_SAMPLE_SUFFIX, false,
+                "RNA genotype sample name suffix, default: " + DEFAULT_RNA_SAMPLE_SUFFIX, DEFAULT_RNA_SAMPLE_SUFFIX);
 
-        RnaHealthChecker rnaHealthChecker = new RnaHealthChecker(cmd);
+        addThreadOptions(configBuilder);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+
+        RnaHealthChecker rnaHealthChecker = new RnaHealthChecker(configBuilder);
         rnaHealthChecker.run();
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.utils;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
@@ -34,13 +36,9 @@ import static com.hartwig.hmftools.sage.utils.DiffType.hasValueDiff;
 import static com.hartwig.hmftools.sage.utils.VariantData.comparePositions;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
@@ -69,7 +67,6 @@ public class SageCompareVcfs
 
     private static final String ORIGINAL_VCF = "original_vcf";
     private static final String NEW_VCF = "new_vcf";
-    private static final String SAMPLE = "sample";
 
     private static final String DIFF_ABS = "diff_abs";
     private static final String DIFF_PERC = "diff_perc";
@@ -78,17 +75,17 @@ public class SageCompareVcfs
     private static final double DEFAULT_DIFF_PERC = 0.1;
     private static final double DEFAULT_DIFF_ABS = 2;
 
-    public SageCompareVcfs(final CommandLine cmd)
+    public SageCompareVcfs(final ConfigBuilder configBuilder)
     {
-        mSampleId = cmd.getOptionValue(SAMPLE);
-        mOriginalVcf = cmd.getOptionValue(ORIGINAL_VCF);
-        mNewVcf = cmd.getOptionValue(NEW_VCF);
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
+        mSampleId = configBuilder.getValue(SAMPLE);
+        mOriginalVcf = configBuilder.getValue(ORIGINAL_VCF);
+        mNewVcf = configBuilder.getValue(NEW_VCF);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
 
-        mDiffAbsPermitted = Double.parseDouble(cmd.getOptionValue(DIFF_ABS, String.valueOf(DEFAULT_DIFF_ABS)));
-        mDiffPercPermitted = Double.parseDouble(cmd.getOptionValue(DIFF_PERC, String.valueOf(DEFAULT_DIFF_PERC)));
-        mPassOnly = cmd.hasOption(PASS_ONLY);
+        mDiffAbsPermitted = Double.parseDouble(configBuilder.getValue(DIFF_ABS, String.valueOf(DEFAULT_DIFF_ABS)));
+        mDiffPercPermitted = Double.parseDouble(configBuilder.getValue(DIFF_PERC, String.valueOf(DEFAULT_DIFF_PERC)));
+        mPassOnly = configBuilder.hasFlag(PASS_ONLY);
 
         mWriter = initialiseWriter();
 
@@ -208,6 +205,8 @@ public class SageCompareVcfs
                 totalComparisons(), mCompareCount, mDiffCount, mUnmatchedOrigCount, mUnmatchedNewCount);
 
         closeBufferedWriter(mWriter);
+
+        SG_LOGGER.info("Sage compare VCFs complete");
     }
 
     private static VariantData getNextVariant(final Iterator iter)
@@ -432,31 +431,28 @@ public class SageCompareVcfs
         return sj.toString();
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(SAMPLE, true, "Sample name");
-        options.addOption(ORIGINAL_VCF, true, "Original VCF file");
-        options.addOption(NEW_VCF, true, "New VCF file");
-        options.addOption(PASS_ONLY, false, "Only compare passing variants");
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addPath(ORIGINAL_VCF, true, "Original VCF file");
+        configBuilder.addPath(NEW_VCF, true, "New VCF file");
+        configBuilder.addFlag(PASS_ONLY, "Only compare passing variants");
+        configBuilder.addDecimal(DIFF_ABS, "Absolute value difference", DEFAULT_DIFF_ABS);
+        configBuilder.addDecimal(DIFF_PERC, "Percentage value difference", DEFAULT_DIFF_PERC);
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        SageCompareVcfs sageCompare = new SageCompareVcfs(cmd);
+        SageCompareVcfs sageCompare = new SageCompareVcfs(configBuilder);
         sageCompare.run();
-
-        SG_LOGGER.info("Sage compare VCFs complete");
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

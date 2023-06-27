@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.sage.pon;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.File;
@@ -16,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -37,18 +40,30 @@ public class PonApplication implements AutoCloseable
     private static final String OUT_VCF = "out";
     private static final String GLOB = "*.sage.somatic.vcf.gz";
 
-    public static void main(String[] args) throws IOException, ParseException, ExecutionException, InterruptedException
+    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException
     {
-        final Options options = createOptions();
-        final CommandLine cmd = createCommandLine(args, options);
-        final String inputFilePath = cmd.getOptionValue(IN_VCF);
-        final String outputFilePath = cmd.getOptionValue(OUT_VCF);
-        final int threads = parseThreads(cmd, 5);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addPath(IN_VCF, true, "Input file");
+        configBuilder.addConfigItem(OUT_VCF, true, "Output file");
+        addThreadOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+
+        int threads = parseThreads(configBuilder);
+
+        String inputFilePath = configBuilder.getValue(IN_VCF);
+        String outputFilePath = configBuilder.getValue(OUT_VCF);
 
         if(outputFilePath == null || inputFilePath == null)
         {
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("PonApplication", options);
+            SG_LOGGER.error("missing input or output VCFs");
             System.exit(1);
         }
 
@@ -63,7 +78,7 @@ public class PonApplication implements AutoCloseable
     private final List<File> files;
     private final ExecutorService executorService;
 
-    private PonApplication(int threads, @NotNull final String input, @NotNull final String output) throws IOException
+    private PonApplication(int threads, final String input, final String output) throws IOException
     {
         SG_LOGGER.info("Input: {}", input);
         SG_LOGGER.info("Output: {}", output);
@@ -126,23 +141,6 @@ public class PonApplication implements AutoCloseable
             }
             iter.close();
         }
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        final Options options = new Options();
-        options.addOption(IN_VCF, true, "Input file");
-        options.addOption(OUT_VCF, true, "Output file");
-        addThreadOptions(options);
-        return options;
     }
 
     @Override

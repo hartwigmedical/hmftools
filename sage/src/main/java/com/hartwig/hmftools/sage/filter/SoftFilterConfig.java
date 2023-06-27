@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.filter;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH;
@@ -8,11 +7,11 @@ import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH_ALL
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_VAF;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class SoftFilterConfig
 {
+    public final String Name;
     public final int MinTumorQual;
     public final double MinTumorVaf;
     public final int MinGermlineCoverage;
@@ -22,36 +21,26 @@ public class SoftFilterConfig
     public final double MaxGermlineVaf;
     public final double MaxGermlineRelativeQual;
 
-    public SoftFilterConfig(final CommandLine cmd, final String prefix, final SoftFilterConfig defaultValue)
+    public SoftFilterConfig(final ConfigBuilder configBuilder, final String prefix, final SoftFilterConfig defaultValue)
     {
-        MinTumorQual = getConfigValue(cmd, prefix + "_" + MIN_TUMOR_QUAL.configName(), defaultValue.MinTumorQual);
-        MinTumorVaf = getConfigValue(cmd, prefix + "_" + MIN_TUMOR_VAF.configName(), defaultValue.MinTumorVaf);
+        Name = defaultValue.Name;
+        MinTumorQual = configBuilder.getInteger(prefix + "_" + MIN_TUMOR_QUAL.configName());
+        MinTumorVaf = configBuilder.getDecimal(prefix + "_" + MIN_TUMOR_VAF.configName());
 
-        MinGermlineCoverage = getConfigValue(
-                cmd, prefix + "_" + MIN_GERMLINE_DEPTH.configName(), defaultValue.MinGermlineCoverage);
-
-        MinGermlineCoverageLongInsert = getConfigValue(
-                cmd, prefix + "_" + MIN_GERMLINE_DEPTH.configName(), defaultValue.MinGermlineCoverageLongInsert);
-
-        MinGermlineCoverageAllosome =
-                getConfigValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName(),
-                        defaultValue.MinGermlineCoverageAllosome);
-
-        MinGermlineCoverageAllosomeLongInsert =
-                getConfigValue(cmd, prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName(),
-                        defaultValue.MinGermlineCoverageAllosomeLongInsert);
-
-        MaxGermlineVaf = getConfigValue(cmd, prefix + "_" + MAX_GERMLINE_VAF.configName(), defaultValue.MaxGermlineVaf);
-
-        MaxGermlineRelativeQual =
-                getConfigValue(cmd, prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL.configName(), defaultValue.MaxGermlineRelativeQual);
+        MinGermlineCoverage = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
+        MinGermlineCoverageLongInsert = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH.configName());
+        MinGermlineCoverageAllosome = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName());
+        MinGermlineCoverageAllosomeLongInsert = configBuilder.getInteger(prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName());
+        MaxGermlineVaf = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_VAF.configName());
+        MaxGermlineRelativeQual = configBuilder.getDecimal(prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL.configName());
     }
 
     public SoftFilterConfig(
-            final int minTumorQual, final double minTumorVaf, final int minGermlineCoverage, final int minGermlineCoverageLongInsert,
-            final int minGermlineCoverageAllosome, final int minGermlineCoverageAllosomeLongInsert,
+            final String name, final int minTumorQual, final double minTumorVaf, final int minGermlineCoverage,
+            final int minGermlineCoverageLongInsert, final int minGermlineCoverageAllosome, final int minGermlineCoverageAllosomeLongInsert,
             final double maxGermlineVaf, final double maxGermlineRelativeQual)
     {
+        Name = name;
         MinTumorQual = minTumorQual;
         MinTumorVaf = minTumorVaf;
         MinGermlineCoverage = minGermlineCoverage;
@@ -62,26 +51,30 @@ public class SoftFilterConfig
         MaxGermlineRelativeQual = maxGermlineRelativeQual;
     }
 
-    public static Options createOptions(final String prefix, final SoftFilterConfig defaultValue)
+    public static void registerConfig(final ConfigBuilder configBuilder, final SoftFilterConfig defaultConfig)
     {
-        final Options options = new Options();
+        String prefix = defaultConfig.Name;
 
-        options.addOption(
-                prefix + "_" + MIN_TUMOR_QUAL.configName(), true, "Minimum " + prefix + " tumor quality [" + defaultValue.MinTumorQual + "]");
-        options.addOption(prefix + "_" + MIN_TUMOR_VAF.configName(), true, "Minimum " + prefix + " tumor VAF [" + defaultValue.MinTumorVaf + "]");
-        options.addOption(
-                prefix + "_" + MIN_GERMLINE_DEPTH.configName(), true,
-                "Minimum " + prefix + " germline depth [" + defaultValue.MinGermlineCoverage + "]");
-        options.addOption(
-                prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName(), true,
-                "Minimum " + prefix + " germline depth [" + defaultValue.MinGermlineCoverageAllosome + "]");
+        configBuilder.addInteger(
+                prefix + "_" + MIN_TUMOR_QUAL.configName(),
+                "Minimum " + prefix + " tumor quality", defaultConfig.MinTumorQual);
 
-        options.addOption(
-                prefix + "_" + MAX_GERMLINE_VAF.configName(), true, "Maximum " + prefix + " germline VAF [" + defaultValue.MaxGermlineVaf + "]");
-        options.addOption(
-                prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL.configName(), true,
-                "Maximum " + prefix + " germline relative quality [" + defaultValue.MaxGermlineRelativeQual + "]");
+        configBuilder.addDecimal(
+                prefix + "_" + MIN_TUMOR_VAF.configName(), "Minimum " + prefix + " tumor VAF",defaultConfig.MinTumorVaf);
 
-        return options;
+        configBuilder.addInteger(
+                prefix + "_" + MIN_GERMLINE_DEPTH.configName(),
+                "Minimum " + prefix + " germline depth", defaultConfig.MinGermlineCoverage);
+
+        configBuilder.addInteger(
+                prefix + "_" + MIN_GERMLINE_DEPTH_ALLOSOME.configName(),
+                "Minimum " + prefix + " germline depth", defaultConfig.MinGermlineCoverageAllosome);
+
+        configBuilder.addDecimal(
+                prefix + "_" + MAX_GERMLINE_VAF.configName(), "Maximum " + prefix + " germline VAF", defaultConfig.MaxGermlineVaf);
+
+        configBuilder.addDecimal(
+                prefix + "_" + MAX_GERMLINE_REL_RAW_BASE_QUAL.configName(),
+                "Maximum " + prefix + " germline relative qualit", defaultConfig.MaxGermlineRelativeQual);
     }
 }

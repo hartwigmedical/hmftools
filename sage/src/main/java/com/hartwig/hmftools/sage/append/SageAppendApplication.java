@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.append;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.sage.SageApplication.createCommandLine;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.appendHeader;
 
@@ -20,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -31,10 +31,6 @@ import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -58,20 +54,28 @@ public class SageAppendApplication
     private static final String INPUT_VCF = "input_vcf";
     private static final String FILTER_TO_GENES = "require_gene";
 
-    public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException
+    public SageAppendApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("sage.version");
         SG_LOGGER.info("SAGE version: {}", version.version());
 
-        final CommandLine cmd = createCommandLine(args, options);
+        mConfig = new SageConfig(true, version.version(), configBuilder);
+        mInputVcf = mConfig.SampleDataDir + configBuilder.getValue(INPUT_VCF);
+        mFilterToGenes = configBuilder.hasFlag(FILTER_TO_GENES);
 
-        setLogLevel(cmd);
+        IndexedFastaSequenceFile refFastaSeqFile = null;
 
-        mConfig = new SageConfig(true, version.version(), cmd);
-        mInputVcf = mConfig.SampleDataDir + cmd.getOptionValue(INPUT_VCF);
-        mFilterToGenes = cmd.hasOption(FILTER_TO_GENES);
+        try
+        {
+            refFastaSeqFile = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
+        }
+        catch (IOException e)
+        {
+            SG_LOGGER.error("Reference file loading failed: {}", e.toString());
+            System.exit(1);
+        }
 
-        mRefGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
+        mRefGenome = refFastaSeqFile;
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException
@@ -275,34 +279,31 @@ public class SageAppendApplication
         return dictionary;
     }
 
-    public static Options createOptions()
-    {
-        final Options options = new Options();
-        SageConfig.commonOptions().getOptions().forEach(options::addOption);
-        options.addOption(INPUT_VCF, true, "Path to input vcf");
-        options.addOption(FILTER_TO_GENES, false, "Only process variants with gene annotations");
-        return options;
-    }
-
     public static void main(String[] args)
     {
-        final Options options = createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        SageConfig.registerCommonConfig(configBuilder);
+        configBuilder.addPath(INPUT_VCF, true, "Path to input vcf");
+        configBuilder.addFlag(FILTER_TO_GENES, "Only process variants with gene annotations");
+
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
+
+        setLogLevel(configBuilder);
+
+        SageAppendApplication application = new SageAppendApplication(configBuilder);
 
         try
         {
-            final SageAppendApplication application = new SageAppendApplication(options, args);
             application.run();
-        }
-        catch(ParseException e)
-        {
-            SG_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SageAppendApplication", options);
-            System.exit(1);
         }
         catch(Exception e)
         {
-            SG_LOGGER.warn(e);
+            SG_LOGGER.error("error: {}", e.toString());
+            e.printStackTrace();
             System.exit(1);
         }
     }

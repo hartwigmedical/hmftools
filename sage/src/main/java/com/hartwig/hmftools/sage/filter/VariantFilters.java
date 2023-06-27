@@ -80,7 +80,7 @@ public class VariantFilters
                 mFilterCounts[HARD_FC_TUMOR_QUAL], mFilterCounts[HARD_FC_TUMOR_VAF]);
     }
 
-    public boolean enabled() { return mConfig.SoftFilter; }
+    public boolean enabled() { return !mConfig.DisableSoftFilter; }
 
     public void applySoftFilters(final SageVariant variant)
     {
@@ -280,8 +280,8 @@ public class VariantFilters
         if(variant.isPassing())
             return true;
 
-        if(config.Filter.HardFilter)
-            return false;
+        if(config.Filter.DisableHardFilter)
+            return true;
 
         if(variant.tier() == VariantTier.HOTSPOT)
             return true;

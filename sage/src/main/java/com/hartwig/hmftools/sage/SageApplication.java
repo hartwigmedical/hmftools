@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
@@ -18,13 +19,6 @@ import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -40,12 +34,12 @@ public class SageApplication implements AutoCloseable
     private final PhaseSetCounter mPhaseSetCounter;
     private final VcfWriter mVcfWriter;
 
-    private SageApplication(final CommandLine cmd)
+    private SageApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("sage.version");
         SG_LOGGER.info("Sage version: {}", version.version());
 
-        mConfig = new SageConfig(false, version.version(), cmd);
+        mConfig = new SageConfig(false, version.version(), configBuilder);
 
         if(!mConfig.isValid())
         {
@@ -53,7 +47,7 @@ public class SageApplication implements AutoCloseable
             SG_LOGGER.error("invalid config, exiting");
         }
 
-        mRefData = new ReferenceData(mConfig, cmd);
+        mRefData = new ReferenceData(mConfig, configBuilder);
 
         if(!mRefData.load())
         {
@@ -137,30 +131,19 @@ public class SageApplication implements AutoCloseable
 
     public static void main(final String... args) throws IOException
     {
-        final Options options = SageConfig.createSageOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        SageConfig.registerConfig(configBuilder);
 
-        try
+        if(!configBuilder.parseCommandLine(args))
         {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            final SageApplication application = new SageApplication(cmd);
-            application.run();
-            application.close();
-        }
-        catch(ParseException e)
-        {
-            SG_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SageApplication", options);
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
-    }
 
-    public static CommandLine createCommandLine(final String[] args, final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        setLogLevel(configBuilder);
+
+        SageApplication application = new SageApplication(configBuilder);
+        application.run();
+        application.close();
     }
 }

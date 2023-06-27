@@ -57,19 +57,23 @@ public class SageConstants
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 28;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 22;
 
-    public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(70, 0.005,
+    public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
+            "hotspot", 70, 0.005,
             0, 0, 0, 0,
             0.1, 0.5);
 
-    public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.02  ,
+    public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
+            "panel", 100, 0.02  ,
             0, 0, 0, 0,
             0.04, 0.04);
 
-    public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(160, 0.025,
+    public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
+            "high_confidence", 160, 0.025,
             10, 15, 6, 9,
             0.04, 0.04);
 
-    public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(240, 0.025,
+    public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
+            "low_confidence", 240, 0.025,
             10, 15, 6, 9,
             0.04, 0.04);
 }

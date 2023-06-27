@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
@@ -46,7 +47,7 @@ public class ReferenceData
 
     private final SageConfig mConfig;
 
-    public ReferenceData(final SageConfig config, final CommandLine cmd)
+    public ReferenceData(final SageConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
 
@@ -58,7 +59,7 @@ public class ReferenceData
 
         RefGenome = loadRefGenome(config.RefGenomeFile);
 
-        GeneDataCache = new EnsemblDataCache(cmd, config.RefGenVersion);
+        GeneDataCache = new EnsemblDataCache(configBuilder);
         loadGeneData();
 
         HlaCommon.populateGeneData(GeneDataCache.getChrGeneDataMap().get(hlaChromosome(config.RefGenVersion)));
