@@ -69,6 +69,7 @@ public class IsofoxConfig
     private static final String SINGLE_MAP_QUAL = "single_map_qual";
 
     public static final String GENE_ID_FILE = "gene_id_file";
+    public static final String GENE_ID_FILE_DESC = "Restricted set of Gene IDs in CSV file";
 
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
@@ -355,7 +356,7 @@ public class IsofoxConfig
 
         configBuilder.addFlag(FRAG_LENGTHS_BY_GENE, "Write fragment lengths by gene");
         configBuilder.addPath(BAM_FILE, true, "RNA BAM file location");
-        configBuilder.addPath(GENE_ID_FILE, false, "Optional CSV file of genes to analyse");
+        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
         configBuilder.addFlag(WRITE_EXON_DATA, "Exon region data");
         configBuilder.addFlag(WRITE_SPLICE_JUNC_DATA, "Write canonical splice junction counts");
         configBuilder.addFlag(WRITE_READ_DATA, "BAM read data");

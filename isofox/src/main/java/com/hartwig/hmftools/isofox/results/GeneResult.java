@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.results;
 
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
@@ -78,7 +78,7 @@ public class GeneResult
                 .add(FLD_GENE_SET_ID)
                 .add(FLD_SPLICED_FRAGS)
                 .add(FLD_UNSPLICED_FRAGS)
-                .add(FLD_TPM)
+                .add(FLD_ADJ_TPM)
                 .add("RawTPM")
                 .add("FitResiduals")
                 .add("LowMapQualFrags")

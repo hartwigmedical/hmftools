@@ -22,6 +22,7 @@ public class CohortGenePercentiles
 
     public static final String PAN_CANCER = "ALL";
     public static final String CANCER_TYPE_OTHER = "Other";
+    public static final double INVALID_VALUE = -1;
 
     public CohortGenePercentiles(final String cohortFile)
     {
@@ -98,7 +99,7 @@ public class CohortGenePercentiles
         final Map<String,Double> medianMap = mGeneMedians.get(geneId);
 
         if(medianMap == null || !medianMap.containsKey(cancerType))
-            return -1;
+            return INVALID_VALUE;
 
         return medianMap.get(cancerType);
     }
@@ -108,7 +109,7 @@ public class CohortGenePercentiles
         final Map<String,double[]> percentileMap = mGenePercentiles.get(geneId);
 
         if(percentileMap == null || !percentileMap.containsKey(cancerType))
-            return -1;
+            return INVALID_VALUE;
 
         return getPercentile(percentileMap.get(cancerType), sampleTpm);
     }

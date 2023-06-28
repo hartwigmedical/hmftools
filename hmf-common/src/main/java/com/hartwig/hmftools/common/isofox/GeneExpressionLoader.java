@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.isofox;
 
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
@@ -40,7 +40,7 @@ public final class GeneExpressionLoader
 
             final String geneId = items[fieldsIndexMap.get(FLD_GENE_ID)];
 
-            double tpm = Double.parseDouble(items[fieldsIndexMap.get(FLD_TPM)]);
+            double tpm = Double.parseDouble(items[fieldsIndexMap.get(FLD_ADJ_TPM)]);
 
             double medianCancer = cohortData.getTpmMedian(geneId, cancerType);
             double percentileCancer = cohortData.getTpmPercentile(geneId, cancerType, tpm);

@@ -135,11 +135,11 @@ public class SpliceVariantMatcher
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(SOMATIC_VARIANT_FILE, false, "File with somatic variants potentially affecting splicing");
-        configBuilder.addPath(SV_BREAKEND_FILE, true, "File with cached SV positions");
-        configBuilder.addPath(COHORT_ALT_SJ_FILE, true, "Cohort frequency for alt SJs");
+        configBuilder.addPath(SV_BREAKEND_FILE, false, "File with cached SV positions");
+        configBuilder.addPath(COHORT_ALT_SJ_FILE, false, "Cohort frequency for alt SJs");
         configBuilder.addFlag(WRITE_VARIANT_CACHE, "Write out somatic variants for subsequent non-DB loading");
         configBuilder.addFlag(INCLUDE_ALL_TRANSCRIPTS, "Consider all transcripts, not just canonical (default: false)");
-        configBuilder.addConfigItem(SPLICE_VARIANT_TYPES, true, "Types to include in analysis: NOVEL, DISRUPTION, empty=ALL");
+        configBuilder.addConfigItem(SPLICE_VARIANT_TYPES, false, "Types to include in analysis: NOVEL, DISRUPTION, empty=ALL");
     }
 
     public void processAltSpliceJunctions()

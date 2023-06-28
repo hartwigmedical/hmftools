@@ -93,12 +93,12 @@ public class UmrCohortAnalyser
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
-        configBuilder.addPath(GENE_EXPRESSION_FILE, true, "Gene expression file for cohort");
+        configBuilder.addPath(GENE_EXPRESSION_FILE, false, "Gene expression file for cohort");
         configBuilder.addFlag(COMBINE_FREQUENCIES, "Determine cohort frequencies for slice candidates");
         configBuilder.addFlag(GROUP_BY_SEQUENCE, "Form consensus soft-clip sequences");
         configBuilder.addFlag(WRITE_BLAT_FILE, "Write fasta file for BLAT consensue sequence search");
         configBuilder.addPath(SV_VCF_FILE, false, "Structural variant VCF");
-        configBuilder.addConfigItem(BLAT_RESULTS_FILE, true, "BLAT results file");
+        configBuilder.addConfigItem(BLAT_RESULTS_FILE, false, "BLAT results file");
     }
 
     public void processSampleFiles()

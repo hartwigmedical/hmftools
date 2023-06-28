@@ -133,7 +133,16 @@ public class SampleDataCache
         {
             // override if known
             testSample = findRefSampleData(sample.Id);
-            testSample.setRefSample();
+
+            if(testSample == null)
+            {
+                CUP_LOGGER.error("sample({} ct={}) marked as ref but not found", sample.Id, sample.cancerType());
+                return null;
+            }
+            else
+            {
+                testSample.setRefSample();
+            }
         }
 
         SampleDataList.add(testSample);

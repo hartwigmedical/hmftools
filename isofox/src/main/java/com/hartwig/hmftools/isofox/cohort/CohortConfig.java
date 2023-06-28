@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXPRESSION_DISTRIBUTION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.EXTERNAL_EXPRESSION_COMPARE;
@@ -41,6 +42,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
+import com.hartwig.hmftools.isofox.expression.cohort.PanelTpmNormalisation;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
@@ -216,11 +218,11 @@ public class CohortConfig
         configBuilder.addConfigItem(ANALYSIS_TYPES, true, "List of data types to load & process");
         addEnsemblDir(configBuilder);
         configBuilder.addConfigItem(REF_GENOME, REF_GENOME_CFG_DESC);
-        configBuilder.addPath(GENE_ID_FILE, true, "Optional CSV file of genes to analyse");
-        configBuilder.addPath(EXCLUDED_GENE_ID_FILE, true, "Optional CSV file of genes to ignore");
-        configBuilder.addConfigItem(OUTPUT_ID, true, OUTPUT_ID_DESC);
+        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
+        configBuilder.addPath(EXCLUDED_GENE_ID_FILE, false, "Optional CSV file of genes to ignore");
+        configBuilder.addConfigItem(OUTPUT_ID, false, OUTPUT_ID_DESC);
 
-        configBuilder.addConfigItem(SAMPLE_MUT_FILE, true, "Sample mutations by gene and cancer type");
+        configBuilder.addConfigItem(SAMPLE_MUT_FILE, false, "Sample mutations by gene and cancer type");
 
         AltSjCohortAnalyser.registerConfig(configBuilder);
         SpliceVariantMatcher.registerConfig(configBuilder);
@@ -231,6 +233,7 @@ public class CohortConfig
         AltSjCohortMatrix.registerConfig(configBuilder);
         RecurrentVariantFinder.registerConfig(configBuilder);
         UmrCohortAnalyser.registerConfig(configBuilder);
+        PanelTpmNormalisation.registerConfig(configBuilder);
 
         addDatabaseCmdLineArgs(configBuilder, false);
 

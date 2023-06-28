@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
@@ -211,7 +211,7 @@ public class ExternalExpressionCompare
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
-            int tpmIndex = fieldsMap.get(FLD_TPM);
+            int tpmIndex = fieldsMap.get(FLD_ADJ_TPM);
 
             Integer fittedFragsIndex = fieldsMap.get(FLD_FITTED_FRAGMENTS);
             Integer rawFragsIndex = fieldsMap.get(FLD_RAW_FRAGMENTS);

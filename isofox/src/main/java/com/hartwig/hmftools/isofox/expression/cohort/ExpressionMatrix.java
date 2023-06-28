@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox.expression.cohort;
 
 import static java.lang.Math.log;
 
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
@@ -94,7 +94,7 @@ public class ExpressionMatrix
             int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
 
             int transNameIndex = isTranscriptLevel ? fieldsMap.get(FLD_TRANS_NAME) : -1;
-            int tpmIndex = fieldsMap.get(FLD_TPM);
+            int tpmIndex = fieldsMap.get(FLD_ADJ_TPM);
 
             int itemIndex = 0;
             List<String> itemCache = isTranscriptLevel ? mTranscriptNames : mGeneIds;

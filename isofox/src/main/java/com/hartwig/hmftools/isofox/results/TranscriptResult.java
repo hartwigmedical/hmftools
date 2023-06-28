@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.results;
 
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_ID;
@@ -182,7 +182,7 @@ public class TranscriptResult
                 .add(FLD_EFFECTIVE_LENGTH)
                 .add(FLD_FITTED_FRAGMENTS)
                 .add(FLD_RAW_FRAGMENTS)
-                .add(FLD_TPM)
+                .add(FLD_ADJ_TPM)
                 .add("RawTPM")
                 .add("TranscriptBasesCovered")
                 .add("SJSupported")

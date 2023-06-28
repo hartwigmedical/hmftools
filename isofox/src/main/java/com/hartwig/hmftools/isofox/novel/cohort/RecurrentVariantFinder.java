@@ -36,7 +36,8 @@ public class RecurrentVariantFinder
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(SOMATIC_VARIANT_FILE, true, "Write out recurrent somatic variants for subsequent non-DB loading");
+        configBuilder.addConfigItem(
+                SOMATIC_VARIANT_FILE, false, "Write out recurrent somatic variants for subsequent non-DB loading");
     }
 
     public void processCohortSomaticVariants()

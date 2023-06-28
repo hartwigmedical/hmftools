@@ -23,6 +23,7 @@ import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortCompare;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionMatrix;
 import com.hartwig.hmftools.isofox.expression.cohort.ExternalExpressionCompare;
+import com.hartwig.hmftools.isofox.expression.cohort.PanelTpmNormalisation;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
@@ -135,6 +136,13 @@ public class CohortAnalyser
                     break;
                 }
 
+                case PANEL_TPM_NORMALISATION:
+                {
+                    PanelTpmNormalisation panelTpmNormalisation = new PanelTpmNormalisation(mConfig, mCmdLineArgs);
+                    panelTpmNormalisation.processSamples();
+                    break;
+                }
+
                 default:
                     break;
             }
@@ -186,6 +194,7 @@ public class CohortAnalyser
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.disableWarnOnRepeatedRegos();
         CohortConfig.registerConfig(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))

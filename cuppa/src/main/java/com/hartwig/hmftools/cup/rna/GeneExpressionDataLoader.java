@@ -84,7 +84,7 @@ public class GeneExpressionDataLoader
                 ++geneIndex;
             }
 
-            CUP_LOGGER.info("loaded RNA expression data for {} samples from{}", sampleTpmIndex.size(), filename);
+            CUP_LOGGER.info("loaded RNA expression data for {} samples from {}", sampleTpmIndex.size(), filename);
 
             return sampleGeneExpression;
         }

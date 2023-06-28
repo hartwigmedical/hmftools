@@ -66,13 +66,13 @@ public class ExpressionCohortConfig
         configBuilder.addConfigItem(EXTERNAL_SOURCE, "List of sources to compare fusions between");
         configBuilder.addFlag(WRITE_SAMPLE_GENE_DISTRIBUTION_DATA, "Write per-sample gene distribution data file");
         configBuilder.addPath(GENE_EXP_MATRIX_FILE, false, "Cohort gene expression file");
-        configBuilder.addPath(COHORT_TRANS_FILE, true, "Cohort transcript distribution file");
-        configBuilder.addPath(CANCER_TRANS_FILE, true, "Cancer transcript distribution file");
+        configBuilder.addPath(COHORT_TRANS_FILE, false, "Cohort transcript distribution file");
+        configBuilder.addPath(CANCER_TRANS_FILE, false, "Cancer transcript distribution file");
         configBuilder.addConfigItem(EXTERNAL_COMPARE_TRANSCRIPTS, false, "Compare at transcript level, other default is by gene");
         configBuilder.addDecimal(TPM_ROUNDING, "TPM/FPM rounding factor, base-10 integer (2 = 1%)", 2);
         configBuilder.addDecimal(TPM_THRESHOLD, "Only write transcripts with TPM greater than this", 0);
         configBuilder.addFlag(USE_LOG_TPM, "Convert TPM to log");
-        configBuilder.addConfigItem(CANCER_GENE_FILES, true, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
+        configBuilder.addConfigItem(CANCER_GENE_FILES, false, "Cancer gene distribution files, format: CancerType1-File1;CancerType2-File2");
         configBuilder.addFlag(DIST_BY_CANCER_TYPE, "Produce cancer gene distributions");
         configBuilder.addFlag(LOG_ELEVATED_DIST, "Log elevated gene distributions");
         configBuilder.addFlag(APPLY_TPM_WRITE_THRESHOLD, "Log elevated gene distributions");

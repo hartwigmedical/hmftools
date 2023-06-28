@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
+import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -37,6 +38,7 @@ public class DataLoaderConfig
 
     public static final String CANCER_TYPES_FILE = "cancer_types_file";
     public static final String GENE_DIST_FILE = "gene_distribution_file";
+    public static final String GENE_DIST_FILE_DESC = "Gene distribution for medians and percentile data";
     public static final String ALT_SJ_COHORT_FILE = "alt_sj_cohort_file";
 
     public static final String FLD_SAMPLE_ID = "SampleId";
@@ -202,9 +204,9 @@ public class DataLoaderConfig
         configBuilder.addPath(FUSION_DATA_DIRECTORY, false, "Fusion data directory, will use sample data dir if not present");
         configBuilder.addPath(STATISTICS_DATA_DIRECTORY, false, "Summary statistics data directory, will use sample data dir if not present");
         configBuilder.addPath(CANCER_TYPES_FILE, false, "Primary cancer types (otherwise will use 'Other' for sample");
-        configBuilder.addPath(GENE_DIST_FILE, false, "Gene distribution for medians and percentile data");
+        configBuilder.addPath(GENE_DIST_FILE, false, GENE_DIST_FILE_DESC);
         configBuilder.addPath(ALT_SJ_COHORT_FILE, false, "Alternate splice junction cohort file");
-        configBuilder.addPath(GENE_ID_FILE, false, "Optional CSV file of genes to analyse");
+        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
 
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);

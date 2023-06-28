@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_P
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
@@ -242,7 +242,7 @@ public class SampleLoaderTask implements Callable
                 if(!mConfig.processGeneId(geneId))
                     continue;
 
-                double tpm = Double.parseDouble(items[fieldsIndexMap.get(FLD_TPM)]);
+                double tpm = Double.parseDouble(items[fieldsIndexMap.get(FLD_ADJ_TPM)]);
 
                 double medianCancer = mGeneDistribution.getTpmMedian(geneId, cancerType);
                 double percentileCancer = mGeneDistribution.getTpmPercentile(geneId, cancerType, tpm);

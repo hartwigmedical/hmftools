@@ -32,10 +32,11 @@ public enum AnalysisType
     EXPRESSION_DISTRIBUTION, // produce pan-cancer and per-cancer median and percentile expression data
     GENE_EXPRESSION_COMPARE, // compare gene expression across 2 cohorts of samples
     GENE_EXPRESSION_MATRIX, // generates a matrix for gene expression data
+    PANEL_TPM_NORMALISATION, // normalises panel TPMs vs WGS
     TRANSCRIPT_EXPRESSION_MATRIX, // as above but for transcript expression
     EXTERNAL_EXPRESSION_COMPARE; // combine expression data from Isofox and another source
 
-    public static String getIsofoxFileId(AnalysisType type)
+    public static String getIsofoxFileId(final AnalysisType type)
     {
         switch(type)
         {
@@ -66,6 +67,7 @@ public enum AnalysisType
                 return PASS_FUSION_FILE_ID;
 
             case GENE_EXPRESSION_MATRIX:
+            case PANEL_TPM_NORMALISATION:
                 return GENE_EXPRESSION_FILE_ID;
 
             case TRANSCRIPT_EXPRESSION_MATRIX:

@@ -110,7 +110,7 @@ public class AltSjCohortMatrix
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(ALT_SJ_COHORT_SITES_FILE, true, "Alt-SJ reoccurring sites in cohort to filter by");
+        configBuilder.addPath(ALT_SJ_COHORT_SITES_FILE, false, "Alt-SJ reoccurring sites in cohort to filter by");
         configBuilder.addFlag(ALT_SJ_WRITE_CANCER_MATRIX, "Write cancer matrix for cohort alt-SJs");
         configBuilder.addFlag(ALT_SJ_WRITE_SAMPLE_MATRIX, "Write sample matrix for cohort alt-SJs");
         configBuilder.addInteger(ALT_SJ_MIN_FRAGS, "Min frag count supporting alt-SJs", 1);
