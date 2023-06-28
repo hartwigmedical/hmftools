@@ -87,7 +87,7 @@ public class Isofox
 
         mExpectedCountsCache = mConfig.ExpCountsFile != null || mConfig.applyGcBiasAdjust() ? new ExpectedCountsCache(mConfig) : null;
 
-        mGcTranscriptCalcs = mConfig.applyGcBiasAdjust() ? new GcTranscriptCalculator(mConfig, mGeneTransCache) : null;
+        mGcTranscriptCalcs = mConfig.applyGcBiasAdjust() ? new GcTranscriptCalculator(mConfig) : null;
 
         mFusionTaskManager = mConfig.runFunction(FUSIONS) ? new FusionTaskManager(mConfig, mGeneTransCache) : null;
 

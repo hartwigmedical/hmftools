@@ -54,7 +54,7 @@ bam_file | Input BAM file - must be sorted, preferably with duplicates marked an
 ref_genome | Reference genome fasta file
 ref_genome_version | 37 (default) or 38
 ensembl_data_dir | Directory for Ensembl reference files - see instructions for generation or access below.
-functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;ALT_SPLICE_JUNCTIONS;FUSIONS;RETAINED_INTRONS'. Other values: EXPECTED_GC_COUNTS, EXPECTED_TRANS_COUNTS, STATISTICS and READ_COUNTS.
+functions | List separated by ';', default is 'TRANSCRIPT_COUNTS;ALT_SPLICE_JUNCTIONS;FUSIONS;RETAINED_INTRONS'. Other values: STATISTICS and READ_COUNTS.
 
 ### Optional
 Argument | Description
@@ -102,7 +102,6 @@ write_gc_data | Generates file 'sample_id.isf.gc_ratio_data.csv' with distributi
 write_frag_lengths | Generates file 'sample_id.isf.frag_length.csv' with distribution of fragment lengths
 frag_length_by_gene | Generates file 'sample_id.isf.frag_length_by_gene.csv' with distribution of fragment lengths per gene
 write_trans_combo_data | Generates file 'sample.isf.category_counts.csv' with fragment counts per transcript & gene grouping
-write_exp_rates | Generates file 'sample_id.isf.exp_rates.csv' with expected counts per transcript and gene
 
 ### Logging and Debug
 Argument | Description
@@ -160,33 +159,23 @@ To produce a filtered (passing) fusion file, additionally pass a cohort PON file
 A cohort file generated from ~2500 HMF samples is available from the HMF Resources page (see link above).
 
 ### Generating Transcript Expression and GC Ratio Cached Files
-To generate the cached transcript expression file, use the function EXPECTED_TRANS_COUNTS, passing in the same fragment length values used for normal transcript expression.
+Transcript expression calculations rely on two generated reference data files which are available for each ref-genome version and for common RNA read lengths - see public HMF resources above.
+
+To generate these files, run the following command:
 
 ```
-java -jar isofox.jar 
-    -functions EXPECTED_TRANS_COUNTS
-    -output_dir /path_to_output_data/ 
-    -ensembl_data_dir /path_ensembl_data_cache_files/ 
-    -read_length 151 
-    -exp_rate_frag_lengths "50-0;75-0;100-0;125-0;150-0;200-0;250-0;300-0;400-0;550-0" 
-    -threads 10 
-```
-
-The output file is approximately 100MB.
-
-To generate the expected GCrRatio counts file, use the EXPECTED_GC_COUNTS function with the call:
-
-```
-java -jar isofox.jar 
-    -functions EXPECTED_GC_COUNTS
-    -output_dir /path_to_output_data/ 
-    -ref_genome /path_to_ref_files/ref-genome.fasta 
-    -ensembl_data_dir /path_ensembl_data_cache_files/ 
+java -cp isofox.jar com.hartwig.hmftools.isofox.refdata.GenerateReferenceData 
+    -expected_counts
+    -expected_gc_ratios 
+    -ensembl_data_dir /path_ensembl_data_cache_files/
+    -ref_genome /path_to_ref_files/ref-genome.fasta/ 
+    -ref_genome_version 37 
     -read_length 151 
     -threads 10 
+    -output_dir /isofox_ref_data/
 ```
 
-The output file is approximately 120MB.
+The output files are approximately 100MB.
  
 ## Algorithm
 

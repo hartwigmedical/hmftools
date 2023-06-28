@@ -10,16 +10,15 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 
-public class ExpressionCacheTask implements Callable
+public class ChrExpectedCountsTask implements Callable
 {
     private final RefDataConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;
 
-    private final ExpectedRatesGenerator mExpRatesGenerator;
+    private final ExpectedCountsGenerator mExpRatesGenerator;
 
     private String mChromosome;
     private final List<GeneData> mGeneDataList;
@@ -28,9 +27,7 @@ public class ExpressionCacheTask implements Callable
     private int mCollectionId;
     private int mGenesProcessed;
 
-    private final PerformanceCounter mPerfCounter;
-
-    public ExpressionCacheTask(final RefDataConfig config, final EnsemblDataCache ensemblDataCache, final RefDataWriter writer)
+    public ChrExpectedCountsTask(final RefDataConfig config, final EnsemblDataCache ensemblDataCache, final RefDataWriter writer)
     {
         mConfig = config;
         mGeneTransCache = ensemblDataCache;
@@ -39,9 +36,7 @@ public class ExpressionCacheTask implements Callable
         mChromosome = "";
         mCurrentGeneIndex = 0;
 
-        mExpRatesGenerator = new ExpectedRatesGenerator(mConfig, writer);
-
-        mPerfCounter = new PerformanceCounter("ExpressionCacheGeneration");
+        mExpRatesGenerator = new ExpectedCountsGenerator(mConfig, writer);
     }
 
     public void initialise(final String chromosome, final List<GeneData> geneDataList)
@@ -55,9 +50,8 @@ public class ExpressionCacheTask implements Callable
     @Override
     public Long call()
     {
-        mPerfCounter.start();
         generateExpectedCounts();
-        mPerfCounter.stop();
+        System.gc();
         return (long)0;
     }
 
@@ -89,15 +83,15 @@ public class ExpressionCacheTask implements Callable
 
             mExpRatesGenerator.generateExpectedRates(geneCollection);
 
-            ISF_LOGGER.debug("chr({}) gene({}) processed({} of {})",
+            ISF_LOGGER.trace("chr({}) gene({}) processed({} of {})",
                     mChromosome, geneCollection.geneNames(10), mCurrentGeneIndex, mGeneDataList.size());
 
             ++mGenesProcessed;
 
-            if (mGenesProcessed >= nextLogCount)
+            if(mGenesProcessed >= nextLogCount)
             {
                 nextLogCount += 100;
-                ISF_LOGGER.info("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
+                ISF_LOGGER.debug("chr({}) processed {} of {} genes", mChromosome, mGenesProcessed, mGeneDataList.size());
             }
         }
 

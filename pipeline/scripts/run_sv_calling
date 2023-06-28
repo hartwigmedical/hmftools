@@ -58,7 +58,7 @@ samtools index -@ ${threads} ${sv_prep_tumor_sorted_bam}
 
 if [ "${reference_id}" != "none" ]; then
 
-  tumor_junction_file=${output_dir}/${tumor_id}.sv_prep.junctions.csv
+  tumor_junction_file=${output_dir}/${tumor_id}.sv_prep.junctions.tsv
 
   args="-sample ${reference_id} \
     -bam_file ${reference_bam} \

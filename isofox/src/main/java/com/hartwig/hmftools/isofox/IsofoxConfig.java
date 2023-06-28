@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.isofox;
 
-import static java.lang.Math.max;
-
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -30,7 +28,9 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.RETAINED_INTRONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.STATISTICS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.FL_LENGTH;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.ER_FRAGMENT_LENGTHS;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.ER_FRAGMENT_LENGTHS_DESC;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.loadFragmentSizeConfig;
 import static com.hartwig.hmftools.isofox.unmapped.UmrCohortFrequency.UMR_COHORT_FREQUENCY_FILE;
 
 import java.io.File;
@@ -45,7 +45,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.common.GeneRegionFilters;
-import com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon;
 import com.hartwig.hmftools.isofox.fusion.FusionConfig;
 
 import org.apache.logging.log4j.LogManager;
@@ -80,7 +79,6 @@ public class IsofoxConfig
     // expected expression config
     private static final String EXP_COUNTS_FILE = "exp_counts_file";
     private static final String EXP_GC_RATIOS_FILE = "exp_gc_ratios_file";
-    public static final String ER_FRAGMENT_LENGTHS = "exp_rate_frag_lengths";
     private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
 
     // debug and performance
@@ -118,12 +116,11 @@ public class IsofoxConfig
     public final boolean ApplyFragmentLengthAdjust;
     public int ReadLength;
     public final List<FragmentSize> FragmentSizeData;
-    public final boolean WriteTransComboData;
 
+    public final boolean WriteTransComboData;
     public final boolean WriteFragmentLengths;
     public final int FragmentLengthSamplingCount;
     public final boolean WriteFragmentLengthsByGene;
-
     public final boolean WriteGcData;
 
     public final FusionConfig Fusions;
@@ -213,19 +210,7 @@ public class IsofoxConfig
                 configBuilder.getInteger(FRAG_LENGTH_MIN_COUNT) : defaultFragLengthSamplingCount;
 
         ReadLength = configBuilder.getInteger(READ_LENGTH);
-        FragmentSizeData = Lists.newArrayList();
-
-        if(configBuilder.hasValue(ER_FRAGMENT_LENGTHS))
-        {
-            String[] fragLengths = configBuilder.getValue(ER_FRAGMENT_LENGTHS).split(ITEM_DELIM);
-            for(int i = 0; i < fragLengths.length; ++i)
-            {
-                String[] flItem = fragLengths[i].split("-");
-                int fragLength = Integer.parseInt(flItem[FL_LENGTH]);
-                int fragFrequency = max(Integer.parseInt(flItem[ExpectedRatesCommon.FL_FREQUENCY]), 1);
-                FragmentSizeData.add(new FragmentSize(fragLength, fragFrequency));
-            }
-        }
+        FragmentSizeData = loadFragmentSizeConfig(configBuilder);
 
         Fusions = Functions.contains(FUSIONS) ? new FusionConfig(configBuilder) : new FusionConfig();
 
@@ -386,10 +371,7 @@ public class IsofoxConfig
         configBuilder.addInteger(READ_LENGTH, "Sample sequencing read length, if 0 then is inferred from reads", 0);
         configBuilder.addInteger(SINGLE_MAP_QUAL, "Map quality for reads mapped to a single location", DEFAULT_SINGLE_MAP_QUALITY);
 
-        configBuilder.addConfigItem(
-                ER_FRAGMENT_LENGTHS, false,
-                "Fragment sizes and weights for expected transcript calcs (format: length1-freq1;length3-freq2 eg 100-10;150-20) in integer terms",
-                DEFAULT_EXPECTED_RATE_LENGTHS);
+        configBuilder.addConfigItem(ER_FRAGMENT_LENGTHS, false, ER_FRAGMENT_LENGTHS_DESC, DEFAULT_EXPECTED_RATE_LENGTHS);
 
         configBuilder.addFlag(RUN_VALIDATIONS, "Run auto-validations");
         configBuilder.addFlag(PERF_CHECKS, "Run performance logging routines");

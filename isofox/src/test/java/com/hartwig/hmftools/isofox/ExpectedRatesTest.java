@@ -29,7 +29,7 @@ import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.isofox.refdata.ExpectedRatesGenerator;
+import com.hartwig.hmftools.isofox.refdata.ExpectedCountsGenerator;
 import com.hartwig.hmftools.isofox.refdata.RefDataConfig;
 
 import org.apache.logging.log4j.Level;
@@ -38,13 +38,13 @@ import org.junit.Test;
 
 public class ExpectedRatesTest
 {
-    private static ExpectedRatesGenerator fromConfig(final int readLength, final int fragmentLength)
+    private static ExpectedCountsGenerator fromConfig(final int readLength, final int fragmentLength)
     {
         RefDataConfig config = new RefDataConfig(readLength);
         config.FragmentSizeData.add(new FragmentSize(fragmentLength, 1));
-        ExpectedRatesGenerator expectedRatesGenerator = new ExpectedRatesGenerator(config, null);
-        expectedRatesGenerator.setFragmentLengthData(fragmentLength, 1);
-        return expectedRatesGenerator;
+        ExpectedCountsGenerator expectedCountsGenerator = new ExpectedCountsGenerator(config, null);
+        expectedCountsGenerator.setFragmentLengthData(fragmentLength, 1);
+        return expectedCountsGenerator;
     }
 
     @Test
@@ -52,7 +52,7 @@ public class ExpectedRatesTest
     {
         int fragmentLength = 100;
         int readLength = 20;
-        ExpectedRatesGenerator expRatesCalc = fromConfig(readLength, fragmentLength);
+        ExpectedCountsGenerator expRatesCalc = fromConfig(readLength, fragmentLength);
 
         int transId1 = 1;
         TranscriptData transData = new TranscriptData(transId1, "TRANS01", GENE_NAME_1, true, (byte)1,
@@ -288,7 +288,7 @@ public class ExpectedRatesTest
     public void testSingleTranscriptCounts()
     {
         int fragmentLength = 30;
-        ExpectedRatesGenerator expRatesCalc = fromConfig(10, fragmentLength);
+        ExpectedCountsGenerator expRatesCalc = fromConfig(10, fragmentLength);
 
         String geneId = "GENE01";
 
@@ -356,7 +356,7 @@ public class ExpectedRatesTest
     public void testMultipleTranscriptCounts()
     {
         int fragmentLength = 30;
-        ExpectedRatesGenerator expRatesCalc = fromConfig(10, fragmentLength);
+        ExpectedCountsGenerator expRatesCalc = fromConfig(10, fragmentLength);
 
         String geneId = "GENE01";
 
@@ -467,7 +467,7 @@ public class ExpectedRatesTest
     public void testSingleExonicRegions()
     {
         int fragmentLength = 30;
-        ExpectedRatesGenerator expRatesCalc = fromConfig(10, fragmentLength);
+        ExpectedCountsGenerator expRatesCalc = fromConfig(10, fragmentLength);
 
         String geneId = "GENE01";
 
@@ -554,7 +554,7 @@ public class ExpectedRatesTest
     public void testOverlappingGeneCounts()
     {
         int fragmentLength = 30;
-        ExpectedRatesGenerator expRatesCalc = fromConfig(10, fragmentLength);
+        ExpectedCountsGenerator expRatesCalc = fromConfig(10, fragmentLength);
 
 
         String geneId1 = "GENE01";

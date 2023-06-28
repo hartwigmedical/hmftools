@@ -40,6 +40,7 @@ public class GenerateReferenceData
         mEnsemblDataCache.load(false);
 
         long startTime = System.currentTimeMillis();
+
         Map<String,List<GeneData>> chrGeneMap = mEnsemblDataCache.getChrGeneDataMap();
 
         // first execute non-core tasks
@@ -64,12 +65,12 @@ public class GenerateReferenceData
     {
         ISF_LOGGER.info("generating expected transcript counts cache");
 
-        final List<ExpressionCacheTask> taskList = Lists.newArrayList();
+        final List<ChrExpectedCountsTask> taskList = Lists.newArrayList();
         final List<Callable> callableList = Lists.newArrayList();
 
         for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {
-            ExpressionCacheTask expressionTask = new ExpressionCacheTask(mConfig, mEnsemblDataCache, mWriter);
+            ChrExpectedCountsTask expressionTask = new ChrExpectedCountsTask(mConfig, mEnsemblDataCache, mWriter);
             expressionTask.initialise(entry.getKey(), entry.getValue());
             taskList.add(expressionTask);
             callableList.add(expressionTask);
@@ -82,27 +83,19 @@ public class GenerateReferenceData
     {
         ISF_LOGGER.info("generating GC counts cache");
 
-        /*
-        final List<GcTranscriptCalculator> taskList = Lists.newArrayList();
+        final List<ExpectedGcRatiosGenerator> taskList = Lists.newArrayList();
         final List<Callable> callableList = Lists.newArrayList();
-
-        mGcTranscriptCalcs.initialiseWriter();
 
         for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {
-            GcTranscriptCalculator gcCalcs = new GcTranscriptCalculator(mConfig, mGeneTransCache);
-            gcCalcs.initialise(entry.getKey(), entry.getValue(), mGcTranscriptCalcs.getWriter());
+            ExpectedGcRatiosGenerator gcCalcs = new ExpectedGcRatiosGenerator(
+                    mConfig, mEnsemblDataCache, entry.getKey(), entry.getValue(), mWriter.getReadGcRatioWriter());
+
             taskList.add(gcCalcs);
             callableList.add(gcCalcs);
         }
 
-        boolean taskStatus = TaskExecutor.executeTasks(callableList, mConfig.Threads);
-        mGcTranscriptCalcs.close();
-        return taskStatus;
-
-         */
-
-        return false;
+        return TaskExecutor.executeTasks(callableList, mConfig.Threads);
     }
 
     public static void main(@NotNull final String[] args)
