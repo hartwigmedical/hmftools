@@ -31,7 +31,6 @@ import static com.hartwig.hmftools.isofox.IsofoxFunction.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.ER_FRAGMENT_LENGTHS;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.ER_FRAGMENT_LENGTHS_DESC;
 import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.loadFragmentSizeConfig;
-import static com.hartwig.hmftools.isofox.unmapped.UmrCohortFrequency.UMR_COHORT_FREQUENCY_FILE;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -57,30 +56,30 @@ public class IsofoxConfig
 
     private static final String CANONICAL_ONLY = "canonical_only";
 
-    private static final String WRITE_EXON_DATA = "write_exon_data";
-    private static final String WRITE_READ_DATA = "write_read_data";
-    private static final String WRITE_SPLICE_SITE_DATA = "write_splice_sites";
-    private static final String WRITE_SPLICE_JUNC_DATA = "write_splice_junctions";
-
     private static final String BAM_FILE = "bam_file";
     public static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     public static final String READ_LENGTH = "read_length";
-    private static final String DROP_DUPLICATES = "drop_dups";
-    private static final String SINGLE_MAP_QUAL = "single_map_qual";
 
     public static final String GENE_ID_FILE = "gene_id_file";
     public static final String GENE_ID_FILE_DESC = "Restricted set of Gene IDs in CSV file";
 
+    private static final String WRITE_EXON_DATA = "write_exon_data";
+    private static final String WRITE_READ_DATA = "write_read_data";
+    private static final String WRITE_SPLICE_SITE_DATA = "write_splice_sites";
+    private static final String WRITE_SPLICE_JUNC_DATA = "write_splice_junctions";
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String FRAG_LENGTH_MIN_COUNT = "frag_length_min_count";
     private static final String FRAG_LENGTHS_BY_GENE = "frag_length_by_gene";
-
     private static final String WRITE_GC_DATA = "write_gc_data";
+    private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
 
     // expected expression config
     private static final String EXP_COUNTS_FILE = "exp_counts_file";
     private static final String EXP_GC_RATIOS_FILE = "exp_gc_ratios_file";
-    private static final String WRITE_TRANS_COMBO_DATA = "write_trans_combo_data";
+    private static final String PANEL_TPM_NORM_FILE = "panel_tpm_norm_file";
+
+    private static final String DROP_DUPLICATES = "drop_dups";
+    private static final String SINGLE_MAP_QUAL = "single_map_qual";
 
     // debug and performance
     private static final String GENE_READ_LIMIT = "gene_read_limit";
@@ -101,23 +100,22 @@ public class IsofoxConfig
     public final RefGenomeVersion RefGenVersion;
     public final RefGenomeInterface RefGenome;
     public final GeneRegionFilters Filters;
-    public final int GeneReadLimit;
+    public int ReadLength;
     public int MaxFragmentLength;
     public final boolean DropDuplicates;
+
+    // expression
+    public final String ExpCountsFile;
+    public final String ExpGcRatiosFile;
+    public final String PanelTpmNormFile;
+    public final String NeoDir;
+    public final boolean ApplyFragmentLengthAdjust;
+    public final List<FragmentSize> FragmentSizeData;
 
     public final boolean WriteExonData;
     public final boolean WriteSpliceJunctions;
     public final boolean WriteReadData;
     public final boolean WriteSpliceSiteData;
-
-    public final String ExpCountsFile;
-    public final String NeoDir;
-    public final String UnmappedCohortFreqFile;
-    public final String ExpGcRatiosFile;
-    public final boolean ApplyFragmentLengthAdjust;
-    public int ReadLength;
-    public final List<FragmentSize> FragmentSizeData;
-
     public final boolean WriteTransComboData;
     public final boolean WriteFragmentLengths;
     public final int FragmentLengthSamplingCount;
@@ -127,6 +125,7 @@ public class IsofoxConfig
     public final FusionConfig Fusions;
 
     // debugging and performance options
+    public final int GeneReadLimit;
     public final boolean RunValidations;
     public final boolean RunPerfChecks;
     public final int Threads;
@@ -202,7 +201,7 @@ public class IsofoxConfig
         }
 
         NeoDir = configBuilder.getValue(NEO_DIR_CFG);
-        UnmappedCohortFreqFile = configBuilder.getValue(UMR_COHORT_FREQUENCY_FILE);
+        PanelTpmNormFile = configBuilder.getValue(PANEL_TPM_NORM_FILE);
 
         ApplyFragmentLengthAdjust = ExpCountsFile != null;
 
@@ -315,7 +314,7 @@ public class IsofoxConfig
         ExpCountsFile = null;
         ExpGcRatiosFile = null;
         NeoDir = null;
-        UnmappedCohortFreqFile = null;
+        PanelTpmNormFile = null;
 
         WriteExonData = false;
         WriteSpliceJunctions = false;
@@ -368,7 +367,7 @@ public class IsofoxConfig
         configBuilder.addPath(EXP_COUNTS_FILE, false, "File with generated expected expression rates per transcript");
         configBuilder.addPath(EXP_GC_RATIOS_FILE, false, "File with generated expected GC ratios per transcript");
         configBuilder.addPath(NEO_DIR_CFG, false, NEO_DIR_DESC);
-        configBuilder.addPath(UMR_COHORT_FREQUENCY_FILE, false, "Unmapped reads cohort frequency file");
+        configBuilder.addPath(PANEL_TPM_NORM_FILE, false, "Panel TPM normalisation file");
         configBuilder.addInteger(READ_LENGTH, "Sample sequencing read length, if 0 then is inferred from reads", 0);
         configBuilder.addInteger(SINGLE_MAP_QUAL, "Map quality for reads mapped to a single location", DEFAULT_SINGLE_MAP_QUALITY);
 

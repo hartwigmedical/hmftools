@@ -505,8 +505,8 @@ public class ChromosomeTaskExecutor implements Callable
             for(final TranscriptResult transResult : geneCollectionResult.TranscriptResults)
             {
                 final GeneData geneData = geneCollectionResult.GeneResults.stream()
-                        .filter(x -> x.GeneData.GeneId.equals(transResult.Trans.GeneId))
-                        .map(x -> x.GeneData)
+                        .filter(x -> x.Gene.GeneId.equals(transResult.Trans.GeneId))
+                        .map(x -> x.Gene)
                         .findFirst().orElse(null);
 
                 mResultsWriter.writeTranscriptResults(geneData, transResult);

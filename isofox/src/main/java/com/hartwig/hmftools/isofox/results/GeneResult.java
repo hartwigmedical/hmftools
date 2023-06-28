@@ -16,7 +16,7 @@ import com.hartwig.hmftools.isofox.common.GeneReadData;
 
 public class GeneResult
 {
-    public final com.hartwig.hmftools.common.gene.GeneData GeneData;
+    public final com.hartwig.hmftools.common.gene.GeneData Gene;
     public final String CollectionId;
     public final int IntronicLength;
     public final int TransCount;
@@ -30,11 +30,11 @@ public class GeneResult
 
     public GeneResult(final GeneCollection geneCollection, final GeneReadData geneReadData)
     {
-        GeneData = geneReadData.GeneData;
+        Gene = geneReadData.GeneData;
         CollectionId = geneCollection.chrId();
 
         long exonicLength = geneReadData.calcExonicRegionLength();
-        IntronicLength = (int)(GeneData.length() - exonicLength);
+        IntronicLength = (int)(Gene.length() - exonicLength);
         TransCount = geneReadData.getTranscripts().size();
 
         mFitResiduals = 0;
@@ -57,14 +57,14 @@ public class GeneResult
         mAdjustedTpm = adjusted;
     }
 
+    public void applyTpmAdjustFactor(double factor) { mAdjustedTpm *= factor; }
+
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
     public double getSplicedAlloc() { return mSplicedAlloc; }
     public double getUnsplicedAlloc() { return mUnsplicedAlloc; }
 
     public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
-
-    public static final String FLD_SUPPORTING_TRANS = "SupportingTrans";
 
     public static String csvHeader()
     {
@@ -88,10 +88,10 @@ public class GeneResult
     public String toCsv()
     {
         return new StringJoiner(DELIMITER)
-                .add(GeneData.GeneId)
-                .add(GeneData.GeneName)
-                .add(GeneData.Chromosome)
-                .add(String.valueOf(GeneData.length()))
+                .add(Gene.GeneId)
+                .add(Gene.GeneName)
+                .add(Gene.Chromosome)
+                .add(String.valueOf(Gene.length()))
                 .add(String.valueOf(IntronicLength))
                 .add(String.valueOf(TransCount))
                 .add(CollectionId)

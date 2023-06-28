@@ -72,9 +72,9 @@ public class GeneCollectionSummary
 
         for(final GeneResult geneResult : GeneResults)
         {
-            Double geneFitAllocation = geneSpliceTotals.get(geneResult.GeneData.GeneId);
+            Double geneFitAllocation = geneSpliceTotals.get(geneResult.Gene.GeneId);
             geneResult.setFitAllocation(
-                    geneFitAllocation != null ? geneFitAllocation : 0, getFitAllocation(geneResult.GeneData.GeneId));
+                    geneFitAllocation != null ? geneFitAllocation : 0, getFitAllocation(geneResult.Gene.GeneId));
         }
     }
 
@@ -87,11 +87,11 @@ public class GeneCollectionSummary
         else
         {
             // divvy up residuals between the genes according to their length
-            long totalGeneLength = GeneResults.stream().mapToLong(x -> x.GeneData.length()).sum();
+            long totalGeneLength = GeneResults.stream().mapToLong(x -> x.Gene.length()).sum();
 
             for (final GeneResult geneResult : GeneResults)
             {
-                double residualsFraction = geneResult.GeneData.length() / (double) totalGeneLength * mFitResiduals;
+                double residualsFraction = geneResult.Gene.length() / (double) totalGeneLength * mFitResiduals;
                 geneResult.setFitResiduals(residualsFraction);
             }
         }

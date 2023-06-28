@@ -46,6 +46,7 @@ import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
 import com.hartwig.hmftools.isofox.expression.GeneCollectionSummary;
+import com.hartwig.hmftools.isofox.expression.PanelTpmNormaliser;
 import com.hartwig.hmftools.isofox.fusion.ChimericStats;
 import com.hartwig.hmftools.isofox.fusion.FusionTaskManager;
 import com.hartwig.hmftools.isofox.neo.NeoEpitopeReader;
@@ -276,11 +277,15 @@ public class Isofox
 
         double[] tpmFactors = calcTpmFactors(geneSummaryData, mConfig.Filters.EnrichedGeneIds);
 
+        PanelTpmNormaliser panelTpmNormaliser = new PanelTpmNormaliser(mConfig.PanelTpmNormFile);
+
         int spliceGeneCount = 0;
 
         for(ChromosomeTaskExecutor chrTask : chrTasks)
         {
             setTranscriptsPerMillion(chrTask.getGeneCollectionSummaryData(), tpmFactors);
+
+            panelTpmNormaliser.applyNormalisation(chrTask.getGeneCollectionSummaryData());
 
             spliceGeneCount += chrTask.getGeneCollectionSummaryData().stream().mapToInt(x -> x.spliceGenesCount()).sum();
 

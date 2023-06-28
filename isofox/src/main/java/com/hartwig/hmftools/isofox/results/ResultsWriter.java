@@ -76,7 +76,6 @@ public class ResultsWriter
     private BufferedWriter mCategoryCountsWriter;
 
     // controlled by other components but instantiated once for output synchronosation
-    private BufferedWriter mExpRateWriter;
     private BufferedWriter mReadDataWriter;
     private BufferedWriter mAltSpliceJunctionWriter;
     private BufferedWriter mGeneFragLengthWriter;
@@ -97,7 +96,6 @@ public class ResultsWriter
         mExonDataWriter = null;
         mSpliceJunctionWriter = null;
         mCategoryCountsWriter = null;
-        mExpRateWriter = null;
         mReadDataWriter = null;
         mAltSpliceJunctionWriter = null;
         mGeneFragLengthWriter = null;
@@ -123,7 +121,6 @@ public class ResultsWriter
         closeBufferedWriter(mExonDataWriter);
         closeBufferedWriter(mSpliceJunctionWriter);
         closeBufferedWriter(mCategoryCountsWriter);
-        closeBufferedWriter(mExpRateWriter);
         closeBufferedWriter(mReadDataWriter);
         closeBufferedWriter(mAltSpliceJunctionWriter);
         closeBufferedWriter(mGeneFragLengthWriter);
@@ -171,7 +168,6 @@ public class ResultsWriter
             mUnamppedReadsWriter = UmrFinder.createWriter(mConfig);
     }
 
-    public BufferedWriter getExpRatesWriter() { return mExpRateWriter;}
     public BufferedWriter getCategoryCountsWriter() { return mCategoryCountsWriter;}
     public BufferedWriter getAltSpliceJunctionWriter() { return mAltSpliceJunctionWriter;}
     public BufferedWriter getRetainedIntronWriter() { return mRetainedIntronWriter;}
@@ -496,5 +492,4 @@ public class ResultsWriter
             TranscriptNames = Lists.newArrayList();
         }
     }
-
 }

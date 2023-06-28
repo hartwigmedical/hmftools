@@ -32,7 +32,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
-public class PanelTpmNormalisation
+public class GeneratePanelNormalisation
 {
     private final CohortConfig mConfig;
 
@@ -40,9 +40,11 @@ public class PanelTpmNormalisation
     private final List<String> mGeneNames;
     private final List<Double> mWgsCohortMedians;
 
+    public static final String FLD_TPM_ADJUST_FACTOR = "AdjustmentFactor";
+
     private static final double MIN_WGS_MEDIAN_TPM = 0.01;
 
-    public PanelTpmNormalisation(final CohortConfig config, final ConfigBuilder configBuilder)
+    public GeneratePanelNormalisation(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
 
@@ -135,14 +137,14 @@ public class PanelTpmNormalisation
 
             for(final String data : lines)
             {
-                final String[] items = data.split(DELIMITER);
+                final String[] values = data.split(DELIMITER);
 
-                final String geneId = items[geneIdIndex];
+                final String geneId = values[geneIdIndex];
 
                 if(!mGeneIds.contains(geneId))
                     continue;
 
-                double tpm = Double.parseDouble(items[tpmIndex]);
+                double tpm = Double.parseDouble(values[tpmIndex]);
 
                 List<Double> tpms = geneTpms.get(geneId);
 
@@ -170,7 +172,8 @@ public class PanelTpmNormalisation
 
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("GeneId,GeneName,WgsMedian,PanelMedian,AdjustmentFactor");
+            writer.write("GeneId,GeneName,WgsMedian,PanelMedian," + FLD_TPM_ADJUST_FACTOR);
+            writer.newLine();
 
             for(int i = 0; i < mGeneIds.size(); ++i)
             {

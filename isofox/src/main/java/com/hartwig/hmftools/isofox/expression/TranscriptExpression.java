@@ -239,14 +239,13 @@ public class TranscriptExpression
         return results;
     }
 
-    public static void setTranscriptsPerMillion(
-            final List<GeneCollectionSummary> geneSummaryData, double[] tmpFactors)
+    public static void setTranscriptsPerMillion(final List<GeneCollectionSummary> allGeneSummaries, double[] tmpFactors)
     {
-        for(final GeneCollectionSummary summaryData : geneSummaryData)
+        for(final GeneCollectionSummary geneSummary : allGeneSummaries)
         {
             Map<String,double[]> geneTPMs = Maps.newHashMap();
 
-            for(TranscriptResult transResult : summaryData.TranscriptResults)
+            for(TranscriptResult transResult : geneSummary.TranscriptResults)
             {
                 double fragsPerKb = transResult.fragmentsPerKb();
 
@@ -266,9 +265,9 @@ public class TranscriptExpression
                 }
             }
 
-            for(GeneResult geneResult : summaryData.GeneResults)
+            for(GeneResult geneResult : geneSummary.GeneResults)
             {
-                final double[] geneTpm = geneTPMs.get(geneResult.GeneData.GeneId);
+                final double[] geneTpm = geneTPMs.get(geneResult.Gene.GeneId);
                 geneResult.setTPM(geneTpm[RAW_TPM], geneTpm[ADJUSTED_TPM]);
             }
         }

@@ -42,7 +42,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortConfig;
 import com.hartwig.hmftools.isofox.expression.cohort.ExpressionCohortDistribution;
-import com.hartwig.hmftools.isofox.expression.cohort.PanelTpmNormalisation;
+import com.hartwig.hmftools.isofox.expression.cohort.GeneratePanelNormalisation;
 import com.hartwig.hmftools.isofox.fusion.cohort.FusionCohortConfig;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortMatrix;
@@ -233,7 +233,7 @@ public class CohortConfig
         AltSjCohortMatrix.registerConfig(configBuilder);
         RecurrentVariantFinder.registerConfig(configBuilder);
         UmrCohortAnalyser.registerConfig(configBuilder);
-        PanelTpmNormalisation.registerConfig(configBuilder);
+        GeneratePanelNormalisation.registerConfig(configBuilder);
 
         addDatabaseCmdLineArgs(configBuilder, false);
 
