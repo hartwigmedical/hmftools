@@ -2,7 +2,7 @@
 
 LILAC is a WGS tool to determine the HLA Class I types for the germline of each patient as well as determining the status of each of those alleles in the tumor including complete loss of one or more alleles, allele specific somatic mutations and allelic imbalance.  Lilac is described in this preprint(https://www.biorxiv.org/content/10.1101/2022.02.23.481444v1.full.pdf).
 
-LILAC uses the IMGT/HLA database (https://www.ebi.ac.uk/ipd/imgt/hla/download.html) as a reference set of Human MHC class I alleles, and performs typing to 4-digits, which means it uniquely identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences (8 digits).
+LILAC uses the IMGT/HLA database (https://www.ebi.ac.uk/ipd/imgt/hla/download) as a reference set of Human MHC class I alleles, and performs typing to 4-digits, which means it uniquely identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences (8 digits).
 
 There are many existing tools which can perform HLA class 1 typing notably Polysolver, xHLA and Optitype. LILAC offers a number of potential advantages including:
 - Estimated 99.8% accuracy on 30x - 100x WGS, with improved accuracy particularly for rare alleles.
