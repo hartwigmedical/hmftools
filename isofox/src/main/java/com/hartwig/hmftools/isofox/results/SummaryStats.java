@@ -73,7 +73,7 @@ public class SummaryStats
                 return null;
             }
 
-            return RnaStatistics.fromCsv(lines);
+            return RnaStatistics.fromLines(lines);
         }
         catch(IOException e)
         {

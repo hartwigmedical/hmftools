@@ -17,6 +17,11 @@ public final class FileDelimiters
         return filename.endsWith(CSV_EXTENSION) ? CSV_DELIM : TSV_DELIM;
     }
 
+    public static String inferHeaderDelimiter(final String header)
+    {
+        return header.contains(CSV_DELIM) ? CSV_DELIM : TSV_DELIM;
+    }
+
     public static String switchFilenameExtension(final String filename, final String requiredExtension)
     {
         if(filename.endsWith(requiredExtension))

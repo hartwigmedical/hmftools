@@ -207,7 +207,7 @@ public class AltSjCohortAnalyser
 
                 try
                 {
-                    altSJs.add(AltSpliceJunctionFile.fromCsv(values, geneId, geneName, chr, posStart, posEnd, type,
+                    altSJs.add(AltSpliceJunctionFile.parseLine(values, geneId, geneName, chr, posStart, posEnd, type,
                             fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd));
                 }
                 catch(Exception e)

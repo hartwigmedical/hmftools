@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.util.StringJoiner;
@@ -21,7 +22,7 @@ public final class CanonicalSpliceJunctionFile
 
     public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + ISF_FILE_ID + CANONICAL_SJ_FILE_ID;
+        return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + CANONICAL_SJ_FILE_ID;
     }
 
     public static String csvHeader()

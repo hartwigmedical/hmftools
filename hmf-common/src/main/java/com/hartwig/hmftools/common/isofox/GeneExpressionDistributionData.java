@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.isofox;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.IOException;
@@ -39,7 +40,8 @@ public class GeneExpressionDistributionData
     {
         final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), RnaCommon.DELIMITER);
+        String fileDelim = inferFileDelimiter(filename);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
         lines.remove(0);
 
         int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
@@ -53,7 +55,7 @@ public class GeneExpressionDistributionData
 
         for(String line : lines)
         {
-            final String[] items = line.split(RnaCommon.DELIMITER, -1);
+            final String[] items = line.split(fileDelim, -1);
 
             final String geneId = items[geneIdIndex];
             final String cancerType = items[cancerIndex];

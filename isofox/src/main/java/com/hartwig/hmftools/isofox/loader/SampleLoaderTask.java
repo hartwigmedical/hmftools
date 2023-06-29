@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -186,8 +187,7 @@ public class SampleLoaderTask implements Callable
         if(!mConfig.loadDataType(DataLoadType.STATISTICS))
             return;
 
-        final String sampleDataDir = mConfig.StatisticsDataDir.contains("*") ?
-                mConfig.StatisticsDataDir.replaceAll("\\*", sampleId) : mConfig.StatisticsDataDir;
+        final String sampleDataDir = convertWildcardSamplePath(mConfig.StatisticsDataDir, sampleId);
 
         final String filename = sampleDataDir + sampleId + ISF_FILE_ID + SUMMARY_FILE;
 
@@ -201,7 +201,7 @@ public class SampleLoaderTask implements Callable
                 return;
             }
 
-            final RnaStatistics statistics = RnaStatistics.fromCsv(lines);
+            final RnaStatistics statistics = RnaStatistics.fromLines(lines);
 
             ISF_LOGGER.debug("sample({}) writing summary statistics to DB", sampleId);
             mRnaDAO.writeRnaStatistics(sampleId, statistics);
@@ -221,8 +221,7 @@ public class SampleLoaderTask implements Callable
 
         final List<GeneExpression> geneExpressions = Lists.newArrayList();
 
-        final String sampleDataDir = mConfig.GeneDataDir.contains("*") ?
-                mConfig.GeneDataDir.replaceAll("\\*", sampleId) : mConfig.GeneDataDir;
+        final String sampleDataDir = convertWildcardSamplePath(mConfig.GeneDataDir, sampleId);
 
         final String filename = GeneExpressionFile.generateFilename(sampleDataDir,sampleId);
 
@@ -278,8 +277,7 @@ public class SampleLoaderTask implements Callable
 
         final List<NovelSpliceJunction> novelJunctions = Lists.newArrayList();
 
-        final String sampleDataDir = mConfig.AltSjDataDir.contains("*") ?
-                mConfig.AltSjDataDir.replaceAll("\\*", sampleId) : mConfig.AltSjDataDir;
+        final String sampleDataDir = convertWildcardSamplePath(mConfig.AltSjDataDir, sampleId);
 
         final String filename = sampleDataDir + sampleId + ISF_FILE_ID + ALT_SJ_FILE_ID;
 
@@ -315,7 +313,7 @@ public class SampleLoaderTask implements Callable
                 if(!mConfig.processGeneId(geneId))
                     continue;
 
-                final AltSpliceJunctionFile altSJ = AltSpliceJunctionFile.fromCsv(
+                final AltSpliceJunctionFile altSJ = AltSpliceJunctionFile.parseLine(
                         items, geneIdIndex, geneName, chr, posStart, posEnd, type,
                         fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd);
 
@@ -355,8 +353,7 @@ public class SampleLoaderTask implements Callable
 
         final List<RnaFusion> fusions = Lists.newArrayList();
 
-        final String sampleDataDir = mConfig.FusionDataDir.contains("*") ?
-                mConfig.FusionDataDir.replaceAll("\\*", sampleId) : mConfig.FusionDataDir;
+        final String sampleDataDir = convertWildcardSamplePath(mConfig.FusionDataDir, sampleId);
 
         final String filename = sampleDataDir + sampleId + ISF_FILE_ID + PASS_FUSION_FILE_ID;
 

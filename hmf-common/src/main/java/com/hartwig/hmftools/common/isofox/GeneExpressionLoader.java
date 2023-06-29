@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.IOException;
@@ -24,19 +25,20 @@ public final class GeneExpressionLoader
 {
     @NotNull
     public static List<GeneExpression> loadGeneExpression(
-            final String isofoxGeneDataCsv,
+            final String isofoxGeneDataFile,
             final GeneExpressionDistributionData cohortData,
             final  String cancerType) throws IOException
     {
         List<GeneExpression> geneExpressions = Lists.newArrayList();
 
-        List<String> lines = Files.readAllLines(Paths.get(isofoxGeneDataCsv));
+        List<String> lines = Files.readAllLines(Paths.get(isofoxGeneDataFile));
 
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), RnaCommon.DELIMITER);
+        String fileDelim = inferFileDelimiter(isofoxGeneDataFile);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
 
         for(String line : lines.subList(1, lines.size()))
         {
-            final String[] items = line.split(RnaCommon.DELIMITER, -1);
+            final String[] items = line.split(fileDelim, -1);
 
             final String geneId = items[fieldsIndexMap.get(FLD_GENE_ID)];
 

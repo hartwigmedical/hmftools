@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -29,19 +30,20 @@ import com.hartwig.hmftools.common.rna.RnaCommon;
 
 public final class NovelSpliceJunctionLoader
 {
-    public static List<NovelSpliceJunction> load(final String isofoxAltSpliceJunctionCsv, final AltSjCohortData altSjCohortData)
+    public static List<NovelSpliceJunction> load(final String isofoxAltSpliceJunctionFile, final AltSjCohortData altSjCohortData)
             throws IOException
     {
         List<NovelSpliceJunction> novelJunctions = Lists.newArrayList();
 
-        BufferedReader fileReader = new BufferedReader(new FileReader(isofoxAltSpliceJunctionCsv));
+        BufferedReader fileReader = new BufferedReader(new FileReader(isofoxAltSpliceJunctionFile));
 
         String line = fileReader.readLine();
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, RnaCommon.DELIMITER);
+        String fileDelim = inferFileDelimiter(isofoxAltSpliceJunctionFile);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, fileDelim);
 
         while((line = fileReader.readLine()) != null)
         {
-            String[] items = line.split(RnaCommon.DELIMITER, -1);
+            String[] items = line.split(fileDelim, -1);
 
             int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
             int geneName = fieldsIndexMap.get(FLD_GENE_NAME);
@@ -60,7 +62,7 @@ public final class NovelSpliceJunctionLoader
             int transStart = fieldsIndexMap.get("TransStart");
             int transEnd = fieldsIndexMap.get("TransEnd");
 
-            AltSpliceJunctionFile altSJ = AltSpliceJunctionFile.fromCsv(items,
+            AltSpliceJunctionFile altSJ = AltSpliceJunctionFile.parseLine(items,
                     geneIdIndex,
                     geneName,
                     chr,

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
@@ -128,8 +129,9 @@ public class GeneratePanelNormalisation
         try
         {
             final List<String> lines = Files.readAllLines(filename);
+            String fileDelim = inferFileDelimiter(filename.toString());
 
-            Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), fileDelim);
             lines.remove(0);
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
@@ -137,7 +139,7 @@ public class GeneratePanelNormalisation
 
             for(final String data : lines)
             {
-                final String[] values = data.split(DELIMITER);
+                final String[] values = data.split(fileDelim, -1);
 
                 final String geneId = values[geneIdIndex];
 

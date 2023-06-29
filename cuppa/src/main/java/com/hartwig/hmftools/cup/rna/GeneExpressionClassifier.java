@@ -5,7 +5,10 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -360,6 +363,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
     {
         final String isofoxDir = mConfig.getIsofoxDataDir(sampleId);
         final String filename = GeneExpressionFile.generateFilename(isofoxDir, sampleId);
+        String fileDelim = inferFileDelimiter(filename);
 
         CUP_LOGGER.debug("loading sample gene-expression data file({})", filename);
 
@@ -373,20 +377,20 @@ public class GeneExpressionClassifier implements CuppaClassifier
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
             String header = fileData.get(0);
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
             fileData.remove(0);
 
             // GeneId,GeneName, etc AdjTPM
             double[][] matrixData = mSampleGeneExpression.getData();
 
-            int geneIdCol = fieldsIndexMap.get("GeneId");
-            int adjTPM = fieldsIndexMap.get("AdjTPM");
+            int geneIdCol = fieldsIndexMap.get(FLD_GENE_ID);
+            int adjTPM = fieldsIndexMap.get(FLD_ADJ_TPM);
 
             int unknownGeneCount = 0;
 
             for(String line : fileData)
             {
-                final String[] items = line.split(DATA_DELIM, -1);
+                final String[] items = line.split(fileDelim, -1);
 
                 String geneId = items[geneIdCol];
                 double adjTpm = Double.parseDouble(items[adjTPM]);

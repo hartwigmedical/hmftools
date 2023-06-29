@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -283,7 +284,8 @@ public class FusionData
         try
         {
             final List<String> lines = Files.readAllLines(filename);
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            String fileDelim = inferFileDelimiter(filename.toString());
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
             lines.remove(0);
 
             int fusionIdIndex = fieldsIndexMap.get(FLD_FUSION_ID);
@@ -327,7 +329,7 @@ public class FusionData
 
             for(String data : lines)
             {
-                final String[] values = data.split(DELIMITER, -1);
+                final String[] values = data.split(fileDelim, -1);
 
                 int fusionId = Integer.parseInt(values[fusionIdIndex].replaceAll(FUSION_ID_PREFIX, ""));
                 boolean isValid = Boolean.parseBoolean(values[validIndex]);

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_F
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -206,7 +207,8 @@ public class ExternalExpressionCompare
         {
             final List<String> lines = Files.readAllLines(filename);
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            String fileDelim = inferFileDelimiter(filename.toString());
+            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), fileDelim);
             lines.remove(0);
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
@@ -225,9 +227,9 @@ public class ExternalExpressionCompare
             {
                 ExpressionData expData = mTransScope ?
                         fromIsofoxTranscript(
-                                data, geneIdIndex, geneNameIndex, transNameIndex, fittedFragsIndex, rawFragsIndex,
+                                data, fileDelim, geneIdIndex, geneNameIndex, transNameIndex, fittedFragsIndex, rawFragsIndex,
                                 tpmIndex, effectiveLengthIndex, lowQualIndex) :
-                        fromIsofoxGene(data, geneIdIndex, geneNameIndex, tpmIndex, splicedIndex, unsplicedIndex, lowQualIndex);
+                        fromIsofoxGene(data, fileDelim, geneIdIndex, geneNameIndex, tpmIndex, splicedIndex, unsplicedIndex, lowQualIndex);
 
                 if(expData == null)
                     continue;

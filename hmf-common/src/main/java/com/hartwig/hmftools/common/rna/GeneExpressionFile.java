@@ -17,6 +17,6 @@ public final class GeneExpressionFile
 
     public static String generateFilename(final String basePath, final String sample)
     {
-        return checkAddDirSeparator(basePath) + File.separator + sample + ISF_FILE_ID + GENE_EXPRESSION_FILE_ID;
+        return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + GENE_EXPRESSION_FILE_ID;
     }
 }

@@ -85,7 +85,7 @@ public class RnaExpressionMatrix
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
             String header = fileData.get(0);
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
             fileData.remove(0);
 
             int idCol = mTranscriptScope ? fieldsIndexMap.get(FLD_TRANS_NAME) : fieldsIndexMap.get(FLD_GENE_ID);

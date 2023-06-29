@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -82,9 +83,10 @@ public class ExpressionMatrix
         try
         {
             final List<String> lines = Files.readAllLines(filename);
+            String fileDelim = inferFileDelimiter(filename.toString());
 
             if(fieldsMap.isEmpty())
-                fieldsMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
+                fieldsMap.putAll(createFieldsIndexMap(lines.get(0), fileDelim));
 
             lines.remove(0);
 
@@ -110,7 +112,7 @@ public class ExpressionMatrix
                 // cull rows based on any restrictions in place
                 if(!mConfig.RestrictedGeneIds.isEmpty())
                 {
-                    long itemCount = lines.stream().map(x -> x.split(DELIMITER, -1)[geneIdIndex])
+                    long itemCount = lines.stream().map(x -> x.split(fileDelim, -1)[geneIdIndex])
                             .filter(x -> mConfig.RestrictedGeneIds.contains(x))
                             .count();
 
@@ -128,7 +130,7 @@ public class ExpressionMatrix
 
             for(final String data : lines)
             {
-                final String[] items = data.split(DELIMITER);
+                final String[] items = data.split(fileDelim, -1);
 
                 final String geneId = items[geneIdIndex];
                 final String transName = transNameIndex >= 0 ? items[transNameIndex] : "";

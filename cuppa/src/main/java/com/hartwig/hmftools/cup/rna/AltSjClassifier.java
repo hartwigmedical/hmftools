@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -503,7 +504,8 @@ public class AltSjClassifier implements CuppaClassifier
             BufferedReader fileReader = createBufferedReader(filename);
 
             String header = fileReader.readLine();
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
+            String fileDelim = inferFileDelimiter(filename);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posStartIndex = fieldsIndexMap.get(FLD_POS_START);
@@ -514,7 +516,7 @@ public class AltSjClassifier implements CuppaClassifier
 
             while(line != null)
             {
-                final String[] items = line.split(DATA_DELIM, -1);
+                final String[] items = line.split(fileDelim, -1);
 
                 final String asjKey = formKey(
                         items[chrIndex], Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]));
@@ -543,8 +545,9 @@ public class AltSjClassifier implements CuppaClassifier
         try
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
+            String fileDelim = inferFileDelimiter(filename);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DATA_DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
             lines.remove(0);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
@@ -556,7 +559,7 @@ public class AltSjClassifier implements CuppaClassifier
 
             for(String data : lines)
             {
-                final String items[] = data.split(DATA_DELIM, -1);
+                final String items[] = data.split(fileDelim, -1);
 
                 String chromosome = items[chrIndex];
                 int posStart = Integer.parseInt(items[posStartIndex]);

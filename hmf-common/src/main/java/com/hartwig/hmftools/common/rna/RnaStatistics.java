@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.rna;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getDoubleValue;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
@@ -96,11 +97,13 @@ public abstract class RnaStatistics
                 .toString();
     }
 
-    public static RnaStatistics fromCsv(final List<String> lines)
+    public static RnaStatistics fromLines(final List<String> lines)
     {
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        String header = lines.get(0);
+        String fileDelim = inferFileDelimiter(header);
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
 
-        final String[] values = lines.get(1).split(DELIMITER);
+        final String[] values = lines.get(1).split(fileDelim);
 
         long totalFragments = getLongValue(fieldsIndexMap, "TotalFragments", values);
         long duplicateFragments = getLongValue(fieldsIndexMap, "DuplicateFragments", values);
