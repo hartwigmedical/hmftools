@@ -24,13 +24,17 @@ if ! [[ -d "$BUILD_MODULE" ]]; then
   exit 1
 fi
 
-# set the property version in the parent
+## set the property version in the parent
 mvn -f "pom.xml" versions:set-property -DgenerateBackupPoms=false -Dproperty="${BUILD_MODULE}.version" -DnewVersion="${SEMVER}"
-# set the version of the actual parent
+
+## set the property version of the shared libraries
+# hmf-common
+mvn -f "pom.xml" versions:set-property -DgenerateBackupPoms=false -Dproperty="hmf-common.version" -DnewVersion="${SEMVER}"
+mvn -f "pom.xml" versions:set-property -DgenerateBackupPoms=false -Dproperty="orange-datamodel.version" -DnewVersion="${SEMVER}"
+mvn -f "pom.xml" versions:set-property -DgenerateBackupPoms=false -Dproperty="patient-db.version" -DnewVersion="${SEMVER}"
+## set the version of the actual parent
 mvn -f "pom.xml" versions:set -DgenerateBackupPoms=false -DnewVersion=${SEMVER}
 
-# Step 2: compile, package, release
-#mvn -f "${BUILD_MODULE}/pom.xml" deploy -B
 
 
 echo "done!"
