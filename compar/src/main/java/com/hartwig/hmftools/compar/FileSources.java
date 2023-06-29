@@ -1,5 +1,12 @@
 package com.hartwig.hmftools.compar;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.compar.CommonUtils.SUB_ITEM_DELIM;
@@ -21,12 +28,6 @@ public class FileSources
     public final boolean RequiresLiftover;
 
     public static final String SAMPLE_DIR = "sample_dir";
-    public static final String LINX_DIR = "linx_dir";
-    public static final String LINX_GERMLINE_DIR = "linx_germline_dir";
-    public static final String PURPLE_DIR = "purple_dir";
-    public static final String CUPPA_DIR = "cuppa_dir";
-    public static final String LILAC_DIR = "lilac_dir";
-    public static final String CHORD_DIR = "chord_dir";
     public static final String SOMATIC_VCF = "somatic_vcf";
     public static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
 
@@ -51,14 +52,14 @@ public class FileSources
     {
         return new FileSources(
                 fileSources.Source,
-                fileSources.Linx.replaceAll("\\*", sampleId),
-                fileSources.Purple.replaceAll("\\*", sampleId),
-                fileSources.LinxGermline.replaceAll("\\*", sampleId),
-                fileSources.Cuppa.replaceAll("\\*", sampleId),
-                fileSources.Lilac.replaceAll("\\*", sampleId),
-                fileSources.Chord.replaceAll("\\*", sampleId),
-                fileSources.SomaticVcf.replaceAll("\\*", sampleId),
-                fileSources.SomaticUnfilteredVcf.replaceAll("\\*", sampleId),
+                convertWildcardSamplePath(fileSources.Linx, sampleId),
+                convertWildcardSamplePath(fileSources.Purple, sampleId),
+                convertWildcardSamplePath(fileSources.LinxGermline, sampleId),
+                convertWildcardSamplePath(fileSources.Cuppa, sampleId),
+                convertWildcardSamplePath(fileSources.Lilac, sampleId),
+                convertWildcardSamplePath(fileSources.Chord, sampleId),
+                convertWildcardSamplePath(fileSources.SomaticVcf, sampleId),
+                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId),
                 fileSources.RequiresLiftover);
     }
 
@@ -104,27 +105,27 @@ public class FileSources
             String type = itemStr[0];
             String value = itemStr[1];
 
-            if(type.equals(LINX_DIR))
+            if(type.equals(LINX_DIR_CFG))
             {
                 linxDir = getDirectory(sampleDir, value);
             }
-            else if(type.equals(LINX_GERMLINE_DIR))
+            else if(type.equals(LINX_GERMLINE_DIR_CFG))
             {
                 linxGermlineDir = getDirectory(sampleDir, value);
             }
-            else if(type.equals(PURPLE_DIR))
+            else if(type.equals(PURPLE_DIR_CFG))
             {
                 purpleDir = getDirectory(sampleDir, value);
             }
-            else if(type.equals(LILAC_DIR))
+            else if(type.equals(LILAC_DIR_CFG))
             {
                 lilacDir = value;
             }
-            else if(type.equals(CHORD_DIR))
+            else if(type.equals(CHORD_DIR_CFG))
             {
                 chordDir = value;
             }
-            else if(type.equals(CUPPA_DIR))
+            else if(type.equals(CUPPA_DIR_CFG))
             {
                 cuppaDir = value;
             }
