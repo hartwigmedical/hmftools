@@ -25,7 +25,7 @@ if ! [[ -d "$BUILD_MODULE" ]]; then
 fi
 
 # set the property version in the parent
-mvn -f "pom.xml" versions:set-property -DgenerateBackupPoms=false -Dproperty="${SEMVER}.version" -DnewVersion="${SEMVER}"
+mvn -f "pom.xml" versions:set-property -DgenerateBackupPoms=false -Dproperty="${BUILD_MODULE}.version" -DnewVersion="${SEMVER}"
 # set the version of the actual parent
 mvn -f "pom.xml" versions:set -DgenerateBackupPoms=false -DnewVersion=${SEMVER}
 
