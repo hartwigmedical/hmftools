@@ -60,14 +60,14 @@ public class SampleDataFiles
         SampleDataDir = configBuilder.hasValue(SAMPLE_DIR) ? checkAddDirSeparator(configBuilder.getValue(SAMPLE_DIR)) : null;
 
         if(configBuilder.hasValue(AMBER))
-            AmberDirectory = configBuilder.getValue(AMBER);
+            AmberDirectory = checkAddDirSeparator(configBuilder.getValue(AMBER));
         else if(SampleDataDir != null)
             AmberDirectory = SampleDataDir + AMBER_DIR + File.separator;
         else
             AmberDirectory = null;
 
         if(configBuilder.hasValue(COBALT))
-            CobaltDirectory = configBuilder.getValue(COBALT);
+            CobaltDirectory = checkAddDirSeparator(configBuilder.getValue(COBALT));
         else if(SampleDataDir != null)
             CobaltDirectory = SampleDataDir + COBALT_DIR + File.separator;
         else
@@ -78,11 +78,8 @@ public class SampleDataFiles
 
         RecoveredSvVcfFile = getFilename(configBuilder, SV_RECOVERY_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.somatic.vcf.gz");
 
-        SomaticVcfFile = getFilename(configBuilder, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".sage.somatic.filtered.pave.vcf.gz");
-        GermlineVcfFile = getFilename(configBuilder, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".sage.germline.filtered.pave.vcf.gz");
-
-        // SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".pave.filtered.somatic.vcf.gz");
-        // GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".pave.filtered.germline.vcf.gz");
+        SomaticVcfFile = getFilename(configBuilder, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".pave.somatic.vcf.gz");
+        GermlineVcfFile = getFilename(configBuilder, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".pave.germline.vcf.gz");
     }
 
     public boolean hasValidSampleNames(final PurpleConfig config)
