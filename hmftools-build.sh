@@ -25,9 +25,9 @@ if ! [[ -d "$BUILD_MODULE" ]]; then
 fi
 
 # set the property version in the parent
-mvn -f "pom.xml" versions:set-property -Dproperty="${SEMVER}.version" -DnewVersion="${SEMVER}"
+mvn -f "pom.xml" versions:set-property -DgenerateBackupPoms=false -Dproperty="${SEMVER}.version" -DnewVersion="${SEMVER}"
 # set the version of the actual parent
-mvn -f "pom.xml" versions:set -DnewVersion=${SEMVER}
+mvn -f "pom.xml" versions:set -DgenerateBackupPoms=false -DnewVersion=${SEMVER}
 
 # Step 2: compile, package, release
 #mvn -f "${BUILD_MODULE}/pom.xml" deploy -B
