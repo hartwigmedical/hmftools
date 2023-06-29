@@ -8,16 +8,15 @@ if [ $# -ne 1 ]; then
   exit 1
 fi
 
-SEMVER_VERSION="$1"
+SEMVER="$1"
 # The regex pattern is <module_name>-<semver>
 SEMVER_REGEX="^([a-zA-Z0-9_-]+)-([0-9]+)\.([0-9]+)\.([0-9]+)(-(alpha|beta)\.[0-9]+)?$"
-if ! [[ "$SEMVER_VERSION" =~ $SEMVER_REGEX ]]; then
-  echo "Invalid semver version: $SEMVER_VERSION"
+if ! [[ "$SEMVER" =~ $SEMVER_REGEX ]]; then
+  echo "Invalid semver version: $SEMVER"
   exit 1
 fi
 
 BUILD_MODULE=${BASH_REMATCH[1]}
-SEMVER="${SEMVER_VERSION/${BASH_REMATCH[1]}-}"
 
 # Check if this module exists
 if ! [[ -d "$BUILD_MODULE" ]]; then
@@ -25,11 +24,13 @@ if ! [[ -d "$BUILD_MODULE" ]]; then
   exit 1
 fi
 
-# Version the appropriate files
-mvn -f "${BUILD_MODULE}/pom.xml" versions:set -DnewVersion=${SEMVER}
+# set the property version in the parent
+mvn -f "pom.xml" versions:set-property -Dproperty="${SEMVER}.version" -DnewVersion="${SEMVER}"
+# set the version of the actual parent
+mvn -f "pom.xml" versions:set -DnewVersion=${SEMVER}
 
 # Step 2: compile, package, release
-mvn -f "${BUILD_MODULE}/pom.xml" deploy -B
+#mvn -f "${BUILD_MODULE}/pom.xml" deploy -B
 
 
 echo "done!"
