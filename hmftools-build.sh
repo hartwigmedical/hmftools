@@ -36,7 +36,7 @@ mvn -f "pom.xml" versions:set -DgenerateBackupPoms=false -DnewVersion=${SEMVER}
 
 ## release
 mvn -N -f "pom.xml" deploy -B
-mvn -f "${BUILD_MODULE}/pom.xml" deploy -B
 mvn -f "hmf-common/pom.xml" deploy -B
 mvn -f "orange-datamodel/pom.xml" deploy -B
 mvn -f "patient-db/pom.xml" deploy -B
+mvn -f "${BUILD_MODULE}/pom.xml" deploy -B
