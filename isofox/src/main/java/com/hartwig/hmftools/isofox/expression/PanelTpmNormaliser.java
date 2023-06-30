@@ -39,10 +39,10 @@ public class PanelTpmNormaliser
             {
                 Double adjustFactor = mGeneNormFactors.get(geneResult.Gene.GeneId);
 
-                if(adjustFactor == null)
+                if(adjustFactor == null || adjustFactor <= 0)
                 {
-                    ISF_LOGGER.warn("gene({}:{}) missing panel TPM adjustmeet factor",
-                            geneResult.Gene.GeneId, geneResult.Gene.GeneName);
+                    ISF_LOGGER.warn("gene({}:{}) missing or invalid panel TPM adjustment factor({})",
+                            geneResult.Gene.GeneId, geneResult.Gene.GeneName, adjustFactor);
                 }
                 else
                 {
