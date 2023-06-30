@@ -34,6 +34,13 @@ mvn -f "pom.xml" versions:set-property -DgenerateBackupPoms=false -Dproperty="pa
 ## set the version of the actual parent
 mvn -f "pom.xml" versions:set -DgenerateBackupPoms=false -DnewVersion=${SEMVER}
 
+## build all projects to make sure there aren't any build errors
+mvn -N -f "pom.xml" clean install
+mvn -f "hmf-common/pom.xml" clean install
+mvn -f "orange-datamodel/pom.xml" clean install
+mvn -f "patient-db/pom.xml" clean install
+mvn -f "${BUILD_MODULE}/pom.xml" clean install
+
 ## release
 mvn -N -f "pom.xml" deploy -B
 mvn -f "hmf-common/pom.xml" deploy -B
