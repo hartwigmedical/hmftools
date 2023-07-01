@@ -62,7 +62,7 @@ PURPLE
 
 ### Steps to generated target regions Cobalt normalisation file
 
-1. Run Cobalt without a normalisation file in tumor-only mode on all applicable samples
+1. Run Cobalt without a '-target_region' file in tumor-only mode on all applicable samples
 
 2. Run Amber on applicable samples in tumor-only mode
 
