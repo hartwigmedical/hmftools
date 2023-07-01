@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency.COH
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -236,7 +237,7 @@ public class ReferenceData
 
             GeneTransCache.setRequiredData(true, false, false, true);
             mIsValid &= GeneTransCache.load(true);
-            mIsValid &= GeneTransCache.loadTranscriptData(Lists.newArrayList(), additionalTransNames);
+            mIsValid &= GeneTransCache.loadTranscriptData(Collections.emptyList(), additionalTransNames);
         }
         else
         {

@@ -31,9 +31,22 @@ public final class EnsemblDataLoader
     public static final String ENSEMBL_PROTEIN_FEATURE_DATA_FILE = "ensembl_protein_features.csv";
     public static final String ENSEMBL_TRANS_AMINO_ACIDS_FILE = "ensembl_trans_amino_acids.csv";
 
+    public static final String ENS_FLD_GENE_ID = "GeneId";
+    public static final String ENS_FLD_GENE_NAME = "GeneName";
+    public static final String ENS_FLD_GENE_START = "GeneStart";
+    public static final String ENS_FLD_GENE_END = "GeneEnd";
+    public static final String ENS_FLD_CHROMOSOME = "Chromosome";
+    public static final String ENS_FLD_TRANS_NAME = "TransName";
+    public static final String ENS_FLD_TRANS_ID = "TransId";
+    public static final String ENS_FLD_CANONICAL = "Canonical";
+    public static final String ENS_FLD_STRAND = "Strand";
+    public static final String ENS_FLD_TRAN_START = "TransStart";
+    public static final String ENS_FLD_TRAN_END = "TransEnd";
+
     private static final Logger LOGGER = LogManager.getLogger(EnsemblDataLoader.class);
 
     public static final String ENSEMBL_DELIM = ",";
+    public static final String ENSEMBL_TRANSCRIPT_PREFIX = "ENST";
 
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
             final Map<String,List<GeneData>> chrGeneDataMap, RefGenomeVersion version)
@@ -66,12 +79,12 @@ public final class EnsemblDataLoader
             }
 
             // GeneId,GeneName,Chromosome,Strand,GeneStart,GeneEnd,EntrezIds,KaryotypeBand,Synonyms
-            int geneIdIndex = fieldsIndexMap.get("GeneId");
-            int geneNameIndex = fieldsIndexMap.get("GeneName");
-            int chromosomeIndex = fieldsIndexMap.get("Chromosome");
-            int strandIndex = fieldsIndexMap.get("Strand");
-            int geneStartIndex = fieldsIndexMap.get("GeneStart");
-            int geneEndIndex = fieldsIndexMap.get("GeneEnd");
+            int geneIdIndex = fieldsIndexMap.get(ENS_FLD_GENE_ID);
+            int geneNameIndex = fieldsIndexMap.get(ENS_FLD_GENE_NAME);
+            int chromosomeIndex = fieldsIndexMap.get(ENS_FLD_CHROMOSOME);
+            int strandIndex = fieldsIndexMap.get(ENS_FLD_STRAND);
+            int geneStartIndex = fieldsIndexMap.get(ENS_FLD_GENE_START);
+            int geneEndIndex = fieldsIndexMap.get(ENS_FLD_GENE_END);
             int karyotypeBandIndex = fieldsIndexMap.get("KaryotypeBand");
             int synonymIndex = fieldsIndexMap.get("Synonyms");
 
@@ -131,9 +144,10 @@ public final class EnsemblDataLoader
         return true;
     }
 
-    public static boolean loadTranscriptData(
+    protected static boolean loadTranscriptData(
             final String dataPath, Map<String, List<TranscriptData>> transcriptDataMap,
-            final List<String> restrictedGeneIds, boolean cacheExons, boolean canonicalOnly, final List<String> nonCanonicalTrans)
+            final List<String> restrictedGeneIds, boolean cacheExons, boolean canonicalOnly, boolean includeNonEnsembl,
+            final List<String> nonCanonicalTrans)
     {
         String filename = dataPath;
 
@@ -156,15 +170,16 @@ public final class EnsemblDataLoader
                 return false;
             }
 
-            // GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,TransStart,TransEnd,ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd
-            int geneIdIndex = fieldsIndexMap.get("GeneId");
+            // GeneId,CanonicalTranscriptId,Strand,TransId,TransName,BioType,TransStart,TransEnd,
+            // ExonRank,ExonStart,ExonEnd,ExonPhase,ExonEndPhase,CodingStart,CodingEnd
+            int geneIdIndex = fieldsIndexMap.get(ENS_FLD_GENE_ID);
             int canonicalTransIdIndex = fieldsIndexMap.get("CanonicalTranscriptId");
-            int strandIndex = fieldsIndexMap.get("Strand");
-            int transIdIndex = fieldsIndexMap.get("TransId");
-            int transNameIndex = fieldsIndexMap.containsKey("TransName") ? fieldsIndexMap.get("TransName") : fieldsIndexMap.get("Trans");
+            int strandIndex = fieldsIndexMap.get(ENS_FLD_STRAND);
+            int transIdIndex = fieldsIndexMap.get(ENS_FLD_TRANS_ID);
+            int transNameIndex = fieldsIndexMap.get(ENS_FLD_TRANS_NAME);
             int biotypeIndex = fieldsIndexMap.get("BioType");
-            int transStartIndex = fieldsIndexMap.get("TransStart");
-            int transEndIndex = fieldsIndexMap.get("TransEnd");
+            int transStartIndex = fieldsIndexMap.get(ENS_FLD_TRAN_START);
+            int transEndIndex = fieldsIndexMap.get(ENS_FLD_TRAN_END);
             int exonRankIndex = fieldsIndexMap.get("ExonRank");
             int exonStartIndex = fieldsIndexMap.get("ExonStart");
             int exonEndIndex = fieldsIndexMap.get("ExonEnd");
@@ -181,7 +196,7 @@ public final class EnsemblDataLoader
             List<TranscriptData> transDataList = null;
             List<ExonData> exonDataList = null;
 
-            while (line != null)
+            while(line != null)
             {
                 line = fileReader.readLine();
 
@@ -217,6 +232,9 @@ public final class EnsemblDataLoader
                         if(!isCanonical && !nonCanonicalTrans.contains(transName))
                             continue;
                     }
+
+                    if(!includeNonEnsembl && !transName.startsWith(ENSEMBL_TRANSCRIPT_PREFIX))
+                        continue;
 
                     exonDataList = Lists.newArrayList();
 
@@ -257,7 +275,7 @@ public final class EnsemblDataLoader
         return true;
     }
 
-    public static boolean loadTranscriptProteinData(
+    protected static boolean loadTranscriptProteinData(
             final String dataPath, Map<Integer, List<TranscriptProteinData>> proteinDataMap, Set<Integer> restrictedTransIds)
     {
         String filename = dataPath;
@@ -337,7 +355,7 @@ public final class EnsemblDataLoader
         return true;
     }
 
-    public static boolean loadTranscriptSpliceAcceptorData(
+    protected static boolean loadTranscriptSpliceAcceptorData(
             final String dataPath, Map<Integer,Integer> transSaPositionDataMap, final Set<Integer> restrictedTransIds)
     {
         String filename = dataPath;
@@ -362,7 +380,7 @@ public final class EnsemblDataLoader
             }
 
             // GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance
-            int transIdIndex = fieldsIndexMap.get("TransId");
+            int transIdIndex = fieldsIndexMap.get(ENS_FLD_TRANS_ID);
             int saPositionIndex = fieldsIndexMap.get("PreSpliceAcceptorPosition");
 
             line = fileReader.readLine(); // skip header
@@ -421,10 +439,10 @@ public final class EnsemblDataLoader
             }
 
             // GeneId,TransId,TransName,TransStartPos,PreSpliceAcceptorPosition,Distance
-            int geneIdIndex = fieldsIndexMap.get("GeneId");
-            int geneNameIndex = fieldsIndexMap.get("GeneName");
-            int transIndex = fieldsIndexMap.get("TransName");
-            Integer isCanonicalIndex = fieldsIndexMap.get("Canonical");
+            int geneIdIndex = fieldsIndexMap.get(ENS_FLD_GENE_ID);
+            int geneNameIndex = fieldsIndexMap.get(ENS_FLD_GENE_NAME);
+            int transIndex = fieldsIndexMap.get(ENS_FLD_TRANS_NAME);
+            Integer isCanonicalIndex = fieldsIndexMap.get(ENS_FLD_CANONICAL);
             int aaIndex = fieldsIndexMap.get("AminoAcids");
 
             while ((line = fileReader.readLine()) != null)

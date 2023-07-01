@@ -122,9 +122,6 @@ public class EnsemblDAO
                     mReferenceGeneDataByName.put(geneData.GeneName, geneData);
                 }
             }
-
-            // not currently used
-            // EnsemblDataLoader.loadTranscriptData(ensemblDataDir, mReferenceTranscriptMap, restrictedGeneIds, true, true);
         }
 
         loadGeneIdMappings(mappingFile);

@@ -53,41 +53,6 @@ public final class BreakendGenePrep
             specificPreGeneRanges.add(new ChrBaseRegion(geneData.Chromosome, preGeneStart, preGeneEnd));
         }
 
-        /* deprecated logic to only load transcripts relating to the breakends in a specific sample
-           was used: isSingleSample() && !RunDrivers && RestrictedGeneIds.isEmpty() && !IsGermline;
-
-        if(loadBreakendGenes)
-        {
-            // only load transcript info for the genes covered
-            final List<String> restrictedGeneIds = Lists.newArrayList();
-
-            for(final SvVarData var : svList)
-            {
-                for(int be = SE_START; be <= SE_END; ++be)
-                {
-                    if(be == SE_END && var.isSglBreakend())
-                    {
-                        // special case of looking for mappings to locations containing genes so hotspot fusions can be found
-                        for(final SglMapping mapping : var.getSglMappings())
-                        {
-                            ensemblDataCache.populateGeneIdList(restrictedGeneIds, mapping.Chromosome, mapping.Position, upstreamDistance);
-                        }
-                    }
-                    else
-                    {
-                        boolean isStart = isStart(be);
-                        ensemblDataCache.populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
-                    }
-                }
-            }
-
-            ensemblDataCache.getAlternativeGeneData().stream().filter(x -> !restrictedGeneIds.contains(x.GeneId))
-                    .forEach(x -> restrictedGeneIds.add(x.GeneId));
-
-            ensemblDataCache.loadTranscriptData(restrictedGeneIds);
-        }
-        */
-
         // associate breakends with transcripts
         for(final SvVarData var : svList)
         {

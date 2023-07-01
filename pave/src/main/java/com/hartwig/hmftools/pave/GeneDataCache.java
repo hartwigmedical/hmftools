@@ -69,6 +69,7 @@ public class GeneDataCache
             return false;
 
         mEnsemblDataCache.setRequiredData(true, false, false, canonicalOnly);
+        mEnsemblDataCache.setRequireNonEnsemblTranscripts();
 
         if(onlyDriverGenes)
         {
