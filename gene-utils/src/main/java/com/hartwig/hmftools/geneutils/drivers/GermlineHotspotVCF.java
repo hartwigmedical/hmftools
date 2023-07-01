@@ -2,7 +2,6 @@ package com.hartwig.hmftools.geneutils.drivers;
 
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -12,10 +11,9 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummaryFactory;
 import com.hartwig.hmftools.common.pathogenic.Pathogenicity;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
@@ -23,7 +21,6 @@ import htsjdk.variant.variantcontext.VariantContextComparator;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
@@ -31,17 +28,26 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public final class GermlineHotspotVCF
 {
     private static final String WHITELIST_FLAG = "WHITELIST";
+    private static final String REF_GENOME_37 = "GRCh37";
+    private static final String REF_GENOME_38 = "GRCh38";
 
     public static void write(
             final RefGenomeVersion refGenomeVersion, final String inputFile, final String outputFile, final List<String> genes) throws IOException
     {
-        // READ
-        final VCFFileReader reader = new VCFFileReader(new File(inputFile), false);
-        final VCFHeader readerHeader = reader.getFileHeader();
+        //VCFFileReader reader = new VCFFileReader(new File(inputFile), false);
+        VcfFileReader reader = new VcfFileReader(inputFile);
+
+        if(!reader.fileValid())
+        {
+            GU_LOGGER.error("clinvar file({}) invalid", inputFile);
+            throw new IllegalArgumentException();
+        }
+
+        final VCFHeader readerHeader = reader.vcfHeader();
         final String assembly = readerHeader.getMetaDataLine("reference").getValue();
 
-        if((refGenomeVersion == RefGenomeVersion.V37 && !assembly.equals("GRCh37"))
-        || (refGenomeVersion == RefGenomeVersion.V38 && !assembly.equals("GRCh38")))
+        if((refGenomeVersion == RefGenomeVersion.V37 && !assembly.equals(REF_GENOME_37))
+        || (refGenomeVersion == RefGenomeVersion.V38 && !assembly.equals(REF_GENOME_38)))
         {
             GU_LOGGER.error("clinvar file({}) has incorrect ref genome version({}) vs required({})",
                     inputFile, assembly, refGenomeVersion);
@@ -51,7 +57,7 @@ public final class GermlineHotspotVCF
 
         final List<VariantContext> variants = Lists.newArrayList();
 
-        for(VariantContext context : reader)
+        for(VariantContext context : reader.iterator())
         {
             final Set<String> variantGenes = Sets.newHashSet();
             final String geneInfo = context.getAttributeAsString("GENEINFO", "UNKNOWN:0000");
@@ -82,10 +88,11 @@ public final class GermlineHotspotVCF
                 variants.add(builder.make());
             }
         }
+
         reader.close();
 
         // ADD WHITE LIST (OUT OF ORDER)
-        variants.addAll(assembly.equals("GRCh37") ? GermlineResources.whitelist37() : GermlineResources.whitelist38());
+        variants.addAll(assembly.equals(REF_GENOME_37) ? GermlineResources.whitelist37() : GermlineResources.whitelist38());
 
         // Get sorted contigs
         final List<String> contigs = variants.stream().map(VariantContext::getContig).distinct().collect(Collectors.toList());
@@ -108,7 +115,7 @@ public final class GermlineHotspotVCF
         writer.close();
     }
 
-    private static boolean isPathogenicOrLikelyPathogenic(@NotNull Pathogenicity pathogenicity)
+    private static boolean isPathogenicOrLikelyPathogenic(final Pathogenicity pathogenicity)
     {
         return pathogenicity.isPathogenic();
     }

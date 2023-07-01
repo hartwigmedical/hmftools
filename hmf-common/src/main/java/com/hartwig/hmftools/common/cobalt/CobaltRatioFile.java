@@ -156,6 +156,26 @@ public final class CobaltRatioFile
         return chrRatiosMap;
     }
 
+    private static double genderAdjustedDiploidRatio(@Nullable final Gender gender, final String contig, double initialRatio)
+    {
+        if(gender == null || !HumanChromosome.contains(contig))
+        {
+            return initialRatio;
+        }
+
+        HumanChromosome chromosome = HumanChromosome.fromString(contig);
+        if(chromosome.equals(HumanChromosome._X))
+        {
+            return gender.equals(Gender.FEMALE) ? 1 : 0.5;
+        }
+
+        if(chromosome.equals(HumanChromosome._Y))
+        {
+            return gender.equals(Gender.FEMALE) ? 0 : 0.5;
+        }
+
+        return initialRatio;
+    }
     public static void write(final String fileName, Collection<CobaltRatio> ratios) throws IOException
     {
         List<CobaltRatio> sorted = new ArrayList<>(ratios);
@@ -201,26 +221,5 @@ public final class CobaltRatioFile
                 .add(FORMAT.format(position.tumorGCRatio()))
                 .add(FORMAT.format(position.referenceGCDiploidRatio()))
                 .toString();
-    }
-
-    private static double genderAdjustedDiploidRatio(@Nullable final Gender gender, final String contig, double initialRatio)
-    {
-        if(gender == null || !HumanChromosome.contains(contig))
-        {
-            return initialRatio;
-        }
-
-        HumanChromosome chromosome = HumanChromosome.fromString(contig);
-        if(chromosome.equals(HumanChromosome._X))
-        {
-            return gender.equals(Gender.FEMALE) ? 1 : 0.5;
-        }
-
-        if(chromosome.equals(HumanChromosome._Y))
-        {
-            return gender.equals(Gender.FEMALE) ? 0 : 0.5;
-        }
-
-        return initialRatio;
     }
 }
