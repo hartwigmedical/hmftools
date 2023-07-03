@@ -6,10 +6,12 @@ import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.REGION_SIZE;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.cobalt.CobaltRatioFile;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
@@ -57,12 +59,24 @@ public class DataLoader
     }
 
     public static void addCobaltSampleData(
-            final Gender amberGender, final String cobaltFilename, final Map<String,List<RegionData>> chrRegionData)
+            final Gender amberGender, final String cobaltPanelFilename, final String cobaltWgsFilename,
+            final Map<String,List<RegionData>> chrRegionData)
     {
         try
         {
-            CB_LOGGER.info("reading Cobalt ratios from {}", cobaltFilename);
-            Map<Chromosome,List<CobaltRatio>> chrRatios = CobaltRatioFile.readWithGender(cobaltFilename, amberGender, true);
+            CB_LOGGER.info("reading Cobalt ratios from {}", cobaltPanelFilename);
+
+            Map<Chromosome,List<CobaltRatio>> chrPanelRatios = CobaltRatioFile.readWithGender(
+                    cobaltPanelFilename, amberGender, true);
+
+            Map<Chromosome,List<CobaltRatio>> chrWgsRatios = null;
+
+            if(!cobaltWgsFilename.isEmpty())
+            {
+                CB_LOGGER.info("reading Cobalt WGS ratios from {}", cobaltWgsFilename);
+
+                chrWgsRatios = CobaltRatioFile.readWithGender(cobaltWgsFilename, amberGender, true);
+            }
 
             for(Map.Entry<String,List<RegionData>> entry : chrRegionData.entrySet())
             {
@@ -70,14 +84,16 @@ public class DataLoader
                 List<RegionData> regions = entry.getValue();
 
                 HumanChromosome chromosome = HumanChromosome.fromString(chrStr);
-                List<CobaltRatio> cobaltRatios = chrRatios.get(chromosome);
+                List<CobaltRatio> cobaltRatios = chrPanelRatios.get(chromosome);
 
                 if(cobaltRatios == null)
                     continue;
 
-                double wgsGcRatio = wgsGcRatio(amberGender, chromosome);
+                double defaultWgsGcRatio = wgsGcRatio(amberGender, chromosome);
+                List<CobaltRatio> cobaltWgsRatios = chrWgsRatios != null ? chrWgsRatios.get(chromosome) : Collections.emptyList();
 
                 int cobaltIndex = 0;
+                int cobaltWgsIndex = 0;
 
                 for(RegionData region : regions)
                 {
@@ -98,6 +114,27 @@ public class DataLoader
                         ++cobaltIndex;
                     }
 
+                    // likewise find the matching WGS ratio if available
+                    CobaltRatio cobaltWgsRatio = null;
+
+                    while(true)
+                    {
+                        if(cobaltWgsIndex >= cobaltWgsRatios.size())
+                            break;
+
+                        cobaltWgsRatio = cobaltWgsRatios.get(cobaltWgsIndex);
+
+                        if(cobaltWgsRatio.position() == region.Position)
+                            break;
+                        else if(cobaltWgsRatio.position() > region.Position)
+                            break;
+
+                        ++cobaltWgsIndex;
+                    }
+
+                    double wgsGcRatio = cobaltWgsRatio != null && cobaltWgsRatio.position() == region.Position ?
+                            cobaltWgsRatio.tumorGCRatio() : defaultWgsGcRatio;
+
                     if(cobaltRatio != null && cobaltRatio.position() == region.Position)
                     {
                         region.addSampleRegionData(new SampleRegionData(cobaltRatio.tumorReadCount(), cobaltRatio.tumorGCRatio(), wgsGcRatio));
@@ -111,7 +148,7 @@ public class DataLoader
         }
         catch(IOException e)
         {
-            CB_LOGGER.error("sample({}) failed to read Cobalt data: {}", cobaltFilename, e.toString());
+            CB_LOGGER.error("sample({}) failed to read Cobalt data: {}", cobaltPanelFilename, e.toString());
             e.printStackTrace();
             System.exit(1);
         }

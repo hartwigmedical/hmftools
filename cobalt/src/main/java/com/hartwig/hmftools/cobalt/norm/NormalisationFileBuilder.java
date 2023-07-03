@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.cobalt.norm.Normaliser.calcRelativeEnrichment
 import static com.hartwig.hmftools.cobalt.norm.Normaliser.calcSampleAdjustedRatios;
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
 import static com.hartwig.hmftools.common.genome.gc.GCBucket.calcGcBucket;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 
 import java.io.IOException;
@@ -26,12 +27,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.purple.Gender;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class NormalisationFileBuilder
 {
@@ -39,9 +35,9 @@ public class NormalisationFileBuilder
     private final Map<String,List<RegionData>> mChrRegionData;
     private final GcProfileCache mGcProfileCache;
 
-    public NormalisationFileBuilder(final CommandLine cmd)
+    public NormalisationFileBuilder(final ConfigBuilder configBuilder)
     {
-        mConfig = new NormalisationConfig(cmd);
+        mConfig = new NormalisationConfig(configBuilder);
 
         if(mConfig.SampleIds.isEmpty())
         {
@@ -91,7 +87,7 @@ public class NormalisationFileBuilder
         {
             try
             {
-                String sampleDir = mConfig.AmberDir.replaceAll("\\*", sampleId);
+                String sampleDir = convertWildcardSamplePath(mConfig.AmberDir, sampleId);
                 final String amberFilename = AmberBAFFile.generateAmberFilenameForReading(sampleDir, sampleId);
 
                 Multimap<Chromosome, AmberBAF> chromosomeBafs = AmberBAFFile.read(amberFilename, true);
@@ -152,30 +148,36 @@ public class NormalisationFileBuilder
         {
             Gender amberGender = sampleGenders.get(sampleId);
 
-            String sampleDir = mConfig.CobaltDir.replaceAll("\\*", sampleId);
+            String cobaltPanelDir = convertWildcardSamplePath(mConfig.CobaltPanelDir, sampleId);
+            String cobaltPanelFilename = CobaltRatioFile.generateFilenameForReading(cobaltPanelDir, sampleId);
 
-            final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(sampleDir, sampleId);
+            String cobaltWgsFilename = "";
 
-            addCobaltSampleData(amberGender, cobaltFilename, mChrRegionData);
+            if(!mConfig.CobaltWgsDir.isEmpty())
+            {
+                String wgsSampleId = mConfig.getWgsSampleId(sampleId);
+                String cobaltWgsDir = convertWildcardSamplePath(mConfig.CobaltWgsDir, wgsSampleId);
+                cobaltWgsFilename = CobaltRatioFile.generateFilenameForReading(cobaltWgsDir, wgsSampleId);
+            }
+
+            addCobaltSampleData(amberGender, cobaltPanelFilename, cobaltWgsFilename, mChrRegionData);
         }
     }
 
-    public static void main(final String[] args) throws ParseException
+    public static void main(final String[] args)
     {
-        final Options options = new Options();
-        NormalisationConfig.addCommandLineOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        NormalisationConfig.registerConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        NormalisationFileBuilder normFileBuilder = new NormalisationFileBuilder(cmd);
+        NormalisationFileBuilder normFileBuilder = new NormalisationFileBuilder(configBuilder);
         normFileBuilder.run();
-    }
-
-    private static CommandLine createCommandLine(final String[] args, final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }
