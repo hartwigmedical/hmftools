@@ -31,17 +31,19 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 
 ### Optional Arguments
 
-| Argument             | Description                                                                       |
-|----------------------|-----------------------------------------------------------------------------------|
-| write_cider_bam      | If specified, write a small bam file of all the extracted reads.                  |
-| threads              | Number of threads to use, defaults to 1                                           |
-| max_fragment_length  | Approximate length of the longest fragment. Defaults to 1000                      |
-| threads              | Number of threads to use, defaults to 1                                           |
-| min_base_quality     | Minimum base quality for a base to be considered a "support" base, defaults to 25 |
-| report_match_ref_seq | When specified, reports VDJ sequences that match reference genome                 |
-| num_trim_bases       | Number of bases to trim on each side of reads. Defaults to 0                      |
-| primer_csv           | Path to csv file containing primers                                               |
-| primer_mismatch_max  | Maximum number of mismatch bases for matching primer sequence                     |
+| Argument                   | Default | Description                                                                                             |
+|----------------------------|---------|---------------------------------------------------------------------------------------------------------|
+| write_cider_bam            | Off     | If specified, write a small bam file of all the extracted reads.                                        |
+| threads                    | 1       | Number of threads to use, defaults to 1                                                                 |
+| max_fragment_length        | 1000    | Approximate length of the longest fragment. Defaults to 1000                                            |
+| threads                    | 1       | Number of threads to use, defaults to 1                                                                 |
+| min_base_quality           | 25      | Minimum base quality for a base to be considered a "support" base, defaults to 25                       |
+| report_match_ref_seq       | Off     | When specified, reports VDJ sequences that match reference genome                                       |
+| num_trim_bases             | 0       | Number of bases to trim on each side of reads. Defaults to 0                                            |
+| max_low_qual_base_fraction | 0.1     | Maximum fraction of bases in a read that can be low quality. Reads that exceed this limit are discarded |
+| max_reads_per_gene         | 300,000 | Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.          |
+| primer_csv                 |         | Path to csv file containing primers                                                                     |
+| primer_mismatch_max        | 0       | Maximum number of mismatch bases for matching primer sequence                                           |
 
 The ensembl data cache can be downloaded using the following links:
  [v37](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/37/common/ensembl_data/ensembl_gene_data.csv), 
@@ -103,11 +105,14 @@ Each V only anchored read is also checked for partial overlap with each J only a
 Each collapsed sequence is either marked as PASS or one or more of the following filters 
 - **NO_V_ANCHOR** - No candidate V anchor found 
 - **NO_J_ANCHOR** - No candidate J anchor found 
+- **POOR_V_ANCHOR** - V anchor is found by BLOSUM match with negative similarity score
+- **POOR_J_ANCHOR** - J anchor is found by BLOSUM match with negative similarity score
 - **DUPLICATE** - CDR3 nt sequence is identical to another sequence with more support (different anchors) 
 - **CDR3_DELETED** - A V and J anchor are found, but the CDR3 portion of the sequence (including conserved C,W,F) is fully deleted
 - **MAX_LENGTH** - CDR3 nt sequence must be less than 40 AA in length 
 - **MIN_LENGTH** - CDR3 nt sequence must be at least 5 AA in length (including anchor C & W/F)
 - **MATCHES_REF** - NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0.
+- **NO_HIGH_QUAL_SUPPORT** - Some base in the CDR3 is not supported by any high base quality base in any read. 
 
 Note that sequences with "no anchor" may represent partial rearrangements.
 
@@ -225,6 +230,18 @@ Below steps are required to run the cider_blastn.py script:
 - BLASTN annotation would ideally point to IMGT instead of the 38 reference genome as there is a more complete set of alleles / alts
 
 # Version History and Download Links
+- [0.8.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.8.0)
+  - Add `NO_HIGH_QUAL_SUPPORT` soft filter.
+  - New command line argument: `max_low_qual_base_fraction`.
+  - New command line argument: `max_reads_per_gene`.
+  - By default, any read with more than 10% bases with low base quality are discarded. 
+  - By default, downsample reads if number of reads exceed 300k for a gene.
+  - Remove reads where > 10% of the bases are low quality.
+  - Improve performance of layout building.
+  - Improve performance of VJ layout joining.
+- [0.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.7.0)
+  - Fix an issue where some reads are not collapsed into larger read layouts.
+  - Fix an issue where reads can be added to wrong positions in layout.
 - [0.6](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.6)
   - Fix issue where some sequences that matches reference genome are not marked as MATCHES_REF.
   - Fix bug in the cider_blastn.py script, do not allow D segment to match with genes not within the same chromosome as V or J.

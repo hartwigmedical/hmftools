@@ -25,10 +25,10 @@ import java.io.File
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME
 import java.util.*
-import kotlin.collections.ArrayList
 
 class CiderApplication
 {
@@ -41,8 +41,10 @@ class CiderApplication
     private val mLoggingOptions = LoggingOptions()
 
     @Throws(IOException::class, InterruptedException::class)
-    fun run(): Int
+    fun run(args: Array<String>): Int
     {
+        val runDate = LocalDate.now()
+
         mLoggingOptions.setLogLevel()
         val versionInfo = VersionInfo("cider.version")
         sLogger.info("Cider version: {}, build timestamp: {}",
@@ -106,9 +108,12 @@ class CiderApplication
 
         writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, mParams.reportMatchRefSeq, true)
 
-        val finish = Instant.now()
-        val seconds = Duration.between(start, finish).seconds
-        sLogger.info("CIDER run complete, time taken: {}m {}s", seconds / 60, seconds % 60)
+        sLogger.info("CIDER run complete")
+        sLogger.info("run date: {}", runDate)
+        sLogger.info("run args: {}", args.joinToString(" "))
+        val finish: Instant = Instant.now()
+        val seconds: Long = Duration.between(start, finish).seconds
+        sLogger.info("time taken: {}m {}s", seconds / 60, seconds % 60)
         return 0
     }
 
@@ -162,7 +167,8 @@ class CiderApplication
                 .toList()
 
             val readLayouts = vjReadLayoutAdaptor.buildLayouts(
-                geneType, readsOfGeneType, CiderConstants.LAYOUT_MIN_READ_OVERLAP_BASES)
+                geneType, readsOfGeneType, CiderConstants.LAYOUT_MIN_READ_OVERLAP_BASES,
+                mParams.maxReadCountPerGene, mParams.maxLowQualBaseFraction)
 
             layoutMap[geneType] = readLayouts.sortedByDescending({ layout: ReadLayout -> layout.reads.size })
         }
@@ -243,7 +249,7 @@ class CiderApplication
                     System.exit(1)
                 })
 
-            System.exit(ciderApplication.run())
+            System.exit(ciderApplication.run(args))
         }
     }
 }

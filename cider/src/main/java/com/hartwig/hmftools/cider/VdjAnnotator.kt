@@ -84,7 +84,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         val matchesRef: Boolean = vdjMatchesRef(vdj, vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
                                                 vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads)
 
-        val filterReasons = annotateFilterReasons(vdj, isDuplicate, matchesRef)
+        val filterReasons = annotateFilterReasons(vdj, isDuplicate, matchesRef, cdr3SupportMin)
 
         val vSimilarityScore: Int? = if (vdj.vAnchor != null) calcAnchorSimilarity(vdj, vdj.vAnchor) else null
         val jSimilarityScore: Int? = if (vdj.jAnchor != null) calcAnchorSimilarity(vdj, vdj.jAnchor) else null
@@ -273,7 +273,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             }
         }
 
-        fun annotateFilterReasons(vdj: VDJSequence, isDuplicate: Boolean, matchesRef: Boolean): List<String>
+        fun annotateFilterReasons(vdj: VDJSequence, isDuplicate: Boolean, matchesRef: Boolean, cdr3SupportMin: Int): List<String>
         {
             val filters = ArrayList<String>()
 
@@ -313,6 +313,10 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
                 vdj.vAnchorBoundary!! > vdj.jAnchorBoundary!!)
             {
                 filters.add("CDR3_DELETED")
+            }
+            if (cdr3SupportMin <= 0)
+            {
+                filters.add("NO_HIGH_QUAL_SUPPORT")
             }
             if (filters.isEmpty())
             {
