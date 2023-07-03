@@ -39,7 +39,7 @@ public class HrdDetectionTest
         copyNumbers.add(makeCopyNumber(DEL, DEL, 110001, 110500, 1, 1.0));
         copyNumbers.add(makeCopyNumber(DEL, TELOMERE, 110501, 200000, 2, 0.5));
 
-        assertEquals(0, hrdDetection.calcLohSegments(copyNumbers));
+        assertEquals(0, hrdDetection.calcLohSegments(CHR_1, copyNumbers));
 
         copyNumbers.clear();
 
@@ -61,7 +61,7 @@ public class HrdDetectionTest
         copyNumbers.add(makeCopyNumber(BND, BND, 50001, 60000, 4, 0.75));
 
 
-        assertEquals(1, hrdDetection.calcLohSegments(copyNumbers));
+        assertEquals(1, hrdDetection.calcLohSegments(CHR_1, copyNumbers));
 
         // doesn't call short LOHs
         copyNumbers.clear();
@@ -70,13 +70,17 @@ public class HrdDetectionTest
         copyNumbers.add(makeCopyNumber(BND, BND, 10001, 20000, 1, 1.0));
         copyNumbers.add(makeCopyNumber(BND, BND, 20001, 60000, 2, 0.5));
 
-        assertEquals(0, hrdDetection.calcLohSegments(copyNumbers));
+        assertEquals(0, hrdDetection.calcLohSegments(CHR_1, copyNumbers));
 
-        // can call from and to telomere
+        // cannot call from and to telomere
         copyNumbers.clear();
 
         copyNumbers.add(makeCopyNumber(CHR_1, TELOMERE, CENTROMERE, 1, 100000, 1, 1));
         copyNumbers.add(makeCopyNumber(CHR_1, CENTROMERE, TELOMERE, 100001, 500000, 1, 1));
+
+        assertEquals(0, hrdDetection.calcLohSegments(CHR_1, copyNumbers));
+
+        copyNumbers.clear();
 
         // each side of the centromere
         copyNumbers.add(makeCopyNumber(CHR_2, TELOMERE, BND, 1, 10000, 4, 0.5));
@@ -84,7 +88,7 @@ public class HrdDetectionTest
         copyNumbers.add(makeCopyNumber(CHR_2, CENTROMERE, BND, 100001, 200000, 1, 1));
         copyNumbers.add(makeCopyNumber(CHR_2, BND, TELOMERE, 200001, 500000, 4, 0.5));
 
-        assertEquals(4, hrdDetection.calcLohSegments(copyNumbers));
+        assertEquals(2, hrdDetection.calcLohSegments(CHR_2, copyNumbers));
     }
 
     @Test

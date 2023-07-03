@@ -2,6 +2,10 @@ package com.hartwig.hmftools.purple.tools;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
@@ -22,6 +26,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.chord.ChordStatus;
@@ -53,7 +58,11 @@ public class HrdDetectionAnalyser
 
     public HrdDetectionAnalyser(final ConfigBuilder configBuilder)
     {
-        mSampleIds = loadSampleIdsFile(configBuilder);
+        if(configBuilder.hasValue(SAMPLE))
+            mSampleIds = Lists.newArrayList(configBuilder.getValue(SAMPLE));
+        else
+            mSampleIds = loadSampleIdsFile(configBuilder);
+
         mPurpleDataDir = configBuilder.getValue(PURPLE_DIR_CFG);
         mChordDir = configBuilder.getValue(CHORD_DIR_CFG);
         mThreads = configBuilder.getInteger(THREADS);
@@ -106,7 +115,7 @@ public class HrdDetectionAnalyser
         {
             if(mChordDir != null)
             {
-                String sampleChordDirectory = mChordDir.replaceAll("\\*", sampleId);
+                String sampleChordDirectory =  convertWildcardSamplePath(mChordDir, sampleId);
                 chordData = ChordDataFile.read(ChordDataFile.generateFilename(sampleChordDirectory, sampleId));
             }
             else
@@ -121,7 +130,7 @@ public class HrdDetectionAnalyser
                         .remarksHrStatus("").build();
             }
 
-            String samplePurpleDirectory = mPurpleDataDir.replaceAll("\\*", sampleId);
+            String samplePurpleDirectory = convertWildcardSamplePath(mPurpleDataDir, sampleId);
             copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDirectory, sampleId));
             purityContext = PurityContextFile.read(samplePurpleDirectory, sampleId);
         }
@@ -150,12 +159,20 @@ public class HrdDetectionAnalyser
     {
         try
         {
-            String fileName = outputDir + "purple_hrd_analysis.csv";
+            String fileName = outputDir;
+
+            if(mSampleIds.size() == 1)
+                fileName += mSampleIds.get(0) + ".purple.hrd.tsv";
+            else
+                fileName += "cohort_purple_hrd_analysis.tsv";
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("SampleId,HRDStatus,HRD,BRCA1,BRCA2");
-            writer.write(",LohSegments,SegmentBreaks,SegmentImbalances,Score");
+            if(mSampleIds.size() == 1)
+                writer.write("SampleId\t");
+
+            writer.write("HRDStatus\tHRD\tBRCA1\tBRCA2");
+            writer.write("\tLohSegments\tSegmentBreaks\tSegmentImbalances\tScore");
             writer.newLine();
 
             return writer;
@@ -171,10 +188,15 @@ public class HrdDetectionAnalyser
     {
         try
         {
-            mWriter.write(format("%s,%s,%.3f,%.3f,%.3f",
-                    sampleId, chordData.hrStatus(), chordData.hrdValue(), chordData.BRCA1Value(), chordData.BRCA2Value()));
+            if(mSampleIds.size() == 1)
+            {
+                mWriter.write(format("%s\t", sampleId));
+            }
 
-            mWriter.write(format(",%d,%.1f,%d,%.1f",
+            mWriter.write(format("%s\t%.3f\t%.3f\t%.3f",
+                    chordData.hrStatus(), chordData.hrdValue(), chordData.BRCA1Value(), chordData.BRCA2Value()));
+
+            mWriter.write(format("\t%d\t%.1f\t%d\t%.1f",
                     hrdData.LohSegments, hrdData.SegmentBreaks, hrdData.SegmentImbalances, hrdData.score()));
 
             mWriter.newLine();
@@ -185,12 +207,15 @@ public class HrdDetectionAnalyser
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        addSampleIdFile(configBuilder, true);
-        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addSampleIdFile(configBuilder, false);
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
+        configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
 
         if(!configBuilder.parseCommandLine(args))
@@ -204,13 +229,4 @@ public class HrdDetectionAnalyser
         HrdDetectionAnalyser hrdDetectionAnalyser = new HrdDetectionAnalyser(configBuilder);
         hrdDetectionAnalyser.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
-
 }
