@@ -5,6 +5,10 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -64,8 +68,6 @@ public class PurityConfig
     private static final String PURITY_METHODS = "purity_methods";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SAMPLE_DATA_DIR = "sample_data_dir";
-    private static final String PURPLE_DIR = "purple_dir";
-    private static final String COBALT_DIR = "cobalt_dir";
     private static final String WRITE_VARIANTS = "write_somatics";
     private static final String INCLUDE_FILTERED_VARIANTS = "write_filtered_somatics";
     private static final String WRITE_CN_RATIOS = "write_cn_ratios";
@@ -95,8 +97,8 @@ public class PurityConfig
         }
 
         SomaticVcf = configBuilder.getValue(SOMATIC_VCF);
-        PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR, SampleDataDir));
-        CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIR, SampleDataDir));
+        PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir));
+        CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir));
         OutputDir = checkAddDirSeparator(configBuilder.getValue(OUTPUT_DIR, SampleDataDir));
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
@@ -209,8 +211,8 @@ public class PurityConfig
 
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR, true, "Sample data directory for all files");
-        configBuilder.addConfigItem(PURPLE_DIR, true, "Sample Purple directory");
-        configBuilder.addConfigItem(COBALT_DIR, false, "Sample Cobalt directory");
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addFlag(APPLY_DROPOUT, "Apply somatic drop-out logic");
         configBuilder.addFlag(WRITE_VARIANTS, "Write variants");
         configBuilder.addFlag(WRITE_CN_RATIOS, "Write copy number segment GC ratio summary");
