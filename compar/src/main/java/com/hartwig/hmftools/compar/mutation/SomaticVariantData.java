@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
+import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
+import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
@@ -174,10 +176,10 @@ public class SomaticVariantData implements ComparableItem
     @Override
     public Mismatch findMismatch(final ComparableItem other, final MatchLevel matchLevel, final DiffThresholds thresholds)
     {
-        return findDiffs(other, thresholds, false, false);
+        return findDiffs(other, thresholds, MatchFilterStatus.BOTH_UNFILTERED, false);
     }
 
-    protected Mismatch findDiffs(final ComparableItem other, final DiffThresholds thresholds, boolean isUnfiltered, boolean nonPurple)
+    protected Mismatch findDiffs(final ComparableItem other, final DiffThresholds thresholds, MatchFilterStatus matchFilterStatus, boolean nonPurple)
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
 
@@ -187,7 +189,7 @@ public class SomaticVariantData implements ComparableItem
         checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
         checkDiff(diffs, FLD_TIER, Tier.toString(), otherVar.Tier.toString());
 
-        if(!isUnfiltered)
+        if(matchFilterStatus.canComparePurpleFields())
         {
             // assumes Pave annotated - could possibly check VCF for presence of tags
             checkDiff(diffs, FLD_GENE, Gene, otherVar.Gene);
@@ -197,7 +199,7 @@ public class SomaticVariantData implements ComparableItem
             checkDiff(diffs, FLD_HGVS_PROTEIN, CanonicalHgvsProteinImpact, otherVar.CanonicalHgvsProteinImpact);
         }
 
-        if(!isUnfiltered && !nonPurple)
+        if(matchFilterStatus.canComparePurpleFields() && !nonPurple)
         {
             checkDiff(diffs, FLD_HOTSPOT, HotspotStatus.toString(), otherVar.HotspotStatus.toString());
             checkDiff(diffs, FLD_BIALLELIC, Biallelic, otherVar.Biallelic);
@@ -210,14 +212,25 @@ public class SomaticVariantData implements ComparableItem
         // compare filters
         checkFilterDiffs(Filters, otherVar.Filters, diffs);
 
-        if(isUnfiltered && !diffs.contains(FILTER_DIFF))
+        if(Filters.isEmpty() && otherVar.Filters.isEmpty() && !diffs.contains(FILTER_DIFF))
         {
-            // suggest was filtered downstream of Sage , eg Pave or Purple so indicate this
-            if(Filters.isEmpty() && otherVar.Filters.isEmpty())
+            // if ones side is filtered, suggests was filtered downstream of Sage , eg Pave or Purple so indicate this
+            if(matchFilterStatus == MatchFilterStatus.REF_FILTERED)
+                diffs.add(format("%s(%s/%s)", FILTER_DIFF, "FILTERED", PASS));
+            else if(matchFilterStatus == MatchFilterStatus.NEW_FILTERED)
                 diffs.add(format("%s(%s/%s)", FILTER_DIFF, PASS, "FILTERED"));
         }
 
-        return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
+        if(diffs.isEmpty())
+            return null;
+        else if(matchFilterStatus == MatchFilterStatus.BOTH_UNFILTERED)
+            return new Mismatch(this, other, VALUE, diffs);
+        else if(matchFilterStatus == MatchFilterStatus.REF_FILTERED)
+            return new Mismatch(this, other, NEW_ONLY, diffs);
+        else if(matchFilterStatus == MatchFilterStatus.NEW_FILTERED)
+            return new Mismatch(this, other, REF_ONLY, diffs);
+        else
+            throw new RuntimeException(String.format("Unrecognized value for MatchFilterStatus: %s", matchFilterStatus));
     }
 
     public static SomaticVariantData fromContext(final VariantContext context)
