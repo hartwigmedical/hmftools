@@ -13,6 +13,54 @@ object VdjBuilderUtils
         val overlapBases: Int,
         val highQualMatchBases: Int)
 
+    fun calcWordHashMask(wordSize: Int) : Int
+    {
+        require(wordSize <= 16)
+        return (0xFFFFFFFF shr (32 - 2 * wordSize)).toInt()
+    }
+
+    fun calcSequenceWordHashes(seq: String, wordSize: Int) : List<Int>
+    {
+        if (wordSize > 16)
+        {
+            throw IllegalArgumentException("illegal word size: $wordSize > 16")
+        }
+
+        val wordHashMask: Int = calcWordHashMask(wordSize)
+
+        // anything that has not been found yet we calculate a hash map
+        val hashList = ArrayList<Int>()
+
+        var wordHash: Int = 0
+        var nextWordEnd: Int = wordSize - 1
+
+        for (i in seq.indices)
+        {
+            val base = seq[i]
+
+            if (base == 'N')
+            {
+                // we cannot calculate 5-mer with any N base
+                // we have to skip through it
+                nextWordEnd += wordSize
+                wordHash = 0
+                continue
+            }
+
+            // shift left by 2 to make space for next one
+            wordHash = (wordHash shl 2) + CiderUtils.calcBaseHash(base)
+            wordHash = wordHash and wordHashMask
+
+            if (i == nextWordEnd)
+            {
+                hashList.add(wordHash)
+                nextWordEnd++
+            }
+        }
+
+        return hashList
+    }
+
     // we try to overlap them. Note that it is possible for the V and J layout to overlap in any
     // direction
     //
@@ -28,7 +76,7 @@ object VdjBuilderUtils
     //
     fun findSequenceOverlap(seq1: String, seq2: String, minOverlappedBases: Int) : SequenceOverlap?
     {
-        var highQualMatchBases: Int = 0
+        var highQualMatchBases: Int
 
         //  seq1            ==============
         //  seq2   ==================
@@ -221,7 +269,7 @@ object VdjBuilderUtils
             }
         }
 
-        sLogger.debug("start merge: {}(v:{}, j:{}, aligned pos:{}, within layout: {}-{}, v: {}, j: {}) and " +
+        sLogger.trace("start merge: {}(v:{}, j:{}, aligned pos:{}, within layout: {}-{}, v: {}, j: {}) and " +
                 "{}(v:{}, j:{}, aligned pos:{}, within layout: {}-{}, v: {}, j: {})",
             vdj1.aminoAcidSequenceFormatted, vdj1.vAnchor?.matchMethod, vdj1.jAnchor?.matchMethod, vdj1.layout.alignedPosition,
             vdj1.layoutSliceStart, vdj1.layoutSliceEnd, vdj1.vAnchor?.anchorBoundary, vdj1.jAnchor?.anchorBoundary,

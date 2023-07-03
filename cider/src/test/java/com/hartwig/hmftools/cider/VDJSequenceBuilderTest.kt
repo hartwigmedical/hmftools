@@ -413,54 +413,60 @@ class VDJSequenceBuilderTest
         assertEquals("TGCGAATACCCACAT", vdjSeq.cdr3SequenceShort)
     }
 
+    // test we can identify V J overlap and join them up
+    @Test
+    fun testBuildVdjFromOverlapLayoutsWordHash()
+    {
+        val mockVjReadLayoutAdaptor = MockVJReadLayoutAdaptor()
+        val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
+        val vdjSeqBuilder = VDJSequenceBuilder(
+            mockVjReadLayoutAdaptor, mockAnchorBlosumSearcher, MIN_BASE_QUALITY,
+            10)
+
+        // we create two layouts, a V layout and a J layout, and they overlap each other by 13 bases:
+        // v layout:   TGC-GAATACC-CACATCCTGA-G
+        // j layout:            CC-CACATCCTGA-GAGTG-TCAGA
+        //                 |_____|            |___|
+        //            V anchor(align)    J anchor(align)
+        //
+        // V anchor is position 3-10 in the V layout, J anchor is position 12-17 in the J layout.
+        // The final VDJ is 30 bases long, V anchor at position 3-10, J anchor is position 20-25
+
+        val seq = "TGC-GAATACC-CACATCCTGA-GAGTG-TCAGA".replace("-", "")
+        val vLayout = TestUtils.createLayout(seq.substring(0, 21))
+        val jLayout = TestUtils.createLayout(seq.substring(8))
+
+        mockVjReadLayoutAdaptor.anchorRangeMap[vLayout] = 3 until 10
+        mockVjReadLayoutAdaptor.anchorRangeMap[jLayout] = 12 until 17
+
+        val vLayoutList = mutableListOf(vLayout)
+        val jLayoutList = mutableListOf(jLayout)
+        val vdjList = ArrayList<VDJSequence>()
+
+        // should be able to find read word hash
+        vdjSeqBuilder.joinVjLayoutsByWordHash(
+            VJGeneType.TRAV, VJGeneType.TRAJ,
+            vLayoutList, jLayoutList, vdjList)
+
+        assertTrue(vdjList.isNotEmpty())
+
+        // also the layouts that are used should be removed from the input list
+        assertTrue(vLayoutList.isEmpty())
+        assertTrue(jLayoutList.isEmpty())
+
+        val vdjSeq = vdjList[0]
+
+        assertEquals(VJGeneType.TRAV, vdjSeq.vAnchor!!.geneType)
+        assertEquals(VJGeneType.TRAJ, vdjSeq.jAnchor!!.geneType)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.vAnchor)
+        assertIs<VJAnchorByReadMatch>(vdjSeq.jAnchor)
+        assertEquals("GAATACC", vdjSeq.vAnchorSequence)
+        assertEquals("GAGTG", vdjSeq.jAnchorSequence)
+        assertEquals("CACATCCTGA", vdjSeq.cdr3SequenceShort)
+    }
+
     companion object
     {
         const val MIN_BASE_QUALITY = 30.toByte()
-
-        /*
-        // a simple function to create VDJ sequence
-        fun createVDJ1(sequence: String, support: String, vAnchorBoundary: Int, jAnchorBoundary: Int, readIdPrefix: String) : VDJSequence
-        {
-            assertEquals(sequence.length, support.length)
-            assertTrue(vAnchorBoundary < jAnchorBoundary)
-            assertTrue(vAnchorBoundary < sequence.length)
-            assertTrue(jAnchorBoundary <= sequence.length)
-
-            val vdjSupport = ArrayList<VDJSequence.BaseSupport>()
-
-            // we want to somehow intelligently create some reads to get the given support
-            for (i in sequence.indices)
-            {
-                vdjSupport.add(VDJSequence.BaseSupport(sequence[i], createReadSet(support[i], readIdPrefix)))
-            }
-
-            // create VJ anchor
-            val vAnchor = VJAnchorByReadMatch(
-                type = VJAnchor.Type.V,
-                geneType = VJGeneType.IGHV,
-                anchorBoundary = vAnchorBoundary,
-                matchMethod = "exact"
-            )
-
-            val jAnchor = VJAnchorByReadMatch(
-                type = VJAnchor.Type.J,
-                geneType = VJGeneType.IGHJ,
-                anchorBoundary = jAnchorBoundary,
-                matchMethod = "exact"
-            )
-
-            val vdj = VDJSequence("id", vdjSupport.toTypedArray(), vAnchor, jAnchor)
-            return vdj
-        }
-
-        fun createReadSet(sizeCode: Char, readIdPrefix: String) : Set<ReadKey>
-        {
-            val readSet = HashSet<ReadKey>()
-
-            // convert the size Code to int
-            val size = sizeCode.digitToInt(radix = RADIX)
-            repeat(size, { i -> readSet.add(ReadKey("${readIdPrefix}${i}", true)) })
-            return readSet
-        }*/
     }
 }
