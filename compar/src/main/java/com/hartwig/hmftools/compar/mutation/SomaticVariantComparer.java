@@ -160,7 +160,7 @@ public class SomaticVariantComparer implements ItemComparer
                 final SomaticVariantData refVariant = refVariants.get(index1);
 
                 SomaticVariantData matchedVariant = null;
-                MatchFilterStatus matchFilterStatus = MatchFilterStatus.BOTH_UNFILTERED;
+                MatchFilterStatus matchFilterStatus = null;
 
                 int index2 = 0;
                 while(index2 < newVariants.size())
@@ -170,23 +170,27 @@ public class SomaticVariantComparer implements ItemComparer
                     if(refVariant.matches(newVariant))
                     {
                         matchedVariant = newVariant;
+                        matchFilterStatus = MatchFilterStatus.BOTH_UNFILTERED;
                         newVariants.remove(index2);
                         break;
                     }
                     else if(newVariant.Position > refVariant.Position)
                     {
-                        final SomaticVariantData unfilteredVariant = findUnfilteredVariant(refVariant, NEW_SOURCE);
-
-                        if(unfilteredVariant != null)
-                        {
-                            matchFilterStatus = MatchFilterStatus.NEW_FILTERED;
-                            matchedVariant = unfilteredVariant;
-                        }
-
                         break;
                     }
 
                     ++index2;
+                }
+
+                if(matchedVariant == null)
+                {
+                    final SomaticVariantData unfilteredVariant = findUnfilteredVariant(refVariant, NEW_SOURCE);
+
+                    if(unfilteredVariant != null)
+                    {
+                        matchFilterStatus = MatchFilterStatus.NEW_FILTERED;
+                        matchedVariant = unfilteredVariant;
+                    }
                 }
 
                 if(matchedVariant != null)
