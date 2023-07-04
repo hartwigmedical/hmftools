@@ -179,7 +179,8 @@ public class SomaticVariantData implements ComparableItem
         return findDiffs(other, thresholds, MatchFilterStatus.BOTH_UNFILTERED, false);
     }
 
-    protected Mismatch findDiffs(final ComparableItem other, final DiffThresholds thresholds, MatchFilterStatus matchFilterStatus, boolean nonPurple)
+    protected Mismatch findDiffs(
+            final ComparableItem other, final DiffThresholds thresholds, MatchFilterStatus matchFilterStatus, boolean nonPurple)
     {
         final SomaticVariantData otherVar = (SomaticVariantData) other;
 

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave.annotation;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ_DESC;
@@ -24,6 +25,8 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.pave.VariantData;
+
+import org.apache.logging.log4j.Level;
 
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
@@ -83,7 +86,10 @@ public class GnomadAnnotation
         }
     }
 
-    public boolean exceedsPonThreshold(final Double frequency) { return frequency != null && frequency >= mPonFilterThreshold; }
+    public boolean exceedsPonThreshold(final Double frequency)
+    {
+        return frequency != null && mPonFilterThreshold >= 0 && frequency >= mPonFilterThreshold;
+    }
 
     public Double getFrequency(final VariantData variant)
     {
@@ -216,11 +222,11 @@ public class GnomadAnnotation
             int posIndex = index++;
             int refIndex = index++;
             int altIndex = index++;
-            int freqIndex = index++;
+            int freqIndex = index;
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] values = line.split(",", -1);
+                final String[] values = line.split(CSV_DELIM, -1);
 
                 String chromosome = fileChromosome != null ? fileChromosome : values[chrIndex];
                 int position = Integer.parseInt(values[posIndex]);
@@ -250,11 +256,12 @@ public class GnomadAnnotation
                 ++itemCount;
             }
 
-            PV_LOGGER.debug("loaded {} gnomad frequency records from file({})", itemCount, filename);
+            Level logLevel = !mLoadChromosomeOnDemand ? Level.INFO : Level.DEBUG;
+            PV_LOGGER.log(logLevel, "loaded {} gnomad frequency records from file({})", itemCount, filename);
         }
         catch(IOException e)
         {
-            PV_LOGGER.error("failed to load gnoamd frequency file({}): {}", filename, e.toString());
+            PV_LOGGER.error("failed to load Gnoamd frequency file({}): {}", filename, e.toString());
             return;
         }
     }
