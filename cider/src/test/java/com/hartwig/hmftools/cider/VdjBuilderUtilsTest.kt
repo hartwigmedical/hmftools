@@ -15,6 +15,27 @@ class VdjBuilderUtilsTest
         //org.apache.logging.log4j.core.config.Configurator.setRootLevel(org.apache.logging.log4j.Level.TRACE)
     }
 
+    // test calculation of word hashes
+    @Test
+    fun testCalcSequenceHashes()
+    {
+        val hashes = VdjBuilderUtils.calcSequenceWordHashes("AAAAATAGAAAAAA", 6)
+
+        // for (h in hashes)
+        // println(h)
+
+        assertEquals(9, hashes.size)
+        assertEquals(1, hashes[0])
+        assertEquals(4, hashes[1])
+        assertEquals(19, hashes[2])
+        assertEquals(76, hashes[3])
+        assertEquals(304, hashes[4])
+        assertEquals(1216, hashes[5])
+        assertEquals(768, hashes[6])
+        assertEquals(3072, hashes[7])
+        assertEquals(0, hashes[8])
+    }
+
     // test the function that identifies overlaps
     @Test
     fun testFindVjOverlap1()

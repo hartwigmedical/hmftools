@@ -4,6 +4,7 @@ import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParameterException
 import com.beust.jcommander.ParametersDelegate
 import com.beust.jcommander.UnixStyleUsageFormatter
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.cider.AsyncBamReader.processBam
 import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
 import com.hartwig.hmftools.cider.VJReadLayoutFile.writeLayouts
@@ -11,9 +12,9 @@ import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.primer.*
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator
 import com.hartwig.hmftools.common.utils.config.LoggingOptions
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import com.hartwig.hmftools.common.utils.version.VersionInfo
 import htsjdk.samtools.SAMFileHeader
 import htsjdk.samtools.SAMFileWriterFactory
@@ -25,10 +26,12 @@ import java.io.File
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME
 import java.util.*
-import kotlin.collections.ArrayList
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 class CiderApplication
 {
@@ -41,13 +44,15 @@ class CiderApplication
     private val mLoggingOptions = LoggingOptions()
 
     @Throws(IOException::class, InterruptedException::class)
-    fun run(): Int
+    fun run(args: Array<String>): Int
     {
+        val runDate = LocalDate.now()
+
         mLoggingOptions.setLogLevel()
         val versionInfo = VersionInfo("cider.version")
         sLogger.info("Cider version: {}, build timestamp: {}",
             versionInfo.version(),
-            versionInfo.buildTime()!!.format(ISO_ZONED_DATE_TIME))
+            versionInfo.buildTime().format(ISO_ZONED_DATE_TIME))
 
         if (!mParams.isValid)
         {
@@ -75,7 +80,7 @@ class CiderApplication
         writeCiderBam(readProcessor.allMatchedReads)
 
         val vjReadLayoutAdaptor = VJReadLayoutBuilder(mParams.numBasesToTrim, mParams.minBaseQuality)
-        val layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.vjReadCandidates)
+        val layoutMap = buildLayouts(vjReadLayoutAdaptor, readProcessor.vjReadCandidates, mParams.threadCount)
 
         val vdjBuilderBlosumSearcher = AnchorBlosumSearcher(
             ciderGeneDatastore,
@@ -106,9 +111,12 @@ class CiderApplication
 
         writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, mParams.reportMatchRefSeq, true)
 
-        val finish = Instant.now()
-        val seconds = Duration.between(start, finish).seconds
-        sLogger.info("CIDER run complete, time taken: {}m {}s", seconds / 60, seconds % 60)
+        sLogger.info("CIDER run complete")
+        sLogger.info("run date: {}", runDate)
+        sLogger.info("run args: {}", args.joinToString(" "))
+        val finish: Instant = Instant.now()
+        val seconds: Long = Duration.between(start, finish).seconds
+        sLogger.info("time taken: {}m {}s", seconds / 60, seconds % 60)
         return 0
     }
 
@@ -143,28 +151,48 @@ class CiderApplication
         sLogger.info("found {} VJ read records", readProcessor.allMatchedReads.size)
     }
 
+    // Build the consensus layout of all reads
     private fun buildLayouts(
-        vjReadLayoutAdaptor: VJReadLayoutBuilder,
-        readCandidates: Collection<VJReadCandidate>
-    ): Map<VJGeneType, List<ReadLayout>>
+        vjReadLayoutAdaptor: VJReadLayoutBuilder, readCandidates: Collection<VJReadCandidate>, threadCount: Int)
+        : Map<VJGeneType, List<ReadLayout>>
     {
-        // now build the consensus overlay sequences
-        //var geneTypes = new VJGeneType[] { VJGeneType.IGHV, VJGeneType.IGHJ };
         val geneTypes = VJGeneType.values()
 
         // use a EnumMap such that the keys are ordered by the declaration
         val layoutMap: MutableMap<VJGeneType, List<ReadLayout>> = EnumMap(VJGeneType::class.java)
 
-        for (geneType in geneTypes)
+        val namedThreadFactory = ThreadFactoryBuilder().setNameFormat("worker-%d").build()
+        val executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory)
+
+        try
         {
-            val readsOfGeneType = readCandidates
-                .filter({ o: VJReadCandidate -> o.vjGeneType === geneType })
-                .toList()
+            val futures: MutableMap<VJGeneType, Future<List<ReadLayout>>> = EnumMap(VJGeneType::class.java)
 
-            val readLayouts = vjReadLayoutAdaptor.buildLayouts(
-                geneType, readsOfGeneType, CiderConstants.LAYOUT_MIN_READ_OVERLAP_BASES)
+            for (geneType in geneTypes)
+            {
+                val readsOfGeneType = readCandidates
+                    .filter({ o: VJReadCandidate -> o.vjGeneType === geneType })
+                    .toList()
 
-            layoutMap[geneType] = readLayouts.sortedByDescending({ layout: ReadLayout -> layout.reads.size })
+                val workerTask: Callable<List<ReadLayout>> = Callable {
+                    val readLayouts: List<ReadLayout> = vjReadLayoutAdaptor.buildLayouts(
+                        geneType, readsOfGeneType, CiderConstants.LAYOUT_MIN_READ_OVERLAP_BASES,
+                        mParams.maxReadCountPerGene, mParams.maxLowQualBaseFraction)
+                        .sortedByDescending({ layout: ReadLayout -> layout.reads.size })
+                    readLayouts
+                }
+                futures[geneType] = executorService.submit(workerTask)
+            }
+
+            for ((geneType, future) in futures)
+            {
+                layoutMap[geneType] = future.get()
+            }
+        }
+        finally
+        {
+            // we must do this to make sure application will exit on exception
+            executorService.shutdown()
         }
 
         // give each an ID
@@ -214,8 +242,6 @@ class CiderApplication
         @JvmStatic
         fun main(args: Array<String>)
         {
-            sLogger.info("{}", LocalDateTime.now())
-            sLogger.info("args: {}", java.lang.String.join(" ", *args))
             val ciderApplication = CiderApplication()
             val commander = JCommander.newBuilder()
                 .addObject(ciderApplication)
@@ -243,7 +269,7 @@ class CiderApplication
                     System.exit(1)
                 })
 
-            System.exit(ciderApplication.run())
+            System.exit(ciderApplication.run(args))
         }
     }
 }

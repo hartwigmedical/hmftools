@@ -271,7 +271,7 @@ class LayoutTreeTest
             "CTGAA", SAMUtils.fastqToPhred("FFFFF"), 1))
 
         // should have 2 sequences
-        var layouts = layoutTree.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
+        val layouts = layoutTree.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
         assertEquals(2, layouts.size)
         assertEquals("GCAGCTGAA", layouts[0].consensusSequence())
         assertEquals("123344211", layouts[0].highQualSupportString())
@@ -409,7 +409,7 @@ class LayoutTreeTest
             "AGCTAA", SAMUtils.fastqToPhred("FFFFFF"), 3))
 
         // now want to check that the layoutTree root has two children
-        assertEquals(2, layoutTree.root.children.size)
+        assertEquals(2, layoutTree.roots.size)
 
         // should have 2 sequences
         val layouts = layoutTree.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
@@ -479,7 +479,7 @@ class LayoutTreeTest
             "TAGCTGA", SAMUtils.fastqToPhred("FFFFFFF"), 3))
 
         // now want to check that the layoutTree root has two children
-        assertEquals(2, layoutTree.root.children.size)
+        assertEquals(2, layoutTree.roots.size)
 
         // should have 2 sequences
         val layouts = layoutTree.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })

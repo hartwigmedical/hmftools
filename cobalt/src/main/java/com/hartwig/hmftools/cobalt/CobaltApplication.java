@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.cobalt.RatioSegmentation.applyRatioSegmentati
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
@@ -50,8 +52,7 @@ public class CobaltApplication
 
     public static void main(final String... args) throws IOException, ExecutionException, InterruptedException
     {
-        // CB_LOGGER.info("{}", LocalDate.now());
-        CB_LOGGER.debug("args: {}", String.join(" ", args));
+        // CB_LOGGER.debug("args: {}", String.join(" ", args));
 
         final CobaltApplication application = new CobaltApplication();
         JCommander commander = JCommander.newBuilder()
@@ -82,11 +83,13 @@ public class CobaltApplication
             System.exit(1);
         });
 
-        System.exit(application.run());
+        System.exit(application.run(args));
     }
 
-    private int run() throws IOException, ExecutionException, InterruptedException
+    private int run(final String... args) throws IOException, ExecutionException, InterruptedException
     {
+        LocalDate runDate = LocalDate.now();
+        Instant start = Instant.now();
         mConfig.validate();
         mLoggingOptions.setLogLevel();
 
@@ -156,7 +159,13 @@ public class CobaltApplication
             // we must do this to make sure application will exit on exception
             executorService.shutdown();
         }
-        CB_LOGGER.info("Complete");
+
+        CB_LOGGER.info("Cobalt run complete");
+        CB_LOGGER.info("run date: {}", runDate);
+        CB_LOGGER.info("run args: {}", String.join(" ", args));
+        Instant finish = Instant.now();
+        long seconds = Duration.between(start, finish).getSeconds();
+        CB_LOGGER.info("time taken: {}m {}s", seconds / 60, seconds % 60);
 
         return 0;
     }

@@ -2,10 +2,14 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.LayoutTree
 import com.hartwig.hmftools.cider.layout.ReadLayout
+import com.hartwig.hmftools.common.utils.Doubles
 import htsjdk.samtools.SAMRecord
+import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
+import kotlin.random.Random
 
 // helper class to convert from the outer VJ classes to the layout classes
 // create an interface to make it easier to test
@@ -68,8 +72,6 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             layoutReadSlice.readString,
             layoutReadSlice.baseQualities,
             alignedPosition)
-        {
-        }
 
         override fun copy(alignedPosition: Int): ReadLayout.Read
         {
@@ -139,7 +141,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             val numGs = CiderUtils.numTrailingPolyG(read.readString, sliceEnd)
             if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
-                sLogger.debug("read({}) strand(+) poly G tail of length({}) found({})",
+                sLogger.trace("read({}) strand(+) poly G tail of length({}) found({})",
                     read, numGs, read.readString)
                 sliceEnd -= numGs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
             }
@@ -149,7 +151,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             val numCs = CiderUtils.numLeadingPolyC(read.readString, sliceStart)
             if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
-                sLogger.debug("read({}) strand(-) poly G tail of length({}) found({})",
+                sLogger.trace("read({}) strand(-) poly G tail of length({}) found({})",
                     read, numCs, read.readString)
                 sliceStart += numCs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
             }
@@ -219,19 +221,41 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
     // Build layouts using layout tree
     // TODO: merge layouts where differences are outside of the anchor
     fun buildLayouts(geneType: VJGeneType, readCandidates: List<VJReadCandidate>,
-                     minMatchedBases: Int)
+                     minMatchedBases: Int, maxReadCountPerGene: Int, maxLowQualBaseFraction: Double)
     : List<ReadLayout>
     {
-        sLogger.info("building {} layouts from {} reads", geneType, readCandidates.size)
-
-        val layoutReads = ArrayList<ReadLayout.Read>()
+        val layoutReads: MutableList<ReadLayout.Read> = ArrayList()
 
         for (r in readCandidates)
         {
-            val layoutRead = readCandidateToLayoutRead(r)
-            if (layoutRead != null)
+            val layoutRead = readCandidateToLayoutRead(r) ?: continue
+
+            // filter reads by number of low qual base
+            val fractionLowQual = layoutRead.baseQualities.count { bq -> bq < minBaseQuality }.toDouble() / layoutRead.readLength
+
+            if (Doubles.lessOrEqual(fractionLowQual, maxLowQualBaseFraction))
+            {
                 layoutReads.add(layoutRead)
+            }
         }
+
+        // see if we need to downsample
+        if (layoutReads.size >= maxReadCountPerGene)
+        {
+            val fractionToKeep = maxReadCountPerGene.toDouble() / layoutReads.size
+
+            sLogger.printf(Level.INFO, "building %s layouts, read count(%d) > limit(%d), downsampling(frac to keep: %.3f)",
+                geneType, layoutReads.size, maxReadCountPerGene, fractionToKeep)
+
+            // we always use the same seed to make it predictable
+            val random = Random(0)
+
+            val filteredLayouts = layoutReads.filter { (random.nextDouble() < fractionToKeep) }
+            layoutReads.clear()
+            layoutReads.addAll(filteredLayouts)
+        }
+
+        sLogger.info("building {} layouts from {} reads", geneType, layoutReads.size)
 
         // always build from left to right
         layoutReads.sortWith(
@@ -252,10 +276,32 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         }
 
         val readLayouts: List<ReadLayout> = layoutTree.buildReadLayouts({ read: LayoutTree.Read -> read.source as VjLayoutRead })
+            .sortedByDescending({ layout: ReadLayout -> layout.reads.size })
+
+        // We want to perform a quick sanity check that the number of reads are correct
+        readCountSanityCheck(layoutReads, readLayouts)
 
         sLogger.info("built {} {} layouts from {} reads", readLayouts.size, geneType, layoutReads.size)
 
         return readLayouts
+    }
+
+    // sanity check to make sure we got all correct read counts
+    fun readCountSanityCheck(reads: List<ReadLayout.Read>, layouts: List<ReadLayout>)
+    {
+        // check to make sure all reads are used
+        val readSet: MutableSet<ReadKey> = HashSet()
+
+        reads.forEach { o -> readSet.add(o.readKey) }
+        layouts.forEach { l -> readSet.removeAll(l.reads.map { r -> r.readKey }) }
+
+        if (readSet.isNotEmpty())
+        {
+            sLogger.error("built layouts are missing {} input reads", readSet.size)
+            readSet.forEach({ o -> sLogger.info("read {} missing in built layouts", o) })
+        }
+
+        require(readSet.isEmpty())
     }
 
     companion object

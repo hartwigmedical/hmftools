@@ -426,7 +426,7 @@ class CiderReadScreener(// collect the reads and sort by types
         }
 
         val geneNames = vjAnchorTemplates.map({ o: VJAnchorTemplate -> o.geneName }).distinct().toList()
-        sLogger.debug(
+        sLogger.trace(
             "genes: {} read({}) method({}) anchor range({}-{}) template loc({}) "
                     + "anchor AA({}) template AA({}) similarity({})",
             geneNames, samRecord, templateMatchMethod,

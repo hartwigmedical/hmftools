@@ -59,6 +59,15 @@ class CiderParams
     @Parameter(names = ["-num_trim_bases"], description = "Number of bases to trim on each side of reads")
     var numBasesToTrim = 0
 
+    @Parameter(names = ["-max_low_qual_base_fraction"],
+        description = "Maximum fraction of bases in a read that can be low quality." +
+                "Reads that exceed this limit are discarded")
+    var maxLowQualBaseFraction = MAX_LOW_QUAL_BASES_FRACTION
+
+    @Parameter(names = ["-max_reads_per_gene"],
+        description = "Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.")
+    var maxReadCountPerGene = DEFAULT_MAX_READ_COUNT_PER_GENE
+
     @Parameter(names = ["-primer_csv"], description = "Path to csv file containing primers")
     var primerCsv: String? = null
 
@@ -71,5 +80,8 @@ class CiderParams
     {
         const val DEFAULT_THREADS = 1
         const val DEFAULT_MAX_FRAGMENT_LENGTH = 1000
+        const val DEFAULT_MAX_READ_COUNT_PER_GENE = 600_000
+        // maximum proportion of read bases that are low quality
+        const val MAX_LOW_QUAL_BASES_FRACTION: Double = 0.1
     }
 }

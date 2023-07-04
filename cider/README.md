@@ -31,17 +31,19 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 
 ### Optional Arguments
 
-| Argument             | Description                                                                       |
-|----------------------|-----------------------------------------------------------------------------------|
-| write_cider_bam      | If specified, write a small bam file of all the extracted reads.                  |
-| threads              | Number of threads to use, defaults to 1                                           |
-| max_fragment_length  | Approximate length of the longest fragment. Defaults to 1000                      |
-| threads              | Number of threads to use, defaults to 1                                           |
-| min_base_quality     | Minimum base quality for a base to be considered a "support" base, defaults to 25 |
-| report_match_ref_seq | When specified, reports VDJ sequences that match reference genome                 |
-| num_trim_bases       | Number of bases to trim on each side of reads. Defaults to 0                      |
-| primer_csv           | Path to csv file containing primers                                               |
-| primer_mismatch_max  | Maximum number of mismatch bases for matching primer sequence                     |
+| Argument                   | Default | Description                                                                                             |
+|----------------------------|---------|---------------------------------------------------------------------------------------------------------|
+| write_cider_bam            | Off     | If specified, write a small bam file of all the extracted reads.                                        |
+| threads                    | 1       | Number of threads to use, defaults to 1                                                                 |
+| max_fragment_length        | 1000    | Approximate length of the longest fragment. Defaults to 1000                                            |
+| threads                    | 1       | Number of threads to use, defaults to 1                                                                 |
+| min_base_quality           | 25      | Minimum base quality for a base to be considered a "support" base, defaults to 25                       |
+| report_match_ref_seq       | Off     | When specified, reports VDJ sequences that match reference genome                                       |
+| num_trim_bases             | 0       | Number of bases to trim on each side of reads. Defaults to 0                                            |
+| max_low_qual_base_fraction | 0.1     | Maximum fraction of bases in a read that can be low quality. Reads that exceed this limit are discarded |
+| max_reads_per_gene         | 600,000 | Maximum number of reads per gene. If number of reads exceed this limit, they are downsampled.          |
+| primer_csv                 |         | Path to csv file containing primers                                                                     |
+| primer_mismatch_max        | 0       | Maximum number of mismatch bases for matching primer sequence                                           |
 
 The ensembl data cache can be downloaded using the following links:
  [v37](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/37/common/ensembl_data/ensembl_gene_data.csv), 
@@ -79,9 +81,15 @@ From the bam retrieve all reads and their mates which overlap the anchor coordin
 
 ### VDJ consensus candidate sequences 
 
-Separately for V and J aligned / anchored reads, determine the 30 base anchor sequence + any candidate CDR3 sequence starting from the bases immediately following the conserved V-CYS r J-PHE/J-TRP location. Determine a minimal set of consensus sequences separately for each of the V and J side by collapsing sequences which match (trimmed for bases with qual < 25) into a single consensus sequence. Note that TRA and TRD sequences may also match together. PolyG tails of 6 or more consecutive Gs (and the prior 5 bases) are stripped from the sequence before making the consensus sequence.  Additionally num_trim_bases is set to > 0 then the specified number of bases is always trimmed from every read prior to creating the candidate sequences  
+Separately for V and J aligned / anchored reads, determine the 30 base anchor sequence + any candidate CDR3 sequence starting from the bases
+immediately following the conserved V-CYS r J-PHE/J-TRP location. Determine a minimal set of consensus sequences separately for each of the
+V and J side by collapsing sequences which match (trimmed for bases with qual < 25) into a single consensus sequence. Note that TRA and TRD
+sequences may also match together. PolyG tails of 2 or more consecutive Gs (and the prior 5 bases) are stripped from the sequence before making
+the consensus sequence. Additionally num_trim_bases is set to > 0 then the specified number of bases is always trimmed from every read prior
+to creating the candidate sequences. Afterwards, reads with more than 10% (configurable) low quality bases after trimming are discarded.
 
-If a sequence can be collapsed to multiple longer sequences, then greedily allocate it to the most supported sequence. The total base qual supporting each base is retained for later matching). 
+If a sequence can be collapsed to multiple longer sequences, then greedily allocate it to the most supported sequence. The total base qual
+supporting each base is retained for later matching). 
 
 ### Identify anchors and call CDR3 sequences  
 
@@ -95,19 +103,22 @@ If the max similarity score to any anchor sequence is greater than 0 we deem it 
 
 ### Collapse consensus sequences 
 
-A sequence is collapsed into another sequence if it is identical at all bases with high quality support across both anchors and candidate CDR3 sequence. Sequences may also be collapsed where they have a single base difference with up to 2 reads of high quality support.  
+A sequence is collapsed into another sequence if it is identical at all bases with high quality support across both anchors and candidate CDR3 sequence. Sequences may also be collapsed where they have a single base difference with up to 1 read of high quality support.  
 
-Each V only anchored read is also checked for partial overlap with each J only anchored read. If they exactly match with more than 15 nucleotides of exact match (allowing for low quality bases) then they are also collapsed into a single sequence. 
+Each V only anchored read is also checked for partial overlap with each J only anchored read. If they exactly match with more than 20 nucleotides of exact match (allowing for low quality bases) then they are also collapsed into a single sequence. 
 
 ### Filter and output VDJ sequences 
 Each collapsed sequence is either marked as PASS or one or more of the following filters 
 - **NO_V_ANCHOR** - No candidate V anchor found 
 - **NO_J_ANCHOR** - No candidate J anchor found 
+- **POOR_V_ANCHOR** - V anchor is found by BLOSUM match with negative similarity score
+- **POOR_J_ANCHOR** - J anchor is found by BLOSUM match with negative similarity score
 - **DUPLICATE** - CDR3 nt sequence is identical to another sequence with more support (different anchors) 
 - **CDR3_DELETED** - A V and J anchor are found, but the CDR3 portion of the sequence (including conserved C,W,F) is fully deleted
 - **MAX_LENGTH** - CDR3 nt sequence must be less than 40 AA in length 
 - **MIN_LENGTH** - CDR3 nt sequence must be at least 5 AA in length (including anchor C & W/F)
 - **MATCHES_REF** - NonSplitRead+vNonSplitReads >=2 AND either vAlignedReads or jAlignedReads=0.
+- **NO_HIGH_QUAL_SUPPORT** - Some base in the CDR3 is not supported by any high base quality base in any read. 
 
 Note that sequences with "no anchor" may represent partial rearrangements.
 
@@ -213,18 +224,31 @@ Below steps are required to run the cider_blastn.py script:
 - **Extrapolation of anchor location inside soft clipped part of read** - needs more thought.
 
 ### CDR3 calling:
-- **Full receptor sequence** - We could assemble outwards from the CDR3 to predict the full receptor sequence.  We should also search for rearrangements that delete both anchor sequeneces
-- **PON** - We should filter sequences found in a large number of samples 
-- **Error tolerance in collapsing** - We collapse sequences with up to 1 high quality sequencing difference across the anchors + CDR3 sequence. We still see a small number of artefacts from very highly supported sequences which could be cleaned up further. 
-- **Extension of incomplete TCR** - For TCR regions it may be possible to predict a full CDR3 sequence from the germline using a parital frgament.  For IG this is likely dangerous due to hypermutation 
+- **Full receptor sequence** - We could assemble outwards from the CDR3 to predict the full receptor sequence.  We should also search for rearrangements that delete both anchor sequeneces 
+- **Error tolerance in collapsing** - We collapse sequences with up to 1 high quality sequencing difference across the anchors + CDR3 sequence. We still see a small number of artefacts from very highly supported sequences which could be cleaned up further.  
 - **Multiple CDR3s in consensus sequence** - A single consensus sequence may have 2 anchor locations that lead to plausible high scoring CDR3 sequences. Currently we choose the highest scoring, but both could be functional.
 - **Longer CDR3 sequences artefacts with indels sometimes reported where indel sequencing errors occur in anchor** - we observe this when we have >>100 reads support for a CDR3 sequence, we sometimes get a handful of reads with a longer CDR3 sequence containing the main sequence, but cannot find the anchror due to indel in the base sequence.
 
 ### Other:
+- Downsampling may cause bias between locus.
 - Support AIRR format output.
 - BLASTN annotation would ideally point to IMGT instead of the 38 reference genome as there is a more complete set of alleles / alts
 
 # Version History and Download Links
+- [0.8.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.8.0)
+  - Add `NO_HIGH_QUAL_SUPPORT` soft filter.
+  - New command line argument: `max_low_qual_base_fraction`.
+  - New command line argument: `max_reads_per_gene`.
+  - By default, any read with more than 10% bases with low base quality are discarded.
+  - By default, downsample reads if number of reads exceed 600k for a gene.
+  - Change poly G trimming threshold from 6 or more consecutive Gs to 2.
+  - Remove reads where > 10% of the bases are low quality.
+  - Use multiple threads when building layouts.
+  - Implementing progressive sealing of nodes in the tree layout.
+  - Improve performance of VJ layout joining. First use common read IDs, then use 8 base word hash to find candidates. The word hashes were generated from the base after V anchor, and up to the base before J anchor.
+- [0.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.7.0)
+  - Fix an issue where some reads are not collapsed into larger read layouts.
+  - Fix an issue where reads can be added to wrong positions in layout.
 - [0.6](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.6)
   - Fix issue where some sequences that matches reference genome are not marked as MATCHES_REF.
   - Fix bug in the cider_blastn.py script, do not allow D segment to match with genes not within the same chromosome as V or J.
