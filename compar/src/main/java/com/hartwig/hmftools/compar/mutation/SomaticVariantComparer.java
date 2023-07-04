@@ -113,24 +113,25 @@ public class SomaticVariantComparer implements ItemComparer
                 hasNewItems = true;
         }
 
+        final List<String> emptyDiffs = Lists.newArrayList();
+        
         if(!hasRefItems || !hasNewItems)
         {
             InvalidDataItem invalidDataItem = new InvalidDataItem(category());
 
             if(!hasRefItems && !hasNewItems)
-                mismatches.add(new Mismatch(invalidDataItem, null, INVALID_BOTH, Collections.EMPTY_LIST));
+                mismatches.add(new Mismatch(invalidDataItem, null, INVALID_BOTH, emptyDiffs));
             else if(!hasRefItems)
-                mismatches.add(new Mismatch(invalidDataItem, null, INVALID_REF, Collections.EMPTY_LIST));
+                mismatches.add(new Mismatch(invalidDataItem, null, INVALID_REF, emptyDiffs));
             else if(!hasNewItems)
-                mismatches.add(new Mismatch(invalidDataItem, null, INVALID_NEW, Collections.EMPTY_LIST));
+                mismatches.add(new Mismatch(invalidDataItem, null, INVALID_NEW, emptyDiffs));
 
             return false;
         }
 
         final Map<String,List<SomaticVariantData>> refVariantsMap = buildVariantMap(allRefVariants);
         final Map<String,List<SomaticVariantData>> newVariantsMap = buildVariantMap(allNewVariants);
-
-        final List<String> emptyDiffs = Lists.newArrayList();
+        final List<SomaticVariantData> emptyVariants = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -141,18 +142,11 @@ public class SomaticVariantComparer implements ItemComparer
             if(newVariants == null && refVariants == null)
                 continue;
 
-            if(newVariants == null && refVariants != null)
-            {
-                refVariants.stream().filter(x -> includeMismatchWithVariant(x, matchLevel))
-                        .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
-                continue;
-            }
-            else if(refVariants == null && newVariants != null)
-            {
-                newVariants.stream().filter(x -> includeMismatchWithVariant(x, matchLevel))
-                        .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
-                continue;
-            }
+            if(newVariants == null)
+                newVariants = emptyVariants;
+
+            if(refVariants == null)
+                refVariants = emptyVariants;
 
             int index1 = 0;
             while(index1 < refVariants.size())
