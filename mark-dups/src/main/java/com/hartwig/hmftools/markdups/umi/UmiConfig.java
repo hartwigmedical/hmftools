@@ -126,6 +126,7 @@ public class UmiConfig
         configBuilder.addFlag(UMI_DUPLEX, "UMI duplex enabled");
         configBuilder.addPath(UMI_DEFINED_IDS, false, "Optional set of defined UMI IDs in file");
         configBuilder.addFlag(UMI_BASE_DIFF_STATS, "Record base difference stats");
+
         configBuilder.addConfigItem(
                 UMI_DUPLEX_DELIM, false,
                 "UMI duplex delimiter, default: " + Constants.DEFAULT_DUPLEX_UMI_DELIM,

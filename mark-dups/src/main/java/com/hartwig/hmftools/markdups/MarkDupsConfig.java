@@ -217,9 +217,6 @@ public class MarkDupsConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
-
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(BAM_FILE, true, "BAM file location");
         addRefGenomeConfig(configBuilder, true);
@@ -232,15 +229,18 @@ public class MarkDupsConfig
         configBuilder.addFlag(WRITE_BAM, "Write BAM, default is true if not writing other read TSV output");
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
+        configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         addValidationStringencyOption(configBuilder);
         UmiConfig.addConfig(configBuilder);
+
         addThreadOptions(configBuilder);
+        addOutputOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
-        configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
     }
 
