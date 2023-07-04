@@ -29,7 +29,7 @@ object CiderConstants
     // this is very important such that we do not let one or two reads stop
     // layouts from being joined together
     const val MIN_VJ_LAYOUT_HIGH_QUAL_READ_FRACTION: Double = 0.02
-    const val MIN_POLY_G_TRIM_COUNT: Int = 6
+    const val MIN_POLY_G_TRIM_COUNT: Int = 2
     const val POLY_G_TRIM_EXTRA_BASE_COUNT: Int = 5
 
     const val MIN_NON_SPLIT_READ_STRADDLE_LENGTH: Int = 30

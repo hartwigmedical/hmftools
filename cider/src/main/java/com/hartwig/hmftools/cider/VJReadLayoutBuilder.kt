@@ -4,6 +4,7 @@ import com.hartwig.hmftools.cider.layout.LayoutTree
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.utils.Doubles
 import htsjdk.samtools.SAMRecord
+import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
@@ -243,8 +244,8 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         {
             val fractionToKeep = maxReadCountPerGene.toDouble() / layoutReads.size
 
-            sLogger.info("building {} layouts, read count({}) > limit({}), downsampling(frac to keep: {})",
-                geneType, layoutReads.size, maxReadCountPerGene, Doubles.round(fractionToKeep, 4))
+            sLogger.printf(Level.INFO, "building %s layouts, read count(%d) > limit(%d), downsampling(frac to keep: %.3f)",
+                geneType, layoutReads.size, maxReadCountPerGene, fractionToKeep)
 
             // we always use the same seed to make it predictable
             val random = Random(0)
@@ -275,6 +276,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         }
 
         val readLayouts: List<ReadLayout> = layoutTree.buildReadLayouts({ read: LayoutTree.Read -> read.source as VjLayoutRead })
+            .sortedByDescending({ layout: ReadLayout -> layout.reads.size })
 
         // We want to perform a quick sanity check that the number of reads are correct
         readCountSanityCheck(layoutReads, readLayouts)
