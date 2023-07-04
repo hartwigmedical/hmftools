@@ -143,13 +143,13 @@ public class SomaticVariantComparer implements ItemComparer
 
             if(newVariants == null && refVariants != null)
             {
-                refVariants.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+                refVariants.stream().filter(x -> includeMismatchWithVariant(x, matchLevel))
                         .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
                 continue;
             }
             else if(refVariants == null && newVariants != null)
             {
-                newVariants.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+                newVariants.stream().filter(x -> includeMismatchWithVariant(x, matchLevel))
                         .forEach(x -> mismatches.add(new Mismatch(null, x, NEW_ONLY, emptyDiffs)));
                 continue;
             }
@@ -197,10 +197,7 @@ public class SomaticVariantComparer implements ItemComparer
                 {
                     refVariants.remove(index1);
 
-                    // skip checking for diffs if the items are not reportable
-                    boolean eitherReportable = refVariant.reportable() || matchedVariant.reportable();
-
-                    if(matchLevel != REPORTABLE || eitherReportable)
+                    if(includeMismatchWithVariant(refVariant, matchLevel) || includeMismatchWithVariant(matchedVariant, matchLevel))
                     {
                         Mismatch mismatch = refVariant.findDiffs(matchedVariant, mConfig.Thresholds, matchFilterStatus, usesNonPurpleVcfs);
 
@@ -214,12 +211,12 @@ public class SomaticVariantComparer implements ItemComparer
                 }
             }
 
-            refVariants.stream().filter(x -> matchLevel != REPORTABLE || x.reportable())
+            refVariants.stream().filter(x -> includeMismatchWithVariant(x, matchLevel))
                     .forEach(x -> mismatches.add(new Mismatch(x, null, REF_ONLY, emptyDiffs)));
 
             for(SomaticVariantData newVariant : newVariants)
             {
-                if(matchLevel == REPORTABLE && !newVariant.reportable())
+                if(!includeMismatchWithVariant(newVariant, matchLevel))
                     continue;
 
                 SomaticVariantData unfilteredVariant = findUnfilteredVariant(newVariant, REF_SOURCE);
@@ -265,6 +262,11 @@ public class SomaticVariantComparer implements ItemComparer
         }
 
         return null;
+    }
+
+    private boolean includeMismatchWithVariant(SomaticVariantData variant, MatchLevel matchLevel)
+    {
+        return matchLevel != REPORTABLE || variant.reportable();
     }
 
     private Map<String,List<SomaticVariantData>> buildVariantMap(final List<SomaticVariantData> variants)
