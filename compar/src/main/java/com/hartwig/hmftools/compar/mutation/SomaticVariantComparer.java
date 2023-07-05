@@ -168,7 +168,7 @@ public class SomaticVariantComparer implements ItemComparer
                         newVariants.remove(index2);
                         break;
                     }
-                    else if(newVariant.Position > refVariant.Position)
+                    else if(newVariant.comparisonPosition() > refVariant.comparisonPosition())
                     {
                         break;
                     }
