@@ -46,6 +46,7 @@ public class CuppaDataFile
     public static final String CUPPA_DATAFILE = ".cup.data.csv";
     public static final String CUPPA_REPORT_SUMMARY_PLOT = ".cup.report.summary.png";
     public static final String CUPPA_REPORT_FEATURES_PLOT = ".cup.report.features.png";
+    public static final String CUPPA_CHART_PLOT = ".cuppa.chart.png";
 
     public CuppaDataFile(
             final CategoryType category, final ResultType resultType,
@@ -71,6 +72,11 @@ public class CuppaDataFile
     public static String generateReportFeaturesPlotFilename(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + CUPPA_REPORT_FEATURES_PLOT;
+    }
+
+    public static String generateChartPlotFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + CUPPA_CHART_PLOT;
     }
 
     public static String header()
