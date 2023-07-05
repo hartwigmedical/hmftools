@@ -74,6 +74,9 @@ public final class CommonConfig
     public static final String SIGS_DIR_CFG = toolDirectory("sigs");
     public static final String SIGS_DIR_DESC = toolDirectoryDesc("Signatures");
 
+    public static final String VIRUS_DIR_CFG = toolDirectory("virus");
+    public static final String VIRUS_DIR_DESC = toolDirectoryDesc("Virus");
+
     private static String toolDirectory(final String toolName) { return format("%s_dir", toolName); }
     private static String toolDirectoryDesc(final String toolName) { return format("Path to %s pipeline files", toolName); }
     private static String toolPlotsDirectoryDesc(final String toolName) { return format("Path to %s plots", toolName); }
