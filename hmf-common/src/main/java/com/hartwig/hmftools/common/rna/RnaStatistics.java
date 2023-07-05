@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.rna;
 import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferHeaderDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getDoubleValue;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
@@ -109,7 +110,7 @@ public abstract class RnaStatistics
     public static RnaStatistics fromLines(final List<String> lines)
     {
         String header = lines.get(0);
-        String fileDelim = inferFileDelimiter(header);
+        String fileDelim = inferHeaderDelimiter(header);
         final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
 
         final String[] values = lines.get(1).split(fileDelim);
