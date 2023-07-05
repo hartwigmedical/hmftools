@@ -17,11 +17,6 @@ import com.google.common.collect.Lists;
 
 public final class QualityRecalibrationFile
 {
-    public static String generateBqrFilename(final String sample, final String outputDir)
-    {
-        return outputDir + sample + ".sage.bqr.tsv";
-    }
-
     public static void write(final String filename, final List<QualityRecalibrationRecord> counts) throws IOException
     {
         Collections.sort(counts);

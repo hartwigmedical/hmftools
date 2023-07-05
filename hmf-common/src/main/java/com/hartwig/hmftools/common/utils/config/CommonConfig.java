@@ -47,17 +47,33 @@ public final class CommonConfig
     public static final String LINX_DIR_CFG = toolDirectory("linx");
     public static final String LINX_DIR_DESC = toolDirectoryDesc("Linx");
 
+    public static final String LINX_PLOT_DIR_CFG = toolDirectory("linx_plot");
+    public static final String LINX_PLOT_DIR_DESC = toolPlotsDirectoryDesc("Linx");
+
     public static final String LINX_GERMLINE_DIR_CFG = toolDirectory("linx_germline");
     public static final String LINX_GERMLINE_DIR_DESC = toolDirectoryDesc("Linx germline");
 
     public static final String NEO_DIR_CFG = toolDirectory("neo");
     public static final String NEO_DIR_DESC = toolDirectoryDesc("Neo");
 
+    public static final String PEACH_DIR_CFG = toolDirectory("peach");
+    public static final String PEACH_DIR_DESC = toolDirectoryDesc("Peach");
+
     public static final String PURPLE_DIR_CFG = toolDirectory("purple");
     public static final String PURPLE_DIR_DESC = toolDirectoryDesc("Purple");
 
+    public static final String PURPLE_PLOT_DIR_CFG = toolDirectory("purple_plot");
+    public static final String PURPLE_PLOT_DIR_DESC = toolPlotsDirectoryDesc("Purple");
+
+    public static final String SAGE_DIR_CFG = toolDirectory("sage");
+    public static final String SAGE_DIR_DESC = toolDirectoryDesc("Sage");
+
+    public static final String SIGS_DIR_CFG = toolDirectory("sigs");
+    public static final String SIGS_DIR_DESC = toolDirectoryDesc("Signatures");
+
     private static String toolDirectory(final String toolName) { return format("%s_dir", toolName); }
     private static String toolDirectoryDesc(final String toolName) { return format("Path to %s pipeline files", toolName); }
+    private static String toolPlotsDirectoryDesc(final String toolName) { return format("Path to %s plots", toolName); }
 
     public static List<String> parseLogReadIds(final ConfigBuilder configBuilder)
     {

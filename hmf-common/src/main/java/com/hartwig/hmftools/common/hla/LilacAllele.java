@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.checkFileExtensionRename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,7 +66,7 @@ public abstract class LilacAllele {
         if(Files.exists(Paths.get(filename)))
             return filename;
 
-        return basePath + File.separator + sample + OLD_FILE_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + OLD_FILE_EXTENSION;
     }
 
     public static List<LilacAllele> read(final String filePath) throws IOException

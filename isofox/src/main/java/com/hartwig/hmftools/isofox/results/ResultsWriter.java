@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaStatistics.SUMMARY_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -64,7 +65,6 @@ import org.apache.commons.compress.utils.Lists;
 public class ResultsWriter
 {
     public static final String SPLICE_SITE_FILE = "splice_site_data.csv";
-    public static final String SUMMARY_FILE = "summary.csv";
 
     private final IsofoxConfig mConfig;
 
@@ -184,7 +184,7 @@ public class ResultsWriter
 
         try
         {
-            final String outputFileName = mConfig.formOutputFile(SUMMARY_FILE);
+            final String outputFileName = mConfig.formOutputFile(SUMMARY_FILE_ID);
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             writer.write(RnaStatistics.csvHeader());

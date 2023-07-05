@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.cohort;
 
+import static com.hartwig.hmftools.common.rna.RnaStatistics.SUMMARY_FILE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -7,7 +8,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.logVersion;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SUMMARY;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.loadFile;
 
 import java.io.BufferedWriter;
@@ -170,7 +170,7 @@ public class CohortAnalyser
             if(summaryStats.size() != mConfig.SampleData.SampleIds.size())
                 return;
 
-            final String outputFileName = mConfig.formCohortFilename(SUMMARY_FILE);
+            final String outputFileName = mConfig.formCohortFilename(SUMMARY_FILE_ID);
             final BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
             writer.write(RnaStatistics.csvHeader());

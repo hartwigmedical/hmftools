@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.metrics;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +40,7 @@ public final class WGSMetricsFile
 
     public static String generateFilename(final String basePath, final String sampleId)
     {
-        return basePath + File.separator + sampleId + FILE_EXTENSION;
+        return checkAddDirSeparator(basePath) + sampleId + FILE_EXTENSION;
     }
 
     @NotNull

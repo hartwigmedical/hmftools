@@ -2,9 +2,9 @@ package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
 import static com.hartwig.hmftools.sage.ReferenceData.loadBedFile;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.quality.QualityRecalibrationFile.generateBqrFilename;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +22,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.sage.ReferenceData;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 
@@ -74,8 +73,8 @@ public class BaseQualityRecalibration
         {
             Map<String,String> sampleFileNames = Maps.newHashMap();
             String outputDir = mConfig.formOutputDir();
-            mConfig.ReferenceIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(x, outputDir)));
-            mTumorIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(x, outputDir)));
+            mConfig.ReferenceIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(outputDir, x)));
+            mTumorIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(outputDir, x)));
 
             for(Map.Entry<String,String> entry : sampleFileNames.entrySet())
             {
@@ -262,7 +261,7 @@ public class BaseQualityRecalibration
     {
         try
         {
-            final String tsvFile = generateBqrFilename(sampleId, mConfig.formOutputDir());
+            final String tsvFile = generateBqrFilename(mConfig.formOutputDir(), sampleId);
             SG_LOGGER.debug("writing base quality recalibration file: {}", tsvFile);
 
             QualityRecalibrationFile.write(tsvFile, records.stream().collect(Collectors.toList()));

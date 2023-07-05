@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.isofox.fusion.cohort;
 
+import static com.hartwig.hmftools.common.rna.GeneFusionFile.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneFusionFile.UNFILTERED_FUSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.fusion.FusionWriter.RAW_FUSION_FILE_ID;
-import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.fusion.cohort.FusionCohort.writeCombinedFusions;
 
 import java.io.BufferedWriter;
@@ -123,7 +123,7 @@ public class FusionCohortTask implements Callable
 
     private void writeFusions(final String sampleId, final List<FusionData> fusions, boolean includeFilterFields)
     {
-        final String fileId = includeFilterFields ? PASS_FUSION_FILE_ID : RAW_FUSION_FILE_ID;
+        final String fileId = includeFilterFields ? PASS_FUSION_FILE_ID : UNFILTERED_FUSION_FILE_ID;
         String outputFile = mConfig.OutputDir + sampleId + ISF_FILE_ID + fileId;
 
         try

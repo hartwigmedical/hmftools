@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.hla;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.checkFileExtensionRename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +35,7 @@ public abstract class LilacQcData
 
     public static String generateFilenameForWriting(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + FILE_EXTENSION;
     }
 
     public static String generateFilename(final String basePath, final String sample)
@@ -44,7 +45,7 @@ public abstract class LilacQcData
         if(Files.exists(Paths.get(filename)))
             return filename;
 
-        return basePath + File.separator + sample + OLD_FILE_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + OLD_FILE_EXTENSION;
     }
 
     public static LilacQcData read(final String filePath) throws IOException

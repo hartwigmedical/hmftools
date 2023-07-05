@@ -4,10 +4,10 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_
 import static com.hartwig.hmftools.common.rna.CanonicalSpliceJunctionFile.CANONICAL_SJ_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_EXPRESSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.TRANSCRIPT_EXPRESSION_FILE_ID;
-import static com.hartwig.hmftools.isofox.fusion.FusionWriter.RAW_FUSION_FILE_ID;
-import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneFusionFile.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneFusionFile.UNFILTERED_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaStatistics.SUMMARY_FILE_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.SPLICE_SITE_FILE;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.isofox.unmapped.UmrFinder.UNMAPPED_READS_FILE_ID;
 
 public enum AnalysisType
@@ -44,7 +44,7 @@ public enum AnalysisType
                 return GENE_EXPRESSION_FILE_ID;
 
             case SUMMARY:
-                return SUMMARY_FILE;
+                return SUMMARY_FILE_ID;
 
             case ALT_SPLICE_JUNCTION:
             case SPLICE_VARIANT_MATCHING:
@@ -61,7 +61,7 @@ public enum AnalysisType
                 return SPLICE_SITE_FILE;
 
             case FUSION:
-                return RAW_FUSION_FILE_ID;
+                return UNFILTERED_FUSION_FILE_ID;
 
             case PASSING_FUSION:
                 return PASS_FUSION_FILE_ID;

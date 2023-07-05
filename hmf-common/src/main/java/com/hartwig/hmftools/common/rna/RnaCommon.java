@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class RnaCommon
+public final class RnaCommon
 {
     public static final String ISF_FILE_ID = ".isf.";
 

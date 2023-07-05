@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.common.rna;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
+import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getDoubleValue;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getLongValue;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.util.List;
 import java.util.Map;
@@ -52,6 +54,13 @@ public abstract class RnaStatistics
     public static final String QC_FAIL_LOW_COVERAGE = "FAIL_LOW_COVERAGE";
     public static final String QC_WARN_DUPLICATES = "WARN_DUPLICATE_RATE";
     public static final String QC_WARN_LOW_SPLICE_GENES = "WARN_SPLICED_GENE_COVERAGE";
+
+    public static final String SUMMARY_FILE_ID = "summary.csv";
+
+    public static String generateFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + SUMMARY_FILE_ID;
+    }
 
     public static String csvHeader()
     {

@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_T
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneFusionFile.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
@@ -16,6 +17,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.rna.RnaStatistics.SUMMARY_FILE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -34,10 +36,8 @@ import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_REALIGN_FLAGS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SPLIT_FRAGS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SV_TYPE;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
-import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.BufferedReader;
@@ -53,6 +53,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.GeneExpression;
 import com.hartwig.hmftools.common.rna.GeneExpressionFile;
+import com.hartwig.hmftools.common.rna.GeneFusionFile;
 import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
@@ -189,7 +190,7 @@ public class SampleLoaderTask implements Callable
 
         final String sampleDataDir = convertWildcardSamplePath(mConfig.StatisticsDataDir, sampleId);
 
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + SUMMARY_FILE;
+        final String filename = RnaStatistics.generateFilename(sampleDataDir, sampleId);
 
         try
         {
@@ -355,7 +356,7 @@ public class SampleLoaderTask implements Callable
 
         final String sampleDataDir = convertWildcardSamplePath(mConfig.FusionDataDir, sampleId);
 
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + PASS_FUSION_FILE_ID;
+        final String filename = GeneFusionFile.generateFilename(sampleDataDir, sampleId);
 
         try
         {
