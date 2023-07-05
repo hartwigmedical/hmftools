@@ -107,7 +107,7 @@ import kotlin.collections.ArrayList
 // proactively seal nodes, which involves choosing a child and removing all other childs and reassigning all
 // reads. This is triggered when the highest child support is > second highest child support * nodeSealFactor.
 //
-class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int, var nodeSealFactor: Int)
+class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var nodeSealFactor: Int)
 {
     class Read (
         // have a source that allows us to refer back to where this comes from
@@ -200,6 +200,14 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int, var nodeSe
         }
     }
 
+    // This function is unused for now, the reason is follows:
+    // From testing, I found that when reads are removed from the branch, even though
+    // removing count from the nodes seem correct, it creates many problems.
+    // When node count go down the parent could become sealed and require more
+    // processing. It is simpler and probably harmless to keep the count there until we
+    // find a reason to remove them.
+    // In this sense, the `readCount` in each node is actually the number of reads that have ever
+    // added to a node rather than the current read count.
     private fun removeReadFromCounts(read: Read, lastNode: Node)
     {
         // this is the node position of the first base
@@ -271,15 +279,27 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int, var nodeSe
     fun tryAddRead(read: Read) : Boolean
     {
         val readsToAdd = ArrayDeque<Read>()
-        val readAdded = tryAddRead(read, readsToAdd)
+        val result = tryAddRead(read, readsToAdd)
+        var readAddCount = 1
 
         while (readsToAdd.isNotEmpty())
         {
+            if ((readAddCount++ % ADD_READ_INFINITE_LOOP_CHECK) == 0)
+            {
+                // We have called tryAddRead many times, check if we are in an infinite loop where we add
+                // one read causes another read to be reassigned, and when we add the
+                // reassigned read it causes the previous read to be reassigned.
+                // This should not happen anymore after we changed to no longer remove read counts.
+                // Keeping this check here just to be safe.
+                sLogger.warn("Too many reads ({}) reassigned in tryAddRead call. Checking tree for seal nodes", readAddCount)
+                checkAndSealNodes()
+            }
+
             // as we add reads we might find some nodes can be sealed and reads reassigned
             tryAddRead(readsToAdd.removeFirst(), readsToAdd)
         }
 
-        return readAdded
+        return result
     }
 
     fun tryAddRead(read: Read, readsToReassign: MutableList<Read>) : Boolean
@@ -501,7 +521,7 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int, var nodeSe
             return false
         }
 
-        val readsToReassignSize = readsToReassign.size
+        // val readsToReassignSize = readsToReassign.size
 
         // this node can be sealed, remove all child other than the top one
         // we choose just 1 child and remove the rest
@@ -516,11 +536,19 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int, var nodeSe
             }
         }
 
+        // when reads are removed from the branch, do not remove the read counts from
+        // the nodes. Even though removing count seem correct, it creates many problems.
+        // When node count go down the parent could become sealed and require more
+        // processing. It is simpler and harmless to keep the count there unless we find a reason
+        // to remove them.
+        /*
         for (i in readsToReassignSize until readsToReassign.size)
         {
             removeReadFromCounts(readsToReassign[i], node)
         }
+         */
 
+        // remove children other than the top one
         node.children.subList(1, node.children.size).clear()
         return true
     }
@@ -602,31 +630,9 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int, var nodeSe
 
         for (i in 0 until REASSIGN_READ_ROUNDS) // try maximum of 6 rounds
         {
-            sortLevelNodes()
-            val readsToReassign = ArrayList<Read>()
+            val anyNodeSealed = checkAndSealNodes()
 
-            // depth first traversal, we visit every leaf node and build a layout from it
-            // NOTE this is not quite correct as we remove the reads but the counts are not removed
-            // from the upstream nodes
-            roots.forEach { root: Node ->
-                depthFirstVisit(root) { node: Node ->
-                    checkSealNode(node, readsToReassign)
-                }
-            }
-
-            if (readsToReassign.isNotEmpty())
-            {
-                sLogger.debug("reassigning {} reads", readsToReassign.size)
-
-                readsToReassign.sortedBy { r -> r.alignedPosition }
-
-                // now re add all those reads
-                for (r in readsToReassign)
-                {
-                    tryAddRead(r)
-                }
-            }
-            else if (nodeSealFactor <= 1)
+            if (!anyNodeSealed && nodeSealFactor <= 1)
             {
                 break
             }
@@ -636,6 +642,49 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int, var nodeSe
         }
 
         nodeSealFactor = originalNodeSealFactor
+    }
+
+    // check if any node can be sealed. If yes then seal them. Return true if some reads are reassigned.
+    fun checkAndSealNodes() : Boolean
+    {
+        sortLevelNodes()
+        val readsToReassign = ArrayList<Read>()
+
+        // the following needs to be in a loop since removing reads can cause more nodes to be sealed
+        while (true)
+        {
+            val prevReadsToReassignSize = readsToReassign.size
+
+            // depth first traversal, we visit every node, if node can be sealed we remove all but the top
+            // child, and put all the reads into the list
+            roots.forEach { root: Node ->
+                depthFirstVisit(root) { node: Node ->
+                    checkSealNode(node, readsToReassign)
+                }
+            }
+
+            if (readsToReassign.size == prevReadsToReassignSize)
+            {
+                // finish when no more reads are added
+                break
+            }
+        }
+
+        if (readsToReassign.isEmpty())
+        {
+            return false
+        }
+
+        sLogger.debug("reassigning {} reads", readsToReassign.size)
+
+        readsToReassign.sortedBy { r -> r.alignedPosition }
+
+        // now re add all those reads
+        for (r in readsToReassign)
+        {
+            tryAddRead(r)
+        }
+        return true
     }
 
     // we do depth first traversal, by following the path with highest support
@@ -730,12 +779,14 @@ class LayoutTree(val minBaseQuality: Byte, val minOverlapLength: Int, var nodeSe
 
     companion object
     {
-        private val sLogger = LogManager.getLogger(LayoutTree::class.java)
+        private val sLogger = LogManager.getLogger(LayoutForest::class.java)
         const val UNKNOWN_BASE: Char = 'N'
 
         // this is how much we count low qual base towards support
         // high qual base count as 1
         const val LOW_QUAL_BASE_FACTOR: Double = 0.1
         const val REASSIGN_READ_ROUNDS: Int = 6
+
+        const val ADD_READ_INFINITE_LOOP_CHECK: Int = 10_000
     }
 }
