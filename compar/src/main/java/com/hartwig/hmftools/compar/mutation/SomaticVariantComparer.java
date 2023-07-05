@@ -149,6 +149,7 @@ public class SomaticVariantComparer implements ItemComparer
                 refVariants = emptyVariants;
 
             int index1 = 0;
+            int index2 = 0;
             while(index1 < refVariants.size())
             {
                 final SomaticVariantData refVariant = refVariants.get(index1);
@@ -156,7 +157,12 @@ public class SomaticVariantComparer implements ItemComparer
                 SomaticVariantData matchedVariant = null;
                 MatchFilterStatus matchFilterStatus = null;
 
-                int index2 = 0;
+                // shift index2 back to index at or before first potentially matching variant
+                while(index2 > 0 && (index2 >= newVariants.size() || newVariants.get(index2).comparisonPosition() >= refVariant.comparisonPosition()))
+                {
+                    --index2;
+                }
+
                 while(index2 < newVariants.size())
                 {
                     final SomaticVariantData newVariant = newVariants.get(index2);
@@ -168,7 +174,7 @@ public class SomaticVariantComparer implements ItemComparer
                         newVariants.remove(index2);
                         break;
                     }
-                    else if(newVariant.Position > refVariant.Position)
+                    else if(newVariant.comparisonPosition() > refVariant.comparisonPosition())
                     {
                         break;
                     }
@@ -260,7 +266,9 @@ public class SomaticVariantComparer implements ItemComparer
 
     private boolean includeMismatchWithVariant(SomaticVariantData variant, MatchLevel matchLevel)
     {
-        return matchLevel != REPORTABLE || variant.reportable();
+        boolean reportabilityIsFine = (matchLevel != REPORTABLE || variant.reportable());
+        boolean isInGene = !variant.Gene.isEmpty();
+        return reportabilityIsFine && isInGene;
     }
 
     private Map<String,List<SomaticVariantData>> buildVariantMap(final List<SomaticVariantData> variants)
@@ -316,7 +324,6 @@ public class SomaticVariantComparer implements ItemComparer
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                .and(SOMATICVARIANT.GENE.isNotNull())
                 .fetch();
 
         for(Record record : results)
@@ -357,9 +364,6 @@ public class SomaticVariantComparer implements ItemComparer
                 continue;
 
             SomaticVariantData variant = SomaticVariantData.fromContext(variantContext);
-
-            if(variant.Gene.isEmpty())
-                continue;
 
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;

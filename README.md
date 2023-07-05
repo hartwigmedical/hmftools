@@ -13,7 +13,7 @@ The table below has links for the full functional detail and configuration for e
 #### Current versions
 | Component                     | Description                                                            | Current Version                                                               |
 |-------------------------------|------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [Amber](./amber/README.md)    | Generate a tumor BAF file for Purple's copy number fit                 | [3.9](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)     |
+| [Amber](./amber/README.md)    | Generate a tumor BAF file for Purple's copy number fit                 | [3.9.1](https://github.com/hartwigmedical/hmftools/releases/tag/amber-v3.9)     |
 | [Cobalt](./cobalt/README.md)  | Determines the read depth ratios for Purple's copy number fit          | [1.14](https://github.com/hartwigmedical/hmftools/releases/tag/cobalt-v1.14)  |
 | [Cuppa](./cuppa/README.md)    | Tissue of origin prediction from WGS/WTS                               | [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.8)     |
 | [Gripss](./gripss/README.md)  | SV filtering                                                           | [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/gripss-v2.3.5)  |
@@ -24,7 +24,7 @@ The table below has links for the full functional detail and configuration for e
 | [Sage](./sage/README.md)      | Point mutation variant calling and filtering                           | [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.5)  |
 | [Teal](./teal/README.md)      | Measures telomere content and estimates telomeric length               | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.0.1)  |
 | [SvPrep](./sv-prep/README.md) | Pre-GRIDSS BAM filtering                                               | [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/sv-prep-v1.1) |
-| [Cider](./cider/README.md)    | TCR/BCR V(D)J recombination sequence detection                         | [0.5](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.5)     |
+| [Cider](./cider/README.md)    | TCR/BCR V(D)J recombination sequence detection                         | [0.8.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.8.0)     |
 | [BamTools](./bam-tools/README.md)    | BAM metrics and slicing                         | [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/bam-tools-v1.0)     |
 
 The following external tools are used in the pipeline:
