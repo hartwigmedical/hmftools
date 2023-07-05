@@ -239,6 +239,7 @@ Version | Samples | HOTSPOT | PANEL | OTHER
 ## Known Issues
 - Frameshifts may not always be fully aligned to 3'UTR for HGNC protein annotation
 - Where multiple ALTs are included on a single line only the 1st ALT allele will be annotated.   A workaround is to split multiallelic lines into multiple records first (eg.  the -m none option in bcftools).
+- Duplications may sometimes be marked as insertions 
 
 # Version History and Download Links
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.4.2)
