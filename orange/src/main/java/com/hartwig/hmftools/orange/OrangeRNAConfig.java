@@ -1,10 +1,14 @@
 package com.hartwig.hmftools.orange;
 
-import com.hartwig.hmftools.orange.util.Config;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_DESC;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.GeneExpressionFile;
+import com.hartwig.hmftools.common.rna.GeneFusionFile;
+import com.hartwig.hmftools.common.rna.RnaStatistics;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
@@ -19,93 +23,75 @@ public interface OrangeRNAConfig {
 
     String RNA_SAMPLE_ID = "rna_sample_id";
 
-    String ISOFOX_GENE_DISTRIBUTION_CSV = "isofox_gene_distribution_csv";
-    String ISOFOX_ALT_SJ_COHORT_CSV = "isofox_alt_sj_cohort_csv";
-
-    String ISOFOX_SUMMARY_CSV = "isofox_summary_csv";
-    String ISOFOX_GENE_DATA_CSV = "isofox_gene_data_csv";
-    String ISOFOX_FUSION_CSV = "isofox_fusion_csv";
-    String ISOFOX_ALT_SPLICE_JUNCTION_CSV = "isofox_alt_splice_junction_csv";
+    String ISOFOX_GENE_DISTRIBUTION_CSV = "isofox_gene_distribution";
+    String ISOFOX_ALT_SJ_COHORT_CSV = "isofox_alt_sj_cohort";
 
     @NotNull
-    static Options createOptions() {
-        Options options = new Options();
+    static void registerConfig(final ConfigBuilder configBuilder) {
 
-        options.addOption(RNA_SAMPLE_ID, true, "(Optional) The RNA sample of the tumor sample for which ORANGE will run.");
+        configBuilder.addConfigItem(RNA_SAMPLE_ID, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
 
-        options.addOption(ISOFOX_GENE_DISTRIBUTION_CSV, true, "(Optional) Path to isofox gene distribution CSV.");
-        options.addOption(ISOFOX_ALT_SJ_COHORT_CSV, true, "(Optional) Path to isofox alt SJ cohort CSV.");
+        configBuilder.addPath(ISOFOX_GENE_DISTRIBUTION_CSV, false, "(Optional) Path to isofox gene distribution CSV");
+        configBuilder.addPath(ISOFOX_ALT_SJ_COHORT_CSV, false, "(Optional) Path to isofox alt SJ cohort CSV.");
 
-        options.addOption(ISOFOX_SUMMARY_CSV, true, "(Optional) Path towards the ISOFOX summary data.");
-        options.addOption(ISOFOX_GENE_DATA_CSV, true, "(Optional) Path towards the ISOFOX gene data.");
-        options.addOption(ISOFOX_FUSION_CSV, true, "(Optional) Path towards the ISOFOX fusion data.");
-        options.addOption(ISOFOX_ALT_SPLICE_JUNCTION_CSV, true, "(Optional) Path towards the ISOFOX alt splice junction data.");
-
-        return options;
+        configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
     }
 
-    @NotNull
     String rnaSampleId();
-
-    @NotNull
     String isofoxGeneDistributionCsv();
-
-    @NotNull
     String isofoxAltSjCohortCsv();
-
-    @NotNull
     String isofoxSummaryCsv();
-
-    @NotNull
     String isofoxGeneDataCsv();
-
-    @NotNull
     String isofoxFusionCsv();
-
-    @NotNull
     String isofoxAltSpliceJunctionCsv();
 
-    @NotNull
-    static OrangeRNAConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
-        if (!hasCompleteRnaConfig(cmd,
-                RNA_SAMPLE_ID,
-                ISOFOX_GENE_DISTRIBUTION_CSV,
-                ISOFOX_ALT_SJ_COHORT_CSV,
-                ISOFOX_SUMMARY_CSV,
-                ISOFOX_GENE_DATA_CSV,
-                ISOFOX_FUSION_CSV,
-                ISOFOX_ALT_SPLICE_JUNCTION_CSV)) {
-            LOGGER.debug("No proper RNA input fed to ORANGE");
+    static OrangeRNAConfig createConfig(final ConfigBuilder configBuilder) {
+
+        boolean hasRnaSampleId = configBuilder.hasValue(RNA_SAMPLE_ID);
+        boolean hasIsofoxDir = configBuilder.hasValue(ISOFOX_DIR_CFG);
+        boolean hasGeneDistribution = configBuilder.hasValue(ISOFOX_GENE_DISTRIBUTION_CSV);
+        boolean hasAltSjCohortFreq = configBuilder.hasValue(ISOFOX_ALT_SJ_COHORT_CSV);
+
+        boolean anyConfigPresent = hasRnaSampleId || hasIsofoxDir || hasGeneDistribution || hasAltSjCohortFreq;
+
+        if(!anyConfigPresent)
+        {
+            LOGGER.info("RNA config not present");
             return null;
         }
 
-        String rnaSampleId = Config.nonOptionalValue(cmd, RNA_SAMPLE_ID);
+        boolean allConfigPresent = hasRnaSampleId && hasIsofoxDir && hasGeneDistribution && hasAltSjCohortFreq;
+
+        if(!allConfigPresent)
+        {
+            LOGGER.warn("RNA missing required config items: rnaSampleId({}) isofoxDir({}) geneCohort({}) altSjCohort({})",
+                    hasRnaSampleId, hasIsofoxDir, hasGeneDistribution, hasAltSjCohortFreq);
+            return null;
+        }
+
+        String rnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
         LOGGER.debug("RNA sample configured as {}", rnaSampleId);
+
+        String isofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG);
+
+        // note that it is the (tumor) sample ID which is used in Isofox filenames, not the RNA sample ID used in
+        // the Purple RNA-annotated VCF
+        String tumorSampleId = configBuilder.getValue(OrangeConfig.TUMOR_SAMPLE_ID);
+        String geneDataFile = GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId);
+        String statisticsFile = RnaStatistics.generateFilename(isofoxDir, tumorSampleId);
+        String altSpliceJuncFile = AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId);
+        String fusionsFile = GeneFusionFile.generateFilename(isofoxDir, tumorSampleId);
+        String geneDistributionFile = configBuilder.getValue(ISOFOX_GENE_DISTRIBUTION_CSV);
+        String altSpliceJuncCohortFile = configBuilder.getValue(ISOFOX_ALT_SJ_COHORT_CSV);
 
         return ImmutableOrangeRNAConfig.builder()
                 .rnaSampleId(rnaSampleId)
-                .isofoxGeneDistributionCsv(Config.nonOptionalFile(cmd, ISOFOX_GENE_DISTRIBUTION_CSV))
-                .isofoxAltSjCohortCsv(Config.nonOptionalFile(cmd, ISOFOX_ALT_SJ_COHORT_CSV))
-                .isofoxSummaryCsv(Config.nonOptionalFile(cmd, ISOFOX_SUMMARY_CSV))
-                .isofoxGeneDataCsv(Config.nonOptionalFile(cmd, ISOFOX_GENE_DATA_CSV))
-                .isofoxFusionCsv(Config.nonOptionalFile(cmd, ISOFOX_FUSION_CSV))
-                .isofoxAltSpliceJunctionCsv(Config.nonOptionalFile(cmd, ISOFOX_ALT_SPLICE_JUNCTION_CSV))
+                .isofoxGeneDistributionCsv(geneDistributionFile)
+                .isofoxAltSjCohortCsv(altSpliceJuncCohortFile)
+                .isofoxSummaryCsv(statisticsFile)
+                .isofoxGeneDataCsv(geneDataFile)
+                .isofoxFusionCsv(fusionsFile)
+                .isofoxAltSpliceJunctionCsv(altSpliceJuncFile)
                 .build();
-    }
-
-    private static boolean hasCompleteRnaConfig(@NotNull CommandLine cmd, @NotNull String... options) {
-        boolean hasAllOptions = true;
-        boolean hasAnyOption = false;
-        for (String option : options) {
-            boolean hasOption = cmd.hasOption(option);
-            hasAllOptions = hasAllOptions && hasOption;
-            hasAnyOption = hasAnyOption || hasOption;
-        }
-
-        if (hasAnyOption && !hasAllOptions) {
-            LOGGER.warn("RNA config has been provided but incompletely");
-        }
-
-        return hasAllOptions;
     }
 }

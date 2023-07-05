@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange;
 
 import java.io.IOException;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.report.ReportWriter;
@@ -25,18 +26,21 @@ public class OrangeApplication {
     public static void main(String[] args) throws IOException {
         LOGGER.info("Running {} v{}", APPLICATION, VERSION);
 
-        Options options = OrangeConfig.createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        OrangeConfig.registerConfig(configBuilder);
 
-        OrangeConfig config = null;
-        try {
-            config = OrangeConfig.createConfig(new DefaultParser().parse(options, args));
-        } catch (ParseException exception) {
-            LOGGER.warn(exception);
-            new HelpFormatter().printHelp(APPLICATION, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
             System.exit(1);
         }
 
-        new OrangeApplication(config).run();
+        try {
+            OrangeConfig config = OrangeConfig.createConfig(configBuilder);
+            new OrangeApplication(config).run();
+        } catch (ParseException exception) {
+            System.exit(1);
+        }
     }
 
     @NotNull
