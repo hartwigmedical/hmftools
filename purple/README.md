@@ -926,6 +926,7 @@ We can determine the likelihood of a variant being subclonal at any given varian
 - **Biallelic likelihood** - Currently variants are marked as bialllelic = T/F.  This would be better representated as a likelihood as many variants may be uncertain particularly in low purity samples.
 - **Somatic penalty** - Currently this depends on the upper tail of the distribution of VAFs, which may pick up noise and tend to apply a too agressive penalty.   Better would be to strongly penalise clearly defined peaks of variants with variant copy numbers that are inconsistent with the fitted major allele copy number at the location.
 - **Centromeric noise** - regions within 1Mb of the centromere are normally excluded from fitting in most tools.  This should be evaluated.
+- **TUMOR ONLY fitting for Hgh Purity samples** - High / low BAF points currently get ingnored (as they may be homozygous in germline), but long regions of homozygous or near homozygous points are very convincning evidence of high purity and should be captured.
 
 ## Version History and Download Links
 - [3.8](https://github.com/hartwigmedical/hmftools/releases/tag/purple-v3.8.4)
