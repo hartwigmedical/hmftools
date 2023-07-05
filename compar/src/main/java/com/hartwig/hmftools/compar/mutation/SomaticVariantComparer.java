@@ -266,7 +266,9 @@ public class SomaticVariantComparer implements ItemComparer
 
     private boolean includeMismatchWithVariant(SomaticVariantData variant, MatchLevel matchLevel)
     {
-        return matchLevel != REPORTABLE || variant.reportable();
+        boolean reportabilityIsFine = (matchLevel != REPORTABLE || variant.reportable());
+        boolean isInGene = !variant.Gene.isEmpty();
+        return reportabilityIsFine && isInGene;
     }
 
     private Map<String,List<SomaticVariantData>> buildVariantMap(final List<SomaticVariantData> variants)
@@ -322,7 +324,6 @@ public class SomaticVariantComparer implements ItemComparer
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
                 .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                .and(SOMATICVARIANT.GENE.isNotNull())
                 .fetch();
 
         for(Record record : results)
@@ -363,9 +364,6 @@ public class SomaticVariantComparer implements ItemComparer
                 continue;
 
             SomaticVariantData variant = SomaticVariantData.fromContext(variantContext);
-
-            if(variant.Gene.isEmpty())
-                continue;
 
             if(mConfig.RestrictToDrivers && !mConfig.DriverGenes.contains(variant.Gene))
                 continue;
