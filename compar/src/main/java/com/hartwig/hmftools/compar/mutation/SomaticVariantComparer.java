@@ -149,6 +149,7 @@ public class SomaticVariantComparer implements ItemComparer
                 refVariants = emptyVariants;
 
             int index1 = 0;
+            int index2 = 0;
             while(index1 < refVariants.size())
             {
                 final SomaticVariantData refVariant = refVariants.get(index1);
@@ -156,7 +157,12 @@ public class SomaticVariantComparer implements ItemComparer
                 SomaticVariantData matchedVariant = null;
                 MatchFilterStatus matchFilterStatus = null;
 
-                int index2 = 0;
+                // shift index2 back to index at or before first potentially matching variant
+                while(index2 > 0 && (index2 >= newVariants.size() || newVariants.get(index2).comparisonPosition() >= refVariant.comparisonPosition()))
+                {
+                    --index2;
+                }
+
                 while(index2 < newVariants.size())
                 {
                     final SomaticVariantData newVariant = newVariants.get(index2);
