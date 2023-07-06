@@ -9,7 +9,8 @@ java -jar compar.jar \
    -sample SAMPLE_T \
    -categories ALL \
    -match_level REPORTABLE \
-   -file_sources "RUN_01;sample_dir=./run_01/,RUN_02;sample_dir=./run_02/" \
+   -file_source_ref="sample_dir=/path_to_sample_data/run_01/"
+   -file_source_new="sample_dir=/path_to_sample_data/run_02/"
    -output_dir /output_dir/ 
 ```
 
