@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.neo.scorer;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.NEO_FILE_ID;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CFG;
@@ -53,7 +55,6 @@ public class NeoScorerConfig
     public final int Threads;
 
     public static final String CANCER_TYPE = "cancer_type";
-    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
     public static final String RNA_SOMATIC_VCF = "rna_somatic_vcf";
     public static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
     public static final String COHORT_SAMPLE_TPM_FILE = "cohort_trans_exp_file";
@@ -71,7 +72,7 @@ public class NeoScorerConfig
     {
         Samples = loadFromConfig(configBuilder);
 
-        String sampleDataDir = configBuilder.hasValue(SAMPLE_DATA_DIR) ? checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR)) : "";
+        String sampleDataDir = configBuilder.hasValue(SAMPLE_DATA_DIR_CFG) ? checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG)) : "";
 
         NeoDir = checkAddDirSeparator(configBuilder.getValue(NEO_DIR_CFG, sampleDataDir));
         LilacDir = checkAddDirSeparator(configBuilder.getValue(LILAC_DIR_CFG, sampleDataDir));
@@ -127,7 +128,7 @@ public class NeoScorerConfig
         addSampleIdFile(configBuilder, false);
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
         configBuilder.addConfigItem(CANCER_TYPE, false, "Cancer type for sample, matching those in cohort TPM medians file");
-        configBuilder.addPath(SAMPLE_DATA_DIR, false, "Directory for sample files");
+        configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
         configBuilder.addPath(NEO_DIR_CFG, false, NEO_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);

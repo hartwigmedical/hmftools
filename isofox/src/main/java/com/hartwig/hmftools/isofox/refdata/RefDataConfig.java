@@ -7,12 +7,13 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.LONG_FRAGMENT_LIMIT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.READ_LENGTH;
@@ -99,7 +100,7 @@ public class RefDataConfig
         configBuilder.addInteger(LONG_FRAGMENT_LIMIT, "Max RNA fragment size", DEFAULT_MAX_FRAGMENT_SIZE);
         configBuilder.addRequiredInteger(READ_LENGTH, "Sample sequencing read length");
 
-        configBuilder.addPath(GENE_ID_FILE, false, "Optional CSV file of genes to analyse");
+        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
 
         configBuilder.addConfigItem(ER_FRAGMENT_LENGTHS, false, ER_FRAGMENT_LENGTHS_DESC, DEFAULT_EXPECTED_RATE_LENGTHS);
 

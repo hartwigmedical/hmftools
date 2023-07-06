@@ -32,6 +32,9 @@ public class ConfigUtils
     public static final String SAMPLE_ID_FILE = "sample_id_file";
     public static final String SAMPLE_ID_FILE_DESC = "Sample ID CSV file with 'SampleId' column";
 
+    public static final String GENE_ID_FILE = "gene_id_file";
+    public static final String GENE_ID_FILE_DESC = "Restricted set of Gene IDs in CSV file";
+
     public static final String SAMPLE_ID_COLUMN = "SampleId";
 
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);

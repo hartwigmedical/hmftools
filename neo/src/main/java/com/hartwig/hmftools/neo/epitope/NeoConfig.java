@@ -7,6 +7,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
@@ -43,7 +45,6 @@ public class NeoConfig
     public static final String CANCER_TYPE = "cancer_type";
 
     public static final String SOMATIC_VCF = "somatic_vcf";
-    public static final String GENE_ID_FILE = "gene_id_file";
     public static final String REQ_AMINO_ACIDS = "req_amino_acids";
 
     public static final String WRITE_TRANS_DATA = "write_trans_data";
@@ -94,7 +95,7 @@ public class NeoConfig
         configBuilder.addConfigItem(
                 REQ_AMINO_ACIDS, false, format("Number of amino acids in neo-epitopes", DEFAULT_AMINO_ACID_REF_COUNT));
 
-        configBuilder.addPath(GENE_ID_FILE, false, "Restrict to specific genes");
+        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
 
         addRefGenomeConfig(configBuilder, true);
         EnsemblDataCache.addEnsemblDir(configBuilder);

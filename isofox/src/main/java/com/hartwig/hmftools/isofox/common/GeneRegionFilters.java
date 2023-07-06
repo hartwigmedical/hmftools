@@ -1,11 +1,12 @@
 package com.hartwig.hmftools.isofox.common;
 
 import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 
@@ -41,7 +42,6 @@ public class GeneRegionFilters
     private final List<ChrBaseRegion> mExcludedGeneRegions; // exclude these regions based on geneId, enriched or excluded regions
 
     // config
-    public static final String RESTRICTED_GENE_IDS = "restricted_gene_ids";
     private static final String ENRICHED_GENE_IDS = "enriched_gene_ids";
 
     public GeneRegionFilters(final RefGenomeVersion refGenomeVersion)
@@ -61,7 +61,7 @@ public class GeneRegionFilters
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(RESTRICTED_GENE_IDS, "List of Ensmebl GeneIds separated by ';'");
+        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
         configBuilder.addConfigItem(ENRICHED_GENE_IDS, "List of geneIds to treat as enriched");
         addSpecificChromosomesRegionsConfig(configBuilder);
     }
@@ -88,10 +88,6 @@ public class GeneRegionFilters
             {
                 ISF_LOGGER.info("file({}) loaded {} restricted genes", inputFile, RestrictedGeneIds.size());
             }
-        }
-        else if(configBuilder.hasValue(RESTRICTED_GENE_IDS))
-        {
-            RestrictedGeneIds.addAll(Arrays.stream(configBuilder.getValue(RESTRICTED_GENE_IDS).split(ITEM_DELIM)).collect(Collectors.toList()));
         }
 
         try

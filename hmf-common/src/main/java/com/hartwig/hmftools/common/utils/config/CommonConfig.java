@@ -26,6 +26,12 @@ public final class CommonConfig
     public static final String PERF_DEBUG = "perf_debug";
     public static final String PERF_DEBUG_DESC = "Detailed performance tracking and logging";
 
+    public static final String SAMPLE_DATA_DIR_CFG = "sample_data_dir";
+    public static final String SAMPLE_DATA_DIR_DESC = "Path to sample pipeline files";
+
+    public static final String PIPELINE_SAMPLE_ROOT_DIR = "pipeline_sample_root_dir";
+    public static final String PIPELINE_SAMPLE_ROOT_DESC = "Path to pipeline sample root directory, expecting sub-directories per tool";
+
     public static final String AMBER_DIR_CFG = toolDirectory("amber");
     public static final String AMBER_DIR_DESC = toolDirectoryDesc("Amber");
 

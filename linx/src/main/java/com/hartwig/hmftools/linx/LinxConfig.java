@@ -7,6 +7,12 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
@@ -67,8 +73,6 @@ public class LinxConfig
     public final ConfigBuilder CmdLineConfig; // TODO consider removing
 
     // config options
-    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
-    public static final String PURPLE_DATA_DIR = "purple_dir";
     public static final String VCF_FILE = "sv_vcf";
 
     // clustering analysis options
@@ -81,7 +85,6 @@ public class LinxConfig
     // reference files
     private static final String FRAGILE_SITE_FILE = "fragile_site_file";
     private static final String LINE_ELEMENT_FILE = "line_element_file";
-    public static final String GENE_ID_FILE = "gene_id_file";
 
     // logging options
     public static final String LOG_VERBOSE = "log_verbose";
@@ -101,9 +104,9 @@ public class LinxConfig
 
         String svVcfFile = configBuilder.getValue(VCF_FILE, "");
 
-        if(configBuilder.hasValue(SAMPLE_DATA_DIR))
+        if(configBuilder.hasValue(SAMPLE_DATA_DIR_CFG))
         {
-            SampleDataPath = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR));
+            SampleDataPath = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
             PurpleDataPath = SampleDataPath;
 
             OutputDataPath = isSingleSample() && !configBuilder.hasValue(OUTPUT_DIR) ? SampleDataPath : parseOutputDir(configBuilder);
@@ -111,7 +114,7 @@ public class LinxConfig
         else
         {
             SampleDataPath = "";
-            PurpleDataPath = configBuilder.getValue(PURPLE_DATA_DIR, "");
+            PurpleDataPath = configBuilder.getValue(PURPLE_DIR_CFG, "");
             OutputDataPath = parseOutputDir(configBuilder);
         }
 
@@ -183,7 +186,7 @@ public class LinxConfig
 
     public boolean hasValidSampleDataSource(final ConfigBuilder configBuilder)
     {
-        if(!configBuilder.hasValue(VCF_FILE) && !configBuilder.hasValue(SAMPLE_DATA_DIR) && !configBuilder.hasValue(PURPLE_DATA_DIR))
+        if(!configBuilder.hasValue(VCF_FILE) && !configBuilder.hasValue(SAMPLE_DATA_DIR_CFG) && !configBuilder.hasValue(PURPLE_DIR_CFG))
         {
             LNX_LOGGER.error("missing SV VCF file or sample data directory");
             return false;
@@ -237,8 +240,8 @@ public class LinxConfig
     {
         configBuilder.addConfigItem(SAMPLE, false, "Sample Id, or list separated by ','");
         configBuilder.addConfigItem(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
-        configBuilder.addConfigItem(PURPLE_DATA_DIR, "Sample purple data directory");
-        configBuilder.addConfigItem(SAMPLE_DATA_DIR, "Directory for per-sample SV data, default is to use output_dir");
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, SAMPLE_DATA_DIR_DESC);
         configBuilder.addConfigItem(RefGenomeVersion.REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
         configBuilder.addConfigItem(VCF_FILE, "Path to the PURPLE structural variant VCF file");
         configBuilder.addPath(DRIVER_GENE_PANEL_OPTION, false, DRIVER_GENE_PANEL_OPTION_DESC);
@@ -250,7 +253,7 @@ public class LinxConfig
         configBuilder.addInteger(CHAINING_SV_LIMIT, "Max cluster size for chaining", 0);
         configBuilder.addConfigItem(ANNOTATION_EXTENSIONS, "String list of annotations");
 
-        configBuilder.addPath(GENE_ID_FILE, false, "Limit to Ensembl gene ids specified in file");
+        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
 
         LinxOutput.addConfig(configBuilder);
         configBuilder.addFlag(LOG_VERBOSE, "Log extra detail");
