@@ -1,6 +1,6 @@
 steps:
   - id: 'Tag, release, build'
-    name: 'eu.gcr.io/hmf-build/jdk-mvn-python:1.2.0-alpha.2'
+    name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'python3'
     args: ['hmftools-build.py', '$TAG_NAME']
 logsBucket: 'gs://hmf-build-logs'
