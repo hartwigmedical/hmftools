@@ -37,9 +37,6 @@ for dep in dependencies:
         hmftools_dependencies.add(artifact_id)
 
 
-def run_command(command):
-    subprocess.run(command, shell=True, check=True)
-
 
 # Set version of module in parent pom.
 subprocess.run(['mvn', '-f', 'pom.xml', 'versions:set-property', '-DgenerateBackupPoms=false', f'-Dproperty={module}.version',  f'-DnewVersion={tag}'],
