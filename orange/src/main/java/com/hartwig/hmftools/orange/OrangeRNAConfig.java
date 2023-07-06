@@ -59,16 +59,14 @@ public interface OrangeRNAConfig {
 
         boolean anyConfigPresent = hasRnaSampleId || hasIsofoxDir || hasGeneDistribution || hasAltSjCohortFreq;
 
-        if(!anyConfigPresent)
-        {
+        if(!anyConfigPresent) {
             LOGGER.info("RNA config not present");
             return null;
         }
 
         boolean allConfigPresent = hasRnaSampleId && hasIsofoxDir && hasGeneDistribution && hasAltSjCohortFreq;
 
-        if(!allConfigPresent)
-        {
+        if(!allConfigPresent) {
             LOGGER.warn("RNA missing required config items: rnaSampleId({}) isofoxDir({}) geneCohort({}) altSjCohort({})",
                     hasRnaSampleId, hasIsofoxDir, hasGeneDistribution, hasAltSjCohortFreq);
             return null;
