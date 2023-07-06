@@ -1,4 +1,4 @@
-SET FOREIGN_KEY_CHECKS = 0;
+-- noinspection SqlNoDataSourceInspectionForFile
 
 -- TODO Remove per 1st of jan 2023
 DROP TABLE IF EXISTS protect;
@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
     patientIdentifier varchar(50) UNIQUE,
-    blacklisted BOOLEAN NOT NULL,
+    blacklisted TINYINT(1) NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -17,8 +17,8 @@ CREATE TABLE baseline
     registrationDate DATE,
     informedConsentDate DATE,
     pifVersion varchar(255),
-    inHMFDatabase BOOLEAN,
-    outsideEU BOOLEAN,
+    inHMFDatabase TINYINT(1),
+    outsideEU TINYINT(1),
     gender varchar(10),
     hospital varchar(255),
     birthYear int,
@@ -27,7 +27,7 @@ CREATE TABLE baseline
     primaryTumorType varchar(255),
     primaryTumorSubType varchar(255),
     primaryTumorExtraDetails varchar(255),
-    primaryTumorOverridden BOOLEAN,
+    primaryTumorOverridden TINYINT(1),
     deathDate DATE,
     hasSystemicPreTreatment varchar(3),
     hasRadiotherapyPreTreatment varchar(3),
@@ -90,7 +90,7 @@ CREATE TABLE sample
 DROP TABLE IF EXISTS snpcheck;
 CREATE TABLE snpcheck
 (   sampleId varchar(255) NOT NULL,
-    isPass BOOLEAN NOT NULL,
+    isPass TINYINT(1) NOT NULL,
     PRIMARY KEY (sampleId)
 );
 
@@ -210,19 +210,20 @@ CREATE TABLE cpctEcrf
     sequenced varchar(5),
     fieldName varchar(100),
     relevant varchar(5),
-    PRIMARY KEY (id),
-    INDEX(patientId),
-    INDEX(studyEvent),
-    INDEX(form),
-    INDEX(itemGroup),
-    INDEX(item),
-    INDEX(itemValue (255)),
-    INDEX(status),
-    INDEX(locked),
-    INDEX(sequenced),
-    INDEX(fieldName),
-    INDEX(relevant)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX cpctEcrf_patientId ON cpctEcrf (patientId);
+CREATE INDEX cpctEcrf_studyEvent ON cpctEcrf (studyEvent);
+CREATE INDEX cpctEcrf_form ON cpctEcrf (form);
+CREATE INDEX cpctEcrf_itemGroup ON cpctEcrf (itemGroup);
+CREATE INDEX cpctEcrf_item ON cpctEcrf (item);
+CREATE INDEX cpctEcrf_itemValue ON cpctEcrf (itemValue);
+CREATE INDEX cpctEcrf_status ON cpctEcrf (status);
+CREATE INDEX cpctEcrf_locked ON cpctEcrf (locked);
+CREATE INDEX cpctEcrf_sequenced ON cpctEcrf (sequenced);
+CREATE INDEX cpctEcrf_fieldName ON cpctEcrf (fieldName);
+CREATE INDEX cpctEcrf_relevant ON cpctEcrf (relevant);
 
 DROP TABLE IF EXISTS cpctEcrfDatamodel;
 CREATE TABLE cpctEcrfDatamodel
@@ -249,17 +250,19 @@ CREATE TABLE drupEcrf
     sequenced varchar(5),
     fieldName varchar(100),
     relevant varchar(5),
-    PRIMARY KEY (id),
-    INDEX(patientId),
-    INDEX(studyEvent),
-    INDEX(form),
-    INDEX(itemGroup),
-    INDEX(item),
-    INDEX(status),
-    INDEX(sequenced),
-    INDEX(fieldName),
-    INDEX(relevant)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX drupEcrf_patientId ON drupEcrf (patientId);
+CREATE INDEX drupEcrf_studyEvent ON drupEcrf (studyEvent);
+CREATE INDEX drupEcrf_form ON drupEcrf (form);
+CREATE INDEX drupEcrf_itemGroup ON drupEcrf (itemGroup);
+CREATE INDEX drupEcrf_item ON drupEcrf (item);
+CREATE INDEX drupEcrf_status ON drupEcrf (status);
+CREATE INDEX drupEcrf_sequenced ON drupEcrf (sequenced);
+CREATE INDEX drupEcrf_fieldName ON drupEcrf (fieldName);
+CREATE INDEX drupEcrf_relevant ON drupEcrf (relevant);
+
 
 DROP TABLE IF EXISTS drupEcrfDatamodel;
 CREATE TABLE drupEcrfDatamodel
@@ -275,9 +278,10 @@ CREATE TABLE formsMetadata
     tableName varchar(20),
     form varchar(20),
     status varchar(30),
-    locked varchar(5),
-    UNIQUE KEY (id, tableName, form)
+    locked varchar(5)
 );
+
+CREATE UNIQUE INDEX formsMetadata_unique_constraint on formsMetadata (id, tableName, form);
 
 DROP TABLE IF EXISTS amberPatient;
 CREATE TABLE amberPatient
@@ -292,10 +296,12 @@ CREATE TABLE amberAnonymous
 (   modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     sampleId varchar(255) NOT NULL,
     hmfSampleId varchar(255) NOT NULL,
-    deleted BOOLEAN NOT NULL,
-    PRIMARY KEY (sampleId),
-    INDEX(hmfSampleId)
+    deleted TINYINT(1) NOT NULL,
+    PRIMARY KEY (sampleId)
 );
+
+CREATE INDEX amberAnonymous_hmfSampleId ON amberAnonymous (hmfSampleId);
+
 
 DROP TABLE IF EXISTS amberMapping;
 CREATE TABLE amberMapping
@@ -437,29 +443,30 @@ CREATE TABLE canonicalTranscript
     codingStart int not null,
     codingEnd int not null,
     codingBases int not null,
-    PRIMARY KEY (id),
-    INDEX(gene),
-    INDEX(transcriptId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX canonicalTranscript_gene on canonicalTranscript (gene);
+CREATE INDEX canonicalTranscript_transcriptId on canonicalTranscript (transcriptId);
 
 DROP TABLE IF EXISTS driverGenePanel;
 CREATE TABLE driverGenePanel
 (   modified DATETIME NOT NULL,
     gene varchar(50) NOT NULL,
-    reportMissense BOOLEAN NOT NULL,
-    reportNonsense BOOLEAN NOT NULL,
-    reportSplice BOOLEAN NOT NULL,
-    reportDeletion BOOLEAN NOT NULL,
-    reportDisruption BOOLEAN NOT NULL,
-    reportAmplification BOOLEAN NOT NULL,
-    reportSomaticHotspot BOOLEAN NOT NULL,
+    reportMissense TINYINT(1) NOT NULL,
+    reportNonsense TINYINT(1) NOT NULL,
+    reportSplice TINYINT(1) NOT NULL,
+    reportDeletion TINYINT(1) NOT NULL,
+    reportDisruption TINYINT(1) NOT NULL,
+    reportAmplification TINYINT(1) NOT NULL,
+    reportSomaticHotspot TINYINT(1) NOT NULL,
     reportGermlineVariant varchar(50) NOT NULL,
     reportGermlineHotspot varchar(50) NOT NULL,
     likelihoodType varchar(255) NOT NULL,
     reportGermlineDisruption varchar(50) NOT NULL,
     reportGermlineDeletion varchar(50) NOT NULL,
     additionalReportedTranscripts varchar(255) NOT NULL,
-    reportPGX BOOLEAN NOT NULL,
+    reportPGX TINYINT(1) NOT NULL,
     PRIMARY KEY (gene)
 );
 
@@ -500,7 +507,7 @@ CREATE TABLE metric
     tumorCoverage20xPercentage DOUBLE PRECISION NOT NULL,
     tumorCoverage30xPercentage DOUBLE PRECISION NOT NULL,
     tumorCoverage60xPercentage DOUBLE PRECISION NOT NULL,
-    sufficientCoverage BOOLEAN NOT NULL,
+    sufficientCoverage TINYINT(1) NOT NULL,
     PRIMARY KEY (sampleId)
 );
 
@@ -525,7 +532,7 @@ CREATE TABLE flagstat
     tumorProperlyPairedProportion DOUBLE PRECISION NOT NULL,
     tumorWithItselfAndMateMappedProportion DOUBLE PRECISION NOT NULL,
     tumorSingletonProportion DOUBLE PRECISION NOT NULL,
-    passQC BOOLEAN NOT NULL,
+    passQC TINYINT(1) NOT NULL,
     PRIMARY KEY (sampleId)
 );
 
@@ -546,7 +553,7 @@ CREATE TABLE somaticVariant
     canonicalCodingEffect varchar(50) NOT NULL,
     canonicalHgvsCodingImpact varchar(100) NOT NULL,
     canonicalHgvsProteinImpact varchar(200) NOT NULL,
-    spliceRegion BOOLEAN NOT NULL,
+    spliceRegion TINYINT(1) NOT NULL,
     otherTranscriptEffects varchar(255) NOT NULL,
     worstCodingEffect varchar(50) NOT NULL,
     microhomology varchar(255) NOT NULL,
@@ -560,12 +567,12 @@ CREATE TABLE somaticVariant
     tier varchar(20) NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
     subclonalLikelihood DOUBLE PRECISION NOT NULL,
-    biallelic BOOLEAN NOT NULL,
+    biallelic TINYINT(1) NOT NULL,
     hotspot varchar(20) NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
     germlineStatus varchar(50) NOT NULL,
     minorAlleleCopyNumber DOUBLE PRECISION NOT NULL,
-    recovered BOOLEAN NOT NULL,
+    recovered TINYINT(1) NOT NULL,
     kataegis varchar(20) NOT NULL,
     referenceAlleleReadCount int,
     referenceTotalReadCount int,
@@ -573,17 +580,18 @@ CREATE TABLE somaticVariant
     rnaTotalReadCount int,
     localPhaseSet varchar(50),
     qual double precision not null,
-    reported BOOLEAN NOT NULL,
+    reported TINYINT(1) NOT NULL,
     clinvarInfo varchar(255) NULL,
     gnomadFrequency DOUBLE PRECISION NULL,
     somaticLikelihood varchar(10) NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY (sampleId, chromosome, position, ref, alt),
-    INDEX(sampleId),
-    INDEX(filter),
-    INDEX(type),
-    INDEX(gene)
+    PRIMARY KEY (id)
 );
+
+CREATE UNIQUE INDEX somaticVariant_unique_constraint on somaticVariant (sampleId, chromosome, position, ref, alt);
+CREATE INDEX somaticVariant_sampleId on somaticVariant (sampleId);
+CREATE INDEX somaticVariant_filter on somaticVariant (filter);
+CREATE INDEX somaticVariant_type on somaticVariant (type);
+CREATE INDEX somaticVariant_gene on somaticVariant (gene);
 
 DROP TABLE IF EXISTS germlineVariant;
 CREATE TABLE germlineVariant
@@ -597,7 +605,7 @@ CREATE TABLE germlineVariant
     ref varchar(255) NOT NULL,
     alt varchar(255) NOT NULL,
 
-    ## SAGE
+    -- ### SAGE
     qual double precision not null,
     tier varchar(20) NOT NULL,
     germlineGenotype varchar(255) NOT NULL,
@@ -609,46 +617,47 @@ CREATE TABLE germlineVariant
     tumorTotalReadCount int NOT NULL,
     localPhaseSet varchar(50),
 
-    ### PURPLE ENRICHMENT
+    -- ### PURPLE ENRICHMENT
     adjustedVaf DOUBLE PRECISION NOT NULL,
     variantCopyNumber DOUBLE PRECISION NOT NULL,
     copyNumber DOUBLE PRECISION NOT NULL,
-    biallelic BOOLEAN NOT NULL,
+    biallelic TINYINT(1) NOT NULL,
     minorAlleleCopyNumber DOUBLE PRECISION NOT NULL,
 
-    ### PATHOGENIC
+    -- ### PATHOGENIC
     clinvarInfo varchar(255) NOT NULL,
     pathogenicity varchar(255) NOT NULL,
-    pathogenic BOOLEAN NOT NULL,
+    pathogenic TINYINT(1) NOT NULL,
 
-    ## PAVE IMPACTS
+    -- ### PAVE IMPACTS
     gene varchar(50) NOT NULL,
     genesAffected int not null,
     canonicalEffect varchar(255) NOT NULL,
     canonicalCodingEffect varchar(50) NOT NULL,
     canonicalHgvsCodingImpact varchar(100) NOT NULL,
     canonicalHgvsProteinImpact varchar(200) NOT NULL,
-    spliceRegion BOOLEAN NOT NULL,
+    spliceRegion TINYINT(1) NOT NULL,
     otherTranscriptEffects varchar(255) NOT NULL,
     worstCodingEffect varchar(50) NOT NULL,
 
-    ### REF GENOME ENRICHMENT
+    -- ### REF GENOME ENRICHMENT
     microhomology varchar(255) NOT NULL,
     repeatSequence varchar(255) NOT NULL,
     repeatCount int NOT NULL,
     trinucleotideContext varchar(3) NOT NULL,
 
-    ### DRIVER CATALOG
+    -- ### DRIVER CATALOG
     hotspot varchar(20) NOT NULL,
     mappability DOUBLE PRECISION NOT NULL,
-    reported BOOLEAN NOT NULL,
+    reported TINYINT(1) NOT NULL,
 
-    PRIMARY KEY (id),
-    INDEX(sampleId),
-    INDEX(filter),
-    INDEX(type),
-    INDEX(gene)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX germlineVariant_sampleId on germlineVariant (sampleId);
+CREATE INDEX germlineVariant_filter on germlineVariant (filter);
+CREATE INDEX germlineVariant_type on germlineVariant (type);
+CREATE INDEX germlineVariant_gene on germlineVariant (gene);
 
 DROP TABLE IF EXISTS purity;
 CREATE TABLE purity
@@ -666,7 +675,7 @@ CREATE TABLE purity
     ploidy DOUBLE PRECISION not null,
     diploidProportion DOUBLE PRECISION not null,
     polyclonalProportion DOUBLE PRECISION not null,
-    wholeGenomeDuplication BOOLEAN NOT NULL,
+    wholeGenomeDuplication TINYINT(1) NOT NULL,
     minPurity DOUBLE PRECISION not null,
     maxPurity DOUBLE PRECISION not null,
     minPloidy DOUBLE PRECISION not null,
@@ -684,12 +693,13 @@ CREATE TABLE purity
     copyNumberSegments INT not null DEFAULT 0,
     unsupportedCopyNumberSegments INT not null DEFAULT 0,
     contamination DOUBLE PRECISION not null DEFAULT 0,
-    germlineAberration varchar(255) not null DEFAULT "NONE",
+    germlineAberration varchar(255) not null DEFAULT 'NONE',
     amberGender varchar(20) NOT NULL,
-    targeted BOOLEAN not null,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
+    targeted TINYINT(1) not null,
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX purity_sampleId on purity (sampleId);
 
 DROP TABLE IF EXISTS purityRange;
 CREATE TABLE purityRange
@@ -702,9 +712,10 @@ CREATE TABLE purityRange
     somaticPenalty DOUBLE PRECISION not null,
     ploidy DOUBLE PRECISION not null,
     diploidProportion DOUBLE PRECISION not null,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX purityRange_sampleId on purityRange (sampleId);
 
 DROP TABLE IF EXISTS copyNumber;
 CREATE TABLE copyNumber
@@ -727,10 +738,11 @@ CREATE TABLE copyNumber
     gcContent DOUBLE PRECISION not null,
     minStart int not null,
     maxStart int not null,
-    PRIMARY KEY (id),
-    UNIQUE KEY (sampleId, chromosome, start, end),
-    INDEX(sampleId)
+    PRIMARY KEY (id)
 );
+
+CREATE UNIQUE INDEX copyNumber_unique_constraint on copyNumber (sampleId, chromosome, start, end);
+CREATE INDEX copyNumber_sampleId on copyNumber (sampleId);
 
 DROP TABLE IF EXISTS geneCopyNumber;
 CREATE TABLE geneCopyNumber
@@ -743,7 +755,7 @@ CREATE TABLE geneCopyNumber
     gene varchar(255) NOT NULL,
     chromosomeBand varchar(255) NOT NULL,
     transcriptId varchar(255) NOT NULL,
-    canonicalTranscript BOOLEAN NOT NULL,
+    canonicalTranscript TINYINT(1) NOT NULL,
     minCopyNumber DOUBLE PRECISION not null,
     maxCopyNumber DOUBLE PRECISION not null,
     somaticRegions int not null,
@@ -754,11 +766,12 @@ CREATE TABLE geneCopyNumber
     minRegionEndSupport varchar(255) NOT NULL,
     minRegionMethod varchar(255) NOT NULL,
     minMinorAlleleCopyNumber DOUBLE PRECISION not null,
-    PRIMARY KEY (id),
-    UNIQUE KEY (sampleId, chromosome, gene, transcriptId),
-    INDEX(sampleId, gene),
-    INDEX(gene)
+    PRIMARY KEY (id)
 );
+
+CREATE UNIQUE INDEX geneCopyNumber_unique_constraint on geneCopyNumber (sampleId, chromosome, gene, transcriptId);
+CREATE INDEX geneCopyNumber_sampleId_gene on geneCopyNumber (sampleId, gene);
+CREATE INDEX geneCopyNumber_gene on geneCopyNumber (gene);
 
 DROP TABLE IF EXISTS driverCatalog;
 CREATE TABLE driverCatalog
@@ -769,7 +782,7 @@ CREATE TABLE driverCatalog
     chromosomeBand varchar(50) NOT NULL,
     gene varchar(50) NOT NULL,
     transcriptId varchar(50) NOT NULL,
-    canonicalTranscript BOOLEAN NOT NULL DEFAULT 1,
+    canonicalTranscript TINYINT(1) NOT NULL DEFAULT 1,
     category varchar(50) NOT NULL,
     driver varchar(50) NOT NULL,
     likelihoodMethod varchar(50) NOT NULL,
@@ -779,13 +792,14 @@ CREATE TABLE driverCatalog
     splice int NOT NULL,
     frameshift int NOT NULL,
     inframe int NOT NULL,
-    biallelic BOOLEAN NOT NULL,
+    biallelic TINYINT(1) NOT NULL,
     minCopyNumber DOUBLE PRECISION NOT NULL,
     maxCopyNumber DOUBLE PRECISION NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId, gene),
-    INDEX(gene)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX driverCatalog_sampleId_gene on driverCatalog (sampleId, gene);
+CREATE INDEX driverCatalog_gene on driverCatalog (gene);
 
 DROP TABLE IF EXISTS germlineDeletion;
 CREATE TABLE germlineDeletion
@@ -807,11 +821,12 @@ CREATE TABLE germlineDeletion
     tumorCopyNumber DOUBLE PRECISION NOT NULL,
     filter varchar(50) NOT NULL,
     cohortFrequency int not null,
-    reported BOOLEAN NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId, gene),
-    INDEX(gene)
+    reported TINYINT(1) NOT NULL,
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX germlineDeletion_sampleId_gene on germlineDeletion (sampleId, gene);
+CREATE INDEX germlineDeletion_gene on germlineDeletion (gene);
 
 DROP TABLE IF EXISTS structuralVariant;
 CREATE TABLE structuralVariant
@@ -839,7 +854,7 @@ CREATE TABLE structuralVariant
     insertSequence varchar(2048) not null,
     type varchar(10) NOT NULL,
     filter varchar(50) NOT NULL,
-    imprecise BOOLEAN NOT NULL,
+    imprecise TINYINT(1) NOT NULL,
     qualScore DOUBLE PRECISION,
     event varchar(50),
     startTumorVariantFragmentCount int,
@@ -859,7 +874,7 @@ CREATE TABLE structuralVariant
     startLinkedBy varchar(1024),
     endLinkedBy varchar(1024),
     vcfId varchar(50),
-    recovered BOOLEAN NOT NULL,
+    recovered TINYINT(1) NOT NULL,
     recoveryMethod varchar(64),
     recoveryFilter varchar(255),
     startRefContext varchar(255),
@@ -871,9 +886,10 @@ CREATE TABLE structuralVariant
     insertSequenceRepeatCoverage DOUBLE PRECISION,
     startAnchoringSupportDistance int,
     endAnchoringSupportDistance int,
-    PRIMARY KEY (id),
-    INDEX(sampleId, svId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX structuralVariant_sampleId_svId on structuralVariant (sampleId, svId);
 
 DROP TABLE IF EXISTS svAnnotation;
 CREATE TABLE svAnnotation
@@ -883,9 +899,9 @@ CREATE TABLE svAnnotation
     svId INT NOT NULL,
     clusterId INT NOT NULL,
     clusterReason VARCHAR(255) NULL,
-    fragileSiteStart BOOLEAN NOT NULL,
-    fragileSiteEnd BOOLEAN NOT NULL,
-    isFoldback BOOLEAN NOT NULL,
+    fragileSiteStart TINYINT(1) NOT NULL,
+    fragileSiteEnd TINYINT(1) NOT NULL,
+    isFoldback TINYINT(1) NOT NULL,
     lineTypeStart VARCHAR(20),
     lineTypeEnd VARCHAR(20),
     junctionCopyNumberMin DOUBLE PRECISION,
@@ -898,11 +914,12 @@ CREATE TABLE svAnnotation
     localTopologyEnd VARCHAR(20),
     localTICountStart INT,
     localTICountEnd INT,
-    PRIMARY KEY (id),
-    INDEX(sampleId, svId),
-    INDEX(clusterId),
-    INDEX(svId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX svAnnotation_sampleId_svId on svAnnotation (sampleId, svId);
+CREATE INDEX svAnnotation_clusterId on svAnnotation (clusterId);
+CREATE INDEX svAnnotation_svId on svAnnotation (svId);
 
 DROP TABLE IF EXISTS svCluster;
 CREATE TABLE svCluster
@@ -911,14 +928,15 @@ CREATE TABLE svCluster
     sampleId varchar(50) NOT NULL,
     clusterId INT NOT NULL,
     category VARCHAR(20),
-    synthetic BOOLEAN NOT NULL,
+    synthetic TINYINT(1) NOT NULL,
     resolvedType VARCHAR(20),
     clusterCount INT,
     clusterDesc VARCHAR(50),
-    PRIMARY KEY (id),
-    INDEX(sampleId, clusterId),
-    INDEX(clusterId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX svCluster_sampleId_clusterId on svCluster (sampleId, clusterId);
+CREATE INDEX svCluster_clusterId on svCluster (clusterId);
 
 DROP TABLE IF EXISTS svLink;
 CREATE TABLE svLink
@@ -931,21 +949,22 @@ CREATE TABLE svLink
     chainLinkCount INT NOT NULL,
     lowerSvId INT NOT NULL,
     upperSvId INT NOT NULL,
-    lowerBreakendIsStart BOOLEAN NOT NULL,
-    upperBreakendIsStart BOOLEAN NOT NULL,
+    lowerBreakendIsStart TINYINT(1) NOT NULL,
+    upperBreakendIsStart TINYINT(1) NOT NULL,
     chromosome VARCHAR(10),
     arm VARCHAR(3),
-    assembled BOOLEAN NOT NULL,
+    assembled TINYINT(1) NOT NULL,
     traversedSVCount INT,
     linkLength INT,
     junctionCopyNumber DOUBLE PRECISION,
     junctionCopyNumberUncertainty DOUBLE PRECISION,
     pseudogeneInfo varchar(255),
-    ecDna BOOLEAN,
-    PRIMARY KEY (id),
-    INDEX(sampleId, clusterId),
-    INDEX(clusterId)
+    ecDna TINYINT(1),
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX svLink_sampleId_clusterId on svLink (sampleId, clusterId);
+CREATE INDEX svLink_clusterId on svLink (clusterId);
 
 DROP TABLE IF EXISTS svDriver;
 CREATE TABLE svDriver
@@ -955,10 +974,11 @@ CREATE TABLE svDriver
     clusterId INT NULL,
     gene VARCHAR(50) NOT NULL,
     eventType VARCHAR(50),
-    PRIMARY KEY (id),
-    INDEX(sampleId, clusterId),
-    INDEX(clusterId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX svDiver_sampleId_clusterId on svDriver (sampleId, clusterId);
+CREATE INDEX svDriver_clusterId on svDriver (clusterId);
 
 DROP TABLE IF EXISTS svBreakend;
 CREATE TABLE svBreakend
@@ -966,13 +986,13 @@ CREATE TABLE svBreakend
     modified DATETIME NOT NULL,
     sampleId varchar(50) NOT NULL,
     svId INT NOT NULL,
-    startBreakend BOOLEAN NOT NULL,
-    gene VARCHAR(50) NOT NULL, # length here comes from ensembl db schema
-    transcriptId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
-    canonicalTranscript BOOLEAN NOT NULL,
+    startBreakend TINYINT(1) NOT NULL,
+    gene VARCHAR(50) NOT NULL, -- # length here comes from ensembl db schema
+    transcriptId VARCHAR(128) NOT NULL, -- # length here comes from ensembl db schema
+    canonicalTranscript TINYINT(1) NOT NULL,
     geneOrientation VARCHAR(20) NOT NULL,
-    disruptive BOOLEAN NOT NULL,
-    reportedDisruption BOOLEAN NOT NULL,
+    disruptive TINYINT(1) NOT NULL,
+    reportedDisruption TINYINT(1) NOT NULL,
     undisruptedCopyNumber DOUBLE PRECISION,
     regionType VARCHAR(20) NOT NULL,
     codingContext VARCHAR(20),
@@ -982,11 +1002,12 @@ CREATE TABLE svBreakend
     nextSpliceExonPhase TINYINT,
     nextSpliceDistance INT,
     totalExonCount SMALLINT NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId, svId),
-    INDEX(gene),
-    INDEX(transcriptId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX svBreakend_sampleId_svId on svBreakend (sampleId, svId);
+CREATE INDEX svBreakend_gene on svBreakend (gene);
+CREATE INDEX svBreakend_transcriptId on svBreakend (transcriptId);
 
 DROP TABLE IF EXISTS svFusion;
 CREATE TABLE svFusion
@@ -996,24 +1017,25 @@ CREATE TABLE svFusion
     fivePrimeBreakendId INT UNSIGNED NOT NULL,
     threePrimeBreakendId INT UNSIGNED NOT NULL,
     name VARCHAR(50) NOT NULL,
-    reported BOOLEAN NOT NULL,
+    reported TINYINT(1) NOT NULL,
     reportedType varchar(50) NOT NULL,
     phased VARCHAR(20) NOT NULL,
     likelihood VARCHAR(10) NOT NULL,
     chainLength INT,
     chainLinks INT,
-    chainTerminated BOOLEAN,
+    chainTerminated TINYINT(1),
     domainsKept VARCHAR(255),
     domainsLost VARCHAR(255),
     skippedExonsUp INT,
     skippedExonsDown INT,
     fusedExonUp INT,
     fusedExonDown INT,
-    PRIMARY KEY (id),
-    INDEX(fivePrimeBreakendId),
-    INDEX(threePrimeBreakendId),
-    INDEX(sampleId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX svFusion_fivePrimeBreakendId on svFusion (fivePrimeBreakendId);
+CREATE INDEX svFusion_threePrimeBreakendId on svFusion (threePrimeBreakendId);
+CREATE INDEX svFusion_sampleId on svFusion (sampleId);
 
 DROP TABLE IF EXISTS structuralVariantGermline;
 CREATE TABLE structuralVariantGermline
@@ -1057,9 +1079,10 @@ CREATE TABLE structuralVariantGermline
     linkedByStart varchar(1024),
     linkedByEnd varchar(1024),
     cohortFrequency int not null,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX structuralVariantGermline_sampleId on structuralVariantGermline (sampleId);
 
 DROP TABLE IF EXISTS svBreakendGermline;
 CREATE TABLE svBreakendGermline
@@ -1067,13 +1090,13 @@ CREATE TABLE svBreakendGermline
     modified DATETIME NOT NULL,
     sampleId varchar(50) NOT NULL,
     svId INT NOT NULL,
-    startBreakend BOOLEAN NOT NULL,
-    gene VARCHAR(50) NOT NULL, # length here comes from ensembl db schema
-    transcriptId VARCHAR(128) NOT NULL, # length here comes from ensembl db schema
-    canonicalTranscript BOOLEAN NOT NULL,
+    startBreakend TINYINT(1) NOT NULL,
+    gene VARCHAR(50) NOT NULL, -- length here comes from ensembl db schema
+    transcriptId VARCHAR(128) NOT NULL, -- length here comes from ensembl db schema
+    canonicalTranscript TINYINT(1) NOT NULL,
     geneOrientation VARCHAR(20) NOT NULL,
-    disruptive BOOLEAN NOT NULL,
-    reportedDisruption BOOLEAN NOT NULL,
+    disruptive TINYINT(1) NOT NULL,
+    reportedDisruption TINYINT(1) NOT NULL,
     undisruptedCopyNumber DOUBLE PRECISION,
     regionType VARCHAR(20) NOT NULL,
     codingType VARCHAR(20),
@@ -1083,12 +1106,12 @@ CREATE TABLE svBreakendGermline
     nextSpliceExonPhase TINYINT,
     nextSpliceDistance INT,
     totalExonCount SMALLINT NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId, svId),
-    INDEX(gene),
-    INDEX(transcriptId)
+    PRIMARY KEY (id)
 );
 
+CREATE INDEX svBreakendGermline_sampleId_svId on svBreakendGermline (sampleId, svId);
+CREATE INDEX svBreakendGermline_gene on svBreakendGermline (gene);
+CREATE INDEX svBreakendGermline_transcriptId on svBreakendGermline (transcriptId);
 
 DROP TABLE IF EXISTS signature;
 CREATE TABLE signature
@@ -1098,9 +1121,10 @@ CREATE TABLE signature
     signature VARCHAR(50) NOT NULL,
     allocation DOUBLE PRECISION,
     percent DOUBLE PRECISION,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX signature_sampleId on signature (sampleId);
 
 DROP TABLE IF EXISTS chord;
 CREATE TABLE chord
@@ -1199,7 +1223,7 @@ CREATE TABLE virusAnnotation
     percentageCovered double NOT NULL,
     meanCoverage double NOT NULL,
     expectedClonalCoverage double,
-    reported BOOLEAN NOT NULL,
+    reported TINYINT(1) NOT NULL,
     likelihood VARCHAR(10) NOT NULL,
     PRIMARY KEY (id)
 );
@@ -1211,9 +1235,10 @@ CREATE TABLE cuppa
     sampleId varchar(255) NOT NULL,
     cuppaTumorLocation varchar(255) NOT NULL,
     cuppaPrediction varchar(255),
-    PRIMARY KEY (id),
-    KEY(sampleId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX cuppa_sampleId on cuppa (sampleId);
 
 DROP TABLE IF EXISTS rnaStatistics;
 CREATE TABLE rnaStatistics
@@ -1233,9 +1258,10 @@ CREATE TABLE rnaStatistics
     fragmentLengthPct95 DOUBLE PRECISION NOT NULL,
     enrichedGenePercent DOUBLE PRECISION NOT NULL,
     medianGCRatio DOUBLE PRECISION NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX rnaStatistics_sampleId on rnaStatistics (sampleId);
 
 DROP TABLE IF EXISTS geneExpression;
 CREATE TABLE geneExpression
@@ -1250,10 +1276,11 @@ CREATE TABLE geneExpression
     percentileCancer DOUBLE PRECISION NOT NULL,
     medianTpmCohort DOUBLE PRECISION NOT NULL,
     percentileCohort DOUBLE PRECISION NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId, gene),
-    INDEX(gene)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX geneExpression_sampleId_gene on geneExpression (sampleId, gene);
+CREATE INDEX geneExpression_gene on geneExpression (gene);
 
 DROP TABLE IF EXISTS novelSpliceJunction;
 CREATE TABLE novelSpliceJunction
@@ -1273,10 +1300,11 @@ CREATE TABLE novelSpliceJunction
     basesStart VARCHAR(20) NOT NULL,
     basesEnd VARCHAR(20) NOT NULL,
     cohortFrequency int NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId, gene),
-    INDEX(gene)
+    PRIMARY KEY (id)
 );
+
+CREATE INDEX novelSpliceJunction_sampleId_gene on novelSpliceJunction (sampleId, gene);
+CREATE INDEX novelSpliceJunction_gene on novelSpliceJunction (gene);
 
 DROP TABLE IF EXISTS rnaFusion;
 CREATE TABLE rnaFusion
@@ -1301,9 +1329,8 @@ CREATE TABLE rnaFusion
     maxAnchorLengthUp int NOT NULL,
     maxAnchorLengthDown int NOT NULL,
     cohortFrequency int NOT NULL,
-    PRIMARY KEY (id),
-    INDEX(sampleId, name),
-    INDEX(name)
+    PRIMARY KEY (id)
 );
 
-SET FOREIGN_KEY_CHECKS = 1;
+CREATE INDEX rnaFusion_sampleId_name on rnaFusion (sampleId, name);
+CREATE INDEX rnaFusion_name on rnaFusion (name);
