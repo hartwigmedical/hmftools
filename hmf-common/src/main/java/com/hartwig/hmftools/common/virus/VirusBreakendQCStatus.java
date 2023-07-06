@@ -2,7 +2,8 @@ package com.hartwig.hmftools.common.virus;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum VirusBreakendQCStatus {
+public enum VirusBreakendQCStatus
+{
     NO_ABNORMALITIES,
     LOW_VIRAL_COVERAGE,
     EXCESSIVE_VIRAL_COVERAGE,
@@ -11,13 +12,17 @@ public enum VirusBreakendQCStatus {
     UNCLEAR_TAXID_ASSIGNMENT;
 
     @NotNull
-    public static VirusBreakendQCStatus convert(@NotNull String qcStatusString) {
-        if (qcStatusString.isEmpty()) {
+    public static VirusBreakendQCStatus convert(@NotNull String qcStatusString)
+    {
+        if(qcStatusString.isEmpty())
+        {
             return NO_ABNORMALITIES;
         }
 
-        for (VirusBreakendQCStatus qcStatus : VirusBreakendQCStatus.values()) {
-            if (qcStatus.toString().equals(qcStatusString)) {
+        for(VirusBreakendQCStatus qcStatus : VirusBreakendQCStatus.values())
+        {
+            if(qcStatus.toString().equals(qcStatusString))
+            {
                 return qcStatus;
             }
         }

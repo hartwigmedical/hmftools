@@ -2,7 +2,8 @@ package com.hartwig.hmftools.common.virus;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum VirusConstants {
+public enum VirusConstants
+{
     MCV("MCV"),
     EBV("EBV"),
     HPV("HPV"),
@@ -12,13 +13,16 @@ public enum VirusConstants {
     @NotNull
     private final String virusName;
 
-    VirusConstants(@NotNull final String virusName) {
+    VirusConstants(@NotNull final String virusName)
+    {
         this.virusName = virusName;
     }
 
     @NotNull
-    public static VirusConstants fromVirusName(@NotNull String virusName) {
-        switch (virusName) {
+    public static VirusConstants fromVirusName(@NotNull String virusName)
+    {
+        switch(virusName)
+        {
             case "MCV":
                 return MCV;
             case "EBV":

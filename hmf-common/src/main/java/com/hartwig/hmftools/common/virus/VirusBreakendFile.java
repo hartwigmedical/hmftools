@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.virus;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,20 +11,17 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VirusBreakendFile {
-
-    private static final String DELIMITER = "\t";
-
-    private VirusBreakendFile() {
-    }
-
+public class VirusBreakendFile
+{
     @NotNull
-    public static List<VirusBreakend> read(@NotNull String virusBreakendTsv) throws IOException {
+    public static List<VirusBreakend> read(@NotNull String virusBreakendTsv) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(virusBreakendTsv).toPath()));
     }
 
     @NotNull
-    private static List<VirusBreakend> fromLines(@NotNull final List<String> lines) {
+    private static List<VirusBreakend> fromLines(@NotNull final List<String> lines)
+    {
         return lines.stream()
                 .skip(1)
                 .map(VirusBreakendFile::fromString)
@@ -30,8 +29,9 @@ public class VirusBreakendFile {
     }
 
     @NotNull
-    private static VirusBreakend fromString(@NotNull final String line) {
-        String[] values = line.split(DELIMITER);
+    private static VirusBreakend fromString(@NotNull final String line)
+    {
+        String[] values = line.split(TSV_DELIM);
         ImmutableVirusBreakend.Builder builder = ImmutableVirusBreakend.builder()
                 .taxidGenus(Integer.parseInt(values[0]))
                 .nameGenus(values[1])
@@ -59,7 +59,8 @@ public class VirusBreakendFile {
                 .integrations(Integer.parseInt(values[23]))
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES);
 
-        if (values.length == 25) {
+        if(values.length == 25)
+        {
             builder.qcStatus(VirusBreakendQCStatus.convert(values[24]));
         }
 
