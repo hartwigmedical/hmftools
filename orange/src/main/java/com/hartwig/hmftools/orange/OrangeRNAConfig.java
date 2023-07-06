@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.orange;
 
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.ISOFOX_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DIR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.orange.OrangeConfig.getToolDirectory;
 
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.rna.GeneExpressionFile;
@@ -72,7 +77,10 @@ public interface OrangeRNAConfig {
         String rnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
         LOGGER.debug("RNA sample configured as {}", rnaSampleId);
 
-        String isofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG);
+        String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
+        String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
+
+        String isofoxDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, ISOFOX_DIR_CFG, ISOFOX_DIR);
 
         // note that it is the (tumor) sample ID which is used in Isofox filenames, not the RNA sample ID used in
         // the Purple RNA-annotated VCF
