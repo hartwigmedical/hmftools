@@ -14,6 +14,8 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
@@ -66,7 +68,6 @@ public class MissensePeptideScorer
 
     private BufferedWriter mWriter;
 
-    private static final String GENE_ID_FILE = "gene_id_file";
     private static final String OUTPUT_FILE = "output_file";
     private static final String LIKELIHOOD_CUTOFF = "likelihood_cutoff";
 
@@ -474,7 +475,7 @@ public class MissensePeptideScorer
         addEnsemblDir(configBuilder);
         ScoreConfig.registerConfig(configBuilder);
         configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        configBuilder.addPath(GENE_ID_FILE, false, "Gene IDs file");
+        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
         configBuilder.addPath(OUTPUT_FILE, true, "Output filename");
         configBuilder.addConfigItem(OUTPUT_DIR, true, "Output directory");
         configBuilder.addDecimal(LIKELIHOOD_CUTOFF, "Likelihood cutoff to write an allele peptide result", 0.02);

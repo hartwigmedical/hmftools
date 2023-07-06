@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR_DEFAULT;
 import static java.lang.String.format;
 
@@ -139,8 +141,6 @@ public class CuppaConfig
     public static final String DNA_CATEGORIES = "DNA";
     public static final String RNA_CATEGORIES = "RNA";
 
-    public static final String SAMPLE_DATA_DIR = "sample_data_dir";
-
     // either a single sample to be tested for a file containing the samples to be tested
     public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
@@ -253,7 +253,7 @@ public class CuppaConfig
         }
         else
         {
-            SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR, ""));
+            SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DATA_DIR_CFG, ""));
             SampleDataFile = cmd.getOptionValue(SAMPLE_DATA_FILE, "");
 
             LinxDir = checkAddDirSeparator(cmd.getOptionValue(LINX_DIR, ""));
@@ -264,7 +264,7 @@ public class CuppaConfig
             {
                 CUP_LOGGER.info("testing single sample({})", cmd.getOptionValue(SPECIFIC_SAMPLE_DATA));
             }
-            else if(cmd.hasOption(SAMPLE_DATA_DIR))
+            else if(cmd.hasOption(SAMPLE_DATA_DIR_CFG))
             {
                 CUP_LOGGER.info("testing samples from file: {}", SampleDataFile);
             }
@@ -318,7 +318,7 @@ public class CuppaConfig
     private String getCohortSampleDataFile(
             final CommandLine cmd, boolean useRefDataFile, final String configStr, final String defaultFilename, final CategoryType category)
     {
-        if(cmd.hasOption(SAMPLE_DATA_DIR) && cmd.hasOption(SPECIFIC_SAMPLE_DATA))
+        if(cmd.hasOption(SAMPLE_DATA_DIR_CFG) && cmd.hasOption(SPECIFIC_SAMPLE_DATA))
             return "";
 
         if(cmd.hasOption(configStr))
@@ -416,7 +416,7 @@ public class CuppaConfig
                         ALL_CATEGORIES, DNA_CATEGORIES, RNA_CATEGORIES, categories.toString()));
 
         options.addOption(SPECIFIC_SAMPLE_DATA, true, "Specific sample in form 'SampleId;CancerType;CancerSubtype' (last 2 optional)");
-        options.addOption(SAMPLE_DATA_DIR, true, "Directory containing standard sample files from pipeline");
+        options.addOption(SAMPLE_DATA_DIR_CFG, true, SAMPLE_DATA_DIR_DESC);
         addPipelineDirectories(options);
 
         options.addOption(SAMPLE_DATA_FILE, true, "Sample data file");

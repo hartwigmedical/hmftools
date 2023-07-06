@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -67,7 +69,6 @@ public class PurityConfig
     private static final String CTDNA_SAMPLES = "ctdna_samples";
     private static final String PURITY_METHODS = "purity_methods";
     private static final String SOMATIC_VCF = "somatic_vcf";
-    private static final String SAMPLE_DATA_DIR = "sample_data_dir";
     private static final String WRITE_VARIANTS = "write_somatics";
     private static final String INCLUDE_FILTERED_VARIANTS = "write_filtered_somatics";
     private static final String WRITE_CN_RATIOS = "write_cn_ratios";
@@ -79,7 +80,7 @@ public class PurityConfig
 
     public PurityConfig(final ConfigBuilder configBuilder)
     {
-        SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR));
+        SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
         Samples = Lists.newArrayList();
         loadSampleData(configBuilder);
@@ -210,7 +211,7 @@ public class PurityConfig
                 "List of purity methods separated by ',' default(all) from: " + sj);
 
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
-        configBuilder.addConfigItem(SAMPLE_DATA_DIR, true, "Sample data directory for all files");
+        configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, true, SAMPLE_DATA_DIR_DESC);
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
         configBuilder.addFlag(APPLY_DROPOUT, "Apply somatic drop-out logic");

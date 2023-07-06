@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -77,8 +78,6 @@ public class SageConfig
 
     private boolean mIsValid;
 
-    private static final String SAMPLE_DATA_DIR = "sample_data_dir";
-
     private static final String REFERENCE = "reference";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String OUTPUT_VCF = "out";
@@ -111,7 +110,7 @@ public class SageConfig
         }
 
 
-        SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR, ""));
+        SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG, ""));
 
         ReferenceBams = Lists.newArrayList();
 
@@ -237,7 +236,7 @@ public class SageConfig
         configBuilder.addConfigItem(REFERENCE, false, "Reference sample, or collection separated by ','");
         configBuilder.addConfigItem(REFERENCE_BAM, false, "Reference bam file");
 
-        configBuilder.addPath(SAMPLE_DATA_DIR, false, "Path to sample data files");
+        configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, "Path to sample data files");
         configBuilder.addConfigItem(OUTPUT_VCF, true, "Output vcf");
 
         addRefGenomeConfig(configBuilder, true);

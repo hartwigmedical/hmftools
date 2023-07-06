@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.isofox.loader;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
@@ -9,8 +13,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -30,7 +32,6 @@ import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
 public class DataLoaderConfig
 {
-    public static final String SAMPLE_DATA_DIRECTORY = "sample_data_dir";
     public static final String GENE_DATA_DIRECTORY = "gene_data_dir";
     public static final String ALT_SJ_DATA_DIRECTORY = "alt_sj_data_dir";
     public static final String FUSION_DATA_DIRECTORY = "fusion_data_dir";
@@ -103,7 +104,7 @@ public class DataLoaderConfig
             }
         }
 
-        SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIRECTORY));
+        SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
         GeneDistributionFile = configBuilder.getValue(GENE_DIST_FILE);
         AltSjCohortFile = configBuilder.getValue(ALT_SJ_COHORT_FILE);
 
@@ -198,7 +199,7 @@ public class DataLoaderConfig
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addConfigItem(SAMPLE_ID_FILE, "File with list of samples and cancer types to load data for");
         configBuilder.addConfigItem(LOAD_TYPES, "Load specific types only (default=ALL)");
-        configBuilder.addPath(SAMPLE_DATA_DIRECTORY, false, "Sample data directory");
+        configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
         configBuilder.addPath(GENE_DATA_DIRECTORY, false, "Gene data directory, will use sample data dir if not present");
         configBuilder.addPath(ALT_SJ_DATA_DIRECTORY, false, "Alt-SJ data directory, will use sample data dir if not present");
         configBuilder.addPath(FUSION_DATA_DIRECTORY, false, "Fusion data directory, will use sample data dir if not present");

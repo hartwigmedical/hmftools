@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.NEO_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
@@ -59,9 +61,6 @@ public class IsofoxConfig
     private static final String BAM_FILE = "bam_file";
     public static final String LONG_FRAGMENT_LIMIT = "long_frag_limit";
     public static final String READ_LENGTH = "read_length";
-
-    public static final String GENE_ID_FILE = "gene_id_file";
-    public static final String GENE_ID_FILE_DESC = "Restricted set of Gene IDs in CSV file";
 
     private static final String WRITE_EXON_DATA = "write_exon_data";
     private static final String WRITE_READ_DATA = "write_read_data";
