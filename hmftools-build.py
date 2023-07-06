@@ -3,6 +3,7 @@ import re
 import subprocess
 import xml.etree.ElementTree as ET
 
+# Check if a semver version is included as argument.
 if len(sys.argv) != 2:
     print(f'Invalid arguments. Usage: {sys.argv[0]} semver-version')
     quit()
@@ -18,31 +19,23 @@ if not match:
 
 module = match.group(1)
 
-
-# parse all the pom modules the project depends on from the pom.xml
+# parse all the hmftools modules the project depends on from the pom.xml
 parsed_pom = ET.parse(f'{module}/pom.xml')
 root = parsed_pom.getroot()
-
 namespace = {'ns': 'http://maven.apache.org/POM/4.0.0'}
-
 dependencies = root.findall('.//ns:dependencies/ns:dependency', namespace)
-
 hmftools_dependencies = set()
-
 for dep in dependencies:
-    # Extract relevant information from each dependency
     group_id = dep.find('ns:groupId', namespace).text
     artifact_id = dep.find('ns:artifactId', namespace).text
     if group_id == "com.hartwig":
         hmftools_dependencies.add(artifact_id)
 
-
-
 # Set version of module in parent pom.
 subprocess.run(['mvn', '-f', 'pom.xml', 'versions:set-property', '-DgenerateBackupPoms=false', f'-Dproperty={module}.version',  f'-DnewVersion={tag}'],
                check=True)
 
-# Set version of dependencies in parent pom.xml
+# Set version of hmftools dependencies in parent pom.xml
 for hmf_dep in hmftools_dependencies:
     subprocess.run(['mvn', '-f', 'pom.xml', 'versions:set-property', '-DgenerateBackupPoms=false',
                     f'-Dproperty={hmf_dep}.version', f'-DnewVersion={tag}'], check=True)
