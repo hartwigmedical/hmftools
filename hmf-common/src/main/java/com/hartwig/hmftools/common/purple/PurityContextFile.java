@@ -111,7 +111,7 @@ public final class PurityContextFile
                 .add(FORMAT.format(score.maxPloidy()))
                 .add(FORMAT.format(score.minDiploidProportion()))
                 .add(FORMAT.format(score.maxDiploidProportion()))
-                .add("")
+                .add("unset")
                 .add(FORMAT.format(purity.somaticPenalty()))
                 .add(String.valueOf(context.wholeGenomeDuplication()))
                 .add(FORMAT.format(context.microsatelliteIndelsPerMb()))
