@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.layout.LayoutTree
+import com.hartwig.hmftools.cider.layout.LayoutForest
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.utils.Doubles
 import htsjdk.samtools.SAMRecord
@@ -266,16 +266,16 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
                     .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
             ))
 
-        val layoutTree = LayoutTree(minBaseQuality.toByte(), minMatchedBases, CiderConstants.LAYOUT_MIN_SUPPORT_TO_SEAL_NODE)
+        val layoutForest = LayoutForest(minBaseQuality.toByte(), minMatchedBases, CiderConstants.LAYOUT_MIN_SUPPORT_TO_SEAL_NODE)
 
         // go through the read data list, and add one by one to the list of clusters
         // if there are multiple clusters that matches, we choose the highest one
         for (read in layoutReads)
         {
-            layoutTree.tryAddRead(LayoutTree.Read(read, read.sequence, read.baseQualities, read.alignedPosition))
+            layoutForest.tryAddRead(LayoutForest.Read(read, read.sequence, read.baseQualities, read.alignedPosition))
         }
 
-        val readLayouts: List<ReadLayout> = layoutTree.buildReadLayouts({ read: LayoutTree.Read -> read.source as VjLayoutRead })
+        val readLayouts: List<ReadLayout> = layoutForest.buildReadLayouts({ read: LayoutForest.Read -> read.source as VjLayoutRead })
             .sortedByDescending({ layout: ReadLayout -> layout.reads.size })
 
         // We want to perform a quick sanity check that the number of reads are correct

@@ -1,8 +1,11 @@
 package com.hartwig.hmftools.orange.algo.plot;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -27,8 +30,9 @@ public class FileBasedPlotManager implements PlotManager {
     @Override
     public void createPlotDirectory() throws IOException {
         File plotDir = new File(plotDirectoryPath());
+
         if (plotDir.exists()) {
-            throw new IOException("Plot directory exists already: " + plotDir);
+            return;
         }
 
         if (!plotDir.mkdirs()) {
@@ -45,10 +49,12 @@ public class FileBasedPlotManager implements PlotManager {
             return null;
         }
 
-        String targetPath = plotDirectoryPath() + File.separator + extractFileName(sourcePlotPath);
+        String targetPath = checkAddDirSeparator(plotDirectoryPath()) + extractFileName(sourcePlotPath);
 
-        LOGGER.debug("Copying '{}' to '{}'", sourcePlotPath, targetPath);
-        Files.copy(new File(sourcePlotPath).toPath(), new File(targetPath).toPath());
+        if(!Files.exists(Paths.get(targetPath))) {
+            LOGGER.debug("Copying '{}' to '{}'", sourcePlotPath, targetPath);
+            Files.copy(new File(sourcePlotPath).toPath(), new File(targetPath).toPath());
+        }
 
         return relativePath(targetPath, outputDir);
     }
