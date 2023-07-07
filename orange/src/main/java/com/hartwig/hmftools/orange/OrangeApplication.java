@@ -20,13 +20,15 @@ public class OrangeApplication {
     private static final String APPLICATION = "ORANGE";
     public static final String VERSION = OrangeApplication.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) throws IOException, ParseException
+    {
         LOGGER.info("Running {} v{}", APPLICATION, VERSION);
 
         ConfigBuilder configBuilder = new ConfigBuilder();
         OrangeConfig.registerConfig(configBuilder);
 
-        if (!configBuilder.parseCommandLine(args)) {
+        if (!configBuilder.parseCommandLine(args))
+        {
             configBuilder.logInvalidDetails();
             System.exit(1);
         }
@@ -38,11 +40,13 @@ public class OrangeApplication {
     @NotNull
     private final OrangeConfig config;
 
-    private OrangeApplication(@NotNull final OrangeConfig config) {
+    private OrangeApplication(@NotNull final OrangeConfig config)
+    {
         this.config = config;
     }
 
-    private void run() throws IOException {
+    private void run() throws IOException
+    {
         LOGGER.info("Generating ORANGE report data");
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
         OrangeRecord report = algo.run(config);
