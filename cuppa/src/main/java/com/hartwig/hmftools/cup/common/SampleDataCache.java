@@ -128,8 +128,9 @@ public class SampleDataCache
         }
 
         SampleData testSample = sample;
+        String refCancerType = RefSampleCancerTypeMap.get(sample.Id);
 
-        if(RefSampleCancerTypeMap.containsKey(sample.Id))
+        if(refCancerType != null)
         {
             // override if known
             testSample = findRefSampleData(sample.Id);
@@ -142,6 +143,7 @@ public class SampleDataCache
             else
             {
                 testSample.setRefSample();
+                testSample.setCancerType(refCancerType);
             }
         }
 
@@ -150,23 +152,18 @@ public class SampleDataCache
         return testSample;
     }
 
-    public void loadSampleData(final String specificSampleData, final String sampleDataFile)
+    public void loadSampleData(final String specificSampleId, final int sampleRnaReadLength, final String sampleDataFile)
     {
-        if(specificSampleData != null)
+        if(specificSampleId != null)
         {
-            final String[] sampleItems = specificSampleData.split(SUBSET_DELIM, -1);
-            String sampleId = sampleItems[0];
-            String cancerType = CANCER_TYPE_UNKNOWN;
-            String cancerSubtype = CANCER_SUBTYPE_OTHER;
-
-            if(sampleItems.length >= 2)
-                cancerType = sampleItems[1];
-
-            if(sampleItems.length == 3)
-                cancerSubtype = sampleItems[2];
-
-            SampleData sample = new SampleData(sampleId, cancerType, cancerSubtype);
+            SampleData sample = new SampleData(specificSampleId, "", "");
+            sample.setRnaReadLength(sampleRnaReadLength);
             SpecificSample = addTestSample(sample);
+
+            if(SpecificSample.isRefSample())
+            {
+                CUP_LOGGER.info("sample({}) cancerType({}) is a ref sample", SpecificSample.Id, SpecificSample.cancerType());
+            }
         }
         else if(sampleDataFile != null)
         {

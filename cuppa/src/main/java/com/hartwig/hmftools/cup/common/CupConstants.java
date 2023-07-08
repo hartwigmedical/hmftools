@@ -34,6 +34,8 @@ public class CupConstants
     public static final double CSS_SIMILARITY_CUTOFF = 0.01;
     public static final int CSS_SIMILARITY_MAX_MATCHES = 20;
 
+    public static final int DEFAULT_RNA_LENGTH = 151;
+
     // gene expression
     public static final double GENE_EXP_CSS_THRESHOLD = 0.01;
     public static final double GENE_EXP_DIFF_EXPONENT = 50;

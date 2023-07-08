@@ -142,7 +142,8 @@ public class CuppaConfig
     public static final String RNA_CATEGORIES = "RNA";
 
     // either a single sample to be tested for a file containing the samples to be tested
-    public static final String SPECIFIC_SAMPLE_DATA = "sample_data";
+    public static final String SAMPLE_ID = "sample";
+    public static final String SAMPLE_RNA_LENGTH = "sample_rna_length";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
 
     public static final String REF_DATA_DIR = "ref_data_dir";
@@ -236,9 +237,9 @@ public class CuppaConfig
             RefSampleSigContribFile = getRefDataFile(cmd, REF_COHORT_SIG_CONTRIBS_FILE, COHORT_REF_SIG_DATA_FILE);
             RefSampleSvFile = getRefDataFile(cmd, REF_COHORT_SV_DATA_FILE, COHORT_REF_SV_DATA_FILE);
 
-            if(cmd.hasOption(SPECIFIC_SAMPLE_DATA))
+            if(cmd.hasOption(SAMPLE_ID))
             {
-                CUP_LOGGER.info("testing single reference sample({})", cmd.getOptionValue(SPECIFIC_SAMPLE_DATA));
+                CUP_LOGGER.info("testing single reference sample({})", cmd.getOptionValue(SAMPLE_ID));
             }
             else
             {
@@ -260,9 +261,9 @@ public class CuppaConfig
             PurpleDir = checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR, ""));
             IsofoxDir = checkAddDirSeparator(cmd.getOptionValue(ISOFOX_DIR, ""));
 
-            if(cmd.hasOption(SPECIFIC_SAMPLE_DATA))
+            if(cmd.hasOption(SAMPLE_ID))
             {
-                CUP_LOGGER.info("testing single sample({})", cmd.getOptionValue(SPECIFIC_SAMPLE_DATA));
+                CUP_LOGGER.info("testing single sample({})", cmd.getOptionValue(SAMPLE_ID));
             }
             else if(cmd.hasOption(SAMPLE_DATA_DIR_CFG))
             {
@@ -270,7 +271,7 @@ public class CuppaConfig
             }
             else
             {
-                CUP_LOGGER.error("missing {}, non-ref cohort {} or {} config", SPECIFIC_SAMPLE_DATA, SAMPLE_DATA_FILE, TEST_REF_SAMPLE_DATA);
+                CUP_LOGGER.error("missing {}, non-ref cohort {} or {} config", SAMPLE_ID, SAMPLE_DATA_FILE, TEST_REF_SAMPLE_DATA);
                 mIsValid = false;
             }
 
@@ -313,24 +314,6 @@ public class CuppaConfig
             return refFilename + ".gz";
 
         return refFilename;
-    }
-
-    private String getCohortSampleDataFile(
-            final CommandLine cmd, boolean useRefDataFile, final String configStr, final String defaultFilename, final CategoryType category)
-    {
-        if(cmd.hasOption(SAMPLE_DATA_DIR_CFG) && cmd.hasOption(SPECIFIC_SAMPLE_DATA))
-            return "";
-
-        if(cmd.hasOption(configStr))
-            return cmd.getOptionValue(configStr);
-
-        if(!useRefDataFile)
-            return ""; // meaning this data type is not loaded
-
-        if(!runClassifier(category)) // ignores ref data file name since classifier won't be run
-            return "";
-
-        return defaultFilename.startsWith(RefDataDir) ? defaultFilename : RefDataDir + defaultFilename;
     }
 
     public boolean isValid()
@@ -415,7 +398,8 @@ public class CuppaConfig
                 format("Categories for analysis: %s, %s, %s or sub-group from [%s]",
                         ALL_CATEGORIES, DNA_CATEGORIES, RNA_CATEGORIES, categories.toString()));
 
-        options.addOption(SPECIFIC_SAMPLE_DATA, true, "Specific sample in form 'SampleId;CancerType;CancerSubtype' (last 2 optional)");
+        options.addOption(SAMPLE_ID, true, "Specific sample ID");
+        options.addOption(SAMPLE_RNA_LENGTH, true, "Specific sample RNA read length (default: 151)");
         options.addOption(SAMPLE_DATA_DIR_CFG, true, SAMPLE_DATA_DIR_DESC);
         addPipelineDirectories(options);
 

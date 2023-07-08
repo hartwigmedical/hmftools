@@ -4,13 +4,16 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.SPECIFIC_SAMPLE_DATA;
+import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_ID;
+import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_RNA_LENGTH;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
+import static com.hartwig.hmftools.cup.CuppaConfig.configCategories;
+import static com.hartwig.hmftools.cup.common.CupConstants.DEFAULT_RNA_LENGTH;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -90,7 +93,10 @@ public class CupAnalyser
     private void loadSampleData(final CommandLine cmd)
     {
         mSampleDataCache.loadReferenceSampleData(mConfig.RefSampleDataFile);
-        mSampleDataCache.loadSampleData(cmd.getOptionValue(SPECIFIC_SAMPLE_DATA), mConfig.SampleDataFile);
+
+        String sampleId = cmd.getOptionValue(SAMPLE_ID);
+        int rnaReadLength = Integer.parseInt(cmd.getOptionValue(SAMPLE_RNA_LENGTH, String.valueOf(DEFAULT_RNA_LENGTH)));
+        mSampleDataCache.loadSampleData(sampleId, rnaReadLength, mConfig.SampleDataFile);
 
         if(mSampleDataCache.isMultiSample())
         {

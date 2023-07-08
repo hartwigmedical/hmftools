@@ -55,7 +55,7 @@ public class SampleData
 
     public String cancerType()
     {
-        return !CancerSubtype.isEmpty() && !CancerSubtype.equals(CANCER_TYPE_UNKNOWN) ? CancerSubtype : mCancerType ;
+        return !CancerSubtype.isEmpty() && !CancerSubtype.equals(CANCER_TYPE_UNKNOWN) ? CancerSubtype : mCancerType;
     }
 
     public String cancerMainType() { return mCancerType; }
