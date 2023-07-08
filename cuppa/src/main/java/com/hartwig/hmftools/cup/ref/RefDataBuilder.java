@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.classifierEnabled;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.feature.RefFeatures;
 import com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions;
@@ -16,11 +17,6 @@ import com.hartwig.hmftools.cup.traits.RefSampleTraits;
 import com.hartwig.hmftools.cup.somatics.RefSomatics;
 import com.hartwig.hmftools.cup.svs.RefSvData;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class RefDataBuilder
@@ -31,40 +27,39 @@ public class RefDataBuilder
 
     private final List<RefClassifier> mClassifiers;
 
-    public RefDataBuilder(final CommandLine cmd)
+    public RefDataBuilder(final ConfigBuilder configBuilder)
     {
-        mConfig = new RefDataConfig(cmd);
+        mConfig = new RefDataConfig(configBuilder);
 
         mSampleDataCache = new SampleDataCache();
 
-        loadSampleData(cmd);
-
+        loadSampleData(configBuilder);
 
         mClassifiers = Lists.newArrayList();
 
         // build / load traits first since some subsequent classifiers use its data (eg purity & ploidy)
         if(RefSampleTraits.requiresBuild(mConfig))
-            mClassifiers.add(new RefSampleTraits(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new RefSampleTraits(mConfig, mSampleDataCache, configBuilder));
 
         if(RefSomatics.requiresBuild(mConfig))
-            mClassifiers.add(new RefSomatics(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new RefSomatics(mConfig, mSampleDataCache, configBuilder));
 
         if(RefSvData.requiresBuild(mConfig))
             mClassifiers.add(new RefSvData(mConfig, mSampleDataCache));
 
         if(RefFeatures.requiresBuild(mConfig))
-            mClassifiers.add(new RefFeatures(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new RefFeatures(mConfig, mSampleDataCache, configBuilder));
 
         if(RefGeneExpression.requiresBuild(mConfig))
-            mClassifiers.add(new RefGeneExpression(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new RefGeneExpression(mConfig, mSampleDataCache, configBuilder));
 
         if(RefAltSpliceJunctions.requiresBuild(mConfig))
-            mClassifiers.add(new RefAltSpliceJunctions(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new RefAltSpliceJunctions(mConfig, mSampleDataCache));
     }
 
-    private void loadSampleData(final CommandLine cmd)
+    private void loadSampleData(final ConfigBuilder configBuilder)
     {
-        mSampleDataCache.loadReferenceSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
+        mSampleDataCache.loadReferenceSampleData(configBuilder.getValue(REF_SAMPLE_DATA_FILE));
 
         CUP_LOGGER.info("loaded {} reference samples, {} cancer types",
                 mSampleDataCache.RefSampleDataList.size(), mSampleDataCache.RefCancerSampleData.size());
@@ -93,24 +88,15 @@ public class RefDataBuilder
         CUP_LOGGER.info("CUP ref data building complete");
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        Options options = new Options();
-        RefDataConfig.addCmdLineArgs(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        RefDataConfig.registerConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
+        setLogLevel(configBuilder);
 
-        setLogLevel(cmd);
-
-        RefDataBuilder refDataBuilder = new RefDataBuilder(cmd);
+        RefDataBuilder refDataBuilder = new RefDataBuilder(configBuilder);
         refDataBuilder.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

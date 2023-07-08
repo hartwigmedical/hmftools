@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.cuppa.ClassifierType;
@@ -45,9 +46,6 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class FeatureClassifier implements CuppaClassifier
 {
@@ -70,7 +68,7 @@ public class FeatureClassifier implements CuppaClassifier
     public static final String DRIVER_ZERO_PREV = "driver_zero_prev";
     public static final String NON_DRIVER_ZERO_PREV = "non_driver_zero_prev";
 
-    public FeatureClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public FeatureClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleFeatures = Maps.newHashMap();
@@ -81,32 +79,25 @@ public class FeatureClassifier implements CuppaClassifier
 
         loadKnownMutations(mConfig.RefGenVersion);
 
-        mNonDriverZeroPrevAllocation = cmd != null && cmd.hasOption(NON_DRIVER_ZERO_PREV) ?
-                Double.parseDouble(cmd.getOptionValue(NON_DRIVER_ZERO_PREV)) : NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT;
+        mNonDriverZeroPrevAllocation = configBuilder.getDecimal(NON_DRIVER_ZERO_PREV);
+        mDriverZeroPrevAllocation = configBuilder.getDecimal(DRIVER_ZERO_PREV);
 
-        mDriverZeroPrevAllocation = cmd != null && cmd.hasOption(DRIVER_ZERO_PREV) ?
-                Double.parseDouble(cmd.getOptionValue(DRIVER_ZERO_PREV)) : DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT;
-
-        mSplitAmps = cmd == null || !cmd.hasOption(COMBINE_DRIVER_AMP);
-        mMinAmpCnMultiple = cmd != null ? Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0")) : 0;
-        mRestrictAmpGenes = cmd == null || cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
+        mSplitAmps = !configBuilder.hasFlag(COMBINE_DRIVER_AMP);
+        mMinAmpCnMultiple = configBuilder.getDecimal(MIN_AMP_MULTIPLE);
+        mRestrictAmpGenes = configBuilder.hasFlag(RESTRICT_DRIVER_AMP_GENES);
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(
-                FEATURE_DAMPEN_FACTOR, true,
-                "Feature dampening factor, default = " + FEATURE_DAMPEN_FACTOR_DEFAULT);
+        configBuilder.addDecimal(FEATURE_DAMPEN_FACTOR,"Feature dampening factor", FEATURE_DAMPEN_FACTOR_DEFAULT);
 
-        options.addOption(
-                DRIVER_ZERO_PREV, true,
-                "Driver zero prevalence allocation, default = " + DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT);
+        configBuilder.addDecimal(
+                DRIVER_ZERO_PREV, "Driver zero prevalence allocation", DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT);
 
-        options.addOption(
-                NON_DRIVER_ZERO_PREV, true,
-                "Non-driver zero prevalence allocation, default = " + NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT);
+        configBuilder.addDecimal(
+                NON_DRIVER_ZERO_PREV,"Non-driver zero prevalence allocation", NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT);
 
-        FeaturesCommon.addCmdLineArgs(options);
+        FeaturesCommon.registerConfig(configBuilder);
     }
 
     public CategoryType categoryType() { return FEATURE; }

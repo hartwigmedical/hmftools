@@ -217,6 +217,15 @@ public class ConfigBuilder
         return Files.exists(Paths.get(path));
     }
 
+    public void checkAndParseCommandLine(final String[] args)
+    {
+        if(!parseCommandLine(args))
+        {
+            logInvalidDetails();
+            System.exit(1);
+        }
+    }
+
     public boolean parseCommandLine(final String[] args)
     {
         if(args == null)

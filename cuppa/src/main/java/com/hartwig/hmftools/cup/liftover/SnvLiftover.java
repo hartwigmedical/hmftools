@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.cup.liftover;
 
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
-import static com.hartwig.hmftools.cup.liftover.LiftoverConfig.SAMPLE;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -15,12 +15,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class SnvLiftover
@@ -33,25 +29,25 @@ public class SnvLiftover
     @Deprecated
     public static final String LIFTOVER_FILE = ".snv_liftover.csv";
 
-    public SnvLiftover(final CommandLine cmd)
+    public SnvLiftover(final ConfigBuilder configBuilder)
     {
-        mConfig = new LiftoverConfig(cmd);
+        mConfig = new LiftoverConfig(configBuilder);
 
-        if(cmd.hasOption(SAMPLE))
+        if(configBuilder.hasValue(SAMPLE))
         {
-            mSampleIds = Lists.newArrayList(cmd.getOptionValue(SAMPLE));
+            mSampleIds = Lists.newArrayList(configBuilder.getValue(SAMPLE));
         }
         else
         {
-            mSampleIds = loadSampleIdsFile(cmd);
+            mSampleIds = loadSampleIdsFile(configBuilder);
         }
-        mThreads = parseThreads(cmd);
+        mThreads = parseThreads(configBuilder);
 
         mMappingCache = new GenomeLiftoverCache();
 
-        if(cmd.hasOption(LIFTOVER_MAPPING_FILE))
+        if(configBuilder.hasValue(LIFTOVER_MAPPING_FILE))
         {
-            if(!mMappingCache.loadFile(cmd.getOptionValue(LIFTOVER_MAPPING_FILE)))
+            if(!mMappingCache.loadFile(configBuilder.getValue(LIFTOVER_MAPPING_FILE)))
                 System.exit(1);
         }
     }
@@ -89,25 +85,17 @@ public class SnvLiftover
         CUP_LOGGER.info("conversion complete");
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        LiftoverConfig.addOptions(options);
+        LiftoverConfig.addOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        SnvLiftover snvLiftover = new SnvLiftover(cmd);
+        SnvLiftover snvLiftover = new SnvLiftover(configBuilder);
         snvLiftover.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

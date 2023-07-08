@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cup.liftover;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
@@ -9,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -21,32 +24,30 @@ public class LiftoverConfig
     public final boolean ApplyFilters;
     public final boolean KeepExisting;
 
-    public static final String SAMPLE = "sample";
     public static final String SAMPLE_VCF_DIR = "sample_vcf_dir";
     public static final String APPLY_FILTERS = "apply_filters";
     public static final String KEEP_EXISTING = "keep_existing";
 
-    public LiftoverConfig(final CommandLine cmd)
+    public LiftoverConfig(final ConfigBuilder configBuilder)
     {
-        OutputDir = parseOutputDir(cmd);
-        SampleVcfDir = cmd.getOptionValue(SAMPLE_VCF_DIR);
-        Threads = parseThreads(cmd);
-        ApplyFilters = cmd.hasOption(APPLY_FILTERS);
-        KeepExisting = cmd.hasOption(KEEP_EXISTING);
+        OutputDir = parseOutputDir(configBuilder);
+        SampleVcfDir = configBuilder.getValue(SAMPLE_VCF_DIR);
+        Threads = parseThreads(configBuilder);
+        ApplyFilters = configBuilder.hasFlag(APPLY_FILTERS);
+        KeepExisting = configBuilder.hasFlag(KEEP_EXISTING);
     }
 
-    public static void addOptions(final Options options)
+    public static void addOptions(final ConfigBuilder configBuilder)
     {
-        addSampleIdFile(options);
-        addOutputOptions(options);
-        addThreadOptions(options);
-        addLoggingOptions(options);
-        GenomeLiftoverCache.addConfig(options);
+        addSampleIdFile(configBuilder, false);
+        addOutputOptions(configBuilder);
+        addThreadOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+        GenomeLiftoverCache.addConfig(configBuilder);
 
-        options.addOption(SAMPLE, true, "Sample ID");
-        options.addOption(SAMPLE_VCF_DIR, true, "Path to sample VCF(s)");
-        options.addOption(APPLY_FILTERS, false, "Only convert and write variants used by Cuppa's somatic classifier");
-        options.addOption(KEEP_EXISTING, false, "Do not overwrite existing output sample files");
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
+        configBuilder.addPath(SAMPLE_VCF_DIR, true, "Path to sample VCF(s)");
+        configBuilder.addFlag(APPLY_FILTERS, "Only convert and write variants used by Cuppa's somatic classifier");
+        configBuilder.addFlag(KEEP_EXISTING, "Do not overwrite existing output sample files");
     }
-
 }

@@ -2,9 +2,9 @@ package com.hartwig.hmftools.cup;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_ID;
 import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_RNA_LENGTH;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
-import static com.hartwig.hmftools.cup.CuppaConfig.configCategories;
 import static com.hartwig.hmftools.cup.common.CupConstants.DEFAULT_RNA_LENGTH;
 
 import java.util.List;
@@ -22,6 +21,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -34,12 +34,6 @@ import com.hartwig.hmftools.cup.traits.SampleTraitClassifier;
 import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
 import com.hartwig.hmftools.cup.svs.SvClassifier;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class CupAnalyser
@@ -51,15 +45,15 @@ public class CupAnalyser
     private final List<CuppaClassifier> mClassifiers;
     private final ResultsWriter mResultsWriter;
 
-    public CupAnalyser(final CommandLine cmd)
+    public CupAnalyser(final ConfigBuilder configBuilder)
     {
-        mConfig = new CuppaConfig(cmd);
+        mConfig = new CuppaConfig(configBuilder);
 
         mSampleDataCache = new SampleDataCache();
 
         mClassifiers = Lists.newArrayList();
 
-        loadSampleData(cmd);
+        loadSampleData(configBuilder);
 
         if(!mConfig.isValid() || !mSampleDataCache.isValid())
         {
@@ -68,34 +62,34 @@ public class CupAnalyser
         }
 
         if(mConfig.runClassifier(SAMPLE_TRAIT)) // added first since other classifiers depend on ploidy & purity
-            mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new SampleTraitClassifier(mConfig, mSampleDataCache, configBuilder));
 
         if(mConfig.runClassifier(SNV))
-            mClassifiers.add(new SomaticClassifier(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new SomaticClassifier(mConfig, mSampleDataCache, configBuilder));
 
         if(mConfig.runClassifier(FEATURE))
-            mClassifiers.add(new FeatureClassifier(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new FeatureClassifier(mConfig, mSampleDataCache, configBuilder));
 
         if(mConfig.runClassifier(SV))
             mClassifiers.add(new SvClassifier(mConfig, mSampleDataCache));
 
         if(mConfig.runClassifier(GENE_EXP))
-            mClassifiers.add(new GeneExpressionClassifier(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new GeneExpressionClassifier(mConfig, mSampleDataCache, configBuilder));
 
         if(mConfig.runClassifier(ALT_SJ))
-            mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache, cmd));
+            mClassifiers.add(new AltSjClassifier(mConfig, mSampleDataCache, configBuilder));
 
         CUP_LOGGER.debug("{} classifiers loaded", mClassifiers.size());
 
         mResultsWriter = new ResultsWriter(mConfig, mSampleDataCache);
     }
 
-    private void loadSampleData(final CommandLine cmd)
+    private void loadSampleData(final ConfigBuilder configBuilder)
     {
         mSampleDataCache.loadReferenceSampleData(mConfig.RefSampleDataFile);
 
-        String sampleId = cmd.getOptionValue(SAMPLE_ID);
-        int rnaReadLength = Integer.parseInt(cmd.getOptionValue(SAMPLE_RNA_LENGTH, String.valueOf(DEFAULT_RNA_LENGTH)));
+        String sampleId = configBuilder.getValue(SAMPLE);
+        int rnaReadLength = Integer.parseInt(configBuilder.getValue(SAMPLE_RNA_LENGTH, String.valueOf(DEFAULT_RNA_LENGTH)));
         mSampleDataCache.loadSampleData(sampleId, rnaReadLength, mConfig.SampleDataFile);
 
         if(mSampleDataCache.isMultiSample())
@@ -186,38 +180,19 @@ public class CupAnalyser
         CUP_LOGGER.info("CUP analysis complete");
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
         final VersionInfo version = new VersionInfo("cuppa.version");
         CUP_LOGGER.info("Cuppa version: {}", version.version());
 
-        Options options = new Options();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        CuppaConfig.registerConfig(configBuilder);
 
-        CuppaConfig.addCmdLineArgs(options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        try
-        {
-            final CommandLine cmd = createCommandLine(args, options);
+        setLogLevel(configBuilder);
 
-            setLogLevel(cmd);
-
-            CupAnalyser cupAnalyser = new CupAnalyser(cmd);
-            cupAnalyser.run();
-        }
-        catch(ParseException e)
-        {
-            CUP_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("CupAnalyser", options);
-            System.exit(1);
-        }
+        CupAnalyser cupAnalyser = new CupAnalyser(configBuilder);
+        cupAnalyser.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

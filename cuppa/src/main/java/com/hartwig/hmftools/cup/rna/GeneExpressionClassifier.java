@@ -40,6 +40,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -48,9 +49,6 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class GeneExpressionClassifier implements CuppaClassifier
 {
@@ -80,7 +78,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
     private static final String CSS_EXPONENT = "gene_exp_css_exp";
     private static final String MATCH_READ_LENGTH = "gene_exp_match_read_length";
 
-    public GeneExpressionClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public GeneExpressionClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -97,19 +95,19 @@ public class GeneExpressionClassifier implements CuppaClassifier
         mSampleGeneExpression = null;
         mSampleIndexMap = Maps.newHashMap();
 
-        final String rnaMethods = cmd.getOptionValue(RNA_METHODS);
+        final String rnaMethods = configBuilder.getValue(RNA_METHODS);
 
         mRunPairwiseCss = rnaMethods == null || rnaMethods.contains(CSS_METHOD_PAIRWISE);
         mRunCancerCss = rnaMethods != null && rnaMethods.contains(CSS_METHOD_CANCER);
-        mCssExponent = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT, String.valueOf(GENE_EXP_DIFF_EXPONENT)));
-        mMatchReadLength = cmd.hasOption(MATCH_READ_LENGTH);
+        mCssExponent = configBuilder.getDecimal(CSS_EXPONENT);
+        mMatchReadLength = configBuilder.hasFlag(MATCH_READ_LENGTH);
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addCmdLineArgs(final ConfigBuilder configBuilder)
     {
-        options.addOption(RNA_METHODS, true, "Types of RNA gene expression methods");
-        options.addOption(CSS_EXPONENT, true, "Gene expression CSS exponent");
-        options.addOption(MATCH_READ_LENGTH, false, "Gene expression pairwise only amongst matching read-length samples");
+        configBuilder.addConfigItem(RNA_METHODS, false, "Types of RNA gene expression methods");
+        configBuilder.addDecimal(CSS_EXPONENT, "Gene expression CSS exponent", GENE_EXP_DIFF_EXPONENT);
+        configBuilder.addFlag(MATCH_READ_LENGTH, "Gene expression pairwise only amongst matching read-length samples");
     }
 
     public CategoryType categoryType() { return GENE_EXP; }

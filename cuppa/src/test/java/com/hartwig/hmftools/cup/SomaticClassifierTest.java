@@ -16,6 +16,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -32,8 +33,10 @@ public class SomaticClassifierTest
         SampleDataCache dataCache = new SampleDataCache();
 
         CuppaConfig config = new CuppaConfig();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        SomaticClassifier.registerConfig(configBuilder);
 
-        SomaticClassifier classifier = new SomaticClassifier(config, dataCache, null);
+        SomaticClassifier classifier = new SomaticClassifier(config, dataCache, configBuilder);
 
         CuppaUtilsTest.addRefSample(dataCache, TEST_SAMPLE_001, TEST_CT_001);
         CuppaUtilsTest.addRefSample(dataCache, TEST_SAMPLE_002, TEST_CT_002);

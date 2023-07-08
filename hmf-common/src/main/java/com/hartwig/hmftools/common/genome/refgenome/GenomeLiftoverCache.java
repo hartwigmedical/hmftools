@@ -9,8 +9,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class GenomeLiftoverCache
 {
@@ -55,9 +54,9 @@ public class GenomeLiftoverCache
         return UNMAPPED_POSITION;
     }
 
-    public static void addConfig(final Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(LIFTOVER_MAPPING_FILE, true, LIFTOVER_MAPPING_FILE_DESC);
+        configBuilder.addPath(LIFTOVER_MAPPING_FILE, true, LIFTOVER_MAPPING_FILE_DESC);
     }
 
     /*

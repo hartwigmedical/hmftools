@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
@@ -38,7 +39,7 @@ public class RefAltSpliceJunctions implements RefClassifier
     public static final String FLD_POS_START = "PosStart";
     public static final String FLD_POS_END = "PosEnd";
 
-    public RefAltSpliceJunctions(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefAltSpliceJunctions(final RefDataConfig config, final SampleDataCache sampleDataCache)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;

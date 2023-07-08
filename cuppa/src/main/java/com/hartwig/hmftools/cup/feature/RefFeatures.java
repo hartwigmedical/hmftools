@@ -39,14 +39,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public class RefFeatures implements RefClassifier
 {
@@ -58,7 +55,7 @@ public class RefFeatures implements RefClassifier
     private final boolean mSplitDriverAmps;
     private final double mMinAmpCnMultiple;
 
-    public RefFeatures(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefFeatures(final RefDataConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
 
@@ -66,18 +63,18 @@ public class RefFeatures implements RefClassifier
 
         mSampleDataCache = sampleDataCache;
 
-        mSplitDriverAmps = !cmd.hasOption(COMBINE_DRIVER_AMP);
-        mRestrictAmpGenes = cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
-        mMinAmpCnMultiple = Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0"));
+        mSplitDriverAmps = !configBuilder.hasFlag(COMBINE_DRIVER_AMP);
+        mRestrictAmpGenes = configBuilder.hasFlag(RESTRICT_DRIVER_AMP_GENES);
+        mMinAmpCnMultiple = configBuilder.getDecimal(MIN_AMP_MULTIPLE);
 
         mFeatureOverrides = loadRefFeatureOverrides(mConfig.FeatureOverrideFile);
     }
 
     public CategoryType categoryType() { return FEATURE; }
 
-    public static void addCmdLineArgs(@NotNull Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        FeaturesCommon.addCmdLineArgs(options);
+        FeaturesCommon.registerConfig(configBuilder);
     }
 
     public static boolean requiresBuild(final RefDataConfig config)

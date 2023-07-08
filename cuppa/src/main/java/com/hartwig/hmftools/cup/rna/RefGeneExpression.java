@@ -30,13 +30,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +57,7 @@ public class RefGeneExpression implements RefClassifier
 
     private static final String TPM_IN_LOG_FORM = "tpm_as_log";
 
-    public RefGeneExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefGeneExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -70,12 +70,12 @@ public class RefGeneExpression implements RefClassifier
         mCancerTypes = Lists.newArrayList();
         mSampleNames = Lists.newArrayList();
 
-        mTpmInLogForm = cmd.hasOption(TPM_IN_LOG_FORM);
+        mTpmInLogForm = configBuilder.hasFlag(TPM_IN_LOG_FORM);
     }
 
-    public static void addCmdLineArgs(@NotNull Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(TPM_IN_LOG_FORM, false, "Expect TPM in log form");
+        configBuilder.addFlag(TPM_IN_LOG_FORM, "Expect TPM in log form");
     }
 
     public CategoryType categoryType() { return GENE_EXP; }

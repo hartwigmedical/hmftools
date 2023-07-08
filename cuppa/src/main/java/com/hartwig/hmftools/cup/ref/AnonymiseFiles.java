@@ -30,13 +30,13 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -47,17 +47,17 @@ public class AnonymiseFiles
     private final SampleDataCache mSampleDataCache;
     private final Map<String,String> mSampleMapping;
 
-    public AnonymiseFiles(final CommandLine cmd)
+    public AnonymiseFiles(final ConfigBuilder configBuilder)
     {
-        mConfig = new AnonymiseConfig(cmd);
+        mConfig = new AnonymiseConfig(configBuilder);
 
         mSampleDataCache = new SampleDataCache();
         mSampleMapping = Maps.newHashMap();
 
-        loadSampleData(cmd);
+        loadSampleData(configBuilder);
     }
 
-    private void loadSampleData(final CommandLine cmd)
+    private void loadSampleData(final ConfigBuilder configBuilder)
     {
         mSampleDataCache.loadReferenceSampleData(mConfig.RefSampleDataFile);
 
@@ -216,22 +216,14 @@ public class AnonymiseFiles
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        Options options = new Options();
-        AnonymiseConfig.addCmdLineArgs(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        AnonymiseConfig.registerConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        AnonymiseFiles anonymiser = new AnonymiseFiles(cmd);
+        AnonymiseFiles anonymiser = new AnonymiseFiles(configBuilder);
         anonymiser.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

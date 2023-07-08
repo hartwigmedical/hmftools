@@ -10,9 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.traits.SampleTraitsData;
-
-import org.apache.commons.cli.Options;
 
 public final class FeaturesCommon
 {
@@ -20,11 +19,11 @@ public final class FeaturesCommon
     public static final String RESTRICT_DRIVER_AMP_GENES = "restrict_driver_amp_genes";
     public static final String MIN_AMP_MULTIPLE = "min_amp_multiple";
 
-    public static void addCmdLineArgs(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(COMBINE_DRIVER_AMP, false, "Combine driver AMPs with other driver events");
-        options.addOption(RESTRICT_DRIVER_AMP_GENES, false, "Restrict driver AMPs to specifc list of genes");
-        options.addOption(MIN_AMP_MULTIPLE, true, "AMP CN multiple of ploidy for use as a feature");
+        configBuilder.addFlag(COMBINE_DRIVER_AMP, "Combine driver AMPs with other driver events");
+        configBuilder.addFlag(RESTRICT_DRIVER_AMP_GENES, "Restrict driver AMPs to specifc list of genes");
+        configBuilder.addDecimal(MIN_AMP_MULTIPLE, "AMP CN multiple of ploidy for use as a feature", 0);
     }
 
     public static final List<String> DRIVER_AMP_GENES = Lists.newArrayList(

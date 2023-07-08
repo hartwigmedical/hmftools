@@ -66,6 +66,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -74,9 +75,6 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class SomaticClassifier implements CuppaClassifier
 {
@@ -131,7 +129,7 @@ public class SomaticClassifier implements CuppaClassifier
     public static final String WRITE_GEN_POS_SIMILARITIES = "write_gen_pos_sims";
     public static final String WRITE_SNV_SIMILARITIES = "write_snv_sims";
 
-    public SomaticClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public SomaticClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -149,69 +147,50 @@ public class SomaticClassifier implements CuppaClassifier
         mRefGenPosCancerTypes = Lists.newArrayList();
         mRefSampleGenPosCountsIndex = Maps.newHashMap();
 
-        if(cmd != null)
-        {
-            mIncludeAidApobecGenPos = cmd.hasOption(INCLUDE_AID_APOBEC);
-            mRunPairwiseGenPos = cmd.hasOption(GEN_POS_PAIRWISE);
+        mIncludeAidApobecGenPos = configBuilder.hasFlag(INCLUDE_AID_APOBEC);
+        mRunPairwiseGenPos = configBuilder.hasFlag(GEN_POS_PAIRWISE);
 
-            mCssExponentSnv = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_SNV, String.valueOf(SNV_96_CSS_DIFF_EXPONENT)));
-            mGenPosCssExponent = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS, String.valueOf(GEN_POS_CSS_EXPONENT)));
-            mGenPosCssExponentTail = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS_TAIL, String.valueOf(GEN_POS_CSS_EXPONENT_TAIL)));
-            mGenPosCssExponentCutoff = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT_GEN_POS_CUTOFF, String.valueOf(GEN_POS_CSS_EXPONENT_CUTOFF)));
+        mCssExponentSnv = configBuilder.getDecimal(CSS_EXPONENT_SNV);
+        mGenPosCssExponent = configBuilder.getDecimal(CSS_EXPONENT_GEN_POS);
+        mGenPosCssExponentTail = configBuilder.getDecimal(CSS_EXPONENT_GEN_POS_TAIL);
+        mGenPosCssExponentCutoff = configBuilder.getDecimal(CSS_EXPONENT_GEN_POS_CUTOFF);
 
-            mMaxCssAdjustFactorSnv = Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_SNV, "0"));
-            mMaxCssAdjustFactorGenPos = Double.parseDouble(cmd.getOptionValue(MAX_CSS_ADJUST_FACTOR_GEN_POS, "0"));
-            mWriteSnvSims = cmd.hasOption(WRITE_SNV_SIMILARITIES);
-            mWriteGenPosSims = cmd.hasOption(WRITE_GEN_POS_SIMILARITIES);
-        }
-        else
-        {
-            mIncludeAidApobecGenPos = false;
-            mRunPairwiseGenPos = false;
-            mCssExponentSnv = SNV_96_CSS_DIFF_EXPONENT;
-            mGenPosCssExponent = GEN_POS_CSS_EXPONENT;
-            mGenPosCssExponentTail = 0;
-            mGenPosCssExponentCutoff = 0;
-            mMaxCssAdjustFactorSnv = 0;
-            mMaxCssAdjustFactorGenPos = 0;
-            mWriteSnvSims = false;
-            mWriteGenPosSims = false;
-        }
+        mMaxCssAdjustFactorSnv = configBuilder.getDecimal(MAX_CSS_ADJUST_FACTOR_SNV);
+        mMaxCssAdjustFactorGenPos = configBuilder.getDecimal(MAX_CSS_ADJUST_FACTOR_GEN_POS);
+        mWriteSnvSims = configBuilder.hasFlag(WRITE_SNV_SIMILARITIES);
+        mWriteGenPosSims = configBuilder.hasFlag(WRITE_GEN_POS_SIMILARITIES);
 
         mGenPosCohortCssWriter = null;
 
         mSigContributions = new SigContributions(mConfig, mSampleDataCache);
 
-        int genPosBucketSize = cmd != null && cmd.hasOption(GEN_POS_BUCKET_SIZE_CFG) ?
-                Integer.parseInt(cmd.getOptionValue(GEN_POS_BUCKET_SIZE_CFG)) : GEN_POS_BUCKET_SIZE;
-
-        int genPosMaxSampleCount = cmd != null && cmd.hasOption(GEN_POS_MAX_SAMPLE_COUNT_CFG) ?
-                Integer.parseInt(cmd.getOptionValue(GEN_POS_MAX_SAMPLE_COUNT_CFG)) : GEN_POS_MAX_SAMPLE_COUNT;
+        int genPosBucketSize = configBuilder.getInteger(GEN_POS_BUCKET_SIZE_CFG);
+        int genPosMaxSampleCount = configBuilder.getInteger(GEN_POS_MAX_SAMPLE_COUNT_CFG);
 
         mPosFrequencies = new PositionFrequencies(mConfig.RefGenVersion, genPosBucketSize, genPosMaxSampleCount);
 
-        if(cmd != null && cmd.hasOption(WRITE_GEN_POS_CSS) && !mRunPairwiseGenPos)
+        if(configBuilder.hasFlag(WRITE_GEN_POS_CSS) && !mRunPairwiseGenPos)
         {
             initialiseOutputFiles();
         }
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
-        options.addOption(GEN_POS_PAIRWISE, false, "Run genomic position as a pairwise classifier");
-        options.addOption(INCLUDE_AID_APOBEC_SIG, false, INCLUDE_AID_APOBEC_SIG_DESC);
-        options.addOption(MAX_CSS_ADJUST_FACTOR_SNV, true, "Max CSS adustment factor for SNV 96");
-        options.addOption(MAX_CSS_ADJUST_FACTOR_GEN_POS, true, "Max CSS adustment factor for genomic pos frequency");
-        options.addOption(CSS_EXPONENT_SNV, true, "SNV 96 CSS exponent for tail");
-        options.addOption(CSS_EXPONENT_GEN_POS, true, "Genomic position CSS exponent");
-        options.addOption(CSS_EXPONENT_GEN_POS_TAIL, true, "Genomic position CSS exponent for tail");
-        options.addOption(CSS_EXPONENT_GEN_POS_CUTOFF, true, "Genomic position CSS exponent cutoff");
-        options.addOption(GEN_POS_BUCKET_SIZE_CFG, true, GEN_POS_BUCKET_SIZE_DESC);
-        options.addOption(GEN_POS_MAX_SAMPLE_COUNT_CFG, true, GEN_POS_MAX_SAMPLE_COUNT_DESC);
-        options.addOption(WRITE_SNV_SIMILARITIES, false, "Write SNV-96 CSS to file");
-        options.addOption(WRITE_GEN_POS_SIMILARITIES, false, "Write genomic position CSS to file");
-        options.addOption(WRITE_GEN_POS_CSS, false, "Write gen-pos CSS to file");
+        configBuilder.addFlag(INCLUDE_AID_APOBEC, INCLUDE_AID_APOBEC_DESC);
+        configBuilder.addFlag(GEN_POS_PAIRWISE, "Run genomic position as a pairwise classifier");
+        configBuilder.addFlag(INCLUDE_AID_APOBEC_SIG, INCLUDE_AID_APOBEC_SIG_DESC);
+        configBuilder.addDecimal(MAX_CSS_ADJUST_FACTOR_SNV, "Max CSS adustment factor for SNV 96", 0);
+        configBuilder.addDecimal(MAX_CSS_ADJUST_FACTOR_GEN_POS, "Max CSS adustment factor for genomic pos frequency", 0);
+        configBuilder.addDecimal(CSS_EXPONENT_SNV, "SNV 96 CSS exponent for tail", SNV_96_CSS_DIFF_EXPONENT);
+        configBuilder.addDecimal(CSS_EXPONENT_GEN_POS, "Genomic position CSS exponent", GEN_POS_CSS_EXPONENT);
+        configBuilder.addDecimal(CSS_EXPONENT_GEN_POS_TAIL, "Genomic position CSS exponent for tail", GEN_POS_CSS_EXPONENT_TAIL);
+        configBuilder.addDecimal(CSS_EXPONENT_GEN_POS_CUTOFF, "Genomic position CSS exponent cutoff", GEN_POS_CSS_EXPONENT_CUTOFF);
+        configBuilder.addInteger(GEN_POS_BUCKET_SIZE_CFG, GEN_POS_BUCKET_SIZE_DESC, GEN_POS_BUCKET_SIZE);
+        configBuilder.addInteger(GEN_POS_MAX_SAMPLE_COUNT_CFG, GEN_POS_MAX_SAMPLE_COUNT_DESC, GEN_POS_MAX_SAMPLE_COUNT);
+        configBuilder.addFlag(WRITE_SNV_SIMILARITIES, "Write SNV-96 CSS to file");
+        configBuilder.addFlag(WRITE_GEN_POS_SIMILARITIES, "Write genomic position CSS to file");
+        configBuilder.addFlag(WRITE_GEN_POS_CSS, "Write gen-pos CSS to file");
     }
 
     public CategoryType categoryType() { return SNV; }

@@ -45,12 +45,11 @@ import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-
-import org.apache.commons.cli.CommandLine;
 
 public class RefSampleTraits implements RefClassifier
 {
@@ -63,7 +62,7 @@ public class RefSampleTraits implements RefClassifier
     private BufferedWriter mPercentilesWriter;
     private BufferedWriter mRatesWriter;
 
-    public RefSampleTraits(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefSampleTraits(final RefDataConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -74,9 +73,9 @@ public class RefSampleTraits implements RefClassifier
 
         mGenderRates = Maps.newHashMap();
 
-        if(cmd.hasOption(GENDER_RATES))
+        if(configBuilder.hasValue(GENDER_RATES))
         {
-            String genderRatesStr = cmd.getOptionValue(GENDER_RATES);
+            String genderRatesStr = configBuilder.getValue(GENDER_RATES);
 
             if(genderRatesStr.equals(GENDER_RATES_ADULT_DEFAULT))
             {

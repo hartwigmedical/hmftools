@@ -30,6 +30,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.cuppa.ClassifierType;
@@ -39,9 +40,6 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class SampleTraitClassifier implements CuppaClassifier
 {
@@ -58,7 +56,7 @@ public class SampleTraitClassifier implements CuppaClassifier
 
     private static final String APPLY_PLOIDY_LIKELIHOOD = "apply_ploidy_likelihood";
 
-    public SampleTraitClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public SampleTraitClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -68,15 +66,15 @@ public class SampleTraitClassifier implements CuppaClassifier
         mRefTraitRates = Maps.newHashMap();
         mRefGenderRates = Maps.newHashMap();
 
-        mApplyPloidyLikelihood = cmd.hasOption(APPLY_PLOIDY_LIKELIHOOD);
+        mApplyPloidyLikelihood = configBuilder.hasFlag(APPLY_PLOIDY_LIKELIHOOD);
     }
 
     public CategoryType categoryType() { return SAMPLE_TRAIT; }
     public void close() {}
 
-    public static void addCmdLineArgs(Options options)
+    public static void addCmdLineArgs(final ConfigBuilder configBuilder)
     {
-        options.addOption(APPLY_PLOIDY_LIKELIHOOD, false, "Add ploidy high/low likelihood feature");
+        configBuilder.addFlag(APPLY_PLOIDY_LIKELIHOOD, "Add ploidy high/low likelihood feature");
     }
 
     @Override

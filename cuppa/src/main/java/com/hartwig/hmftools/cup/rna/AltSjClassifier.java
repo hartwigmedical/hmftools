@@ -49,6 +49,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -56,9 +57,6 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class AltSjClassifier implements CuppaClassifier
 {
@@ -92,7 +90,7 @@ public class AltSjClassifier implements CuppaClassifier
     private static final String READ_LENGTH_DELIM = "_";
 
     public AltSjClassifier(
-            final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+            final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -106,26 +104,26 @@ public class AltSjClassifier implements CuppaClassifier
         mSampleFragCounts = null;
         mCssWriter = null;
 
-        mWeightExponent = Double.parseDouble(cmd.getOptionValue(WEIGHT_EXPONENT, String.valueOf(ALT_SJ_DIFF_EXPONENT)));
-        mFragCountLogValue = max(Double.parseDouble(cmd.getOptionValue(FRAG_COUNT_LOG_VALUE, "1")), 1.0);
+        mWeightExponent = configBuilder.getDecimal(WEIGHT_EXPONENT);
+        mFragCountLogValue = max(configBuilder.getDecimal(FRAG_COUNT_LOG_VALUE), 1.0);
 
-        mMinSampleFragments = Integer.parseInt(cmd.getOptionValue(MIN_SAMPLE_FRAGS, "0"));
+        mMinSampleFragments = configBuilder.getInteger(MIN_SAMPLE_FRAGS);
 
-        mRunPairwise = cmd.hasOption(RUN_PAIRWISE);
+        mRunPairwise = configBuilder.hasFlag(RUN_PAIRWISE);
 
-        if(cmd.hasOption(LOG_CSS_VALUES))
+        if(configBuilder.hasValue(LOG_CSS_VALUES))
         {
             initialiseCssWriter();
         }
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addCmdLineArgs(final ConfigBuilder configBuilder)
     {
-        options.addOption(FRAG_COUNT_LOG_VALUE, true, "Use log of frag counts plus this value");
-        options.addOption(WEIGHT_EXPONENT, true, "Exponent for weighting pair-wise calcs");
-        options.addOption(RUN_PAIRWISE, false, "Run pair-wise classifier");
-        options.addOption(MIN_SAMPLE_FRAGS, true, "Min sample fragments to use a site");
-        options.addOption(LOG_CSS_VALUES, false, "Log CSS values");
+        configBuilder.addDecimal(FRAG_COUNT_LOG_VALUE, "Use log of frag counts plus this value", 1);
+        configBuilder.addDecimal(WEIGHT_EXPONENT, "Exponent for weighting pair-wise calcs", ALT_SJ_DIFF_EXPONENT);
+        configBuilder.addFlag(RUN_PAIRWISE, "Run pair-wise classifier");
+        configBuilder.addInteger(MIN_SAMPLE_FRAGS, "Min sample fragments to use a site", 0);
+        configBuilder.addFlag(LOG_CSS_VALUES, "Log CSS values");
     }
 
     public CategoryType categoryType() { return ALT_SJ; }

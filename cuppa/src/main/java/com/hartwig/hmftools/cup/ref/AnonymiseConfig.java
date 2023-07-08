@@ -20,8 +20,7 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLi
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class AnonymiseConfig
 {
@@ -35,27 +34,27 @@ public class AnonymiseConfig
     public final String RefGeneExpSampleFile;
     public final String RefAltSjSampleFile;
 
-    public AnonymiseConfig(final CommandLine cmd)
+    public AnonymiseConfig(final ConfigBuilder configBuilder)
     {
-        RefDataDir = checkAddDirSeparator(cmd.getOptionValue(REF_DATA_DIR, ""));
+        RefDataDir = checkAddDirSeparator(configBuilder.getValue(REF_DATA_DIR, ""));
 
-        RefSampleDataFile = getRefDataFile(cmd, REF_SAMPLE_DATA_FILE, REF_FILE_SAMPLE_DATA);
-        RefSnvCountsFile = getRefDataFile(cmd, REF_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS);
-        RefSnvSamplePosFreqFile = getRefDataFile(cmd, REF_SNV_SAMPLE_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
-        RefGeneExpSampleFile = getRefDataFile(cmd, REF_RNA_GENE_EXP_SAMPLE_FILE, REF_FILE_GENE_EXP_SAMPLE, true);
-        RefAltSjSampleFile = getRefDataFile(cmd, REF_RNA_ALT_SJ_SAMPLE_FILE, REF_FILE_ALT_SJ_SAMPLE, true);
+        RefSampleDataFile = getRefDataFile(configBuilder, REF_SAMPLE_DATA_FILE, REF_FILE_SAMPLE_DATA);
+        RefSnvCountsFile = getRefDataFile(configBuilder, REF_SNV_COUNTS_FILE, REF_FILE_SNV_COUNTS);
+        RefSnvSamplePosFreqFile = getRefDataFile(configBuilder, REF_SNV_SAMPLE_POS_FREQ_FILE, REF_FILE_SAMPLE_POS_FREQ_COUNTS);
+        RefGeneExpSampleFile = getRefDataFile(configBuilder, REF_RNA_GENE_EXP_SAMPLE_FILE, REF_FILE_GENE_EXP_SAMPLE, true);
+        RefAltSjSampleFile = getRefDataFile(configBuilder, REF_RNA_ALT_SJ_SAMPLE_FILE, REF_FILE_ALT_SJ_SAMPLE, true);
 
-        OutputDir = parseOutputDir(cmd);
+        OutputDir = parseOutputDir(configBuilder);
     }
 
-    private String getRefDataFile(final CommandLine cmd, final String configStr, final String defaultFilename)
+    private String getRefDataFile(final ConfigBuilder configBuilder, final String configStr, final String defaultFilename)
     {
-        return getRefDataFile(cmd, configStr, defaultFilename, false);
+        return getRefDataFile(configBuilder, configStr, defaultFilename, false);
     }
 
-    private String getRefDataFile(final CommandLine cmd, final String configStr, final String defaultFilename, boolean checkZipped)
+    private String getRefDataFile(final ConfigBuilder configBuilder, final String configStr, final String defaultFilename, boolean checkZipped)
     {
-        final String fileName = RefDataDir + cmd.getOptionValue(configStr, defaultFilename);
+        final String fileName = RefDataDir + configBuilder.getValue(configStr, defaultFilename);
 
         if(checkZipped && !Files.exists(Paths.get(fileName)) && Files.exists(Paths.get(fileName + ".gz")))
             return fileName + ".gz";
@@ -63,17 +62,16 @@ public class AnonymiseConfig
         return fileName;
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(REF_DATA_DIR, true, "Reference data directory");
-        options.addOption(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
-        options.addOption(REF_SNV_SAMPLE_POS_FREQ_FILE, true, "Ref SNV position frequency matrix data file");
-        options.addOption(REF_SNV_COUNTS_FILE, true, "Ref SNV trinucleotide matrix data file");
-        options.addOption(REF_RNA_GENE_EXP_SAMPLE_FILE, true, "Ref sample RNA gene expression cohort data file");
-        options.addOption(REF_RNA_ALT_SJ_SAMPLE_FILE, true, "Ref sample RNA alternative SJ cohort data file");
+        configBuilder.addPath(REF_DATA_DIR, true, "Reference data directory");
+        configBuilder.addPath(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
+        configBuilder.addPath(REF_SNV_SAMPLE_POS_FREQ_FILE, false, "Ref SNV position frequency matrix data file");
+        configBuilder.addPath(REF_SNV_COUNTS_FILE, false, "Ref SNV trinucleotide matrix data file");
+        configBuilder.addPath(REF_RNA_GENE_EXP_SAMPLE_FILE, false, "Ref sample RNA gene expression cohort data file");
+        configBuilder.addPath(REF_RNA_ALT_SJ_SAMPLE_FILE, false, "Ref sample RNA alternative SJ cohort data file");
 
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
     }
-
 }

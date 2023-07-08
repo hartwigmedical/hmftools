@@ -60,14 +60,11 @@ import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public class RefSomatics implements RefClassifier
 {
@@ -96,7 +93,7 @@ public class RefSomatics implements RefClassifier
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
 
     public RefSomatics(
-            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+            final RefDataConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -113,11 +110,11 @@ public class RefSomatics implements RefClassifier
         mGenPosCountsIndex = Maps.newHashMap();
         mWriteGenPosMatrixData = false;
 
-        mIncludeAidApobec = cmd.hasOption(INCLUDE_AID_APOBEC);
-        mExcludeGenPosChrX = cmd.hasOption(EXCLUDE_GEN_POS_CHR_X);
+        mIncludeAidApobec = configBuilder.hasFlag(INCLUDE_AID_APOBEC);
+        mExcludeGenPosChrX = configBuilder.hasFlag(EXCLUDE_GEN_POS_CHR_X);
 
-        int posFreqBucketSize = Integer.parseInt(cmd.getOptionValue(GEN_POS_BUCKET_SIZE_CFG, String.valueOf(GEN_POS_BUCKET_SIZE)));
-        int genPosMaxSampleCount = Integer.parseInt(cmd.getOptionValue(GEN_POS_MAX_SAMPLE_COUNT_CFG, String.valueOf(GEN_POS_MAX_SAMPLE_COUNT)));
+        int posFreqBucketSize = configBuilder.getInteger(GEN_POS_BUCKET_SIZE_CFG);
+        int genPosMaxSampleCount = configBuilder.getInteger(GEN_POS_MAX_SAMPLE_COUNT_CFG);
 
         mPosFrequencies = new PositionFrequencies(mConfig.RefGenVersion, posFreqBucketSize, genPosMaxSampleCount);
     }
@@ -136,12 +133,12 @@ public class RefSomatics implements RefClassifier
                 || !config.SomaticVariantsDir.isEmpty();
     }
 
-    public static void addCmdLineArgs(@NotNull Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(GEN_POS_BUCKET_SIZE_CFG, true, GEN_POS_BUCKET_SIZE_DESC);
-        options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
-        options.addOption(EXCLUDE_GEN_POS_CHR_X, false, EXCLUDE_GEN_POS_CHR_X_DESC);
-        options.addOption(GEN_POS_MAX_SAMPLE_COUNT_CFG, true, GEN_POS_MAX_SAMPLE_COUNT_DESC);
+        configBuilder.addInteger(GEN_POS_BUCKET_SIZE_CFG, GEN_POS_BUCKET_SIZE_DESC, GEN_POS_BUCKET_SIZE);
+        configBuilder.addFlag(INCLUDE_AID_APOBEC, INCLUDE_AID_APOBEC_DESC);
+        configBuilder.addFlag(EXCLUDE_GEN_POS_CHR_X, EXCLUDE_GEN_POS_CHR_X_DESC);
+        configBuilder.addInteger(GEN_POS_MAX_SAMPLE_COUNT_CFG, GEN_POS_MAX_SAMPLE_COUNT_DESC, GEN_POS_MAX_SAMPLE_COUNT);
     }
 
     public void buildRefDataSets()
