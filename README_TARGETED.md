@@ -64,7 +64,10 @@ PURPLE
 
 1. Run Cobalt without a '-target_region' file in tumor-only mode on all applicable samples
 
-2. Run Amber on applicable samples in tumor-only mode
+2a. Run Amber on applicable samples in tumor-only mode
+- set '-tumor_only_min_depth 2' to ensure sufficient read coverage over heterozygous points
+OR
+2b. Set Amber gender in for each applicable sample in sample ID file in step 3
 
 3. Run the Cobalt normalisation file builder command described below.  This performs the following steps
 - for each 1K region covering any target region, extract each sample's tumor read count and teh GC profile mappability and GC ratio bucket
@@ -78,9 +81,9 @@ PURPLE
 
 Field | Description
 ---|---
-sample_id_file | CSV with SampleId column header and list of sample IDs, as per pipeline output, corresponding to Amber and Cobalt files
+sample_id_file | CSV with SampleId column header and list of sample IDs, optionally Gender column if Amber directory is not specified & available
 amber_dir | Pipeline Amber output directory
-cobalt_dir | Pipeline Amber output directory
+cobalt_dir | Pipeline Cobalt output directory from non-normalised run on panel BAMs
 ref_genome_version | V37 or V38
 gc_profile | As used in Cobalt and Purple
 target_regions_bed | Definition of target regions
@@ -91,8 +94,8 @@ output_file | Output normalisation TSV file
 ```
 java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder 
   -sample_id_file sample_ids.csv
-  -amber_dir /path_to_pipeline_amber_data/ 
   -cobalt_dir /path_to_pipeline_cobalt_data/
+  -amber_dir /path_to_pipeline_amber_data/ 
   -ref_genome_version V37 
   -gc_profile /ref_data/GC_profile.1000bp.37.cnp 
   -target_regions_bed /ref_data/target_regions_definition.37.bed 

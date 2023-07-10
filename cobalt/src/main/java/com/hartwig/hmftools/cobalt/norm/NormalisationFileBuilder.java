@@ -60,7 +60,7 @@ public class NormalisationFileBuilder
         setGcProfileData();
 
         // load Amber files and establish gender
-        Map<String,Gender> sampleGenders = determineAmberGenders();
+        Map<String,Gender> sampleGenders = !mConfig.SampleGender.isEmpty() ? mConfig.SampleGender : determineAmberGenders();
 
         // load per-sample Cobalt ratios
         loadSampleCobaltData(sampleGenders);

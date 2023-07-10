@@ -52,7 +52,7 @@ public class GcNormalisationTest
 
         ratios = new GcNormalizedRatioMapper(false).mapRatios(ratios);
 
-        System.out.println(ratios);
+        // System.out.println(ratios);
 
         assertEquals(6, ratios.rowCount());
         assertRatio(ratios, 0,1001, 0.0);

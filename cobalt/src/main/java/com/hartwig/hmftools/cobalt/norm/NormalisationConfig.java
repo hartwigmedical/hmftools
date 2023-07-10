@@ -25,14 +25,16 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class NormalisationConfig
 {
     public final List<String> SampleIds;
+    public final Map<String, Gender> SampleGender;
     public final String AmberDir;
     public final String CobaltWgsDir;
-    public final String CobaltPanelDir; // unnormalised files
+    public final String CobaltPanelDir; // un-normalised files
     public final String TargetRegionsBed;
     public final String GcProfile;
     public final String OutputFile;
@@ -47,10 +49,12 @@ public class NormalisationConfig
     private static final String DETAILED_OUTPUT = "detailed_file";
 
     private static final String WGS_SAMPLE_ID = "WgsSampleId";
+    private static final String GENDER = "Gender";
 
     public NormalisationConfig(final ConfigBuilder configBuilder)
     {
         SampleIds = Lists.newArrayList();
+        SampleGender = Maps.newHashMap();
         mPanelToWgsSampleIdMappings = Maps.newHashMap();
         loadSampleIds(configBuilder);
 
@@ -84,6 +88,7 @@ public class NormalisationConfig
 
             int sampleIndex = fieldsIndexMap.get(SAMPLE_ID_COLUMN);
             Integer wgsSampleIndex = fieldsIndexMap.get(WGS_SAMPLE_ID);
+            Integer genderIndex = fieldsIndexMap.get(GENDER);
 
             for(String line : lines)
             {
@@ -100,6 +105,11 @@ public class NormalisationConfig
                 {
                     mPanelToWgsSampleIdMappings.put(sampleId, values[wgsSampleIndex]);
                 }
+
+                if(genderIndex != null)
+                {
+                    SampleGender.put(sampleId, Gender.valueOf(values[genderIndex]));
+                }
             }
 
             CB_LOGGER.info("loaded {} samples from file", SampleIds.size());
@@ -112,8 +122,8 @@ public class NormalisationConfig
 
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        addSampleIdFile(configBuilder, true);
-        configBuilder.addPath(AMBER_DIR_CFG, true, AMBER_DIR_DESC);
+        configBuilder.addPath(SAMPLE_ID_FILE, true, "CSV with SampleId, optional: WgsSampleId,Gender");
+        configBuilder.addPath(AMBER_DIR_CFG, false, AMBER_DIR_DESC);
         configBuilder.addPath(COBALT_DIR_CFG, true, COBALT_DIR_DESC);
         configBuilder.addPath(COBALT_WGS_DIR, false, "Path to cobalt WGS files");
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
