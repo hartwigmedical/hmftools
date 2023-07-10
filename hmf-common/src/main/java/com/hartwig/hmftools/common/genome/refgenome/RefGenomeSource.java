@@ -31,9 +31,18 @@ public class RefGenomeSource implements RefGenomeInterface
         options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
     }
 
-    public static void addRefGenomeConfig(final ConfigBuilder configBuilder, boolean required)
+    public static void addRefGenomeVersion(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
+    }
+
+    public static void addRefGenomeConfig(final ConfigBuilder configBuilder, boolean required)
+    {
+        if(required)
+            configBuilder.addRequiredConfigItem(REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
+        else
+            configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
+
         configBuilder.addPath(REF_GENOME, required, REF_GENOME_CFG_DESC);
     }
 

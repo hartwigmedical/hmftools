@@ -154,7 +154,7 @@ vis_file_dir | Path to Linx output directory, see below for expected files
 plot_out | Plot output directory
 data_out | Data output directory
 circos |Path to circos binary
-ensembl_data_dir | Ensembl data cache directory as use by Linx
+ensembl_data_dir | Ensembl data cache directory as used by Linx
 ref_genome_version | Defaults to version 37, valid values are 37 or 38
 
 ## Other Arguments

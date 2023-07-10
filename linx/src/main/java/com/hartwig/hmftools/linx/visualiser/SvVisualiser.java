@@ -3,6 +3,9 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.linx.LinxApplication.logVersion;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -23,6 +26,7 @@ import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.linx.visualiser.circos.ChromosomeRangeExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
@@ -41,12 +45,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -57,20 +55,19 @@ public class SvVisualiser implements AutoCloseable
 
     public static void main(String[] args)
     {
-        final Options options = VisualiserConfig.createOptions();
-        CircosConfig.addOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        try(final SvVisualiser application = new SvVisualiser(options, args))
+        VisualiserConfig.registerConfig(configBuilder);
+        CircosConfig.registerConfig(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+        setLogLevel(configBuilder);
+
+        logVersion();
+
+        try(final SvVisualiser application = new SvVisualiser(configBuilder))
         {
             application.run();
-        }
-        catch(ParseException e)
-        {
-            VIS_LOGGER.warn(e);
-            e.printStackTrace();
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SvVisualiser", options);
-            System.exit(1);
         }
         catch(Exception e)
         {
@@ -87,13 +84,12 @@ public class SvVisualiser implements AutoCloseable
     private final List<Callable<Object>> mCallableImages;
     private final List<Callable<Object>> mCallableConfigs;
 
-    private SvVisualiser(final Options options, final String... args) throws Exception
+    private SvVisualiser(final ConfigBuilder configBuilder) throws Exception
     {
-        final CommandLine cmd = createCommandLine(args, options);
-        VIS_LOGGER.info("Loading data");
+        VIS_LOGGER.info("loading visualiser data");
 
-        mCircosConfig = new CircosConfig(cmd);
-        mConfig = new VisualiserConfig(cmd);
+        mCircosConfig = new CircosConfig(configBuilder);
+        mConfig = new VisualiserConfig(configBuilder);
         mSampleData = new SampleData(mConfig);
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
 
@@ -156,6 +152,8 @@ public class SvVisualiser implements AutoCloseable
         {
             future.get();
         }
+
+        VIS_LOGGER.info("Linx Visualiser complete");
     }
 
     private void submitChromosome(@NotNull final List<String> chromosomes)
@@ -374,24 +372,14 @@ public class SvVisualiser implements AutoCloseable
         return circosResult;
     }
 
-    @NotNull
-    private static CommandLine createCommandLine(final String[] args, Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
     @Override
     public void close()
     {
         mExecutorService.shutdown();
-        VIS_LOGGER.info("Complete");
     }
 
     private interface ColorPickerFactory
     {
-        @NotNull
-        ColorPicker create(@NotNull final List<VisSvData> links);
+        ColorPicker create(final List<VisSvData> links);
     }
-
 }

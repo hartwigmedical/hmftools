@@ -49,6 +49,7 @@ public class FusedExons
                 .gene(fusion.GeneNameUp)
                 .geneStart(convertedUpGeneRegion.start())
                 .geneEnd(convertedUpGeneRegion.end())
+                .isUpstream(true)
                 .transcript(fusion.TranscriptUp);
 
         boolean hasUpExons = false;
@@ -83,6 +84,7 @@ public class FusedExons
                 .gene(fusion.GeneNameDown)
                 .geneStart(convertedDownGeneRegion.start() + convertedUpGeneRegion.end())
                 .geneEnd(convertedDownGeneRegion.end() + convertedUpGeneRegion.end())
+                .isUpstream(false)
                 .transcript(fusion.TranscriptDown);
 
         boolean intronicToExonicFusion = fusion.RegionTypeUp.equals("Intronic") && fusion.RegionTypeDown.equals("Exonic");
@@ -193,6 +195,7 @@ public class FusedExons
                 .add("gene")
                 .add("geneStart")
                 .add("geneEnd")
+                .add("isUpstream")
                 .add("chromosome")
                 .add("start")
                 .add("end")
@@ -211,6 +214,7 @@ public class FusedExons
                 .add(exon.gene())
                 .add(String.valueOf(exon.geneStart()))
                 .add(String.valueOf(exon.geneEnd()))
+                .add(String.valueOf(exon.isUpstream()))
                 .add(exon.chromosome())
                 .add(String.valueOf(exon.start()))
                 .add(String.valueOf(exon.end()))

@@ -103,7 +103,7 @@ for(i in c(1:length(fusions))) {
   fusedExons = clusterFusedExons %>%
     filter(fusion == selectedFusion) %>%
     mutate(
-      upGene = ifelse(startsWith(fusion, gene) & rank == row_number(), T, F),
+      upGene = isUpstream=='true',
       color = ifelse(upGene, singleBlue, singleRed))
   
   fusedProteinDomains = clusterProteinDomains %>% filter(fusion == selectedFusion)
@@ -132,7 +132,7 @@ pCircos <- ggdraw() + draw_image(imgCircos)
 circosWidth = image_info(imgCircos)$width
 circosHeight = image_info(imgCircos)$height
 
-if(is.na(pLegend)) {
+if(nrow(nonUTRProteinDomain) == 0) {
   totalHeight = (circosHeight + fusionHeight) 
   pCombined = plot_grid(pCircos, pFusions, ncol = 1, rel_heights = c(circosHeight, fusionHeight))
 } else {

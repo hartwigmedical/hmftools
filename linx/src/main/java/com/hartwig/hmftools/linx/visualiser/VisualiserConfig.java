@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.linx.visualiser;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -19,7 +20,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -27,13 +27,11 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.Highlights;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.jetbrains.annotations.NotNull;
 
 public class VisualiserConfig
 {
@@ -64,7 +62,6 @@ public class VisualiserConfig
     public final boolean PlotClusterGenes;
     public final boolean RestrictClusterByGene;
 
-    private static final String SAMPLE = "sample";
     private static final String VIS_FILE_DIRECTORY = "vis_file_dir";
     private static final String LOAD_COHORT_FILES = "load_cohort_files";
     private static final String CLUSTER_IDS = "clusterId";
@@ -83,39 +80,31 @@ public class VisualiserConfig
 
     private static final String DELIM = ",";
 
-    public VisualiserConfig(final CommandLine cmd) throws ParseException, IOException
+    public VisualiserConfig(final ConfigBuilder configBuilder) throws IOException, ParseException
     {
-        final StringJoiner missingJoiner = new StringJoiner(", ");
+        Sample = configBuilder.getValue(SAMPLE);
+        SampleDataDir = checkAddDirSeparator(configBuilder.getValue(VIS_FILE_DIRECTORY));
 
-        Sample = parameter(cmd, SAMPLE, missingJoiner);
-        SampleDataDir = checkAddDirSeparator(cmd.getOptionValue(VIS_FILE_DIRECTORY));
+        OutputPlotPath = configBuilder.hasValue(PLOT_OUT) ? configBuilder.getValue(PLOT_OUT) : SampleDataDir + "plot/";
+        OutputConfPath = configBuilder.hasValue(DATA_OUT) ? configBuilder.getValue(DATA_OUT) : SampleDataDir + "data/";
+        CircosBin = configBuilder.getValue(CIRCOS);
+        UseCohortFiles = configBuilder.hasFlag(LOAD_COHORT_FILES);
+        IsGermline = configBuilder.hasFlag(GERMLINE);
 
-        OutputPlotPath = cmd.hasOption(PLOT_OUT) ? cmd.getOptionValue(PLOT_OUT) : SampleDataDir + "plot/";
-        OutputConfPath = cmd.hasOption(DATA_OUT) ? cmd.getOptionValue(DATA_OUT) : SampleDataDir + "data/";
-        CircosBin = parameter(cmd, CIRCOS, missingJoiner);
-        UseCohortFiles = cmd.hasOption(LOAD_COHORT_FILES);
-        IsGermline = cmd.hasOption(GERMLINE);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
+        EnsemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
-        EnsemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
-
-        SpecificRegions = ChrBaseRegion.loadSpecificRegions(cmd);
-        ClusterIds = parseClusterIds(cmd);
-        ChainIds = parseChainIds(cmd);
-        Chromosomes = parseChromosomes(cmd);
+        SpecificRegions = ChrBaseRegion.loadSpecificRegions(configBuilder);
+        ClusterIds = parseClusterIds(configBuilder);
+        ChainIds = parseChainIds(configBuilder);
+        Chromosomes = parseChromosomes(configBuilder);
         Genes = Sets.newHashSet();
 
-        if(cmd.hasOption(GENE))
+        if(configBuilder.hasValue(GENE))
         {
-            String geneStr = cmd.getOptionValue(GENE);
+            String geneStr = configBuilder.getValue(GENE);
             String delim = geneStr.contains(ITEM_DELIM) ? ITEM_DELIM : DELIM;
             Arrays.stream(geneStr.split(delim)).forEach(x -> Genes.add(x));
-        }
-
-        final String missing = missingJoiner.toString();
-        if(!missing.isEmpty())
-        {
-            throw new ParseException("Missing the following parameters: " + missing);
         }
 
         File outputDir = new File(OutputPlotPath);
@@ -130,49 +119,48 @@ public class VisualiserConfig
             throw new IOException("Unable to write to data directory " + OutputConfPath);
         }
 
-        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd);
-        RefGenomeCoords = refGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-        Highlights.populateKnownSites(refGenVersion);
+        RefGenomeCoords = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        Highlights.populateKnownSites(RefGenVersion);
 
-        Threads = parseThreads(cmd);
-        Debug = cmd.hasOption(DEBUG);
+        Threads = parseThreads(configBuilder);
+        Debug = configBuilder.hasFlag(DEBUG);
 
-        IncludeLineElements = cmd.hasOption(INCLUDE_LINE_ELEMENTS);
-        PlotReportableEvents = cmd.hasOption(PLOT_REPORTABLE);
-        RestrictClusterByGene = cmd.hasOption(RESTRICT_CLUSTERS_BY_GENE);
-        PlotClusterGenes = cmd.hasOption(PLOT_CLUSTER_GENES);
+        IncludeLineElements = configBuilder.hasFlag(INCLUDE_LINE_ELEMENTS);
+        PlotReportableEvents = configBuilder.hasFlag(PLOT_REPORTABLE);
+        RestrictClusterByGene = configBuilder.hasFlag(RESTRICT_CLUSTERS_BY_GENE);
+        PlotClusterGenes = configBuilder.hasFlag(PLOT_CLUSTER_GENES);
     }
 
-    private static List<Integer> parseClusterIds(final CommandLine cmd)
+    private static List<Integer> parseClusterIds(final ConfigBuilder configBuilder)
     {
         List<Integer> result = Lists.newArrayList();
 
-        if(cmd.hasOption(CLUSTER_IDS))
+        if(configBuilder.hasValue(CLUSTER_IDS))
         {
-            Arrays.stream(cmd.getOptionValue(CLUSTER_IDS).split(DELIM, -1)).forEach(x -> result.add(Integer.parseInt(x)));
+            Arrays.stream(configBuilder.getValue(CLUSTER_IDS).split(DELIM, -1)).forEach(x -> result.add(Integer.parseInt(x)));
         }
 
         return result;
     }
 
-    private static List<Integer> parseChainIds(final CommandLine cmd)
+    private static List<Integer> parseChainIds(final ConfigBuilder configBuilder)
     {
         List<Integer> result = Lists.newArrayList();
 
-        if(cmd.hasOption(CHAIN_IDS))
+        if(configBuilder.hasValue(CHAIN_IDS))
         {
-            Arrays.stream(cmd.getOptionValue(CHAIN_IDS).split(DELIM, -1)).forEach(x -> result.add(Integer.parseInt(x)));
+            Arrays.stream(configBuilder.getValue(CHAIN_IDS).split(DELIM, -1)).forEach(x -> result.add(Integer.parseInt(x)));
         }
 
         return result;
     }
 
-    private static List<String> parseChromosomes(final CommandLine cmd)
+    private static List<String> parseChromosomes(final ConfigBuilder configBuilder)
     {
         List<String> result = Lists.newArrayList();
-        if(cmd.hasOption(CHROMOSOMES))
+        if(configBuilder.hasValue(CHROMOSOMES))
         {
-            final String contigs = cmd.getOptionValue(CHROMOSOMES);
+            final String contigs = configBuilder.getValue(CHROMOSOMES);
 
             if(contigs.equals("All"))
             {
@@ -186,53 +174,41 @@ public class VisualiserConfig
         return result;
     }
 
-
-    public static Options createOptions()
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
 
-        options.addOption(SAMPLE, true, "Sample name");
-        options.addOption(VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
-        options.addOption(LOAD_COHORT_FILES, false, "Load Linx cohort rather than per-sample vis files");
-        options.addOption(GERMLINE, false, "Load Linx germline VIS files");
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addPath(
+                VIS_FILE_DIRECTORY, true, "Path to all Linx vis files, used instead of specifying them individually");
 
-        options.addOption(PLOT_OUT, true, "Plot output directory, default is 'plot' in sample files directory");
-        options.addOption(DATA_OUT, true, "Data output directory, default is 'data' in sample files directory");
+        configBuilder.addFlag(LOAD_COHORT_FILES, "Load Linx cohort rather than per-sample vis files");
+        configBuilder.addFlag(GERMLINE, "Load Linx germline VIS files");
+        addRefGenomeVersion(configBuilder);
 
-        options.addOption(CIRCOS, true, "Path to Circos binary");
-        EnsemblDataCache.addEnsemblDir(options);
+        configBuilder.addConfigItem(PLOT_OUT, "Plot output directory, default is 'plot' in sample files directory");
+        configBuilder.addConfigItem(DATA_OUT, "Data output directory, default is 'data' in sample files directory");
 
-        options.addOption(DEBUG, false, "Enabled debug mode");
-        addThreadOptions(options);
+        configBuilder.addPath(CIRCOS, true, "Path to Circos binary");
+        EnsemblDataCache.addEnsemblDir(configBuilder);
 
         // filters
-        options.addOption(GENE, true, "Show canonical transcript for genes (separated by ','");
-        options.addOption(CLUSTER_IDS, true, "Limit to specified cluster IDs (separated by ',')");
-        options.addOption(CHAIN_IDS, true, "Limit to specified chain IDs (separated by ','), requires clusterId to be specified");
-        options.addOption(CHROMOSOMES, true, "Limit to specified chromosomes (separated by ',')");
-        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
+        configBuilder.addConfigItem(GENE, "Show canonical transcript for genes (separated by ','");
+        configBuilder.addConfigItem(CLUSTER_IDS, "Limit to specified cluster IDs (separated by ',')");
+        configBuilder.addConfigItem(CHAIN_IDS, "Limit to specified chain IDs (separated by ','), requires clusterId to be specified");
+        configBuilder.addConfigItem(CHROMOSOMES, "Limit to specified chromosomes (separated by ',')");
+        configBuilder.addConfigItem(SPECIFIC_REGIONS, SPECIFIC_REGIONS_DESC);
 
         // options
-        options.addOption(RESTRICT_CLUSTERS_BY_GENE, false, "Only plot clusters with breakends in configured 'gene' list");
-        addEnsemblDir(options);
-        options.addOption(INCLUDE_LINE_ELEMENTS, false, "Include line elements in chromosome plots");
-        options.addOption(PLOT_REPORTABLE, false, "Plot all clusters with a fusion, disruption, AMP or DEL");
+        configBuilder.addFlag(RESTRICT_CLUSTERS_BY_GENE, "Only plot clusters with breakends in configured 'gene' list");
+        configBuilder.addFlag(INCLUDE_LINE_ELEMENTS, "Include line elements in chromosome plots");
+        configBuilder.addFlag(PLOT_REPORTABLE, "Plot all clusters with a fusion, disruption, AMP or DEL");
 
-        options.addOption(PLOT_CLUSTER_GENES, false,
+        configBuilder.addFlag(PLOT_CLUSTER_GENES,
                 "Show all genes linked to SVs in a cluster (only applicable when clusterId is specified)");
 
-        return options;
-    }
-
-    public static String parameter(@NotNull final CommandLine cmd, @NotNull final String parameter, @NotNull final StringJoiner missing)
-    {
-        final String value = cmd.getOptionValue(parameter);
-        if(value == null)
-        {
-            missing.add(parameter);
-            return "";
-        }
-        return value;
+        // debug and threads
+        configBuilder.addFlag(DEBUG, "Enabled debug mode");
+        addThreadOptions(configBuilder);
+        addLoggingOptions(configBuilder);
     }
 }

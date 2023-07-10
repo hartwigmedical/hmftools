@@ -1,14 +1,9 @@
 package com.hartwig.hmftools.linx.visualiser;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.linx.visualiser.SvVisualiser.VIS_LOGGER;
 
 import com.hartwig.hmftools.common.utils.Doubles;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class CircosConfig
 {
@@ -110,50 +105,53 @@ public class CircosConfig
     private static final int DEFAULT_MAX_DISTANCE_LABELS = 100;
     private static final int DEFAULT_MAX_POSITION_LABELS = 60;
 
-    public static void addOptions(@NotNull Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(OUTER_RADIUS, true, "Outermost ending radius of chromosome track [" + DEFAULT_OUTER_RADIUS + "]");
-        options.addOption(INNER_RADIUS, true, "Innermost starting radius of minor-allele ploidy track [" + DEFAULT_INNER_RADIUS + "]");
-        options.addOption(GAP_RADIUS, true, "Radial gap between tracks [" + DEFAULT_GAP_RADIUS + "]");
-        options.addOption(EXON_RANK_RADIUS, true, "Radial gap left for exon rank labels [" + DEFAULT_EXON_RANK_RADIUS + "]");
+        configBuilder.addDecimal(OUTER_RADIUS, "Outermost ending radius of chromosome track", DEFAULT_OUTER_RADIUS);
+        configBuilder.addDecimal(INNER_RADIUS, "Innermost starting radius of minor-allele ploidy track", DEFAULT_INNER_RADIUS);
+        configBuilder.addDecimal(GAP_RADIUS, "Radial gap between tracks", DEFAULT_GAP_RADIUS);
+        configBuilder.addDecimal(EXON_RANK_RADIUS, "Radial gap left for exon rank labels", DEFAULT_EXON_RANK_RADIUS);
 
-        options.addOption(FUSION_HEIGHT, true, "Height of each fusion in pixels [" + DEFAULT_FUSION_HEIGHT + "]");
-        options.addOption(FUSION_LEGEND_ROWS, true, "Number of rows in protein domain legend  [" + DEFAULT_FUSION_LEGEND_ROWS + "]");
-        options.addOption(FUSION_LEGEND_HEIGHT_PER_ROW,
-                true,
-                "Height of each row in protein domain legend [" + DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW + "]");
+        configBuilder.addInteger(FUSION_HEIGHT, "Height of each fusion in pixels", DEFAULT_FUSION_HEIGHT);
+        configBuilder.addInteger(FUSION_LEGEND_ROWS, "Number of rows in protein domain legend ", DEFAULT_FUSION_LEGEND_ROWS);
 
-        options.addOption(CHR_RANGE_HEIGHT, true, "Chromosome range row height in pixels [" + DEFAULT_CHR_RANGE_HEIGHT + "]");
-        options.addOption(CHR_RANGE_COLUMNS, true, "Chromosome range row columns [" + DEFAULT_CHR_RANGE_COLUMNS + "]");
+        configBuilder.addInteger(
+                FUSION_LEGEND_HEIGHT_PER_ROW,
+                "Height of each row in protein domain legend", DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW);
 
-        options.addOption(GENE_RELATIVE_SIZE,
-                true,
-                "Size of gene track relative to segments and copy number alterations [" + DEFAULT_GENE_RELATIVE_SIZE + "]");
-        options.addOption(SEGMENT_RELATIVE_SIZE,
-                true,
-                "Size of segment track relative to copy number alterations and genes[" + DEFAULT_SEGMENT_RELATIVE_SIZE + "]");
-        options.addOption(CNA_RELATIVE_SIZE,
-                true,
-                "Size of gene copy number alteration relative to genes and segments [" + DEFAULT_CNA_RELATIVE_SIZE + "]");
+        configBuilder.addInteger(CHR_RANGE_HEIGHT, "Chromosome range row height in pixels", DEFAULT_CHR_RANGE_HEIGHT);
+        configBuilder.addInteger(CHR_RANGE_COLUMNS, "Chromosome range row columns", DEFAULT_CHR_RANGE_COLUMNS);
 
-        options.addOption(MIN_LABEL_SIZE, true, "Minimum label size in pixels [" + DEFAULT_MIN_LABEL_SIZE + "]");
-        options.addOption(MAX_LABEL_SIZE, true, "Maximum label size in pixels [" + DEFAULT_MAX_LABEL_SIZE + "]");
-        options.addOption(MAX_DISTANCE_LABELS, true, "Maximum number of distance labels before removing them [" + DEFAULT_MAX_DISTANCE_LABELS + "]");
-        options.addOption(MAX_POSITION_LABELS, true, "Maximum number of position labels before increasing distance between labels [" + DEFAULT_MAX_POSITION_LABELS + "]");
-        options.addOption(MAX_GENE_CHARACTERS,
-                true,
-                "Maximum number of character in gene allowed before scaling [" + DEFAULT_MAX_GENE_CHARACTERS + "]");
+        configBuilder.addDecimal(
+                GENE_RELATIVE_SIZE,
+                                "Size of gene track relative to segments and copy number alterations", DEFAULT_GENE_RELATIVE_SIZE);
+        configBuilder.addDecimal(
+                SEGMENT_RELATIVE_SIZE,"Size of segment track relative to copy number alterations and genes",
+                DEFAULT_SEGMENT_RELATIVE_SIZE);
 
-        options.addOption(MIN_LINE_SIZE, true, "Minimum line size in pixels [" + DEFAULT_MIN_LINE_SIZE + "]");
-        options.addOption(MAX_LINE_SIZE, true, "Maximum line size in pixels [" + DEFAULT_MAX_LINE_SIZE + "]");
-        options.addOption(GLYPH_SIZE, true, "Size of glyphs in pixels [" + DEFAULT_GLYPH_SIZE + "]");
+        configBuilder.addDecimal(
+                CNA_RELATIVE_SIZE, "Size of gene copy number alteration relative to genes and segments", DEFAULT_CNA_RELATIVE_SIZE);
 
-        options.addOption(INTERPOLATE_CNA_POSITIONS, false, "Interpolate copy number positions rather than adjust scale");
-        options.addOption(INTERPOLATE_EXON_POSITIONS, false, "Interpolate exon positions rather than adjust scale");
+        configBuilder.addInteger(MIN_LABEL_SIZE, "Minimum label size in pixels", DEFAULT_MIN_LABEL_SIZE);
+        configBuilder.addInteger(MAX_LABEL_SIZE, "Maximum label size in pixels", DEFAULT_MAX_LABEL_SIZE);
+        configBuilder.addInteger(MAX_DISTANCE_LABELS, "Maximum number of distance labels before removing them",
+                DEFAULT_MAX_DISTANCE_LABELS);
+        configBuilder.addInteger(MAX_POSITION_LABELS,
+                "Maximum number of position labels before increasing distance between labels", DEFAULT_MAX_POSITION_LABELS);
 
-        options.addOption(EXACT_POSITION, false, "Display exact positions at all break ends");
-        options.addOption(SHOW_SV_ID, false, "Display SV Id next to position");
-        options.addOption(STEP, false, "Create image at each step of derivative chromosome");
+        configBuilder.addInteger(
+                MAX_GENE_CHARACTERS, "Maximum number of character in gene allowed before scaling", DEFAULT_MAX_GENE_CHARACTERS);
+
+        configBuilder.addInteger(MIN_LINE_SIZE, "Minimum line size in pixels", DEFAULT_MIN_LINE_SIZE);
+        configBuilder.addInteger(MAX_LINE_SIZE, "Maximum line size in pixels", DEFAULT_MAX_LINE_SIZE);
+        configBuilder.addInteger(GLYPH_SIZE, "Size of glyphs in pixels", DEFAULT_GLYPH_SIZE);
+
+        configBuilder.addFlag(INTERPOLATE_CNA_POSITIONS, "Interpolate copy number positions rather than adjust scale");
+        configBuilder.addFlag(INTERPOLATE_EXON_POSITIONS, "Interpolate exon positions rather than adjust scale");
+
+        configBuilder.addFlag(EXACT_POSITION, "Display exact positions at all break ends");
+        configBuilder.addFlag(SHOW_SV_ID, "Display SV Id next to position");
+        configBuilder.addFlag(STEP, "Create image at each step of derivative chromosome");
 
     }
 
@@ -167,41 +165,41 @@ public class CircosConfig
         return Math.round(MaxLabelSize - 1d * count * (MaxLabelSize - MinLabelSize) / MaxNumberOfDistanceLabels);
     }
 
-    public CircosConfig(@NotNull final CommandLine cmd) throws ParseException
+    public CircosConfig(final ConfigBuilder configBuilder)
     {
-        MinLabelSize = getConfigValue(cmd, MIN_LABEL_SIZE, DEFAULT_MIN_LABEL_SIZE);
-        MaxLabelSize = getConfigValue(cmd, MAX_LABEL_SIZE, DEFAULT_MAX_LABEL_SIZE);
+        MinLabelSize = configBuilder.getInteger(MIN_LABEL_SIZE);
+        MaxLabelSize = configBuilder.getInteger(MAX_LABEL_SIZE);
 
-        OuterRadius = getConfigValue(cmd, OUTER_RADIUS, DEFAULT_OUTER_RADIUS);
-        InnerRadius = getConfigValue(cmd, INNER_RADIUS, DEFAULT_INNER_RADIUS);
-        GapRadius = getConfigValue(cmd, GAP_RADIUS, DEFAULT_GAP_RADIUS);
-        ExonRankRadius = getConfigValue(cmd, EXON_RANK_RADIUS, DEFAULT_EXON_RANK_RADIUS);
+        OuterRadius = configBuilder.getDecimal(OUTER_RADIUS);
+        InnerRadius = configBuilder.getDecimal(INNER_RADIUS);
+        GapRadius = configBuilder.getDecimal(GAP_RADIUS);
+        ExonRankRadius = configBuilder.getDecimal(EXON_RANK_RADIUS);
 
-        GeneRelativeSize = getConfigValue(cmd, GENE_RELATIVE_SIZE, DEFAULT_GENE_RELATIVE_SIZE);
-        SegmentRelativeSize = getConfigValue(cmd, SEGMENT_RELATIVE_SIZE, DEFAULT_SEGMENT_RELATIVE_SIZE);
-        CopyNumberRelativeSize = getConfigValue(cmd, CNA_RELATIVE_SIZE, DEFAULT_CNA_RELATIVE_SIZE);
+        GeneRelativeSize = configBuilder.getDecimal(GENE_RELATIVE_SIZE);
+        SegmentRelativeSize = configBuilder.getDecimal(SEGMENT_RELATIVE_SIZE);
+        CopyNumberRelativeSize = configBuilder.getDecimal(CNA_RELATIVE_SIZE);
 
-        MaxGeneCharacters = getConfigValue(cmd, MAX_GENE_CHARACTERS, DEFAULT_MAX_GENE_CHARACTERS);
-        MaxNumberOfDistanceLabels = getConfigValue(cmd, MAX_DISTANCE_LABELS, DEFAULT_MAX_DISTANCE_LABELS);
-        MaxNumberOfPositionLabels = getConfigValue(cmd, MAX_POSITION_LABELS, DEFAULT_MAX_POSITION_LABELS);
+        MaxGeneCharacters = configBuilder.getInteger(MAX_GENE_CHARACTERS);
+        MaxNumberOfDistanceLabels = configBuilder.getInteger(MAX_DISTANCE_LABELS);
+        MaxNumberOfPositionLabels = configBuilder.getInteger(MAX_POSITION_LABELS);
 
-        FusionLegendRows = getConfigValue(cmd, FUSION_LEGEND_ROWS, DEFAULT_FUSION_LEGEND_ROWS);
-        FusionLegendHeightPerRow = getConfigValue(cmd, FUSION_LEGEND_HEIGHT_PER_ROW, DEFAULT_FUSION_LEGEND_HEIGHT_PER_ROW);
-        FusionHeight = getConfigValue(cmd, FUSION_HEIGHT, DEFAULT_FUSION_HEIGHT);
+        FusionLegendRows = configBuilder.getInteger(FUSION_LEGEND_ROWS);
+        FusionLegendHeightPerRow = configBuilder.getInteger(FUSION_LEGEND_HEIGHT_PER_ROW);
+        FusionHeight = configBuilder.getInteger(FUSION_HEIGHT);
 
-        ChromosomeRangeColumns = getConfigValue(cmd, CHR_RANGE_COLUMNS, DEFAULT_CHR_RANGE_COLUMNS);
-        ChromosomeRangeHeight = getConfigValue(cmd, CHR_RANGE_HEIGHT, DEFAULT_CHR_RANGE_HEIGHT);
+        ChromosomeRangeColumns = configBuilder.getInteger(CHR_RANGE_COLUMNS);
+        ChromosomeRangeHeight = configBuilder.getInteger(CHR_RANGE_HEIGHT);
 
-        MinLineSize = getConfigValue(cmd, MIN_LINE_SIZE, DEFAULT_MIN_LINE_SIZE);
-        MaxLineSize = getConfigValue(cmd, MAX_LINE_SIZE, DEFAULT_MAX_LINE_SIZE);
-        GlyphSize = getConfigValue(cmd, GLYPH_SIZE, DEFAULT_GLYPH_SIZE);
+        MinLineSize = configBuilder.getInteger(MIN_LINE_SIZE);
+        MaxLineSize = configBuilder.getInteger(MAX_LINE_SIZE);
+        GlyphSize = configBuilder.getInteger(GLYPH_SIZE);
 
-        InterpolateCopyNumberPositions = cmd.hasOption(INTERPOLATE_CNA_POSITIONS);
-        InterpolateExonPositions = cmd.hasOption(INTERPOLATE_EXON_POSITIONS);
+        InterpolateCopyNumberPositions = configBuilder.hasFlag(INTERPOLATE_CNA_POSITIONS);
+        InterpolateExonPositions = configBuilder.hasFlag(INTERPOLATE_EXON_POSITIONS);
 
-        ExactPosition = cmd.hasOption(EXACT_POSITION);
-        ShowSvId = cmd.hasOption(SHOW_SV_ID);
-        Step = cmd.hasOption(STEP);
+        ExactPosition = configBuilder.hasFlag(EXACT_POSITION);
+        ShowSvId = configBuilder.hasFlag(SHOW_SV_ID);
+        Step = configBuilder.hasFlag(STEP);
     }
 
     public boolean isValid()

@@ -34,9 +34,6 @@ public class LinxApplication
 {
     public LinxApplication(final ConfigBuilder configBuilder)
     {
-        final VersionInfo version = new VersionInfo("linx.version");
-        LNX_LOGGER.info("LINX version: {}", version.version());
-
         LinxConfig config = new LinxConfig(configBuilder);
 
         if(!checkCreateOutputDir(config.OutputDataPath))
@@ -205,6 +202,7 @@ public class LinxApplication
 
         if(config.isSingleSample())
         {
+            final VersionInfo version = new VersionInfo("linx.version");
             try { version.write(config.OutputDataPath); } catch(IOException e) {}
         }
 
@@ -221,6 +219,12 @@ public class LinxApplication
         }
     }
 
+    public static void logVersion()
+    {
+        final VersionInfo version = new VersionInfo("linx.version");
+        LNX_LOGGER.info("Linx version: {}", version.version());
+    }
+
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
@@ -231,11 +235,9 @@ public class LinxApplication
         addEnsemblDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
+
+        logVersion();
 
         setLogLevel(configBuilder);
 
