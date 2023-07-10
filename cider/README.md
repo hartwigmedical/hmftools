@@ -156,7 +156,18 @@ The full set of fields output are:
 | vdjSeq               | Full consensus sequence in nucleotides                                                                                                              | 
 | support              | Counts of high quality base support at each nucleotide (radix-36 ASCII encoded)                                                                     | 
 | SampleType           | "dna" or "rna"                                                                                                                                      | 
-| cohortFrequency      | TO DO                                                                                                                                               | 
+
+### Locus summary output
+In addition, CIDER writes a locus summary output file `<sample_id>.cider.locus_stats.tsv` with the following columns
+
+| Field         | Explanation                                                                                                       | 
+|---------------|-------------------------------------------------------------------------------------------------------------------|
+| locus         | IG/TCR locus                                                                                                      | 
+| readsUsed     | Number of reads used to build the VDJ sequences. Differs from the readsTotal by quality filtering and downsample. | 
+| readsTotal    | Number of reads found mapped to the locus.                                                                        | 
+| downSampled   | `true` if downSampled.                                                                                            |
+| sequences     | Number of sequences found.                                                                                        | 
+| passSequences | Number of PASS sequences found.                                                                                   | 
 
 ## Post CIDER annotation script using BLAST
 
@@ -234,7 +245,23 @@ Below steps are required to run the cider_blastn.py script:
 - Support AIRR format output.
 - BLASTN annotation would ideally point to IMGT instead of the 38 reference genome as there is a more complete set of alleles / alts
 
+## Performance Characteristics
+These are indicative performance characteristics on a 12 core machines running with 4 threads.
+Running with `-xmx32G`.
+
+| Max reads per gene | Elapsed time (minutes) |
+|--------------------|------------------------|
+| 200k               | 81                     |
+| 400k               | 192                    |
+| 600k               | 292                    |
+| 800k               | 518                    |
+
+"Max reads per gene" is the maximum number of reads we found in each of the IG/TCR gene segment, i.e. IGHV, TRBJ etc. 
+
 # Version History and Download Links
+- [0.9.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.9.0)
+  - Fix an issue in 0.8.0 where layout can get into infinite loop.
+  - Add cider.locus_stats.tsv output
 - [0.8.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.8.0)
   - Add `NO_HIGH_QUAL_SUPPORT` soft filter.
   - New command line argument: `max_low_qual_base_fraction`.
