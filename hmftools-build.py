@@ -22,8 +22,8 @@ module = match.group(1)
 version = match.group(2)
 
 # parse all the hmftools modules the project depends on from the pom.xml
-parsed_pom = ET.parse(f'{module}/pom.xml')
-root = parsed_pom.getroot()
+parsed_module_pom = ET.parse(f'{module}/pom.xml')
+root = parsed_module_pom.getroot()
 namespace = {'ns': 'http://maven.apache.org/POM/4.0.0'}
 dependencies = root.findall('.//ns:dependencies/ns:dependency', namespace)
 
