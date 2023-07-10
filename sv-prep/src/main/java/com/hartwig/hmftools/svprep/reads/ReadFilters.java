@@ -22,17 +22,13 @@ import static com.hartwig.hmftools.svprep.SvConstants.MIN_LINE_SOFT_CLIP_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_CHECK_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.SvConstants.REPEAT_BREAK_MIN_SC_LENGTH;
-import static com.hartwig.hmftools.svprep.reads.ReadFilterType.BREAK_IN_REPEAT;
-import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
-import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_ALIGN_MATCH;
-import static com.hartwig.hmftools.svprep.reads.ReadFilterType.MIN_MAP_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.POLY_G_SC;
-import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LENGTH;
-import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.getSoftClippedBases;
 
 import static htsjdk.samtools.CigarOperator.M;
+
+import java.util.EnumSet;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMRecord;
@@ -52,23 +48,23 @@ public class ReadFilters
     {
         // check each filter type that would prevent a read being used to establish a junction
         // NOTE: must check all filters (ie no early) exits since the state of some are subsequently used (eg map-qual & poly-G)
-        int filters = 0;
+        final EnumSet<ReadFilterType> filters = EnumSet.noneOf(ReadFilterType.class);
 
         final Cigar cigar = record.getCigar();
         int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
         if(alignedBases < mConfig.MinAlignmentBases)
-            filters = ReadFilterType.set(filters, MIN_ALIGN_MATCH);
+            filters.add(ReadFilterType.MIN_ALIGN_MATCH);
 
         if(record.getMappingQuality() < mConfig.MinMapQuality)
-            filters = ReadFilterType.set(filters, MIN_MAP_QUAL);
+            filters.add(ReadFilterType.MIN_MAP_QUAL);
 
         if(!mateUnmapped(record) && !record.getReadUnmappedFlag())
         {
             int insertAlignmentOverlap = abs(abs(record.getInferredInsertSize()) - alignedBases);
 
             if(insertAlignmentOverlap < mConfig.MinInsertAlignmentOverlap)
-                filters = ReadFilterType.set(filters, INSERT_MAP_OVERLAP);
+                filters.add(ReadFilterType.INSERT_MAP_OVERLAP);
         }
 
         // check length and quality of soft-clipped bases if not an INDEL
@@ -79,7 +75,7 @@ public class ReadFilters
         int maxIndelLength = ReadRecord.maxIndelLength(record.getCigar());
 
         if(maxIndelLength < mConfig.MinIndelLength && scLeft < mConfig.MinSoftClipLength && scRight < mConfig.MinSoftClipLength)
-            filters = ReadFilterType.set(filters, SOFT_CLIP_LENGTH);
+            filters.add(ReadFilterType.SOFT_CLIP_LENGTH);
 
         // base qual in soft clip
         if(scLeft > 0 || scRight > 0)
@@ -99,13 +95,13 @@ public class ReadFilters
 
             if(aboveQual / (double)scLength < mConfig.MinSoftClipHighQualPerc)
             {
-                filters = ReadFilterType.set(filters, SOFT_CLIP_BASE_QUAL);
+                filters.add(ReadFilterType.SOFT_CLIP_BASE_QUAL);
 
                 // additional check to exclude a read from any use
                 int lowQualCount = scLength - aboveQual;
 
                 if(lowQualCount >= MAX_SOFT_CLIP_LOW_QUAL_COUNT)
-                    filters = ReadFilterType.set(filters, SOFT_CLIP_LOW_BASE_QUAL);
+                    filters.add(ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL);
             }
 
             String scBases = getSoftClippedBases(record, useLeftClip);
@@ -113,14 +109,14 @@ public class ReadFilters
             // check for poly G/C inserts, then a break in a repetitive section, then poly A/T mobile line insertion
             if(scLength >= POLY_G_LENGTH && (scBases.contains(POLY_G_INSERT) || scBases.contains(POLY_C_INSERT)))
             {
-                filters = ReadFilterType.set(filters, POLY_G_SC);
+                filters.add(ReadFilterType.POLY_G_SC);
             }
-            else if(!ReadFilterType.isSet(filters, SOFT_CLIP_LENGTH))
+            else if(!filters.contains(SOFT_CLIP_LENGTH))
             {
                 if((record.getMappingQuality() < REPEAT_BREAK_MIN_MAP_QUAL || scLength < REPEAT_BREAK_MIN_SC_LENGTH)
                 && isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
-                    filters = ReadFilterType.set(filters, BREAK_IN_REPEAT);
+                    filters.add(ReadFilterType.BREAK_IN_REPEAT);
                 }
             }
             else if(scLength >= MIN_LINE_SOFT_CLIP_LENGTH)
@@ -131,12 +127,12 @@ public class ReadFilters
                 if(isMobileLineElement(orientation, scBases)
                 && !isRepetitiveSectionBreak(record.getReadBases(), useLeftClip, scLength))
                 {
-                    filters = ReadFilterType.unset(filters, SOFT_CLIP_LENGTH);
+                    filters.remove(ReadFilterType.SOFT_CLIP_LENGTH);
                 }
             }
         }
 
-        return filters;
+        return ReadFilterType.toFlags(filters);
     }
 
     public boolean isCandidateSupportingRead(final SAMRecord record, final int filters)
@@ -180,7 +176,7 @@ public class ReadFilters
         return false;
     }
 
-    public static boolean isRepetitiveSectionBreak(final byte[] readBases, boolean leftClipped, int scLength)
+    public static boolean isRepetitiveSectionBreak(final byte[] readBases, boolean leftClipped, int softClippedLength)
     {
         int readLength = readBases.length;
 
@@ -189,12 +185,12 @@ public class ReadFilters
         if(leftClipped)
         {
             // 0-9 sc bases, length = 10, checked range is 4-9 and 10-17
-            startIndex = max(scLength - REPEAT_BREAK_CHECK_LENGTH, 0);
+            startIndex = max(softClippedLength - REPEAT_BREAK_CHECK_LENGTH, 0);
         }
         else
         {
             // 91-100 sc bases, length = 10, checked range 83-90 and 91-96
-            startIndex = max(readLength - scLength - REPEAT_BREAK_CHECK_LENGTH, 0);
+            startIndex = max(readLength - softClippedLength - REPEAT_BREAK_CHECK_LENGTH, 0);
         }
 
         int endIndex = min(startIndex + REPEAT_BREAK_CHECK_LENGTH + REPEAT_BREAK_CHECK_LENGTH, readLength);
