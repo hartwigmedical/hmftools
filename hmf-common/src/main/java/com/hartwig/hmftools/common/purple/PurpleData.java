@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
+import com.hartwig.hmftools.common.variant.AllTranscriptSomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.immutables.value.Value;
@@ -24,16 +25,16 @@ public interface PurpleData
     List<DriverCatalog> germlineDrivers();
 
     @NotNull
-    List<SomaticVariant> allSomaticVariants();
+    List<AllTranscriptSomaticVariant> allSomaticVariants();
 
     @NotNull
-    List<SomaticVariant> reportableSomaticVariants();
+    List<AllTranscriptSomaticVariant> reportableSomaticVariants();
 
     @Nullable
-    List<SomaticVariant> allGermlineVariants();
+    List<AllTranscriptSomaticVariant> allGermlineVariants();
 
     @Nullable
-    List<SomaticVariant> reportableGermlineVariants();
+    List<AllTranscriptSomaticVariant> reportableGermlineVariants();
 
     @NotNull
     List<StructuralVariant> allSomaticStructuralVariants();

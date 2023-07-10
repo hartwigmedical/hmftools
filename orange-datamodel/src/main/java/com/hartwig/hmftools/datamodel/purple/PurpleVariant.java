@@ -22,6 +22,9 @@ public interface PurpleVariant extends Variant {
     List<PurpleTranscriptImpact> otherImpacts();
 
     @NotNull
+    List<PurpleNonCanonicalTranscriptImpact> nonCanonicalImpacts();
+
+    @NotNull
     Hotspot hotspot();
 
     boolean reported();

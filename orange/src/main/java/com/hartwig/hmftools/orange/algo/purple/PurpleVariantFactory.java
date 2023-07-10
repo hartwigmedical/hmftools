@@ -1,16 +1,19 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.common.variant.AllTranscriptSomaticVariant;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.datamodel.purple.Hotspot;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleNonCanonicalTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleNonCanonicalTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
@@ -34,21 +37,23 @@ public class PurpleVariantFactory {
     }
 
     @Nullable
-    public List<PurpleVariant> create(@Nullable List<SomaticVariant> variants) {
+    public List<PurpleVariant> create(@Nullable List<AllTranscriptSomaticVariant> variants) {
         if (variants == null) {
             return null;
         }
 
         List<PurpleVariant> purpleVariants = Lists.newArrayList();
-        for (SomaticVariant variant : variants) {
+        for (AllTranscriptSomaticVariant variant : variants) {
             purpleVariants.add(toPurpleVariant(variant));
         }
         return purpleVariants;
     }
 
     @NotNull
-    private PurpleVariant toPurpleVariant(@NotNull SomaticVariant variant) {
+    private PurpleVariant toPurpleVariant(@NotNull AllTranscriptSomaticVariant variant) {
         com.hartwig.hmftools.common.variant.AllelicDepth nullable = variant.rnaDepth();
+        // TODO other transcripts
+
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.valueOf(variant.type().name()))
                 .gene(variant.gene())
@@ -59,6 +64,7 @@ public class PurpleVariantFactory {
                 .worstCodingEffect(PurpleConversion.convert(variant.worstCodingEffect()))
                 .canonicalImpact(extractCanonicalImpact(variant))
                 .otherImpacts(extractOtherImpacts(variant))
+                .nonCanonicalImpacts(extractNonCanonicalImpacts(variant))
                 .hotspot(Hotspot.valueOf(variant.hotspot().name()))
                 .reported(variant.reported())
                 .tumorDepth(extractTumorDepth(variant))
@@ -75,8 +81,24 @@ public class PurpleVariantFactory {
                 .build();
     }
 
+    private List<PurpleNonCanonicalTranscriptImpact> extractNonCanonicalImpacts(final AllTranscriptSomaticVariant variant) {
+        List<VariantEffect> variantEffects = VariantEffect.effectsToList(variant.canonicalEffect());
+        List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
+
+        return variant.allTranscripts()
+                .stream()
+                .map(t -> ImmutablePurpleNonCanonicalTranscriptImpact.builder()
+                        .transcript(t.Transcript)
+                        .hgvsCodingImpact(t.HgvsCoding)
+                        .hgvsProteinImpact(t.HgvsProtein)
+                        .spliceRegion(t.SpliceRegion)
+                        .effects(purpleVariantEffects)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     @NotNull
-    private static PurpleAllelicDepth extractTumorDepth(@NotNull SomaticVariant variant) {
+    private static PurpleAllelicDepth extractTumorDepth(@NotNull AllTranscriptSomaticVariant variant) {
         return ImmutablePurpleAllelicDepth.builder()
                 .alleleReadCount(variant.alleleReadCount())
                 .totalReadCount(variant.totalReadCount())
@@ -84,7 +106,7 @@ public class PurpleVariantFactory {
     }
 
     @NotNull
-    private PurpleTranscriptImpact extractCanonicalImpact(@NotNull SomaticVariant variant) {
+    private PurpleTranscriptImpact extractCanonicalImpact(@NotNull AllTranscriptSomaticVariant variant) {
         // TODO Move effect parsing into SomaticVariant
 
         PaveEntry paveEntry = paveAlgo.run(variant.gene(), variant.canonicalTranscript(), variant.position());
@@ -103,7 +125,7 @@ public class PurpleVariantFactory {
     }
 
     @NotNull
-    private List<PurpleTranscriptImpact> extractOtherImpacts(@NotNull SomaticVariant variant) {
+    private List<PurpleTranscriptImpact> extractOtherImpacts(@NotNull AllTranscriptSomaticVariant variant) {
         List<PurpleTranscriptImpact> otherImpacts = Lists.newArrayList();
         // TODO Move other reported effects parsing into SomaticVariant
         // TODO Move effect parsing into SomaticVariant

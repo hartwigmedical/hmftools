@@ -128,4 +128,5 @@ public final class PurpleConversion {
     public static PurpleVariantEffect convert(VariantEffect effect) {
         return PurpleVariantEffect.valueOf(effect.name());
     }
+
 }
