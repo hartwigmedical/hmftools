@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
 import static com.hartwig.hmftools.svprep.TestUtils.CHR_2;
-import static com.hartwig.hmftools.svprep.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.svprep.TestUtils.setReadFlag;
 
 import static org.junit.Assert.assertEquals;

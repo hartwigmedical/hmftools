@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMEN
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.isSingleBreakend;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSingleOrientation;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSvOrientation;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
 

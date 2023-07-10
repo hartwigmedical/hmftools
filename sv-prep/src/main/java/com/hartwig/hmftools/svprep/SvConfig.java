@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
@@ -17,8 +19,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSIO
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
@@ -35,8 +35,6 @@ import static com.hartwig.hmftools.svprep.WriteType.BAM;
 import static com.hartwig.hmftools.svprep.WriteType.FRAGMENT_LENGTH_DIST;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -48,11 +46,8 @@ import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadFilterConfig;
 import com.hartwig.hmftools.svprep.reads.ReadFilters;
-
-import org.apache.commons.cli.ParseException;
 
 import htsjdk.samtools.ValidationStringency;
 

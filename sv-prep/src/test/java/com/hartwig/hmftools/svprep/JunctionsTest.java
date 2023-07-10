@@ -17,7 +17,6 @@ import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 

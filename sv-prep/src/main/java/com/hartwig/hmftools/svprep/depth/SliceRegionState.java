@@ -8,8 +8,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import org.apache.commons.math3.stat.descriptive.rank.Min;
-
 public class SliceRegionState
 {
     public int PositionMax;

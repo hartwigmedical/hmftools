@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svprep;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;

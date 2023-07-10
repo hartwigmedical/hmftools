@@ -5,7 +5,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
-import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;

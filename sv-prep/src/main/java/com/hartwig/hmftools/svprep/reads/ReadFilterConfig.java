@@ -2,9 +2,9 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_SUPPORT_FRAGMENT_DISTANCE;
-import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_ALIGNMENT_BASES;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
