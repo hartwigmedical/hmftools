@@ -55,7 +55,7 @@ public class SageConstants
     public static final int HOTSPOT_MIN_RAW_ALT_BASE_QUAL = 150;
 
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 28;
-    public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 22;
+    public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
             "hotspot", 70, 0.005,
