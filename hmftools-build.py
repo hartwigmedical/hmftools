@@ -11,7 +11,7 @@ if len(sys.argv) != 2:
 tag = sys.argv[1]
 
 # check if the tag name is according to the regex
-semver_pattern = '^(\w+)-v?((\d+)(\.\d+){0,2})(-(alpha|beta)\.[0-9]+)?$'
+semver_pattern = '^([a-z-]+)-v?([0-9]+\.[0-9]+\.[0-9]+(?:-(?:alpha|beta)\.[0-9]+)?)$'
 match = re.match(semver_pattern, tag)
 
 if not match:
