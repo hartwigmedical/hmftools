@@ -3,6 +3,20 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
+
+def extract_hmftools_dependencies(dependencies):
+    hmftools_dependencies = set()
+    for dep in dependencies:
+        group_id = dep.find('ns:groupId', namespace).text
+        artifact_id = dep.find('ns:artifactId', namespace).text
+        if group_id == "com.hartwig":
+            hmftools_dependencies.add(artifact_id)
+    return hmftools_dependencies
+
+
+
+
+
 # Check if a semver version is included as argument.
 if len(sys.argv) != 2:
     print(f'Invalid arguments. Usage: {sys.argv[0]} semver-version')
@@ -26,14 +40,8 @@ parsed_module_pom = ET.parse(f'{module}/pom.xml')
 root = parsed_module_pom.getroot()
 namespace = {'ns': 'http://maven.apache.org/POM/4.0.0'}
 dependencies = root.findall('.//ns:dependencies/ns:dependency', namespace)
+hmftools_dependencies = extract_hmftools_dependencies(dependencies)
 
-hmftools_dependencies = set()
-
-for dep in dependencies:
-    group_id = dep.find('ns:groupId', namespace).text
-    artifact_id = dep.find('ns:artifactId', namespace).text
-    if group_id == "com.hartwig":
-        hmftools_dependencies.add(artifact_id)
 
 # Set version of module in parent pom.
 subprocess.run(
