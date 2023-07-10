@@ -85,8 +85,8 @@ public class VisualiserConfig
         Sample = configBuilder.getValue(SAMPLE);
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(VIS_FILE_DIRECTORY));
 
-        OutputPlotPath = configBuilder.hasValue(PLOT_OUT) ? configBuilder.getValue(PLOT_OUT) : SampleDataDir + "plot/";
-        OutputConfPath = configBuilder.hasValue(DATA_OUT) ? configBuilder.getValue(DATA_OUT) : SampleDataDir + "data/";
+        OutputPlotPath = checkAddDirSeparator(configBuilder.getValue(PLOT_OUT, SampleDataDir + "plot/"));
+        OutputConfPath = checkAddDirSeparator(configBuilder.getValue(DATA_OUT, SampleDataDir + "data/"));
         CircosBin = configBuilder.getValue(CIRCOS);
         UseCohortFiles = configBuilder.hasFlag(LOAD_COHORT_FILES);
         IsGermline = configBuilder.hasFlag(GERMLINE);
