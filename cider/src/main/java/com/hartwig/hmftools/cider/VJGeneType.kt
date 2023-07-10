@@ -43,7 +43,7 @@ enum class VJGeneType
     TRGJ,
     IGKKDE;
 
-    //val locus: IgTcrLocus = IgTcrLocus.valueOf(name.take(3))
+    val locus: IgTcrLocus = IgTcrLocus.valueOf(name.take(3))
     val vj: VJ = if (name == "IGKKDE") VJ.J else VJ.valueOf(name[3].toString())
 
     // gene types that can be paired with

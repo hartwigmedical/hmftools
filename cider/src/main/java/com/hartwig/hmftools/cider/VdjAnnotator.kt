@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.VdjAnnotator.Companion.PASS_FILTER
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
@@ -21,6 +22,12 @@ data class VdjAnnotation(val vdj: VDJSequence,
                          val jSimilarityScore: Int?,
                          val vPrimerMatchCount: Int,
                          val jPrimerMatchCount: Int)
+{
+    val passesFilter : Boolean get()
+    {
+        return filters.contains(PASS_FILTER)
+    }
+}
 
 // helper object to annotate the VDJ sequences that we found
 class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
@@ -241,6 +248,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         const val CDR3_FILTER_AA_MIN_LENGTH = 5
         const val CDR3_FILTER_AA_MAX_LENGTH = 40
         const val MAX_NONSPLIT_READS = 2
+        const val PASS_FILTER = "PASS"
 
         private val sLogger = LogManager.getLogger(VdjAnnotator::class.java)
 
@@ -320,7 +328,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             }
             if (filters.isEmpty())
             {
-                filters.add("PASS")
+                filters.add(PASS_FILTER)
             }
             return filters
         }

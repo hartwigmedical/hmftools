@@ -56,6 +56,9 @@ abstract class IVJReadLayoutAdaptor
 // Most functions here rely on this.
 class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality: Int) : IVJReadLayoutAdaptor()
 {
+    data class LayoutBuildResult(val layouts: List<ReadLayout>, val numCandidateReads: Int, val numHighQualReads: Int,
+                                 val numReadsUsed: Int, val downSampled: Boolean)
+
     private class VjLayoutRead private constructor(
         val layoutReadSlice: ReadSlice,
         val readCandidate: VJReadCandidate,
@@ -218,12 +221,14 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         return anchorRange
     }
 
-    // Build layouts using layout tree
-    // TODO: merge layouts where differences are outside of the anchor
+    // Build layouts using layout forest
     fun buildLayouts(geneType: VJGeneType, readCandidates: List<VJReadCandidate>,
                      minMatchedBases: Int, maxReadCountPerGene: Int, maxLowQualBaseFraction: Double)
-    : List<ReadLayout>
+    : LayoutBuildResult
     {
+        val numHighQualReads: Int
+        val downSampled: Boolean
+
         val layoutReads: MutableList<ReadLayout.Read> = ArrayList()
 
         for (r in readCandidates)
@@ -239,6 +244,9 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             }
         }
 
+        // here is the high qual reads
+        numHighQualReads = layoutReads.size
+
         // see if we need to downsample
         if (layoutReads.size >= maxReadCountPerGene)
         {
@@ -250,9 +258,15 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             // we always use the same seed to make it predictable
             val random = Random(0)
 
-            val filteredLayouts = layoutReads.filter { (random.nextDouble() < fractionToKeep) }
+            val downSampledReads = layoutReads.filter { (random.nextDouble() < fractionToKeep) }
             layoutReads.clear()
-            layoutReads.addAll(filteredLayouts)
+            layoutReads.addAll(downSampledReads)
+
+            downSampled = true
+        }
+        else
+        {
+            downSampled = false
         }
 
         sLogger.info("building {} layouts from {} reads", geneType, layoutReads.size)
@@ -276,14 +290,15 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         }
 
         val readLayouts: List<ReadLayout> = layoutForest.buildReadLayouts({ read: LayoutForest.Read -> read.source as VjLayoutRead })
-            .sortedByDescending({ layout: ReadLayout -> layout.reads.size })
+            .sortedByDescending { layout: ReadLayout -> layout.reads.size }
 
         // We want to perform a quick sanity check that the number of reads are correct
         readCountSanityCheck(layoutReads, readLayouts)
 
         sLogger.info("built {} {} layouts from {} reads", readLayouts.size, geneType, layoutReads.size)
 
-        return readLayouts
+        return LayoutBuildResult(layouts=readLayouts, numCandidateReads=readCandidates.size, numHighQualReads=numHighQualReads,
+            numReadsUsed=layoutReads.size, downSampled=downSampled)
     }
 
     // sanity check to make sure we got all correct read counts
