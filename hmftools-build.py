@@ -33,14 +33,20 @@ class Maven:
 ### Helper methods
 
 def extract_hmftools_dependencies(pom_path):
-    parsed_module_pom = ET.parse(pom_path)
     namespace = {'ns': 'http://maven.apache.org/POM/4.0.0'}
-    dependencies = parsed_module_pom.root().findall('.//ns:dependencies/ns:dependency', namespace)
+
+    # First, obtain a list of all modules defined in the parent
+    parsed_parent_pom = ET.parse('pom.xml')
+    modules = parsed_parent_pom.getroot().findall('.//ns:modules/ns:module', namespace)
+    module_set = {module.text for module in modules}
+    # Then, obtain dependencies on these modules from target module
+    parsed_module_pom = ET.parse(pom_path)
+    dependencies = parsed_module_pom.getroot().findall('.//ns:dependencies/ns:dependency', namespace)
     hmftools_dependencies = set()
     for dep in dependencies:
         group_id = dep.find('ns:groupId', namespace).text
         artifact_id = dep.find('ns:artifactId', namespace).text
-        if group_id == "com.hartwig":
+        if group_id == "com.hartwig" and artifact_id in module_set:
             hmftools_dependencies.add(artifact_id)
     return hmftools_dependencies
 
