@@ -19,6 +19,7 @@ if not match:
     quit()
 
 module = match.group(1)
+version = match.group(2)
 
 # parse all the hmftools modules the project depends on from the pom.xml
 parsed_pom = ET.parse(f'{module}/pom.xml')
@@ -37,7 +38,7 @@ for dep in dependencies:
 # Set version of module in parent pom.
 subprocess.run(
     ['mvn', '-f', 'pom.xml', 'versions:set-property', '-DgenerateBackupPoms=false', f'-Dproperty={module}.version',
-     f'-DnewVersion={tag}'],
+     f'-DnewVersion={version}'],
     check=True)
 
 # Set version of hmftools dependencies in parent pom.xml
