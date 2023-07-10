@@ -169,11 +169,7 @@ public class NormalisationFileBuilder
         ConfigBuilder configBuilder = new ConfigBuilder();
         NormalisationConfig.registerConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
         setLogLevel(configBuilder);
 

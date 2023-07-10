@@ -129,7 +129,7 @@ public class NormalisationConfig
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         configBuilder.addPath(TARGET_REGIONS_BED, true, "Target regions BED file");
         configBuilder.addRequiredConfigItem(OUTPUT_FILE, "Output normalisation file");
-        configBuilder.addFlag(DETAILED_OUTPUT, "Output normalisation file");
+        configBuilder.addConfigItem(DETAILED_OUTPUT, "Detailed normalisation calcs file");
         addGcProfilePath(configBuilder, true);
         addLoggingOptions(configBuilder);
     }
