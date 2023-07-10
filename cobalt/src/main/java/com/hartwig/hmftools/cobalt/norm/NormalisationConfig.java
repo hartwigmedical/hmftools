@@ -59,8 +59,8 @@ public class NormalisationConfig
         loadSampleIds(configBuilder);
 
         CobaltPanelDir = configBuilder.getValue(COBALT_DIR_CFG);
-        CobaltWgsDir = configBuilder.getValue(COBALT_WGS_DIR);
-        AmberDir = configBuilder.getValue(AMBER_DIR_CFG);
+        CobaltWgsDir = configBuilder.getValue(COBALT_WGS_DIR, "");
+        AmberDir = configBuilder.getValue(AMBER_DIR_CFG, "");
         GcProfile = configBuilder.getValue(GC_PROFILE);
         TargetRegionsBed = configBuilder.getValue(TARGET_REGIONS_BED);
         RefGenVersion = RefGenomeVersion.from(configBuilder);

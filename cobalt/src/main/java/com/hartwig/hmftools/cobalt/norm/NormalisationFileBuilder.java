@@ -94,7 +94,7 @@ public class NormalisationFileBuilder
                 Gender gender = AmberGender.determineGender(mConfig.RefGenVersion, chromosomeBafs);
                 sampleGenders.put(sampleId, gender);
 
-                CB_LOGGER.debug("AMBER_GENDER:{},{}", sampleId, gender);
+                CB_LOGGER.debug("sample({}) Amber gender({})", sampleId, gender);
             }
             catch(IOException e)
             {
