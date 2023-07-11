@@ -17,17 +17,11 @@ class Maven:
         subprocess.run(['mvn', '-f', self.pom_path, 'versions:set',
                         '-DgenerateBackupPoms=false', f'-DnewVersion={version}'], check=True)
         
-    def install(self, non_recursive=False):
-        if non_recursive:
-            subprocess.run(['mvn', '-N', '-f', self.pom_path, 'clean', 'install'], check=True)
-        else:
-            subprocess.run(['mvn', '-f', self.pom_path, 'clean', 'install'], check=True)
 
-    def deploy(self, non_recursive=False):
-        if non_recursive:
-            subprocess.run(['mvn', '-N', '-f', self.pom_path, 'deploy', '-B'], check=True)
-        else:
-            subprocess.run(['mvn', '-f', self.pom_path, 'deploy', '-B'], check=True)
+    @staticmethod
+    def deploy_all(modules):
+        module_str = ','.join(modules)
+        subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am'])
 
 
 ### Helper methods
@@ -87,14 +81,4 @@ for hmf_dep in hmftools_dependencies:
 parent_pom.set_version(tag)
 module_pom.set_version(version)
 
-# Build all submodules to check for build errors
-parent_pom.install(non_recursive=True)
-for dependency_pom in dependencies_pom:
-    dependency_pom.install()
-module_pom.install()
-
-# Deploy if no errors
-parent_pom.deploy(non_recursive=True)
-for dependency_pom in dependencies_pom:
-    dependency_pom.deploy()
-module_pom.deploy()
+Maven.deploy_all(list(hmftools_dependencies.copy()) + [module])
