@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.rna.GeneFusionFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.orange.util.InputFiles;
+import com.hartwig.hmftools.orange.util.Config;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,19 +87,15 @@ public interface OrangeRNAConfig {
         String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
         String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
-        String isofoxDir = InputFiles.directoryExists(getToolDirectory(configBuilder,
-                pipelineSampleRootDir,
-                sampleDataDir,
-                ISOFOX_DIR_CFG,
-                ISOFOX_DIR));
+        String isofoxDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, ISOFOX_DIR_CFG, ISOFOX_DIR);
 
         String tumorSampleId = configBuilder.getValue(OrangeConfig.TUMOR_SAMPLE_ID);
-        String geneDataFile = InputFiles.fileExists(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
-        String statisticsFile = InputFiles.fileExists(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
-        String altSpliceJuncFile = InputFiles.fileExists(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
-        String fusionsFile = InputFiles.fileExists(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
-        String geneDistributionFile = InputFiles.fileExists(configBuilder.getValue(ISOFOX_GENE_DISTRIBUTION_CSV));
-        String altSpliceJuncCohortFile = InputFiles.fileExists(configBuilder.getValue(ISOFOX_ALT_SJ_COHORT_CSV));
+        String geneDataFile = Config.fileExists(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
+        String statisticsFile = Config.fileExists(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
+        String altSpliceJuncFile = Config.fileExists(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
+        String fusionsFile = Config.fileExists(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
+        String geneDistributionFile = Config.fileExists(configBuilder.getValue(ISOFOX_GENE_DISTRIBUTION_CSV));
+        String altSpliceJuncCohortFile = Config.fileExists(configBuilder.getValue(ISOFOX_ALT_SJ_COHORT_CSV));
 
         return ImmutableOrangeRNAConfig.builder()
                 .rnaSampleId(rnaSampleId)
