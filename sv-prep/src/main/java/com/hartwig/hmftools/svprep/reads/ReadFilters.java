@@ -30,6 +30,7 @@ import static htsjdk.samtools.CigarOperator.M;
 import java.util.EnumSet;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class ReadFilters
@@ -50,7 +51,7 @@ public class ReadFilters
         final EnumSet<ReadFilterType> filters = EnumSet.noneOf(ReadFilterType.class);
 
         final Cigar cigar = record.getCigar();
-        int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+        int alignedBases = cigar.getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(CigarElement::getLength).sum();
 
         if(alignedBases < mConfig.MinAlignmentBases)
             filters.add(ReadFilterType.MIN_ALIGN_MATCH);

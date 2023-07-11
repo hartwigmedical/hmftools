@@ -37,7 +37,6 @@ import static com.hartwig.hmftools.svprep.reads.RemoteJunction.addRemoteJunction
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -86,8 +85,8 @@ public class JunctionTracker
         InitJunctions,
         JunctionSupport,
         DiscordantGroups,
-        JunctionFilter;
-    };
+        JunctionFilter,
+    }
 
     public JunctionTracker(
             final ChrBaseRegion region, final SvConfig svConfig, final HotspotCache hotspotCache, final BlacklistLocations blacklist)
@@ -113,7 +112,7 @@ public class JunctionTracker
         {
             // extract the blacklist regions just for this partition
             chrRegions.stream().filter(x -> positionsOverlap(mRegion.start(), mRegion.end(), x.start(), x.end()))
-                    .forEach(x -> mBlacklistRegions.add(x));
+                    .forEach(mBlacklistRegions::add);
         }
 
         mReadGroupMap = Maps.newHashMap();
@@ -296,7 +295,7 @@ public class JunctionTracker
         perfCounterStart(PerfCounters.JunctionSupport);
 
         // order by first read's start position to assist with efficient junction look-up using the last junction index
-        Collections.sort(candidateSupportGroups, new ReadGroup.ReadGroupComparator());
+        candidateSupportGroups.sort(new ReadGroup.ReadGroupComparator());
 
         Map<JunctionData,ReadType> supportedJunctions = Maps.newHashMap();
         for(ReadGroup readGroup : candidateSupportGroups)
@@ -374,7 +373,7 @@ public class JunctionTracker
         if(!discordantJunctions.isEmpty())
         {
             SV_LOGGER.debug("region({}) found {} discordant group junctions", mRegion, discordantJunctions.size());
-            discordantJunctions.forEach(x -> addJunction(x));
+            discordantJunctions.forEach(this::addJunction);
         }
 
         // no obvious need to re-check support at these junctions since all proximate facing read groups have already been tested
@@ -455,7 +454,7 @@ public class JunctionTracker
     private boolean groupInBlacklist(final ReadGroup readGroup)
     {
         // test whether every read is in a blacklist region
-        return readGroup.reads().stream().allMatch(x -> readInBlacklist(x));
+        return readGroup.reads().stream().allMatch(this::readInBlacklist);
     }
 
     private boolean readInBlacklist(final ReadRecord read)
@@ -1034,7 +1033,7 @@ public class JunctionTracker
         }
 
         // reset read group junction positions, to remove those for purged junctions
-        mReadGroupMap.values().forEach(x -> x.clearJunctionPositions());
+        mReadGroupMap.values().forEach(ReadGroup::clearJunctionPositions);
 
         for(JunctionData junctionData : mJunctions)
         {
@@ -1124,8 +1123,8 @@ public class JunctionTracker
         if(mBaseDepth == null)
             return;
 
-        int readsPosMin = readGroup.reads().stream().mapToInt(x -> x.start()).min().orElse(0);
-        int readsPosMax = readGroup.reads().stream().mapToInt(x -> x.end()).max().orElse(0);
+        int readsPosMin = readGroup.reads().stream().mapToInt(ReadRecord::start).min().orElse(0);
+        int readsPosMax = readGroup.reads().stream().mapToInt(ReadRecord::end).max().orElse(0);
         int baseStart = max(readsPosMin - mRegion.start(), 0);
         int baseEnd = min(readsPosMax - mRegion.start(), mBaseDepth.length - 1);
         for(int i = baseStart; i <= baseEnd; ++i)

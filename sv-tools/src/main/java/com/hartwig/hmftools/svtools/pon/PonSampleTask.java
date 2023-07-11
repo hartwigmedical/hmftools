@@ -17,7 +17,7 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class PonSampleTask implements Callable
+public class PonSampleTask implements Callable<Long>
 {
     private final int mTaskId;
     private final Map<String,String> mSampleVcfFiles;

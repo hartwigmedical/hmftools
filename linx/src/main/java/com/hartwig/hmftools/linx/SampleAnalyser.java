@@ -60,7 +60,7 @@ import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 
-public class SampleAnalyser implements Callable
+public class SampleAnalyser implements Callable<Long>
 {
     private final int mId;
     private final LinxConfig mConfig;

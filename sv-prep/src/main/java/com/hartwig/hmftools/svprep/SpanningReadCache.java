@@ -145,7 +145,7 @@ public class SpanningReadCache
                 if(cachedReadGroup != null)
                 {
                     mMatchedCandidates += cachedReadGroup.Reads.size();
-                    cachedReadGroup.Reads.forEach(x -> readGroup.addRead(x));
+                    cachedReadGroup.Reads.forEach(readGroup::addRead);
                     cachedReadGroup.Reads.clear();
 
                     cachedReadGroups.remove(readGroup.id());
@@ -275,7 +275,7 @@ public class SpanningReadCache
                 purgedGroupReadIds.add(cachedReadGroup.ReadId);
         }
 
-        purgedGroupReadIds.forEach(x -> cachedReadGroups.remove(x));
+        purgedGroupReadIds.forEach(cachedReadGroups::remove);
         mPurgedCandidates += purgedGroupReadIds.size();
     }
 
@@ -286,7 +286,7 @@ public class SpanningReadCache
             if(!forceLog)
                 return;
 
-            int junctionReadIds = mJunctionPartitionReadIds.values().stream().mapToInt(x -> x.size()).sum();
+            int junctionReadIds = mJunctionPartitionReadIds.values().stream().mapToInt(Set::size).sum();
 
             SV_LOGGER.info("spanning cache partition processed({}) junctionIds({})", mProcessedPartitions.size(), junctionReadIds);
             return;
@@ -298,7 +298,7 @@ public class SpanningReadCache
 
         if(abs(newCount - mLastSnapshotCount) > LOG_CACH_DIFF || forceLog)
         {
-            int junctionReadIds = mJunctionPartitionReadIds.values().stream().mapToInt(x -> x.size()).sum();
+            int junctionReadIds = mJunctionPartitionReadIds.values().stream().mapToInt(Set::size).sum();
 
             SV_LOGGER.info("spanning cache partition processed({}) candidates cached({} -> {} matched={} purged={}) junctionIds({})",
                     mProcessedPartitions.size(), mLastSnapshotCount, newCount, mMatchedCandidates, mPurgedCandidates, junctionReadIds);
@@ -325,7 +325,7 @@ public class SpanningReadCache
         mPerfCounter.logStats();
     }
 
-    private class CachedReadGroup
+    private static class CachedReadGroup
     {
         public final String ReadId;
         public final List<ReadRecord> Reads;
@@ -360,7 +360,7 @@ public class SpanningReadCache
 
         mCandidatePartitionGroups.values().stream()
                 .filter(x -> readId == null || x.containsKey(readId))
-                .forEach(x -> x.values().forEach(y -> cachedReadGroups.add(y)));
+                .forEach(x -> cachedReadGroups.addAll(x.values()));
 
         return cachedReadGroups.stream().mapToInt(x -> x.Reads.size()).sum();
     }

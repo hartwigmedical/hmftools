@@ -15,7 +15,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class AnnotateConsumer implements Callable
+public class AnnotateConsumer implements Callable<Long>
 {
     private final AnnotateConfig mConfig;
     private final ArrayBlockingQueue<BlacklistRegion> mJobs;

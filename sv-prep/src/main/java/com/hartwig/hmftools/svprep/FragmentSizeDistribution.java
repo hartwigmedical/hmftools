@@ -19,12 +19,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -63,8 +62,7 @@ public class FragmentSizeDistribution
             chrTasks.add(chrTask);
         }
 
-        final List<Callable> callableList = chrTasks.stream().collect(Collectors.toList());
-        boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        boolean validExecution = TaskExecutor.executeTasks(chrTasks, mConfig.Threads);
 
         if(!validExecution)
             return;
@@ -188,7 +186,7 @@ public class FragmentSizeDistribution
         }
     }
 
-    private class ChromosomeTask implements Callable
+    private class ChromosomeTask implements Callable<Long>
     {
         private final String mChromosome;
         private int mProcessedReads;
@@ -323,7 +321,7 @@ public class FragmentSizeDistribution
         }
     }
 
-    private class LengthFrequency
+    private static class LengthFrequency
     {
         public final int Length;
         public int Frequency;

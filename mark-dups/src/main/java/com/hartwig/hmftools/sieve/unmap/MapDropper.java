@@ -5,8 +5,6 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -45,8 +43,7 @@ public class MapDropper
         // TODO(m_cooper): Multi-thread.
         final List<MapDropperTask> dropTasks = Lists.newArrayList();
         dropTasks.add(new MapDropperTask(mConfig, writer));
-        final List<Callable> callableList = dropTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        TaskExecutor.executeTasks(dropTasks, mConfig.Threads);
 
         writer.close();
 

@@ -2,38 +2,34 @@ package com.hartwig.hmftools.cup;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_RNA_LENGTH;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.SAMPLE_RNA_LENGTH;
 import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 import static com.hartwig.hmftools.cup.common.CupConstants.DEFAULT_RNA_LENGTH;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.feature.FeatureClassifier;
 import com.hartwig.hmftools.cup.rna.AltSjClassifier;
 import com.hartwig.hmftools.cup.rna.GeneExpressionClassifier;
-import com.hartwig.hmftools.cup.traits.SampleTraitClassifier;
 import com.hartwig.hmftools.cup.somatics.SomaticClassifier;
 import com.hartwig.hmftools.cup.svs.SvClassifier;
+import com.hartwig.hmftools.cup.traits.SampleTraitClassifier;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -154,9 +150,7 @@ public class CupAnalyser
                     taskIndex = 0;
             }
 
-            List<Callable> callableTasks = sampleTasks.stream().collect(Collectors.toList());
-
-            if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
+            if(!TaskExecutor.executeTasks(sampleTasks, mConfig.Threads))
                 System.exit(1);
         }
 

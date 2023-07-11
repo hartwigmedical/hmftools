@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.sv.Direction;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 
 public class RemoteJunction
 {
@@ -46,7 +47,7 @@ public class RemoteJunction
         {
             int skippedBases = remoteCigar.getCigarElements().stream()
                     .filter(x -> x.getOperator() == N || x.getOperator() == M || x.getOperator() == D)
-                    .mapToInt(x -> x.getLength()).sum();
+                    .mapToInt(CigarElement::getLength).sum();
 
             int remoteJunctionPos = suppData.Position + skippedBases - 1;
             return new RemoteJunction(suppData.Chromosome, remoteJunctionPos, Direction.FORWARDS);

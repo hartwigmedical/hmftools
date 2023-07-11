@@ -16,17 +16,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.jetbrains.annotations.NotNull;
@@ -125,7 +123,7 @@ public class DepthAnnotator
 
         if(mChrVariantMap.isEmpty())
         {
-            SV_LOGGER.warn("all variants filtered from vcf({})", vcfCount, mConfig.InputVcf);
+            SV_LOGGER.warn("all variants filtered from vcf({})", mConfig.InputVcf);
             return;
         }
 
@@ -148,8 +146,7 @@ public class DepthAnnotator
             depthTasks.add(depthTask);
         }
 
-        final List<Callable> callableList = depthTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        TaskExecutor.executeTasks(depthTasks, mConfig.Threads);
 
         // write output VCF
         writeVcf(vcfHeader, depthTasks);
@@ -215,7 +212,7 @@ public class DepthAnnotator
             if(depthTask == null)
                 continue;
 
-            depthTask.variants().forEach(x -> writer.add(x));
+            depthTask.variants().forEach(writer::add);
         }
 
         writer.close();

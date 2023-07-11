@@ -27,7 +27,7 @@ public class CombinedStats
     {
         if(PerfCounters.isEmpty())
         {
-            perfCounters.forEach(x -> PerfCounters.add(x));
+            PerfCounters.addAll(perfCounters);
             return;
         }
 

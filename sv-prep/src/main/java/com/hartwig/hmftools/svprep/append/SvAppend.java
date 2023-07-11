@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.svprep.append.AppendConstants.BREAKEND_PROXIM
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -40,7 +38,7 @@ public class SvAppend
         if(!loadBreakends() || mChrBreakendMap.isEmpty())
             System.exit(1);
 
-        SV_LOGGER.info("SV Append for {} SV breakends", mChrBreakendMap.values().stream().mapToInt(x -> x.size()).sum());
+        SV_LOGGER.info("SV Append for {} SV breakends", mChrBreakendMap.values().stream().mapToInt(List::size).sum());
         long startTimeMs = System.currentTimeMillis();
 
         List<RegionTask> regionTasks = Lists.newArrayList();
@@ -70,12 +68,11 @@ public class SvAppend
 
         if(mConfig.Threads > 1)
         {
-            final List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            TaskExecutor.executeTasks(regionTasks, mConfig.Threads);
         }
         else
         {
-            regionTasks.forEach(x -> x.call());
+            regionTasks.forEach(RegionTask::call);
         }
 
         // write appended output VCF
@@ -103,13 +100,7 @@ public class SvAppend
 
             String chromosome = mConfig.RefGenVersion.versionedChromosome(variant.getContig());
 
-            List<BreakendData> breakends = mChrBreakendMap.get(chromosome);
-
-            if(breakends == null)
-            {
-                breakends = Lists.newArrayList();
-                mChrBreakendMap.put(chromosome, breakends);
-            }
+            List<BreakendData> breakends = mChrBreakendMap.computeIfAbsent(chromosome, k -> Lists.newArrayList());
 
             breakends.add(BreakendData.fromVariant(variant));
             ++breakendCount;

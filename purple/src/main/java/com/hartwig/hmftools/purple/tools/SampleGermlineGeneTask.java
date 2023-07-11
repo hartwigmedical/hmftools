@@ -26,7 +26,7 @@ import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.segment.SegmentFile;
 
-public class SampleGermlineGeneTask implements Callable
+public class SampleGermlineGeneTask implements Callable<Long>
 {
     private final int mTaskId;
     private final BufferedWriter mWriter;

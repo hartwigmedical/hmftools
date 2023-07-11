@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGT
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 
@@ -40,7 +41,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class DepthTask implements Callable
+public class DepthTask implements Callable<Long>
 {
     private final DepthConfig mConfig;
     private final Map<String,Integer> mSampleVcfGenotypeIds;
@@ -244,7 +245,7 @@ public class DepthTask implements Callable
             times.add((System.nanoTime() - startTime)/NANOS_IN_SECOND);
             readCounts.add(mTotalReadCount - readCount);
 
-            mReadGroups.values().forEach(x -> processReadGroup(x));
+            mReadGroups.values().forEach(this::processReadGroup);
         }
 
         mPerfCounter.stop();
@@ -349,7 +350,7 @@ public class DepthTask implements Callable
         boolean expectMate = false;
 
         if(read.getReadPairedFlag() && !read.getMateUnmappedFlag()
-        && read.getMateReferenceIndex() == read.getReferenceIndex() && read.getMateAlignmentStart() <= maxSlicePosition)
+        && Objects.equals(read.getMateReferenceIndex(), read.getReferenceIndex()) && read.getMateAlignmentStart() <= maxSlicePosition)
         {
             expectMate = true;
         }
@@ -377,7 +378,7 @@ public class DepthTask implements Callable
         // ignore reads which cannot span the current variant(s)
         if(read.getAlignmentEnd() < variantInfo.PositionMin)
         {
-            if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
+            if(read.getMateUnmappedFlag() || !Objects.equals(read.getMateReferenceIndex(), read.getReferenceIndex()))
                 return false;
 
             // both reads before the variants
@@ -386,7 +387,7 @@ public class DepthTask implements Callable
         }
         else if(read.getAlignmentStart() > variantInfo.PositionMax)
         {
-            if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
+            if(read.getMateUnmappedFlag() || !Objects.equals(read.getMateReferenceIndex(), read.getReferenceIndex()))
                 return false;
 
             return false;
@@ -431,8 +432,8 @@ public class DepthTask implements Callable
     private void processReadGroup(final ReadGroup readGroup)
     {
         // find the variants that this group overlaps
-        int groupMinPosition = readGroup.Reads.stream().mapToInt(x -> x.getAlignmentStart()).min().orElse(0);
-        int groupMaxPosition = readGroup.Reads.stream().mapToInt(x -> x.getAlignmentEnd()).max().orElse(0);
+        int groupMinPosition = readGroup.Reads.stream().mapToInt(SAMRecord::getAlignmentStart).min().orElse(0);
+        int groupMaxPosition = readGroup.Reads.stream().mapToInt(SAMRecord::getAlignmentEnd).max().orElse(0);
 
         for(VariantInfo variantInfo : mSliceRegionState.UncappedVariants)
         {
@@ -564,7 +565,7 @@ public class DepthTask implements Callable
     public void addSliceVariants(final List<VariantInfo> variants)
     {
         mSliceRegionState.reset();
-        variants.forEach(x -> mSliceRegionState.addVariant(x));
+        variants.forEach(mSliceRegionState::addVariant);
         mSliceRegionState.resetUncappedVariants();
     }
 

@@ -3,8 +3,6 @@ package com.hartwig.hmftools.linx;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -14,8 +12,6 @@ import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.hasDatabaseConfi
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -145,8 +141,7 @@ public class LinxApplication
                 sampleAnalysers.get(i).setSampleIds(saSampleLists.get(i));
             }
 
-            final List<Callable> callableList = sampleAnalysers.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, callableList.size());
+            TaskExecutor.executeTasks(sampleAnalysers, sampleAnalysers.size());
         }
         else
         {

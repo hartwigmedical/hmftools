@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 
 import htsjdk.variant.vcf.VCFHeader;
 
-public class SomaticVariantEnrichment implements Callable
+public class SomaticVariantEnrichment implements Callable<Long>
 {
     private final KataegisEnrichment mKataegisEnrichment;
     private final SomaticRefContextEnrichment mSomaticRefContextEnrichment;

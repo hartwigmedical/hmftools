@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.wisp.purity.WriteType.CN_PLOTS;
 
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.FittedPurity;
@@ -72,8 +71,7 @@ public class PurityEstimator
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            TaskExecutor.executeTasks(sampleTasks, mConfig.Threads);
         }
         else
         {
@@ -106,7 +104,7 @@ public class PurityEstimator
         CT_LOGGER.info("CtDNA purity estimator complete");
     }
 
-    private class PurityTask implements Callable
+    private class PurityTask implements Callable<Long>
     {
         public final List<SampleData> Samples;
 

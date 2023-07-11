@@ -17,7 +17,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class RegionBamSlicer implements Callable
+public class RegionBamSlicer implements Callable<Long>
 {
     private final SliceConfig mConfig;
     private final ChrBaseRegion mRegion;

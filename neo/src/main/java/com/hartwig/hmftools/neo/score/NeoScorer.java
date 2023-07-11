@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -60,9 +58,7 @@ public class NeoScorer
                 taskIndex = 0;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-
-        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
+        if(!TaskExecutor.executeTasks(sampleTasks, mConfig.Threads))
             System.exit(1);
 
         mWriters.close();

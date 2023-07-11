@@ -28,13 +28,11 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 
 import org.jetbrains.annotations.NotNull;
@@ -101,8 +99,7 @@ public class BlacklistExplorer
                 taskIndex = 0;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mThreads);
+        TaskExecutor.executeTasks(sampleTasks, mThreads);
 
         closeBufferedWriter(mWriter);
 
@@ -120,7 +117,7 @@ public class BlacklistExplorer
             if(!variantContext.getFilters().isEmpty())
             {
                 StringJoiner filters = new StringJoiner(";");
-                variantContext.getFilters().forEach(x -> filters.add(x));
+                variantContext.getFilters().forEach(filters::add);
                 filtersStr = filters.toString();
             }
             else
@@ -168,7 +165,7 @@ public class BlacklistExplorer
         }
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Long>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;

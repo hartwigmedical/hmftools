@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -90,8 +88,7 @@ public class Annotate
             annotateConsumers.add(annotateConsumer);
         }
 
-        final List<Callable> callableList = annotateConsumers.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        TaskExecutor.executeTasks(annotateConsumers, mConfig.Threads);
 
         try
         {

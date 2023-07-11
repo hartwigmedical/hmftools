@@ -38,13 +38,7 @@ public class BlacklistLocations
 
     public void addRegion(final String chromosome, final BaseRegion region)
     {
-        List<BaseRegion> regions = mChrLocationsMap.get(chromosome);
-
-        if(regions == null)
-        {
-            regions = Lists.newArrayList();
-            mChrLocationsMap.put(chromosome, regions);
-        }
+        List<BaseRegion> regions = mChrLocationsMap.computeIfAbsent(chromosome, k -> Lists.newArrayList());
 
         regions.add(region);
     }

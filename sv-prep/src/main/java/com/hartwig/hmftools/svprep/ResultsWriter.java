@@ -117,7 +117,7 @@ public class ResultsWriter
                         junctionPosStr);
             }
 
-            readGroup.reads().forEach(x -> x.setWritten());
+            readGroup.reads().forEach(ReadRecord::setWritten);
         }
     }
 
@@ -264,7 +264,7 @@ public class ResultsWriter
 
                     if(!junctionData.RemoteJunctions.isEmpty())
                     {
-                        Collections.sort(junctionData.RemoteJunctions, new RemoteJunction.RemoteJunctionSorter());
+                        junctionData.RemoteJunctions.sort(new RemoteJunction.RemoteJunctionSorter());
 
                         StringJoiner sj = new StringJoiner(ITEM_DELIM);
 

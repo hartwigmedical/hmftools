@@ -18,8 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -82,8 +80,7 @@ public class PonBuilder
                     taskIndex = 0;
             }
 
-            final List<Callable> callableList = ponTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, callableList.size());
+            TaskExecutor.executeTasks(ponTasks, ponTasks.size());
         }
         else
         {

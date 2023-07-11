@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
@@ -21,14 +21,12 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.neo.PeptideData;
 
 public class RandomPeptideDistribution
@@ -78,7 +76,7 @@ public class RandomPeptideDistribution
     public static double getScoreRank(
             final Map<String,Map<Integer,List<ScoreDistributionData>>> scoresMap, final String allele, final int peptideLength, double score)
     {
-        Map<Integer,List<ScoreDistributionData>> peptideLengthMap = scoresMap.get(allele);
+        Map<Integer, List<ScoreDistributionData>> peptideLengthMap = scoresMap.get(allele);
 
         if(peptideLengthMap == null)
             return INVALID_SCORE;
@@ -194,8 +192,7 @@ public class RandomPeptideDistribution
 
         if(mConfig.Threads > 1)
         {
-            final List<Callable> callableList = alleleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, callableList.size());
+            TaskExecutor.executeTasks(alleleTasks, alleleTasks.size());
         }
         else
         {
@@ -237,8 +234,7 @@ public class RandomPeptideDistribution
 
         if(mConfig.Threads > 1)
         {
-            final List<Callable> callableList = alleleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            TaskExecutor.executeTasks(alleleTasks, mConfig.Threads);
         }
         else
         {

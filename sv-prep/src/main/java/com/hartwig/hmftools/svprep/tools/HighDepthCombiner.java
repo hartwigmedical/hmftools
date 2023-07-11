@@ -362,7 +362,7 @@ public class HighDepthCombiner
         return highDepthRegions;
     }
 
-    private class CombinedRegion
+    private static class CombinedRegion
     {
         public List<PositionCount> Depth;
 
@@ -446,7 +446,7 @@ public class HighDepthCombiner
         public String toString() { return format("span(%d - %d) length(%d)", start(), end(), length()); }
     }
 
-    private class PositionCount
+    private static class PositionCount
     {
         public int Position;
         public int Count;
@@ -679,13 +679,7 @@ public class HighDepthCombiner
                     if(!mSpecificRegions.isEmpty() && mSpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chromosome)))
                         continue;
 
-                    List<HighDepthRegion> regions = chrRegions.get(chromosome);
-
-                    if(regions == null)
-                    {
-                        regions = Lists.newArrayList();
-                        chrRegions.put(chromosome, regions);
-                    }
+                    List<HighDepthRegion> regions = chrRegions.computeIfAbsent(chromosome, k -> Lists.newArrayList());
 
                     int posStart = Integer.parseInt(values[1]);
                     int posEnd = Integer.parseInt(values[2]);
@@ -703,13 +697,8 @@ public class HighDepthCombiner
 
                 for(Map.Entry<String,List<HighDepthRegion>> entry : chrRegions.entrySet())
                 {
-                    List<List<HighDepthRegion>> sampleRegions = mChrSampleHighDepthRegions.get(entry.getKey());
-
-                    if(sampleRegions == null)
-                    {
-                        sampleRegions = Lists.newArrayList();
-                        mChrSampleHighDepthRegions.put(entry.getKey(), sampleRegions);
-                    }
+                    List<List<HighDepthRegion>> sampleRegions =
+                            mChrSampleHighDepthRegions.computeIfAbsent(entry.getKey(), k -> Lists.newArrayList());
 
                     sampleRegions.add(entry.getValue());
                 }

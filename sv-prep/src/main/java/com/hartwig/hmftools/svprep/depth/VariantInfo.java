@@ -67,10 +67,10 @@ public class VariantInfo
 
         RefSupportCounts totalCounts = new RefSupportCounts(0);
 
-        for(int i = 0; i < SampleSupportCounts.length; ++i)
+        for(final RefSupportCounts support : SampleSupportCounts)
         {
-            totalCounts.RefSupport += SampleSupportCounts[i].RefSupport;
-            totalCounts.RefPairSupport += SampleSupportCounts[i].RefPairSupport;
+            totalCounts.RefSupport += support.RefSupport;
+            totalCounts.RefPairSupport += support.RefPairSupport;
         }
 
         return totalCounts;

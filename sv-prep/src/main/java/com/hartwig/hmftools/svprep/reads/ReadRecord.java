@@ -138,7 +138,7 @@ public class ReadRecord
     {
         return cigar.getCigarElements().stream()
                 .filter(x -> x.getOperator() == CigarOperator.D || x.getOperator() == CigarOperator.I)
-                .mapToInt(x -> x.getLength()).max().orElse(0);
+                .mapToInt(CigarElement::getLength).max().orElse(0);
     }
 
     public static String getSoftClippedBases(final SAMRecord record, final boolean isClippedLeft)

@@ -104,7 +104,7 @@ public class ExistingJunctionCache
         }
         catch(IOException exception)
         {
-            SV_LOGGER.error("failed to read existing junctions file({})", filename, exception.toString());
+            SV_LOGGER.error("failed to read existing junctions file({})", filename, exception);
             return false;
         }
 

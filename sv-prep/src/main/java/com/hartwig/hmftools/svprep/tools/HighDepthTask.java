@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.svprep.tools.HighDepthFinder.writeHighDepthRe
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -24,7 +25,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class HighDepthTask implements Callable
+public class HighDepthTask implements Callable<Long>
 {
     private final HighDepthConfig mConfig;
     private final String mChromosome;
@@ -68,7 +69,7 @@ public class HighDepthTask implements Callable
 
         if(!mConfig.SpecificRegions.isEmpty())
         {
-            mConfig.SpecificRegions.stream().filter(x -> x.Chromosome.equals(mChromosome)).forEach(x -> partitions.add(x));
+            mConfig.SpecificRegions.stream().filter(x -> x.Chromosome.equals(mChromosome)).forEach(partitions::add);
         }
         else
         {
@@ -107,10 +108,7 @@ public class HighDepthTask implements Callable
 
     private void processPartition(final ChrBaseRegion partition)
     {
-        for(int i = 0; i < mBaseDepth.length; ++i)
-        {
-            mBaseDepth[i] = 0;
-        }
+        Arrays.fill(mBaseDepth, 0);
 
         mCurrentPartition = partition;
 

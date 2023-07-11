@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -58,13 +57,7 @@ public class CandidateBamWriter
         {
             String chromosome = chrFromChrPartition(remotePartition);
 
-            Set<String> readIds = mChrJunctionReadIds.get(chromosome);
-
-            if(readIds == null)
-            {
-                readIds = Sets.newHashSet();
-                mChrJunctionReadIds.put(chromosome, readIds);
-            }
+            Set<String> readIds = mChrJunctionReadIds.computeIfAbsent(chromosome, k -> Sets.newHashSet());
 
             readIds.add(readId);
         }
@@ -101,7 +94,7 @@ public class CandidateBamWriter
         SV_LOGGER.info("assigning candidate mate read to junctions");
 
         // close before re-accessing
-        mCandidatesWriters.values().forEach(x -> x.close());
+        mCandidatesWriters.values().forEach(SAMFileWriter::close);
 
         List<CandidateReadMatchTask> chromosomeTasks = Lists.newArrayList();
 
@@ -126,8 +119,7 @@ public class CandidateBamWriter
             chromosomeTasks.add(chrTask);
         }
 
-        final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        TaskExecutor.executeTasks(chromosomeTasks, mConfig.Threads);
 
         SV_LOGGER.info("candidate reads assignment complete");
 
@@ -150,7 +142,7 @@ public class CandidateBamWriter
         }
     }
 
-    private class CandidateReadMatchTask implements Callable
+    private class CandidateReadMatchTask implements Callable<Long>
     {
         private final String mChromosome;
         private final SamReader mSamReader;

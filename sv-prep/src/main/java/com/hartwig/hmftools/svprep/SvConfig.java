@@ -273,7 +273,7 @@ public class SvConfig
         configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         configBuilder.addFlag(CALC_FRAG_LENGTH, "Calculate distribution for fragment length");
-        configBuilder.addConfigItem(WRITE_TYPES, "Write types: " + WriteType.values().toString());
+        configBuilder.addConfigItem(WRITE_TYPES, "Write types: " + Arrays.toString(WriteType.values()));
         configBuilder.addFlag(UNPAIRED_READS, "Unpaired reads ignores non-expect junction support");
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addConfigItem(LOG_READ_IDS, false, LOG_READ_IDS_DESC);

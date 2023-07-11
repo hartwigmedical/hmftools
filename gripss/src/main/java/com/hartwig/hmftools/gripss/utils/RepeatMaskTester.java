@@ -3,13 +3,13 @@ package com.hartwig.hmftools.gripss.utils;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.io.BufferedReader;
@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
@@ -75,8 +74,7 @@ public class RepeatMaskTester
             ++taskIndex;
         }
 
-        final List<Callable> callableList = compareTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mThreads);
+        TaskExecutor.executeTasks(compareTasks, mThreads);
 
         closeBufferedWriter(mWriter);
 
@@ -132,7 +130,7 @@ public class RepeatMaskTester
         return svDataList;
     }
 
-    private class CompareTask implements Callable
+    private class CompareTask implements Callable<Long>
     {
         private final int mTaskId;
         public final List<SvData> SvDataList;
