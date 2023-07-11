@@ -423,14 +423,19 @@ public interface OrangeConfig {
         return sampleDataDir;
     }
 
-    @Nullable
+    @NotNull
     static String getToolPlotsDirectory(final ConfigBuilder configBuilder, final String pipelineSampleRootDir, final String toolDirConfig,
             final String pipelineToolDir) {
         if (configBuilder.hasValue(toolDirConfig)) {
             return configBuilder.getValue(toolDirConfig);
         }
 
-        return pipelineSampleRootDir != null ? pipelineSampleRootDir + pipelineToolDir + "/plot/" : null;
+        String plotDir = pipelineSampleRootDir != null ? pipelineSampleRootDir + pipelineToolDir + "/plot/" : null;
+        if (plotDir == null) {
+            throw new IllegalArgumentException(
+                    "Plot directory cannot be determined from [%s]. Please define either the tool directory or the sample directory.");
+        }
+        return plotDir;
     }
 
     @NotNull
