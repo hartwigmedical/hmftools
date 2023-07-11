@@ -30,16 +30,23 @@ public class FileBasedPlotManager implements PlotManager {
     @Override
     public void createPlotDirectory() throws IOException {
         File plotDir = new File(plotDirectoryPath());
-
         if (plotDir.exists()) {
-            return;
-        }
+            File[] files = plotDir.listFiles();
+            if (files == null) {
+                throw new IllegalStateException(String.format(
+                        "Plot directory of [%s] is not a directory. Please check configured plot directory.",
+                        plotDirectoryPath()));
+            } else if (files.length > 0) {
+                LOGGER.warn("Plot directory already existed at path [{}], continuing, but output may be mixed with older files. "
+                        + "It is recommended to start Orange with a clean output directory", plotDirectoryPath());
+            }
+        } else {
+            if (!plotDir.mkdirs()) {
+                throw new IOException("Unable to create plot directory: " + plotDir);
+            }
 
-        if (!plotDir.mkdirs()) {
-            throw new IOException("Unable to create plot directory: " + plotDir);
+            LOGGER.debug("Created plot directory '{}'", plotDir.getPath());
         }
-
-        LOGGER.debug("Created plot directory '{}'", plotDir.getPath());
     }
 
     @Nullable
@@ -51,7 +58,7 @@ public class FileBasedPlotManager implements PlotManager {
 
         String targetPath = checkAddDirSeparator(plotDirectoryPath()) + extractFileName(sourcePlotPath);
 
-        if(!Files.exists(Paths.get(targetPath))) {
+        if (!Files.exists(Paths.get(targetPath))) {
             LOGGER.debug("Copying '{}' to '{}'", sourcePlotPath, targetPath);
             Files.copy(new File(sourcePlotPath).toPath(), new File(targetPath).toPath());
         }

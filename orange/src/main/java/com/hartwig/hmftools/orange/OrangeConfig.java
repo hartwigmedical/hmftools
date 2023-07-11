@@ -61,6 +61,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -74,8 +75,8 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+import com.hartwig.hmftools.orange.util.InputFiles;
 
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.immutables.value.Value;
@@ -117,8 +118,12 @@ public interface OrangeConfig {
     static void registerConfig(final ConfigBuilder configBuilder) {
 
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
-        configBuilder.addConfigItem(REFERENCE_SAMPLE_ID, false, "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
-        configBuilder.addConfigItem(PRIMARY_TUMOR_DOIDS, true, "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
+        configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
+                false,
+                "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
+        configBuilder.addConfigItem(PRIMARY_TUMOR_DOIDS,
+                true,
+                "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
         configBuilder.addConfigItem(EXPERIMENT_DATE, false, "Optional, if provided represents the experiment date in YYMMDD format.");
 
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
@@ -281,12 +286,13 @@ public interface OrangeConfig {
     boolean addDisclaimer();
 
     @NotNull
-    static OrangeConfig createConfig(final ConfigBuilder configBuilder) throws ParseException {
+    static OrangeConfig createConfig(final ConfigBuilder configBuilder) {
 
         setLogLevel(configBuilder);
 
-        if(LOGGER.isDebugEnabled())
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Switched root level logging to DEBUG");
+        }
 
         boolean addDisclaimer = configBuilder.hasFlag(ADD_DISCLAIMER);
         if (addDisclaimer) {
@@ -320,23 +326,47 @@ public interface OrangeConfig {
         String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
         String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
-        String sageSomaticDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
-        String sageGermlineDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
-        String sageGemlineGeneCoverage = refSampleId != null ? SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId) : null;
-        String sageRefSampleBqrPlot = refSampleId != null ? SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId) : null;
-        String sageTumorSampleBqrPlot = SageCommon.generateBqrPlotFilename(sageSomaticDir, tumorSampleId);
+        String sageSomaticDir = InputFiles.directoryExists(getToolDirectory(configBuilder,
+                pipelineSampleRootDir,
+                sampleDataDir,
+                SAGE_DIR_CFG,
+                SAGE_SOMATIC_DIR));
+        String sageGermlineDir = InputFiles.directoryExists(getToolDirectory(configBuilder,
+                pipelineSampleRootDir,
+                sampleDataDir,
+                SAGE_GERMLINE_DIR_CFG,
+                SAGE_GERMLINE_DIR));
+        String sageGermlineGeneCoverage =
+                refSampleId != null ? SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId) : null;
+        String sageSomaticRefSampleBqrPlot = refSampleId != null ? SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId) : null;
+        String sageSomaticTumorSampleBqrPlot = InputFiles.fileExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, tumorSampleId));
 
-        String purpleDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PURPLE_DIR_CFG, PURPLE_DIR);
-        String purplePlotsDir = getToolPlotsDirectory(configBuilder, pipelineSampleRootDir, PURPLE_PLOT_DIR_CFG, PURPLE_DIR);
-        String linxSomaticDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_DIR_CFG, LINX_SOMATIC_DIR);
-        String linxGermlineDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
-        String linxPlotsDir = getToolPlotsDirectory(configBuilder, pipelineSampleRootDir, LINX_PLOT_DIR_CFG, LINX_SOMATIC_DIR);
+        String purpleDir = InputFiles.directoryExists(getToolDirectory(configBuilder,
+                pipelineSampleRootDir,
+                sampleDataDir,
+                PURPLE_DIR_CFG,
+                PURPLE_DIR));
+        String purplePlotsDir =
+                InputFiles.directoryExists(getToolPlotsDirectory(configBuilder, pipelineSampleRootDir, PURPLE_PLOT_DIR_CFG, PURPLE_DIR));
+        String linxSomaticDir = InputFiles.directoryExists(getToolDirectory(configBuilder,
+                pipelineSampleRootDir,
+                sampleDataDir,
+                LINX_DIR_CFG,
+                LINX_SOMATIC_DIR));
+        String linxGermlineDir =
+                getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
+        String linxPlotsDir = InputFiles.directoryExists(getToolPlotsDirectory(configBuilder,
+                pipelineSampleRootDir,
+                LINX_PLOT_DIR_CFG,
+                LINX_SOMATIC_DIR));
 
-        String lilacDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LILAC_DIR_CFG, LILAC_DIR);
-        String lilacCoverage = LilacAllele.generateFilename(lilacDir, tumorSampleId);
-        String lilacQc = LilacQcData.generateFilename(lilacDir, tumorSampleId);
+        String lilacDir =
+                InputFiles.directoryExists(getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LILAC_DIR_CFG, LILAC_DIR));
+        String lilacCoverage = InputFiles.fileExists(LilacAllele.generateFilename(lilacDir, tumorSampleId));
+        String lilacQc = InputFiles.fileExists(LilacQcData.generateFilename(lilacDir, tumorSampleId));
 
-        String chordDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CHORD_DIR_CFG, CHORD_DIR);
+        String chordDir =
+                InputFiles.directoryExists(getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CHORD_DIR_CFG, CHORD_DIR));
         String chordPredictions = ChordDataFile.generateFilename(chordDir, tumorSampleId);
 
         String cuppaDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CUPPA_DIR_CFG, CUPPA_DIR);
@@ -356,6 +386,8 @@ public interface OrangeConfig {
 
         OrangeRefGenomeVersion orangeRefGenomeVersion = OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name());
 
+        String outputDir = Optional.ofNullable(parseOutputDir(configBuilder))
+                .orElseThrow(() -> new IllegalArgumentException("Output directory cannot be null"));
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(configBuilder.getValue(TUMOR_SAMPLE_ID))
                 .referenceSampleId(refSampleId)
@@ -363,21 +395,21 @@ public interface OrangeConfig {
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .experimentDate(experimentDate)
                 .refGenomeVersion(orangeRefGenomeVersion)
-                .outputDir(parseOutputDir(configBuilder))
-                .doidJsonFile(configBuilder.getValue(DOID_JSON))
-                .cohortMappingTsv(configBuilder.getValue(COHORT_MAPPING_TSV))
-                .cohortPercentilesTsv(configBuilder.getValue(COHORT_PERCENTILES_TSV))
-                .driverGenePanelTsv(configBuilder.getValue(DRIVER_GENE_PANEL_OPTION))
-                .knownFusionFile(configBuilder.getValue(KNOWN_FUSIONS_FILE))
-                .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
-                .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
+                .outputDir(outputDir)
+                .doidJsonFile(InputFiles.fileExists(configBuilder.getValue(DOID_JSON)))
+                .cohortMappingTsv(InputFiles.fileExists(configBuilder.getValue(COHORT_MAPPING_TSV)))
+                .cohortPercentilesTsv(InputFiles.fileExists(configBuilder.getValue(COHORT_PERCENTILES_TSV)))
+                .driverGenePanelTsv(InputFiles.fileExists(configBuilder.getValue(DRIVER_GENE_PANEL_OPTION)))
+                .knownFusionFile(InputFiles.fileExists(configBuilder.getValue(KNOWN_FUSIONS_FILE)))
+                .ensemblDataDirectory(InputFiles.fileExists(configBuilder.getValue(ENSEMBL_DATA_DIR)))
+                .pipelineVersionFile(InputFiles.fileExists(configBuilder.getValue(PIPELINE_VERSION_FILE)))
                 .refSampleWGSMetricsFile(configBuilder.getValue(REF_SAMPLE_WGS_METRICS_FILE))
                 .refSampleFlagstatFile(configBuilder.getValue(REF_SAMPLE_FLAGSTAT_FILE))
-                .tumorSampleWGSMetricsFile(configBuilder.getValue(TUMOR_SAMPLE_WGS_METRICS_FILE))
-                .tumorSampleFlagstatFile(configBuilder.getValue(TUMOR_SAMPLE_FLAGSTAT_FILE))
-                .sageGermlineGeneCoverageTsv(sageGemlineGeneCoverage)
-                .sageSomaticRefSampleBQRPlot(sageRefSampleBqrPlot)
-                .sageSomaticTumorSampleBQRPlot(sageTumorSampleBqrPlot)
+                .tumorSampleWGSMetricsFile(InputFiles.fileExists(configBuilder.getValue(TUMOR_SAMPLE_WGS_METRICS_FILE)))
+                .tumorSampleFlagstatFile(InputFiles.fileExists(configBuilder.getValue(TUMOR_SAMPLE_FLAGSTAT_FILE)))
+                .sageGermlineGeneCoverageTsv(sageGermlineGeneCoverage)
+                .sageSomaticRefSampleBQRPlot(sageSomaticRefSampleBqrPlot)
+                .sageSomaticTumorSampleBQRPlot(sageSomaticTumorSampleBqrPlot)
                 .purpleDataDirectory(purpleDir)
                 .purplePlotDirectory(purplePlotsDir)
                 .linxSomaticDataDirectory(linxSomaticDir)
@@ -399,27 +431,30 @@ public interface OrangeConfig {
                 .build();
     }
 
-    static String getToolDirectory(
-            final ConfigBuilder configBuilder, final String pipelineSampleRootDir, final String sampleDataDir,
-            final String toolDirConfig, final String pipelineToolDir)
-    {
-        if(configBuilder.hasValue(toolDirConfig))
+    @NotNull
+    static String getToolDirectory(final ConfigBuilder configBuilder, final String pipelineSampleRootDir, final String sampleDataDir,
+            final String toolDirConfig, final String pipelineToolDir) {
+        if (configBuilder.hasValue(toolDirConfig)) {
             return checkAddDirSeparator(configBuilder.getValue(toolDirConfig));
+        }
 
-        if(pipelineSampleRootDir != null)
+        if (pipelineSampleRootDir != null) {
             return pipelineSampleRootDir + pipelineToolDir + File.separator;
+        }
 
         return sampleDataDir;
     }
 
-    static String getToolPlotsDirectory(
-            final ConfigBuilder configBuilder, final String pipelineSampleRootDir, final String toolDirConfig, final String pipelineToolDir)
-    {
-        if(configBuilder.hasValue(toolDirConfig))
+    @NotNull
+    static String getToolPlotsDirectory(final ConfigBuilder configBuilder, final String pipelineSampleRootDir, final String toolDirConfig,
+            final String pipelineToolDir) {
+        if (configBuilder.hasValue(toolDirConfig)) {
             return configBuilder.getValue(toolDirConfig);
+        }
 
         return pipelineSampleRootDir != null ? pipelineSampleRootDir + pipelineToolDir + "/plot/" : null;
     }
+
     @NotNull
     static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator) {
         return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
