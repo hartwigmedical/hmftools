@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
 import static com.hartwig.hmftools.svprep.TestUtils.DEFAULT_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.TestUtils.DEFAULT_MAP_QUAL;
@@ -20,6 +18,7 @@ import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import com.hartwig.hmftools.common.sv.Direction;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.ReadFilterType;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
@@ -48,7 +47,7 @@ public class ReadSupportTest
         ReadRecord junctionRead = ReadRecord.from(createSamRecord(
                 readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
 
-        JunctionData junctionData = new JunctionData(230, NEG_ORIENT, junctionRead);
+        JunctionData junctionData = new JunctionData(230, Direction.REVERSE, junctionRead);
 
         // exact position match
         ReadRecord supportRead = ReadRecord.from(createSamRecord(
@@ -87,7 +86,7 @@ public class ReadSupportTest
         junctionRead = ReadRecord.from(createSamRecord(
                 "01", CHR_1, 200, REF_BASES.substring(0, 80), "50M30S"));
 
-        junctionData = new JunctionData(249, POS_ORIENT, junctionRead);
+        junctionData = new JunctionData(249, Direction.FORWARDS, junctionRead);
 
         // exact position match
         supportRead = ReadRecord.from(createSamRecord(
@@ -151,7 +150,7 @@ public class ReadSupportTest
         ReadRecord junctionRead = ReadRecord.from(createSamRecord(
                 readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
 
-        JunctionData junctionData = new JunctionData(230, NEG_ORIENT, junctionRead);
+        JunctionData junctionData = new JunctionData(230, Direction.REVERSE, junctionRead);
 
         // exact position match
         ReadRecord supportRead = ReadRecord.from(createSamRecord(
@@ -169,7 +168,7 @@ public class ReadSupportTest
         junctionRead = ReadRecord.from(createSamRecord(
                 "01", CHR_1, 200, REF_BASES.substring(0, 80), "50M30S"));
 
-        junctionData = new JunctionData(249, POS_ORIENT, junctionRead);
+        junctionData = new JunctionData(249, Direction.FORWARDS, junctionRead);
 
         // exact position match
         supportRead = ReadRecord.from(createSamRecord(
@@ -192,7 +191,7 @@ public class ReadSupportTest
         ReadRecord junctionRead = ReadRecord.from(TestUtils.createSamRecord(
                 readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
 
-        JunctionData junctionData = new JunctionData(230, NEG_ORIENT, junctionRead);
+        JunctionData junctionData = new JunctionData(230, Direction.REVERSE, junctionRead);
 
         // distant within range, correct orientation
         ReadRecord supportRead = createRead(readIdStr(readId++), 500, false, true);
@@ -214,7 +213,7 @@ public class ReadSupportTest
         junctionRead = ReadRecord.from(TestUtils.createSamRecord(
                 readIdStr(readId++), CHR_1, 1500, REF_BASES.substring(0, 100), "70M30S"));
 
-        junctionData = new JunctionData(1500, POS_ORIENT, junctionRead);
+        junctionData = new JunctionData(1500, Direction.FORWARDS, junctionRead);
 
         supportRead = createRead(readIdStr(readId++), 1000, true, false);
         assertTrue(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));

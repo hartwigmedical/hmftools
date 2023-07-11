@@ -146,21 +146,21 @@ public class StructuralVariantFactory
         return altBases.length > 0 && (altBases[0] == SINGLE_BREAKEND_BYTE || altBases[altBases.length - 1] == SINGLE_BREAKEND_BYTE);
     }
 
-    public static byte parseSingleOrientation(final VariantContext context)
+    public static Direction parseSingleOrientation(final VariantContext context)
     {
         final String alt = context.getAlternateAllele(0).getDisplayString();
-        return alt.startsWith(".") ? NEG_ORIENT : POS_ORIENT;
+        return alt.startsWith(".") ? Direction.REVERSE : Direction.FORWARDS;
     }
 
-    public static byte parseSvOrientation(final VariantContext context)
+    public static Direction parseSvOrientation(final VariantContext context)
     {
         final String alt = context.getAlternateAllele(0).getDisplayString();
         final Matcher match = BREAKEND_REGEX.matcher(alt);
 
         if(!match.matches())
-            return (byte)0;
+            return Direction.UNKNOWN;
 
-        return match.group(1).length() > 0 ? POS_ORIENT : NEG_ORIENT;
+        return match.group(1).length() > 0 ? Direction.FORWARDS : Direction.REVERSE;
     }
 
     public void addVariantContext(final VariantContext context)

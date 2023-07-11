@@ -13,6 +13,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.sv.Direction;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 
 public class ExistingJunctionCache
@@ -86,7 +87,7 @@ public class ExistingJunctionCache
 
                 String chromosome = values[chrIndex];
                 int position = Integer.parseInt(values[posIndex]);
-                byte orientation = Byte.parseByte(values[orientIndex]);
+                Direction orientation = Direction.parse(values[orientIndex]);
 
                 if(!currentChromosome.equals(chromosome))
                 {

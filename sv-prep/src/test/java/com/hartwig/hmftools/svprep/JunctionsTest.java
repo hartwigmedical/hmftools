@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.svprep;
 
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
 import static com.hartwig.hmftools.svprep.TestUtils.BLACKLIST_LOCATIONS;
 import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
@@ -24,6 +22,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.sv.Direction;
 import com.hartwig.hmftools.svprep.reads.DiscordantGroups;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.JunctionTracker;
@@ -122,26 +121,26 @@ public class JunctionsTest
 
         JunctionData junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 800).findFirst().orElse(null);
         assertNotNull(junctionData);
-        assertEquals(NEG_ORIENT, junctionData.Orientation);
+        assertEquals(Direction.REVERSE, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(1, junctionData.exactSupportFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 950).findFirst().orElse(null);
         assertNotNull(junctionData);
-        assertEquals(NEG_ORIENT, junctionData.Orientation);
+        assertEquals(Direction.REVERSE, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(1, junctionData.exactSupportFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 1049).findFirst().orElse(null);
         assertNotNull(junctionData);
-        assertEquals(POS_ORIENT, junctionData.Orientation);
+        assertEquals(Direction.FORWARDS, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(1, junctionData.exactSupportFragmentCount());
         assertEquals(4, junctionData.supportingFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 1059).findFirst().orElse(null);
         assertNotNull(junctionData);
-        assertEquals(POS_ORIENT, junctionData.Orientation);
+        assertEquals(Direction.FORWARDS, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(2, junctionData.exactSupportFragmentCount());
         assertEquals(5, junctionData.supportingFragmentCount());
@@ -189,25 +188,25 @@ public class JunctionsTest
 
         JunctionData junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 119).findFirst().orElse(null);
         assertNotNull(junctionData);
-        assertEquals(POS_ORIENT, junctionData.Orientation);
+        assertEquals(Direction.FORWARDS, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(1, junctionData.exactSupportFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 160).findFirst().orElse(null);
         assertNotNull(junctionData);
-        assertEquals(NEG_ORIENT, junctionData.Orientation);
+        assertEquals(Direction.REVERSE, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(1, junctionData.exactSupportFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 241).findFirst().orElse(null);
         assertNotNull(junctionData);
-        assertEquals(POS_ORIENT, junctionData.Orientation);
+        assertEquals(Direction.FORWARDS, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(0, junctionData.exactSupportFragmentCount());
 
         junctionData = mJunctionTracker.junctions().stream().filter(x -> x.Position == 277).findFirst().orElse(null);
         assertNotNull(junctionData);
-        assertEquals(NEG_ORIENT, junctionData.Orientation);
+        assertEquals(Direction.REVERSE, junctionData.Orientation);
         assertEquals(1, junctionData.junctionFragmentCount());
         assertEquals(0, junctionData.exactSupportFragmentCount());
     }
@@ -307,9 +306,9 @@ public class JunctionsTest
         assertEquals(2, junctions.size());
         assertTrue(junctions.get(0).JunctionGroups.isEmpty());
         assertEquals(540, junctions.get(0).Position);
-        assertEquals(POS_ORIENT, junctions.get(0).Orientation);
+        assertEquals(Direction.FORWARDS, junctions.get(0).Orientation);
         assertEquals(5050, junctions.get(1).Position);
-        assertEquals(NEG_ORIENT, junctions.get(1).Orientation);
+        assertEquals(Direction.REVERSE, junctions.get(1).Orientation);
 
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 540, CHR_1, 105000); // unrelated
         addDiscordantCandidate(discordantCandidates, readIdStr(++readId), CHR_1, 550, CHR_1, 5300);
@@ -320,7 +319,7 @@ public class JunctionsTest
         junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
         assertEquals(0, junctions.size());
 
-        discordantCandidates.forEach(x -> x.clearJunctionPositions());
+        discordantCandidates.forEach(ReadGroup::clearJunctionPositions);
         junctions = DiscordantGroups.formDiscordantJunctions(REGION_1, discordantCandidates, DEFAULT_MAX_FRAGMENT_LENGTH);
         assertEquals(2, junctions.size());
         assertEquals(5, junctions.get(0).SupportingGroups.size());

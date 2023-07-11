@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.JUNCTIONS;
 import static com.hartwig.hmftools.svprep.WriteType.READS;
@@ -31,6 +30,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.sv.Direction;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.ReadFilterType;
 import com.hartwig.hmftools.svprep.reads.ReadGroup;
@@ -205,7 +205,7 @@ public class ResultsWriter
                 int maxSoftClip = 0;
                 String softClipBases = "";
                 boolean hasPloyAT = false;
-                boolean expectLeftClipped = junctionData.Orientation == NEG_ORIENT;
+                boolean expectLeftClipped = junctionData.Orientation == Direction.REVERSE;
 
                 for(ReadRecord read : junctionData.ReadTypeReads.get(JUNCTION))
                 {
@@ -250,7 +250,7 @@ public class ResultsWriter
                 }
 
                 mJunctionWriter.write(format("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
-                        chromosome, junctionData.Position, junctionData.Orientation, junctionData.junctionFragmentCount(),
+                        chromosome, junctionData.Position, junctionData.Orientation.Step, junctionData.junctionFragmentCount(),
                         exactSupportFrags, discordantFrags, lowMapQualFrags, maxMapQual));
 
                 mJunctionWriter.write(format("\t%d\t%d\t%s\t%s\t%s\t%s\t%s",
@@ -272,7 +272,7 @@ public class ResultsWriter
                         {
                             RemoteJunction remoteJunction = junctionData.RemoteJunctions.get(i);
                             sj.add(format("%s:%d:%d:%d",
-                                    remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orientation, remoteJunction.Fragments));
+                                    remoteJunction.Chromosome, remoteJunction.Position, remoteJunction.Orientation.Step, remoteJunction.Fragments));
                             // junctionData.RemoteJunctions.forEach(x -> sj.add(format("%s:%d:%d", x.Chromosome, x.Position, x.Orientation)));
                         }
                         remoteJunctionsStr = sj.toString();

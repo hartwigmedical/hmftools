@@ -12,6 +12,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSvOri
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.sv.Direction;
+
 import htsjdk.variant.variantcontext.VariantContext;
 
 public class VariantInfo
@@ -19,7 +21,7 @@ public class VariantInfo
     public final int Position;
     public final int PositionMin;
     public final int PositionMax;
-    public final byte Orientation;
+    public final Direction Orientation;
 
     public final RefSupportCounts[] SampleSupportCounts;
 
@@ -74,7 +76,7 @@ public class VariantInfo
         return totalCounts;
     }
 
-    private static byte getOrientation(final VariantContext variant)
+    private static Direction getOrientation(final VariantContext variant)
     {
         return isSingleBreakend(variant) ? parseSingleOrientation(variant) : parseSvOrientation(variant);
     }

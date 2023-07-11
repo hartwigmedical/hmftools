@@ -20,6 +20,7 @@ import static htsjdk.samtools.CigarOperator.M;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.sv.Direction;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -85,8 +86,8 @@ public class ReadRecord
     public int start() { return Positions[SE_START]; }
     public int end() { return Positions[SE_END]; }
 
-    public byte orientation() { return !isReadReversed() ? POS_ORIENT : NEG_ORIENT; }
-    public byte mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? POS_ORIENT : NEG_ORIENT; }
+    public Direction orientation() { return !isReadReversed() ? Direction.FORWARDS : Direction.REVERSE; }
+    public Direction mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? Direction.FORWARDS : Direction.REVERSE; }
 
     public int flags() { return mRecord.getFlags(); }
     public Cigar cigar() { return mRecord.getCigar(); }

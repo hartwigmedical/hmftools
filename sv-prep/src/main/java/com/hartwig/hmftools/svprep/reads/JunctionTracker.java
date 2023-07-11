@@ -9,8 +9,6 @@ import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.LOW_BASE_QUALITY;
 import static com.hartwig.hmftools.svprep.SvConstants.MAX_HIGH_QUAL_BASE_MISMATCHES;
@@ -49,6 +47,7 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.ClippedSide;
+import com.hartwig.hmftools.common.sv.Direction;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -412,7 +411,7 @@ public class JunctionTracker
             if(scSide == null || ReadFilterType.isSet(read.filters(), SOFT_CLIP_LENGTH) || scSide.Length < MIN_LINE_SOFT_CLIP_LENGTH)
                 continue;
 
-            byte orientation = scSide.isLeft() ? NEG_ORIENT : POS_ORIENT;
+            Direction orientation = scSide.isLeft() ? Direction.REVERSE : Direction.FORWARDS;
             int position = scSide.isLeft() ? read.start() : read.end();
 
             // junctions cannot fall in blacklist regions
@@ -483,8 +482,8 @@ public class JunctionTracker
             return;
 
         // a bit inefficient to search twice, but there won't be too many of these long indel reads
-        JunctionData junctionStart = getOrCreateJunction(read, indelCoords[SE_START], POS_ORIENT);
-        JunctionData junctionEnd = getOrCreateJunction(read, indelCoords[SE_END], NEG_ORIENT);
+        JunctionData junctionStart = getOrCreateJunction(read, indelCoords[SE_START], Direction.FORWARDS);
+        JunctionData junctionEnd = getOrCreateJunction(read, indelCoords[SE_END], Direction.REVERSE);
 
         if(reachedFragmentCap(junctionStart.junctionFragmentCount()) || reachedFragmentCap(junctionEnd.junctionFragmentCount()))
             return;
@@ -531,9 +530,9 @@ public class JunctionTracker
                 if(indelPos != junctionData.Position)
                     continue;
 
-                if(se == SE_START && junctionData.Orientation != POS_ORIENT)
+                if(se == SE_START && junctionData.Orientation != Direction.FORWARDS)
                     continue;
-                else if(se == SE_END && junctionData.Orientation != NEG_ORIENT)
+                else if(se == SE_END && junctionData.Orientation != Direction.REVERSE)
                     continue;
 
                 // indel coords support a junction
@@ -552,13 +551,13 @@ public class JunctionTracker
         }
     }
 
-    private JunctionData getOrCreateJunction(final ReadRecord read, final byte orientation)
+    private JunctionData getOrCreateJunction(final ReadRecord read, final Direction orientation)
     {
-        int junctionPosition = orientation == NEG_ORIENT ? read.start() : read.end();
+        int junctionPosition = orientation == Direction.REVERSE ? read.start() : read.end();
         return getOrCreateJunction(read, junctionPosition, orientation);
     }
 
-    private JunctionData getOrCreateJunction(final ReadRecord read, final int junctionPosition, final byte orientation)
+    private JunctionData getOrCreateJunction(final ReadRecord read, final int junctionPosition, final Direction orientation)
     {
         // junctions are stored in ascending order to make finding them more efficient, especially for supporting reads
 
@@ -796,7 +795,7 @@ public class JunctionTracker
         // correct side of the junction
         int junctionDistance = 0;
 
-        if(junctionData.Orientation == POS_ORIENT)
+        if(junctionData.Orientation == Direction.FORWARDS)
         {
             if(read.end() > junctionData.Position)
                 return false;
@@ -814,10 +813,10 @@ public class JunctionTracker
         // any soft-clipping on the correct side if close to the junction
         if(junctionDistance <= filterConfig.MinSupportingReadDistance)
         {
-            if(junctionData.Orientation == POS_ORIENT && rightSoftClipped(read.record()))
+            if(junctionData.Orientation == Direction.FORWARDS && rightSoftClipped(read.record()))
                 return true;
 
-            if(junctionData.Orientation == NEG_ORIENT && leftSoftClipped(read.record()))
+            if(junctionData.Orientation == Direction.REVERSE && leftSoftClipped(read.record()))
                 return true;
         }
 
@@ -849,7 +848,7 @@ public class JunctionTracker
 
         int readLength = read.readBases().length();
 
-        if(junctionData.Orientation == POS_ORIENT)
+        if(junctionData.Orientation == Direction.FORWARDS)
         {
             if(!rightSoftClipped)
                 return false;
