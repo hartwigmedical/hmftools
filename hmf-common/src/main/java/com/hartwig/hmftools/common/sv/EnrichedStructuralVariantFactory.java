@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.sv;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_CONTEXT_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_JUNCTION_COPY_NUMBER;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_PLOIDY_INFO;
 

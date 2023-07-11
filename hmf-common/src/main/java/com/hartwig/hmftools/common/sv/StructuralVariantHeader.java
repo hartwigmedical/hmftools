@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.common.sv;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE_DESC;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_DESC;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_JUNCTION_COPY_NUMBER_DESC;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE_DESC;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_DESC;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_JUNCTION_COPY_NUMBER;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_JUNCTION_COPY_NUMBER_DESC;
 
 import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
 
