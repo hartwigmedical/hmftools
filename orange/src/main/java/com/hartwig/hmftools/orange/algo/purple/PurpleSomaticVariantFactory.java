@@ -12,6 +12,7 @@ import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,26 +20,32 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
+import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
 import org.apache.logging.log4j.util.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
+import htsjdk.variant.variantcontext.filter.VariantContextFilter;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class PurpleSomaticVariantFactory {
 
-    private final PassingVariantFilter passingVariantFilter = new PassingVariantFilter();
     private int mCreatedCount;
     private int mFilteredCount;
-
     private static final String RECOVERED_FLAG = "RECOVERED";
+
+    @NotNull
+    private final CompoundFilter mFilter;
 
     public int getCreatedCount() {
         return mCreatedCount;
@@ -48,8 +55,23 @@ public class PurpleSomaticVariantFactory {
         return mFilteredCount;
     }
 
+
+    public static PurpleSomaticVariantFactory passingOnlyInstance() {
+        return new PurpleSomaticVariantFactory(new PassingVariantFilter());
+    }
+
+    public PurpleSomaticVariantFactory(final VariantContextFilter... filters)
+    {
+        mFilter = new CompoundFilter(true);
+        mFilter.addAll(Arrays.asList(filters));
+        mFilter.add(new HumanChromosomeFilter());
+        mFilter.add(new NTFilter());
+        mCreatedCount = 0;
+        mFilteredCount = 0;
+    }
+
     public List<PurpleSomaticVariant> fromVCFFile(final String tumor, @Nullable final String reference, @Nullable final String rna,
-            final String vcfFile, boolean useCheckReference) throws IOException {
+            final String vcfFile) throws IOException {
         List<PurpleSomaticVariant> result = new ArrayList<>();
 
         try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
@@ -59,7 +81,7 @@ public class PurpleSomaticVariantFactory {
                 throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
             }
 
-            if (useCheckReference && reference != null && !sampleInFile(reference, header)) {
+            if (reference != null && !sampleInFile(reference, header)) {
                 throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
             }
 
@@ -72,7 +94,7 @@ public class PurpleSomaticVariantFactory {
             }
 
             for (VariantContext variant : reader.iterator()) {
-                if (passingVariantFilter.test(variant)) {
+                if (mFilter.test(variant)) {
                     try {
                         PurpleSomaticVariant purpleSomaticVariant = createVariant(tumor, reference, rna, variant);
                         result.add(purpleSomaticVariant);
@@ -92,7 +114,7 @@ public class PurpleSomaticVariantFactory {
     //TODO find out if exceptions are appropriate or if optional is preferred
     public PurpleSomaticVariant createVariant(final String sample, @Nullable final String reference, @Nullable final String rna,
             final VariantContext context) {
-        if (!passingVariantFilter.test(context)) {
+        if (!mFilter.test(context)) {
             throw new IllegalArgumentException(String.format("Variant could not be created because sample [%s] does not PASS", sample));
         }
 

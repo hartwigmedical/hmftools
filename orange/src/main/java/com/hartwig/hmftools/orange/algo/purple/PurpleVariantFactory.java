@@ -34,41 +34,41 @@ public class PurpleVariantFactory {
     }
 
     @Nullable
-    public List<PurpleVariant> create(@Nullable List<SomaticVariant> variants) {
+    public List<PurpleVariant> create(@Nullable List<PurpleSomaticVariant> variants) {
         if (variants == null) {
             return null;
         }
 
         List<PurpleVariant> purpleVariants = Lists.newArrayList();
-        for (SomaticVariant variant : variants) {
+        for (PurpleSomaticVariant variant : variants) {
             purpleVariants.add(toPurpleVariant(variant));
         }
         return purpleVariants;
     }
 
     @NotNull
-    private PurpleVariant toPurpleVariant(@NotNull SomaticVariant variant) {
+    private PurpleVariant toPurpleVariant(@NotNull PurpleSomaticVariant variant) {
         com.hartwig.hmftools.common.variant.AllelicDepth nullable = variant.rnaDepth();
         return ImmutablePurpleVariant.builder()
-                .type(PurpleVariantType.valueOf(variant.type().name()))
+                .type(PurpleVariantType.valueOf(variant.type().name())) // TODO
                 .gene(variant.gene())
                 .chromosome(variant.chromosome())
                 .position(variant.position())
                 .ref(variant.ref())
                 .alt(variant.alt())
-                .worstCodingEffect(PurpleConversion.convert(variant.worstCodingEffect()))
-                .canonicalImpact(extractCanonicalImpact(variant))
-                .otherImpacts(extractOtherImpacts(variant))
+                .worstCodingEffect(PurpleConversion.convert(variant.worstCodingEffect())) // TODO
+                .canonicalImpact(extractCanonicalImpact(variant)) // TODO
+                .otherImpacts(extractOtherImpacts(variant)) // TODO
                 .hotspot(Hotspot.valueOf(variant.hotspot().name()))
                 .reported(variant.reported())
-                .tumorDepth(extractTumorDepth(variant))
-                .rnaDepth(nullable == null ? null : PurpleConversion.convert(nullable))
+                .tumorDepth(extractTumorDepth(variant)) // TODO
+                .rnaDepth(nullable == null ? null : PurpleConversion.convert(nullable)) // TODO
                 .adjustedCopyNumber(variant.adjustedCopyNumber())
                 .adjustedVAF(variant.adjustedVAF())
                 .minorAlleleCopyNumber(variant.minorAlleleCopyNumber())
                 .variantCopyNumber(variant.variantCopyNumber())
                 .biallelic(variant.biallelic())
-                .genotypeStatus(PurpleGenotypeStatus.valueOf(variant.genotypeStatus().name()))
+                .genotypeStatus(PurpleGenotypeStatus.valueOf(variant.genotypeStatus().name())) // TODO
                 .repeatCount(variant.repeatCount())
                 .subclonalLikelihood(variant.subclonalLikelihood())
                 .localPhaseSets(variant.localPhaseSets())
@@ -76,7 +76,7 @@ public class PurpleVariantFactory {
     }
 
     @NotNull
-    private static PurpleAllelicDepth extractTumorDepth(@NotNull SomaticVariant variant) {
+    private static PurpleAllelicDepth extractTumorDepth(@NotNull PurpleSomaticVariant variant) {
         return ImmutablePurpleAllelicDepth.builder()
                 .alleleReadCount(variant.alleleReadCount())
                 .totalReadCount(variant.totalReadCount())
@@ -84,7 +84,7 @@ public class PurpleVariantFactory {
     }
 
     @NotNull
-    private PurpleTranscriptImpact extractCanonicalImpact(@NotNull SomaticVariant variant) {
+    private PurpleTranscriptImpact extractCanonicalImpact(@NotNull PurpleSomaticVariant variant) {
         // TODO Move effect parsing into SomaticVariant
 
         PaveEntry paveEntry = paveAlgo.run(variant.gene(), variant.canonicalTranscript(), variant.position());
@@ -103,7 +103,7 @@ public class PurpleVariantFactory {
     }
 
     @NotNull
-    private List<PurpleTranscriptImpact> extractOtherImpacts(@NotNull SomaticVariant variant) {
+    private List<PurpleTranscriptImpact> extractOtherImpacts(@NotNull PurpleSomaticVariant variant) {
         List<PurpleTranscriptImpact> otherImpacts = Lists.newArrayList();
         // TODO Move other reported effects parsing into SomaticVariant
         // TODO Move effect parsing into SomaticVariant

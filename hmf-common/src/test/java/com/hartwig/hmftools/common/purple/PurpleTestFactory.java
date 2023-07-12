@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.purple;
 
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class PurpleTestFactory {

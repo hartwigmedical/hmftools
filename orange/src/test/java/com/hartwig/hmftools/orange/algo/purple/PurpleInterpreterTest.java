@@ -12,7 +12,6 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
-import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
