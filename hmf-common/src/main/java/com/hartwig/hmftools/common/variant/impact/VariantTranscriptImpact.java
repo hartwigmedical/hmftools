@@ -64,7 +64,9 @@ public class VariantTranscriptImpact
         if(!variant.hasAttribute(VAR_TRANS_IMPACT_ANNOTATION))
             return Collections.EMPTY_LIST;
 
-        String[] impactsStr = variant.getAttributeAsString(VAR_TRANS_IMPACT_ANNOTATION, "").split(VAR_TRANS_IMPACT_DELIM, -1);
+
+        String impactsRawString = variant.getAttributeAsString(VAR_TRANS_IMPACT_ANNOTATION, "[]");
+        String[] impactsStr = impactsRawString.substring(1, impactsRawString.length() - 1).split(VAR_TRANS_IMPACT_DELIM, -1);
 
         List<VariantTranscriptImpact> transImpacts = Lists.newArrayList();
 
