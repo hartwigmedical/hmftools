@@ -180,6 +180,7 @@ public class PurpleVariantFactory {
                 .repeatCount(contextDecorator.repeatCount())
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .localPhaseSets(context.getAttributeAsIntList(LOCAL_PHASE_SET, 0))
+                .variantTranscriptImpacts(variantTranscriptImpacts)
                 .build();
     }
 

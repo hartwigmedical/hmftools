@@ -1,162 +1,54 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantTier;
-import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
-
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurpleVariantFactoryTest {
 
-    private static final double EPSILON = 1.0E-10;
 
-    @Test
-    public void canHandleNullVariants() {
-        PurpleVariantFactory factory = createTestFactory();
-        assertNull(factory.create(null));
-    }
-
-    @Test
-    public void canCreateSimplePurpleVariant() {
-        SomaticVariant somaticVariant = SomaticVariantTestFactory.builder()
-                .totalReadCount(20)
-                .alleleReadCount(10)
-                .chromosome("1")
-                .position(15)
-                .type(VariantType.INDEL)
-                .gene("gene")
-                .ref("C")
-                .alt("CA")
-                .canonicalTranscript("canonical transcript")
-                .canonicalEffect("missense_variant")
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
-                .canonicalHgvsCodingImpact("canonical hgvs coding")
-                .canonicalHgvsProteinImpact("canonical hgvs protein")
-                .qual(1.5)
-                .filter("PASS")
-                .genesAffected(2)
-                .spliceRegion(false)
-                .otherReportedEffects(Strings.EMPTY)
-                .worstCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
-                .hotspot(com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT)
-                .recovered(true)
-                .mappability(0.5)
-                .adjustedCopyNumber(0.6)
-                .adjustedVAF(0.7)
-                .minorAlleleCopyNumber(0.2)
-                .variantCopyNumber(2.5)
-                .biallelic(false)
-                .reported(true)
-                .genotypeStatus(GenotypeStatus.HOM_REF)
-                .germlineStatus(GermlineStatus.NOISE)
-                .trinucleotideContext("TTT")
-                .microhomology("GC")
-                .repeatSequence("AT")
-                .repeatCount(3)
-                .kataegis("kataegis")
-                .tier(VariantTier.HOTSPOT)
-                .subclonalLikelihood(0.35)
-                .rnaDepth(createDepth(18, 14))
-                .referenceDepth(createDepth(28, 24))
-                .localPhaseSets(Lists.newArrayList(1, 2))
-                .build();
-
-        PurpleVariantFactory factory = createTestFactory();
-        List<PurpleVariant> converted = factory.create(Lists.newArrayList(somaticVariant));
-        assertEquals(1, converted.size());
-
-        PurpleVariant variant = converted.get(0);
-        assertEquals(PurpleVariantType.INDEL, variant.type());
-        assertEquals("gene", variant.gene());
-        assertEquals("1", variant.chromosome());
-        assertEquals(15, variant.position());
-        assertEquals("C", variant.ref());
-        assertEquals("CA", variant.alt());
-        assertEquals(PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, variant.worstCodingEffect());
-        assertEquals("canonical transcript", variant.canonicalImpact().transcript());
-        assertEquals("canonical hgvs coding", variant.canonicalImpact().hgvsCodingImpact());
-        assertEquals("canonical hgvs protein", variant.canonicalImpact().hgvsProteinImpact());
-        assertNull(variant.canonicalImpact().affectedCodon());
-        assertNull(variant.canonicalImpact().affectedExon());
-        assertFalse(variant.canonicalImpact().spliceRegion());
-        assertEquals(1, variant.canonicalImpact().effects().size());
-        assertTrue(variant.canonicalImpact().effects().contains(PurpleVariantEffect.MISSENSE));
-        assertEquals(PurpleCodingEffect.MISSENSE, variant.canonicalImpact().codingEffect());
-        assertTrue(variant.otherImpacts().isEmpty());
-        assertEquals(Hotspot.NEAR_HOTSPOT, variant.hotspot());
-        assertTrue(variant.reported());
-        assertEquals(20, variant.tumorDepth().totalReadCount());
-        assertEquals(10, variant.tumorDepth().alleleReadCount());
-        assertEquals(18, variant.rnaDepth().totalReadCount());
-        assertEquals(14, variant.rnaDepth().alleleReadCount());
-        assertEquals(0.6, variant.adjustedCopyNumber(), EPSILON);
-        assertEquals(0.7, variant.adjustedVAF(), EPSILON);
-        assertEquals(0.2, variant.minorAlleleCopyNumber(), EPSILON);
-        assertEquals(2.5, variant.variantCopyNumber(), EPSILON);
-        assertFalse(variant.biallelic());
-        assertEquals(PurpleGenotypeStatus.HOM_REF, variant.genotypeStatus());
-        assertEquals(3, variant.repeatCount());
-        assertEquals(0.35, variant.subclonalLikelihood(), EPSILON);
-        assertEquals(2, variant.localPhaseSets().size());
-        assertTrue(variant.localPhaseSets().contains(1));
-        assertTrue(variant.localPhaseSets().contains(2));
-    }
-
-    @Test
-    public void canPopulateOtherTranscriptImpacts() {
-        AltTranscriptReportableInfo info =
-                new AltTranscriptReportableInfo("transcript", "hgvs coding", "hgvs protein", "missense_variant", CodingEffect.MISSENSE);
-        SomaticVariant somaticVariant = SomaticVariantTestFactory.builder().otherReportedEffects(info.serialise()).build();
-
-        PurpleVariantFactory factory = createTestFactory();
-        PurpleVariant variant = factory.create(Lists.newArrayList(somaticVariant)).get(0);
-
-        assertEquals(1, variant.otherImpacts().size());
-        PurpleTranscriptImpact impact = variant.otherImpacts().get(0);
-        assertEquals("transcript", impact.transcript());
-        assertEquals("hgvs coding", impact.hgvsCodingImpact());
-        assertEquals("hgvs protein", impact.hgvsProteinImpact());
-        assertNull(impact.affectedCodon());
-        assertNull(impact.affectedExon());
-        assertFalse(impact.spliceRegion());
-        assertEquals(1, impact.effects().size());
-        assertTrue(impact.effects().contains(PurpleVariantEffect.MISSENSE));
-        assertEquals(PurpleCodingEffect.MISSENSE, impact.codingEffect());
-    }
-
-    @NotNull
-    private static AllelicDepth createDepth(int totalReadCount, int alleleReadCount) {
-        return ImmutableAllelicDepthImpl.builder().totalReadCount(totalReadCount).alleleReadCount(alleleReadCount).build();
-    }
+    private static final String SOMATIC_VARIANT_FILE = Resources.getResource("purple/variants.vcf").getPath();
 
     @NotNull
     private static PurpleVariantFactory createTestFactory() {
         return new PurpleVariantFactory(new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache()));
+    }
+
+
+    @Test
+    public void testCanReadVcfFile() throws IOException {
+        var testFactory = createTestFactory();
+        List<PurpleVariant> variants = testFactory.fromVCFFile("COLO829v003T", "COLO829v003R", null, SOMATIC_VARIANT_FILE);
+
+        assertEquals(1, variants.size());
+
+        var variant = variants.get(0);
+
+        assertEquals(String.valueOf(4), variant.chromosome());
+        assertEquals(57181855, variant.position());
+        assertEquals("C", variant.ref());
+        assertEquals("T", variant.alt());
+
+        var canonicalImpact = variant.canonicalImpact();
+
+        assertNotNull(canonicalImpact);
+        assertEquals("ENST00000504228", canonicalImpact.transcript());
+        assertEquals("c.2187C>T", canonicalImpact.hgvsCodingImpact());
+        assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
+        assertEquals(PurpleCodingEffect.SYNONYMOUS, canonicalImpact.codingEffect());
+
+        //TODO more meaningful tests?
     }
 }
