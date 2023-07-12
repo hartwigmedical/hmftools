@@ -60,8 +60,6 @@ public class PurpleInterpreter {
     private static final int MAX_LENGTH_FOR_IMPLIED_DELS = 1500;
 
     @NotNull
-    private final PurpleVariantFactory purpleVariantFactory;
-    @NotNull
     private final GermlineGainLossFactory germlineGainLossFactory;
     @NotNull
     private final List<DriverGene> driverGenes;
@@ -70,10 +68,9 @@ public class PurpleInterpreter {
     @Nullable
     private final ChordData chord;
 
-    public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
+    public PurpleInterpreter(
             @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
             @NotNull final LinxRecord linx, @Nullable final ChordData chord) {
-        this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
         this.driverGenes = driverGenes;
         this.linx = linx;
@@ -83,14 +80,14 @@ public class PurpleInterpreter {
     @NotNull
     public PurpleRecord interpret(@NotNull PurpleData purple) {
         LOGGER.info("Analysing purple data");
-        List<PurpleVariant> allSomaticVariants = purpleVariantFactory.create(purple.allSomaticVariants());
-        List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.create(purple.reportableSomaticVariants());
+        List<PurpleVariant> allSomaticVariants = purple.allSomaticVariants();
+        List<PurpleVariant> reportableSomaticVariants = purple.reportableSomaticVariants();
         List<PurpleVariant> additionalSuspectSomaticVariants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(allSomaticVariants, reportableSomaticVariants, driverGenes);
         LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
 
-        List<PurpleVariant> allGermlineVariants = purpleVariantFactory.create(purple.allGermlineVariants());
-        List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.create(purple.reportableGermlineVariants());
+        List<PurpleVariant> allGermlineVariants = purple.allGermlineVariants();
+        List<PurpleVariant> reportableGermlineVariants = purple.reportableGermlineVariants();
         List<PurpleVariant> additionalSuspectGermlineVariants =
                 GermlineVariantSelector.selectInterestingUnreportedVariants(allGermlineVariants);
         if (additionalSuspectGermlineVariants != null) {

@@ -67,13 +67,11 @@ import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
-import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.GermlineGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
@@ -172,7 +170,7 @@ public class OrangeAlgo {
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
-        PurpleData purpleData = loadPurpleData(config);
+        PurpleData purpleData = loadPurpleData(config, ensemblDataCache);
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
         ChordData chord = loadChordAnalysis(config);
@@ -189,10 +187,12 @@ public class OrangeAlgo {
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
-        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
+        // PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
+
+
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
         PurpleInterpreter purpleInterpreter =
-                new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
+                new PurpleInterpreter(germlineGainLossFactory, driverGenes, linx, chord);
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
         IsofoxRecord isofox = null;
@@ -354,14 +354,15 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException {
+    private static PurpleData loadPurpleData(@NotNull OrangeConfig config, @NotNull EnsemblDataCache ensemblDataCache) throws IOException {
         LOGGER.info("Loading PURPLE data from {}", config.purpleDataDirectory());
 
         String referenceSample = config.referenceSampleId();
         PurpleData purple = PurpleDataLoader.load(config.tumorSampleId(),
                 referenceSample,
                 config.rnaConfig() != null ? config.rnaConfig().rnaSampleId() : null,
-                config.purpleDataDirectory());
+                config.purpleDataDirectory(),
+                ensemblDataCache);
 
         DecimalFormat purityFormat = new DecimalFormat("#'%'");
         PurityContext purityContext = purple.purityContext();

@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -28,16 +29,16 @@ public interface PurpleData
     List<DriverCatalog> germlineDrivers();
 
     @NotNull
-    List<PurpleSomaticVariant> allSomaticVariants();
+    List<PurpleVariant> allSomaticVariants();
 
     @NotNull
-    List<PurpleSomaticVariant> reportableSomaticVariants();
+    List<PurpleVariant> reportableSomaticVariants();
 
     @Nullable
-    List<PurpleSomaticVariant> allGermlineVariants();
+    List<PurpleVariant> allGermlineVariants();
 
     @Nullable
-    List<PurpleSomaticVariant> reportableGermlineVariants();
+    List<PurpleVariant> reportableGermlineVariants();
 
     @NotNull
     List<StructuralVariant> allSomaticStructuralVariants();

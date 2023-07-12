@@ -2,6 +2,8 @@ package com.hartwig.hmftools.datamodel.purple;
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -51,4 +53,7 @@ public interface PurpleVariant extends Variant {
 
     @Nullable
     List<Integer> localPhaseSets();
+
+    List<VariantTranscriptImpact> variantTranscriptImpacts();
+
 }
