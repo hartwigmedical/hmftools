@@ -132,7 +132,6 @@ public final class PurpleConversion {
         return PurpleVariantEffect.valueOf(effect.name());
     }
 
-
     @NotNull
     public static PurpleVariantTranscriptImpact convert(VariantTranscriptImpact impact) {
         var effectsList = VariantEffect.effectsToList(impact.Effects);

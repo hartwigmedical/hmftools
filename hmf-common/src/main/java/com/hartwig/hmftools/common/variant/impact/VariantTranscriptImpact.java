@@ -13,8 +13,7 @@ import htsjdk.variant.vcf.VCFHeaderLineCount;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class VariantTranscriptImpact
-{
+public class VariantTranscriptImpact {
     public final String GeneId;
     public final String GeneName;
     public final String Transcript;
@@ -24,8 +23,7 @@ public class VariantTranscriptImpact
     public final String HgvsProtein;
 
     public VariantTranscriptImpact(final String geneId, final String geneName, final String transcript, final String effects,
-            final boolean spliceRegion, final String hgvsCoding, final String hgvsProtein)
-    {
+            final boolean spliceRegion, final String hgvsCoding, final String hgvsProtein) {
         GeneId = geneId;
         GeneName = geneName;
         Transcript = transcript;
@@ -42,45 +40,41 @@ public class VariantTranscriptImpact
     public static final String VAR_TRANS_IMPACT_DELIM = ",";
     public static final String VAR_TRANS_IMPACT_ITEM_DELIM = "|";
 
-    public static void writeHeader(final VCFHeader header)
-    {
+    public static void writeHeader(final VCFHeader header) {
         StringJoiner fields = new StringJoiner("|");
         List<String> fieldItems = Lists.newArrayList("Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p");
         fieldItems.forEach(x -> fields.add(x));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(
-                VAR_TRANS_IMPACT_ANNOTATION, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String,
+        header.addMetaDataLine(new VCFInfoHeaderLine(VAR_TRANS_IMPACT_ANNOTATION,
+                VCFHeaderLineCount.UNBOUNDED,
+                VCFHeaderLineType.String,
                 String.format("Transcript impact [%s]", fields.toString())));
     }
 
-    public static void writeVcfData(final VariantContext context, final List<VariantTranscriptImpact> transImpacts)
-    {
+    public static void writeVcfData(final VariantContext context, final List<VariantTranscriptImpact> transImpacts) {
         StringJoiner sj = new StringJoiner(VAR_TRANS_IMPACT_DELIM);
         transImpacts.forEach(x -> sj.add(x.toVcfData()));
         context.getCommonInfo().putAttribute(VAR_TRANS_IMPACT_ANNOTATION, sj.toString(), true);
     }
 
-    public static List<VariantTranscriptImpact> fromVariantContext(final VariantContext variant)
-    {
-        if(!variant.hasAttribute(VAR_TRANS_IMPACT_ANNOTATION))
+    public static List<VariantTranscriptImpact> fromVariantContext(final VariantContext variant) {
+        if (!variant.hasAttribute(VAR_TRANS_IMPACT_ANNOTATION)) {
             return Collections.EMPTY_LIST;
-
+        }
 
         String impactsRawString = variant.getAttributeAsString(VAR_TRANS_IMPACT_ANNOTATION, "[]");
         String[] impactsStr = impactsRawString.substring(1, impactsRawString.length() - 1).split(VAR_TRANS_IMPACT_DELIM, -1);
 
         List<VariantTranscriptImpact> transImpacts = Lists.newArrayList();
 
-        for(String impactStr : impactsStr)
-        {
+        for (String impactStr : impactsStr) {
             transImpacts.add(fromVcfData(impactStr));
         }
 
         return transImpacts;
     }
 
-    public static VariantTranscriptImpact fromVcfData(final String data)
-    {
+    public static VariantTranscriptImpact fromVcfData(final String data) {
         String[] items = data.split("\\" + VAR_TRANS_IMPACT_ITEM_DELIM, -1);
 
         // dirty fix: append items if it is less than 7 to prevent out of bound exceptions
@@ -88,12 +82,10 @@ public class VariantTranscriptImpact
             items = Arrays.copyOf(items, items.length + 7 - items.length);
         }
 
-        return new VariantTranscriptImpact(
-                items[0], items[1], items[2], items[3], Boolean.parseBoolean(items[4]), items[5], items[6]);
+        return new VariantTranscriptImpact(items[0], items[1], items[2], items[3], Boolean.parseBoolean(items[4]), items[5], items[6]);
     }
 
-    private String toVcfData()
-    {
+    private String toVcfData() {
         StringJoiner sj = new StringJoiner(VAR_TRANS_IMPACT_ITEM_DELIM);
         sj.add(GeneId);
         sj.add(GeneName);
@@ -105,5 +97,7 @@ public class VariantTranscriptImpact
         return sj.toString();
     }
 
-    public String toString() { return toVcfData(); }
+    public String toString() {
+        return toVcfData();
+    }
 }
