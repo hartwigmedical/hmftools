@@ -99,8 +99,5 @@ public class VariantTranscriptImpact
         return sj.toString();
     }
 
-    public String toString()
-    {
-        return toVcfData();
-    }
+    public String toString() { return toVcfData(); }
 }
