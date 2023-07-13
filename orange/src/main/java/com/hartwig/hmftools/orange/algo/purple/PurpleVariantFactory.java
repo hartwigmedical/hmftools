@@ -93,10 +93,10 @@ public class PurpleVariantFactory {
                 throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
             }
 
-            for (VariantContext variant : reader.iterator()) {
-                if (mFilter.test(variant)) {
+            for (VariantContext variantContext : reader.iterator()) {
+                if (mFilter.test(variantContext)) {
                     try {
-                        PurpleVariant purpleSomaticVariant = createVariant(tumor, reference, rna, variant);
+                        PurpleVariant purpleSomaticVariant = createVariant(variantContext, tumor, reference, rna);
                         result.add(purpleSomaticVariant);
                     } catch (IllegalArgumentException e) {
                         // ignore, consider the sample filtered
@@ -104,23 +104,21 @@ public class PurpleVariantFactory {
                 }
             }
         }
-
         return result;
     }
 
-    public PurpleVariant createVariant(final String sample, @Nullable final String reference, @Nullable final String rna,
-            final VariantContext context) {
-        if (!mFilter.test(context)) {
+    public PurpleVariant createVariant(VariantContext variantContext, String sample, @Nullable String reference, @Nullable String rna) {
+        if (!mFilter.test(variantContext)) {
             throw new IllegalArgumentException(String.format("Variant could not be created because sample [%s] does not have status PASS", sample));
         }
 
-        if (!AllelicDepth.containsAllelicDepth(context.getGenotype(sample))) {
+        if (!AllelicDepth.containsAllelicDepth(variantContext.getGenotype(sample))) {
             throw new IllegalArgumentException(String.format(
                     "Variant could not be created because sample [%s] does not contain allelic depth",
                     sample));
         }
 
-        final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(context.getGenotype(sample));
+        final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(variantContext.getGenotype(sample));
         int readCount = tumorDepth.totalReadCount();
 
         if (readCount <= 0) {
@@ -129,17 +127,17 @@ public class PurpleVariantFactory {
                     readCount));
         }
 
-        return helperCreateVariant(context, tumorDepth, reference, rna);
+        return helperCreateVariant(variantContext, tumorDepth, reference, rna);
     }
 
-    private PurpleVariant helperCreateVariant(VariantContext context, AllelicDepth tumorDepth, @Nullable String reference,
+    private PurpleVariant helperCreateVariant(VariantContext variantContext, AllelicDepth tumorDepth, @Nullable String reference,
             @Nullable String rna) {
-        VariantContextDecorator contextDecorator = new VariantContextDecorator(context);
+        VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);
         final VariantImpact variantImpact = contextDecorator.variantImpact();
-        final List<VariantTranscriptImpact> variantTranscriptImpacts = VariantTranscriptImpact.fromVariantContext(context);
+        final List<VariantTranscriptImpact> variantTranscriptImpacts = VariantTranscriptImpact.fromVariantContext(variantContext);
         final List<PurpleVariantTranscriptImpact> purpleVariantTranscriptImpacts =
                 variantTranscriptImpacts.stream().map(PurpleConversion::convert).collect(Collectors.toList());
-        final Optional<AllelicDepth> rnaDepth = rnaDepth(context, rna);
+        final Optional<AllelicDepth> rnaDepth = rnaDepth(variantContext, rna);
         final GenotypeStatus genotypeStatus = reference != null ? contextDecorator.genotypeStatus(reference) : null;
 
         return ImmutablePurpleVariant.builder()
@@ -163,8 +161,8 @@ public class PurpleVariantFactory {
                 .biallelic(contextDecorator.biallelic())
                 .genotypeStatus(PurpleGenotypeStatus.valueOf((genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN).name()))
                 .repeatCount(contextDecorator.repeatCount())
-                .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
-                .localPhaseSets(context.getAttributeAsIntList(LOCAL_PHASE_SET, 0))
+                .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
+                .localPhaseSets(variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0))
                 .variantTranscriptImpacts(purpleVariantTranscriptImpacts)
                 .build();
     }
