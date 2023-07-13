@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
@@ -137,8 +136,7 @@ public class PurpleVariantFactory {
         final List<VariantTranscriptImpact> variantTranscriptImpacts = VariantTranscriptImpact.fromVariantContext(variantContext);
         final List<PurpleVariantTranscriptImpact> purpleVariantTranscriptImpacts =
                 variantTranscriptImpacts.stream().map(PurpleConversion::convert).collect(Collectors.toList());
-        final Optional<AllelicDepth> rnaDepth = rnaDepth(variantContext, rna);
-        final GenotypeStatus genotypeStatus = reference != null ? contextDecorator.genotypeStatus(reference) : null;
+        final Optional<AllelicDepth> rnaDepth = extractRnaDepth(variantContext, rna);
 
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.valueOf(contextDecorator.type().name()))
@@ -159,7 +157,7 @@ public class PurpleVariantFactory {
                 .minorAlleleCopyNumber(contextDecorator.minorAlleleCopyNumber())
                 .variantCopyNumber(contextDecorator.variantCopyNumber())
                 .biallelic(contextDecorator.biallelic())
-                .genotypeStatus(PurpleGenotypeStatus.valueOf((genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN).name()))
+                .genotypeStatus(PurpleGenotypeStatus.valueOf(contextDecorator.genotypeStatus(reference).name()))
                 .repeatCount(contextDecorator.repeatCount())
                 .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .localPhaseSets(variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0))
@@ -216,7 +214,7 @@ public class PurpleVariantFactory {
                 .build();
     }
 
-    private static Optional<AllelicDepth> rnaDepth(VariantContext context, String rna) {
+    private static Optional<AllelicDepth> extractRnaDepth(VariantContext context, @Nullable String rna) {
         return Optional.ofNullable(context.getGenotype(rna)).filter(AllelicDepth::containsAllelicDepth).map(AllelicDepth::fromGenotype);
     }
 
