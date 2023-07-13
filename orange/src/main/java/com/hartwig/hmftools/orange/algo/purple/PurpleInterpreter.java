@@ -274,7 +274,7 @@ public class PurpleInterpreter {
     private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
             @NotNull List<GeneCopyNumber> allGeneCopyNumbers) {
         List<DriverGene> allGenes = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
+        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
             allGenes.add(ImmutableDriverGene.builder()
                     .gene(geneCopyNumber.geneName())
                     .reportMissenseAndInframe(false)
@@ -357,9 +357,7 @@ public class PurpleInterpreter {
                 .microsatelliteIndelsPerMb(purple.purityContext().microsatelliteIndelsPerMb())
                 .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(purple.purityContext().microsatelliteStatus().name()))
                 .tumorMutationalBurdenPerMb(purple.purityContext().tumorMutationalBurdenPerMb())
-                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext()
-                        .tumorMutationalBurdenStatus()
-                        .name()))
+                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalBurdenStatus().name()))
                 .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
                 .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
                 .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())

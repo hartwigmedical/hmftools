@@ -187,8 +187,6 @@ public class OrangeAlgo {
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
-        // PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
-
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
         PurpleInterpreter purpleInterpreter = new PurpleInterpreter(germlineGainLossFactory, driverGenes, linx, chord);
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
@@ -317,8 +315,8 @@ public class OrangeAlgo {
 
     @NotNull
     private static EnsemblDataCache loadEnsemblDataCache(@NotNull OrangeConfig config) {
-        EnsemblDataCache ensemblDataCache =
-                new EnsemblDataCache(config.ensemblDataDirectory(), RefGenomeVersion.from(config.refGenomeVersion().name()));
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(),
+                RefGenomeVersion.from(config.refGenomeVersion().name()));
         ensemblDataCache.load(false);
         return ensemblDataCache;
     }

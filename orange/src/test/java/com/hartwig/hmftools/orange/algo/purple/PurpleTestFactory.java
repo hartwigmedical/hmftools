@@ -16,13 +16,16 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleTestFactory {
+public final class PurpleTestFactory
+{
 
-    private PurpleTestFactory() {
+    private PurpleTestFactory()
+    {
     }
 
     @NotNull
-    public static PurpleData createMinimalTestPurpleData() {
+    public static PurpleData createMinimalTestPurpleData()
+    {
         PurityContext minimalContext = ImmutablePurityContext.builder()
                 .gender(Gender.FEMALE)
                 .runMode(RunMode.TUMOR_GERMLINE)
@@ -46,7 +49,8 @@ public final class PurpleTestFactory {
     }
 
     @NotNull
-    private static FittedPurity emptyFit() {
+    private static FittedPurity emptyFit()
+    {
         return ImmutableFittedPurity.builder()
                 .purity(0D)
                 .normFactor(0D)
@@ -58,7 +62,8 @@ public final class PurpleTestFactory {
     }
 
     @NotNull
-    private static FittedPurityScore emptyScore() {
+    private static FittedPurityScore emptyScore()
+    {
         return ImmutableFittedPurityScore.builder()
                 .minPurity(0D)
                 .maxPurity(0D)
@@ -70,7 +75,8 @@ public final class PurpleTestFactory {
     }
 
     @NotNull
-    private static PurpleQC qcPass() {
+    private static PurpleQC qcPass()
+    {
         return ImmutablePurpleQC.builder()
                 .method(FittedPurityMethod.NORMAL)
                 .amberMeanDepth(0)
