@@ -64,10 +64,7 @@ public class VariantTranscriptImpact
         if(!variant.hasAttribute(VAR_TRANS_IMPACT_ANNOTATION))
             return Collections.EMPTY_LIST;
 
-        // when we get the impacts string, the square brackets from the array are actually included in the string
-        // here, we strip them
-        String impactsRawString = variant.getAttributeAsString(VAR_TRANS_IMPACT_ANNOTATION, "[]");
-        String[] impactsStr = impactsRawString.substring(1, impactsRawString.length() - 1).split(VAR_TRANS_IMPACT_DELIM, -1);
+        String[] impactsStr = variant.getAttributeAsString(VAR_TRANS_IMPACT_ANNOTATION, "").split(VAR_TRANS_IMPACT_DELIM, -1);
 
         List<VariantTranscriptImpact> transImpacts = Lists.newArrayList();
 
