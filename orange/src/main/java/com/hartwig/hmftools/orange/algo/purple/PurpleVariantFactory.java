@@ -55,7 +55,7 @@ public class PurpleVariantFactory {
 
     private int mCreatedCount;
     private int mFilteredCount;
-    private PaveAlgo paveAlgo;
+    private final PaveAlgo paveAlgo;
 
     @NotNull
     private final CompoundFilter mFilter;
