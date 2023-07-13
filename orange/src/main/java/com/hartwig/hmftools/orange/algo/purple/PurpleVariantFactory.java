@@ -25,7 +25,6 @@ import com.hartwig.hmftools.datamodel.purple.Hotspot;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
@@ -53,20 +52,10 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class PurpleVariantFactory {
 
-    private int mCreatedCount;
-    private int mFilteredCount;
     private final PaveAlgo paveAlgo;
 
     @NotNull
     private final CompoundFilter mFilter;
-
-    public int getCreatedCount() {
-        return mCreatedCount;
-    }
-
-    public int getFilteredCount() {
-        return mFilteredCount;
-    }
 
     public PurpleVariantFactory withPassingOnlyFilter() {
         mFilter.add(new PassingVariantFilter());
@@ -79,8 +68,6 @@ public class PurpleVariantFactory {
         mFilter.addAll(Arrays.asList(filters));
         mFilter.add(new HumanChromosomeFilter());
         mFilter.add(new NTFilter());
-        mCreatedCount = 0;
-        mFilteredCount = 0;
     }
 
     public List<PurpleVariant> fromVCFFile(final String tumor, @Nullable final String reference, @Nullable final String rna,
@@ -111,12 +98,9 @@ public class PurpleVariantFactory {
                     try {
                         PurpleVariant purpleSomaticVariant = createVariant(tumor, reference, rna, variant);
                         result.add(purpleSomaticVariant);
-                        ++mCreatedCount;
                     } catch (IllegalArgumentException e) {
-                        ++mFilteredCount;
+                        // ignore, consider the sample filtered
                     }
-                } else {
-                    ++mFilteredCount;
                 }
             }
         }
@@ -124,7 +108,6 @@ public class PurpleVariantFactory {
         return result;
     }
 
-    //TODO find out if exceptions are appropriate or if optional is preferred
     public PurpleVariant createVariant(final String sample, @Nullable final String reference, @Nullable final String rna,
             final VariantContext context) {
         if (!mFilter.test(context)) {
@@ -149,16 +132,15 @@ public class PurpleVariantFactory {
         return helperCreateVariant(context, tumorDepth, reference, rna);
     }
 
-    private PurpleVariant helperCreateVariant(VariantContext context, AllelicDepth tumorDepth, @Nullable String reference, @Nullable String rna) {
+    private PurpleVariant helperCreateVariant(VariantContext context, AllelicDepth tumorDepth, @Nullable String reference,
+            @Nullable String rna) {
         VariantContextDecorator contextDecorator = new VariantContextDecorator(context);
         final VariantImpact variantImpact = contextDecorator.variantImpact();
-        final List<VariantTranscriptImpact> variantTranscriptImpacts =
-                VariantTranscriptImpact.fromVariantContext(context);
-        final List<PurpleVariantTranscriptImpact> purpleVariantTranscriptImpacts = variantTranscriptImpacts
-                .stream().map(PurpleConversion::convert).collect(Collectors.toList());
+        final List<VariantTranscriptImpact> variantTranscriptImpacts = VariantTranscriptImpact.fromVariantContext(context);
+        final List<PurpleVariantTranscriptImpact> purpleVariantTranscriptImpacts =
+                variantTranscriptImpacts.stream().map(PurpleConversion::convert).collect(Collectors.toList());
         final Optional<AllelicDepth> rnaDepth = rnaDepth(context, rna);
         final GenotypeStatus genotypeStatus = reference != null ? contextDecorator.genotypeStatus(reference) : null;
-
 
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.valueOf(contextDecorator.type().name()))
@@ -240,9 +222,7 @@ public class PurpleVariantFactory {
         return Optional.ofNullable(context.getGenotype(rna)).filter(AllelicDepth::containsAllelicDepth).map(AllelicDepth::fromGenotype);
     }
 
-
     private static boolean sampleInFile(final String sample, final VCFHeader header) {
         return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
     }
-
 }
