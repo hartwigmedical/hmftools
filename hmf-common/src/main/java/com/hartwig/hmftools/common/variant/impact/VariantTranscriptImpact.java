@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.variant.impact;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
@@ -64,9 +63,7 @@ public class VariantTranscriptImpact
     public static List<VariantTranscriptImpact> fromVariantContext(final VariantContext variant)
     {
         if(!variant.hasAttribute(VAR_TRANS_IMPACT_ANNOTATION))
-        {
             return Collections.EMPTY_LIST;
-        }
 
         // when we get the impacts string, the square brackets from the array are actually included in the string
         // here, we strip them
@@ -86,14 +83,8 @@ public class VariantTranscriptImpact
     public static VariantTranscriptImpact fromVcfData(final String data)
     {
         String[] items = data.split("\\" + VAR_TRANS_IMPACT_ITEM_DELIM, -1);
-
-        // dirty fix: append items if it is less than 7 to prevent out of bound exceptions
-        if(items.length < 7)
-        {
-            items = Arrays.copyOf(items, items.length + 7 - items.length);
-        }
-
-        return new VariantTranscriptImpact(items[0], items[1], items[2], items[3], Boolean.parseBoolean(items[4]), items[5], items[6]);
+        return new VariantTranscriptImpact(
+                items[0], items[1], items[2], items[3], Boolean.parseBoolean(items[4]), items[5], items[6]);
     }
 
     private String toVcfData()
