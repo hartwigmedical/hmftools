@@ -15,15 +15,6 @@ Key features include:
   - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
   - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.  One potential case is to have a paired RNA sample as an additional reference to measure RNA support for candidate variants
   - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
-  
-## BAM Requirements
-BAM records that are flagged as unmapped, duplicateRead or secondary/supplementary are ignored. 
-
-Optional NM tag (edit distance to the reference) is used in the quality calculation where available otherwise it is calculated on the fly.
-More information about the tag available [here](https://samtools.github.io/hts-specs/SAMtags.pdf).
-
-While SAGE does support CRAM files, we strongly recommend converting them to BAM first as SAGE makes multiple passes over the supplied alignment files. 
-Converting them first up front saves significant CPU time overall. 
 
 ## Installation
 
@@ -180,6 +171,13 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendAppl
 ```
 
 # Key concepts in SAGE
+
+## BAM conventions
+BAM records that are flagged as unmapped, duplicateRead or secondary/supplementary are ignored. 
+
+Optional NM tag (edit distance to the reference) is used in the quality calculation where available otherwise it is calculated on the fly. More information about the tag available [here](https://samtools.github.io/hts-specs/SAMtags.pdf).
+
+While SAGE does support CRAM files, we strongly recommend converting them to BAM first as SAGE makes multiple passes over the supplied alignment files. Converting them first up front saves significant CPU time overall. 
 
 ## Sample types and conventions
 
