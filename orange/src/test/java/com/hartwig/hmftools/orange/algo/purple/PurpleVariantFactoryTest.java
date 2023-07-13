@@ -7,26 +7,33 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantTranscriptImpact;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
+import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PurpleVariantFactoryTest {
+public class PurpleVariantFactoryTest
+{
 
     private static final String SOMATIC_VARIANT_FILE = Resources.getResource("purple/variants.vcf").getPath();
 
     @NotNull
-    private static PurpleVariantFactory createTestFactory() {
+    private static PurpleVariantFactory createTestFactory()
+    {
         return new PurpleVariantFactory(new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache()));
     }
 
     @Test
-    public void testCanReadVcfFile() throws IOException {
+    public void testCanReadVcfFile() throws IOException
+    {
         var testFactory = createTestFactory();
         List<PurpleVariant> variants = testFactory.fromVCFFile("COLO829v003T", "COLO829v003R", null, SOMATIC_VARIANT_FILE);
 
@@ -48,6 +55,34 @@ public class PurpleVariantFactoryTest {
 
         List<PurpleVariantTranscriptImpact> purpleVariantTranscriptImpacts = variant.variantTranscriptImpacts();
         assertEquals(4, purpleVariantTranscriptImpacts.size());
-        //TODO more meaningful tests?
+
+        // Test if the extra transcripts are loaded properly
+        var expectedTranscriptImpacts = List.of(
+                ImmutablePurpleVariantTranscriptImpact.builder().
+                        transcript("ENST00000264229")
+                        .effects(List.of(PurpleVariantEffect.SYNONYMOUS))
+                        .hgvsCodingImpact("c.2187C>T")
+                        .hgvsProteinImpact("p.Ser729=")
+                        .build(),
+                ImmutablePurpleVariantTranscriptImpact.builder().
+                        transcript("ENST00000504228")
+                        .effects(List.of(PurpleVariantEffect.SYNONYMOUS))
+                        .hgvsCodingImpact("c.2187C>T")
+                        .hgvsProteinImpact("p.Ser729=")
+                        .build(),
+                ImmutablePurpleVariantTranscriptImpact.builder().
+                        transcript("ENST00000514330")
+                        .effects(List.of(PurpleVariantEffect.UPSTREAM_GENE))
+                        .hgvsCodingImpact("")
+                        .hgvsProteinImpact("")
+                        .build(),
+                ImmutablePurpleVariantTranscriptImpact.builder().
+                        transcript("ENST00000541073")
+                        .effects(List.of(PurpleVariantEffect.SYNONYMOUS))
+                        .hgvsCodingImpact("c.2166C>T")
+                        .hgvsProteinImpact("p.Ser722=]")
+                        .build());
+
+        assertEquals(expectedTranscriptImpacts, purpleVariantTranscriptImpacts);
     }
 }
