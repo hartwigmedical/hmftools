@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface PurpleVariantTranscriptImpact {
+
     @NotNull
     String transcript();
 
@@ -19,5 +20,4 @@ public interface PurpleVariantTranscriptImpact {
     String hgvsProteinImpact();
 
     List<PurpleVariantEffect> effects();
-
 }
