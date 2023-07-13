@@ -67,10 +67,10 @@ public final class PurpleDataLoader
 
     private static String resolveVcfPath(final String vcfPath)
     {
-        if(!new File(vcfPath).exists() && vcfPath.endsWith(".gz"))
+        if (!new File(vcfPath).exists() && vcfPath.endsWith(".gz"))
         {
             String unzippedVcfPath = vcfPath.substring(0, vcfPath.length() - 3);
-            if(new File(unzippedVcfPath).exists())
+            if (new File(unzippedVcfPath).exists())
             {
                 return unzippedVcfPath;
             }
@@ -106,13 +106,13 @@ public final class PurpleDataLoader
         List<PurpleVariant> reportableGermlineVariants = null;
         List<GermlineDeletion> allGermlineDeletions = null;
         List<GermlineDeletion> reportableGermlineDeletions = null;
-        if(referenceSample != null)
+        if (referenceSample != null)
         {
             germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
             allGermlineStructuralVariants = StructuralVariantFileLoader.fromFile(germlineStructuralVariantVcf, new PassingVariantFilter());
 
-            allGermlineVariants =
-                    new PurpleVariantFactory(paveAlgo).fromVCFFile(tumorSample, referenceSample, rnaSample, germlineVariantVcf);
+            allGermlineVariants = new PurpleVariantFactory(paveAlgo).fromVCFFile(tumorSample, referenceSample, rnaSample,
+                    germlineVariantVcf);
             reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
 
             allGermlineDeletions = selectPassDeletions(GermlineDeletion.read(germlineDeletionTsv));
@@ -140,9 +140,9 @@ public final class PurpleDataLoader
     private static List<PurpleVariant> selectReportedVariants(@NotNull List<PurpleVariant> allVariants)
     {
         List<PurpleVariant> reported = Lists.newArrayList();
-        for(PurpleVariant variant : allVariants)
+        for (PurpleVariant variant : allVariants)
         {
-            if(variant.reported())
+            if (variant.reported())
             {
                 reported.add(variant);
             }
@@ -154,9 +154,9 @@ public final class PurpleDataLoader
     private static List<GermlineDeletion> selectPassDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions)
     {
         List<GermlineDeletion> pass = Lists.newArrayList();
-        for(GermlineDeletion deletion : allGermlineDeletions)
+        for (GermlineDeletion deletion : allGermlineDeletions)
         {
-            if(deletion.Filter.equals("PASS"))
+            if (deletion.Filter.equals("PASS"))
             {
                 pass.add(deletion);
             }
@@ -169,9 +169,9 @@ public final class PurpleDataLoader
     private static List<GermlineDeletion> selectReportedDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions)
     {
         List<GermlineDeletion> reported = Lists.newArrayList();
-        for(GermlineDeletion deletion : allGermlineDeletions)
+        for (GermlineDeletion deletion : allGermlineDeletions)
         {
-            if(deletion.Reported)
+            if (deletion.Reported)
             {
                 reported.add(deletion);
             }
