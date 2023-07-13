@@ -47,9 +47,8 @@ public class VariantTranscriptImpact
         List<String> fieldItems = Lists.newArrayList("Gene", "GeneName", "Transcript", "Effects", "SpliceRegion", "HGVS.c", "HGVS.p");
         fieldItems.forEach(x -> fields.add(x));
 
-        header.addMetaDataLine(new VCFInfoHeaderLine(VAR_TRANS_IMPACT_ANNOTATION,
-                VCFHeaderLineCount.UNBOUNDED,
-                VCFHeaderLineType.String,
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                VAR_TRANS_IMPACT_ANNOTATION, VCFHeaderLineCount.UNBOUNDED, VCFHeaderLineType.String,
                 String.format("Transcript impact [%s]", fields.toString())));
     }
 
