@@ -111,7 +111,7 @@ public class PurpleVariantFactory {
     public PurpleVariant createVariant(final String sample, @Nullable final String reference, @Nullable final String rna,
             final VariantContext context) {
         if (!mFilter.test(context)) {
-            throw new IllegalArgumentException(String.format("Variant could not be created because sample [%s] does not PASS", sample));
+            throw new IllegalArgumentException(String.format("Variant could not be created because sample [%s] does not have status PASS", sample));
         }
 
         if (!AllelicDepth.containsAllelicDepth(context.getGenotype(sample))) {
