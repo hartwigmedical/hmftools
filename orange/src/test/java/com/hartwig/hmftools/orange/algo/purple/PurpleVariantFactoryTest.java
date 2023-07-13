@@ -5,19 +5,18 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.io.Resources;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantTranscriptImpact;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
+
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurpleVariantFactoryTest {
-
 
     private static final String SOMATIC_VARIANT_FILE = Resources.getResource("purple/variants.vcf").getPath();
 
@@ -25,7 +24,6 @@ public class PurpleVariantFactoryTest {
     private static PurpleVariantFactory createTestFactory() {
         return new PurpleVariantFactory(new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache()));
     }
-
 
     @Test
     public void testCanReadVcfFile() throws IOException {
@@ -40,7 +38,6 @@ public class PurpleVariantFactoryTest {
         assertEquals(57181855, variant.position());
         assertEquals("C", variant.ref());
         assertEquals("T", variant.alt());
-
         var canonicalImpact = variant.canonicalImpact();
 
         assertNotNull(canonicalImpact);
@@ -49,6 +46,8 @@ public class PurpleVariantFactoryTest {
         assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
         assertEquals(PurpleCodingEffect.SYNONYMOUS, canonicalImpact.codingEffect());
 
+        List<PurpleVariantTranscriptImpact> purpleVariantTranscriptImpacts = variant.variantTranscriptImpacts();
+        assertEquals(4, purpleVariantTranscriptImpacts.size());
         //TODO more meaningful tests?
     }
 }

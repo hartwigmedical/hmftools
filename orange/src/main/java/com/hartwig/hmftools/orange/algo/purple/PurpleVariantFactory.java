@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
@@ -24,11 +25,13 @@ import com.hartwig.hmftools.datamodel.purple.Hotspot;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.PaveEntry;
@@ -52,8 +55,6 @@ public class PurpleVariantFactory {
 
     private int mCreatedCount;
     private int mFilteredCount;
-    private static final String RECOVERED_FLAG = "RECOVERED";
-
     private PaveAlgo paveAlgo;
 
     @NotNull
@@ -152,10 +153,12 @@ public class PurpleVariantFactory {
         VariantContextDecorator contextDecorator = new VariantContextDecorator(context);
         final VariantImpact variantImpact = contextDecorator.variantImpact();
         final List<VariantTranscriptImpact> variantTranscriptImpacts =
-                VariantTranscriptImpact.fromVariantContext(context); // TODO add this to model
-
+                VariantTranscriptImpact.fromVariantContext(context);
+        final List<PurpleVariantTranscriptImpact> purpleVariantTranscriptImpacts = variantTranscriptImpacts
+                .stream().map(PurpleConversion::convert).collect(Collectors.toList());
         final Optional<AllelicDepth> rnaDepth = rnaDepth(context, rna);
         final GenotypeStatus genotypeStatus = reference != null ? contextDecorator.genotypeStatus(reference) : null;
+
 
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.valueOf(contextDecorator.type().name()))
@@ -180,7 +183,7 @@ public class PurpleVariantFactory {
                 .repeatCount(contextDecorator.repeatCount())
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .localPhaseSets(context.getAttributeAsIntList(LOCAL_PHASE_SET, 0))
-                .variantTranscriptImpacts(variantTranscriptImpacts)
+                .variantTranscriptImpacts(purpleVariantTranscriptImpacts)
                 .build();
     }
 
@@ -236,6 +239,7 @@ public class PurpleVariantFactory {
     private static Optional<AllelicDepth> rnaDepth(VariantContext context, String rna) {
         return Optional.ofNullable(context.getGenotype(rna)).filter(AllelicDepth::containsAllelicDepth).map(AllelicDepth::fromGenotype);
     }
+
 
     private static boolean sampleInFile(final String sample, final VCFHeader header) {
         return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));

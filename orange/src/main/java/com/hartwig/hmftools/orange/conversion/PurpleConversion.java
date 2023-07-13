@@ -7,12 +7,14 @@ import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGermlineDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
@@ -27,6 +29,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantTranscriptImpact;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -128,4 +131,19 @@ public final class PurpleConversion {
     public static PurpleVariantEffect convert(VariantEffect effect) {
         return PurpleVariantEffect.valueOf(effect.name());
     }
+
+
+    @NotNull
+    public static PurpleVariantTranscriptImpact convert(VariantTranscriptImpact impact) {
+        var effectsList = VariantEffect.effectsToList(impact.Effects);
+        var purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
+
+        return ImmutablePurpleVariantTranscriptImpact.builder()
+                .transcript(impact.Transcript)
+                .hgvsCodingImpact(impact.HgvsCoding)
+                .hgvsProteinImpact(impact.HgvsProtein)
+                .effects(purpleEffects)
+                .build();
+    }
+
 }

@@ -54,6 +54,6 @@ public interface PurpleVariant extends Variant {
     @Nullable
     List<Integer> localPhaseSets();
 
-    List<VariantTranscriptImpact> variantTranscriptImpacts();
+    List<PurpleVariantTranscriptImpact> variantTranscriptImpacts();
 
 }
