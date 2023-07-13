@@ -16,10 +16,6 @@ Key features include:
   - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.  One potential case is to have a paired RNA sample as an additional reference to measure RNA support for candidate variants
   - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
   
-## Germline mode
-
-Sage can be run in a germline mode.  See details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
-
 ## BAM Requirements
 BAM records that are flagged as unmapped, duplicateRead or secondary/supplementary are ignored. 
 
@@ -144,11 +140,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
 
-# Append Reference Samples
-It is possible to append additional reference samples to an existing SAGE VCF file. A typical use case would be to append RNA without having to rerun all of SAGE.
 
-In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#4-normal-counts-and-quality) steps.
-The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
 
 ## Usage
 
@@ -187,23 +179,39 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.append.SageAppendAppl
     -out /path/to/COLO829v003.sage.rna.vcf.gz
 ```
 
-# Read context 
- The read context of a variant is the region surrounding it in the read where it was found.
- It must be sufficiently large to uniquely identify the variant from both the reference and other possible variants at that location regardless of local alignment.
+# Key concepts in SAGE
+
+## Sample types and conventions
+
+SAGE is designed to jointly call any number of samples.  1 or more 'tumor' samples must be defined and 1 or more 
+
+- A 'tumor' sample in SAGE is defined as a sample in which SAGE will BOTH search for candidates AND collect evidence
+- A 'reference' sample is one in which SAGE will collect evidence only (for candidates identified in the tumor sampless)
+
+SAGE requires at least one tumor sample to be set (unless running in append mode - see below).    By default the first reference sample is also treated as a 'germline' sample, which is used for calculation of the germline filters.  The number of reference samples to be used for germline filtering can be configured by setting the ref_sample_count.  2 common alternatives are:
+
+- If no germline filtering is desired set ref_sample_count = 0.
+- If the patient has a bone marrow donor and reference samples for both patient and donor are avaialable, then SAGE can subtract germline calls from both by setting ref_sample_count = 2. 
+
+Additionally, SAGE can be run in a germline mode by setting the germline sample to be the 'tumor'. Please mored details[here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
+
+## Append mode
+It is possible to append additional reference samples to an existing SAGE VCF file. A typical use case would be to append RNA without having to rerun all of SAGE.
+
+In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#4-normal-counts-and-quality) steps.
+The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
+
+## Read context 
+ 
+ The read context of a variant is the region surrounding it in the read where it was found. It must be sufficiently large to uniquely identify the variant from both the reference and other possible variants at that location regardless of local alignment.
  SAGE uses the read context to search for evidence supporting the variant and calculate the allelic depth and frequency.
  
- The core read context is a distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in either the read or ref genome.
- A 'repeat' in this context, is defined as having 1 - 10 bases repeated at least 2 times. 
- The core is a minimum of 5 bases long.  
+ The core read context is a distinct set of bases surrounding a variant after accounting for any microhomology in the read and any repeats in either the read or ref genome. A 'repeat' in this context, is defined as having 1 - 10 bases repeated at least 2 times. 
+ The core is a minimum of 5 bases long.   For a SNV/MNV in a non-repeat sequence this will just be the alternate base(s) with 2 bases either side. For a SNV/MNV in a repeat, the entire repeat will be included as well as one base on either side, eg 'TAAAAAC'.
  
- For a SNV/MNV in a non-repeat sequence this will just be the alternate base(s) with 2 bases either side. 
- For a SNV/MNV in a repeat, the entire repeat will be included as well as one base on either side, eg 'TAAAAAC'.
+ A DEL always includes the bases on either side of the deleted sequence. If the delete is part of a microhomology or repeat sequence, this will also be included in the core read context.
  
- A DEL always includes the bases on either side of the deleted sequence. 
- If the delete is part of a microhomology or repeat sequence, this will also be included in the core read context.
- 
- An INSERT always includes the base to the left of the insert as well as the new sequence. 
- As with a DEL, the core read context will be extended to include any repeats and/or microhomology.
+ An INSERT always includes the base to the left of the insert as well as the new sequence. As with a DEL, the core read context will be extended to include any repeats and/or microhomology.
 
 The complete read context is the core read context flanked on either side by an additional 10 bases. 
  
