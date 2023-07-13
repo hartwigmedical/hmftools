@@ -11,10 +11,16 @@ Key features include:
   - No cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#6-phasing) of somatic + somatic and somatic + germline variants over whole read length
   - Native MNV handling 
-  - Tumor sample only support
-  - Multiple tumor sample support - a 'tumor' in SAGE is any sample in which we search for candidate variants and determine variant support.
-  - Additional reference sample support - a 'reference' sample in SAGE is a sample in which we don't look for candidate variants, but in which we still determine variant support and read depth at each candidate location.  One potential case is to have a paired RNA sample as an additional reference to measure RNA support for candidate variants
+  - Joint calling, including allowing both multiple tumor and reference samples to be analysed copncurrently
+  - Support for diverse calling scenarios including somatic tumor-normal, somatic tumor only, germline, etc.
   - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
+
+## Append mode
+
+SAGE also supports the ability append additional reference samples to an existing SAGE VCF file. A typical use case would be to analyse previously called variants in RNA or other dditional longitudinal samples for monitoring without having to rerun all samples through SAGE.
+
+In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#4-normal-counts-and-quality) steps.
+The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
 
 ## Installation
 
@@ -131,9 +137,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -out /path/to/COLO829v003.sage.vcf.gz
 ```
 
-
-
-## Usage
+# SAGE append mode usage
 
 ## Mandatory Arguments
 
@@ -192,12 +196,6 @@ SAGE requires at least one tumor sample to be set (unless running in append mode
 - If the patient has a bone marrow donor and reference samples for both patient and donor are avaialable, then SAGE can subtract germline calls from both by setting ref_sample_count = 2. 
 
 Additionally, SAGE can be run in a germline mode by setting the germline sample to be the 'tumor'. Please mored details[here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
-
-## Append mode
-It is possible to append additional reference samples to an existing SAGE VCF file. A typical use case would be to append RNA without having to rerun all of SAGE.
-
-In append mode SAGE only performs the [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) and [normal counts and quality](#4-normal-counts-and-quality) steps.
-The supplied SAGE VCF is used to determine the candidate variants and no changes are made to tumor counts, filters, phasing, de-duplication or realignment.
 
 ## Read context 
  
