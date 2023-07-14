@@ -331,7 +331,7 @@ public interface OrangeConfig {
         String sageGermlineGeneCoverage =
                 refSampleId != null ? SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId) : null;
         String sageSomaticRefSampleBqrPlot = refSampleId != null ? SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId) : null;
-        String sageSomaticTumorSampleBqrPlot = Config.fileExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, tumorSampleId));
+        String sageSomaticTumorSampleBqrPlot = Config.fileIfExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, tumorSampleId));
 
         String purpleDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PURPLE_DIR_CFG, PURPLE_DIR);
         String purplePlotsDir = getToolPlotsDirectory(configBuilder, pipelineSampleRootDir, PURPLE_PLOT_DIR_CFG, PURPLE_DIR);
@@ -341,8 +341,8 @@ public interface OrangeConfig {
         String linxPlotsDir = getToolPlotsDirectory(configBuilder, pipelineSampleRootDir, LINX_PLOT_DIR_CFG, LINX_SOMATIC_DIR);
 
         String lilacDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LILAC_DIR_CFG, LILAC_DIR);
-        String lilacCoverage = Config.fileExists(LilacAllele.generateFilename(lilacDir, tumorSampleId));
-        String lilacQc = Config.fileExists(LilacQcData.generateFilename(lilacDir, tumorSampleId));
+        String lilacCoverage = Config.fileIfExists(LilacAllele.generateFilename(lilacDir, tumorSampleId));
+        String lilacQc = Config.fileIfExists(LilacQcData.generateFilename(lilacDir, tumorSampleId));
 
         String chordDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CHORD_DIR_CFG, CHORD_DIR);
         String chordPredictions = ChordDataFile.generateFilename(chordDir, tumorSampleId);
