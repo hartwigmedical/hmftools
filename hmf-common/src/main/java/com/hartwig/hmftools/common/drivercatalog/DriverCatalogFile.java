@@ -140,8 +140,10 @@ public final class DriverCatalogFile
                     .chromosome(values[fieldsIndexMap.get("chromosome")])
                     .chromosomeBand(values[fieldsIndexMap.get("chromosomeBand")])
                     .gene(values[fieldsIndexMap.get("gene")])
-                    .transcript(values[fieldsIndexMap.get("transcript")])
-                    .isCanonical(Boolean.parseBoolean(values[fieldsIndexMap.get("isCanonical")]))
+                    .transcript(fieldsIndexMap.containsKey("transcript") ?
+                            values[fieldsIndexMap.get("transcript")] : "")
+                    .isCanonical(fieldsIndexMap.containsKey("isCanonical") ?
+                            Boolean.parseBoolean(values[fieldsIndexMap.get("isCanonical")]) : true)
                     .driver(checkConvertType(values[fieldsIndexMap.get("driver")]))
                     .category(DriverCategory.valueOf(values[fieldsIndexMap.get("category")]))
                     .likelihoodMethod(LikelihoodMethod.valueOf(values[fieldsIndexMap.get("likelihoodMethod")]))
