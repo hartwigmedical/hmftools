@@ -7,15 +7,11 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantTranscriptImpact;
-import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
-import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
-import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -28,7 +24,7 @@ public class PurpleVariantFactoryTest
     @NotNull
     private static PurpleVariantFactory createTestFactory()
     {
-        return new PurpleVariantFactory(new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache()));
+        return new PurpleVariantFactory();
     }
 
     @Test

@@ -51,18 +51,14 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class PurpleVariantFactory {
 
-    private final PaveAlgo paveAlgo;
-
     @NotNull
     private final CompoundFilter mFilter;
 
-    public PurpleVariantFactory withPassingOnlyFilter() {
-        mFilter.add(new PassingVariantFilter());
-        return this;
+    public static PurpleVariantFactory withPassingOnlyFilter() {
+        return new PurpleVariantFactory(new PassingVariantFilter());
     }
 
-    public PurpleVariantFactory(final PaveAlgo paveAlgo, final VariantContextFilter... filters) {
-        this.paveAlgo = paveAlgo;
+    public PurpleVariantFactory(final VariantContextFilter... filters) {
         mFilter = new CompoundFilter(true);
         mFilter.addAll(Arrays.asList(filters));
         mFilter.add(new HumanChromosomeFilter());
@@ -168,16 +164,12 @@ public class PurpleVariantFactory {
     private PurpleTranscriptImpact extractCanonicalImpact(VariantContextDecorator contextDecorator) {
         var variantImpact = contextDecorator.variantImpact();
 
-        PaveEntry paveEntry = paveAlgo.run(variantImpact.CanonicalGeneName, variantImpact.CanonicalTranscript, contextDecorator.position());
-
         List<VariantEffect> variantEffects = VariantEffect.effectsToList(variantImpact.CanonicalEffect);
         List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
         return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(variantImpact.CanonicalTranscript)
                 .hgvsCodingImpact(variantImpact.CanonicalHgvsCoding)
                 .hgvsProteinImpact(variantImpact.CanonicalHgvsProtein)
-                .affectedCodon(paveEntry != null ? paveEntry.affectedCodon() : null)
-                .affectedExon(paveEntry != null ? paveEntry.affectedExon() : null)
                 .spliceRegion(variantImpact.CanonicalSpliceRegion)
                 .effects(purpleVariantEffects)
                 .codingEffect(PurpleConversion.convert(variantImpact.CanonicalCodingEffect))
@@ -185,10 +177,7 @@ public class PurpleVariantFactory {
     }
 
     private List<PurpleTranscriptImpact> extractOtherImpacts(VariantContextDecorator contextDecorator) {
-
         var variantImpact = contextDecorator.variantImpact();
-        PaveEntry paveEntry = paveAlgo.run(variantImpact.CanonicalGeneName, variantImpact.CanonicalTranscript, contextDecorator.position());
-
         List<PurpleTranscriptImpact> otherImpacts = Lists.newArrayList();
         for (AltTranscriptReportableInfo altInfo : AltTranscriptReportableInfo.parseAltTranscriptInfo(variantImpact.OtherReportableEffects)) {
             List<VariantEffect> variantEffects = VariantEffect.effectsToList(altInfo.Effects);
@@ -197,8 +186,6 @@ public class PurpleVariantFactory {
                     .transcript(altInfo.TransName)
                     .hgvsCodingImpact(altInfo.HgvsCoding)
                     .hgvsProteinImpact(altInfo.HgvsProtein)
-                    .affectedCodon(paveEntry != null ? paveEntry.affectedCodon() : null)
-                    .affectedExon(paveEntry != null ? paveEntry.affectedExon() : null)
                     .spliceRegion(variantImpact.CanonicalSpliceRegion)
                     .effects(purpleVariantEffects)
                     .codingEffect(PurpleConversion.convert(altInfo.Effect))

@@ -34,7 +34,7 @@ public final class PurpleDataLoader
 
     @NotNull
     public static PurpleData load(final String tumorSample, @Nullable final String referenceSample, @Nullable final String rnaSample,
-            final String purpleDir, EnsemblDataCache ensemblDataCache) throws IOException
+            final String purpleDir) throws IOException
     {
         String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorSample);
         String purityTsv = PurityContextFile.generateFilenameForReading(purpleDir, tumorSample);
@@ -61,8 +61,7 @@ public final class PurpleDataLoader
                 germlineStructuralVariantVcf,
                 copyNumberTsv,
                 geneCopyNumberTsv,
-                germlineDeletionTsv,
-                ensemblDataCache);
+                germlineDeletionTsv);
     }
 
     private static String resolveVcfPath(final String vcfPath)
@@ -83,15 +82,15 @@ public final class PurpleDataLoader
             @NotNull String qcFile, @NotNull String purityTsv, @NotNull String somaticDriverCatalogTsv, @NotNull String somaticVariantVcf,
             @NotNull String germlineDriverCatalogTsv, @NotNull String germlineVariantVcf, @NotNull String somaticStructuralVariantVcf,
             @NotNull String germlineStructuralVariantVcf, @NotNull String copyNumberTsv, @NotNull String geneCopyNumberTsv,
-            @NotNull String germlineDeletionTsv, @NotNull EnsemblDataCache ensembleDataCache) throws IOException
+            @NotNull String germlineDeletionTsv) throws IOException
     {
         PurityContext purityContext = PurityContextFile.readWithQC(qcFile, purityTsv);
 
         List<DriverCatalog> somaticDrivers = DriverCatalogFile.read(somaticDriverCatalogTsv);
 
-        PaveAlgo paveAlgo = new PaveAlgo(ensembleDataCache);
 
-        List<PurpleVariant> allSomaticVariants = new PurpleVariantFactory(paveAlgo).withPassingOnlyFilter()
+
+        List<PurpleVariant> allSomaticVariants = PurpleVariantFactory.withPassingOnlyFilter()
                 .fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
         List<PurpleVariant> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
 
@@ -111,7 +110,7 @@ public final class PurpleDataLoader
             germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
             allGermlineStructuralVariants = StructuralVariantFileLoader.fromFile(germlineStructuralVariantVcf, new PassingVariantFilter());
 
-            allGermlineVariants = new PurpleVariantFactory(paveAlgo).fromVCFFile(tumorSample, referenceSample, rnaSample,
+            allGermlineVariants = new PurpleVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample,
                     germlineVariantVcf);
             reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
 

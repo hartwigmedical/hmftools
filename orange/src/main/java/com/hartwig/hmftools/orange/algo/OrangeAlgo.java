@@ -65,6 +65,7 @@ import com.hartwig.hmftools.orange.OrangeRNAConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
+import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
@@ -188,7 +189,8 @@ public class OrangeAlgo {
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(germlineGainLossFactory, driverGenes, linx, chord);
+        PaveAlgo paveAlgo = new PaveAlgo(ensemblDataCache);
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(germlineGainLossFactory, driverGenes, linx, paveAlgo, chord);
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
         IsofoxRecord isofox = null;
@@ -358,8 +360,7 @@ public class OrangeAlgo {
         PurpleData purple = PurpleDataLoader.load(config.tumorSampleId(),
                 referenceSample,
                 config.rnaConfig() != null ? config.rnaConfig().rnaSampleId() : null,
-                config.purpleDataDirectory(),
-                ensemblDataCache);
+                config.purpleDataDirectory());
 
         DecimalFormat purityFormat = new DecimalFormat("#'%'");
         PurityContext purityContext = purple.purityContext();
