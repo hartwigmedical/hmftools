@@ -42,20 +42,28 @@ public interface OrangeRNAConfig {
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
     }
 
+    @NotNull
     String rnaSampleId();
 
+    @NotNull
     String isofoxGeneDistributionCsv();
 
+    @NotNull
     String isofoxAltSjCohortCsv();
 
+    @NotNull
     String isofoxSummaryCsv();
 
+    @NotNull
     String isofoxGeneDataCsv();
 
+    @NotNull
     String isofoxFusionCsv();
 
+    @NotNull
     String isofoxAltSpliceJunctionCsv();
 
+    @Nullable
     static OrangeRNAConfig createConfig(final ConfigBuilder configBuilder) {
 
         boolean hasRnaSampleId = configBuilder.hasValue(RNA_SAMPLE_ID);
