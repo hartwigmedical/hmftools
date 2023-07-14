@@ -181,8 +181,6 @@ BAM records that are flagged as unmapped, duplicateRead or secondary/supplementa
 
 Optional NM tag (edit distance to the reference) is used in the quality calculation where available otherwise it is calculated on the fly. More information about the tag available [here](https://samtools.github.io/hts-specs/SAMtags.pdf).
 
-While SAGE does support CRAM files, we strongly recommend converting them to BAM first as SAGE makes multiple passes over the supplied alignment files. Converting them first up front saves significant CPU time overall. 
-
 ## Sample types and conventions
 
 SAGE is designed to jointly call any number of samples.  1 or more 'tumor' samples must be defined and 1 or more 
@@ -195,7 +193,7 @@ SAGE requires at least one tumor sample to be set (unless running in append mode
 - If no germline filtering is desired set ref_sample_count = 0.
 - If the patient has a bone marrow donor and reference samples for both patient and donor are avaialable, then SAGE can subtract germline calls from both by setting ref_sample_count = 2. 
 
-Additionally, SAGE can be run in a germline mode by setting the germline sample to be the 'tumor'. Please mored details[here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
+Additionally, SAGE can be run in a germline mode by setting the germline sample to be the 'tumor'. Please mored details [here](https://github.com/hartwigmedical/hmftools/blob/master/sage/GERMLINE.md).
 
 ## Read context 
  
