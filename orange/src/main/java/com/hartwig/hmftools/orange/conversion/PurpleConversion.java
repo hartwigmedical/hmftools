@@ -30,6 +30,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
+import com.hartwig.hmftools.orange.algo.purple.CodingEffectDeterminer;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -136,11 +137,8 @@ public final class PurpleConversion {
     public static PurpleTranscriptImpact convert(VariantTranscriptImpact impact) {
         var effectsList = VariantEffect.effectsToList(impact.Effects);
         var purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
-        if (purpleEffects.size() != 1) {
-            throw new IllegalArgumentException(
-                    String.format("Variant transcript impact has more than 1 effect. The following effects were found: %s", purpleEffects));
-        }
-        var purpleCodingEffect = convert(CodingEffect.effect(effectsList.get(0)));
+        var purpleCodingEffect = convert(CodingEffectDeterminer.determineCodingEffect(effectsList));
+
         /*  When VariantTranscriptImpacts are created from the VCF file, it sometimes (incorrectly) parses the square array brackets.
             These parsed brackets are then included in the impacts fields.
             Here, we make no assumption what the field order is in the underlying VCF file, and we just check if the square bracket is
