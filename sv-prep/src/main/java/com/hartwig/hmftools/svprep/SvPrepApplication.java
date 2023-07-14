@@ -116,11 +116,7 @@ public class SvPrepApplication
         ConfigBuilder configBuilder = new ConfigBuilder();
         SvConfig.addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
         setLogLevel(configBuilder);
         logVersion();

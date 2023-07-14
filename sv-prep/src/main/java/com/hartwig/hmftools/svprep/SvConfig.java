@@ -321,7 +321,7 @@ public class SvConfig
         addValidationStringencyOption(configBuilder);
         ReadFilterConfig.addConfig(configBuilder);
         addThreadOptions(configBuilder);
-        addOutputOptions(configBuilder);
+        addOutputOptions(configBuilder, true);
         ConfigUtils.addLoggingOptions(configBuilder);
     }
 }

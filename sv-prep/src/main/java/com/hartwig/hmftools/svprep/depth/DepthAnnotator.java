@@ -357,23 +357,12 @@ public class DepthAnnotator
         ConfigBuilder configBuilder = new ConfigBuilder();
         DepthConfig.addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
         setLogLevel(configBuilder);
         logVersion();
 
         DepthAnnotator bamSvSlicer = new DepthAnnotator(configBuilder);
         bamSvSlicer.run();
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

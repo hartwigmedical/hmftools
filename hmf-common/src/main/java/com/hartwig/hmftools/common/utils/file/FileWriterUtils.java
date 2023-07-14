@@ -29,15 +29,25 @@ public final class FileWriterUtils
     public static final String OUTPUT_ID = "output_id";
     public static final String OUTPUT_ID_DESC = "Output file suffix";
 
-    public static void addOutputOptions(final ConfigBuilder configBuilder)
+    public static void addOutputOptions(final ConfigBuilder configBuilder) { addOutputOptions(configBuilder, false); }
+
+    public static void addOutputOptions(final ConfigBuilder configBuilder, boolean checkExists)
     {
-        configBuilder.addConfigItem(OUTPUT_DIR, OUTPUT_DIR_DESC);
+        addOutputDir(configBuilder, checkExists);
         configBuilder.addConfigItem(OUTPUT_ID, OUTPUT_ID_DESC);
     }
 
     public static void addOutputDir(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(OUTPUT_DIR, OUTPUT_DIR_DESC);
+    }
+
+    public static void addOutputDir(final ConfigBuilder configBuilder, boolean checkExists)
+    {
+        if(checkExists)
+            configBuilder.addPath(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
+        else
+            configBuilder.addConfigItem(OUTPUT_DIR, OUTPUT_DIR_DESC);
     }
 
     public static String parseOutputDir(final ConfigBuilder configBuilder)

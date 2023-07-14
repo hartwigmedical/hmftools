@@ -262,11 +262,7 @@ public class BlacklistExplorer
         ConfigUtils.addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
         setLogLevel(configBuilder);
         logVersion();
