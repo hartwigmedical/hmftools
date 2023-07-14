@@ -137,12 +137,22 @@ public final class PurpleConversion {
         var effectsList = VariantEffect.effectsToList(impact.Effects);
         var purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
 
+        /*  When VariantTranscriptImpacts are created from the VCF file, it sometimes (incorrectly) parses the square array brackets.
+            These parsed brackets are then included in the impacts fields.
+            Here, we make no assumption what the field order is in the underlying VCF file, and we just check if the square bracket is
+            included, if so we remove them. */
+        // TODO maybe fix this bug upstream?
         return ImmutablePurpleVariantTranscriptImpact.builder()
-                .transcript(impact.Transcript)
-                .hgvsCodingImpact(impact.HgvsCoding)
-                .hgvsProteinImpact(impact.HgvsProtein)
+                .transcript(stripSquareBrackets(impact.Transcript))
+                .hgvsCodingImpact(stripSquareBrackets(impact.HgvsCoding))
+                .hgvsProteinImpact(stripSquareBrackets(impact.HgvsProtein))
                 .effects(purpleEffects)
                 .build();
+    }
+
+    private static String stripSquareBrackets(String s) {
+        s = s.startsWith("[") ? s.substring(1) : s;
+        return s.endsWith("]") ? s.substring(0, s.length() - 1) : s;
     }
 
 }

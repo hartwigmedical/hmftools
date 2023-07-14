@@ -80,7 +80,7 @@ public class PurpleVariantFactoryTest
                         transcript("ENST00000541073")
                         .effects(List.of(PurpleVariantEffect.SYNONYMOUS))
                         .hgvsCodingImpact("c.2166C>T")
-                        .hgvsProteinImpact("p.Ser722=]")
+                        .hgvsProteinImpact("p.Ser722=")
                         .build());
 
         assertEquals(expectedTranscriptImpacts, purpleVariantTranscriptImpacts);
