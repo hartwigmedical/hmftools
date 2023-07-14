@@ -31,12 +31,12 @@ public class MismatchWriter
         String filePrefix = mConfig.OutputDir;
 
         if(mConfig.singleSample())
-            filePrefix += mConfig.SampleIds.get(0) + ".cmp.";
+            filePrefix += mConfig.SampleIds.get(0) + ".cmp";
         else
-            filePrefix += "compar_cohort.";
+            filePrefix += "compar_cohort";
 
         if(mConfig.OutputId != null)
-            filePrefix += mConfig.OutputId;
+            filePrefix += "." + mConfig.OutputId;
 
         try
         {

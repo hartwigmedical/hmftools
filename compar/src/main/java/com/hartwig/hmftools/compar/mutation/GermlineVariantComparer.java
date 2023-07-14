@@ -95,7 +95,7 @@ public class GermlineVariantComparer implements ItemComparer
             List<GermlineVariant> variants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
             variants.forEach(x -> comparableItems.add(new GermlineVariantData(x)));
 
-            CMP_LOGGER.debug("sample({}) loaded {} germline variants", sampleId, comparableItems.size());
+            CMP_LOGGER.debug("sample({}) loaded {} {} germline variants", sampleId, fileSources.Source, comparableItems.size());
         }
         catch(Exception e)
         {
