@@ -129,7 +129,7 @@ public class SampleData
         if(Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty())
         {
             VIS_LOGGER.warn("sample({}) empty segments, SVs or copy-number files", mConfig.Sample);
-            return;
+            throw new Exception("invalid input sample data");
         }
 
         boolean loadSvData = !mConfig.UseCohortFiles
