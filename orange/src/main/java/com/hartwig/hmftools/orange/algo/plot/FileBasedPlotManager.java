@@ -38,7 +38,7 @@ public class FileBasedPlotManager implements PlotManager {
                         plotDirectoryPath()));
             } else if (files.length > 0) {
                 LOGGER.warn("Plot directory already existed at path [{}], continuing, but output may be mixed with older files. "
-                        + "It is recommended to start Orange with a clean output directory", plotDirectoryPath());
+                        + "It is recommended to start ORANGE with a clean output directory", plotDirectoryPath());
             }
         } else {
             if (!plotDir.mkdirs()) {
