@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariantTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantTranscriptImpact;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -49,34 +49,42 @@ public class PurpleVariantFactoryTest
         assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
         assertEquals(PurpleCodingEffect.SYNONYMOUS, canonicalImpact.codingEffect());
 
-        List<PurpleVariantTranscriptImpact> purpleVariantTranscriptImpacts = variant.variantTranscriptImpacts();
+        List<PurpleTranscriptImpact> purpleVariantTranscriptImpacts = variant.variantTranscriptImpacts();
         assertEquals(4, purpleVariantTranscriptImpacts.size());
 
         // Test if the extra transcripts are loaded properly
         var expectedTranscriptImpacts = List.of(
-                ImmutablePurpleVariantTranscriptImpact.builder().
+                ImmutablePurpleTranscriptImpact.builder().
                         transcript("ENST00000264229")
                         .effects(List.of(PurpleVariantEffect.SYNONYMOUS))
+                        .codingEffect(PurpleCodingEffect.SYNONYMOUS)
                         .hgvsCodingImpact("c.2187C>T")
                         .hgvsProteinImpact("p.Ser729=")
+                        .spliceRegion(false)
                         .build(),
-                ImmutablePurpleVariantTranscriptImpact.builder().
+                ImmutablePurpleTranscriptImpact.builder().
                         transcript("ENST00000504228")
                         .effects(List.of(PurpleVariantEffect.SYNONYMOUS))
+                        .codingEffect(PurpleCodingEffect.SYNONYMOUS)
                         .hgvsCodingImpact("c.2187C>T")
                         .hgvsProteinImpact("p.Ser729=")
+                        .spliceRegion(false)
                         .build(),
-                ImmutablePurpleVariantTranscriptImpact.builder().
+                ImmutablePurpleTranscriptImpact.builder().
                         transcript("ENST00000514330")
                         .effects(List.of(PurpleVariantEffect.UPSTREAM_GENE))
+                        .codingEffect(PurpleCodingEffect.NONE)
                         .hgvsCodingImpact("")
                         .hgvsProteinImpact("")
+                        .spliceRegion(false)
                         .build(),
-                ImmutablePurpleVariantTranscriptImpact.builder().
+                ImmutablePurpleTranscriptImpact.builder().
                         transcript("ENST00000541073")
                         .effects(List.of(PurpleVariantEffect.SYNONYMOUS))
+                        .codingEffect(PurpleCodingEffect.SYNONYMOUS)
                         .hgvsCodingImpact("c.2166C>T")
                         .hgvsProteinImpact("p.Ser722=")
+                        .spliceRegion(true)
                         .build());
 
         assertEquals(expectedTranscriptImpacts, purpleVariantTranscriptImpacts);

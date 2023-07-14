@@ -14,7 +14,7 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGermlineDeletion;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariantTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
@@ -28,8 +28,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGermlineStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantTranscriptImpact;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -133,20 +133,23 @@ public final class PurpleConversion {
     }
 
     @NotNull
-    public static PurpleVariantTranscriptImpact convert(VariantTranscriptImpact impact) {
+    public static PurpleTranscriptImpact convert(VariantTranscriptImpact impact) {
         var effectsList = VariantEffect.effectsToList(impact.Effects);
         var purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
+        var purpleCodingEffect = convert(CodingEffect.effect(effectsList.get(0))); // effectList is always of size 1
 
         /*  When VariantTranscriptImpacts are created from the VCF file, it sometimes (incorrectly) parses the square array brackets.
             These parsed brackets are then included in the impacts fields.
             Here, we make no assumption what the field order is in the underlying VCF file, and we just check if the square bracket is
             included, if so we remove them. */
         // TODO maybe fix this bug upstream?
-        return ImmutablePurpleVariantTranscriptImpact.builder()
+        return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(stripSquareBrackets(impact.Transcript))
                 .hgvsCodingImpact(stripSquareBrackets(impact.HgvsCoding))
                 .hgvsProteinImpact(stripSquareBrackets(impact.HgvsProtein))
                 .effects(purpleEffects)
+                .codingEffect(purpleCodingEffect)
+                .spliceRegion(impact.SpliceRegion)
                 .build();
     }
 

@@ -29,10 +29,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
-import com.hartwig.hmftools.datamodel.purple.PurpleVariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
-import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
-import com.hartwig.hmftools.orange.algo.pave.PaveEntry;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
@@ -130,7 +127,7 @@ public class PurpleVariantFactory {
         VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);
         final VariantImpact variantImpact = contextDecorator.variantImpact();
         final List<VariantTranscriptImpact> variantTranscriptImpacts = VariantTranscriptImpact.fromVariantContext(variantContext);
-        final List<PurpleVariantTranscriptImpact> purpleVariantTranscriptImpacts =
+        final List<PurpleTranscriptImpact> purpleVariantTranscriptImpacts =
                 variantTranscriptImpacts.stream().map(PurpleConversion::convert).collect(Collectors.toList());
         final Optional<AllelicDepth> rnaDepth = extractRnaDepth(variantContext, rna);
 
