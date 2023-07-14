@@ -74,18 +74,12 @@ public class AltSjClassifier implements CuppaClassifier
 
     private final Map<String,RnaCohortData> mCancerDataMap; // number of samples with specific read length in each cancer type
 
-    private final double mFragCountLogValue;
-    private final int mMinSampleFragments;
     private final double mWeightExponent;
-    private final boolean mRunPairwise;
 
     private BufferedWriter mCssWriter;
 
-    private static final String FRAG_COUNT_LOG_VALUE = "alt_sj_log_value";
     private static final String LOG_CSS_VALUES = "alt_sj_log_css";
     private static final String WEIGHT_EXPONENT = "alt_sj_weight_exp";
-    private static final String RUN_PAIRWISE = "alt_sj_pairwise";
-    private static final String MIN_SAMPLE_FRAGS = "alt_sj_min_sample_frags";
 
     private static final String READ_LENGTH_DELIM = "_";
 
@@ -105,11 +99,6 @@ public class AltSjClassifier implements CuppaClassifier
         mCssWriter = null;
 
         mWeightExponent = configBuilder.getDecimal(WEIGHT_EXPONENT);
-        mFragCountLogValue = max(configBuilder.getDecimal(FRAG_COUNT_LOG_VALUE), 1.0);
-
-        mMinSampleFragments = configBuilder.getInteger(MIN_SAMPLE_FRAGS);
-
-        mRunPairwise = configBuilder.hasFlag(RUN_PAIRWISE);
 
         if(configBuilder.hasValue(LOG_CSS_VALUES))
         {
@@ -119,10 +108,7 @@ public class AltSjClassifier implements CuppaClassifier
 
     public static void addCmdLineArgs(final ConfigBuilder configBuilder)
     {
-        configBuilder.addDecimal(FRAG_COUNT_LOG_VALUE, "Use log of frag counts plus this value", 1);
         configBuilder.addDecimal(WEIGHT_EXPONENT, "Exponent for weighting pair-wise calcs", ALT_SJ_DIFF_EXPONENT);
-        configBuilder.addFlag(RUN_PAIRWISE, "Run pair-wise classifier");
-        configBuilder.addInteger(MIN_SAMPLE_FRAGS, "Min sample fragments to use a site", 0);
         configBuilder.addFlag(LOG_CSS_VALUES, "Log CSS values");
     }
 
@@ -204,9 +190,6 @@ public class AltSjClassifier implements CuppaClassifier
 
         addCancerCssResults(sample, rawSampleFragCounts, adjSampleFragCounts, results);
 
-        if(mRunPairwise)
-            addSampleCssResults(sample, adjSampleFragCounts, results, similarities);
-
         return true;
     }
 
@@ -216,12 +199,7 @@ public class AltSjClassifier implements CuppaClassifier
 
         for(int i = 0; i < sampleFragCounts.length; ++i)
         {
-            int fragCount = rawSampleFragCounts[i];
-
-            if(fragCount < mMinSampleFragments)
-                continue;
-
-            sampleFragCounts[i] = convertFragCount(fragCount);
+            sampleFragCounts[i] = convertFragCount(rawSampleFragCounts[i]);
         }
 
         return sampleFragCounts;
@@ -241,13 +219,10 @@ public class AltSjClassifier implements CuppaClassifier
         {
             for(int i = 0; i < rawSampleFragCounts.length; ++i)
             {
-                if(rawSampleFragCounts[i] >= mMinSampleFragments)
-                {
-                    totalFrags += rawSampleFragCounts[i];
+                totalFrags += rawSampleFragCounts[i];
 
-                    if(adjSampleFragCounts[i] > 0)
-                        ++altSjSites;
-                }
+                if(adjSampleFragCounts[i] > 0)
+                    ++altSjSites;
             }
         }
 
@@ -280,7 +255,7 @@ public class AltSjClassifier implements CuppaClassifier
                     adjustRefCounts(mRefCancerTypeMatrix.getRow(i), rawSampleFragCounts, cohortData.SampleCount) : mRefCancerTypeMatrix.getRow(i);
 
             // now any adjustments have been made, zero out any low-fragment-count sites
-            double css = calcCosineSim(refAsjFragCounts, adjSampleFragCounts, false, mMinSampleFragments > 0);
+            double css = calcCosineSim(refAsjFragCounts, adjSampleFragCounts, false, false);
 
             if(css < GENE_EXP_CSS_THRESHOLD)
                 continue;
@@ -327,81 +302,6 @@ public class AltSjClassifier implements CuppaClassifier
                 sample.Id, ALT_SJ, CLASSIFIER, ALT_SJ_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
-    private void addSampleCssResults(
-            final SampleData sample, final double[] sampleFragCounts, final List<SampleResult> results, final List<SampleSimilarity> similarities)
-    {
-        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
-
-        final List<SampleSimilarity> topMatches = Lists.newArrayList();
-
-        int readLength = sample.rnaReadLength();
-
-        for(Map.Entry<String,Integer> entry : mSampleIndexMap.entrySet())
-        {
-            final String refSampleId = entry.getKey();
-
-            if(refSampleId.equals(sample.Id))
-                continue;
-
-            if(readLength != RNA_READ_LENGTH_NONE && readLength != mSampleDataCache.getRefSampleRnaReadLength(refSampleId))
-                continue;
-
-            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
-
-            if(refCancerType == null)
-                continue;
-
-            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
-                continue;
-
-            int refSampleCountsIndex = entry.getValue();
-
-            // TODO: cache the converted ref counts to avoid repeating this step?
-            final short[] refRawSampleFragCounts = mSampleFragCounts[refSampleCountsIndex];
-            final double[] refSampleFragCounts = convertSampleFragCounts(refRawSampleFragCounts);
-
-            double css = calcCosineSim(sampleFragCounts, refSampleFragCounts);
-
-            if(css < GENE_EXP_CSS_THRESHOLD)
-                continue;
-
-            if(mConfig.WriteSimilarities)
-            {
-                recordCssSimilarity(
-                        topMatches, sample.Id, refSampleId, css, ALT_SJ_PAIRWISE.toString(),
-                        CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
-            }
-
-            if(!isKnownCancerType(refCancerType))
-                continue;
-
-            double cssWeight = pow(mWeightExponent, -100 * (1 - css));
-
-            int cancerSampleCount = mSampleDataCache.getCancerSampleCount(refCancerType);
-            double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
-
-            Double total = cancerCssTotals.get(refCancerType);
-
-            if(total == null)
-                cancerCssTotals.put(refCancerType, weightedCss);
-            else
-                cancerCssTotals.put(refCancerType, total + weightedCss);
-        }
-
-        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
-
-        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
-        {
-            double prob = totalCss > 0 ? entry.getValue() / totalCss : 0;
-            cancerCssTotals.put(entry.getKey(), prob);
-        }
-
-        results.add(new SampleResult(
-                sample.Id, ALT_SJ, CLASSIFIER, ALT_SJ_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
-
-        similarities.addAll(topMatches);
-    }
-
     private double[] adjustRefCounts(final double[] refCounts, final short[] sampleCounts, int cancerSampleCount)
     {
         // remove the sample's counts - which since now keep raw counts does not need to be de-logged
@@ -409,18 +309,13 @@ public class AltSjClassifier implements CuppaClassifier
 
         for(int b = 0; b < refCounts.length; ++b)
         {
-            if(mFragCountLogValue == 0)
-            {
-                double actualRefCount = refCounts[b] * cancerSampleCount;
-                adjustedCounts[b] = max(actualRefCount - sampleCounts[b], 0) / (cancerSampleCount - 1);
-            }
-            else if(refCounts[b] == 0)
+            if(refCounts[b] == 0)
             {
                 adjustedCounts[b] = refCounts[b];
             }
             else
             {
-                double actualRefCount = (exp(refCounts[b]) - mFragCountLogValue) * cancerSampleCount;
+                double actualRefCount = (exp(refCounts[b]) - 1) * cancerSampleCount;
                 double adjustedRefAvg = max(actualRefCount - sampleCounts[b], 0) / (cancerSampleCount - 1);
                 adjustedCounts[b] = convertFragCount(adjustedRefAvg);
             }
@@ -431,10 +326,7 @@ public class AltSjClassifier implements CuppaClassifier
 
     private double convertFragCount(double fragCount)
     {
-        if(mFragCountLogValue < 1)
-            return fragCount;
-
-        return log(fragCount + mFragCountLogValue);
+        return log(fragCount + 1);
     }
 
     private void loadRefCancerFragCounts()

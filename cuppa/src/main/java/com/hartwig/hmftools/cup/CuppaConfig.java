@@ -135,8 +135,6 @@ public class CuppaConfig
     public final String OutputFileId;
     public final int Threads;
 
-    private boolean mIsValid;
-
     // config strings
     public static final String CATEGORIES = "categories";
 
@@ -194,8 +192,6 @@ public class CuppaConfig
 
     public CuppaConfig(final ConfigBuilder configBuilder)
     {
-        mIsValid = true;
-
         Categories = configCategories(configBuilder);
 
         CUP_LOGGER.info("running classifiers: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
@@ -274,7 +270,6 @@ public class CuppaConfig
             else
             {
                 CUP_LOGGER.error("missing {}, non-ref cohort {} or {} config", SAMPLE, SAMPLE_DATA_FILE, TEST_REF_SAMPLE_DATA);
-                mIsValid = false;
             }
 
             RefSampleTraitsFile = "";
@@ -444,7 +439,6 @@ public class CuppaConfig
         AltSjClassifier.addCmdLineArgs(configBuilder);
         SomaticClassifier.registerConfig(configBuilder);
         FeatureClassifier.registerConfig(configBuilder);
-        SampleTraitClassifier.addCmdLineArgs(configBuilder);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);

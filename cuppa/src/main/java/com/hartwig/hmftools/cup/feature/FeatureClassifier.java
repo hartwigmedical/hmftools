@@ -22,11 +22,7 @@ import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadRefPrevalen
 import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.FeatureType.INDEL;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.MIN_AMP_MULTIPLE;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.RESTRICT_DRIVER_AMP_GENES;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.COMBINE_DRIVER_AMP;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertAndFilterDriverAmps;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.filterDriverAmps;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertDriverAmps;
 
 import java.util.List;
 import java.util.Map;
@@ -60,10 +56,6 @@ public class FeatureClassifier implements CuppaClassifier
     private final double mNonDriverZeroPrevAllocation;
     private final double mDriverZeroPrevAllocation;
 
-    private final boolean mSplitAmps;
-    private final boolean mRestrictAmpGenes;
-    private final double mMinAmpCnMultiple;
-
     public static final String FEATURE_DAMPEN_FACTOR = "feature_dampen_factor";
     public static final String DRIVER_ZERO_PREV = "driver_zero_prev";
     public static final String NON_DRIVER_ZERO_PREV = "non_driver_zero_prev";
@@ -81,10 +73,6 @@ public class FeatureClassifier implements CuppaClassifier
 
         mNonDriverZeroPrevAllocation = configBuilder.getDecimal(NON_DRIVER_ZERO_PREV);
         mDriverZeroPrevAllocation = configBuilder.getDecimal(DRIVER_ZERO_PREV);
-
-        mSplitAmps = !configBuilder.hasFlag(COMBINE_DRIVER_AMP);
-        mMinAmpCnMultiple = configBuilder.getDecimal(MIN_AMP_MULTIPLE);
-        mRestrictAmpGenes = configBuilder.hasFlag(RESTRICT_DRIVER_AMP_GENES);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -96,8 +84,6 @@ public class FeatureClassifier implements CuppaClassifier
 
         configBuilder.addDecimal(
                 NON_DRIVER_ZERO_PREV,"Non-driver zero prevalence allocation", NON_DRIVER_ZERO_PREVALENCE_ALLOCATION_DEFAULT);
-
-        FeaturesCommon.registerConfig(configBuilder);
     }
 
     public CategoryType categoryType() { return FEATURE; }
@@ -123,15 +109,7 @@ public class FeatureClassifier implements CuppaClassifier
         if(!loadSampleFeatures())
             return false;
 
-        if(mSplitAmps)
-        {
-            convertAndFilterDriverAmps(mSampleFeatures, mRestrictAmpGenes);
-
-            if(mMinAmpCnMultiple > 0)
-            {
-                filterDriverAmps(mSampleFeatures, mSampleDataCache.SampleTraitsData, mMinAmpCnMultiple);
-            }
-        }
+        convertDriverAmps(mSampleFeatures);
 
         return true;
     }

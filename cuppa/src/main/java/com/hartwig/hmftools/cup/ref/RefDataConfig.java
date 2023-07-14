@@ -172,6 +172,5 @@ public class RefDataConfig
 
         RefGeneExpression.registerConfig(configBuilder);
         RefSomatics.registerConfig(configBuilder);
-        RefFeatures.registerConfig(configBuilder);
     }
 }

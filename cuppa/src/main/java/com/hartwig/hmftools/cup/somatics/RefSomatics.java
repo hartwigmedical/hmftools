@@ -81,9 +81,6 @@ public class RefSomatics implements RefClassifier
     private final Map<String,Integer> mGenPosCountsIndex;
     private boolean mWriteGenPosMatrixData;
 
-    private final boolean mIncludeAidApobec;
-    private final boolean mExcludeGenPosChrX;
-
     private final PositionFrequencies mPosFrequencies;
 
     private BufferedWriter mRefDataWriter;
@@ -110,9 +107,6 @@ public class RefSomatics implements RefClassifier
         mGenPosCountsIndex = Maps.newHashMap();
         mWriteGenPosMatrixData = false;
 
-        mIncludeAidApobec = configBuilder.hasFlag(INCLUDE_AID_APOBEC);
-        mExcludeGenPosChrX = configBuilder.hasFlag(EXCLUDE_GEN_POS_CHR_X);
-
         int posFreqBucketSize = configBuilder.getInteger(GEN_POS_BUCKET_SIZE_CFG);
         int genPosMaxSampleCount = configBuilder.getInteger(GEN_POS_MAX_SAMPLE_COUNT_CFG);
 
@@ -136,8 +130,6 @@ public class RefSomatics implements RefClassifier
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addInteger(GEN_POS_BUCKET_SIZE_CFG, GEN_POS_BUCKET_SIZE_DESC, GEN_POS_BUCKET_SIZE);
-        configBuilder.addFlag(INCLUDE_AID_APOBEC, INCLUDE_AID_APOBEC_DESC);
-        configBuilder.addFlag(EXCLUDE_GEN_POS_CHR_X, EXCLUDE_GEN_POS_CHR_X_DESC);
         configBuilder.addInteger(GEN_POS_MAX_SAMPLE_COUNT_CFG, GEN_POS_MAX_SAMPLE_COUNT_DESC, GEN_POS_MAX_SAMPLE_COUNT);
     }
 
@@ -163,13 +155,6 @@ public class RefSomatics implements RefClassifier
             mGenPosCounts = loadReferenceSnvCounts(mConfig.GenPosMatrixFile, mGenPosCountsIndex, MATRIX_TYPE_GEN_POS);
 
             retrieveMissingSampleCounts();
-        }
-
-        if(mExcludeGenPosChrX)
-        {
-            String chrX = mConfig.RefGenVersion.versionedChromosome("X");
-            excludeChromosome(mGenPosCounts, mPosFrequencies, chrX);
-            mWriteGenPosMatrixData = true;
         }
 
         // always exclude Y, if not already when the counts were made
@@ -361,7 +346,7 @@ public class RefSomatics implements RefClassifier
                 int refSampleIndex = mGenPosCountsIndex.size();
                 mGenPosCountsIndex.put(sampleId, refSampleIndex);
 
-                AidApobecStatus aidApobecStatus = mIncludeAidApobec ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
+                AidApobecStatus aidApobecStatus = AidApobecStatus.FALSE_ONLY;
                 extractPositionFrequencyCounts(variants, mPosFrequencies, aidApobecStatus);
                 mGenPosCounts.setRow(refSampleIndex, mPosFrequencies.getCounts());
             }
