@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.cohort.application;
 
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.hartwig.hmftools.orange.util.Config;
@@ -60,9 +61,35 @@ public interface OrangeCohortDataGeneratorConfig {
         }
 
         return ImmutableOrangeCohortDataGeneratorConfig.builder()
-                .doidJson(Config.nonOptionalFile(cmd, DOID_JSON))
-                .cohortMappingTsv(Config.nonOptionalFile(cmd, COHORT_MAPPING_TSV))
-                .outputDirectory(Config.outputDir(cmd, OUTPUT_DIRECTORY))
+                .doidJson(nonOptionalFile(cmd, DOID_JSON))
+                .cohortMappingTsv(nonOptionalFile(cmd, COHORT_MAPPING_TSV))
+                .outputDirectory(outputDir(cmd, OUTPUT_DIRECTORY))
                 .build();
     }
+
+    @NotNull
+    private static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param)   {
+        return Config.fileIfExists(nonOptionalValue(cmd, param));
+    }
+
+    @NotNull
+    private static String nonOptionalValue(@NotNull CommandLine cmd, @NotNull String param) {
+        String value = cmd.getOptionValue(param);
+        if (value == null) {
+            throw new IllegalArgumentException("Parameter must be provided: " + param);
+        }
+
+        return value;
+    }
+
+    @NotNull
+    private static String outputDir(@NotNull CommandLine cmd, @NotNull String param) throws IOException {
+        String value = nonOptionalValue(cmd, param);
+        File outputDir = new File(value);
+        if (!outputDir.exists() && !outputDir.mkdirs()) {
+            throw new IOException("Unable to write to directory " + value);
+        }
+        return value;
+    }
+
 }
