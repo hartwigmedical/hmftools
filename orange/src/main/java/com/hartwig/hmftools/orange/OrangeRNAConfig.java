@@ -64,7 +64,7 @@ public interface OrangeRNAConfig {
     String isofoxAltSpliceJunctionCsv();
 
     @Nullable
-    static OrangeRNAConfig createConfig(final ConfigBuilder configBuilder) {
+    static OrangeRNAConfig createConfig(@NotNull ConfigBuilder configBuilder) {
 
         boolean hasRnaSampleId = configBuilder.hasValue(RNA_SAMPLE_ID);
         boolean hasIsofoxDir = configBuilder.hasValue(ISOFOX_DIR_CFG);
@@ -97,13 +97,14 @@ public interface OrangeRNAConfig {
 
         String isofoxDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, ISOFOX_DIR_CFG, ISOFOX_DIR);
 
+        String geneDistributionFile = configBuilder.getValue(ISOFOX_GENE_DISTRIBUTION_CSV);
+        String altSpliceJuncCohortFile = configBuilder.getValue(ISOFOX_ALT_SJ_COHORT_CSV);
+
         String tumorSampleId = configBuilder.getValue(OrangeConfig.TUMOR_SAMPLE_ID);
         String geneDataFile = Config.fileIfExists(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
         String statisticsFile = Config.fileIfExists(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
         String altSpliceJuncFile = Config.fileIfExists(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
         String fusionsFile = Config.fileIfExists(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
-        String geneDistributionFile = Config.fileIfExists(configBuilder.getValue(ISOFOX_GENE_DISTRIBUTION_CSV));
-        String altSpliceJuncCohortFile = Config.fileIfExists(configBuilder.getValue(ISOFOX_ALT_SJ_COHORT_CSV));
 
         return ImmutableOrangeRNAConfig.builder()
                 .rnaSampleId(rnaSampleId)
