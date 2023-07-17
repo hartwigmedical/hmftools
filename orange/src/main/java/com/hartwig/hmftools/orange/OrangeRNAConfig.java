@@ -34,7 +34,7 @@ public interface OrangeRNAConfig {
 
     static void registerConfig(final ConfigBuilder configBuilder) {
 
-        configBuilder.addConfigItem(RNA_SAMPLE_ID, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
+        configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
 
         configBuilder.addPath(ISOFOX_GENE_DISTRIBUTION_CSV, false, "(Optional) Path to isofox gene distribution CSV");
         configBuilder.addPath(ISOFOX_ALT_SJ_COHORT_CSV, false, "(Optional) Path to isofox alt SJ cohort CSV.");
