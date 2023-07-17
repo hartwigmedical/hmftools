@@ -30,6 +30,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
+import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
@@ -48,146 +49,66 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class PurpleVariantFactory {
 
+    private final PaveAlgo paveAlgo;
+
+    public PurpleVariantFactory(@NotNull PaveAlgo paveAlgo) {
+        this.paveAlgo = paveAlgo;
+    }
+
+    @Nullable
+    public List<PurpleVariant> fromPurpleVariantContext(@Nullable List<PurpleVariantContext> context) {
+        if (context == null) {
+            return null;
+        }
+        return context.stream().map(this::fromPurpleVariantContext).collect(Collectors.toList());
+    }
+
     @NotNull
-    private final CompoundFilter mFilter;
+    public PurpleVariant fromPurpleVariantContext(@NotNull PurpleVariantContext context) {
 
-    public static PurpleVariantFactory withPassingOnlyFilter() {
-        return new PurpleVariantFactory(new PassingVariantFilter());
-    }
-
-    public PurpleVariantFactory(final VariantContextFilter... filters) {
-        mFilter = new CompoundFilter(true);
-        mFilter.addAll(Arrays.asList(filters));
-        mFilter.add(new HumanChromosomeFilter());
-        mFilter.add(new NTFilter());
-    }
-
-    public List<PurpleVariant> fromVCFFile(final String tumor, @Nullable final String reference, @Nullable final String rna,
-            final String vcfFile) throws IOException {
-        List<PurpleVariant> result = new ArrayList<>();
-
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
-            final VCFHeader header = (VCFHeader) reader.getHeader();
-
-            if (!sampleInFile(tumor, header)) {
-                throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
-            }
-
-            if (reference != null && !sampleInFile(reference, header)) {
-                throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
-            }
-
-            if (rna != null && !sampleInFile(rna, header)) {
-                throw new IllegalArgumentException("Sample " + rna + " not found in vcf file " + vcfFile);
-            }
-
-            if (!header.hasFormatLine("AD")) {
-                throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
-            }
-
-            for (VariantContext variantContext : reader.iterator()) {
-                if (mFilter.test(variantContext)) {
-                    try {
-                        PurpleVariant purpleSomaticVariant = createVariant(variantContext, tumor, reference, rna);
-                        result.add(purpleSomaticVariant);
-                    } catch (IllegalArgumentException e) {
-                        // ignore, consider the sample filtered
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    public PurpleVariant createVariant(VariantContext variantContext, String sample, @Nullable String reference, @Nullable String rna) {
-        if (!mFilter.test(variantContext)) {
-            throw new IllegalArgumentException(String.format("Variant could not be created because sample [%s] does not have status PASS", sample));
-        }
-
-        if (!AllelicDepth.containsAllelicDepth(variantContext.getGenotype(sample))) {
-            throw new IllegalArgumentException(String.format(
-                    "Variant could not be created because sample [%s] does not contain allelic depth",
-                    sample));
-        }
-
-        final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(variantContext.getGenotype(sample));
-        int readCount = tumorDepth.totalReadCount();
-
-        if (readCount <= 0) {
-            throw new IllegalArgumentException(String.format(
-                    "Variant could not be created because tumor depth read count should be greater than 0 (actual value: %s)",
-                    readCount));
-        }
-
-        return helperCreateVariant(variantContext, tumorDepth, reference, rna);
-    }
-
-    private PurpleVariant helperCreateVariant(VariantContext variantContext, AllelicDepth tumorDepth, @Nullable String reference,
-            @Nullable String rna) {
-        VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);
-        final VariantImpact variantImpact = contextDecorator.variantImpact();
-        final List<VariantTranscriptImpact> variantTranscriptImpacts = VariantTranscriptImpact.fromVariantContext(variantContext);
-        final List<PurpleTranscriptImpact> purpleVariantTranscriptImpacts =
-                variantTranscriptImpacts.stream().map(PurpleConversion::convert).collect(Collectors.toList());
-        final Optional<AllelicDepth> rnaDepth = extractRnaDepth(variantContext, rna);
+        var purpleVariantTranscriptImpacts = context.otherImpacts().stream().map(PurpleConversion::convert).collect(Collectors.toList());
+        var rnaDepth = context.rnaDepth() != null ? PurpleConversion.convert(context.rnaDepth()) : null;
 
         return ImmutablePurpleVariant.builder()
-                .type(PurpleVariantType.valueOf(contextDecorator.type().name()))
-                .gene(variantImpact.CanonicalGeneName)
-                .chromosome(contextDecorator.chromosome())
-                .position(contextDecorator.position())
-                .ref(contextDecorator.ref())
-                .alt(contextDecorator.alt())
-                .worstCodingEffect(PurpleConversion.convert(variantImpact.WorstCodingEffect))
-                .canonicalImpact(extractCanonicalImpact(contextDecorator))
+                .type(PurpleVariantType.valueOf(context.type().name()))
+                .gene(context.gene())
+                .chromosome(context.chromosome())
+                .position(context.position())
+                .ref(context.ref())
+                .alt(context.alt())
+                .worstCodingEffect(PurpleConversion.convert(context.worstCodingEffect()))
+                .canonicalImpact(extractCanonicalImpact(context))
                 .otherImpacts(purpleVariantTranscriptImpacts)
-                .hotspot(Hotspot.valueOf(contextDecorator.hotspot().name()))
-                .reported(contextDecorator.reported())
-                .tumorDepth(extractTumorDepth(tumorDepth))
-                .rnaDepth(rnaDepth.map(PurpleConversion::convert).orElse(null))
-                .adjustedCopyNumber(contextDecorator.adjustedCopyNumber())
-                .adjustedVAF(contextDecorator.adjustedVaf())
-                .minorAlleleCopyNumber(contextDecorator.minorAlleleCopyNumber())
-                .variantCopyNumber(contextDecorator.variantCopyNumber())
-                .biallelic(contextDecorator.biallelic())
-                .genotypeStatus(PurpleGenotypeStatus.valueOf(contextDecorator.genotypeStatus(reference).name()))
-                .repeatCount(contextDecorator.repeatCount())
-                .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
-                .localPhaseSets(variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0))
+                .hotspot(Hotspot.valueOf(context.hotspot().name()))
+                .reported(context.reported())
+                .tumorDepth(extractTumorDepth(context.tumorDepth()))
+                .rnaDepth(rnaDepth)
+                .adjustedCopyNumber(context.adjustedCopyNumber())
+                .adjustedVAF(context.adjustedVAF())
+                .minorAlleleCopyNumber(context.minorAlleleCopyNumber())
+                .variantCopyNumber(context.variantCopyNumber())
+                .biallelic(context.biallelic())
+                .genotypeStatus(PurpleGenotypeStatus.valueOf(context.genotypeStatus().name()))
+                .repeatCount(context.repeatCount())
+                .subclonalLikelihood(context.subclonalLikelihood())
+                .localPhaseSets(context.localPhaseSets())
                 .build();
     }
 
-    private PurpleTranscriptImpact extractCanonicalImpact(VariantContextDecorator contextDecorator) {
-        var variantImpact = contextDecorator.variantImpact();
-
-        List<VariantEffect> variantEffects = VariantEffect.effectsToList(variantImpact.CanonicalEffect);
+    private PurpleTranscriptImpact extractCanonicalImpact(PurpleVariantContext purpleContext) {
+        var paveEntry = paveAlgo.run(purpleContext.gene(), purpleContext.canonicalTranscript(), purpleContext.position());
+        List<VariantEffect> variantEffects = VariantEffect.effectsToList(purpleContext.canonicalEffect());
         List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
         return ImmutablePurpleTranscriptImpact.builder()
-                .transcript(variantImpact.CanonicalTranscript)
-                .hgvsCodingImpact(variantImpact.CanonicalHgvsCoding)
-                .hgvsProteinImpact(variantImpact.CanonicalHgvsProtein)
-                .spliceRegion(variantImpact.CanonicalSpliceRegion)
+                .transcript(purpleContext.canonicalTranscript())
+                .hgvsCodingImpact(purpleContext.canonicalHgvsCodingImpact())
+                .hgvsProteinImpact(purpleContext.canonicalHgvsProteinImpact())
+                .affectedCodon(paveEntry != null ? paveEntry.affectedCodon() : null)
+                .affectedExon(paveEntry != null ? paveEntry.affectedExon() : null)
+                .spliceRegion(purpleContext.spliceRegion())
                 .effects(purpleVariantEffects)
-                .codingEffect(PurpleConversion.convert(variantImpact.CanonicalCodingEffect))
+                .codingEffect(PurpleConversion.convert(purpleContext.canonicalCodingEffect()))
                 .build();
-    }
-
-    private List<PurpleTranscriptImpact> extractOtherImpacts(VariantContextDecorator contextDecorator) {
-        var variantImpact = contextDecorator.variantImpact();
-        List<PurpleTranscriptImpact> otherImpacts = Lists.newArrayList();
-        for (AltTranscriptReportableInfo altInfo : AltTranscriptReportableInfo.parseAltTranscriptInfo(variantImpact.OtherReportableEffects)) {
-            List<VariantEffect> variantEffects = VariantEffect.effectsToList(altInfo.Effects);
-            List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
-            otherImpacts.add(ImmutablePurpleTranscriptImpact.builder()
-                    .transcript(altInfo.TransName)
-                    .hgvsCodingImpact(altInfo.HgvsCoding)
-                    .hgvsProteinImpact(altInfo.HgvsProtein)
-                    .spliceRegion(variantImpact.CanonicalSpliceRegion)
-                    .effects(purpleVariantEffects)
-                    .codingEffect(PurpleConversion.convert(altInfo.Effect))
-                    .build());
-        }
-        return otherImpacts;
     }
 
     private static PurpleAllelicDepth extractTumorDepth(AllelicDepth tumorDepth) {
@@ -195,13 +116,5 @@ public class PurpleVariantFactory {
                 .alleleReadCount(tumorDepth.alleleReadCount())
                 .totalReadCount(tumorDepth.totalReadCount())
                 .build();
-    }
-
-    private static Optional<AllelicDepth> extractRnaDepth(VariantContext context, @Nullable String rna) {
-        return Optional.ofNullable(context.getGenotype(rna)).filter(AllelicDepth::containsAllelicDepth).map(AllelicDepth::fromGenotype);
-    }
-
-    private static boolean sampleInFile(final String sample, final VCFHeader header) {
-        return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
     }
 }

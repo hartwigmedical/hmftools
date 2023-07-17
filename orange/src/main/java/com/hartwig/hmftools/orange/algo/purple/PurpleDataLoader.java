@@ -88,11 +88,9 @@ public final class PurpleDataLoader
 
         List<DriverCatalog> somaticDrivers = DriverCatalogFile.read(somaticDriverCatalogTsv);
 
-
-
-        List<PurpleVariant> allSomaticVariants = PurpleVariantFactory.withPassingOnlyFilter()
+        List<PurpleVariantContext> allSomaticVariants = PurpleVariantContextLoader.withPassingOnlyFilter()
                 .fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
-        List<PurpleVariant> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
+        List<PurpleVariantContext> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
 
         List<StructuralVariant> allSomaticStructuralVariants =
                 StructuralVariantFileLoader.fromFile(somaticStructuralVariantVcf, new PassingVariantFilter());
@@ -101,8 +99,8 @@ public final class PurpleDataLoader
 
         List<DriverCatalog> germlineDrivers = null;
         List<StructuralVariant> allGermlineStructuralVariants = null;
-        List<PurpleVariant> allGermlineVariants = null;
-        List<PurpleVariant> reportableGermlineVariants = null;
+        List<PurpleVariantContext> allGermlineVariants = null;
+        List<PurpleVariantContext> reportableGermlineVariants = null;
         List<GermlineDeletion> allGermlineDeletions = null;
         List<GermlineDeletion> reportableGermlineDeletions = null;
         if (referenceSample != null)
@@ -110,7 +108,7 @@ public final class PurpleDataLoader
             germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
             allGermlineStructuralVariants = StructuralVariantFileLoader.fromFile(germlineStructuralVariantVcf, new PassingVariantFilter());
 
-            allGermlineVariants = new PurpleVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample,
+            allGermlineVariants = new PurpleVariantContextLoader().fromVCFFile(tumorSample, referenceSample, rnaSample,
                     germlineVariantVcf);
             reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
 
@@ -136,10 +134,10 @@ public final class PurpleDataLoader
     }
 
     @NotNull
-    private static List<PurpleVariant> selectReportedVariants(@NotNull List<PurpleVariant> allVariants)
+    private static List<PurpleVariantContext> selectReportedVariants(@NotNull List<PurpleVariantContext> allVariants)
     {
-        List<PurpleVariant> reported = Lists.newArrayList();
-        for (PurpleVariant variant : allVariants)
+        List<PurpleVariantContext> reported = Lists.newArrayList();
+        for (PurpleVariantContext variant : allVariants)
         {
             if (variant.reported())
             {

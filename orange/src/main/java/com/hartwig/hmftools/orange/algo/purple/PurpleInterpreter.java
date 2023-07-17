@@ -64,25 +64,26 @@ public class PurpleInterpreter
     private static final Logger LOGGER = LogManager.getLogger(PurpleInterpreter.class);
 
     private static final int MAX_LENGTH_FOR_IMPLIED_DELS = 1500;
-
+    @NotNull
+    private final PurpleVariantFactory purpleVariantFactory;
     @NotNull
     private final GermlineGainLossFactory germlineGainLossFactory;
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
     private final LinxRecord linx;
-    @NotNull
-    private final PaveAlgo paveAlgo;
     @Nullable
     private final ChordData chord;
 
-    public PurpleInterpreter(@NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final LinxRecord linx, @NotNull PaveAlgo paveAlgo, @Nullable final ChordData chord)
+
+    public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
+            @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
+            @NotNull final LinxRecord linx, @Nullable final ChordData chord)
     {
+        this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
         this.driverGenes = driverGenes;
         this.linx = linx;
-        this.paveAlgo = paveAlgo;
         this.chord = chord;
     }
 
@@ -90,14 +91,16 @@ public class PurpleInterpreter
     public PurpleRecord interpret(@NotNull PurpleData purple)
     {
         LOGGER.info("Analysing purple data");
-        List<PurpleVariant> allSomaticVariants = analyseCodonsAndExons(purple.allSomaticVariants());
-        List<PurpleVariant> reportableSomaticVariants = analyseCodonsAndExons(purple.reportableSomaticVariants());
+
+        List<PurpleVariant> allSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allSomaticVariants());
+
+        List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableSomaticVariants());
         List<PurpleVariant> additionalSuspectSomaticVariants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(allSomaticVariants, reportableSomaticVariants, driverGenes);
         LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
 
-        List<PurpleVariant> allGermlineVariants = analyseCodonsAndExons(purple.allGermlineVariants());
-        List<PurpleVariant> reportableGermlineVariants = analyseCodonsAndExons(purple.reportableGermlineVariants());
+        List<PurpleVariant> allGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
+        List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableGermlineVariants());
         List<PurpleVariant> additionalSuspectGermlineVariants =
                 GermlineVariantSelector.selectInterestingUnreportedVariants(allGermlineVariants);
         if(additionalSuspectGermlineVariants != null)
@@ -182,26 +185,6 @@ public class PurpleInterpreter
                 .reportableGermlineFullLosses(reportableGermlineFullLosses)
                 .build();
     }
-
-    @Nullable
-    private List<PurpleVariant> analyseCodonsAndExons(@Nullable List<PurpleVariant> purpleVariants) {
-        if (purpleVariants == null) {
-            return null;
-        }
-        return purpleVariants.stream().map(this::analyseCodonsAndExons).collect(Collectors.toList());
-    }
-
-    @NotNull
-    private PurpleVariant analyseCodonsAndExons(@NotNull PurpleVariant purpleVariant)
-    {
-        PaveEntry paveEntry = paveAlgo.run(purpleVariant.gene(), purpleVariant.canonicalImpact().transcript(), purpleVariant.position());
-        var analysedImpact = ImmutablePurpleTranscriptImpact.builder().from(purpleVariant.canonicalImpact())
-                .affectedCodon(paveEntry != null ? paveEntry.affectedCodon() : null)
-                .affectedExon(paveEntry != null ? paveEntry.affectedExon() : null)
-                .build();
-        return ImmutablePurpleVariant.builder().from(purpleVariant).canonicalImpact(analysedImpact).build();
-    }
-
 
     @NotNull
     @VisibleForTesting

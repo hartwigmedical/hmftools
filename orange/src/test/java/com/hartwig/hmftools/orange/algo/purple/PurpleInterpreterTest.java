@@ -119,13 +119,13 @@ public class PurpleInterpreterTest {
 
     @NotNull
     private static PurpleInterpreter createInterpreter(@NotNull EnsemblDataCache ensemblDataCache) {
+        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
-        PaveAlgo paveAlgo = new PaveAlgo(ensemblDataCache);
 
-        return new PurpleInterpreter(germlineGainLossFactory,
+        return new PurpleInterpreter(purpleVariantFactory,
+                germlineGainLossFactory,
                 Lists.newArrayList(),
                 TestLinxInterpretationFactory.createMinimalTestLinxData(),
-                paveAlgo,
                 null);
     }
 

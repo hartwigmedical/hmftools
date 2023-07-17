@@ -73,6 +73,7 @@ import com.hartwig.hmftools.orange.algo.purple.GermlineGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.PurpleData;
 import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
+import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
 import com.hartwig.hmftools.orange.algo.util.ReportLimiter;
 import com.hartwig.hmftools.orange.algo.wildtype.WildTypeAlgo;
@@ -189,8 +190,8 @@ public class OrangeAlgo {
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
-        PaveAlgo paveAlgo = new PaveAlgo(ensemblDataCache);
-        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(germlineGainLossFactory, driverGenes, linx, paveAlgo, chord);
+        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
+        PurpleInterpreter purpleInterpreter = new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
         IsofoxRecord isofox = null;

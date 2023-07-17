@@ -27,16 +27,16 @@ public interface PurpleData {
     List<DriverCatalog> germlineDrivers();
 
     @NotNull
-    List<PurpleVariant> allSomaticVariants();
+    List<PurpleVariantContext> allSomaticVariants();
 
     @NotNull
-    List<PurpleVariant> reportableSomaticVariants();
+    List<PurpleVariantContext> reportableSomaticVariants();
 
     @Nullable
-    List<PurpleVariant> allGermlineVariants();
+    List<PurpleVariantContext> allGermlineVariants();
 
     @Nullable
-    List<PurpleVariant> reportableGermlineVariants();
+    List<PurpleVariantContext> reportableGermlineVariants();
 
     @NotNull
     List<StructuralVariant> allSomaticStructuralVariants();
