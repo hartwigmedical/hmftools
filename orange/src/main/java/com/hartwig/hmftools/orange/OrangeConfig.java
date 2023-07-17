@@ -54,9 +54,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
-import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -147,19 +145,19 @@ public interface OrangeConfig {
         configBuilder.addPath(PIPELINE_SAMPLE_ROOT_DIR, false, PIPELINE_SAMPLE_ROOT_DESC);
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
 
-        configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
-        configBuilder.addPath(CUPPA_DIR_CFG, false, CUPPA_DIR_DESC);
-        configBuilder.addPath(LILAC_DIR_CFG, true, LILAC_DIR_DESC);
-        configBuilder.addPath(LINX_DIR_CFG, true, LINX_DIR_DESC);
-        configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
-        configBuilder.addPath(LINX_PLOT_DIR_CFG, true, LINX_PLOT_DIR_DESC);
-        configBuilder.addPath(PEACH_DIR_CFG, false, PEACH_DIR_DESC);
-        configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
-        configBuilder.addPath(PURPLE_PLOT_DIR_CFG, true, PURPLE_PLOT_DIR_DESC);
         configBuilder.addPath(SAGE_DIR_CFG, true, SAGE_DIR_DESC);
         configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);
-        configBuilder.addPath(SIGS_DIR_CFG, false, SIGS_DIR_DESC);
+        configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addPath(PURPLE_PLOT_DIR_CFG, true, PURPLE_PLOT_DIR_DESC);
+        configBuilder.addPath(LINX_DIR_CFG, true, LINX_DIR_DESC);
+        configBuilder.addPath(LINX_PLOT_DIR_CFG, true, LINX_PLOT_DIR_DESC);
+        configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
+        configBuilder.addPath(LILAC_DIR_CFG, true, LILAC_DIR_DESC);
         configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
+        configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
+        configBuilder.addPath(CUPPA_DIR_CFG, false, CUPPA_DIR_DESC);
+        configBuilder.addPath(PEACH_DIR_CFG, false, PEACH_DIR_DESC);
+        configBuilder.addPath(SIGS_DIR_CFG, false, SIGS_DIR_DESC);
 
         configBuilder.addFlag(CONVERT_GERMLINE_TO_SOMATIC, "If set, germline events are converted to somatic events.");
         configBuilder.addFlag(LIMIT_JSON_OUTPUT, "If set, limits every list in the json output to 1 entry.");
@@ -369,7 +367,7 @@ public interface OrangeConfig {
 
         OrangeRefGenomeVersion orangeRefGenomeVersion = OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name());
 
-        String outputDir = Config.fileIfExists(parseOutputDir(configBuilder));
+        String outputDir = Config.fileIfExists(configBuilder.getValue(OUTPUT_DIR));
 
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(configBuilder.getValue(TUMOR_SAMPLE_ID))
@@ -418,11 +416,11 @@ public interface OrangeConfig {
     static String getToolDirectory(@NotNull ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
             @Nullable String sampleDataDir, @NotNull String toolDirConfig, @NotNull String pipelineToolDir) {
         if (configBuilder.hasValue(toolDirConfig)) {
-            return checkAddDirSeparator(configBuilder.getValue(toolDirConfig));
+            return configBuilder.getValue(toolDirConfig);
         }
 
         if (pipelineSampleRootDir != null) {
-            return pipelineSampleRootDir + pipelineToolDir + File.separator;
+            return pipelineSampleRootDir + pipelineToolDir;
         }
 
         return sampleDataDir;
@@ -435,7 +433,7 @@ public interface OrangeConfig {
             return configBuilder.getValue(toolDirConfig);
         }
 
-        String plotDir = pipelineSampleRootDir != null ? Config.fileIfExists(pipelineSampleRootDir + pipelineToolDir + "/plot/") : null;
+        String plotDir = pipelineSampleRootDir != null ? Config.fileIfExists(pipelineSampleRootDir + pipelineToolDir + "/plot") : null;
         if (plotDir == null) {
             throw new IllegalArgumentException(
                     "Plot directory cannot be determined from [%s]. Please define either the tool directory or the sample directory.");
