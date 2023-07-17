@@ -53,16 +53,15 @@ java -jar orange.jar \
     -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
     -driver_gene_panel_tsv /path/to/driver_gene_panel.tsv \
     -known_fusion_file /path/to/known_fusion_file.tsv \
-    -ensembl_data_directory /path/to/ensembl_data_directory \
+    -ensembl_data_dir /path/to/ensembl_data_directory \
     -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
     -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
-    -sage_somatic_tumor_sample_bqr_plot /path/to/sage_tumor_sample_bqr_plot \
-    -purple_data_directory /path/to/purple_data \
-    -purple_plot_directory /path/to/purple_plots \
-    -linx_somatic_data_directory /path/to/linx_somatic_data \
-    -linx_plot_directory /path/to/linx_plots \
-    -lilac_result_csv /path/to/lilac_results.csv \
-    -lilac_qc_csv /path/to/lilac_qc.csv"
+    -sage /path/to/sage_somatic_output \
+    -purple /path/to/purple_output \
+    -purple_plot /path/to/purple_plots \
+    -linx /path/to/linx_somatic_output \
+    -linx_plot /path/to/linx_plots \
+    -lilac /path/to/lilac_output 
 ```
 
 Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
@@ -71,12 +70,10 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
 ### Additional parameters when whole genome tumor DNA data is available
 
 ```
-   -annotated_virus_tsv /path/to/annotated_virus.tsv \
-   -chord_prediction_txt /path/to/chord_prediction.txt \
-   -cuppa_result_csv /path/to/cuppa_results.tsv \
-   -cuppa_summary_plot /path/to/cuppa_summary_plot \
-   -cuppa_chart_plot /path/to/cuppa_chart_plot \
-   -sigs_allocation_tsv /path/to/sigs.allocation.tsv 
+   -virus /path/to/virus_interpreter_output \
+   -chord /path/to/chord_output \
+   -cuppa /path/to/cuppa_output \
+   -sigs /path/to/sigs_output 
 ```
 
 ### Additional parameters when whole genome germline DNA data is available
@@ -85,10 +82,9 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
     -reference_sample_id reference_sample \
     -ref_sample_wgs_metrics_file /path/to/reference_sample_wgs_metrics \
     -ref_sample_flagstat_file /path/to/reference_sample_flagstats \
-    -sage_germline_gene_coverage_tsv /path/to/sage_germline_gene_coverage.tsv \
-    -sage_somatic_ref_sample_bqr_plot /path/to/sage_ref_sample_bqr_plot \
-    -linx_germline_data_directory /path/to/linx_germline_data \
-    -peach_genotype_tsv /path/to/peach_genotypes.tsv 
+    -sage_germline /path/to/sage_germline_output \
+    -linx_germline /path/to/linx_germline_output \
+    -peach /path/to/peach_output.tsv 
 ```
 
 ### Additional parameters when whole genome RNA data is available
@@ -97,10 +93,7 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
     -rna_sample_id rna_sample \
     -isofox_gene_distribution_csv /path/to/isofox_gene_distribution.csv \
     -isofox_alt_sj_cohort_csv /path/to/isofox_alt_sj_cohort.csv \
-    -isofox_summary_csv /path/to/isofox_summary.csv \
-    -isofox_gene_data_csv /path/to/isofox_gene_data.csv \
-    -isofox_fusion_csv /path/to/isofox_fusion.csv \
-    -isofox_alt_splice_junction_csv /path/to/isofox_alt_splice_junctions.csv
+    -isofox /path/to/isofox_output 
 ```
 
 ### Additional optional parameters across all modes
@@ -114,6 +107,7 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
 | add_disclaimer              | If set, adds a "research use only" disclaimer to the footer of every page.                                                                                                                                                                                                            |  
 | limit_json_output           | If set, limits all lists in the JSON output to a single entry to facilitate manual inspection of the JSON output.                                                                                                                                                                     |
 | log_debug                   | If set, additional DEBUG logging is generated.                                                                                                                                                                                                                                        |
+| log_level                   | If set, overrides the default log level (INFO). Values can be `ERROR`, `WARN`, `INFO`, `DEBUG` and `TRACE`                                                                                                                                                                            |
 
 ### Somatic Findings
 
@@ -216,7 +210,11 @@ investigate potential causes for QC failure.
 - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
-
+- Upcoming
+    - Various updates to configuration:
+      - All inputs are now configured via one directory per tool rather than individual files
+      - `ensembl_data_directory` parameter has been renamed to `ensembl_data_dir`
+      - `log_level` parameter has been added to allow manual override of the default log level
 - [2.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.5.0)
     - Bugfix: Maintain linx clusters after ORANGE germline conversion
     - Include breakdown by classifier in CUPPA predictions
