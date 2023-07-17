@@ -51,17 +51,17 @@ java -jar orange.jar \
     -doid_json /path/to/input_doid_tree.json \
     -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
     -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
-    -driver_gene_panel_tsv /path/to/driver_gene_panel.tsv \
+    -driver_gene_panel /path/to/driver_gene_panel.tsv \
     -known_fusion_file /path/to/known_fusion_file.tsv \
     -ensembl_data_dir /path/to/ensembl_data_directory \
     -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
     -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
-    -sage /path/to/sage_somatic_output \
-    -purple /path/to/purple_output \
-    -purple_plot /path/to/purple_plots \
-    -linx /path/to/linx_somatic_output \
-    -linx_plot /path/to/linx_plots \
-    -lilac /path/to/lilac_output 
+    -sage_dir /path/to/sage_somatic_output \
+    -purple_dir /path/to/purple_output \
+    -purple_plot_dir /path/to/purple_plots \
+    -linx_dir /path/to/linx_somatic_output \
+    -linx_plot_dir /path/to/linx_plots \
+    -lilac_dir /path/to/lilac_output 
 ```
 
 Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
@@ -70,10 +70,10 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
 ### Additional parameters when whole genome tumor DNA data is available
 
 ```
-   -virus /path/to/virus_interpreter_output \
-   -chord /path/to/chord_output \
-   -cuppa /path/to/cuppa_output \
-   -sigs /path/to/sigs_output 
+   -virus_dir /path/to/virus_interpreter_output \
+   -chord_dir /path/to/chord_output \
+   -cuppa_dir /path/to/cuppa_output \
+   -sigs_dir /path/to/sigs_output 
 ```
 
 ### Additional parameters when whole genome germline DNA data is available
@@ -82,18 +82,18 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
     -reference_sample_id reference_sample \
     -ref_sample_wgs_metrics_file /path/to/reference_sample_wgs_metrics \
     -ref_sample_flagstat_file /path/to/reference_sample_flagstats \
-    -sage_germline /path/to/sage_germline_output \
-    -linx_germline /path/to/linx_germline_output \
-    -peach /path/to/peach_output.tsv 
+    -sage_germline_dir /path/to/sage_germline_output \
+    -linx_germline_dir /path/to/linx_germline_output \
+    -peach_dir /path/to/peach_output.tsv 
 ```
 
 ### Additional parameters when whole genome RNA data is available
 
 ```
     -rna_sample_id rna_sample \
-    -isofox_gene_distribution_csv /path/to/isofox_gene_distribution.csv \
-    -isofox_alt_sj_cohort_csv /path/to/isofox_alt_sj_cohort.csv \
-    -isofox /path/to/isofox_output 
+    -isofox_gene_distribution /path/to/isofox_gene_distribution.csv \
+    -isofox_alt_sj_cohort /path/to/isofox_alt_sj_cohort.csv \
+    -isofox_dir /path/to/isofox_output 
 ```
 
 ### Additional optional parameters across all modes
@@ -214,6 +214,9 @@ investigate potential causes for QC failure.
     - Various updates to configuration:
       - All inputs are now configured via one directory per tool rather than individual files
       - `ensembl_data_directory` parameter has been renamed to `ensembl_data_dir`
+      - `driver_gene_panel_tsv` parameter has been renamed to `driver_gene_panel`
+      - `isofox_gene_distribution_csv` parameter has been renamed to `isofox_gene_distribution`
+      - `isofox_alt_sj_cohort_csv` parameter has been renamed to `isofox_alt_sj_cohort`
       - `log_level` parameter has been added to allow manual override of the default log level
 - [2.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.5.0)
     - Bugfix: Maintain linx clusters after ORANGE germline conversion

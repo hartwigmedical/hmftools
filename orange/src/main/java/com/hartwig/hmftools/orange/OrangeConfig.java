@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.orange;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
-import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.addGenePanelOption;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
@@ -130,7 +130,7 @@ public interface OrangeConfig {
         configBuilder.addPath(DOID_JSON, true, "Path to JSON file containing the full DOID tree.");
         configBuilder.addPath(COHORT_MAPPING_TSV, true, "Path to cohort mapping TSV.");
         configBuilder.addPath(COHORT_PERCENTILES_TSV, true, "Path to cohort percentiles TSV.");
-        configBuilder.addPath(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
+        addGenePanelOption(configBuilder, true);
         addKnownFusionFileOption(configBuilder);
         addEnsemblDir(configBuilder);
 
