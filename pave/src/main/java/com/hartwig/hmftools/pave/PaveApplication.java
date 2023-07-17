@@ -141,6 +141,12 @@ public class PaveApplication
             System.exit(1);
         }
 
+        if(!mGnomadAnnotation.hasValidData())
+        {
+            PV_LOGGER.error("invalid Gnomad data, exiting");
+            System.exit(1);
+        }
+
         processVcfFile(mConfig.SampleId);
 
         mTranscriptWriter.close();
