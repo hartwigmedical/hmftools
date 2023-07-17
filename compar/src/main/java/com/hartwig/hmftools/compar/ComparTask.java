@@ -133,7 +133,6 @@ public class ComparTask implements Callable
             catch(IOException e)
             {
                 CMP_LOGGER.warn("sample({}) failed to load driver data: {}", sampleId, e.toString());
-                return null;
             }
         }
 
