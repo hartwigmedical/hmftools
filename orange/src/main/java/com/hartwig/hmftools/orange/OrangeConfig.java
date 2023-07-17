@@ -318,6 +318,8 @@ public interface OrangeConfig {
         }
 
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
+        OrangeRefGenomeVersion orangeRefGenomeVersion = OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name());
+        String outputDir = Config.fileIfExists(configBuilder.getValue(OUTPUT_DIR));
 
         String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
         String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
@@ -333,6 +335,7 @@ public interface OrangeConfig {
 
         String purpleDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PURPLE_DIR_CFG, PURPLE_DIR);
         String purplePlotsDir = getToolPlotsDirectory(configBuilder, pipelineSampleRootDir, PURPLE_PLOT_DIR_CFG, PURPLE_DIR);
+
         String linxSomaticDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_DIR_CFG, LINX_SOMATIC_DIR);
         String linxGermlineDir =
                 getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
@@ -342,6 +345,10 @@ public interface OrangeConfig {
         String lilacCoverage = Config.fileIfExists(LilacAllele.generateFilename(lilacDir, tumorSampleId));
         String lilacQc = Config.fileIfExists(LilacQcData.generateFilename(lilacDir, tumorSampleId));
 
+        String virusDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, VIRUS_DIR_CFG, VIRUS_BREAKEND_DIR);
+        String virusAnnotations =
+                virusDir != null ? Config.fileIfExists(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)) : null;
+
         String chordDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CHORD_DIR_CFG, CHORD_DIR);
         String chordPredictions = chordDir != null ? Config.fileIfExists(ChordDataFile.generateFilename(chordDir, tumorSampleId)) : null;
 
@@ -349,7 +356,9 @@ public interface OrangeConfig {
         String cuppaDataFile = cuppaDir != null ? Config.fileIfExists(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)) : null;
         String cuppaSummaryPlot =
                 cuppaDir != null ? Config.fileIfExists(CuppaDataFile.generateReportSummaryPlotFilename(cuppaDir, tumorSampleId)) : null;
-        String cuppaFeaturesPlot = CuppaDataFile.generateReportFeaturesPlotFilename(cuppaDir, tumorSampleId);
+        String cuppaFeaturesPlot = cuppaDir != null
+                ? Config.optionalFileIfExists(CuppaDataFile.generateReportFeaturesPlotFilename(cuppaDir, tumorSampleId))
+                : null;
         String cuppaChartPlot =
                 cuppaDir != null ? Config.fileIfExists(CuppaDataFile.generateChartPlotFilename(cuppaDir, tumorSampleId)) : null;
 
@@ -357,17 +366,9 @@ public interface OrangeConfig {
         String sigAllocations =
                 sigsDir != null ? Config.fileIfExists(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)) : null;
 
-        String virusDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, VIRUS_DIR_CFG, VIRUS_BREAKEND_DIR);
-        String virusAnnotations =
-                virusDir != null ? Config.fileIfExists(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)) : null;
-
         String peachDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PEACH_DIR_CFG, PEACH_DIR);
         String peachGenotype =
                 peachDir != null ? Config.fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv") : null;
-
-        OrangeRefGenomeVersion orangeRefGenomeVersion = OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name());
-
-        String outputDir = Config.fileIfExists(configBuilder.getValue(OUTPUT_DIR));
 
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(configBuilder.getValue(TUMOR_SAMPLE_ID))
