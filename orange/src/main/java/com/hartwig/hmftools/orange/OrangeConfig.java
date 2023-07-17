@@ -435,7 +435,7 @@ public interface OrangeConfig {
             return configBuilder.getValue(toolDirConfig);
         }
 
-        String plotDir = pipelineSampleRootDir != null ? pipelineSampleRootDir + pipelineToolDir + "/plot/" : null;
+        String plotDir = pipelineSampleRootDir != null ? Config.fileIfExists(pipelineSampleRootDir + pipelineToolDir + "/plot/") : null;
         if (plotDir == null) {
             throw new IllegalArgumentException(
                     "Plot directory cannot be determined from [%s]. Please define either the tool directory or the sample directory.");
