@@ -157,7 +157,7 @@ public interface OrangeConfig {
         configBuilder.addPath(PEACH_DIR_CFG, false, PEACH_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addPath(PURPLE_PLOT_DIR_CFG, true, PURPLE_PLOT_DIR_DESC);
-        configBuilder.addPath(SAGE_DIR_CFG, false, SAGE_DIR_DESC);
+        configBuilder.addPath(SAGE_DIR_CFG, true, SAGE_DIR_DESC);
         configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);
         configBuilder.addPath(SIGS_DIR_CFG, false, SIGS_DIR_DESC);
         configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
