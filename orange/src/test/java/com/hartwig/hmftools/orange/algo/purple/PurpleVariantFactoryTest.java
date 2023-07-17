@@ -49,7 +49,7 @@ public class PurpleVariantFactoryTest
         assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
         assertEquals(PurpleCodingEffect.SYNONYMOUS, canonicalImpact.codingEffect());
 
-        List<PurpleTranscriptImpact> purpleVariantTranscriptImpacts = variant.variantTranscriptImpacts();
+        List<PurpleTranscriptImpact> purpleVariantTranscriptImpacts = variant.otherImpacts();
         assertEquals(4, purpleVariantTranscriptImpacts.size());
 
         // Test if the extra transcripts are loaded properly

@@ -140,7 +140,7 @@ public class PurpleVariantFactory {
                 .alt(contextDecorator.alt())
                 .worstCodingEffect(PurpleConversion.convert(variantImpact.WorstCodingEffect))
                 .canonicalImpact(extractCanonicalImpact(contextDecorator))
-                .otherImpacts(extractOtherImpacts(contextDecorator))
+                .otherImpacts(purpleVariantTranscriptImpacts)
                 .hotspot(Hotspot.valueOf(contextDecorator.hotspot().name()))
                 .reported(contextDecorator.reported())
                 .tumorDepth(extractTumorDepth(tumorDepth))
@@ -154,7 +154,6 @@ public class PurpleVariantFactory {
                 .repeatCount(contextDecorator.repeatCount())
                 .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .localPhaseSets(variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0))
-                .variantTranscriptImpacts(purpleVariantTranscriptImpacts)
                 .build();
     }
 
