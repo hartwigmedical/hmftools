@@ -307,8 +307,9 @@ public class FeatureClassifier implements CuppaClassifier
         {
             final String linxDataDir = mConfig.getLinxDataDir(sample.Id);
             final String purpleDataDir = mConfig.getPurpleDataDir(sample.Id);
+            final String virusDataDir = mConfig.getVirusDataDir(sample.Id);
 
-            if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, mSampleFeatures))
+            if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, virusDataDir, mSampleFeatures))
                 break;
         }
 

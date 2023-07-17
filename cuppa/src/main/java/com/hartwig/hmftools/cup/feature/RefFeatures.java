@@ -128,8 +128,9 @@ public class RefFeatures implements RefClassifier
 
                 final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
                 final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
+                final String virusDataDir = formSamplePath(mConfig.VirusDir, sample.Id);
 
-                if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, sampleFeaturesMap))
+                if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, virusDataDir, sampleFeaturesMap))
                     break;
 
                 if(i > 0 && (i % 100) == 0)
