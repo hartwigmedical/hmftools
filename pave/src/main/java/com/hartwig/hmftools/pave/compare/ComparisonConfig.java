@@ -3,8 +3,7 @@ package com.hartwig.hmftools.pave.compare;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
@@ -23,10 +22,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class ComparisonConfig
 {
@@ -50,59 +46,54 @@ public class ComparisonConfig
     private static final String WRITE_MATCHES = "write_matches";
     private static final String DIFF_TYPES = "diff_types";
 
-    public ComparisonConfig(final CommandLine cmd)
+    public ComparisonConfig(final ConfigBuilder configBuilder)
     {
-        SampleIds = loadSampleIdsFile(cmd);
+        SampleIds = loadSampleIdsFile(configBuilder);
 
-        RefGenVersion = RefGenomeVersion.from(cmd);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        ReferenceVariantsFile = cmd.getOptionValue(REF_VARIANTS_FILE);
+        ReferenceVariantsFile = configBuilder.getValue(REF_VARIANTS_FILE);
 
         ImpactDiffTypes = Lists.newArrayList();
 
-        if(cmd.hasOption(DIFF_TYPES))
+        if(configBuilder.hasValue(DIFF_TYPES))
         {
-            Arrays.stream(cmd.getOptionValue(DIFF_TYPES).split(ITEM_DELIM)).forEach(x -> ImpactDiffTypes.add(ImpactDiffType.valueOf(x)));
+            Arrays.stream(configBuilder.getValue(DIFF_TYPES).split(ITEM_DELIM)).forEach(x -> ImpactDiffTypes.add(ImpactDiffType.valueOf(x)));
         }
         else
         {
             ImpactDiffTypes.add(CODING_EFFECT);
         }
 
-        OnlyCanonical = cmd.hasOption(ONLY_CANONCIAL);
-        OnlyDriverGenes = cmd.hasOption(ONLY_DRIVER_GENES);
+        OnlyCanonical = configBuilder.hasFlag(ONLY_CANONCIAL);
+        OnlyDriverGenes = configBuilder.hasFlag(ONLY_DRIVER_GENES);
 
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
-        WriteTransData = cmd.hasOption(WRITE_TRANS_DATA);
-        WriteMatches = cmd.hasOption(WRITE_MATCHES);
-        Threads = parseThreads(cmd);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
+        WriteTransData = configBuilder.hasFlag(WRITE_TRANS_DATA);
+        WriteMatches = configBuilder.hasFlag(WRITE_MATCHES);
+        Threads = parseThreads(configBuilder);
     }
 
     public boolean checkDiffType(ImpactDiffType type) { return ImpactDiffTypes.contains(type) || ImpactDiffTypes.contains(ANY); }
 
-    @NotNull
-    public static Options createOptions()
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        Options options = new Options();
-        addSampleIdFile(options);
-        options.addOption(REF_VARIANTS_FILE, true, "File with variants to test against");
-        options.addOption(ONLY_DRIVER_GENES, false, "Only compare variants in driver genes");
-        options.addOption(ONLY_CANONCIAL, false, "Only compare variants by canonical transcripts");
-        addThreadOptions(options);
+        addSampleIdFile(configBuilder, true);
+        configBuilder.addPath(REF_VARIANTS_FILE, true, "File with variants to test against");
+        configBuilder.addFlag(ONLY_DRIVER_GENES, "Only compare variants in driver genes");
+        configBuilder.addFlag(ONLY_CANONCIAL, "Only compare variants by canonical transcripts");
+        addThreadOptions(configBuilder);
 
-        options.addOption(
+        configBuilder.addConfigItem(
                 DIFF_TYPES, true, "Types of diffs to write to file: CODING_EFFECT, EFFECTS, HGVS_CODING, HGVS_PROTEIN, ANY");
 
-        options.addOption(WRITE_TRANS_DATA, false, "Write detailed transcript impact data");
-        options.addOption(WRITE_MATCHES, false, "Write matches as well");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, "Ref genome version: V37(default) or V38");
-        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
-        addEnsemblDir(options);
-        addLoggingOptions(options);
-        addOutputOptions(options);
-
-        return options;
+        configBuilder.addFlag(WRITE_TRANS_DATA, "Write detailed transcript impact data");
+        configBuilder.addFlag(WRITE_MATCHES, "Write matches as well");
+        addRefGenomeConfig(configBuilder, true);
+        configBuilder.addConfigItem(DRIVER_GENE_PANEL_OPTION, DRIVER_GENE_PANEL_OPTION_DESC);
+        addEnsemblDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
     }
 }
