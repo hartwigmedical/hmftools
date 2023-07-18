@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -31,15 +31,12 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,26 +61,26 @@ public class SineBreakendFinder
 
     private final String mOutputDir;
 
-    public SineBreakendFinder(final CommandLine cmd)
+    public SineBreakendFinder(final ConfigBuilder configBuilder)
     {
-        String sampleIdsFile = cmd.getOptionValue(SAMPLE_ID_FILE);
+        String sampleIdsFile = configBuilder.getValue(SAMPLE_ID_FILE);
         mSampleIds = ConfigUtils.loadSampleIdsFile(sampleIdsFile);
-        LOGGER.info("loaded {} samples from file()", mSampleIds.size(), cmd.getOptionValue(SAMPLE_ID_FILE));
+        LOGGER.info("loaded {} samples from file()", mSampleIds.size(), configBuilder.getValue(SAMPLE_ID_FILE));
 
         mRmTypes = Lists.newArrayList();
 
-        if(cmd.hasOption(RM_TYPES))
+        if(configBuilder.hasFlag(RM_TYPES))
         {
-            mRmTypes.addAll(Arrays.stream(cmd.getOptionValue(RM_TYPES).split(";", -1)).map(x -> x).collect(Collectors.toList()));
+            mRmTypes.addAll(Arrays.stream(configBuilder.getValue(RM_TYPES).split(";", -1)).map(x -> x).collect(Collectors.toList()));
         }
 
         LOGGER.info("loaded {} repeat masker types", mRmTypes.size());
 
         mMatchedSineElements = Maps.newHashMap();
-        loadRepeatMaskerDataFile(cmd.getOptionValue(REPEAT_MASKER_FILE));
+        loadRepeatMaskerDataFile(configBuilder.getValue(REPEAT_MASKER_FILE));
 
-        mOutputDir = parseOutputDir(cmd);
-        mDbAccess = createDatabaseAccess(cmd);
+        mOutputDir = parseOutputDir(configBuilder);
+        mDbAccess = createDatabaseAccess(configBuilder);
     }
 
     public void run()
@@ -125,6 +122,8 @@ public class SineBreakendFinder
         }
 
         writeResults();
+
+        LOGGER.info("SINE breakend matching complete");
     }
 
     private void checkVariant(final String sampleId, final StructuralVariantData svData)
@@ -320,31 +319,21 @@ public class SineBreakendFinder
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = new Options();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addSampleIdFile(configBuilder, true);
+        configBuilder.addConfigItem(RM_TYPES, true, "External LINE data sample counts");
+        configBuilder.addPath(REPEAT_MASKER_FILE, true, "Polymorphic LINE data file");
 
-        addSampleIdFile(options);
-        options.addOption(RM_TYPES, true, "External LINE data sample counts");
-        options.addOption(REPEAT_MASKER_FILE, true, "Polymorphic LINE data file");
-        addLoggingOptions(options);
-        addOutputDir(options);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        DatabaseAccess.addDatabaseCmdLineArgs(options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        setLogLevel(configBuilder);
 
-        setLogLevel(cmd);
+        DatabaseAccess.addDatabaseCmdLineArgs(configBuilder, true);
 
-        SineBreakendFinder cohortLineElements = new SineBreakendFinder(cmd);
+        SineBreakendFinder cohortLineElements = new SineBreakendFinder(configBuilder);
         cohortLineElements.run();
-
-        LOGGER.info("SINE breakend matching complete");
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

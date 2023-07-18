@@ -1,12 +1,11 @@
 package com.hartwig.hmftools.svtools.sequence;
 
-import static java.lang.Math.round;
-
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -24,16 +23,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class InsertSequenceAnalyser
@@ -340,36 +334,35 @@ public class InsertSequenceAnalyser
         return reverse;
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addCmdLineArgs(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        registerConfig(configBuilder);
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        configBuilder.checkAndParseCommandLine(args);
 
-        Configurator.setRootLevel(Level.DEBUG);
+        setLogLevel(configBuilder);
 
-        InsertSequenceAnalyser insSeqAnalyser = InsertSequenceAnalyser.from(cmd);
+        InsertSequenceAnalyser insSeqAnalyser = InsertSequenceAnalyser.from(configBuilder);
         insSeqAnalyser.run();
     }
 
-    public static InsertSequenceAnalyser from (final CommandLine cmd)
+    public static InsertSequenceAnalyser from (final ConfigBuilder configBuilder)
     {
         return new InsertSequenceAnalyser(
-                cmd.getOptionValue(INS_SEQ_FILE),
-                parseOutputDir(cmd),
-                Integer.parseInt(cmd.getOptionValue(SEARCH_LENGTH_MIN, "50")),
-                Double.parseDouble(cmd.getOptionValue(REQD_MATCH_PERC, "0.95")));
+                configBuilder.getValue(INS_SEQ_FILE),
+                parseOutputDir(configBuilder),
+                configBuilder.getInteger(SEARCH_LENGTH_MIN),
+                Double.parseDouble(configBuilder.getValue(REQD_MATCH_PERC, "0.95")));
     }
 
-    public static void addCmdLineArgs(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(INS_SEQ_FILE, true, "File with sample insert sequence data");
-        options.addOption(SEARCH_LENGTH_MIN, true, "Sequence min length");
-        options.addOption(REQD_MATCH_PERC, true, "Number of instances of search string to record it");
-        addOutputDir(options);
-        addLoggingOptions(options);
+        configBuilder.addConfigItem(INS_SEQ_FILE, true, "File with sample insert sequence data");
+        configBuilder.addInteger(SEARCH_LENGTH_MIN, "Sequence min length", 50);
+        configBuilder.addConfigItem(REQD_MATCH_PERC, true, "Number of instances of search string to record it");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
     }
 
     /*

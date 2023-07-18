@@ -27,12 +27,9 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -61,7 +58,7 @@ public class CohortLineElements
     public static final int LINE_ELEMENT_PROXIMITY_DISTANCE = 5000; // mirrors the value in Linx
     public static final Logger CL_LOGGER = LogManager.getLogger(CohortLineElements.class);
 
-    public CohortLineElements(final CommandLine cmd)
+    public CohortLineElements(final ConfigBuilder configBuilder)
     {
         mSampleClusterLineData = Maps.newHashMap();
         mExtLineSampleCounts = Maps.newHashMap();
@@ -69,20 +66,20 @@ public class CohortLineElements
         mKnownLineElements = Lists.newArrayList();
         mPolymorphicLineElements = Lists.newArrayList();
 
-        mOutputDir = parseOutputDir(cmd);
-        mSvDataFile = cmd.getOptionValue(SV_DATA_FILE);
-        mExtDataFile = cmd.getOptionValue(EXT_DATA_FILE);
-        mPolymorphicDataFile = cmd.getOptionValue(POLYMORPHIC_DATA_FILE);
-        mRepeatMaskerDataFile = cmd.getOptionValue(REPEAT_MASKER_DATA_FILE);
-        mKnownLineElementsFile = cmd.getOptionValue(KNOWN_DATA_FILE);
-        mWriteRefGenomeLineBases = cmd.hasOption(WRITE_LINE_SEQUENCES);
+        mOutputDir = parseOutputDir(configBuilder);
+        mSvDataFile = configBuilder.getValue(SV_DATA_FILE);
+        mExtDataFile = configBuilder.getValue(EXT_DATA_FILE);
+        mPolymorphicDataFile = configBuilder.getValue(POLYMORPHIC_DATA_FILE);
+        mRepeatMaskerDataFile = configBuilder.getValue(REPEAT_MASKER_DATA_FILE);
+        mKnownLineElementsFile = configBuilder.getValue(KNOWN_DATA_FILE);
+        mWriteRefGenomeLineBases = configBuilder.hasFlag(WRITE_LINE_SEQUENCES);
         mRefGenomeFile = null;
 
         try
         {
-            if(cmd.hasOption(REF_GENOME))
+            if(configBuilder.hasFlag(REF_GENOME))
             {
-                mRefGenomeFile = new IndexedFastaSequenceFile(new File(cmd.getOptionValue(REF_GENOME)));
+                mRefGenomeFile = new IndexedFastaSequenceFile(new File(configBuilder.getValue(REF_GENOME)));
             }
         }
         catch (Exception e)
@@ -108,6 +105,8 @@ public class CohortLineElements
         {
             writeRefGeneLineBases();
         }
+
+        CL_LOGGER.info("LINE element processing complete");
     }
 
     private void loadLineElementsFile(final String filename)
@@ -643,33 +642,22 @@ public class CohortLineElements
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = new Options();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addPath(SV_DATA_FILE, true, "Path to the Linx cohort SVs file");
+        configBuilder.addPath(EXT_DATA_FILE, true, "External LINE data sample counts");
+        configBuilder.addPath(POLYMORPHIC_DATA_FILE, true, "Polymorphic LINE data file");
+        configBuilder.addPath(KNOWN_DATA_FILE, true, "Known LINE elements file");
+        configBuilder.addPath(REPEAT_MASKER_DATA_FILE, true, "Path to repeat masker data for LINE elements");
+        configBuilder.addFlag(WRITE_LINE_SEQUENCES, "Write ref genome LINE element sequences");
+        addRefGenomeConfig(configBuilder, true);
+        addLoggingOptions(configBuilder);
+        addOutputDir(configBuilder);
 
-        options.addOption(SV_DATA_FILE, true, "Path to the Linx cohort SVs file");
-        options.addOption(EXT_DATA_FILE, true, "External LINE data sample counts");
-        options.addOption(POLYMORPHIC_DATA_FILE, true, "Polymorphic LINE data file");
-        options.addOption(KNOWN_DATA_FILE, true, "Known LINE elements file");
-        options.addOption(REPEAT_MASKER_DATA_FILE, true, "Path to repeat masker data for LINE elements");
-        options.addOption(WRITE_LINE_SEQUENCES, false, "Write ref genome LINE element sequences");
-        addRefGenomeConfig(options);
-        addLoggingOptions(options);
-        addOutputDir(options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        setLogLevel(configBuilder);
 
-        setLogLevel(cmd);
-
-        CohortLineElements cohortLineElements = new CohortLineElements(cmd);
+        CohortLineElements cohortLineElements = new CohortLineElements(configBuilder);
         cohortLineElements.run();
-
-        CL_LOGGER.info("LINE element processing complete");
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }
