@@ -10,24 +10,21 @@ import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
-import org.jetbrains.annotations.NotNull;
+public class PurpleChecker implements HealthChecker
+{
+    private final String mTumorSample;
+    private final String mPurpleDir;
 
-public class PurpleChecker implements HealthChecker {
-
-    @NotNull
-    private final String tumorSample;
-    @NotNull
-    private final String purpleDirectory;
-
-    public PurpleChecker(@NotNull final String tumorSample, @NotNull final String purpleDirectory) {
-        this.tumorSample = tumorSample;
-        this.purpleDirectory = purpleDirectory;
+    public PurpleChecker(final String tumorSample, final String purpleDirectory)
+    {
+        mTumorSample = tumorSample;
+        mPurpleDir = purpleDirectory;
     }
 
-    @NotNull
     @Override
-    public List<QCValue> run() throws IOException {
-        String path = PurpleQCFile.generateFilename(purpleDirectory, tumorSample);
+    public List<QCValue> run() throws IOException
+    {
+        String path = PurpleQCFile.generateFilename(mPurpleDir, mTumorSample);
         PurpleQC qc = PurpleQCFile.read(path);
 
         return Lists.newArrayList(ImmutableQCValue.builder().type(QCValueType.PURPLE_QC_STATUS).value(qc.toString()).build(),

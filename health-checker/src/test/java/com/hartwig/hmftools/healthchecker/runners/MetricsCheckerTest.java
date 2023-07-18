@@ -1,5 +1,10 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
+import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_COVERAGE_10X;
+import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_COVERAGE_20X;
+import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_COVERAGE_30X;
+import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_COVERAGE_60X;
+
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -37,7 +42,7 @@ public class MetricsCheckerTest {
 
     @Test
     public void extractDataFromMetricsWorksForTumor() throws IOException {
-        TumorMetricsChecker checker = new TumorMetricsChecker(TUM_WGS_METRICS_FILE);
+        ReferenceMetricsChecker checker = new ReferenceMetricsChecker(TUM_WGS_METRICS_FILE);
         List<QCValue> values = checker.run();
 
         assertEquals(2, values.size());

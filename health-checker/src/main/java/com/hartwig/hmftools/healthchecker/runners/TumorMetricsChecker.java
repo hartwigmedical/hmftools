@@ -10,9 +10,10 @@ import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
 import org.jetbrains.annotations.NotNull;
 
-public class TumorMetricsChecker extends FileBasedHealthChecker<WGSMetrics> {
-
-    public TumorMetricsChecker(@NotNull String metricsFile) throws IOException {
+public class TumorMetricsChecker extends FileBasedHealthChecker<WGSMetrics>
+{
+    public TumorMetricsChecker(final String metricsFile) throws IOException
+    {
         super(WGSMetricsFile.read(metricsFile),
                 wgsMetrics -> List.of(ImmutableQCValue.builder()
                                 .type(QCValueType.TUM_COVERAGE_30X)

@@ -22,7 +22,7 @@ public class FlagstatCheckerTest {
 
     @Test
     public void extractDataFromFlagstatWorksForSomatic() throws IOException {
-        FlagstatChecker checker = new FlagstatChecker(REF_FLAGSTAT, TUMOR_FLAGSTAT);
+        TestFlagstatChecker checker = new TestFlagstatChecker(REF_FLAGSTAT, TUMOR_FLAGSTAT);
         List<QCValue> values = checker.run();
 
         assertEquals(4, values.size());
@@ -41,11 +41,11 @@ public class FlagstatCheckerTest {
 
     @Test(expected = IOException.class)
     public void malformedYieldsIOException() throws IOException {
-        new FlagstatChecker(MALFORMED_FLAGSTAT, MALFORMED_FLAGSTAT).run();
+        new TestFlagstatChecker(MALFORMED_FLAGSTAT, MALFORMED_FLAGSTAT).run();
     }
 
     @Test(expected = IOException.class)
     public void missingYieldsIOException() throws IOException {
-        new FlagstatChecker(MISSING_FLAGSTAT, MISSING_FLAGSTAT).run();
+        new TestFlagstatChecker(MISSING_FLAGSTAT, MISSING_FLAGSTAT).run();
     }
 }

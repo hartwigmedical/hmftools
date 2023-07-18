@@ -6,8 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Flagstat {
-
+public abstract class Flagstat
+{
     public abstract long uniqueReadCount();
 
     public abstract long secondaryCount();
