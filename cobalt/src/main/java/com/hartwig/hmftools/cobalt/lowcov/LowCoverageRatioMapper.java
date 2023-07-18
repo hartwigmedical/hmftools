@@ -80,7 +80,8 @@ public class LowCoverageRatioMapper implements RatioMapper
         // also create a table of the bucket themselves
         Table bucketTable = Table.create(
                 IntColumn.create(BUCKET_ID_COLUMN),
-                LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
+                StringColumn.create(CobaltColumns.CHROMOSOME),
+                IntColumn.create(CobaltColumns.POSITION),
                 BooleanColumn.create("isAutosome"));
 
         // first step we give each row a lowCovBucketId
@@ -109,8 +110,8 @@ public class LowCoverageRatioMapper implements RatioMapper
                 ++bucketId;
                 Row bucketRow = bucketTable.appendRow();
                 bucketRow.setInt(BUCKET_ID_COLUMN, bucketId);
-                bucketRow.setLong(CobaltColumns.ENCODED_CHROMOSOME_POS,
-                        mChromosomePositionCodec.encodeChromosomePosition(chromosome, bucket.bucketPosition));
+                bucketRow.setString(CobaltColumns.CHROMOSOME, chromosome);
+                bucketRow.setInt(CobaltColumns.POSITION, bucket.bucketPosition);
                 bucketRow.setBoolean("isAutosome", row.getBoolean("isAutosome"));
             }
 
@@ -131,8 +132,8 @@ public class LowCoverageRatioMapper implements RatioMapper
                         ++bucketId;
                         Row bucketRow = bucketTable.appendRow();
                         bucketRow.setInt(BUCKET_ID_COLUMN, bucketId);
-                        bucketRow.setLong(CobaltColumns.ENCODED_CHROMOSOME_POS,
-                                mChromosomePositionCodec.encodeChromosomePosition(chromosome, bucket.bucketPosition));
+                        bucketRow.setString(CobaltColumns.CHROMOSOME, chromosome);
+                        bucketRow.setInt(CobaltColumns.POSITION, bucket.bucketPosition);
                         bucketRow.setBoolean("isAutosome", row.getBoolean("isAutosome"));
                     }
                     else
@@ -172,6 +173,9 @@ public class LowCoverageRatioMapper implements RatioMapper
 
         // merge in the bucket, this is required to get the bucket position
         lovCovRatio = lovCovRatio.joinOn(BUCKET_ID_COLUMN).leftOuter(bucketTable);
+
+        // add the encoded chromosome pos columns
+        mChromosomePositionCodec.addEncodedChrPosColumn(lovCovRatio, false);
 
         CB_LOGGER.debug("low cov table: {}", lovCovRatio);
 
