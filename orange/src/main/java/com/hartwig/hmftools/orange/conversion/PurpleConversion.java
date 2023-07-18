@@ -34,13 +34,16 @@ import com.hartwig.hmftools.orange.algo.purple.CodingEffectDeterminer;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleConversion {
+public final class PurpleConversion
+{
 
-    private PurpleConversion() {
+    private PurpleConversion()
+    {
     }
 
     @NotNull
-    public static PurpleCopyNumber convert(com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber) {
+    public static PurpleCopyNumber convert(com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber)
+    {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(copyNumber.chromosome())
                 .start(copyNumber.start())
@@ -50,7 +53,8 @@ public final class PurpleConversion {
     }
 
     @NotNull
-    public static PurpleGeneCopyNumber convert(GeneCopyNumber geneCopyNumber) {
+    public static PurpleGeneCopyNumber convert(GeneCopyNumber geneCopyNumber)
+    {
         return ImmutablePurpleGeneCopyNumber.builder()
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
@@ -61,7 +65,8 @@ public final class PurpleConversion {
     }
 
     @NotNull
-    public static PurpleDriver convert(DriverCatalog catalog) {
+    public static PurpleDriver convert(DriverCatalog catalog)
+    {
         return ImmutablePurpleDriver.builder()
                 .gene(catalog.gene())
                 .transcript(catalog.transcript())
@@ -73,7 +78,8 @@ public final class PurpleConversion {
     }
 
     @NotNull
-    public static PurpleQC convert(@NotNull com.hartwig.hmftools.common.purple.PurpleQC purpleQC) {
+    public static PurpleQC convert(@NotNull com.hartwig.hmftools.common.purple.PurpleQC purpleQC)
+    {
         return ImmutablePurpleQC.builder()
                 .status(ConversionUtil.mapToIterable(purpleQC.status(), PurpleConversion::convert))
                 .germlineAberrations(ConversionUtil.mapToIterable(purpleQC.germlineAberrations(), PurpleConversion::convert))
@@ -85,7 +91,8 @@ public final class PurpleConversion {
     }
 
     @NotNull
-    public static PurpleAllelicDepth convert(AllelicDepth allelicDepth) {
+    public static PurpleAllelicDepth convert(AllelicDepth allelicDepth)
+    {
         return ImmutablePurpleAllelicDepth.builder()
                 .alleleReadCount(allelicDepth.alleleReadCount())
                 .totalReadCount(allelicDepth.totalReadCount())
@@ -93,7 +100,8 @@ public final class PurpleConversion {
     }
 
     @NotNull
-    public static PurpleGermlineDeletion convert(GermlineDeletion germlineDeletion) {
+    public static PurpleGermlineDeletion convert(GermlineDeletion germlineDeletion)
+    {
         return ImmutablePurpleGermlineDeletion.builder()
                 .geneName(germlineDeletion.GeneName)
                 .chromosome(germlineDeletion.Chromosome)
@@ -115,26 +123,31 @@ public final class PurpleConversion {
     }
 
     @NotNull
-    public static PurpleGermlineAberration convert(GermlineAberration aberration) {
+    public static PurpleGermlineAberration convert(GermlineAberration aberration)
+    {
         return PurpleGermlineAberration.valueOf(aberration.name());
     }
 
     @NotNull
-    public static PurpleQCStatus convert(com.hartwig.hmftools.common.purple.PurpleQCStatus qcStatus) {
+    public static PurpleQCStatus convert(com.hartwig.hmftools.common.purple.PurpleQCStatus qcStatus)
+    {
         return PurpleQCStatus.valueOf(qcStatus.name());
     }
 
-    public static PurpleCodingEffect convert(CodingEffect effect) {
+    public static PurpleCodingEffect convert(CodingEffect effect)
+    {
         return PurpleCodingEffect.valueOf(effect.name());
     }
 
     @NotNull
-    public static PurpleVariantEffect convert(VariantEffect effect) {
+    public static PurpleVariantEffect convert(VariantEffect effect)
+    {
         return PurpleVariantEffect.valueOf(effect.name());
     }
 
     @NotNull
-    public static PurpleTranscriptImpact convert(VariantTranscriptImpact impact) {
+    public static PurpleTranscriptImpact convert(VariantTranscriptImpact impact)
+    {
         var effectsList = VariantEffect.effectsToList(impact.Effects);
         var purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
         var purpleCodingEffect = convert(CodingEffectDeterminer.determineCodingEffect(effectsList));
@@ -154,7 +167,8 @@ public final class PurpleConversion {
                 .build();
     }
 
-    private static String stripSquareBrackets(String s) {
+    private static String stripSquareBrackets(String s)
+    {
         s = s.startsWith("[") ? s.substring(1) : s;
         return s.endsWith("]") ? s.substring(0, s.length() - 1) : s;
     }

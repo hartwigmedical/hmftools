@@ -1,25 +1,10 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
-
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.AllelicDepth;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
-import com.hartwig.hmftools.common.variant.filter.NTFilter;
-import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.Hotspot;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
@@ -34,37 +19,32 @@ import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.filter.CompoundFilter;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-import htsjdk.variant.variantcontext.filter.VariantContextFilter;
-import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
-
-public class PurpleVariantFactory {
+public class PurpleVariantFactory
+{
 
     private final PaveAlgo paveAlgo;
 
-    public PurpleVariantFactory(@NotNull PaveAlgo paveAlgo) {
+    public PurpleVariantFactory(@NotNull PaveAlgo paveAlgo)
+    {
         this.paveAlgo = paveAlgo;
     }
 
     @Nullable
-    public List<PurpleVariant> fromPurpleVariantContext(@Nullable List<PurpleVariantContext> context) {
-        if (context == null) {
+    public List<PurpleVariant> fromPurpleVariantContext(@Nullable List<PurpleVariantContext> context)
+    {
+        if(context == null)
+        {
             return null;
         }
         return context.stream().map(this::fromPurpleVariantContext).collect(Collectors.toList());
     }
 
     @NotNull
-    public PurpleVariant fromPurpleVariantContext(@NotNull PurpleVariantContext context) {
+    public PurpleVariant fromPurpleVariantContext(@NotNull PurpleVariantContext context)
+    {
 
         var purpleVariantTranscriptImpacts = context.otherImpacts().stream().map(PurpleConversion::convert).collect(Collectors.toList());
         var rnaDepth = context.rnaDepth() != null ? PurpleConversion.convert(context.rnaDepth()) : null;
@@ -95,7 +75,8 @@ public class PurpleVariantFactory {
                 .build();
     }
 
-    private PurpleTranscriptImpact extractCanonicalImpact(PurpleVariantContext purpleContext) {
+    private PurpleTranscriptImpact extractCanonicalImpact(PurpleVariantContext purpleContext)
+    {
         var paveEntry = paveAlgo.run(purpleContext.gene(), purpleContext.canonicalTranscript(), purpleContext.position());
         List<VariantEffect> variantEffects = VariantEffect.effectsToList(purpleContext.canonicalEffect());
         List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
@@ -111,7 +92,8 @@ public class PurpleVariantFactory {
                 .build();
     }
 
-    private static PurpleAllelicDepth extractTumorDepth(AllelicDepth tumorDepth) {
+    private static PurpleAllelicDepth extractTumorDepth(AllelicDepth tumorDepth)
+    {
         return ImmutablePurpleAllelicDepth.builder()
                 .alleleReadCount(tumorDepth.alleleReadCount())
                 .totalReadCount(tumorDepth.totalReadCount())
