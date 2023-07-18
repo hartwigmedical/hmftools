@@ -7,12 +7,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -23,6 +17,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Map;
+
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class FastqAnalyser
 {
@@ -43,10 +39,10 @@ public class FastqAnalyser
     private static final char NO_BASE = 0;
     private static final int LINE_LOG_COUNT = 1000000;
 
-    public FastqAnalyser(final CommandLine cmd)
+    public FastqAnalyser(final ConfigBuilder configBuilder)
     {
-        mFastqFile = cmd.getOptionValue(FASTQ_FILE);
-        mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
+        mFastqFile = configBuilder.getValue(FASTQ_FILE);
+        mOutputFile = configBuilder.getValue(OUTPUT_FILE);
         mRepeatFrequencies = new RepeatFrequencies();
         mCurrentSequence = null;
         mLastBase = NO_BASE;
@@ -182,40 +178,17 @@ public class FastqAnalyser
 
     public static void main(@NotNull final String[] args)
     {
-        // final VersionInfo version = new VersionInfo("fastq-tools.version");
-        // FQ_LOGGER.info("BamTools version: {}", version.version());
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        final Options options = new Options();
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+        configBuilder.addPath(FASTQ_FILE, true, "Fastq file path");
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output fie");
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
-        //addThreadOptions(options);
-        //addRefGenomeConfig(options);;
-        options.addOption(FASTQ_FILE, true, "Fastq file path");
-        options.addOption(OUTPUT_FILE, true, "Output fie");
+        configBuilder.checkAndParseCommandLine(args);
+        setLogLevel(configBuilder);
 
-        try
-        {
-            final CommandLine cmd = createCommandLine(args, options);
-
-            setLogLevel(cmd);
-
-            FastqAnalyser fastqAnalyser = new FastqAnalyser(cmd);
-            fastqAnalyser.run();
-        }
-        catch(ParseException e)
-        {
-            FQ_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("FastqAnalyser", options);
-            System.exit(1);
-        }
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        FastqAnalyser fastqAnalyser = new FastqAnalyser(configBuilder);
+        fastqAnalyser.run();
     }
 }
