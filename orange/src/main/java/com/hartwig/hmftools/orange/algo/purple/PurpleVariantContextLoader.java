@@ -83,7 +83,7 @@ public class PurpleVariantContextLoader
                 {
                     try
                     {
-                        PurpleVariantContext purpleVariantContext = createVariant(variantContext, tumor, reference, rna);
+                        PurpleVariantContext purpleVariantContext = createPurpleVariantContext(variantContext, tumor, reference, rna);
                         result.add(purpleVariantContext);
                     }
                     catch(IllegalArgumentException e)
@@ -96,7 +96,7 @@ public class PurpleVariantContextLoader
         return result;
     }
 
-    public PurpleVariantContext createVariant(VariantContext variantContext, String sample, @Nullable String reference,
+    public PurpleVariantContext createPurpleVariantContext(VariantContext variantContext, String sample, @Nullable String reference,
             @Nullable String rna)
     {
         if(!mFilter.test(variantContext))
@@ -121,10 +121,10 @@ public class PurpleVariantContextLoader
                     readCount));
         }
 
-        return helperCreateVariant(variantContext, tumorDepth, reference, rna);
+        return helperCreatePurpleVariantContext(variantContext, tumorDepth, reference, rna);
     }
 
-    private PurpleVariantContext helperCreateVariant(VariantContext variantContext, AllelicDepth tumorDepth, @Nullable String reference,
+    private PurpleVariantContext helperCreatePurpleVariantContext(VariantContext variantContext, AllelicDepth tumorDepth, @Nullable String reference,
             @Nullable String rna)
     {
         VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);

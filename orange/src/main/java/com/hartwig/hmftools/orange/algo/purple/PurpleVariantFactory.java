@@ -33,13 +33,13 @@ public class PurpleVariantFactory
     }
 
     @Nullable
-    public List<PurpleVariant> fromPurpleVariantContext(@Nullable List<PurpleVariantContext> context)
+    public List<PurpleVariant> fromPurpleVariantContext(@Nullable List<PurpleVariantContext> contexts)
     {
-        if(context == null)
+        if(contexts == null)
         {
             return null;
         }
-        return context.stream().map(this::fromPurpleVariantContext).collect(Collectors.toList());
+        return contexts.stream().map(this::fromPurpleVariantContext).collect(Collectors.toList());
     }
 
     @NotNull
