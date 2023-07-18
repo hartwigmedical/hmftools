@@ -116,6 +116,10 @@ public class PurpleVariantContextLoader
         final AllelicDepth rnaDepth = extractRnaDepth(variantContext, rna);
 
         return ImmutablePurpleVariantContext.builder()
+                .chromosome(contextDecorator.chromosome())
+                .position(contextDecorator.position())
+                .totalReadCount(tumorDepth.totalReadCount())
+                .alleleReadCount(tumorDepth.alleleReadCount())
                 .spliceRegion(variantImpact.CanonicalSpliceRegion)
                 .type(contextDecorator.type())
                 .gene(variantImpact.CanonicalGeneName)
