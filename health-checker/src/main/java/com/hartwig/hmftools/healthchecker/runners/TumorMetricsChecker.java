@@ -5,23 +5,16 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
-import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
+import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
-
-import org.jetbrains.annotations.NotNull;
 
 public class TumorMetricsChecker extends FileBasedHealthChecker<WGSMetrics>
 {
     public TumorMetricsChecker(final String metricsFile) throws IOException
     {
         super(WGSMetricsFile.read(metricsFile),
-                wgsMetrics -> List.of(ImmutableQCValue.builder()
-                                .type(QCValueType.TUM_COVERAGE_30X)
-                                .value(String.valueOf(wgsMetrics.coverage30xPercentage()))
-                                .build(),
-                        ImmutableQCValue.builder()
-                                .type(QCValueType.TUM_COVERAGE_60X)
-                                .value(String.valueOf(wgsMetrics.coverage60xPercentage()))
-                                .build()));
+                wgsMetrics -> List.of(
+                        new QCValue(QCValueType.TUM_COVERAGE_30X, String.valueOf(wgsMetrics.coverage30xPercentage())),
+                        new QCValue(QCValueType.TUM_COVERAGE_60X, String.valueOf(wgsMetrics.coverage60xPercentage()))));
     }
 }

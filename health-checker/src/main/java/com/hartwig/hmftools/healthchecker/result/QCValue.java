@@ -1,17 +1,13 @@
 package com.hartwig.hmftools.healthchecker.result;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
-public abstract class QCValue
+public class QCValue
 {
-    @NotNull
-    public abstract QCValueType type();
+    public final QCValueType Type;
+    public final String Value;
 
-    @NotNull
-    public abstract String value();
+    public QCValue(final QCValueType type, final String value)
+    {
+        Type = type;
+        Value = value;
+    }
 }

@@ -27,14 +27,14 @@ public class FlagstatCheckerTest {
 
         assertEquals(4, values.size());
         for (QCValue value : values) {
-            if (value.type() == QCValueType.REF_PROPORTION_MAPPED) {
-                assertEquals("0.993296", value.value());
-            } else if (value.type() == QCValueType.TUM_PROPORTION_MAPPED) {
-                assertEquals("0.99683", value.value());
-            } else if (value.type() == QCValueType.REF_PROPORTION_DUPLICATE) {
-                assertEquals("0.116625", value.value());
-            } else if (value.type() == QCValueType.TUM_PROPORTION_DUPLICATE) {
-                assertEquals("0.163053", value.value());
+            if (value.Type == QCValueType.REF_PROPORTION_MAPPED) {
+                assertEquals("0.993296", value.Value);
+            } else if (value.Type == QCValueType.TUM_PROPORTION_MAPPED) {
+                assertEquals("0.99683", value.Value);
+            } else if (value.Type == QCValueType.REF_PROPORTION_DUPLICATE) {
+                assertEquals("0.116625", value.Value);
+            } else if (value.Type == QCValueType.TUM_PROPORTION_DUPLICATE) {
+                assertEquals("0.163053", value.Value);
             }
         }
     }

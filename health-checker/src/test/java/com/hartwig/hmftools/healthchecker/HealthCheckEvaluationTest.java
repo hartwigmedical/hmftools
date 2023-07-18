@@ -4,11 +4,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class HealthCheckEvaluationTest
@@ -87,6 +85,6 @@ public class HealthCheckEvaluationTest
 
     private static QCValue qc(final QCValueType type, final String value)
     {
-        return ImmutableQCValue.builder().type(type).value(value).build();
+        return new QCValue(type, value);
     }
 }

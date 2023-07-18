@@ -14,50 +14,44 @@ final class HealthCheckEvaluation
     private static final String PURPLE_QC_PASS = "PASS";
     private static final String PURPLE_QC_FAIL = "FAIL";
 
-    private HealthCheckEvaluation()
-    {
-    }
-
     static boolean isPass(final List<QCValue> qcValues)
     {
-        boolean success = true;
         for(QCValue qcValue : qcValues)
         {
             if(!succeed(qcValue))
-            {
-                success = false;
-            }
+                return false;
         }
-        return success;
+
+        return true;
     }
 
     private static boolean succeed(final QCValue qcValue)
     {
-        switch(qcValue.type())
+        switch(qcValue.Type)
         {
             case REF_COVERAGE_10X:
-                return checkCoverage(qcValue.value(), "Ref 10x", WGSMetricQC.MIN_REF_10X_COVERAGE);
+                return checkCoverage(qcValue.Value, "Ref 10x", WGSMetricQC.MIN_REF_10X_COVERAGE);
             case REF_COVERAGE_20X:
-                return checkCoverage(qcValue.value(), "Ref 20x", WGSMetricQC.MIN_REF_20X_COVERAGE);
+                return checkCoverage(qcValue.Value, "Ref 20x", WGSMetricQC.MIN_REF_20X_COVERAGE);
             case TUM_COVERAGE_30X:
-                return checkCoverage(qcValue.value(), "Tum 30x", WGSMetricQC.MIN_TUMOR_30X_COVERAGE);
+                return checkCoverage(qcValue.Value, "Tum 30x", WGSMetricQC.MIN_TUMOR_30X_COVERAGE);
             case TUM_COVERAGE_60X:
-                return checkCoverage(qcValue.value(), "Tum 60x", WGSMetricQC.MIN_TUMOR_60X_COVERAGE);
+                return checkCoverage(qcValue.Value, "Tum 60x", WGSMetricQC.MIN_TUMOR_60X_COVERAGE);
             case PURPLE_QC_STATUS:
-                return checkPurpleQCStatus(qcValue.value());
+                return checkPurpleQCStatus(qcValue.Value);
             case PURPLE_CONTAMINATION:
-                return checkPurpleContamination(qcValue.value());
+                return checkPurpleContamination(qcValue.Value);
             case REF_PROPORTION_MAPPED:
-                return checkFlagstatMappingProportion(qcValue.value(), "Ref");
+                return checkFlagstatMappingProportion(qcValue.Value, "Ref");
             case TUM_PROPORTION_MAPPED:
-                return checkFlagstatMappingProportion(qcValue.value(), "Tum");
+                return checkFlagstatMappingProportion(qcValue.Value, "Tum");
             case REF_PROPORTION_DUPLICATE:
             case TUM_PROPORTION_DUPLICATE:
                 // No QC on duplicate rate (only reporting the value)
                 return true;
             default:
             {
-                HC_LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.type());
+                HC_LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.Type);
                 return false;
             }
         }

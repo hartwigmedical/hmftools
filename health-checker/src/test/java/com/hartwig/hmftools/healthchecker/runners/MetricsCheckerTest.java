@@ -1,10 +1,5 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_COVERAGE_10X;
-import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_COVERAGE_20X;
-import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_COVERAGE_30X;
-import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_COVERAGE_60X;
-
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -32,10 +27,10 @@ public class MetricsCheckerTest {
         List<QCValue> values = checker.run();
         assertEquals(2, values.size());
         for (QCValue value : values) {
-            if (value.type() == QCValueType.REF_COVERAGE_10X) {
-                assertEquals("0.98261", value.value());
-            } else if (value.type() == QCValueType.REF_COVERAGE_20X) {
-                assertEquals("0.980701", value.value());
+            if (value.Type == QCValueType.REF_COVERAGE_10X) {
+                assertEquals("0.98261", value.Value);
+            } else if (value.Type == QCValueType.REF_COVERAGE_20X) {
+                assertEquals("0.980701", value.Value);
             }
         }
     }
@@ -47,10 +42,10 @@ public class MetricsCheckerTest {
 
         assertEquals(2, values.size());
         for (QCValue value : values) {
-            if (value.type() == QCValueType.TUM_COVERAGE_30X) {
-                assertEquals("0.978779", value.value());
-            } else if (value.type() == QCValueType.TUM_COVERAGE_60X) {
-                assertEquals("0.950264", value.value());
+            if (value.Type == QCValueType.TUM_COVERAGE_30X) {
+                assertEquals("0.978779", value.Value);
+            } else if (value.Type == QCValueType.TUM_COVERAGE_60X) {
+                assertEquals("0.950264", value.Value);
             }
         }
     }

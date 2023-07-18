@@ -20,7 +20,7 @@ public class PurpleCheckerTest {
         PurpleChecker checker = new PurpleChecker("tumor", PURPLE_DIRECTORY);
         List<QCValue> values = checker.run();
 
-        assertEquals(QCValueType.PURPLE_QC_STATUS, values.get(0).type());
-        assertEquals("FAIL_CONTAMINATION", values.get(0).value());
+        assertEquals(QCValueType.PURPLE_QC_STATUS, values.get(0).Type);
+        assertEquals("FAIL_CONTAMINATION", values.get(0).Value);
     }
 }

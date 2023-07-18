@@ -6,12 +6,8 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_COVERAGE_10X;
-import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_COVERAGE_20X;
 import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_PROPORTION_DUPLICATE;
 import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_PROPORTION_MAPPED;
-import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_COVERAGE_30X;
-import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_COVERAGE_60X;
 import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_PROPORTION_DUPLICATE;
 import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_PROPORTION_MAPPED;
 
@@ -140,7 +136,7 @@ public class HealthChecksApplication
 
         for(QCValue qcValue : qcValues)
         {
-            HC_LOGGER.info("QC Metric '{}' has value '{}'", qcValue.type(), qcValue.value());
+            HC_LOGGER.info("QC Metric '{}' has value '{}'", qcValue.Type, qcValue.Value);
         }
 
         if(HealthCheckEvaluation.isPass(qcValues))
