@@ -44,32 +44,32 @@ public class PurpleVariantFactoryTest
 
         PurpleVariantContext context = ImmutablePurpleVariantContext.builder()
                 .chromosome("chromosome")
-                .position(1)
-                .totalReadCount(1)
-                .alleleReadCount(1)
+                .position(57181855)
+                .totalReadCount(153)
+                .alleleReadCount(80)
                 .type(VariantType.INDEL)
-                .gene("gene")
-                .ref("ref")
-                .alt("alt")
-                .canonicalTranscript("canonicalTranscript")
+                .gene("CRACD")
+                .ref("C")
+                .alt("T")
+                .canonicalTranscript("ENST00000504228")
                 .canonicalEffect("frameshift_variant&missense_variant")
                 .canonicalCodingEffect(CodingEffect.NONE)
-                .canonicalHgvsCodingImpact("coding")
-                .canonicalHgvsProteinImpact("protein")
+                .canonicalHgvsCodingImpact("c.2187C>T")
+                .canonicalHgvsProteinImpact("p.Ser729=")
                 .spliceRegion(true)
                 .worstCodingEffect(CodingEffect.UNDEFINED)
                 .otherImpacts(otherImpacts)
                 .hotspot(Hotspot.HOTSPOT)
                 .reported(true)
-                .tumorDepth(ImmutableAllelicDepthImpl.builder().alleleReadCount(1).totalReadCount(1).build())
+                .tumorDepth(ImmutableAllelicDepthImpl.builder().alleleReadCount(80).totalReadCount(153).build())
                 .rnaDepth(null)
-                .adjustedCopyNumber(1)
-                .adjustedVAF(1)
-                .minorAlleleCopyNumber(1)
-                .variantCopyNumber(1)
+                .adjustedCopyNumber(3.84)
+                .adjustedVAF(0.5256)
+                .minorAlleleCopyNumber(1.84)
+                .variantCopyNumber(2.02)
                 .biallelic(false)
                 .genotypeStatus(GenotypeStatus.UNKNOWN)
-                .repeatCount(1)
+                .repeatCount(2)
                 .subclonalLikelihood(1)
                 .localPhaseSets(List.of(1, 2, 3))
                 .build();
@@ -78,17 +78,17 @@ public class PurpleVariantFactoryTest
         PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
 
         assertEquals(PurpleVariantType.INDEL, purpleVariant.type());
-        assertEquals("gene", purpleVariant.gene());
+        assertEquals("CRACD", purpleVariant.gene());
         assertEquals("chromosome", purpleVariant.chromosome());
-        assertEquals(1, purpleVariant.position());
-        assertEquals("ref", purpleVariant.ref());
-        assertEquals("alt", purpleVariant.alt());
+        assertEquals(57181855, purpleVariant.position());
+        assertEquals("C", purpleVariant.ref());
+        assertEquals("T", purpleVariant.alt());
         assertEquals(PurpleCodingEffect.UNDEFINED, purpleVariant.worstCodingEffect());
 
         var canonicalImpact = purpleVariant.canonicalImpact();
-        assertEquals("canonicalTranscript", canonicalImpact.transcript());
-        assertEquals("coding", canonicalImpact.hgvsCodingImpact());
-        assertEquals("protein", canonicalImpact.hgvsProteinImpact());
+        assertEquals("ENST00000504228", canonicalImpact.transcript());
+        assertEquals("c.2187C>T", canonicalImpact.hgvsCodingImpact());
+        assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
         assertNull(canonicalImpact.affectedCodon());
         assertNull(canonicalImpact.affectedExon());
         assertTrue(canonicalImpact.spliceRegion());
@@ -108,16 +108,16 @@ public class PurpleVariantFactoryTest
 
         assertEquals(com.hartwig.hmftools.datamodel.purple.Hotspot.HOTSPOT, purpleVariant.hotspot());
         assertTrue(purpleVariant.reported());
-        assertEquals(1, purpleVariant.tumorDepth().alleleReadCount());
-        assertEquals(1, purpleVariant.tumorDepth().totalReadCount());
+        assertEquals(80, purpleVariant.tumorDepth().alleleReadCount());
+        assertEquals(153, purpleVariant.tumorDepth().totalReadCount());
         assertNull(purpleVariant.rnaDepth());
-        assertEquals(1, purpleVariant.adjustedCopyNumber(), 0);
-        assertEquals(1, purpleVariant.adjustedVAF(), 0);
-        assertEquals(1, purpleVariant.minorAlleleCopyNumber(), 0);
-        assertEquals(1, purpleVariant.variantCopyNumber(), 0);
+        assertEquals(3.84, purpleVariant.adjustedCopyNumber(), 0);
+        assertEquals(0.5256, purpleVariant.adjustedVAF(), 0);
+        assertEquals(1.84, purpleVariant.minorAlleleCopyNumber(), 0);
+        assertEquals(2.02, purpleVariant.variantCopyNumber(), 0);
         assertFalse(purpleVariant.biallelic());
         assertEquals(PurpleGenotypeStatus.UNKNOWN, purpleVariant.genotypeStatus());
-        assertEquals(1, purpleVariant.repeatCount());
+        assertEquals(2, purpleVariant.repeatCount());
         assertEquals(1, purpleVariant.subclonalLikelihood(), 0);
         assertEquals(List.of(1, 2, 3), purpleVariant.localPhaseSets());
     }
