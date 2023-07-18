@@ -148,13 +148,15 @@ public class RefDataConfig
         configBuilder.addConfigItem(CATEGORIES, false, "Categories to build ref data for");
 
         configBuilder.addPath(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
-        configBuilder.addPath(REF_SNV_SAMPLE_POS_FREQ_FILE, false, "Ref SNV position frequency matrix data file");
-        configBuilder.addPath(REF_SNV_COUNTS_FILE, false, "Ref SNV trinucleotide matrix data file");
 
-        configBuilder.addPath(REF_COHORT_FEATURES_FILE, false, "Ref sample features data file");
-        configBuilder.addPath(REF_COHORT_SAMPLE_TRAITS_FILE, false, "Ref sample cohort traits file");
-        configBuilder.addPath(REF_COHORT_SIG_CONTRIBS_FILE, false, "Ref sample cohort signature contributions file");
-        configBuilder.addPath(REF_COHORT_SV_DATA_FILE, false, "Ref sample cohort SV file");
+        // when combining datasets, these paths are ',' delimited so cannot be checked as a path
+        // could add logic for this to ConfigBuilder but would be rarely used
+        configBuilder.addConfigItem(REF_SNV_SAMPLE_POS_FREQ_FILE, false, "Ref SNV position frequency matrix data file");
+        configBuilder.addConfigItem(REF_SNV_COUNTS_FILE, false, "Ref SNV trinucleotide matrix data file");
+        configBuilder.addConfigItem(REF_COHORT_FEATURES_FILE, false, "Ref sample features data file");
+        configBuilder.addConfigItem(REF_COHORT_SAMPLE_TRAITS_FILE, false, "Ref sample cohort traits file");
+        configBuilder.addConfigItem(REF_COHORT_SIG_CONTRIBS_FILE, false, "Ref sample cohort signature contributions file");
+        configBuilder.addConfigItem(REF_COHORT_SV_DATA_FILE, false, "Ref sample cohort SV file");
 
         addPipelineDirectories(configBuilder);
 
