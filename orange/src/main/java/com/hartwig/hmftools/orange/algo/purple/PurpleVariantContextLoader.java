@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -36,11 +35,13 @@ public class PurpleVariantContextLoader
     @NotNull
     private final CompoundFilter mFilter;
 
-    public static PurpleVariantContextLoader withPassingOnlyFilter() {
+    public static PurpleVariantContextLoader withPassingOnlyFilter()
+    {
         return new PurpleVariantContextLoader(new PassingVariantFilter());
     }
 
-    public PurpleVariantContextLoader(final VariantContextFilter... filters) {
+    public PurpleVariantContextLoader(final VariantContextFilter... filters)
+    {
         mFilter = new CompoundFilter(true);
         mFilter.addAll(Arrays.asList(filters));
         mFilter.add(new HumanChromosomeFilter());
@@ -52,31 +53,41 @@ public class PurpleVariantContextLoader
     {
         List<PurpleVariantContext> result = new ArrayList<>();
 
-        try (final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false)) {
+        try(final AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(vcfFile, new VCFCodec(), false))
+        {
             final VCFHeader header = (VCFHeader) reader.getHeader();
 
-            if (!sampleInFile(tumor, header)) {
+            if(!sampleInFile(tumor, header))
+            {
                 throw new IllegalArgumentException("Sample " + tumor + " not found in vcf file " + vcfFile);
             }
 
-            if (reference != null && !sampleInFile(reference, header)) {
+            if(reference != null && !sampleInFile(reference, header))
+            {
                 throw new IllegalArgumentException("Sample " + reference + " not found in vcf file " + vcfFile);
             }
 
-            if (rna != null && !sampleInFile(rna, header)) {
+            if(rna != null && !sampleInFile(rna, header))
+            {
                 throw new IllegalArgumentException("Sample " + rna + " not found in vcf file " + vcfFile);
             }
 
-            if (!header.hasFormatLine("AD")) {
+            if(!header.hasFormatLine("AD"))
+            {
                 throw new IllegalArgumentException("Allelic depths is a required format field in vcf file " + vcfFile);
             }
 
-            for (VariantContext variantContext : reader.iterator()) {
-                if (mFilter.test(variantContext)) {
-                    try {
+            for(VariantContext variantContext : reader.iterator())
+            {
+                if(mFilter.test(variantContext))
+                {
+                    try
+                    {
                         PurpleVariantContext purpleVariantContext = createVariant(variantContext, tumor, reference, rna);
                         result.add(purpleVariantContext);
-                    } catch (IllegalArgumentException e) {
+                    }
+                    catch(IllegalArgumentException e)
+                    {
                         // ignore, consider the sample filtered
                     }
                 }
@@ -85,12 +96,16 @@ public class PurpleVariantContextLoader
         return result;
     }
 
-    public PurpleVariantContext createVariant(VariantContext variantContext, String sample, @Nullable String reference, @Nullable String rna) {
-        if (!mFilter.test(variantContext)) {
+    public PurpleVariantContext createVariant(VariantContext variantContext, String sample, @Nullable String reference,
+            @Nullable String rna)
+    {
+        if(!mFilter.test(variantContext))
+        {
             throw new IllegalArgumentException(String.format("Variant could not be created because sample [%s] does not have status PASS", sample));
         }
 
-        if (!AllelicDepth.containsAllelicDepth(variantContext.getGenotype(sample))) {
+        if(!AllelicDepth.containsAllelicDepth(variantContext.getGenotype(sample)))
+        {
             throw new IllegalArgumentException(String.format(
                     "Variant could not be created because sample [%s] does not contain allelic depth",
                     sample));
@@ -99,7 +114,8 @@ public class PurpleVariantContextLoader
         final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(variantContext.getGenotype(sample));
         int readCount = tumorDepth.totalReadCount();
 
-        if (readCount <= 0) {
+        if(readCount <= 0)
+        {
             throw new IllegalArgumentException(String.format(
                     "Variant could not be created because tumor depth read count should be greater than 0 (actual value: %s)",
                     readCount));
@@ -109,7 +125,8 @@ public class PurpleVariantContextLoader
     }
 
     private PurpleVariantContext helperCreateVariant(VariantContext variantContext, AllelicDepth tumorDepth, @Nullable String reference,
-            @Nullable String rna) {
+            @Nullable String rna)
+    {
         VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);
         final VariantImpact variantImpact = contextDecorator.variantImpact();
         final List<VariantTranscriptImpact> variantTranscriptImpacts = VariantTranscriptImpact.fromVariantContext(variantContext);
@@ -148,11 +165,16 @@ public class PurpleVariantContextLoader
                 .build();
     }
 
-    private static AllelicDepth extractRnaDepth(VariantContext context, @Nullable String rna) {
-        return Optional.ofNullable(context.getGenotype(rna)).filter(AllelicDepth::containsAllelicDepth).map(AllelicDepth::fromGenotype).orElse(null);
+    private static AllelicDepth extractRnaDepth(VariantContext context, @Nullable String rna)
+    {
+        return Optional.ofNullable(context.getGenotype(rna))
+                .filter(AllelicDepth::containsAllelicDepth)
+                .map(AllelicDepth::fromGenotype)
+                .orElse(null);
     }
 
-    private static boolean sampleInFile(final String sample, final VCFHeader header) {
+    private static boolean sampleInFile(final String sample, final VCFHeader header)
+    {
         return header.getSampleNamesInOrder().stream().anyMatch(x -> x.equals(sample));
     }
 
