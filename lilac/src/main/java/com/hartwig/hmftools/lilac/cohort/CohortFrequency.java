@@ -11,9 +11,6 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-
 public class CohortFrequency
 {
     private final Map<HlaAllele,Double> mAlleleFrequencies;
@@ -37,11 +34,6 @@ public class CohortFrequency
     {
         Double frequency = mAlleleFrequencies.get(allele);
         return frequency != null ? frequency : 0;
-    }
-
-    public static void addCmdLineOptions(final Options options)
-    {
-        options.addOption(ALLELE_FREQUENCY_FILE, true, "File with cohort allele frequencies");
     }
 
     private void loadData(final String filename)
