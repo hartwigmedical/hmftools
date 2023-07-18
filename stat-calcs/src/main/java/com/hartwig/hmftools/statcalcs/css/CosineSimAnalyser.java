@@ -8,11 +8,11 @@ import static com.hartwig.hmftools.common.sigs.NoiseCalcs.calcPoissonRangeGivenP
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.statcalcs.common.StatsCommon.LOG_DEBUG;
 import static com.hartwig.hmftools.statcalcs.common.StatsCommon.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.statcalcs.common.StatsCommon.STAT_LOGGER;
 import static com.hartwig.hmftools.statcalcs.common.StatsCommon.formOutputFilename;
@@ -27,15 +27,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.statcalcs.common.StatsCommon;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class CosineSimAnalyser
@@ -67,26 +61,26 @@ public class CosineSimAnalyser
     private static final double ELEVATED_BUCKET_PROBABILITY = 0.1;
     private static final double DEFAULT_CSS_THRESHOLD = 0.8;
 
-    public CosineSimAnalyser(final CommandLine cmd)
+    public CosineSimAnalyser(final ConfigBuilder configBuilder)
     {
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_FILE_ID);
 
         mSampleCountsIndex = Maps.newHashMap();
 
-        mCssThreshold = cmd.hasOption(CSS_THRESHOLD) ? Double.parseDouble(cmd.getOptionValue(CSS_THRESHOLD)) : DEFAULT_CSS_THRESHOLD;
-        mUseElevated = cmd.hasOption(USE_ELEVATED);
+        mCssThreshold = configBuilder.getDecimal(CSS_THRESHOLD);
+        mUseElevated = configBuilder.hasFlag(USE_ELEVATED);
         mRangeMap = Maps.newHashMap();
 
-        mSampleCounts = loadMatrixDataFile(cmd.getOptionValue(SAMPLE_COUNTS_FILE), mSampleCountsIndex, null, false);
+        mSampleCounts = loadMatrixDataFile(configBuilder.getValue(SAMPLE_COUNTS_FILE), mSampleCountsIndex, null, false);
         mSampleCounts.cacheTranspose();
 
         mSampleCancerTypes = Maps.newHashMap();
         mSampleIds = Lists.newArrayList();
 
-        if(cmd.hasOption(SAMPLE_REF_FILE))
+        if(configBuilder.hasValue(SAMPLE_REF_FILE))
         {
-            loadSampleRefDataFile(cmd.getOptionValue(SAMPLE_REF_FILE));
+            loadSampleRefDataFile(configBuilder.getValue(SAMPLE_REF_FILE));
         }
         else
         {
@@ -94,11 +88,11 @@ public class CosineSimAnalyser
         }
 
         mRefNames = Lists.newArrayList();
-        if(cmd.hasOption(REF_COUNTS_FILE))
+        if(configBuilder.hasValue(REF_COUNTS_FILE))
         {
-            STAT_LOGGER.info("loading reference data from file({})", cmd.getOptionValue(REF_COUNTS_FILE));
+            STAT_LOGGER.info("loading reference data from file({})", configBuilder.getValue(REF_COUNTS_FILE));
 
-            mReferenceSampleCounts = loadMatrixDataFile(cmd.getOptionValue(REF_COUNTS_FILE), mRefNames, false);
+            mReferenceSampleCounts = loadMatrixDataFile(configBuilder.getValue(REF_COUNTS_FILE), mRefNames, false);
             mReferenceSampleCounts.cacheTranspose();
         }
         else
@@ -293,22 +287,21 @@ public class CosineSimAnalyser
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        Options options = new Options();
-        StatsCommon.addCmdLineArgs(options);
-        options.addOption(CSS_THRESHOLD, true, "Optional - min CSS to log (default = 0.8)");
-        options.addOption(USE_ELEVATED, false, "Optional - only include elevated counts in comparison");
-        options.addOption(REF_COUNTS_FILE, true, "Optional - min CSS to log (default = 0.8)");
-        options.addOption(SAMPLE_REF_FILE, true, "Optional - sample to ref-type mapping file");
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        StatsCommon.registerConfig(configBuilder);
+        configBuilder.addDecimal(CSS_THRESHOLD, "Min CSS to log", DEFAULT_CSS_THRESHOLD);
+        configBuilder.addFlag(USE_ELEVATED, "Only include elevated counts in comparison");
+        configBuilder.addPath(REF_COUNTS_FILE, false, "Reference counts");
+        configBuilder.addPath(SAMPLE_REF_FILE, false, "Sample to ref-type mapping file");
 
-        if (cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        configBuilder.checkAndParseCommandLine(args);
 
-        CosineSimAnalyser cosineSims = new CosineSimAnalyser(cmd);
+        setLogLevel(configBuilder);
+
+        CosineSimAnalyser cosineSims = new CosineSimAnalyser(configBuilder);
         cosineSims.run();
     }
 }

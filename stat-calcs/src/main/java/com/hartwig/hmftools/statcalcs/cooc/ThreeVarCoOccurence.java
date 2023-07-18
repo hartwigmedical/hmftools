@@ -13,10 +13,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,13 +46,13 @@ public class ThreeVarCoOccurence
 
     private static final Logger LOGGER = LogManager.getLogger(ThreeVarCoOccurence.class);
 
-    public ThreeVarCoOccurence(final CommandLine cmd, final String outputDir)
+    public ThreeVarCoOccurence(final ConfigBuilder configBuilder, final String outputDir)
     {
         mGroupingField = "";
         mCategory1 = "";
         mCategory2 = "";
 
-        final String inputFile = cmd.getOptionValue(THREE_VAR_INPUT_FILE);
+        final String inputFile = configBuilder.getValue(THREE_VAR_INPUT_FILE);
 
         loadSampleGenericData(inputFile);
 
@@ -69,14 +68,14 @@ public class ThreeVarCoOccurence
         mFisherET = new FisherExactTest();
     }
 
-    public static void addCmdLineOptions(Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(THREE_VAR_INPUT_FILE, true, "Sample data with grouping and 2 variable");
+        configBuilder.addPath(THREE_VAR_INPUT_FILE, false, "Sample data with grouping and 2 variable");
     }
 
-    public static boolean hasConfig(final CommandLine cmd)
+    public static boolean hasConfig(final ConfigBuilder configBuilder)
     {
-        return cmd.hasOption(THREE_VAR_INPUT_FILE);
+        return configBuilder.hasValue(THREE_VAR_INPUT_FILE);
     }
 
     private static String SPEC_GROUP_VAL = "";
