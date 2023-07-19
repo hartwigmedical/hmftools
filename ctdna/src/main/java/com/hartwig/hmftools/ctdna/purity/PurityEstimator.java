@@ -2,7 +2,6 @@ package com.hartwig.hmftools.ctdna.purity;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
@@ -16,6 +15,7 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.ctdna.common.SampleData;
 import com.hartwig.hmftools.ctdna.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.ctdna.purity.cn.CopyNumberProfile;
 import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariantResult;

@@ -26,7 +26,7 @@ import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_GC_RATIO_MIN;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
-import static com.hartwig.hmftools.ctdna.purity.SampleData.ctDnaSamplesFromStr;
+import static com.hartwig.hmftools.ctdna.common.SampleData.ctDnaSamplesFromStr;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +40,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.ctdna.common.SampleData;
 
 public class PurityConfig
 {
@@ -121,41 +122,7 @@ public class PurityConfig
     {
         if(configBuilder.hasValue(SAMPLE_ID_FILE))
         {
-            String filename = configBuilder.getValue(SAMPLE_ID_FILE);
-
-            if(!Files.exists(Paths.get(filename)))
-                filename = SampleDataDir + filename;
-
-            try
-            {
-                final List<String> fileContents = Files.readAllLines(new File(filename).toPath());
-
-                String header = fileContents.get(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
-                fileContents.remove(0);
-
-                int patientIndex = fieldsIndexMap.get("PatientId");
-                int tumorIndex = fieldsIndexMap.get("TumorId");
-                int ctdnaIndex = fieldsIndexMap.get("CtDnaSampleIds");
-                Integer vcfIndex = fieldsIndexMap.get("VcfTag");
-
-                for(String line : fileContents)
-                {
-                    if(line.startsWith("#") || line.isEmpty())
-                        continue;
-
-                    String[] values = line.split(CSV_DELIM, -1);
-
-                    String vcfTag = vcfIndex != null && vcfIndex < values.length ? values[vcfIndex] : "";
-
-                    Samples.add(new SampleData(
-                            values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex]), vcfTag));
-                }
-            }
-            catch (IOException e)
-            {
-                CT_LOGGER.error("failed to read sample data file({}): {}", filename, e.toString());
-            }
+            Samples.addAll(SampleData.loadSampleDataFile(configBuilder.getValue(SAMPLE_ID_FILE)));
         }
         else
         {

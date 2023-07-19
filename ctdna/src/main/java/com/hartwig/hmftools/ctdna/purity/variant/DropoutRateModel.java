@@ -24,7 +24,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.ctdna.purity.PurityConfig;
 import com.hartwig.hmftools.ctdna.purity.ResultsWriter;
-import com.hartwig.hmftools.ctdna.purity.SampleData;
+import com.hartwig.hmftools.ctdna.common.SampleData;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
