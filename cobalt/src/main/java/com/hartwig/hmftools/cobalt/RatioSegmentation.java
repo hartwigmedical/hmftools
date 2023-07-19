@@ -3,12 +3,12 @@ package com.hartwig.hmftools.cobalt;
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.pcf.PCFFile;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
 
@@ -18,7 +18,7 @@ public class RatioSegmentation
             final ExecutorService executorService, final String outputDir, final String ratioFile,
             final String reference, final String tumor, int gamma) throws ExecutionException, InterruptedException
     {
-        final List<Future<Object>> futures = Lists.newArrayList();
+        final List<Future<Object>> futures = new ArrayList<>();
 
         if (reference != null)
         {

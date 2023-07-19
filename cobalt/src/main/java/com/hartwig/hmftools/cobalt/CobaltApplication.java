@@ -97,6 +97,9 @@ public class CobaltApplication
         CB_LOGGER.info("COBALT version: {}, build timestamp: {}",
                 mVersionInfo.version(), mVersionInfo.buildTime().format(ISO_ZONED_DATE_TIME));
 
+        CB_LOGGER.info("run args: {}", String.join(" ", args));
+        CB_LOGGER.info("run date: {}", runDate);
+
         CB_LOGGER.info("Reading GC Profile from {}", mConfig.GcProfilePath);
 
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("worker-%d").build();
@@ -152,6 +155,9 @@ public class CobaltApplication
             mVersionInfo.write(mConfig.OutputDir);
             CobaltRatioFile.write(outputFilename, ratios.stream().map(r -> rowToCobaltRatio(r, chromosomePosCodec)).collect(Collectors.toList()));
 
+            // do a GC here to free up some memory for ratio segmentation
+            System.gc();
+
             applyRatioSegmentation(executorService, mConfig.OutputDir, outputFilename, mConfig.ReferenceId, mConfig.TumorId, mConfig.PcfGamma);
         }
         finally
@@ -160,12 +166,9 @@ public class CobaltApplication
             executorService.shutdown();
         }
 
-        CB_LOGGER.info("Cobalt run complete");
-        CB_LOGGER.info("run date: {}", runDate);
-        CB_LOGGER.info("run args: {}", String.join(" ", args));
         Instant finish = Instant.now();
         long seconds = Duration.between(start, finish).getSeconds();
-        CB_LOGGER.info("time taken: {}m {}s", seconds / 60, seconds % 60);
+        CB_LOGGER.info("Cobalt run complete. Time taken: {}m {}s", seconds / 60, seconds % 60);
 
         return 0;
     }

@@ -81,8 +81,17 @@ public class RatioSupplier
 
             // set column as ratio, but filter out unmappable regions
             DoubleColumn ratioColumn = DoubleColumn.create(CobaltColumns.RATIO);
-            readRatios.forEach(row -> ratioColumn.append(
-                    row.getBoolean(CobaltColumns.IS_MAPPABLE) ? (double)row.getInt(CobaltColumns.READ_COUNT) : Double.NaN));
+            for (Row row : readRatios)
+            {
+                if (!row.isMissing(CobaltColumns.IS_MAPPABLE) && row.getBoolean(CobaltColumns.IS_MAPPABLE))
+                {
+                    ratioColumn.append((double)row.getInt(CobaltColumns.READ_COUNT));
+                }
+                else
+                {
+                    ratioColumn.appendMissing();
+                }
+            }
             readRatios.addColumns(ratioColumn);
 
             // on target ratios
