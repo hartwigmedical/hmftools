@@ -33,7 +33,7 @@ import htsjdk.variant.vcf.VCFHeader;
 public class PurpleVariantContextLoader
 {
     @NotNull
-    private final CompoundFilter mFilter;
+    private final CompoundFilter filter;
 
     public static PurpleVariantContextLoader withPassingOnlyFilter()
     {
@@ -42,10 +42,10 @@ public class PurpleVariantContextLoader
 
     public PurpleVariantContextLoader(final VariantContextFilter... filters)
     {
-        mFilter = new CompoundFilter(true);
-        mFilter.addAll(Arrays.asList(filters));
-        mFilter.add(new HumanChromosomeFilter());
-        mFilter.add(new NTFilter());
+        filter = new CompoundFilter(true);
+        filter.addAll(Arrays.asList(filters));
+        filter.add(new HumanChromosomeFilter());
+        filter.add(new NTFilter());
     }
 
     public List<PurpleVariantContext> fromVCFFile(final String tumor, @Nullable final String reference, @Nullable final String rna,
@@ -79,7 +79,7 @@ public class PurpleVariantContextLoader
 
             for(VariantContext variantContext : reader.iterator())
             {
-                if(mFilter.test(variantContext))
+                if(filter.test(variantContext))
                 {
                     try
                     {
@@ -99,9 +99,10 @@ public class PurpleVariantContextLoader
     public PurpleVariantContext createPurpleVariantContext(VariantContext variantContext, String sample, @Nullable String reference,
             @Nullable String rna)
     {
-        if(!mFilter.test(variantContext))
+        if(!filter.test(variantContext))
         {
-            throw new IllegalArgumentException(String.format("Variant could not be created because sample [%s] does not have status PASS", sample));
+            throw new IllegalArgumentException(
+                    String.format("Variant could not be created because sample [%s] does not have status PASS", sample));
         }
 
         if(!AllelicDepth.containsAllelicDepth(variantContext.getGenotype(sample)))
@@ -124,8 +125,8 @@ public class PurpleVariantContextLoader
         return helperCreatePurpleVariantContext(variantContext, tumorDepth, reference, rna);
     }
 
-    private PurpleVariantContext helperCreatePurpleVariantContext(VariantContext variantContext, AllelicDepth tumorDepth, @Nullable String reference,
-            @Nullable String rna)
+    private PurpleVariantContext helperCreatePurpleVariantContext(VariantContext variantContext, AllelicDepth tumorDepth,
+            @Nullable String reference, @Nullable String rna)
     {
         VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);
         final VariantImpact variantImpact = contextDecorator.variantImpact();
