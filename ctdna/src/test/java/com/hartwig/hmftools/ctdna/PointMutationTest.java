@@ -19,7 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.ctdna.probe.PointMutation;
+import com.hartwig.hmftools.ctdna.probe.SomaticMutation;
 
 import org.junit.Test;
 
@@ -41,7 +41,7 @@ public class PointMutationTest
         int position = 20;
         String ref = REF_BASES_CHR_1.substring(position, position + 1);
         String alt = "A";
-        PointMutation var = new PointMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
+        SomaticMutation var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
 
@@ -51,7 +51,7 @@ public class PointMutationTest
         // an MNV
         ref = REF_BASES_CHR_1.substring(position, position + 2);
         alt = "AA";
-        var = new PointMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
+        var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
 
@@ -61,7 +61,7 @@ public class PointMutationTest
         // 3-base MNV
         ref = REF_BASES_CHR_1.substring(position, position + 3);
         alt = "AAA";
-        var = new PointMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
+        var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
 
@@ -72,7 +72,7 @@ public class PointMutationTest
         int delLength = 5;
         ref = REF_BASES_CHR_1.substring(position, position + delLength);
         alt = ref.substring(0, 1);
-        var = new PointMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
+        var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
 
@@ -83,7 +83,7 @@ public class PointMutationTest
         delLength = 10;
         ref = REF_BASES_CHR_1.substring(position, position + delLength);
         alt = ref.substring(0, 1);
-        var = new PointMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
+        var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
 
@@ -93,7 +93,7 @@ public class PointMutationTest
         // 2 base insert
         ref = REF_BASES_CHR_1.substring(position, position + 1);
         alt = ref + "AA";
-        var = new PointMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
+        var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
 
@@ -103,7 +103,7 @@ public class PointMutationTest
         // 7 base insert
         ref = REF_BASES_CHR_1.substring(position, position + 1);
         alt = ref + "AAAAAAA";
-        var = new PointMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
+        var = new SomaticMutation(createVariantContext(CHR_1, position, ref, alt), TEST_SAMPLE_ID);
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
 
