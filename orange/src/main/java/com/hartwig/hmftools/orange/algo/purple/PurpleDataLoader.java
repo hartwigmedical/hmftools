@@ -25,9 +25,6 @@ import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public final class PurpleDataLoader
 {
-    private PurpleDataLoader()
-    {
-    }
 
     @NotNull
     public static PurpleData load(final String tumorSample, @Nullable final String referenceSample, @Nullable final String rnaSample,

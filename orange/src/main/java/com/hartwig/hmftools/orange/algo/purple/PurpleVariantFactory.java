@@ -74,6 +74,7 @@ public class PurpleVariantFactory
                 .build();
     }
 
+    @NotNull
     private PurpleTranscriptImpact extractCanonicalImpact(PurpleVariantContext purpleContext)
     {
         var paveEntry = paveAlgo.run(purpleContext.gene(), purpleContext.canonicalTranscript(), purpleContext.position());

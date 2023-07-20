@@ -49,6 +49,7 @@ public class PurpleVariantContextLoader
         filter.add(new NTFilter());
     }
 
+    @NotNull
     public List<PurpleVariantContext> fromVCFFile(final String tumor, @Nullable final String reference, @Nullable final String rna,
             final String vcfFile) throws IOException
     {
@@ -88,6 +89,7 @@ public class PurpleVariantContextLoader
         return result;
     }
 
+    @NotNull
     public PurpleVariantContext createPurpleVariantContext(VariantContext variantContext, String sample, @Nullable String reference,
             @Nullable String rna)
     {
@@ -111,6 +113,7 @@ public class PurpleVariantContextLoader
         return createPurpleVariantContext(variantContext, tumorDepth, reference, rna);
     }
 
+    @NotNull
     private PurpleVariantContext createPurpleVariantContext(VariantContext variantContext, AllelicDepth tumorDepth,
             @Nullable String reference, @Nullable String rna)
     {
@@ -163,6 +166,7 @@ public class PurpleVariantContextLoader
      * These parsed brackets are then included in the impacts fields and here we remove them.
      * TODO maybe fix this bug upstream in the VariantTranscriptImpact class?
      */
+    @NotNull
     private static VariantTranscriptImpact cleanVariantTranscriptImpactFields(VariantTranscriptImpact impact)
     {
         var cleanedGeneId = stripSquareBracketsAndWhiteSpace(impact.GeneId);
@@ -181,6 +185,7 @@ public class PurpleVariantContextLoader
                 cleanedHgvsProtein);
     }
 
+    @Nullable
     private static String stripSquareBracketsAndWhiteSpace(String s)
     {
         if(s == null)
@@ -192,7 +197,8 @@ public class PurpleVariantContextLoader
         return s.strip();
     }
 
-    private static List<VariantTranscriptImpact> filterOutCanonicalImpact(List<VariantTranscriptImpact> impacts, String canonicalTranscript)
+    @NotNull
+    private static List<VariantTranscriptImpact> filterOutCanonicalImpact(@NotNull List<VariantTranscriptImpact> impacts, String canonicalTranscript)
     {
         return impacts.stream().filter(impact -> !impact.Transcript.equals(canonicalTranscript)).collect(Collectors.toList());
     }

@@ -16,10 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CodingEffectDeterminer
 {
-    private CodingEffectDeterminer()
-    {
-    }
-
     @NotNull
     public static CodingEffect determineCodingEffect(@NotNull List<VariantEffect> variantEffects)
     {

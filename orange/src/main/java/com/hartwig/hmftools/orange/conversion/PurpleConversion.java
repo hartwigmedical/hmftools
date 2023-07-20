@@ -37,10 +37,6 @@ import org.jetbrains.annotations.NotNull;
 public final class PurpleConversion
 {
 
-    private PurpleConversion()
-    {
-    }
-
     @NotNull
     public static PurpleCopyNumber convert(com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber)
     {
@@ -134,6 +130,7 @@ public final class PurpleConversion
         return PurpleQCStatus.valueOf(qcStatus.name());
     }
 
+    @NotNull
     public static PurpleCodingEffect convert(CodingEffect effect)
     {
         return PurpleCodingEffect.valueOf(effect.name());
