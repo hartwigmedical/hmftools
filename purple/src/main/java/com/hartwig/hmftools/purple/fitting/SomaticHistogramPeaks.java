@@ -102,10 +102,7 @@ public class SomaticHistogramPeaks
             if(peakTotalWeight < mMinPeakWeight || peakTotalWeight / initialWeight < mMinPeakPerc)
                 break;
 
-            somaticPeaks.add(ImmutableSomaticPeak.builder()
-                    .alleleFrequency(peak)
-                    .count((int)round(peakTotalWeight))
-                    .build());
+            somaticPeaks.add(new SomaticPeak(peak, (int)round(peakTotalWeight)));
 
             // Decide if we should do another round
             double remainingWeight = positiveWeight(weightedVariants);
@@ -127,8 +124,8 @@ public class SomaticHistogramPeaks
 
         // return the highest VAF peak
         double maxVafPeak = somaticPeaks.stream()
-                .filter(x -> x.alleleFrequency() <= 0.5)
-                .mapToDouble(x -> x.alleleFrequency())
+                .filter(x -> x.AlleleFrequency <= 0.5)
+                .mapToDouble(x -> x.AlleleFrequency)
                 .max().orElse(0);
 
         return maxVafPeak;

@@ -38,8 +38,8 @@ public class SomaticKernelDensityPeaksTest
 
     private static void assertPeak(@NotNull SomaticPeak victim, double vaf, int count)
     {
-        assertEquals(vaf, victim.alleleFrequency(), EPSILON);
-        assertEquals(count, victim.count());
+        assertEquals(vaf, victim.AlleleFrequency, EPSILON);
+        assertEquals(count, victim.Count);
     }
 }
 

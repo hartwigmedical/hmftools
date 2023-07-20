@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import org.immutables.value.Value;
+public class SomaticPeak {
 
-@Value.Immutable
-public abstract class SomaticPeak {
+    public final double AlleleFrequency;
+    public final int Count;
 
-    public abstract double alleleFrequency();
-
-    public abstract int count();
+    public SomaticPeak(final double alleleFrequency, final int count)
+    {
+        AlleleFrequency = alleleFrequency;
+        Count = count;
+    }
 }
