@@ -14,31 +14,30 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class GermlineGainLossFactory {
-
-    private static final Logger LOGGER = LogManager.getLogger(GermlineGainLossFactory.class);
-
+public class GermlineGainLossFactory
+{
     @NotNull
     private final EnsemblDataCache ensemblDataCache;
 
-    public GermlineGainLossFactory(@NotNull final EnsemblDataCache ensemblDataCache) {
+    public GermlineGainLossFactory(@NotNull final EnsemblDataCache ensemblDataCache)
+    {
         this.ensemblDataCache = ensemblDataCache;
     }
 
     @NotNull
     public Map<PurpleGainLoss, GermlineDeletion> mapDeletions(@NotNull List<GermlineDeletion> germlineDeletions,
-            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers) {
+            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    {
         Map<PurpleGainLoss, GermlineDeletion> deletionMap = Maps.newHashMap();
-        for (GermlineDeletion germlineDeletion : germlineDeletions) {
-            if (germlineDeletion.TumorStatus == GermlineStatus.HOM_DELETION) {
+        for(GermlineDeletion germlineDeletion : germlineDeletions)
+        {
+            if(germlineDeletion.TumorStatus == GermlineStatus.HOM_DELETION)
+            {
                 PurpleGainLoss gainLoss = toGainLoss(germlineDeletion, allSomaticGeneCopyNumbers);
-                if (deletionMap.containsKey(gainLoss)) {
-                    LOGGER.warn("Gain loss created that already exists, from germline deletion on gene {}", germlineDeletion.GeneName);
-                } else {
+                if(!deletionMap.containsKey(gainLoss))
+                {
                     deletionMap.put(gainLoss, germlineDeletion);
                 }
             }
@@ -47,7 +46,8 @@ public class GermlineGainLossFactory {
     }
 
     @NotNull
-    private PurpleGainLoss toGainLoss(@NotNull GermlineDeletion deletion, @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers) {
+    private PurpleGainLoss toGainLoss(@NotNull GermlineDeletion deletion, @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    {
         TranscriptData canonicalTranscript = findCanonicalTranscript(deletion.GeneName);
 
         boolean isFullDeletion = deletion.RegionStart < canonicalTranscript.TransStart && deletion.RegionEnd > canonicalTranscript.TransEnd;
@@ -67,14 +67,17 @@ public class GermlineGainLossFactory {
     }
 
     @NotNull
-    private TranscriptData findCanonicalTranscript(@NotNull String geneNameToFind) {
+    private TranscriptData findCanonicalTranscript(@NotNull String geneNameToFind)
+    {
         GeneData gene = ensemblDataCache.getGeneDataByName(geneNameToFind);
-        if (gene == null) {
+        if(gene == null)
+        {
             throw new IllegalStateException("Could not find gene in ensembl data cache with name: " + geneNameToFind);
         }
 
         TranscriptData transcript = ensemblDataCache.getCanonicalTranscriptData(gene.GeneId);
-        if (transcript == null) {
+        if(transcript == null)
+        {
             throw new IllegalStateException("Could not find canonical transcript in ensembl data cache for gene with id: " + gene.GeneId);
         }
 
@@ -82,9 +85,12 @@ public class GermlineGainLossFactory {
     }
 
     private static double maxCopyNumberFromGeneCopyNumber(@NotNull String geneNameToFind,
-            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers) {
-        for (GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers) {
-            if (geneCopyNumber.geneName().equals(geneNameToFind)) {
+            @NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers)
+    {
+        for(GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers)
+        {
+            if(geneCopyNumber.geneName().equals(geneNameToFind))
+            {
                 return Math.max(0, geneCopyNumber.maxCopyNumber());
             }
         }
