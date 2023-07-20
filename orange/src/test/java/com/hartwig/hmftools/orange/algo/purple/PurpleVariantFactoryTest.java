@@ -33,13 +33,13 @@ public class PurpleVariantFactoryTest
     {
         var otherImpacts = List.of(
                 new VariantTranscriptImpact(
-                        "[ENSG00000109265",
+                        "ENSG00000109265",
                         "CRACD",
                         "ENST00000264229",
                         "synonymous_variant",
                         false,
                         "c.2187C>T",
-                        "p.Ser729=]"
+                        "p.Ser729="
                 ));
 
         PurpleVariantContext context = ImmutablePurpleVariantContext.builder()

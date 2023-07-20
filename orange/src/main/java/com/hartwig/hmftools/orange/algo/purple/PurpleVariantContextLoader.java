@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
@@ -115,7 +116,12 @@ public class PurpleVariantContextLoader
     {
         VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);
         final VariantImpact variantImpact = contextDecorator.variantImpact();
-        final List<VariantTranscriptImpact> variantTranscriptImpacts = VariantTranscriptImpact.fromVariantContext(variantContext);
+        final List<VariantTranscriptImpact> allImpacts = VariantTranscriptImpact.fromVariantContext(variantContext)
+                .stream()
+                .map(PurpleVariantContextLoader::cleanVariantTranscriptImpactFields)
+                .collect(Collectors.toList());
+
+        final List<VariantTranscriptImpact> otherImpacts = filterOutCanonicalImpact(allImpacts, variantImpact.CanonicalTranscript);
         final AllelicDepth rnaDepth = extractRnaDepth(variantContext, rna);
 
         return ImmutablePurpleVariantContext.builder()
@@ -134,7 +140,7 @@ public class PurpleVariantContextLoader
                 .canonicalHgvsCodingImpact(variantImpact.CanonicalHgvsCoding)
                 .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProtein)
                 .worstCodingEffect(variantImpact.WorstCodingEffect)
-                .otherImpacts(variantTranscriptImpacts)
+                .otherImpacts(otherImpacts)
                 .hotspot(contextDecorator.hotspot())
                 .reported(contextDecorator.reported())
                 .tumorDepth(tumorDepth)
@@ -149,6 +155,45 @@ public class PurpleVariantContextLoader
                 .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .localPhaseSets(variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0))
                 .build();
+    }
+
+    /**
+     * When VariantTranscriptImpacts are created from the VCF file, it sometimes (incorrectly) parses the square array brackets.
+     * These parsed brackets are then included in the impacts fields and here we remove them.
+     * TODO maybe fix this bug upstream in the VariantTranscriptImpact class?
+     */
+    private static VariantTranscriptImpact cleanVariantTranscriptImpactFields(VariantTranscriptImpact impact)
+    {
+        var cleanedGeneId = stripSquareBracketsAndWhiteSpace(impact.GeneId);
+        var cleanedGeneName = stripSquareBracketsAndWhiteSpace(impact.GeneName);
+        var cleanedTranscript = stripSquareBracketsAndWhiteSpace(impact.Transcript);
+        var cleanedHgvsCoding = stripSquareBracketsAndWhiteSpace(impact.HgvsCoding);
+        var cleanedHgvsProtein = stripSquareBracketsAndWhiteSpace(impact.HgvsProtein);
+        var cleanedEffects = stripSquareBracketsAndWhiteSpace(impact.Effects);
+        return new VariantTranscriptImpact(
+                cleanedGeneId,
+                cleanedGeneName,
+                cleanedTranscript,
+                cleanedEffects,
+                impact.SpliceRegion,
+                cleanedHgvsCoding,
+                cleanedHgvsProtein);
+    }
+
+    private static String stripSquareBracketsAndWhiteSpace(String s)
+    {
+        if(s == null)
+        {
+            return null;
+        }
+        s = s.startsWith("[") ? s.substring(1) : s;
+        s = s.endsWith("]") ? s.substring(0, s.length() - 1) : s;
+        return s.strip();
+    }
+
+    private static List<VariantTranscriptImpact> filterOutCanonicalImpact(List<VariantTranscriptImpact> impacts, String canonicalTranscript)
+    {
+        return impacts.stream().filter(impact -> !impact.Transcript.equals(canonicalTranscript)).collect(Collectors.toList());
     }
 
     @Nullable

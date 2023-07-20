@@ -50,10 +50,10 @@ public class PurpleVariantContextLoaderTest
         List<VariantTranscriptImpact> otherImpacts = variant.otherImpacts();
         assertEquals(2, otherImpacts.size());
 
-        // Test if the extra transcripts are loaded properly
+        // Test if the extra transcripts are loaded properly,
         var expectedTranscriptImpacts = List.of(
                 new VariantTranscriptImpact(
-                        "[ENSG00000109265",
+                        "ENSG00000109265",
                         "CRACD",
                         "ENST00000264229",
                         "synonymous_variant",
@@ -61,19 +61,21 @@ public class PurpleVariantContextLoaderTest
                         "c.2187C>T",
                         "p.Ser729="),
                 new VariantTranscriptImpact(
-                        " ENSG00000109265",
+                        "ENSG00000109265",
                         "CRACD",
                         "ENST00000514330",
                         "upstream_gene_variant",
                         true,
                         "",
-                        "]"
+                        ""
                 ));
 
         for(int i = 0; i < otherImpacts.size(); i++)
         {
             assertVariantTranscriptImpactEquals(expectedTranscriptImpacts.get(i), otherImpacts.get(i));
         }
+        // Assertions above already imply it, but explicitly assert the canonical impact isn't included in the otherImpacts field
+        assertFalse(otherImpacts.stream().anyMatch(impact -> impact.Transcript.equals(variant.canonicalTranscript())));
 
         assertEquals(Hotspot.NON_HOTSPOT, variant.hotspot());
         assertFalse(variant.reported());
