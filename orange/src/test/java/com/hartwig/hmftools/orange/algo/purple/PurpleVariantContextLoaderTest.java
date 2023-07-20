@@ -19,13 +19,13 @@ import org.junit.Test;
 
 public class PurpleVariantContextLoaderTest
 {
-    private static final String SOMATIC_VARIANT_FILE = Resources.getResource("purple/variants.vcf").getPath();
+    private static final String PURPLE_VARIANT_FILE = Resources.getResource("purple/variants.vcf").getPath();
 
     @Test
     public void testCanReadVcfFile() throws IOException
     {
         PurpleVariantContextLoader contextLoader = PurpleVariantContextLoader.withPassingOnlyFilter();
-        List<PurpleVariantContext> variants = contextLoader.fromVCFFile("COLO829v003T", "COLO829v003R", null, SOMATIC_VARIANT_FILE);
+        List<PurpleVariantContext> variants = contextLoader.fromVCFFile("COLO829v003T", "COLO829v003R", null, PURPLE_VARIANT_FILE);
 
         assertEquals(1, variants.size());
 
