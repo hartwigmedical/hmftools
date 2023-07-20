@@ -268,7 +268,7 @@ public class GnomadAnnotation
         }
         catch(IOException e)
         {
-            PV_LOGGER.error("failed to load Gnoamd frequency file({}): {}", filename, e.toString());
+            PV_LOGGER.error("failed to load Gnomad frequency file({}): {}", filename, e.toString());
             return;
         }
     }
@@ -284,7 +284,7 @@ public class GnomadAnnotation
     public static void addHeader(final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(GNOMAD_FREQ, 1, VCFHeaderLineType.Float, GNOMAD_FREQ_DESC));
-        header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnoamd PON"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnomad PON"));
     }
 
     private class GnomadVariant
