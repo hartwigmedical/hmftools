@@ -108,10 +108,10 @@ public class PurpleVariantContextLoader
                     readCount));
         }
 
-        return createCreatePurpleVariantContext(variantContext, tumorDepth, reference, rna);
+        return createPurpleVariantContext(variantContext, tumorDepth, reference, rna);
     }
 
-    private PurpleVariantContext createCreatePurpleVariantContext(VariantContext variantContext, AllelicDepth tumorDepth,
+    private PurpleVariantContext createPurpleVariantContext(VariantContext variantContext, AllelicDepth tumorDepth,
             @Nullable String reference, @Nullable String rna)
     {
         VariantContextDecorator contextDecorator = new VariantContextDecorator(variantContext);
@@ -123,6 +123,8 @@ public class PurpleVariantContextLoader
 
         final List<VariantTranscriptImpact> otherImpacts = filterOutCanonicalImpact(allImpacts, variantImpact.CanonicalTranscript);
         final AllelicDepth rnaDepth = extractRnaDepth(variantContext, rna);
+
+        var localPhaseSets = variantContext.hasAttribute(LOCAL_PHASE_SET) ? variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0) : null;
 
         return ImmutablePurpleVariantContext.builder()
                 .chromosome(contextDecorator.chromosome())
@@ -152,7 +154,7 @@ public class PurpleVariantContextLoader
                 .genotypeStatus(contextDecorator.genotypeStatus(reference))
                 .repeatCount(contextDecorator.repeatCount())
                 .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
-                .localPhaseSets(variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0))
+                .localPhaseSets(localPhaseSets)
                 .build();
     }
 
