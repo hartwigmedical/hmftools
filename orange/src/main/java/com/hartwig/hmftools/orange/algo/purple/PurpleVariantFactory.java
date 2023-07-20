@@ -60,7 +60,7 @@ public class PurpleVariantFactory
                 .otherImpacts(purpleVariantTranscriptImpacts)
                 .hotspot(Hotspot.valueOf(context.hotspot().name()))
                 .reported(context.reported())
-                .tumorDepth(extractTumorDepth(context.tumorDepth()))
+                .tumorDepth(PurpleConversion.convert(context))
                 .rnaDepth(rnaDepth)
                 .adjustedCopyNumber(context.adjustedCopyNumber())
                 .adjustedVAF(context.adjustedVAF())
@@ -88,14 +88,6 @@ public class PurpleVariantFactory
                 .spliceRegion(purpleContext.spliceRegion())
                 .effects(purpleVariantEffects)
                 .codingEffect(PurpleConversion.convert(purpleContext.canonicalCodingEffect()))
-                .build();
-    }
-
-    private static PurpleAllelicDepth extractTumorDepth(AllelicDepth tumorDepth)
-    {
-        return ImmutablePurpleAllelicDepth.builder()
-                .alleleReadCount(tumorDepth.alleleReadCount())
-                .totalReadCount(tumorDepth.totalReadCount())
                 .build();
     }
 }

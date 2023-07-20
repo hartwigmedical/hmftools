@@ -61,7 +61,6 @@ public class PurpleVariantFactoryTest
                 .otherImpacts(otherImpacts)
                 .hotspot(Hotspot.HOTSPOT)
                 .reported(true)
-                .tumorDepth(ImmutableAllelicDepthImpl.builder().alleleReadCount(80).totalReadCount(153).build())
                 .rnaDepth(null)
                 .adjustedCopyNumber(3.84)
                 .adjustedVAF(0.5256)

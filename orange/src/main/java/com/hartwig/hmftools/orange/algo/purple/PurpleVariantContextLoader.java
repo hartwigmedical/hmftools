@@ -143,7 +143,6 @@ public class PurpleVariantContextLoader
                 .otherImpacts(otherImpacts)
                 .hotspot(contextDecorator.hotspot())
                 .reported(contextDecorator.reported())
-                .tumorDepth(tumorDepth)
                 .rnaDepth(rnaDepth)
                 .adjustedCopyNumber(contextDecorator.adjustedCopyNumber())
                 .adjustedVAF(contextDecorator.adjustedVaf())

@@ -79,8 +79,6 @@ public class PurpleVariantContextLoaderTest
 
         assertEquals(Hotspot.NON_HOTSPOT, variant.hotspot());
         assertFalse(variant.reported());
-        assertEquals(153, variant.tumorDepth().totalReadCount());
-        assertEquals(80, variant.tumorDepth().alleleReadCount());
         assertNull(variant.rnaDepth());
         assertEquals(3.84, variant.adjustedCopyNumber(), 0);
         assertEquals(0.5256, variant.adjustedVAF(), 0);

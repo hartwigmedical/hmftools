@@ -30,9 +30,6 @@ public interface PurpleVariantContext extends Variant
 
     boolean reported();
 
-    @NotNull
-    AllelicDepth tumorDepth();
-
     @Nullable
     AllelicDepth rnaDepth();
 
