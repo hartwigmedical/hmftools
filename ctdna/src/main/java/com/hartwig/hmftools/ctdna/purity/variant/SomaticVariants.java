@@ -38,7 +38,7 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.ctdna.purity.PurityConfig;
 import com.hartwig.hmftools.ctdna.purity.ResultsWriter;
-import com.hartwig.hmftools.ctdna.purity.SampleData;
+import com.hartwig.hmftools.ctdna.common.SampleData;
 
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;

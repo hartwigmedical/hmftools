@@ -22,7 +22,7 @@ PURPLE may also be run on targeted data. For more info please see [here](https:/
   + [Structural Variant Input VCFs (optional)](#structural-variant-input-vcfs-optional)
   + [Somatic Variant Input VCF (optional)](#somatic-variant-input-vcf-optional)
 * [Tumor Only Mode](#tumor-only-mode) 
-* [Germline Only Mode](#germline-only-mode)  
+* [Germline Only Mode](#germline-only)  
 * [Algorithm](#algorithm)
   + [1. Sex](#1-sex-determination)
   + [2. Segmentation](#2-segmentation)

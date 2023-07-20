@@ -26,7 +26,7 @@ The driverGenePanel.tsv, ActionableCodingPanel.bed and CoverageCodingPanel.bed s
 
 AMBER
 ```
--minTumorDepth 80
+-tumor_only_min_depth 80
 ```
 COBALT
 ```

@@ -82,6 +82,8 @@ public class SomaticVariantData implements ComparableItem
     protected static final String FLD_SUBCLONAL_LIKELIHOOD = "SubclonalLikelihood";
     protected static final String FLD_LPS = "HasLPS";
 
+    protected static final double NO_QUAL_PRESENT = -10;
+
     public SomaticVariantData(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
             final String gene, final boolean reported, final Hotspot hotspotStatus, final VariantTier tier, final boolean biallelic,
@@ -186,7 +188,9 @@ public class SomaticVariantData implements ComparableItem
 
         final List<String> diffs = Lists.newArrayList();
 
-        checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, thresholds);
+        if(Qual != NO_QUAL_PRESENT && otherVar.Qual != NO_QUAL_PRESENT)
+            checkDiff(diffs, FLD_QUAL, Qual, otherVar.Qual, thresholds);
+
         checkDiff(diffs, FLD_REPORTED, Reported, otherVar.Reported);
         checkDiff(diffs, FLD_TIER, Tier.toString(), otherVar.Tier.toString());
 

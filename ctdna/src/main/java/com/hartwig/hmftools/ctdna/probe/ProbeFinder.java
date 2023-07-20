@@ -6,7 +6,6 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -143,7 +142,7 @@ public class ProbeFinder
             {
                 List<Variant> variants = Lists.newArrayList();
                 variants.addAll(mCommonVariants);
-                variants.addAll(PointMutation.loadSomatics(sampleId, mConfig));
+                variants.addAll(SomaticMutation.loadSomatics(sampleId, mConfig));
                 variants.addAll(GermlineMutation.loadGermlineMutations(sampleId, mConfig));
                 variants.addAll(StructuralVariant.loadStructuralVariants(sampleId, mConfig));
                 variants.addAll(GermlineSv.loadGermlineStructuralVariants(sampleId, mConfig));

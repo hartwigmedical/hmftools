@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.svtools.simulation;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class ShatteringConfig
 {
@@ -20,28 +19,28 @@ public class ShatteringConfig
     private static final String RANDOM_SELECTION = "sh_random";
     private static final String EXHAUSTIVE_SEARCH = "sh_exhaustive";
 
-    public ShatteringConfig(final CommandLine cmd)
+    public ShatteringConfig(final ConfigBuilder configBuilder)
     {
-        Iterations = Integer.parseInt(cmd.getOptionValue(ITERATIONS, "1"));
+        Iterations = configBuilder.getInteger(ITERATIONS);
 
-        if(cmd.hasOption(SEG_COUNT))
+        if(configBuilder.hasFlag(SEG_COUNT))
         {
-            SegmentCountMin = Integer.parseInt(cmd.getOptionValue(SEG_COUNT, "1"));
+            SegmentCountMin = configBuilder.getInteger(SEG_COUNT);
             SegmentCountMax = SegmentCountMin;
         }
-        else if(cmd.hasOption(SEG_COUNT_MIN) && cmd.hasOption(SEG_COUNT_MAX))
+        else if(configBuilder.hasFlag(SEG_COUNT_MIN) && configBuilder.hasFlag(SEG_COUNT_MAX))
         {
-            SegmentCountMin = Integer.parseInt(cmd.getOptionValue(SEG_COUNT_MIN, "1"));
-            SegmentCountMax = Integer.parseInt(cmd.getOptionValue(SEG_COUNT_MAX, "1"));
+            SegmentCountMin = configBuilder.getInteger(SEG_COUNT_MIN);
+            SegmentCountMax = configBuilder.getInteger(SEG_COUNT_MAX);
         }
         else
         {
             SegmentCountMin = SegmentCountMax = 0;
         }
 
-        GroupResults = cmd.hasOption(COMBINE_RESULTS);
-        RandomLinkSelection = true; // cmd.hasOption(RANDOM_SELECTION);
-        ExhuastiveSearch = cmd.hasOption(EXHAUSTIVE_SEARCH);
+        GroupResults = configBuilder.hasFlag(COMBINE_RESULTS);
+        RandomLinkSelection = true; // configBuilder.hasFlag(RANDOM_SELECTION);
+        ExhuastiveSearch = configBuilder.hasFlag(EXHAUSTIVE_SEARCH);
     }
 
     public ShatteringConfig(int segments, int iterations)
@@ -58,15 +57,15 @@ public class ShatteringConfig
         return Iterations > 0 && SegmentCountMin> 0 && SegmentCountMax >= SegmentCountMin;
     }
 
-    public static void addCommandLineOptions(Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(SEG_COUNT, true, "Shattering segments");
-        options.addOption(SEG_COUNT_MIN, true, "Shattering segments range min");
-        options.addOption(SEG_COUNT_MAX, true, "Shattering segments range max");
-        options.addOption(ITERATIONS, true, "Shattering test iterations");
-        options.addOption(COMBINE_RESULTS, false, "Shattering group like results");
-        options.addOption(RANDOM_SELECTION, false, "Shattering use random selection of next link");
-        options.addOption(EXHAUSTIVE_SEARCH, false, "Shattering find all possible link combinations");
+        configBuilder.addInteger(SEG_COUNT, "Shattering segments", 1);
+        configBuilder.addInteger(SEG_COUNT_MIN, "Shattering segments range min", 1);
+        configBuilder.addInteger(SEG_COUNT_MAX, "Shattering segments range max", 1);
+        configBuilder.addInteger(ITERATIONS, "Shattering test iterations", 1);
+        configBuilder.addFlag(COMBINE_RESULTS, "Shattering group like results");
+        configBuilder.addFlag(RANDOM_SELECTION, "Shattering use random selection of next link");
+        configBuilder.addFlag(EXHAUSTIVE_SEARCH, "Shattering find all possible link combinations");
     }
 
 }

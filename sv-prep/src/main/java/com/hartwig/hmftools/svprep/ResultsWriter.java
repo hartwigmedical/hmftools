@@ -192,7 +192,7 @@ public class ResultsWriter
         }
         catch(IOException e)
         {
-            SV_LOGGER.error(" failed to create junction writer: {}", e.toString());
+            SV_LOGGER.error("failed to create junction writer: {}", e.toString());
         }
 
         return null;

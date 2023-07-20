@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sigs.loaders;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getBucketIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getChromosomeFromIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFromIndex;
@@ -81,7 +82,7 @@ public class PositionFreqBuilder
 
         mSampleList.addAll(ConfigUtils.loadSampleIdsFile(cmd.getOptionValue(SAMPLE_DATA_FILE)));
 
-        mRefGenomeVersion = RefGenomeVersion.from(cmd);
+        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
         mChromosomeLengths = PositionFrequencies.buildStandardChromosomeLengths(mRefGenomeVersion);
         mPositionCacheSize = initialisePositionCache(mRefGenomeVersion, mBucketSize, mChromosomeLengths, mChromosomePosIndex);
 

@@ -27,25 +27,25 @@ public class MetricsCheckerTest {
         List<QCValue> values = checker.run();
         assertEquals(2, values.size());
         for (QCValue value : values) {
-            if (value.type() == QCValueType.REF_COVERAGE_10X) {
-                assertEquals("0.98261", value.value());
-            } else if (value.type() == QCValueType.REF_COVERAGE_20X) {
-                assertEquals("0.980701", value.value());
+            if (value.Type == QCValueType.REF_COVERAGE_10X) {
+                assertEquals("0.98261", value.Value);
+            } else if (value.Type == QCValueType.REF_COVERAGE_20X) {
+                assertEquals("0.980701", value.Value);
             }
         }
     }
 
     @Test
     public void extractDataFromMetricsWorksForTumor() throws IOException {
-        TumorMetricsChecker checker = new TumorMetricsChecker(TUM_WGS_METRICS_FILE);
+        ReferenceMetricsChecker checker = new ReferenceMetricsChecker(TUM_WGS_METRICS_FILE);
         List<QCValue> values = checker.run();
 
         assertEquals(2, values.size());
         for (QCValue value : values) {
-            if (value.type() == QCValueType.TUM_COVERAGE_30X) {
-                assertEquals("0.978779", value.value());
-            } else if (value.type() == QCValueType.TUM_COVERAGE_60X) {
-                assertEquals("0.950264", value.value());
+            if (value.Type == QCValueType.TUM_COVERAGE_30X) {
+                assertEquals("0.978779", value.Value);
+            } else if (value.Type == QCValueType.TUM_COVERAGE_60X) {
+                assertEquals("0.950264", value.Value);
             }
         }
     }

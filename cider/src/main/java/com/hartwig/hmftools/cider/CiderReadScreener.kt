@@ -263,14 +263,14 @@ class CiderReadScreener(// collect the reads and sort by types
                 {
                     if (relevantAnchorLocation != null)
                     {
-                        sLogger.info(
+                        sLogger.trace(
                             "read({}) matched from mate mapped({}:{}) near anchor location({})",
                             read, read.mateReferenceName, read.mateAlignmentStart, relevantAnchorLocation
                         )
                     }
                     else
                     {
-                        sLogger.info(
+                        sLogger.trace(
                             "read({}) matched from mate mapped({}:{}) near constant region({})",
                             read, read.mateReferenceName, read.mateAlignmentStart, relavantConstantRegion
                         )

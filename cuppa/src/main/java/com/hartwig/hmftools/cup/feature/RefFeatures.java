@@ -20,11 +20,7 @@ import static com.hartwig.hmftools.cup.feature.FeaturePrevData.TYPE_NAME_DELIM;
 import static com.hartwig.hmftools.cup.feature.FeaturePrevData.featureTypeName;
 import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.MIN_AMP_MULTIPLE;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.RESTRICT_DRIVER_AMP_GENES;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.COMBINE_DRIVER_AMP;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertAndFilterDriverAmps;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.filterDriverAmps;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertDriverAmps;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 
 import java.io.BufferedWriter;
@@ -51,9 +47,6 @@ public class RefFeatures implements RefClassifier
     private final SampleDataCache mSampleDataCache;
 
     private final List<FeaturePrevData> mFeatureOverrides;
-    private final boolean mRestrictAmpGenes;
-    private final boolean mSplitDriverAmps;
-    private final double mMinAmpCnMultiple;
 
     public RefFeatures(final RefDataConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
@@ -63,19 +56,10 @@ public class RefFeatures implements RefClassifier
 
         mSampleDataCache = sampleDataCache;
 
-        mSplitDriverAmps = !configBuilder.hasFlag(COMBINE_DRIVER_AMP);
-        mRestrictAmpGenes = configBuilder.hasFlag(RESTRICT_DRIVER_AMP_GENES);
-        mMinAmpCnMultiple = configBuilder.getDecimal(MIN_AMP_MULTIPLE);
-
         mFeatureOverrides = loadRefFeatureOverrides(mConfig.FeatureOverrideFile);
     }
 
     public CategoryType categoryType() { return FEATURE; }
-
-    public static void registerConfig(final ConfigBuilder configBuilder)
-    {
-        FeaturesCommon.registerConfig(configBuilder);
-    }
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
@@ -97,15 +81,7 @@ public class RefFeatures implements RefClassifier
 
         writeCohortData(sampleFeaturesMap);
 
-        if(mSplitDriverAmps)
-        {
-            convertAndFilterDriverAmps(sampleFeaturesMap, mRestrictAmpGenes);
-
-            if(mMinAmpCnMultiple > 0)
-            {
-                filterDriverAmps(sampleFeaturesMap, mSampleDataCache.SampleTraitsData, mMinAmpCnMultiple);
-            }
-        }
+        convertDriverAmps(sampleFeaturesMap);
 
         final Map<String,Map<String,Double>> cancerFeatureCounts = Maps.newHashMap();
 
@@ -152,8 +128,9 @@ public class RefFeatures implements RefClassifier
 
                 final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
                 final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
+                final String virusDataDir = formSamplePath(mConfig.VirusDir, sample.Id);
 
-                if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, sampleFeaturesMap))
+                if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, virusDataDir, sampleFeaturesMap))
                     break;
 
                 if(i > 0 && (i % 100) == 0)

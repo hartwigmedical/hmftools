@@ -102,13 +102,13 @@ public class FeatureDataLoader
     }
 
     public static boolean loadFeaturesFromFile(
-            final String sampleId, final String linxDataDir, final String purpleDataDir,
+            final String sampleId, final String linxDataDir, final String purpleDataDir, final String virusDataDir,
             final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
         // extract features from standard pipeline output files and fail if any cannot be loaded
         try
         {
-            String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(linxDataDir, sampleId);
+            String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(virusDataDir, sampleId);
 
             final List<AnnotatedVirus> virusAnnotations = Lists.newArrayList();
 
@@ -129,7 +129,7 @@ public class FeatureDataLoader
             final List<DriverCatalog> drivers = Lists.newArrayList();
 
             final String linxDriverCatalogFilename = LinxDriver.generateCatalogFilename(linxDataDir, sampleId, true);
-            final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilename(linxDataDir, sampleId);
+            final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilename(purpleDataDir, sampleId);
 
             if(Files.exists(Paths.get(linxDriverCatalogFilename)))
             {
@@ -272,6 +272,7 @@ public class FeatureDataLoader
                     .geneContextEnd("")
                     .geneTranscriptEnd("")
                     .junctionCopyNumber(0.0)
+                    .reportableReasons("")
                     .build();
 
             final List<LinxFusion> fusions = sampleFusionMap.get(sampleId);

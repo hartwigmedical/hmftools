@@ -40,6 +40,7 @@ public class GnomadAnnotation
     private final boolean mLoadChromosomeOnDemand;
     private final Map<String,String> mChromosomeFiles;
     private final double mPonFilterThreshold;
+    private boolean mHasValidData;
 
     public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
@@ -54,6 +55,7 @@ public class GnomadAnnotation
     {
         mFrequencies = Maps.newHashMap();
         mChromosomeFiles = Maps.newHashMap();
+        mHasValidData = true;
 
         mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
         mLoadChromosomeOnDemand = configBuilder.hasFlag(GNOMAD_LOAD_CHR_ON_DEMAND);
@@ -72,6 +74,7 @@ public class GnomadAnnotation
     }
 
     public boolean hasData() { return !mFrequencies.isEmpty() || !mChromosomeFiles.isEmpty(); }
+    public boolean hasValidData() { return mHasValidData; }
 
     public void annotateVariant(final VariantData variant)
     {
@@ -148,7 +151,10 @@ public class GnomadAnnotation
         String chrFilename = mChromosomeFiles.get(chromosome);
 
         if(chrFilename == null)
-            return;
+        {
+            PV_LOGGER.error("missing Gnomad file for chromosome({})", chromosome);
+            System.exit(1);
+        }
 
         loadFrequency(chrFilename, chromosome);
     }
@@ -167,9 +173,9 @@ public class GnomadAnnotation
             for(HumanChromosome humanChr : HumanChromosome.values())
             {
                 String fileChrStrNoId = formFileId(gnomadDir, humanChr.toString(), null);
-                String fileChrStrWithId = GNOMAD_FILE_ID + "_chr" + humanChr.toString() + "_";
+                String fileChrStrWithId = GNOMAD_FILE_ID + "_chr" + humanChr + "_";
 
-                // expect file name to contain 'chr1.csv' or 'chr1_id.csv'
+                // expect file name: gnomad_variants_chr10_v38.csv.gz
 
                 String chrFile = files.stream()
                         .filter(x -> x.endsWith(fileChrStrNoId) || x.contains(fileChrStrWithId))
@@ -180,7 +186,8 @@ public class GnomadAnnotation
                 if(chrFile == null)
                 {
                     PV_LOGGER.error("missing Gnomad chromosome({}) file", chrStr);
-                    continue;
+                    mHasValidData = false;
+                    return;
                 }
 
                 if(mLoadChromosomeOnDemand)

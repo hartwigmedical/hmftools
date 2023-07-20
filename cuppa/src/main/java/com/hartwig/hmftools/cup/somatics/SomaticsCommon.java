@@ -34,22 +34,6 @@ public final class SomaticsCommon
     public static final String DEC_1_FORMAT = "%.1f";
     public static final String DEC_3_FORMAT = "%.3f";
 
-    public static void applyMaxCssAdjustment(double maxCssScore, final Map<String,Double> cancerCssTotals, double adjustFactor)
-    {
-        if(adjustFactor == 0)
-            return;
-
-        double adjustedFactor = pow(maxCssScore, adjustFactor);
-
-        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
-        {
-            double adjCancerScore = pow(entry.getValue(), adjustedFactor);
-            cancerCssTotals.put(entry.getKey(), adjCancerScore);
-        }
-
-        convertToPercentages(cancerCssTotals);
-    }
-
     public static Matrix loadMultipleMatrixFiles(
             final List<String> filenames, final List<String> refSampleIds, final Map<String,Integer> sampleCountsIndex, final String type)
     {

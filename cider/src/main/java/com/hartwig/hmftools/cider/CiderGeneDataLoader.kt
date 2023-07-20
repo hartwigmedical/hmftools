@@ -52,7 +52,7 @@ object CiderGeneDataLoader
                 if (geneData.forwardStrand()) Strand.FORWARD else Strand.REVERSE
             )
             igTcrConstantRegions.add(IgTcrConstantRegion(igConstantRegionType, genomeRegionStrand))
-            sLogger.info(
+            sLogger.debug(
                 "found constant region gene: {}, type: {}, location: {}",
                 geneData.GeneName, igConstantRegionType, genomeRegionStrand
             )
@@ -63,14 +63,15 @@ object CiderGeneDataLoader
     @Throws(IOException::class)
     fun loadAnchorTemplateTsv(refGenomeVersion: RefGenomeVersion): List<VJAnchorTemplate>
     {
-        val resourcePath: String
-        if (refGenomeVersion.is37)
+        val resourcePath: String = if (refGenomeVersion.is37)
         {
-            resourcePath = "igtcr_anchor.37.tsv"
-        } else if (refGenomeVersion.is38)
+            "igtcr_anchor.37.tsv"
+        }
+        else if (refGenomeVersion.is38)
         {
-            resourcePath = "igtcr_anchor.38.tsv"
-        } else
+            "igtcr_anchor.38.tsv"
+        }
+        else
         {
             sLogger.error("unknown ref genome version: {}", refGenomeVersion)
             throw IllegalArgumentException("unknown ref genome version: $refGenomeVersion")

@@ -1,111 +1,126 @@
 package com.hartwig.hmftools.healthchecker;
 
+import static com.hartwig.hmftools.healthchecker.HealthChecksApplication.HC_LOGGER;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.flagstat.FlagstatQC;
 import com.hartwig.hmftools.common.metrics.WGSMetricQC;
-import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
-
-final class HealthCheckEvaluation {
-
-    private static final Logger LOGGER = LogManager.getLogger(HealthCheckEvaluation.class);
-
+final class HealthCheckEvaluation
+{
     private static final String PURPLE_QC_PASS = "PASS";
     private static final String PURPLE_QC_FAIL = "FAIL";
 
-    private HealthCheckEvaluation() {
-    }
-
-    static boolean isPass(@NotNull List<QCValue> qcValues) {
-        boolean success = true;
-        for (QCValue qcValue : qcValues) {
-            if (!succeed(qcValue)) {
-                success = false;
-            }
+    static boolean isPass(final List<QCValue> qcValues)
+    {
+        for(QCValue qcValue : qcValues)
+        {
+            if(!succeed(qcValue))
+                return false;
         }
-        return success;
+
+        return true;
     }
 
-    private static boolean succeed(@NotNull QCValue qcValue) {
-        switch (qcValue.type()) {
+    private static boolean succeed(final QCValue qcValue)
+    {
+        switch(qcValue.Type)
+        {
             case REF_COVERAGE_10X:
-                return checkCoverage(qcValue.value(), "Ref 10x", WGSMetricQC.MIN_REF_10X_COVERAGE);
+                return checkCoverage(qcValue.Value, "Ref 10x", WGSMetricQC.MIN_REF_10X_COVERAGE);
             case REF_COVERAGE_20X:
-                return checkCoverage(qcValue.value(), "Ref 20x", WGSMetricQC.MIN_REF_20X_COVERAGE);
+                return checkCoverage(qcValue.Value, "Ref 20x", WGSMetricQC.MIN_REF_20X_COVERAGE);
             case TUM_COVERAGE_30X:
-                return checkCoverage(qcValue.value(), "Tum 30x", WGSMetricQC.MIN_TUMOR_30X_COVERAGE);
+                return checkCoverage(qcValue.Value, "Tum 30x", WGSMetricQC.MIN_TUMOR_30X_COVERAGE);
             case TUM_COVERAGE_60X:
-                return checkCoverage(qcValue.value(), "Tum 60x", WGSMetricQC.MIN_TUMOR_60X_COVERAGE);
+                return checkCoverage(qcValue.Value, "Tum 60x", WGSMetricQC.MIN_TUMOR_60X_COVERAGE);
             case PURPLE_QC_STATUS:
-                return checkPurpleQCStatus(qcValue.value());
+                return checkPurpleQCStatus(qcValue.Value);
             case PURPLE_CONTAMINATION:
-                return checkPurpleContamination(qcValue.value());
+                return checkPurpleContamination(qcValue.Value);
             case REF_PROPORTION_MAPPED:
-                return checkFlagstatMappingProportion(qcValue.value(), "Ref");
+                return checkFlagstatMappingProportion(qcValue.Value, "Ref");
             case TUM_PROPORTION_MAPPED:
-                return checkFlagstatMappingProportion(qcValue.value(), "Tum");
+                return checkFlagstatMappingProportion(qcValue.Value, "Tum");
             case REF_PROPORTION_DUPLICATE:
             case TUM_PROPORTION_DUPLICATE:
                 // No QC on duplicate rate (only reporting the value)
                 return true;
-            default: {
-                LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.type());
+            default:
+            {
+                HC_LOGGER.warn("Unrecognized check to evaluate: {}", qcValue.Type);
                 return false;
             }
         }
     }
 
-    private static boolean checkCoverage(@NotNull String value, @NotNull String name, double minPercentage) {
+    private static boolean checkCoverage(final String value, final String name, double minPercentage)
+    {
         double coverage = Double.parseDouble(value);
-        if (coverage >= minPercentage) {
-            LOGGER.info("QC PASS - {} coverage of {} is higher than min value {}", name, value, minPercentage);
+        if(coverage >= minPercentage)
+        {
+            HC_LOGGER.info("QC PASS - {} coverage of {} is higher than min value {}", name, value, minPercentage);
             return true;
-        } else {
-            LOGGER.info("QC FAIL - {} coverage of {} is lower than min value {}", name, value, minPercentage);
+        }
+        else
+        {
+            HC_LOGGER.info("QC FAIL - {} coverage of {} is lower than min value {}", name, value, minPercentage);
             return false;
         }
     }
 
-    private static boolean checkPurpleQCStatus(@NotNull final String value) {
-        if (value.equals(PURPLE_QC_PASS)) {
-            LOGGER.info("QC PASS - Purple QC value is {}", value);
+    private static boolean checkPurpleQCStatus(final String value)
+    {
+        if(value.equals(PURPLE_QC_PASS))
+        {
+            HC_LOGGER.info("QC PASS - Purple QC value is {}", value);
             return true;
-        } else if (value.contains(PURPLE_QC_FAIL)) {
-            LOGGER.info("QC FAIL - Purple QC value is {}", value);
+        }
+        else if(value.contains(PURPLE_QC_FAIL))
+        {
+            HC_LOGGER.info("QC FAIL - Purple QC value is {}", value);
             return false;
-        } else {
-            LOGGER.warn("QC WARN - Purple QC value is {}", value);
+        }
+        else
+        {
+            HC_LOGGER.warn("QC WARN - Purple QC value is {}", value);
             return true;
         }
     }
 
-    private static boolean checkPurpleContamination(@NotNull String value) {
+    private static boolean checkPurpleContamination(final String value)
+    {
         double contamination = Double.parseDouble(value);
-        if (contamination <= PurpleQCStatus.MAX_CONTAMINATION) {
-            LOGGER.info("QC PASS - Contamination of {} is lower than {}", value, PurpleQCStatus.MAX_CONTAMINATION);
-            if (contamination > 0) {
-                LOGGER.warn("  But contamination is higher than 0!");
+        if(contamination <= PurpleQCStatus.MAX_CONTAMINATION)
+        {
+            HC_LOGGER.info("QC PASS - Contamination of {} is lower than {}", value, PurpleQCStatus.MAX_CONTAMINATION);
+            if(contamination > 0)
+            {
+                HC_LOGGER.warn("  But contamination is higher than 0!");
             }
             return true;
-        } else {
-            LOGGER.info("QC FAIL - Contamination of {} is higher than {}", value, PurpleQCStatus.MAX_CONTAMINATION);
+        }
+        else
+        {
+            HC_LOGGER.info("QC FAIL - Contamination of {} is higher than {}", value, PurpleQCStatus.MAX_CONTAMINATION);
             return false;
         }
     }
 
-    private static boolean checkFlagstatMappingProportion(@NotNull String value, @NotNull String name) {
+    private static boolean checkFlagstatMappingProportion(final String value, final String name)
+    {
         double proportion = Double.parseDouble(value);
-        if (FlagstatQC.pass(proportion)) {
-            LOGGER.info("QC PASS - {} mapping percentage {} is higher than min value {}", name, value, FlagstatQC.MIN_MAPPED_PROPORTION);
+        if(FlagstatQC.pass(proportion))
+        {
+            HC_LOGGER.info("QC PASS - {} mapping percentage {} is higher than min value {}", name, value, FlagstatQC.MIN_MAPPED_PROPORTION);
             return true;
-        } else {
-            LOGGER.info("QC FAIL - {} mapping percentage {} is lower than min value {}", name, value, FlagstatQC.MIN_MAPPED_PROPORTION);
+        }
+        else
+        {
+            HC_LOGGER.info("QC FAIL - {} mapping percentage {} is lower than min value {}", name, value, FlagstatQC.MIN_MAPPED_PROPORTION);
             return false;
         }
     }

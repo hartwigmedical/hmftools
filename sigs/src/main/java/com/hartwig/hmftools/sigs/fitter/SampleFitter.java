@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sigs.fitter;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
@@ -104,7 +105,7 @@ public class SampleFitter
         mSampleCountsMatrix = null;
         mSignatures = null;
 
-        mRefGenomeVersion = RefGenomeVersion.from(cmd);
+        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
 
         mOutputDir = parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);

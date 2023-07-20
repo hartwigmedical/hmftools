@@ -7,9 +7,11 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
+import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.generateMutationSequence;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_CLONAL_MUTATION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_CODING_MUTATION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.REPORTABLE_MUTATION;
@@ -37,14 +39,14 @@ import com.hartwig.hmftools.common.variant.VcfFileReader;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class PointMutation extends Variant
+public class SomaticMutation extends Variant
 {
     private final VariantContextDecorator mVariantDecorator;
     private final int mTumorDepth;
     private String mSequence;
     private int mLocationHash;
 
-    public PointMutation(final VariantContext variantContext, final String sampleId)
+    public SomaticMutation(final VariantContext variantContext, final String sampleId)
     {
         mVariantDecorator = new VariantContextDecorator(variantContext);
 
@@ -69,12 +71,23 @@ public class PointMutation extends Variant
         if(mVariantDecorator.reported())
             return REPORTABLE_MUTATION;
 
-        if(subclonalLikelihood() >= DEFAULT_SUBCLONAL_LIKELIHOOD_MIN)
-            return SUBCLONAL_MUTATION;
+        boolean isCoding = mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.NONE
+                && mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.UNDEFINED;
 
-        if(mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.NONE
-        && mVariantDecorator.variantImpact().CanonicalCodingEffect != CodingEffect.UNDEFINED)
-            return OTHER_CODING_MUTATION;
+        boolean isSubclonal = subclonalLikelihood() >= DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
+
+        if(mVariantDecorator.type() == SNP)
+        {
+            if(isCoding)
+                return OTHER_CODING_MUTATION;
+
+            if(!isSubclonal)
+                return OTHER_CLONAL_MUTATION;
+        }
+
+        // unused for now
+        // if(isSubclonal)
+        //    return SUBCLONAL_MUTATION;
 
         return OTHER_MUTATION;
     }
@@ -216,7 +229,7 @@ public class PointMutation extends Variant
             if(alt.length() >= MAX_INSERT_BASES)
                 continue;
 
-            variants.add(new PointMutation(variantContext, sampleId));
+            variants.add(new SomaticMutation(variantContext, sampleId));
         }
 
         CT_LOGGER.info("loaded {} somatic variants from vcf({})", variants.size(), vcfFile);

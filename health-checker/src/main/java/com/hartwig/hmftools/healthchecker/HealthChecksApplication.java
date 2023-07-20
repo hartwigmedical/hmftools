@@ -1,5 +1,16 @@
 package com.hartwig.hmftools.healthchecker;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_PROPORTION_DUPLICATE;
+import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_PROPORTION_MAPPED;
+import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_PROPORTION_DUPLICATE;
+import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_PROPORTION_MAPPED;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -8,33 +19,24 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
-import com.hartwig.hmftools.healthchecker.runners.FlagstatChecker;
 import com.hartwig.hmftools.healthchecker.runners.HealthCheckSampleConfiguration;
 import com.hartwig.hmftools.healthchecker.runners.HealthChecker;
-import com.hartwig.hmftools.healthchecker.runners.ReferenceFlagstatChecker;
 import com.hartwig.hmftools.healthchecker.runners.ReferenceMetricsChecker;
-import com.hartwig.hmftools.healthchecker.runners.TumorFlagstatChecker;
+import com.hartwig.hmftools.healthchecker.runners.FlagstatChecker;
 import com.hartwig.hmftools.healthchecker.runners.TumorMetricsChecker;
 import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class HealthChecksApplication {
-
-    private static final Logger LOGGER = LogManager.getLogger(HealthChecksApplication.class);
-
-    private static final String APPLICATION = "Health-Checker";
-    private static final String VERSION = HealthChecksApplication.class.getPackage().getImplementationVersion();
+public class HealthChecksApplication
+{
+    public static final Logger HC_LOGGER = LogManager.getLogger(HealthChecksApplication.class);
 
     private static final String REF_SAMPLE = "reference";
     private static final String TUMOR_SAMPLE = "tumor";
@@ -42,141 +44,160 @@ public class HealthChecksApplication {
     private static final String TUMOR_WGS_METRICS_FILE = "tum_wgs_metrics_file";
     private static final String REF_FLAGSTAT_FILE = "ref_flagstat_file";
     private static final String TUMOR_FLAGSTAT_FILE = "tum_flagstat_file";
-    private static final String PURPLE_DIR = "purple_dir";
     private static final String DO_NOT_WRITE_EVALUATION_FILE = "do_not_write_evaluation_file";
-    private static final String OUTPUT_DIR = "output_dir";
 
     @Nullable
-    private final HealthCheckSampleConfiguration refSampleConfig;
+    private final HealthCheckSampleConfiguration mRefSampleConfig;
     @Nullable
-    private final HealthCheckSampleConfiguration tumorSampleConfig;
+    private final HealthCheckSampleConfiguration mTumorSampleConfig;
     @Nullable
-    private final String purpleDir;
+    private final String mPurpleDir;
     @Nullable
-    private final String outputDir;
+    private final String mOutputDir;
+    private final boolean mWriteEvaluationFile;
+
+    public HealthChecksApplication(final ConfigBuilder configBuilder)
+    {
+        String refSample = configBuilder.getValue(REF_SAMPLE);
+        String refFlagstat = configBuilder.getValue(REF_FLAGSTAT_FILE);
+        String refWgsMetricsFile = configBuilder.getValue(REF_WGS_METRICS_FILE);
+        String tumorSample = configBuilder.getValue(TUMOR_SAMPLE);
+        String tumorWgsMetricsFile = configBuilder.getValue(TUMOR_WGS_METRICS_FILE);
+        String tumorFlagstat = configBuilder.getValue(TUMOR_FLAGSTAT_FILE);
+
+        mRefSampleConfig = new HealthCheckSampleConfiguration(refSample, refWgsMetricsFile, refFlagstat);
+        mTumorSampleConfig = new HealthCheckSampleConfiguration(tumorSample, tumorWgsMetricsFile, tumorFlagstat);
+        mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
+        mOutputDir = parseOutputDir(configBuilder);;
+        mWriteEvaluationFile = !configBuilder.hasFlag(DO_NOT_WRITE_EVALUATION_FILE);
+    }
 
     @VisibleForTesting
-    public HealthChecksApplication(@Nullable final HealthCheckSampleConfiguration refSampleConfig,
+    public HealthChecksApplication(
+            @Nullable final HealthCheckSampleConfiguration refSampleConfig,
             @Nullable final HealthCheckSampleConfiguration tumorSampleConfig, @Nullable final String purpleDir,
-            @Nullable final String outputDir) {
-        this.refSampleConfig = refSampleConfig;
-        this.tumorSampleConfig = tumorSampleConfig;
-        this.purpleDir = purpleDir;
-        this.outputDir = outputDir;
-    }
-
-    public static void main(String... args) throws ParseException, IOException {
-        LOGGER.info("Running {} v{}", APPLICATION, VERSION);
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
-
-        boolean writeEvaluationFile = !cmd.hasOption(DO_NOT_WRITE_EVALUATION_FILE);
-        String outputDir = cmd.hasOption(OUTPUT_DIR) ? cmd.getOptionValue(OUTPUT_DIR) : null;
-
-        String refSample = cmd.getOptionValue(REF_SAMPLE, null);
-        String refFlagstat = cmd.getOptionValue(REF_FLAGSTAT_FILE, null);
-        String refWgsMetricsFile = cmd.getOptionValue(REF_WGS_METRICS_FILE, null);
-        String tumorSample = cmd.getOptionValue(TUMOR_SAMPLE, null);
-        String tumorWgsMetricsFile = cmd.getOptionValue(TUMOR_WGS_METRICS_FILE, null);
-        String tumorFlagstat = cmd.getOptionValue(TUMOR_FLAGSTAT_FILE, null);
-
-        if (missingSampleArgument(refSample, refFlagstat, refWgsMetricsFile) || missingSampleArgument(tumorSample,
-                tumorFlagstat,
-                tumorWgsMetricsFile) || writeEvaluationFile && outputDir == null) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp(APPLICATION, options);
-            System.exit(1);
-        }
-
-        String purpleDir = cmd.getOptionValue(PURPLE_DIR, null);
-        new HealthChecksApplication(HealthCheckSampleConfiguration.of(refSample, refWgsMetricsFile, refFlagstat),
-                HealthCheckSampleConfiguration.of(tumorSample, tumorWgsMetricsFile, tumorFlagstat),
-                purpleDir,
-                outputDir).run(writeEvaluationFile);
-    }
-
-    @NotNull
-    private static Options createOptions() {
-        Options options = new Options();
-        options.addOption(REF_SAMPLE, true, "The name of the reference sample");
-        options.addOption(TUMOR_SAMPLE, true, "The name of the tumor sample");
-        options.addOption(PURPLE_DIR, true, "The directory holding the purple output");
-        options.addOption(REF_WGS_METRICS_FILE, true, "The path to the wgs metrics file of reference sample");
-        options.addOption(TUMOR_WGS_METRICS_FILE, true, "The path to the wgs metrics file of tumor sample");
-        options.addOption(REF_FLAGSTAT_FILE, true, "The path to the flagstat file of reference sample");
-        options.addOption(TUMOR_FLAGSTAT_FILE, true, "The path to the flagstat file of tumor sample");
-        options.addOption(DO_NOT_WRITE_EVALUATION_FILE, false, "Do not write final success or failure file");
-        options.addOption(OUTPUT_DIR, true, "The directory where health checker will write output to");
-        return options;
-    }
-
-    private static boolean missingSampleArgument(final String sample, final String flagstat, final String wgsMetricsFile) {
-        if (sample != null || flagstat != null || wgsMetricsFile != null) {
-            return sample == null || flagstat == null || wgsMetricsFile == null;
-        }
-        return false;
+            @Nullable final String outputDir)
+    {
+        mRefSampleConfig = refSampleConfig;
+        mTumorSampleConfig = tumorSampleConfig;
+        mPurpleDir = purpleDir;
+        mOutputDir = outputDir;
+        mWriteEvaluationFile = false;
     }
 
     @VisibleForTesting
-    void run(boolean writeEvaluationFile) throws IOException {
+    void run() throws IOException
+    {
         List<HealthChecker> checkers;
-        Optional<HealthCheckSampleConfiguration> maybeRefSampleConfiguration = Optional.ofNullable(refSampleConfig);
-        Optional<HealthCheckSampleConfiguration> maybeTumorSampleConfiguration = Optional.ofNullable(tumorSampleConfig);
+        Optional<HealthCheckSampleConfiguration> maybeRefSampleConfiguration = Optional.ofNullable(mRefSampleConfig);
+        Optional<HealthCheckSampleConfiguration> maybeTumorSampleConfiguration = Optional.ofNullable(mTumorSampleConfig);
 
-        if (maybeRefSampleConfiguration.isPresent() && maybeTumorSampleConfiguration.isEmpty()) {
-            LOGGER.info("Running in germline only mode");
-            checkers = List.of(new ReferenceMetricsChecker(maybeRefSampleConfiguration.get().wgsMetricsFile()),
-                    new ReferenceFlagstatChecker(maybeRefSampleConfiguration.get().flagstatFile()));
-        } else if (maybeRefSampleConfiguration.isEmpty() && maybeTumorSampleConfiguration.isPresent()) {
-            LOGGER.info("Running in tumor only mode");
-            checkers = List.of(new TumorMetricsChecker(maybeTumorSampleConfiguration.get().wgsMetricsFile()),
-                    new TumorFlagstatChecker(maybeTumorSampleConfiguration.get().flagstatFile()));
-        } else if (maybeTumorSampleConfiguration.isPresent() && purpleDir != null) {
-            LOGGER.info("Running in somatic mode");
-            checkers = Lists.newArrayList(new TumorMetricsChecker(maybeTumorSampleConfiguration.get().wgsMetricsFile()),
-                    new ReferenceMetricsChecker(maybeRefSampleConfiguration.get().wgsMetricsFile()),
-                    new TumorFlagstatChecker(maybeTumorSampleConfiguration.get().flagstatFile()),
-                    new ReferenceFlagstatChecker(maybeRefSampleConfiguration.get().flagstatFile()),
-                    new PurpleChecker(maybeTumorSampleConfiguration.get().sampleName(), purpleDir));
-        } else {
+        if(maybeRefSampleConfiguration.isPresent() && maybeTumorSampleConfiguration.isEmpty())
+        {
+            HC_LOGGER.info("Running in germline-only mode");
+
+            checkers = List.of(
+                    new ReferenceMetricsChecker(maybeRefSampleConfiguration.get().WgsMetricsFile),
+                    new FlagstatChecker(maybeRefSampleConfiguration.get().FlagstatFile, REF_PROPORTION_MAPPED, REF_PROPORTION_DUPLICATE));
+        }
+        else if(maybeRefSampleConfiguration.isEmpty() && maybeTumorSampleConfiguration.isPresent())
+        {
+            HC_LOGGER.info("Running in tumor-only mode");
+
+            checkers = List.of(
+                    new TumorMetricsChecker(maybeTumorSampleConfiguration.get().WgsMetricsFile),
+                    new FlagstatChecker(maybeTumorSampleConfiguration.get().FlagstatFile, TUM_PROPORTION_MAPPED, TUM_PROPORTION_DUPLICATE));
+        }
+        else if(maybeTumorSampleConfiguration.isPresent() && mPurpleDir != null)
+        {
+            HC_LOGGER.info("Running in tumor-normal mode");
+
+            checkers = Lists.newArrayList(new TumorMetricsChecker(maybeTumorSampleConfiguration.get().WgsMetricsFile),
+                    new ReferenceMetricsChecker(maybeRefSampleConfiguration.get().WgsMetricsFile),
+                    new FlagstatChecker(
+                            maybeTumorSampleConfiguration.get().FlagstatFile, TUM_PROPORTION_MAPPED, TUM_PROPORTION_DUPLICATE),
+                    new FlagstatChecker(
+                            maybeRefSampleConfiguration.get().FlagstatFile, REF_PROPORTION_MAPPED, REF_PROPORTION_DUPLICATE),
+                    new PurpleChecker(maybeTumorSampleConfiguration.get().SampleName, mPurpleDir));
+        }
+        else
+        {
             throw new IllegalArgumentException(String.format("Illegal combination of arguments: [%s, %s, %s]",
                     maybeRefSampleConfiguration,
                     maybeTumorSampleConfiguration,
-                    purpleDir));
+                    mPurpleDir));
         }
 
         List<QCValue> qcValues = Lists.newArrayList();
-        for (HealthChecker checker : checkers) {
+        for(HealthChecker checker : checkers)
+        {
             qcValues.addAll(checker.run());
         }
 
-        for (QCValue qcValue : qcValues) {
-            LOGGER.info("QC Metric '{}' has value '{}'", qcValue.type(), qcValue.value());
+        for(QCValue qcValue : qcValues)
+        {
+            HC_LOGGER.info("QC Metric '{}' has value '{}'", qcValue.Type, qcValue.Value);
         }
 
-        if (HealthCheckEvaluation.isPass(qcValues)) {
-            if (writeEvaluationFile) {
+        if(HealthCheckEvaluation.isPass(qcValues))
+        {
+            if(mWriteEvaluationFile)
+            {
                 String evaluationFile = fileOutputBasePath() + ".HealthCheckSucceeded";
                 new FileOutputStream(evaluationFile).close();
-                LOGGER.info("Evaluation file written to {}", evaluationFile);
+                HC_LOGGER.info("Evaluation file written to {}", evaluationFile);
             }
-            LOGGER.info("Health check evaluation succeeded.");
-        } else {
-            if (writeEvaluationFile) {
+            HC_LOGGER.info("Health check evaluation succeeded.");
+        }
+        else
+        {
+            if(mWriteEvaluationFile)
+            {
                 String evaluationFile = fileOutputBasePath() + ".HealthCheckFailed";
                 new FileOutputStream(evaluationFile).close();
-                LOGGER.info("Evaluation file written to {}", evaluationFile);
+                HC_LOGGER.info("Evaluation file written to {}", evaluationFile);
             }
-            LOGGER.info("Health check evaluation failed!");
+            HC_LOGGER.info("Health check evaluation failed!");
         }
     }
 
     @NotNull
-    private String fileOutputBasePath() {
-        Optional<String> tumorSample = Optional.ofNullable(tumorSampleConfig).map(HealthCheckSampleConfiguration::sampleName);
-        Optional<String> refSample = Optional.ofNullable(refSampleConfig).map(HealthCheckSampleConfiguration::sampleName);
-        return Optional.ofNullable(outputDir)
-                .map(o -> outputDir + File.separator + tumorSample.orElseGet(refSample::orElseThrow))
+    private String fileOutputBasePath()
+    {
+        Optional<String> tumorSample = Optional.ofNullable(mTumorSampleConfig).map(x -> x.SampleName);
+        Optional<String> refSample = Optional.ofNullable(mRefSampleConfig).map(x -> x.SampleName);
+        return Optional.ofNullable(mOutputDir)
+                .map(o -> mOutputDir + File.separator + tumorSample.orElseGet(refSample::orElseThrow))
                 .orElseThrow();
+    }
+
+    public static void main(final String... args) throws IOException
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        registerConfig(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+        setLogLevel(configBuilder);
+
+        final VersionInfo version = new VersionInfo("health-checker.version");
+        HC_LOGGER.info("Health-checker version: {}", version.version());
+
+
+        HealthChecksApplication healthChecksApplication = new HealthChecksApplication(configBuilder);
+        healthChecksApplication.run();
+    }
+
+    private static void registerConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addConfigItem(REF_SAMPLE, "The name of the reference sample");
+        configBuilder.addConfigItem(TUMOR_SAMPLE, "The name of the tumor sample");
+        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(REF_WGS_METRICS_FILE, false, "The path to the wgs metrics file of reference sample");
+        configBuilder.addPath(TUMOR_WGS_METRICS_FILE, false, "The path to the wgs metrics file of tumor sample");
+        configBuilder.addPath(REF_FLAGSTAT_FILE, false, "The path to the flagstat file of reference sample");
+        configBuilder.addPath(TUMOR_FLAGSTAT_FILE, false, "The path to the flagstat file of tumor sample");
+        configBuilder.addFlag(DO_NOT_WRITE_EVALUATION_FILE, "Do not write final success or failure file");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
     }
 }

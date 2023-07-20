@@ -43,13 +43,6 @@ public enum RefGenomeVersion
         return configBuilder.hasValue(REF_GENOME_VERSION) ? RefGenomeVersion.from(configBuilder.getValue(REF_GENOME_VERSION)) : V37;
     }
 
-    public static RefGenomeVersion from(final CommandLine cmd) { return from(cmd, V37); }
-
-    public static RefGenomeVersion from(final CommandLine cmd, final RefGenomeVersion defaultVersion)
-    {
-        return RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(defaultVersion)));
-    }
-
     RefGenomeVersion(@NotNull final String identifier, final boolean is37)
     {
         mIdentifier = identifier;

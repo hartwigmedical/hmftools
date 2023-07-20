@@ -21,13 +21,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -47,10 +43,10 @@ public class VcfDepthComparer
     private static final int DEFAULT_MAX_DIFF = 2;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.02;
 
-    public VcfDepthComparer(final CommandLine cmd)
+    public VcfDepthComparer(final ConfigBuilder configBuilder)
     {
-        mVcfFile = cmd.getOptionValue(VCF_FILE);
-        mNewVcfTagPrefix = cmd.getOptionValue(VCF_TAG_PREFIX);
+        mVcfFile = configBuilder.getValue(VCF_FILE);
+        mNewVcfTagPrefix = configBuilder.getValue(VCF_TAG_PREFIX);
         mDiffAbs = DEFAULT_MAX_DIFF;
         mDiffPerc = DEFAULT_MAX_DIFF_PERC;
 
@@ -102,6 +98,8 @@ public class VcfDepthComparer
         }
 
         closeBufferedWriter(mWriter);
+
+        SV_LOGGER.info("RefDepth comparer complete");
     }
 
     private boolean hasDiff(int value1, int value2)
@@ -150,29 +148,21 @@ public class VcfDepthComparer
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(VCF_FILE, true, "Optional, name of the reference sample");
-        options.addOption(VCF_TAG_PREFIX, true, "New VCF tag prefix");
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        configBuilder.addPath(VCF_FILE, true, "Input VCF file");
+        configBuilder.addConfigItem(VCF_TAG_PREFIX, true, "New VCF tag prefix");
 
-        final CommandLine cmd = createCommandLine(args, options);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        setLogLevel(cmd);
+        configBuilder.checkAndParseCommandLine(args);
 
-        VcfDepthComparer vcfDepthComparer = new VcfDepthComparer(cmd);
+        setLogLevel(configBuilder);
+
+        VcfDepthComparer vcfDepthComparer = new VcfDepthComparer(configBuilder);
         vcfDepthComparer.run();
-
-        SV_LOGGER.info("RefDepth comparer complete");
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

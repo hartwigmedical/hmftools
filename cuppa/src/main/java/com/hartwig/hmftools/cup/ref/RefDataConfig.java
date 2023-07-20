@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -59,6 +60,7 @@ public class RefDataConfig
     // pipeline directories, accepting wildcards
     public final String LinxDir;
     public final String PurpleDir;
+    public final String VirusDir;
     public final String IsofoxDir;
     public final String SomaticVariantsDir;
 
@@ -106,6 +108,7 @@ public class RefDataConfig
 
         LinxDir = configBuilder.getValue(LINX_DIR_CFG, "");
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, "");
+        VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, "");
         IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, "");
         SomaticVariantsDir = configBuilder.getValue(SOMATIC_VARIANTS_DIR, "");
 
@@ -136,6 +139,7 @@ public class RefDataConfig
     {
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(VIRUS_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
     }
 
@@ -144,13 +148,15 @@ public class RefDataConfig
         configBuilder.addConfigItem(CATEGORIES, false, "Categories to build ref data for");
 
         configBuilder.addPath(REF_SAMPLE_DATA_FILE, true, "Ref sample data file");
-        configBuilder.addPath(REF_SNV_SAMPLE_POS_FREQ_FILE, false, "Ref SNV position frequency matrix data file");
-        configBuilder.addPath(REF_SNV_COUNTS_FILE, false, "Ref SNV trinucleotide matrix data file");
 
-        configBuilder.addPath(REF_COHORT_FEATURES_FILE, false, "Ref sample features data file");
-        configBuilder.addPath(REF_COHORT_SAMPLE_TRAITS_FILE, false, "Ref sample cohort traits file");
-        configBuilder.addPath(REF_COHORT_SIG_CONTRIBS_FILE, false, "Ref sample cohort signature contributions file");
-        configBuilder.addPath(REF_COHORT_SV_DATA_FILE, false, "Ref sample cohort SV file");
+        // when combining datasets, these paths are ',' delimited so cannot be checked as a path
+        // could add logic for this to ConfigBuilder but would be rarely used
+        configBuilder.addConfigItem(REF_SNV_SAMPLE_POS_FREQ_FILE, false, "Ref SNV position frequency matrix data file");
+        configBuilder.addConfigItem(REF_SNV_COUNTS_FILE, false, "Ref SNV trinucleotide matrix data file");
+        configBuilder.addConfigItem(REF_COHORT_FEATURES_FILE, false, "Ref sample features data file");
+        configBuilder.addConfigItem(REF_COHORT_SAMPLE_TRAITS_FILE, false, "Ref sample cohort traits file");
+        configBuilder.addConfigItem(REF_COHORT_SIG_CONTRIBS_FILE, false, "Ref sample cohort signature contributions file");
+        configBuilder.addConfigItem(REF_COHORT_SV_DATA_FILE, false, "Ref sample cohort SV file");
 
         addPipelineDirectories(configBuilder);
 
@@ -172,6 +178,5 @@ public class RefDataConfig
 
         RefGeneExpression.registerConfig(configBuilder);
         RefSomatics.registerConfig(configBuilder);
-        RefFeatures.registerConfig(configBuilder);
     }
 }

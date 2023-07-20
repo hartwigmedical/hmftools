@@ -13,6 +13,7 @@ mappability_bed=$1 && shift
 clinvar_vcf=$1 && shift
 blacklist_bed=$1 && shift
 blacklist_vcf=$1 && shift
+gnomad_path=$1 && shift
 
 if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
@@ -39,9 +40,17 @@ args="-sample ${sample_id} \
   -clinvar_vcf ${clinvar_vcf} \
   -blacklist_bed ${blacklist_bed} \
   -blacklist_vcf ${blacklist_vcf} \
+  -gnomad_pon_filter -1 \
   -vcf_file ${sage_vcf} \
   -read_pass_only \
   -output_vcf_file ${pave_germline_vcf}"
+
+if [ "${ref_genome_version}" == "V37" ]; then
+  args="${args} -gnomad_freq_file ${gnomad_path}"
+else
+  args="${args} -gnomad_freq_dir ${gnomad_path} -gnomad_load_chr_on_demand"
+fi
+
 
 echo "Running Pave germline with args: ${args}"
 

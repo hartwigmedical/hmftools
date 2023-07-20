@@ -146,7 +146,7 @@ public class FusedExons
             builder.transcript(fusion.TranscriptDown);
             builder.strand(fusion.StrandDown);
 
-            if(fusion.StrandUp > 0)
+            if(fusion.StrandDown > 0)
             {
                 builder.start(fusion.PosDown);
                 builder.end(firstExon.ExonEnd);

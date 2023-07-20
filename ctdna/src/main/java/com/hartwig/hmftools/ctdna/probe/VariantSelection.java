@@ -55,15 +55,11 @@ public final class VariantSelection
                     canAdd = false;
                     variant.setSelectionStatus(GENE_LOCATIONS);
                 }
-                else if(variant.categoryType() == OTHER_SV && typeCounts[OTHER_SV.ordinal()] >= config.NonReportableSvCount)
+                else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, config.NonReportableSvCount)
+                || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, config.SubclonalCount))
                 {
                     canAdd = false;
                     variant.setSelectionStatus(EXCEEDS_COUNT);
-                }
-                else if(variant.categoryType() == SUBCLONAL_MUTATION && typeCounts[SUBCLONAL_MUTATION.ordinal()] >= config.SubclonalCount)
-                {
-                    variant.setSelectionStatus(EXCEEDS_COUNT);
-                    canAdd = false;
                 }
                 else if(!variant.passNonReportableFilters(config))
                 {
@@ -107,6 +103,21 @@ public final class VariantSelection
         CT_LOGGER.info("selected variant type counts: {}", sj.toString());
 
         return selectedVariants;
+    }
+
+    private static boolean exceedsMaxByType(
+            final CategoryType variantCategory, final CategoryType categoryType, final int[] typeCounts, final int maxCount)
+    {
+        if(variantCategory != categoryType)
+            return false;
+
+        if(maxCount < 0)
+            return true;
+
+        if(maxCount == 0)
+            return false;
+
+        return typeCounts[categoryType.ordinal()] >= maxCount;
     }
 
     public static final int NEAR_DISTANCE = 50;
@@ -175,8 +186,8 @@ public final class VariantSelection
             {
                 // to randomise selection of the lowest priority variants (and avoid multiple selections from highly amplified regions)
                 // use the inverse of position as the final comparison
-                int locationHash1 = ((PointMutation)first).locationHash();
-                int locationHash2 = ((PointMutation)second).locationHash();
+                int locationHash1 = ((SomaticMutation)first).locationHash();
+                int locationHash2 = ((SomaticMutation)second).locationHash();
 
                 if(locationHash1 != locationHash2)
                     return locationHash1 < locationHash2 ? -1 : 1;

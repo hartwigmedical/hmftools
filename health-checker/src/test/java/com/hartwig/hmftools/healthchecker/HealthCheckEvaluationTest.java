@@ -4,17 +4,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.healthchecker.result.ImmutableQCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValue;
 import com.hartwig.hmftools.healthchecker.result.QCValueType;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class HealthCheckEvaluationTest {
-
+public class HealthCheckEvaluationTest
+{
     @Test
-    public void refCoverageChecksWork() {
+    public void refCoverageChecksWork()
+    {
         QCValue ref10xSucceed = qc(QCValueType.REF_COVERAGE_10X, "0.95");
         QCValue ref10xFail = qc(QCValueType.REF_COVERAGE_10X, "0.85");
 
@@ -28,7 +27,8 @@ public class HealthCheckEvaluationTest {
     }
 
     @Test
-    public void tumorCoverageChecksWork() {
+    public void tumorCoverageChecksWork()
+    {
         QCValue tumor30xSucceed = qc(QCValueType.TUM_COVERAGE_30X, "0.9");
         QCValue tumor30xFail = qc(QCValueType.TUM_COVERAGE_30X, "0.7");
 
@@ -42,7 +42,8 @@ public class HealthCheckEvaluationTest {
     }
 
     @Test
-    public void purpleQCCheckWorks() {
+    public void purpleQCCheckWorks()
+    {
         QCValue purpleQCCheckCorrect = qc(QCValueType.PURPLE_QC_STATUS, "PASS");
         QCValue purpleQCCheckFail = qc(QCValueType.PURPLE_QC_STATUS, "FAIL");
 
@@ -51,7 +52,8 @@ public class HealthCheckEvaluationTest {
     }
 
     @Test
-    public void purpleContaminationCheckWorks() {
+    public void purpleContaminationCheckWorks()
+    {
         QCValue purpleContaminationCorrect = qc(QCValueType.PURPLE_CONTAMINATION, "0");
         QCValue purpleContaminationCorrectButNonZero = qc(QCValueType.PURPLE_CONTAMINATION, "0.01");
         QCValue purpleContaminationTooHigh = qc(QCValueType.PURPLE_CONTAMINATION, "0.2");
@@ -62,7 +64,8 @@ public class HealthCheckEvaluationTest {
     }
 
     @Test
-    public void refFlagstatProportionMappedCheckWorks() {
+    public void refFlagstatProportionMappedCheckWorks()
+    {
         QCValue proportionMappedCorrect = qc(QCValueType.REF_PROPORTION_MAPPED, "0.97");
         QCValue proportionMappedTooLow = qc(QCValueType.REF_PROPORTION_MAPPED, "0.4");
 
@@ -71,7 +74,8 @@ public class HealthCheckEvaluationTest {
     }
 
     @Test
-    public void tumFlagstatProportionMappedCheckWorks() {
+    public void tumFlagstatProportionMappedCheckWorks()
+    {
         QCValue proportionMappedCorrect = qc(QCValueType.TUM_PROPORTION_MAPPED, "0.97");
         QCValue proportionMappedTooLow = qc(QCValueType.TUM_PROPORTION_MAPPED, "0.4");
 
@@ -79,8 +83,8 @@ public class HealthCheckEvaluationTest {
         assertFalse(HealthCheckEvaluation.isPass(Lists.newArrayList(proportionMappedTooLow)));
     }
 
-    @NotNull
-    private static QCValue qc(@NotNull QCValueType type, @NotNull String value) {
-        return ImmutableQCValue.builder().type(type).value(value).build();
+    private static QCValue qc(final QCValueType type, final String value)
+    {
+        return new QCValue(type, value);
     }
 }

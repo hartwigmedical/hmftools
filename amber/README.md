@@ -58,8 +58,8 @@ AMBER supports both BAM and CRAM file formats.
 | min_base_quality      | 13      | Minimum quality for a base to be considered                                                       |
 | min_depth_percent     | 0.5     | Only include reference sites with read depth within min percentage of median reference read depth |
 | max_depth_percent     | 1.5     | Only include reference sites with read depth within max percentage of median reference read depth |
-| min_het_af_percent    | 0.4     | Minimum allelic frequency to be considered heterozygous                                           |
-| max_het_af_percent    | 0.65    | Maximum allelic frequency to be considered heterozygous                                           |
+| min_het_af_percent    | 0.4     | Minimum allelic frequency in reference sample to be considered heterozygous                                           |
+| max_het_af_percent    | 0.65    | Maximum allelic frequency in reference sample to be considered heterozygous                                           |
 | ref_genome            | NA      | Path to the reference genome fasta file. Required only when using CRAM files.                     |
 | validation_stringency | STRICT  | SAM validation strategy: STRICT, SILENT, LENIENT                                                  |
 

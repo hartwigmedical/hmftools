@@ -39,28 +39,10 @@ public class ConfigUtils
 
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);
 
-    public static void addLoggingOptions(final Options options)
-    {
-        options.addOption(LOG_DEBUG, false, LOG_DEBUG_DESC);
-        options.addOption(LOG_LEVEL, true, LOG_LEVEL_DESC);
-    }
-
     public static void addLoggingOptions(final ConfigBuilder configBuilder)
     {
         configBuilder.addFlag(LOG_DEBUG, LOG_DEBUG_DESC);
         configBuilder.addConfigItem(LOG_LEVEL, LOG_LEVEL_DESC);
-    }
-
-    public static void setLogLevel(final CommandLine cmd)
-    {
-        if(cmd.hasOption(LOG_DEBUG))
-        {
-            Configurator.setRootLevel(Level.DEBUG);
-        }
-        else if(cmd.hasOption(LOG_LEVEL))
-        {
-            Configurator.setRootLevel(Level.valueOf(cmd.getOptionValue(LOG_LEVEL)));
-        }
     }
 
     public static void setLogLevel(final ConfigBuilder configBuilder)
@@ -75,29 +57,9 @@ public class ConfigUtils
         }
     }
 
-    public static void addSampleIdFile(final Options options)
-    {
-        options.addOption(SAMPLE_ID_FILE, true, SAMPLE_ID_FILE_DESC);
-    }
-
     public static void addSampleIdFile(final ConfigBuilder configBuilder, boolean required)
     {
         configBuilder.addPath(SAMPLE_ID_FILE, required, SAMPLE_ID_FILE_DESC);
-    }
-
-    public static double getConfigValue(@NotNull final CommandLine cmd, final String configName, double defaultValue)
-    {
-        return cmd.hasOption(configName) ? Double.parseDouble(cmd.getOptionValue(configName)) : defaultValue;
-    }
-
-    public static int getConfigValue(@NotNull final CommandLine cmd, final String configName, int defaultValue)
-    {
-        return cmd.hasOption(configName) ? Integer.parseInt(cmd.getOptionValue(configName)) : defaultValue;
-    }
-
-    public static boolean getConfigValue(@NotNull final CommandLine cmd, final String configName, boolean defaultValue)
-    {
-        return cmd.hasOption(configName) ? Boolean.parseBoolean(cmd.getOptionValue(configName)) : defaultValue;
     }
 
     public static List<String> loadSampleIdsFile(final ConfigBuilder configBuilder)
@@ -106,14 +68,6 @@ public class ConfigUtils
             return Lists.newArrayList();
 
         return loadSampleIdsFile(configBuilder.getValue(SAMPLE_ID_FILE));
-    }
-
-    public static List<String> loadSampleIdsFile(final CommandLine cmd)
-    {
-        if(!cmd.hasOption(SAMPLE_ID_FILE))
-            return Lists.newArrayList();
-
-        return loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
     }
 
     public static List<String> loadSampleIdsFile(final String filename)

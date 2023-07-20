@@ -17,13 +17,9 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.pave.GeneDataCache;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class ImpactComparisons
@@ -33,14 +29,15 @@ public class ImpactComparisons
     private final ComparisonWriter mWriter;
     private final RefGenomeInterface mRefGenome;
 
-    public ImpactComparisons(final CommandLine cmd)
+    public ImpactComparisons(final ConfigBuilder configBuilder)
     {
-        mConfig = new ComparisonConfig(cmd);
+        mConfig = new ComparisonConfig(configBuilder);
 
         mGeneDataCache = new GeneDataCache(
-                cmd.getOptionValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion, cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION), false);
+                configBuilder.getValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
+                configBuilder.getValue(DRIVER_GENE_PANEL_OPTION), false);
 
-        mRefGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
+        mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
         mWriter = new ComparisonWriter(mGeneDataCache, mConfig);
     }
@@ -143,22 +140,15 @@ public class ImpactComparisons
         PV_LOGGER.info("Pave impact comparison complete");
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = ComparisonConfig.createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        ComparisonConfig.registerConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
+        setLogLevel(configBuilder);
 
-        setLogLevel(cmd);
-
-        ImpactComparisons impactComparison = new ImpactComparisons(cmd);
+        ImpactComparisons impactComparison = new ImpactComparisons(configBuilder);
         impactComparison.run();
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

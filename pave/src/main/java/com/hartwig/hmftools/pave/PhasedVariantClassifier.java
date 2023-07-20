@@ -288,7 +288,7 @@ public class PhasedVariantClassifier
 
                 if(combinedAltCodons.length() - prevAltBasesTrimmed <= 0)
                 {
-                    PV_LOGGER.error("phasing variants LPS({}) var({}) combinedAltCodons({}) prevAltBasesTrimmed({})",
+                    PV_LOGGER.warn("phasing variants LPS({}) var({}) combinedAltCodons({}) prevAltBasesTrimmed({})",
                             localPhaseSet, variant, combinedAltCodons, prevAltBasesTrimmed);
                     return;
                 }

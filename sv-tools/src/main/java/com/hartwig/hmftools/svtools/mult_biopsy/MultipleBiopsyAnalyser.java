@@ -2,8 +2,8 @@ package com.hartwig.hmftools.svtools.mult_biopsy;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -24,12 +24,8 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -46,40 +42,28 @@ public class MultipleBiopsyAnalyser
 
     private static final Logger LOGGER = LogManager.getLogger(MultipleBiopsyAnalyser.class);
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addPath(PATIENT_SAMPLE_IDS_FILE, true, "File mapping PatientIds to SampleIds file");
+        configBuilder.addPath(SVS_INPUT_FILE, true, "LINX SVs file");
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        setLogLevel(cmd);
+        configBuilder.checkAndParseCommandLine(args);
 
-        String outputDir = parseOutputDir(cmd);
+        setLogLevel(configBuilder);
+
+        String outputDir = parseOutputDir(configBuilder);
 
         MultipleBiopsyAnalyser mbAnalyser = new MultipleBiopsyAnalyser();
 
-        if(!mbAnalyser.loadData(cmd, outputDir))
+        if(!mbAnalyser.loadData(configBuilder, outputDir))
             return;
 
         mbAnalyser.runAnalysis();
 
         LOGGER.info("multiple-biopsy analysis complete");
-    }
-
-    private static Options createBasicOptions()
-    {
-        final Options options = new Options();
-        options.addOption(PATIENT_SAMPLE_IDS_FILE, true, "File mapping PatientIds to SampleIds file");
-        options.addOption(SVS_INPUT_FILE, true, "LINX SVs file");
-        addOutputDir(options);
-        addLoggingOptions(options);
-        return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 
     public MultipleBiopsyAnalyser()
@@ -95,12 +79,12 @@ public class MultipleBiopsyAnalyser
     private static String PATIENT_SAMPLE_IDS_FILE = "patient_ids_file";
     private static String SVS_INPUT_FILE = "sv_data_file";
 
-    public boolean loadData(final CommandLine cmd, final String outputDir)
+    public boolean loadData(final ConfigBuilder configBuilder, final String outputDir)
     {
-        if (!loadPatientSampleData(cmd.getOptionValue(PATIENT_SAMPLE_IDS_FILE)))
+        if (!loadPatientSampleData(configBuilder.getValue(PATIENT_SAMPLE_IDS_FILE)))
             return false;
 
-        if (!loadSampleSVData(cmd.getOptionValue(SVS_INPUT_FILE)))
+        if (!loadSampleSVData(configBuilder.getValue(SVS_INPUT_FILE)))
             return false;
 
         mOutputDir = outputDir;

@@ -379,7 +379,7 @@ public class SomaticVariantComparer implements ItemComparer
             }
         }
 
-        CMP_LOGGER.debug("sample({}) loaded {} somatic variants", sampleId, variants.size());
+        CMP_LOGGER.debug("sample({}) loaded {} {} somatic variants", sampleId, fileSources.Source, variants.size());
 
         // prepare the unfiltered file source if configured
         if(!fileSources.SomaticUnfilteredVcf.isEmpty())

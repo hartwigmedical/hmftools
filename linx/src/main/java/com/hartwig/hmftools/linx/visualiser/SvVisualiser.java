@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toSet;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.linx.LinxApplication.logVersion;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -97,7 +98,7 @@ public class SvVisualiser implements AutoCloseable
         mCallableConfigs = Lists.newArrayList();
     }
 
-    private void run() throws InterruptedException, ExecutionException
+    private void run() throws Exception
     {
         if(!mCircosConfig.isValid())
         {
@@ -346,7 +347,7 @@ public class SvVisualiser implements AutoCloseable
     }
 
     private Object createImageFrame(
-            int frame, double labelSize, final String sample, boolean plotFusion, boolean plotChromosome) throws IOException, InterruptedException
+            int frame, double labelSize, final String sample, boolean plotFusion, boolean plotChromosome) throws Exception
     {
         final String confFileName = sample + ".circos." + String.format("%03d", frame) + ".conf";
         final String outputFileName = sample + "." + String.format("%03d", frame) + ".png";
@@ -359,14 +360,21 @@ public class SvVisualiser implements AutoCloseable
 
         if(plotFusion)
         {
-            new FusionExecution(sample, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath).executeR(mCircosConfig, rLabelSize);
+            int execution = new FusionExecution(sample, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath)
+                    .executeR(mCircosConfig, rLabelSize);
+
+            if(execution != 0)
+                throw new Exception("plotting error");
         }
 
         if(plotChromosome)
         {
-            return new ChromosomeRangeExecution(
+            int execution = new ChromosomeRangeExecution(
                     sample, mConfig.RefGenVersion, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath)
                     .executeR(mCircosConfig, rLabelSize);
+
+            if(execution != 0)
+                throw new Exception("plotting error");
         }
 
         return circosResult;

@@ -35,7 +35,7 @@ import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.ctdna.purity.PurityConfig;
 import com.hartwig.hmftools.ctdna.purity.ResultsWriter;
-import com.hartwig.hmftools.ctdna.purity.SampleData;
+import com.hartwig.hmftools.ctdna.common.SampleData;
 
 public class CopyNumberProfile
 {

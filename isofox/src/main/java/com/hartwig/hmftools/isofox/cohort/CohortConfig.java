@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -56,7 +57,6 @@ public class CohortConfig
 {
     public static final String ROOT_DATA_DIRECTORY = "root_data_dir";
     public static final String SAMPLE_DATA_FILE = "sample_data_file";
-    public static final String USE_SAMPLE_DIRS = "use_sample_dir";
     public static final String ALL_AVAILABLE_FILES = "all_available_files";
     public static final String ANALYSIS_TYPES = "analyses";
     public static final String FAIL_MISSING = "fail_on_missing_file";
@@ -68,8 +68,6 @@ public class CohortConfig
     public final String OutputDir;
     public final String OutputIdentifier;
     public final SampleDataCache SampleData;
-    public final boolean UseSampleDirectories;
-    public final boolean AllAvailableFiles;
     public final List<String> RestrictedGeneIds;
     public final List<String> ExcludedGeneIds;
     public final boolean FailOnMissingSample;
@@ -94,8 +92,6 @@ public class CohortConfig
     {
         RootDataDir = checkAddDirSeparator(configBuilder.getValue(ROOT_DATA_DIRECTORY, ""));;
 
-        UseSampleDirectories = configBuilder.hasFlag(USE_SAMPLE_DIRS);
-        AllAvailableFiles = !UseSampleDirectories && configBuilder.hasFlag(ALL_AVAILABLE_FILES);
         FailOnMissingSample = configBuilder.hasFlag(FAIL_MISSING);
 
         OutputDir = parseOutputDir(configBuilder);
@@ -164,11 +160,7 @@ public class CohortConfig
 
     public static String formSampleFilename(final CohortConfig config, final String sampleId, final AnalysisType dataType)
     {
-        String filename = config.RootDataDir;
-
-        if(config.UseSampleDirectories)
-            filename += File.separator + sampleId + File.separator;
-
+        String filename = convertWildcardSamplePath(config.RootDataDir, sampleId);
         filename += sampleId + ISF_FILE_ID;
         filename += getIsofoxFileId(dataType);
         return filename;
@@ -212,9 +204,7 @@ public class CohortConfig
     {
         configBuilder.addPath(ROOT_DATA_DIRECTORY, true, "Root data directory for input files or sample directories");
         configBuilder.addConfigItem(SAMPLE_DATA_FILE, true, "File with list of samples and cancer types to load data for");
-        configBuilder.addFlag(USE_SAMPLE_DIRS, "File with list of samples to load data for");
         configBuilder.addFlag(FAIL_MISSING, "Exit if sample input file isn't found");
-        configBuilder.addFlag(ALL_AVAILABLE_FILES, "Load all files in root directory matching expected Isofox file names");
         configBuilder.addConfigItem(ANALYSIS_TYPES, true, "List of data types to load & process");
         addEnsemblDir(configBuilder);
         configBuilder.addConfigItem(REF_GENOME, REF_GENOME_CFG_DESC);

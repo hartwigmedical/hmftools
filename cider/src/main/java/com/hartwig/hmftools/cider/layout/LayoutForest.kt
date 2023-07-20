@@ -605,12 +605,9 @@ class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var node
     // for every node we sort the children descending order by highQualityCount
     fun sortNodeChildren()
     {
-        sLogger.debug("sorting children")
-
         roots.forEach { root: Node ->
             depthFirstVisit(root, { n -> n.children.sortByDescending({ c -> c.support }) })
         }
-        sLogger.debug("finished sorting children")
     }
 
     fun sortLevelNodes()

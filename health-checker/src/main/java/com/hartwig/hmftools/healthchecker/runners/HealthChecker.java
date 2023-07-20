@@ -7,8 +7,8 @@ import com.hartwig.hmftools.healthchecker.result.QCValue;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface HealthChecker {
-
+public interface HealthChecker
+{
     @NotNull
     List<QCValue> run() throws IOException;
 }

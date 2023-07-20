@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.cuppa.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.MS_INDELS_TMB;
-import static com.hartwig.hmftools.cup.traits.SampleTraitType.PLOIDY;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.WGD;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_FEMALE_INDEX;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_MALE_INDEX;
@@ -50,11 +49,8 @@ public class SampleTraitClassifier implements CuppaClassifier
 
     private final Map<SampleTraitType,Map<String,double[]>> mRefTraitPercentiles;
     private final Map<SampleTraitType,Map<String,Double>> mRefTraitRates;
-    private final boolean mApplyPloidyLikelihood;
 
     private final Map<String,double[]> mRefGenderRates;
-
-    private static final String APPLY_PLOIDY_LIKELIHOOD = "apply_ploidy_likelihood";
 
     public SampleTraitClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
@@ -65,17 +61,10 @@ public class SampleTraitClassifier implements CuppaClassifier
         mRefTraitPercentiles = Maps.newHashMap();
         mRefTraitRates = Maps.newHashMap();
         mRefGenderRates = Maps.newHashMap();
-
-        mApplyPloidyLikelihood = configBuilder.hasFlag(APPLY_PLOIDY_LIKELIHOOD);
     }
 
     public CategoryType categoryType() { return SAMPLE_TRAIT; }
     public void close() {}
-
-    public static void addCmdLineArgs(final ConfigBuilder configBuilder)
-    {
-        configBuilder.addFlag(APPLY_PLOIDY_LIKELIHOOD, "Add ploidy high/low likelihood feature");
-    }
 
     @Override
     public boolean loadData()
@@ -189,9 +178,6 @@ public class SampleTraitClassifier implements CuppaClassifier
 
         int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.cancerType()) : 0;
         addTraitLikelihoods(sample, cancerSampleCount, results, MS_INDELS_TMB, sampleTraits.IndelsMbPerMb);
-
-        if(mApplyPloidyLikelihood)
-            addTraitLikelihoods(sample, cancerSampleCount, results, PLOIDY, sampleTraits.Ploidy);
 
         addGenderClassifier(sample, sampleTraits, results);
         return true;

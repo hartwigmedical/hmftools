@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR_DEFAULT;
 import static java.lang.String.format;
@@ -107,6 +108,7 @@ public class CuppaConfig
     // or standard pipeline directories
     public final String LinxDir;
     public final String PurpleDir;
+    public final String VirusDir;
     public final String IsofoxDir;
 
     // cohort files, formed during ref data building
@@ -134,8 +136,6 @@ public class CuppaConfig
     public final String OutputDir;
     public final String OutputFileId;
     public final int Threads;
-
-    private boolean mIsValid;
 
     // config strings
     public static final String CATEGORIES = "categories";
@@ -194,8 +194,6 @@ public class CuppaConfig
 
     public CuppaConfig(final ConfigBuilder configBuilder)
     {
-        mIsValid = true;
-
         Categories = configCategories(configBuilder);
 
         CUP_LOGGER.info("running classifiers: {}", Categories.isEmpty() ? ALL_CATEGORIES : Categories.toString());
@@ -252,6 +250,7 @@ public class CuppaConfig
             LinxDir = "";
             PurpleDir = "";
             IsofoxDir = "";
+            VirusDir = "";
             DbAccess = null;
         }
         else
@@ -262,6 +261,7 @@ public class CuppaConfig
             LinxDir = checkAddDirSeparator(configBuilder.getValue(LINX_DIR_CFG, ""));
             PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG, ""));
             IsofoxDir = checkAddDirSeparator(configBuilder.getValue(ISOFOX_DIR_CFG, ""));
+            VirusDir = checkAddDirSeparator(configBuilder.getValue(VIRUS_DIR_CFG, ""));
 
             if(configBuilder.hasValue(SAMPLE))
             {
@@ -274,7 +274,6 @@ public class CuppaConfig
             else
             {
                 CUP_LOGGER.error("missing {}, non-ref cohort {} or {} config", SAMPLE, SAMPLE_DATA_FILE, TEST_REF_SAMPLE_DATA);
-                mIsValid = false;
             }
 
             RefSampleTraitsFile = "";
@@ -342,6 +341,7 @@ public class CuppaConfig
 
     public String getLinxDataDir(final String sampleId) { return getSampleDataDir(sampleId, LinxDir); }
     public String getPurpleDataDir(final String sampleId) { return getSampleDataDir(sampleId, PurpleDir); }
+    public String getVirusDataDir(final String sampleId) { return getSampleDataDir(sampleId, VirusDir); }
     public String getIsofoxDataDir(final String sampleId) { return getSampleDataDir(sampleId, IsofoxDir); }
 
     private String  getSampleDataDir(final String sampleId, final String specificDir)
@@ -444,7 +444,6 @@ public class CuppaConfig
         AltSjClassifier.addCmdLineArgs(configBuilder);
         SomaticClassifier.registerConfig(configBuilder);
         FeatureClassifier.registerConfig(configBuilder);
-        SampleTraitClassifier.addCmdLineArgs(configBuilder);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
@@ -481,6 +480,7 @@ public class CuppaConfig
         LinxDir = "";
         PurpleDir = "";
         IsofoxDir = "";
+        VirusDir = "";
 
         SampleDataFile = "";
         RefSampleFeatureFile = "";

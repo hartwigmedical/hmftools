@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.ctdna.purity.variant;
 
-import static java.lang.CharSequence.compare;
 import static java.lang.String.format;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 public class SomaticVariant
@@ -50,18 +46,6 @@ public class SomaticVariant
     public double sequenceGcRatio() { return mSequenceVcRatio; }
 
     public VariantContextDecorator decorator() { return mVariant; }
-
-    /*
-        public final VariantTier Tier;
-        public final VariantType Type;
-        public final int RepeatCount;
-        public final double Mappability;
-        public final double SubclonalPerc;
-        public final String Gene;
-        public final CodingEffect Effect;
-        public final boolean Reported;
-        public final Hotspot HotspotStatus;
-     */
 
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }
 }

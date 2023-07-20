@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.ctdna.utils;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.CN_SEGMENT_FILE_ID;
@@ -13,7 +12,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.ctdna.purity.cn.CopyNumberProfile;
 import com.hartwig.hmftools.ctdna.purity.PurityConfig;
-import com.hartwig.hmftools.ctdna.purity.SampleData;
+import com.hartwig.hmftools.ctdna.common.SampleData;
 
 import org.apache.commons.cli.ParseException;
 

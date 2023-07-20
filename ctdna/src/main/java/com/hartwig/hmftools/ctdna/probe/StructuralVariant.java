@@ -16,13 +16,15 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
-import static com.hartwig.hmftools.ctdna.probe.CategoryType.AMP_DEL;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.AMP;
+import static com.hartwig.hmftools.ctdna.probe.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.FUSION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_SV;
 import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
 import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
 import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_SV_BREAKENDS_PER_GENE;
 import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_INSERT_BASES;
+import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_POLY_A_T_BASES;
 
 import java.util.List;
 import java.util.Map;
@@ -53,7 +55,7 @@ public class StructuralVariant extends Variant
     private final StructuralVariantData mVariant;
     private final List<LinxBreakend> mBreakends;
     private final List<LinxFusion> mFusions;
-    private boolean mAmpDelDriver;
+    private CategoryType mCategoryType;
 
     private List<String> mRefSequences;
 
@@ -63,23 +65,39 @@ public class StructuralVariant extends Variant
         mVariant = variant;
         mBreakends = breakends;
         mFusions = fusions;
-        mAmpDelDriver = false;
         mRefSequences = Lists.newArrayListWithExpectedSize(2);
+        mCategoryType = OTHER_SV;
+        setCategoryType();
     }
 
     public StructuralVariantData variantData() { return mVariant; }
-    public void markAmpDelDriver() { mAmpDelDriver = true; }
+
+    public void markAmpDelDriver(boolean isAmp)
+    {
+        mCategoryType = isAmp ? CategoryType.AMP : CategoryType.DEL;
+    }
 
     @Override
-    public CategoryType categoryType()
+    public CategoryType categoryType() { return mCategoryType; }
+
+    private void setCategoryType()
     {
         if(!mFusions.isEmpty())
-            return FUSION;
-
-        if(mAmpDelDriver)
-            return AMP_DEL;
-
-        return OTHER_SV;
+        {
+            mCategoryType = FUSION;
+        }
+        else if(mCategoryType == AMP || mCategoryType == CategoryType.DEL)
+        {
+            return;
+        }
+        else if(mBreakends.stream().anyMatch(x -> x.reportedDisruption()))
+        {
+            mCategoryType = DISRUPTION;
+        }
+        else
+        {
+            mCategoryType = OTHER_SV;
+        }
     }
 
     @Override
@@ -130,16 +148,7 @@ public class StructuralVariant extends Variant
     @Override
     public boolean reported()
     {
-        if(!mFusions.isEmpty())
-            return true;
-
-        if(mBreakends.stream().anyMatch(x -> x.reportedDisruption()))
-            return true;
-
-        if(mAmpDelDriver)
-            return true;
-
-        return false;
+        return mCategoryType == FUSION || mCategoryType == AMP || mCategoryType == CategoryType.DEL || mCategoryType == DISRUPTION;
     }
 
     @Override
@@ -308,7 +317,7 @@ public class StructuralVariant extends Variant
     @Override
     public boolean passNonReportableFilters(final PvConfig config)
     {
-        if(reported())
+        if(reported() && mCategoryType != DISRUPTION)
             return true;
 
         if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
@@ -320,6 +329,9 @@ public class StructuralVariant extends Variant
 
             if(gcRatio < DEFAULT_GC_THRESHOLD_MIN || gcRatio > DEFAULT_GC_THRESHOLD_MAX)
                 return false;
+
+            if(exceedsPolyAtThreshold(refSequence))
+                return false;
         }
 
         if(vaf() < config.VafMin)
@@ -329,6 +341,30 @@ public class StructuralVariant extends Variant
             return false;
 
         return true;
+    }
+
+    private boolean exceedsPolyAtThreshold(final String sequence)
+    {
+        int aCount = 0;
+        int tCount = 0;
+        for(int i = 0; i < sequence.length(); ++i)
+        {
+            if(sequence.charAt(i) == 'A')
+            {
+                ++aCount;
+            }
+            if(sequence.charAt(i) == 'T')
+            {
+                ++tCount;
+            }
+            else
+            {
+                aCount = 0;
+                tCount = 0;
+            }
+        }
+
+        return aCount > MAX_POLY_A_T_BASES || tCount > MAX_POLY_A_T_BASES;
     }
 
     @Override
@@ -487,13 +523,13 @@ public class StructuralVariant extends Variant
                     for(StructuralVariant sv : svList)
                     {
                         if(matchesDelRegion(sv, geneCopyNumber))
-                            sv.markAmpDelDriver();
+                            sv.markAmpDelDriver(false);
                     }
                 }
             }
 
             if(driverSv != null)
-                driverSv.markAmpDelDriver();
+                driverSv.markAmpDelDriver(true);
         }
 
         return variants;

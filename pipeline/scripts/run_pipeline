@@ -271,8 +271,7 @@ if [ "${reference_id}" != "none" ]; then
     ${tumor_id}  \
     ${sage_germline_vcf} ${pave_germline_dir} ${pave_germline_vcf} \
     ${ref_genome_version} ${ref_genome} \
-    ${ensembl_dir} ${driver_gene_panel} ${mappability_bed} ${clinvar_vcf} ${germline_blacklist_bed} ${germline_blacklist_vcf} \
-
+    ${ensembl_dir} ${driver_gene_panel} ${mappability_bed} ${clinvar_vcf} ${germline_blacklist_bed} ${germline_blacklist_vcf} ${gnomad_path} \
 fi
 
 
