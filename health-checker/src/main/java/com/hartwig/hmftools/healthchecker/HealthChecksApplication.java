@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.healthchecker.result.QCValueType.REF_PROPORTI
 import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_PROPORTION_DUPLICATE;
 import static com.hartwig.hmftools.healthchecker.result.QCValueType.TUM_PROPORTION_MAPPED;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -31,7 +30,6 @@ import com.hartwig.hmftools.healthchecker.runners.PurpleChecker;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class HealthChecksApplication
@@ -54,6 +52,7 @@ public class HealthChecksApplication
     private final String mPurpleDir;
     @Nullable
     private final String mOutputDir;
+
     private final boolean mWriteEvaluationFile;
 
     public HealthChecksApplication(final ConfigBuilder configBuilder)
@@ -65,10 +64,10 @@ public class HealthChecksApplication
         String tumorWgsMetricsFile = configBuilder.getValue(TUMOR_WGS_METRICS_FILE);
         String tumorFlagstat = configBuilder.getValue(TUMOR_FLAGSTAT_FILE);
 
-        mRefSampleConfig = new HealthCheckSampleConfiguration(refSample, refWgsMetricsFile, refFlagstat);
-        mTumorSampleConfig = new HealthCheckSampleConfiguration(tumorSample, tumorWgsMetricsFile, tumorFlagstat);
+        mRefSampleConfig = refSample != null ? new HealthCheckSampleConfiguration(refSample, refWgsMetricsFile, refFlagstat) : null;
+        mTumorSampleConfig = tumorSample != null ? new HealthCheckSampleConfiguration(tumorSample, tumorWgsMetricsFile, tumorFlagstat) : null;
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
-        mOutputDir = parseOutputDir(configBuilder);;
+        mOutputDir = parseOutputDir(configBuilder);
         mWriteEvaluationFile = !configBuilder.hasFlag(DO_NOT_WRITE_EVALUATION_FILE);
     }
 
@@ -161,14 +160,10 @@ public class HealthChecksApplication
         }
     }
 
-    @NotNull
     private String fileOutputBasePath()
     {
-        Optional<String> tumorSample = Optional.ofNullable(mTumorSampleConfig).map(x -> x.SampleName);
-        Optional<String> refSample = Optional.ofNullable(mRefSampleConfig).map(x -> x.SampleName);
-        return Optional.ofNullable(mOutputDir)
-                .map(o -> mOutputDir + File.separator + tumorSample.orElseGet(refSample::orElseThrow))
-                .orElseThrow();
+        String sampleName = mTumorSampleConfig != null ? mTumorSampleConfig.SampleName : mRefSampleConfig.SampleName;
+        return mOutputDir + sampleName;
     }
 
     public static void main(final String... args) throws IOException
