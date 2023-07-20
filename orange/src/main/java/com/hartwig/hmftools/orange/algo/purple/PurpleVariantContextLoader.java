@@ -103,10 +103,10 @@ public class PurpleVariantContextLoader
         final AllelicDepth tumorDepth = AllelicDepth.fromGenotype(variantContext.getGenotype(sample));
         int readCount = tumorDepth.totalReadCount();
 
-        if(readCount <= 0)
+        if(readCount < 0)
         {
             throw new IllegalArgumentException(String.format(
-                    "Variant could not be created because tumor depth read count should be greater than 0 (actual value: %s)",
+                    "Variant could not be created because tumor depth read count was negative! (value: %s)",
                     readCount));
         }
 
