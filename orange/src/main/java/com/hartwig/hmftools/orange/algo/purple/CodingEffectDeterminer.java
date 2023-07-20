@@ -16,22 +16,34 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CodingEffectDeterminer
 {
+    private CodingEffectDeterminer()
+    {
+    }
+
     @NotNull
     public static CodingEffect determineCodingEffect(@NotNull List<VariantEffect> variantEffects)
     {
-        final List<CodingEffect> simplifiedEffects = variantEffects.stream().map(CodingEffect::effect).collect(Collectors.toList());
+        List<CodingEffect> simplifiedEffects = variantEffects.stream().map(CodingEffect::effect).collect(Collectors.toList());
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(NONSENSE_OR_FRAMESHIFT)))
+        {
             return NONSENSE_OR_FRAMESHIFT;
+        }
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(SPLICE)))
+        {
             return SPLICE;
+        }
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(MISSENSE)))
+        {
             return MISSENSE;
+        }
 
         if(simplifiedEffects.stream().anyMatch(x -> x.equals(SYNONYMOUS)))
+        {
             return SYNONYMOUS;
+        }
 
         return NONE;
     }

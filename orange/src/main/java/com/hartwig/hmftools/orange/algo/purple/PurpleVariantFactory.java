@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class PurpleVariantFactory
 {
-
+    @NotNull
     private final PaveAlgo paveAlgo;
 
     public PurpleVariantFactory(@NotNull PaveAlgo paveAlgo)
@@ -45,7 +45,6 @@ public class PurpleVariantFactory
     @NotNull
     public PurpleVariant fromPurpleVariantContext(@NotNull PurpleVariantContext context)
     {
-
         var purpleVariantTranscriptImpacts = context.otherImpacts().stream().map(PurpleConversion::convert).collect(Collectors.toList());
         var rnaDepth = context.rnaDepth() != null ? PurpleConversion.convert(context.rnaDepth()) : null;
 
