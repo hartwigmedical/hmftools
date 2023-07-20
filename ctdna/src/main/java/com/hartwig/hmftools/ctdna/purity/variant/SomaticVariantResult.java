@@ -26,6 +26,7 @@ public class SomaticVariantResult
 
     public final double TumorVaf;
     public final double AdjustedTumorVaf;
+    public final double MaxSomaticPeakVaf;
     public final FragmentCalcResult AllFragsResult;
     public final FragmentCalcResult DualFragsResult;
     public final FragmentCalcResult LimitOfDetectionResult;
@@ -37,7 +38,7 @@ public class SomaticVariantResult
     public SomaticVariantResult(
             boolean valid, int totalVariants, int calcVariants,
             final SomaticVariantCounts sampleCounts, final UmiTypeCounts umiTypeCounts,
-            double qualPerAdTotal, double tumorVaf, double adjustedTumorVaf,
+            double qualPerAdTotal, double tumorVaf, double adjustedTumorVaf, double maxSomaticPeakVaf,
             final FragmentCalcResult allFragsResult, final FragmentCalcResult dualFragsResult, final FragmentCalcResult lodFragsResult)
     {
         TotalVariants = totalVariants;
@@ -54,6 +55,7 @@ public class SomaticVariantResult
         NonZeroDepthMedian = sampleCounts.medianDepth(true);
         TumorVaf = tumorVaf;
         AdjustedTumorVaf = adjustedTumorVaf;
+        MaxSomaticPeakVaf = maxSomaticPeakVaf;
         AllFragsResult = allFragsResult;
         DualFragsResult = dualFragsResult;
         LimitOfDetectionResult = lodFragsResult;
@@ -77,6 +79,7 @@ public class SomaticVariantResult
         NonZeroDepthMedian = 0;
         TumorVaf = 0;
         AdjustedTumorVaf = 0;
+        MaxSomaticPeakVaf = 0;
         AllFragsResult = FragmentCalcResult.INVALID;
         DualFragsResult = FragmentCalcResult.INVALID;
         LimitOfDetectionResult = FragmentCalcResult.INVALID;
@@ -101,6 +104,7 @@ public class SomaticVariantResult
         sj.add("QualPerAdTotal");
         sj.add("TumorVaf");
         sj.add("AdjustedTumorVaf");
+        sj.add("MaxSomaticPeakVaf");
         sj.add("DepthMedian");
         sj.add("NonZeroDepthCount");
         sj.add("NonZeroDepthMedian");
@@ -128,6 +132,7 @@ public class SomaticVariantResult
         sj.add(format("%.1f", QualPerAdTotal));
         sj.add(formatPurityValue(TumorVaf));
         sj.add(formatPurityValue(AdjustedTumorVaf));
+        sj.add(formatPurityValue(MaxSomaticPeakVaf));
         sj.add(format("%.1f", DepthMedian));
         sj.add(format("%d", NonZeroDepthCount));
         sj.add(format("%.1f", NonZeroDepthMedian));

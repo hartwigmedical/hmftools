@@ -41,7 +41,7 @@ public class ResultsWriter
         mSampleWriter = initialiseWriter();
         mVariantWriter = config.WriteSomatics ? initialiseVariantWriter() : null;
         mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
-        mDropoutCalcWriter = config.ApplyDropout ? DropoutRateModel.initialiseWriter(mConfig) : null;
+        mDropoutCalcWriter = config.ApplyPeakModel ? DropoutRateModel.initialiseWriter(mConfig) : null;
     }
 
     public BufferedWriter getDropoutWriter() { return mDropoutCalcWriter; }

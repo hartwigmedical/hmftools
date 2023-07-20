@@ -55,7 +55,7 @@ public final class SomaticPurityCalc
         return PoissonCalcs.calcPoissonNoiseValue(alleleCount, requiredProb);
     }
 
-    private static double estimatedPurity(double sampleVaf, double tumorPloidy, double tumorVaf)
+    protected static double estimatedPurity(double sampleVaf, double tumorPloidy, double tumorVaf)
     {
         return max(min(2 * sampleVaf / (tumorPloidy * tumorVaf + sampleVaf * (2 - tumorPloidy)), 1), 0);
     }

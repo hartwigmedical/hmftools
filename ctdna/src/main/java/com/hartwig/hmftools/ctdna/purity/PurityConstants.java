@@ -22,6 +22,13 @@ public class PurityConstants
     public static final double DEFAULT_NOISE_READS_PER_MILLION = 30;
     public static final double DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND = 1;
 
+    public static final double SOMATIC_PEAK_MAX_PROBABILITY = 0.05;
+    public static final int SOMATIC_PEAK_MIN_VARIANTS = 10;
+    public static final int SOMATIC_PEAK_MIN_DEPTH = 100;
+    public static final int SOMATIC_PEAK_MIN_AD = 5;
+    public static final int SOMATIC_PEAK_MIN_PEAK_VARIANTS = 5;
+
+    @Deprecated
     public static final double DROPOUT_RATE_VAF_INCREMENT = 0.05;
     public static final int DROPOUT_RATE_MIN_DEPTH = 100;
     public static final double DROPOUT_RATE_PROBABILITY = pow(10, -5);

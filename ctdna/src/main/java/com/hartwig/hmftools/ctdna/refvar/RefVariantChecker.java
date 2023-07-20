@@ -47,11 +47,14 @@ public class RefVariantChecker
     private final String mOutputId;
     private final String mCtDnaVcfs;
     private final String mPurpleDir;
+    private final boolean mGermlineSearch;
+
     private final List<SampleData> mSamples;
 
     private final BufferedWriter mWriter;
 
     private static final String CTDNA_VCFS = "ctdna_vcf";
+    private static final String GERMLINE_SEARCH = "germline_search";
 
     public RefVariantChecker(final ConfigBuilder configBuilder)
     {
@@ -59,6 +62,8 @@ public class RefVariantChecker
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         mOutputDir = parseOutputDir(configBuilder);
         mOutputId = configBuilder.getValue(OUTPUT_ID);
+
+        mGermlineSearch = configBuilder.hasFlag(GERMLINE_SEARCH);
 
         mSamples = SampleData.loadSampleDataFile(configBuilder.getValue(SAMPLE_ID_FILE));
 
@@ -133,21 +138,21 @@ public class RefVariantChecker
                 continue;
             }
 
-            //List<VariantContextDecorator> ctDnaVariants = Lists.newArrayList();
-
             int ctdnaVarCount = 0;
 
             for(VariantContext variantContext : sampleFileReader.iterator())
             {
-                if(variantContext.isFiltered())
+                if(variantContext.isFiltered() && !mGermlineSearch)
                     continue;
 
                 VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
-                if(variant.tier() != VariantTier.HOTSPOT && variant.tier() != VariantTier.PANEL)
-                    continue;
+                if(!mGermlineSearch)
+                {
+                    if(variant.tier() != VariantTier.HOTSPOT && variant.tier() != VariantTier.PANEL)
+                        continue;
+                }
 
-                // ctDnaVariants.add(variant);
                 ++ctdnaVarCount;
 
                 VariantContextDecorator tumorVariant = null;
@@ -262,6 +267,7 @@ public class RefVariantChecker
         addSampleIdFile(configBuilder, true);
         configBuilder.addPath(CTDNA_VCFS, true, "CtDNA VCFs");
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addFlag(GERMLINE_SEARCH, "Search in germline filtered variants");
         addOutputOptions(configBuilder, true);
         addLoggingOptions(configBuilder);
 

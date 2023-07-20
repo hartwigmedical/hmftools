@@ -12,10 +12,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
-import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -28,13 +26,10 @@ import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_NOISE_RE
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
 import static com.hartwig.hmftools.ctdna.common.SampleData.ctDnaSamplesFromStr;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
@@ -58,7 +53,7 @@ public class PurityConfig
     public final boolean WriteSomatics;
     public final boolean WriteCnRatios;
     public final boolean PlotCnFit;
-    public final boolean ApplyDropout;
+    public final boolean ApplyPeakModel;
     public final boolean WriteFilteredSomatics;
     public final double NoiseReadsPerMillion;
     public final double NoiseReadsPerMillionDualStrand;
@@ -76,7 +71,7 @@ public class PurityConfig
     private static final String PLOT_CN = "plot_cn_fit";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
-    private static final String APPLY_DROPOUT = "apply_dropout";
+    private static final String APPLY_PEAK_MODEL = "somatic_vaf_peaks";
     private static final String GC_RATIO_MIN = "gc_ratio_min";
 
     public PurityConfig(final ConfigBuilder configBuilder)
@@ -110,7 +105,7 @@ public class PurityConfig
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
         GcRatioMin = configBuilder.getDecimal(GC_RATIO_MIN);
 
-        ApplyDropout = configBuilder.hasFlag(APPLY_DROPOUT);
+        ApplyPeakModel = configBuilder.hasFlag(APPLY_PEAK_MODEL);
         WriteSomatics = configBuilder.hasFlag(WRITE_VARIANTS);
         WriteCnRatios = configBuilder.hasFlag(WRITE_CN_RATIOS);
         WriteFilteredSomatics = configBuilder.hasFlag(INCLUDE_FILTERED_VARIANTS);
@@ -122,7 +117,12 @@ public class PurityConfig
     {
         if(configBuilder.hasValue(SAMPLE_ID_FILE))
         {
-            Samples.addAll(SampleData.loadSampleDataFile(configBuilder.getValue(SAMPLE_ID_FILE)));
+            String filename = configBuilder.getValue(SAMPLE_ID_FILE);
+
+            if(!Files.exists(Paths.get(filename)))
+                filename = SampleDataDir + filename;
+
+            Samples.addAll(SampleData.loadSampleDataFile(filename));
         }
         else
         {
@@ -181,7 +181,7 @@ public class PurityConfig
         configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, true, SAMPLE_DATA_DIR_DESC);
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
-        configBuilder.addFlag(APPLY_DROPOUT, "Apply somatic drop-out logic");
+        configBuilder.addFlag(APPLY_PEAK_MODEL, "Apply somatic drop-out logic");
         configBuilder.addFlag(WRITE_VARIANTS, "Write variants");
         configBuilder.addFlag(WRITE_CN_RATIOS, "Write copy number segment GC ratio summary");
         configBuilder.addFlag(PLOT_CN,"Plot copy number / GC ratio fit");

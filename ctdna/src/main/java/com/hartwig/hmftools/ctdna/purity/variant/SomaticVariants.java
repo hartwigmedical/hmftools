@@ -23,6 +23,7 @@ import static com.hartwig.hmftools.ctdna.purity.PurityConstants.VARIANT_OUTLIER_
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.VARIANT_OUTLIER_VAF_MULTIPLE;
 import static com.hartwig.hmftools.ctdna.purity.variant.SomaticPurityCalc.LOW_PROBABILITY;
 import static com.hartwig.hmftools.ctdna.purity.variant.SomaticPurityCalc.calcPoissonNoiseValue;
+import static com.hartwig.hmftools.ctdna.purity.variant.SomaticPurityCalc.estimatedPurity;
 import static com.hartwig.hmftools.ctdna.purity.variant.SomaticVariantResult.INVALID_RESULT;
 import static com.hartwig.hmftools.ctdna.purity.variant.UmiTypeCounts.NO_UMI_COUNTS;
 
@@ -204,12 +205,6 @@ public class SomaticVariants
 
     public SomaticVariantResult processSample(final String sampleId, final PurityContext purityContext)
     {
-        if(mConfig.ApplyDropout)
-        {
-            DropoutRateModel dropoutRateModel = new DropoutRateModel(mConfig, mResultsWriter, mSample, mVariants);
-            dropoutRateModel.calculate(sampleId);
-        }
-
         // only include variants which satisfy the min avg qual check in the ctDNA sample
         SomaticVariantCounts tumorCounts = new SomaticVariantCounts();
         SomaticVariantCounts sampleCounts = new SomaticVariantCounts();
@@ -292,6 +287,27 @@ public class SomaticVariants
         FragmentCalcResult allFragsResult = SomaticPurityCalc.calc(
                 tumorPloidy, adjustedTumorVaf, sampleDepthTotal, sampleCounts.alleleFragments(), allFragsNoise);
 
+        double maxSomaticPeakVaf = 0;
+
+        if(mConfig.ApplyPeakModel)
+        {
+            // DropoutRateModel dropoutRateModel = new DropoutRateModel(mConfig, mResultsWriter, mSample, mVariants);
+            // dropoutRateModel.calculate(sampleId);
+
+            VafPeakModel vafPeakModel = new VafPeakModel(mConfig, mResultsWriter, mSample, mVariants);
+            vafPeakModel.calculate(sampleId, allFragsResult);
+
+            if(vafPeakModel.maxSomaticVaf() > 0)
+            {
+                maxSomaticPeakVaf = vafPeakModel.maxSomaticVaf();
+                double newPurity = estimatedPurity(maxSomaticPeakVaf, tumorPloidy, tumorVaf);
+
+                allFragsResult = new FragmentCalcResult(
+                        vafPeakModel.maxSomaticVaf(), newPurity, allFragsResult.PurityProbability,
+                        allFragsResult.PurityRangeLow, allFragsResult.PurityRangeHigh);
+            }
+        }
+
         double dualFragsNoise = sampleCountsDual.totalFragments() / 1000000.0 * mConfig.NoiseReadsPerMillionDualStrand + lowQualNoiseFactor;
 
         FragmentCalcResult dualFragsResult = SomaticPurityCalc.calc(
@@ -308,7 +324,7 @@ public class SomaticVariants
 
         return new SomaticVariantResult(
                 true, totalVariants, calcVariants, sampleCounts, umiTypeCounts, qualPerAllele,
-                tumorVaf, adjustedTumorVaf, allFragsResult, dualFragsResult, lodFragsResult);
+                tumorVaf, adjustedTumorVaf, maxSomaticPeakVaf, allFragsResult, dualFragsResult, lodFragsResult);
     }
 
     private class SampleMetrics
