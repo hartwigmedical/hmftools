@@ -2,6 +2,8 @@ package com.hartwig.hmftools.orange.algo.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
@@ -33,7 +35,6 @@ public class VariantTranscriptImpactCleanerTest
         assertEquals("p.Ser729=", cleanedImpact.HgvsProtein);
     }
 
-
     @Test
     public void testTrailingSpacesAndBracket()
     {
@@ -56,5 +57,29 @@ public class VariantTranscriptImpactCleanerTest
         assertFalse(cleanedImpact.SpliceRegion);
         assertEquals("c.2187C>T", cleanedImpact.HgvsCoding);
         assertEquals("p.Ser729=", cleanedImpact.HgvsProtein);
+    }
+
+    @Test
+    public void testImpactWithNullFields()
+    {
+        var impact = new VariantTranscriptImpact(
+                null,
+                null,
+                null,
+                null,
+                true,
+                null,
+                null);
+
+        //act
+        var cleanedImpact = VariantTranscriptImpactCleaner.cleanFields(impact);
+
+        assertNull(cleanedImpact.GeneId);
+        assertNull(cleanedImpact.GeneName);
+        assertNull(cleanedImpact.Transcript);
+        assertNull(cleanedImpact.Effects);
+        assertTrue(cleanedImpact.SpliceRegion);
+        assertNull(cleanedImpact.HgvsCoding);
+        assertNull(cleanedImpact.HgvsProtein);
     }
 }
