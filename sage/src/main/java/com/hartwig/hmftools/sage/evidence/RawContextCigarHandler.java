@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
@@ -156,7 +157,7 @@ public class RawContextCigarHandler implements CigarHandler
             int baseQuality = altSupport ? avgBaseQuality(readIndex, record, 2) : 0;
             mResult = RawContext.indel(readIndex, altSupport, baseQuality);
         }
-        else if(refPositionEnd >= mVariant.position())
+        else if(positionWithin(mVariant.position(), refPosition, refPositionEnd))
         {
             mResult = RawContext.inDelete(readIndex);
         }
