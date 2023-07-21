@@ -14,7 +14,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface VirusInterpreterConfig {
+public interface VirusInterpreterConfig
+{
 
     String SAMPLE_ID = "sample_id";
     String VIRUS_BREAKEND_TSV = "virus_breakend_tsv";
@@ -32,7 +33,8 @@ public interface VirusInterpreterConfig {
     String LOG_DEBUG = "log_debug";
 
     @NotNull
-    static Options createOptions() {
+    static Options createOptions()
+    {
         Options options = new Options();
 
         options.addOption(SAMPLE_ID, true, "The sample ID for which virus interpreter will run.");
@@ -77,8 +79,10 @@ public interface VirusInterpreterConfig {
     String outputDir();
 
     @NotNull
-    static VirusInterpreterConfig createConfig(@NotNull CommandLine cmd) throws ParseException {
-        if (cmd.hasOption(LOG_DEBUG)) {
+    static VirusInterpreterConfig createConfig(@NotNull CommandLine cmd) throws ParseException
+    {
+        if(cmd.hasOption(LOG_DEBUG))
+        {
             Configurator.setRootLevel(Level.DEBUG);
         }
 
@@ -94,9 +98,11 @@ public interface VirusInterpreterConfig {
     }
 
     @NotNull
-    static String nonOptionalValue(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+    static String nonOptionalValue(@NotNull CommandLine cmd, @NotNull String param) throws ParseException
+    {
         String value = cmd.getOptionValue(param);
-        if (value == null) {
+        if(value == null)
+        {
             throw new ParseException("Parameter must be provided: " + param);
         }
 
@@ -104,10 +110,12 @@ public interface VirusInterpreterConfig {
     }
 
     @NotNull
-    static String nonOptionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+    static String nonOptionalDir(@NotNull CommandLine cmd, @NotNull String param) throws ParseException
+    {
         String value = nonOptionalValue(cmd, param);
 
-        if (!pathExists(value) || !pathIsDirectory(value)) {
+        if(!pathExists(value) || !pathIsDirectory(value))
+        {
             throw new ParseException("Parameter '" + param + "' must be an existing directory: " + value);
         }
 
@@ -115,21 +123,25 @@ public interface VirusInterpreterConfig {
     }
 
     @NotNull
-    static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException {
+    static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param) throws ParseException
+    {
         String value = nonOptionalValue(cmd, param);
 
-        if (!pathExists(value)) {
+        if(!pathExists(value))
+        {
             throw new ParseException("Parameter '" + param + "' must be an existing file: " + value);
         }
 
         return value;
     }
 
-    static boolean pathExists(@NotNull String path) {
+    static boolean pathExists(@NotNull String path)
+    {
         return Files.exists(new File(path).toPath());
     }
 
-    static boolean pathIsDirectory(@NotNull String path) {
+    static boolean pathIsDirectory(@NotNull String path)
+    {
         return Files.isDirectory(new File(path).toPath());
     }
 }

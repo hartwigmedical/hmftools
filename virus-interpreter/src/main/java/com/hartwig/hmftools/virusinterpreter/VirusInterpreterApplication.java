@@ -24,51 +24,55 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class VirusInterpreterApplication {
-
-    private static final Logger LOGGER = LogManager.getLogger(VirusInterpreterApplication.class);
+public class VirusInterpreterApplication
+{
+    public static final Logger VI_LOGGER = LogManager.getLogger(VirusInterpreterApplication.class);
 
     private static final String VERSION = VirusInterpreterApplication.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws IOException {
-        LOGGER.info("Running Virus Interpreter v{}", VERSION);
+    public static void main(String[] args) throws IOException
+    {
+        VI_LOGGER.info("Running Virus Interpreter v{}", VERSION);
 
         Options options = VirusInterpreterConfig.createOptions();
 
         VirusInterpreterConfig config = null;
-        try {
+        try
+        {
             config = VirusInterpreterConfig.createConfig(new DefaultParser().parse(options, args));
-        } catch (ParseException exception) {
-            LOGGER.warn(exception);
+        }
+        catch(ParseException exception)
+        {
+            VI_LOGGER.warn(exception);
             new HelpFormatter().printHelp("VirusInterpreter", options);
             System.exit(1);
         }
 
-        LOGGER.info("Loading taxonomy db from {}", config.taxonomyDbTsv());
+        VI_LOGGER.info("Loading taxonomy db from {}", config.taxonomyDbTsv());
         TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.taxonomyDbTsv());
 
-        LOGGER.info("Building virus reporting db model from {}", config.virusReportedDbTsv());
+        VI_LOGGER.info("Building virus reporting db model from {}", config.virusReportedDbTsv());
         VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(config.virusReportedDbTsv());
 
-        LOGGER.info("Loading virus breakends from {}", new File(config.virusBreakendTsv()).getParent());
+        VI_LOGGER.info("Loading virus breakends from {}", new File(config.virusBreakendTsv()).getParent());
         List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.virusBreakendTsv());
-        LOGGER.info(" Loaded {} virus breakends from {}", virusBreakends.size(), config.virusBreakendTsv());
+        VI_LOGGER.info(" Loaded {} virus breakends from {}", virusBreakends.size(), config.virusBreakendTsv());
 
-        LOGGER.info("Loading purity context from purity {} and qc {}", config.purplePurityTsv(), config.purpleQcFile());
+        VI_LOGGER.info("Loading purity context from purity {} and qc {}", config.purplePurityTsv(), config.purpleQcFile());
         PurityContext purityContext = PurityContextFile.readWithQC(config.purpleQcFile(), config.purplePurityTsv());
 
-        LOGGER.info("Running coverage analysis based on {} and {}", config.purplePurityTsv(), config.tumorSampleWGSMetricsFile());
+        VI_LOGGER.info("Running coverage analysis based on {} and {}", config.purplePurityTsv(), config.tumorSampleWGSMetricsFile());
         CoveragesAnalysis coveragesAnalysis =
                 CoveragesAnalyzer.run(purityContext, config.tumorSampleWGSMetricsFile());
-        LOGGER.info(" Determined the expected clonal coverage to be {}", coveragesAnalysis.expectedClonalCoverage());
+        VI_LOGGER.info(" Determined the expected clonal coverage to be {}", coveragesAnalysis.expectedClonalCoverage());
 
         VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusReportingDbModel, coveragesAnalysis);
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, purityContext);
-        LOGGER.info("Interpreter classified {} viruses as reportable", annotatedViruses.stream().filter(x -> x.reported()).count());
+        VI_LOGGER.info("Interpreter classified {} viruses as reportable", annotatedViruses.stream().filter(x -> x.reported()).count());
 
         String annotatedVirusTsv = AnnotatedVirusFile.generateFileName(config.outputDir(), config.sampleId());
         AnnotatedVirusFile.write(annotatedVirusTsv, annotatedViruses);
-        LOGGER.info("Written {} annotated viruses to {}", annotatedViruses.size(), annotatedVirusTsv);
+        VI_LOGGER.info("Written {} annotated viruses to {}", annotatedViruses.size(), annotatedVirusTsv);
     }
 
 }

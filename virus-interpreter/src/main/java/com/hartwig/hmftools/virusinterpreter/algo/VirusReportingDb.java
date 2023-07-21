@@ -9,7 +9,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VirusReportingDb {
+public abstract class VirusReportingDb
+{
 
     @NotNull
     public abstract String virusInterpretation();

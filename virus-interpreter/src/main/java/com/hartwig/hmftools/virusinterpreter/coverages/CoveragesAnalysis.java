@@ -7,7 +7,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CoveragesAnalysis {
+public abstract class CoveragesAnalysis
+{
 
     public abstract double expectedClonalCoverage();
 }
