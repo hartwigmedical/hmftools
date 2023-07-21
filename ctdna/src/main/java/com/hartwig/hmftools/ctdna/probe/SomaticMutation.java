@@ -16,13 +16,13 @@ import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_CODING_MUTATIO
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.SUBCLONAL_MUTATION;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_MAPPABILITY_MIN;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_REPEAT_COUNT_MAX;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_INDEL_LENGTH;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_INSERT_BASES;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.DEFAULT_MAPPABILITY_MIN;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.DEFAULT_REPEAT_COUNT_MAX;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.MAX_INDEL_LENGTH;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.MAX_INSERT_BASES;
 
 import java.util.List;
 
@@ -140,7 +140,7 @@ public class SomaticMutation extends Variant
     public boolean reported() { return mVariantDecorator.reported(); }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
     {
         mSequence = generateMutationSequence(
                 refGenome, config.ProbeLength, mVariantDecorator.chromosome(), mVariantDecorator.position(), mVariantDecorator.ref(),
@@ -153,7 +153,7 @@ public class SomaticMutation extends Variant
     }
 
     @Override
-    public boolean passNonReportableFilters(final PvConfig config)
+    public boolean passNonReportableFilters(final ProbeConfig config)
     {
         if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
             return false;
@@ -204,9 +204,9 @@ public class SomaticMutation extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadSomatics(final String sampleId, final PvConfig config) throws Exception
+    public static List<Variant> loadSomatics(final String sampleId, final ProbeConfig config) throws Exception
     {
-        String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
+        String purpleDir = ProbeConfig.getSampleFilePath(sampleId, config.PurpleDir);
         String vcfFile = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
 
         List<Variant> variants = Lists.newArrayList();

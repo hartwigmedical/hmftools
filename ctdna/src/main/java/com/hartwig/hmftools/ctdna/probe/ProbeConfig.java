@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -29,7 +30,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-public class PvConfig
+public class ProbeConfig
 {
     public final List<String> SampleIds;
     public final String LinxDir;
@@ -48,6 +49,7 @@ public class PvConfig
     public final int NonReportableSvCount;
     public final int SubclonalCount;
     public final boolean WriteAll;
+    public final boolean AllowMissing;
 
     public final int Threads;
     public final String OutputDir;
@@ -62,6 +64,7 @@ public class PvConfig
     private static final String NON_REPORTABLE_SV_COUNT = "non_reportable_sv_count";
     private static final String SUBCLONAL_COUNT = "subclonal_count";
     private static final String WRITE_ALL = "write_all";
+    private static final String ALLOW_MISSING = "allow_missing";
 
     private static final int DEFAULT_PROBE_COUNT = 500;
     private static final double DEFAULT_VAF_MIN = 0.05;
@@ -78,7 +81,7 @@ public class PvConfig
     public static final int MAX_INDEL_LENGTH = 32;
     public static final int MAX_POLY_A_T_BASES = 7;
 
-    public PvConfig(final ConfigBuilder configBuilder)
+    public ProbeConfig(final ConfigBuilder configBuilder)
     {
         SampleIds = Lists.newArrayList();
 
@@ -111,6 +114,7 @@ public class PvConfig
         VafMin = configBuilder.getDecimal(VAF_THRESHOLD);
         FragmentCountMin = configBuilder.getInteger(FRAG_COUNT_THRESHOLD);
         WriteAll = configBuilder.hasFlag(WRITE_ALL);
+        AllowMissing = configBuilder.hasFlag(ALLOW_MISSING);
         Threads = parseThreads(configBuilder);
     }
 
@@ -119,7 +123,7 @@ public class PvConfig
 
     public static String getSampleFilePath(final String sampleId, final String filePath)
     {
-        return filePath.replaceAll("\\*", sampleId);
+        return convertWildcardSamplePath(filePath, sampleId);
     }
 
     public boolean isValid()
@@ -133,7 +137,28 @@ public class PvConfig
         return true;
     }
 
-    public PvConfig(int probeLength, int probeCount, int nonReportableSvCount, double vafMin, int fragmentCountMin)
+    public boolean checkSampleDirectories(final String sampleId)
+    {
+        String purpleDir = getSampleFilePath(sampleId, PurpleDir);
+        String linxDir = getSampleFilePath(sampleId, LinxDir);
+        String linxGermlineDir = getSampleFilePath(sampleId, LinxGermlineDir);
+
+        if(!Files.exists(Paths.get(purpleDir)) || !Files.exists(Paths.get(linxDir)) || !Files.exists(Paths.get(linxGermlineDir)))
+        {
+            if(!AllowMissing)
+            {
+                CT_LOGGER.error("sample({}) missing Purple or Linx directories", sampleId);
+                System.exit(1);
+            }
+
+            CT_LOGGER.warn("sample({}) missing Purple or Linx directories", sampleId);
+            return false;
+        }
+
+        return true;
+    }
+
+    public ProbeConfig(int probeLength, int probeCount, int nonReportableSvCount, double vafMin, int fragmentCountMin)
     {
         ProbeCount = probeCount;
         ProbeLength = probeLength;
@@ -151,6 +176,7 @@ public class PvConfig
         ReferenceVariantsFile = "";
         RefGenVersion = V37;
         WriteAll = false;
+        AllowMissing = false;
         Threads = 1;
     }
 
@@ -174,6 +200,7 @@ public class PvConfig
         configBuilder.addInteger(SUBCLONAL_COUNT, "Max count of subclonal mutations", 0);
 
         configBuilder.addFlag(WRITE_ALL, "Write all variants to file");
+        configBuilder.addFlag(ALLOW_MISSING, "Continue on missing sample data");
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);

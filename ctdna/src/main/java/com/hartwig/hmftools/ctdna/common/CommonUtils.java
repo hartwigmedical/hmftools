@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.ctdna.common;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.ctdna.probe.PvConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

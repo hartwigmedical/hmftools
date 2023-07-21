@@ -2,6 +2,7 @@ package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.REFERENCE;
@@ -74,7 +75,7 @@ public class ReferenceMutation extends Variant
     public boolean reported() { return false; }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
     {
         if(mAlt.isEmpty())
         {
@@ -111,8 +112,6 @@ public class ReferenceMutation extends Variant
         return description();
     }
 
-    private static final String DELIM = "\t";
-
     public static List<Variant> loadKnownMutations(final String filename)
     {
         List<Variant> variants = Lists.newArrayList();
@@ -122,7 +121,7 @@ public class ReferenceMutation extends Variant
             List<String> lines = Files.readAllLines(Paths.get(filename));
             String header = lines.get(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get("Chromosome");
             int posIndex = fieldsIndexMap.get("Position");
@@ -135,7 +134,7 @@ public class ReferenceMutation extends Variant
 
             for(String line : lines)
             {
-                String[] values = line.split(DELIM, -1);
+                String[] values = line.split(TSV_DELIM, -1);
 
                 variants.add(new ReferenceMutation(
                         values[chrIndex], Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex], values[sourceIndex],

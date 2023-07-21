@@ -20,11 +20,11 @@ import static com.hartwig.hmftools.ctdna.probe.CategoryType.AMP;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.FUSION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MAX;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_GC_THRESHOLD_MIN;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.DEFAULT_SV_BREAKENDS_PER_GENE;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.ctdna.probe.PvConfig.MAX_POLY_A_T_BASES;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.DEFAULT_GC_THRESHOLD_MAX;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.DEFAULT_GC_THRESHOLD_MIN;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.DEFAULT_SV_BREAKENDS_PER_GENE;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.MAX_INSERT_BASES;
+import static com.hartwig.hmftools.ctdna.probe.ProbeConfig.MAX_POLY_A_T_BASES;
 
 import java.util.List;
 import java.util.Map;
@@ -160,7 +160,7 @@ public class StructuralVariant extends Variant
     }
 
     protected static List<String> generateSvReferenceSequences(
-            final RefGenomeInterface refGenome, final PvConfig config,
+            final RefGenomeInterface refGenome, final ProbeConfig config,
             final String chrStart, final int positionStart, final String chrEnd, final int positionEnd)
     {
         List<String> refSequences = Lists.newArrayList();
@@ -185,7 +185,7 @@ public class StructuralVariant extends Variant
     }
 
     private static String generateSglSequence(
-            final RefGenomeInterface refGenome, final PvConfig config,
+            final RefGenomeInterface refGenome, final ProbeConfig config,
             final String chromosome, final int position, final byte orientation, final String insertSequence)
     {
         int probeLength = config.ProbeLength;
@@ -222,7 +222,7 @@ public class StructuralVariant extends Variant
     }
 
     protected static String generateSvSequence(
-            final RefGenomeInterface refGenome, final PvConfig config,
+            final RefGenomeInterface refGenome, final ProbeConfig config,
             final String chrStart, final int positionStart, final byte orientStart,
             final String chrEnd, final int positionEnd, final byte orientEnd, final String insertSequence)
     {
@@ -292,7 +292,7 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
     {
         mRefSequences.addAll(generateSvReferenceSequences(
                 refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.endChromosome(), mVariant.endPosition()));
@@ -315,7 +315,7 @@ public class StructuralVariant extends Variant
     }
 
     @Override
-    public boolean passNonReportableFilters(final PvConfig config)
+    public boolean passNonReportableFilters(final ProbeConfig config)
     {
         if(reported() && mCategoryType != DISRUPTION)
             return true;
@@ -409,13 +409,13 @@ public class StructuralVariant extends Variant
         return format("variant(%s) category(%s) fusion(%d) breakends(%d)", description(), categoryType(), mFusions.size(), mBreakends.size());
     }
 
-    public static List<Variant> loadStructuralVariants(final String sampleId, final PvConfig config) throws Exception
+    public static List<Variant> loadStructuralVariants(final String sampleId, final ProbeConfig config) throws Exception
     {
         List<Variant> variants = Lists.newArrayList();
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
-        String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
-        String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxDir);
+        String purpleDir = ProbeConfig.getSampleFilePath(sampleId, config.PurpleDir);
+        String linxDir = ProbeConfig.getSampleFilePath(sampleId, config.LinxDir);
 
         String vcfFile = PurpleCommon.purpleSomaticSvFile(purpleDir, sampleId);
 

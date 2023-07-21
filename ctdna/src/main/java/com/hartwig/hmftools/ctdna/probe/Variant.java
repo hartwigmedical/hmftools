@@ -46,12 +46,12 @@ public abstract class Variant
 
     abstract boolean reported();
 
-    abstract void generateSequences(final RefGenomeInterface refGenome, final PvConfig config);
+    abstract void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config);
 
     abstract boolean checkAndRegisterLocation(final ProximateLocations registeredLocations);
     boolean checkAndRegisterGeneLocation(final Map<String,Integer> geneDisruptions) { return true; }
 
-    boolean passNonReportableFilters(final PvConfig config) { return true; }
+    boolean passNonReportableFilters(final ProbeConfig config) { return true; }
 
     int sequenceCount() { return 1 + refSequences().size(); }
 

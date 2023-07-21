@@ -67,7 +67,7 @@ public class GermlineSv extends Variant
     public boolean reported() { return true; }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
     {
         mRefSequences.addAll(generateSvReferenceSequences(
                 refGenome, config, mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.ChromosomeEnd, mVariant.PositionEnd));
@@ -98,12 +98,12 @@ public class GermlineSv extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadGermlineStructuralVariants(final String sampleId, final PvConfig config) throws Exception
+    public static List<Variant> loadGermlineStructuralVariants(final String sampleId, final ProbeConfig config) throws Exception
     {
         List<Variant> variants = Lists.newArrayList();
 
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
-        String linxDir = PvConfig.getSampleFilePath(sampleId, config.LinxGermlineDir);
+        String linxDir = ProbeConfig.getSampleFilePath(sampleId, config.LinxGermlineDir);
 
         String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, sampleId);
         String germlineBreakendsFile = LinxBreakend.generateFilename(linxDir, sampleId, true);

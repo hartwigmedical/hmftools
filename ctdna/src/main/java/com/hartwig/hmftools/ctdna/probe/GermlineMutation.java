@@ -60,7 +60,7 @@ public class GermlineMutation extends Variant
     public boolean reported() { return true; }
 
     @Override
-    public void generateSequences(final RefGenomeInterface refGenome, final PvConfig config)
+    public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
     {
         String sequence = generateMutationSequence(
                 refGenome, config.ProbeLength, mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
@@ -82,14 +82,14 @@ public class GermlineMutation extends Variant
         return format("variant(%s) category(%s)", description(), categoryType());
     }
 
-    public static List<Variant> loadGermlineMutations(final String sampleId, final PvConfig config)
+    public static List<Variant> loadGermlineMutations(final String sampleId, final ProbeConfig config)
     {
         List<Variant> variants = Lists.newArrayList();
 
         CompoundFilter filter = new CompoundFilter(true);
         filter.add(new PassingVariantFilter());
 
-        String purpleDir = PvConfig.getSampleFilePath(sampleId, config.PurpleDir);
+        String purpleDir = ProbeConfig.getSampleFilePath(sampleId, config.PurpleDir);
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(purpleDir, sampleId);
 
         try

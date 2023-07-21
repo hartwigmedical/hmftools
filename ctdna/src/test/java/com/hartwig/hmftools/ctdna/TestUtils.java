@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.ctdna;
 
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.ctdna.probe.PvConfig;
+import com.hartwig.hmftools.ctdna.probe.ProbeConfig;
 
 public final class TestUtils
 {
@@ -16,7 +16,7 @@ public final class TestUtils
 
     public static final MockRefGenome MOCK_REF_GENOME = new MockRefGenome();
 
-    public static final PvConfig TEST_CONFIG = new PvConfig(
+    public static final ProbeConfig TEST_CONFIG = new ProbeConfig(
             20, 1, 0, 0, 0);
 
 }

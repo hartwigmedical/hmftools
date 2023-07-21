@@ -26,7 +26,7 @@ import com.google.common.collect.Maps;
 
 public final class VariantSelection
 {
-    public static List<Variant> selectVariants(final List<Variant> variants, final PvConfig config)
+    public static List<Variant> selectVariants(final List<Variant> variants, final ProbeConfig config)
     {
         Collections.sort(variants, new VariantComparator());
 
@@ -100,7 +100,7 @@ public final class VariantSelection
             sj.add(format("%s=%d", type, typeCounts[type.ordinal()]));
         }
 
-        CT_LOGGER.info("selected variant type counts: {}", sj.toString());
+        CT_LOGGER.debug("selected variant type counts: {}", sj.toString());
 
         return selectedVariants;
     }

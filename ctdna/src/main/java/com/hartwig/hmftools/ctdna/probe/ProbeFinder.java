@@ -30,14 +30,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class ProbeFinder
 {
-    private final PvConfig mConfig;
+    private final ProbeConfig mConfig;
     private final List<Variant> mCommonVariants;
     private final RefGenomeInterface mRefGenome;
     private final BufferedWriter mWriter;
 
     public ProbeFinder(final ConfigBuilder configBuilder)
     {
-        mConfig = new PvConfig(configBuilder);
+        mConfig = new ProbeConfig(configBuilder);
         mRefGenome = loadRefGenome(mConfig.RefGenomeFile);
 
         mCommonVariants = Lists.newArrayList();
@@ -138,6 +138,9 @@ public class ProbeFinder
 
         private void processSample(final String sampleId)
         {
+            if(!mConfig.checkSampleDirectories(sampleId))
+                return;
+
             try
             {
                 List<Variant> variants = Lists.newArrayList();
@@ -266,7 +269,7 @@ public class ProbeFinder
         CT_LOGGER.info("ProbeVariantSelection version: {}", version.version());
 
         ConfigBuilder configBuilder = new ConfigBuilder();
-        PvConfig.addConfig(configBuilder);
+        ProbeConfig.addConfig(configBuilder);
 
         ConfigUtils.addLoggingOptions(configBuilder);
 
