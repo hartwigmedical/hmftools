@@ -7,10 +7,12 @@ import static com.hartwig.hmftools.common.sigs.SnvSigUtils.SNV_TRINUCLEOTIDE_BUC
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.utils.MatrixFile.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_SIG_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
@@ -323,7 +325,8 @@ public class RefSomatics implements RefClassifier
             }
             else if(!mConfig.PurpleDir.isEmpty())
             {
-                final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(mConfig.PurpleDir, sampleId);
+                String samplePurpleDir = formSamplePath(mConfig.PurpleDir, sampleId);
+                final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(samplePurpleDir, sampleId);
                 variants.addAll(SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcfFile, Lists.newArrayList(SNP)));
             }
             else
