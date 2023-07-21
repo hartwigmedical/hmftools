@@ -186,15 +186,15 @@ public class PurpleVariantContextLoader
     }
 
     @Nullable
-    private static String stripSquareBracketsAndWhiteSpace(String s)
+    private static String stripSquareBracketsAndWhiteSpace(String string)
     {
-        if(s == null)
+        if(string == null)
         {
             return null;
         }
-        s = s.startsWith("[") ? s.substring(1) : s;
-        s = s.endsWith("]") ? s.substring(0, s.length() - 1) : s;
-        return s.strip();
+        string = string.startsWith("[") ? string.substring(1) : string;
+        string = string.endsWith("]") ? string.substring(0, string.length() - 1) : string;
+        return string.strip();
     }
 
     @NotNull
