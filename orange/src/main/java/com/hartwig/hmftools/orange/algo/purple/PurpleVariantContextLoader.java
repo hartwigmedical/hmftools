@@ -18,6 +18,7 @@ import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 import com.hartwig.hmftools.common.variant.filter.NTFilter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
+import com.hartwig.hmftools.orange.algo.util.VariantTranscriptImpactCleaner;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -121,7 +122,7 @@ public class PurpleVariantContextLoader
         final VariantImpact variantImpact = contextDecorator.variantImpact();
         final List<VariantTranscriptImpact> allImpacts = VariantTranscriptImpact.fromVariantContext(variantContext)
                 .stream()
-                .map(PurpleVariantContextLoader::cleanVariantTranscriptImpactFields)
+                .map(VariantTranscriptImpactCleaner::cleanFields)
                 .collect(Collectors.toList());
 
         final List<VariantTranscriptImpact> otherImpacts = filterOutCanonicalImpact(allImpacts, variantImpact.CanonicalTranscript);
@@ -159,42 +160,6 @@ public class PurpleVariantContextLoader
                 .subclonalLikelihood(variantContext.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))
                 .localPhaseSets(localPhaseSets)
                 .build();
-    }
-
-    /**
-     * When VariantTranscriptImpacts are created from the VCF file, it sometimes (incorrectly) parses the square array brackets.
-     * These parsed brackets are then included in the impacts fields and here we remove them.
-     * TODO maybe fix this bug upstream in the VariantTranscriptImpact class?
-     */
-    @NotNull
-    private static VariantTranscriptImpact cleanVariantTranscriptImpactFields(VariantTranscriptImpact impact)
-    {
-        var cleanedGeneId = stripSquareBracketsAndWhiteSpace(impact.GeneId);
-        var cleanedGeneName = stripSquareBracketsAndWhiteSpace(impact.GeneName);
-        var cleanedTranscript = stripSquareBracketsAndWhiteSpace(impact.Transcript);
-        var cleanedHgvsCoding = stripSquareBracketsAndWhiteSpace(impact.HgvsCoding);
-        var cleanedHgvsProtein = stripSquareBracketsAndWhiteSpace(impact.HgvsProtein);
-        var cleanedEffects = stripSquareBracketsAndWhiteSpace(impact.Effects);
-        return new VariantTranscriptImpact(
-                cleanedGeneId,
-                cleanedGeneName,
-                cleanedTranscript,
-                cleanedEffects,
-                impact.SpliceRegion,
-                cleanedHgvsCoding,
-                cleanedHgvsProtein);
-    }
-
-    @Nullable
-    private static String stripSquareBracketsAndWhiteSpace(String string)
-    {
-        if(string == null)
-        {
-            return null;
-        }
-        string = string.startsWith("[") ? string.substring(1) : string;
-        string = string.endsWith("]") ? string.substring(0, string.length() - 1) : string;
-        return string.strip();
     }
 
     @NotNull
