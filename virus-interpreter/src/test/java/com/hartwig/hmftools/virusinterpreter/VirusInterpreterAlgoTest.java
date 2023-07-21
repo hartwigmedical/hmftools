@@ -26,22 +26,22 @@ import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReportingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDb;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
-import com.hartwig.hmftools.virusinterpreter.coverages.ImmutableCoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class VirusInterpreterAlgoTest {
-
+public class VirusInterpreterAlgoTest
+{
     private static final String GENOMIC_DIR = Resources.getResource("genomic").getPath();
 
     private static final String PURPLE_QC_FILE = GENOMIC_DIR + File.separator + "sample.purple.qc";
     private static final String PURPLE_PURITY_TSV = GENOMIC_DIR + File.separator + "sample.purple.purity.tsv";
 
     @Test
-    public void canTestIsPurpleQCPass() {
+    public void canTestIsPurpleQCPass()
+    {
         assertTrue(VirusInterpreterAlgo.hasAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.WARN_DELETED_GENES)));
         assertTrue(VirusInterpreterAlgo.hasAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.PASS)));
         assertFalse(VirusInterpreterAlgo.hasAcceptablePurpleQuality(Sets.newHashSet(PurpleQCStatus.FAIL_CONTAMINATION)));
@@ -49,7 +49,8 @@ public class VirusInterpreterAlgoTest {
     }
 
     @Test
-    public void canAnalyzeVirusBreakends() throws IOException {
+    public void canAnalyzeVirusBreakends() throws IOException
+    {
         String name = "Human gammaherpesvirus 4";
         List<VirusBreakend> virusBreakends = createTestVirusBreakends();
 
@@ -61,8 +62,10 @@ public class VirusInterpreterAlgoTest {
         assertEquals(4, annotatedViruses.stream().filter(x -> x.reported()).count());
 
         List<AnnotatedVirus> reportedVirus = Lists.newArrayList();
-        for (AnnotatedVirus virus : annotatedViruses) {
-            if (virus.reported()) {
+        for(AnnotatedVirus virus : annotatedViruses)
+        {
+            if(virus.reported())
+            {
                 reportedVirus.add(virus);
             }
         }
@@ -92,7 +95,8 @@ public class VirusInterpreterAlgoTest {
     }
 
     @Test
-    public void canDetermineHighRiskVirus() {
+    public void canDetermineHighRiskVirus()
+    {
         VirusInterpreterAlgo algo = createTestAlgo();
 
         assertEquals(algo.virusLikelihoodType(createTestVirusBreakendsForHighRiskVirus(1), true), VirusLikelihoodType.HIGH);
@@ -101,7 +105,8 @@ public class VirusInterpreterAlgoTest {
     }
 
     @Test
-    public void canReportTest() {
+    public void canReportTest()
+    {
         VirusInterpreterAlgo algo = createTestAlgo();
 
         assertTrue(algo.report(createTestVirusBreakendsFail(1).get(0), 1.0, Sets.newHashSet(PurpleQCStatus.FAIL_NO_TUMOR)));
@@ -111,12 +116,14 @@ public class VirusInterpreterAlgoTest {
     }
 
     @NotNull
-    private static VirusInterpreterAlgo createTestAlgo() {
+    private static VirusInterpreterAlgo createTestAlgo()
+    {
         return createTestAlgo(Strings.EMPTY);
     }
 
     @NotNull
-    private static VirusInterpreterAlgo createTestAlgo(@NotNull String name) {
+    private static VirusInterpreterAlgo createTestAlgo(@NotNull String name)
+    {
         VirusReportingDb virusReporting1 = ImmutableVirusReportingDb.builder()
                 .virusInterpretation("EBV")
                 .integratedMinimalCoverage(null)
@@ -149,13 +156,13 @@ public class VirusInterpreterAlgoTest {
 
         VirusReportingDbModel virusReportingModel = new VirusReportingDbModel(virusReportingMap);
 
-        CoveragesAnalysis coveragesAnalysis = ImmutableCoveragesAnalysis.builder().expectedClonalCoverage(34.5).build();
+        CoveragesAnalysis coveragesAnalysis = new CoveragesAnalysis(34.5);
 
         return new VirusInterpreterAlgo(taxonomyDb, virusReportingModel, coveragesAnalysis);
     }
 
-    @NotNull
-    private static VirusBreakend createTestVirusBreakendsForHighRiskVirus(int taxidSpecies) {
+    private static VirusBreakend createTestVirusBreakendsForHighRiskVirus(int taxidSpecies)
+    {
 
         return VirusTestFactory.virusBreakendBuilder()
                 .referenceTaxid(1)
@@ -166,8 +173,8 @@ public class VirusInterpreterAlgoTest {
                 .build();
     }
 
-    @NotNull
-    private static List<VirusBreakend> createTestVirusBreakends() {
+    private static List<VirusBreakend> createTestVirusBreakends()
+    {
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
         // This one should be added --reported
@@ -238,8 +245,8 @@ public class VirusInterpreterAlgoTest {
         return virusBreakends;
     }
 
-    @NotNull
-    private static List<VirusBreakend> createTestVirusBreakendsFail(int integrations) {
+    private static List<VirusBreakend> createTestVirusBreakendsFail(int integrations)
+    {
         List<VirusBreakend> virusBreakends = Lists.newArrayList();
 
         // This one should be added --reported

@@ -13,15 +13,15 @@ import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.junit.Test;
 
-public class VirusReportingDbFileTest {
-
+public class VirusReportingDbFileTest
+{
     private static final String VIRUS_REPORTING_DB_TSV = Resources.getResource("virus_interpreter/virus_reporting_db.tsv").getPath();
 
     @Test
-    public void canReadVirusReportingDbTsv() throws IOException {
+    public void canReadVirusReportingDbTsv() throws IOException
+    {
         VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(VIRUS_REPORTING_DB_TSV);
         assertEquals(3, virusReportingDbModel.count());
-
 
         assertTrue(virusReportingDbModel.hasInterpretation(1));
         assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(1));

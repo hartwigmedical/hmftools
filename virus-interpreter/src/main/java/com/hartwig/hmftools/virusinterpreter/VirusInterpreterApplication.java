@@ -1,11 +1,16 @@
 package com.hartwig.hmftools.virusinterpreter;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.virusinterpreter.VirusInterpreterConfig.registerConfig;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
@@ -17,10 +22,6 @@ import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalyzer;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDbFile;
 
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,49 +29,43 @@ public class VirusInterpreterApplication
 {
     public static final Logger VI_LOGGER = LogManager.getLogger(VirusInterpreterApplication.class);
 
-    private static final String VERSION = VirusInterpreterApplication.class.getPackage().getImplementationVersion();
-
     public static void main(String[] args) throws IOException
     {
-        VI_LOGGER.info("Running Virus Interpreter v{}", VERSION);
+        final VersionInfo version = new VersionInfo("virus-interpreter.version");
+        VI_LOGGER.info("Running Virus Interpreter v{}", version.version());
 
-        Options options = VirusInterpreterConfig.createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        registerConfig(configBuilder);
 
-        VirusInterpreterConfig config = null;
-        try
-        {
-            config = VirusInterpreterConfig.createConfig(new DefaultParser().parse(options, args));
-        }
-        catch(ParseException exception)
-        {
-            VI_LOGGER.warn(exception);
-            new HelpFormatter().printHelp("VirusInterpreter", options);
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
-        VI_LOGGER.info("Loading taxonomy db from {}", config.taxonomyDbTsv());
-        TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.taxonomyDbTsv());
+        setLogLevel(configBuilder);
 
-        VI_LOGGER.info("Building virus reporting db model from {}", config.virusReportedDbTsv());
-        VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(config.virusReportedDbTsv());
+        VirusInterpreterConfig config = new VirusInterpreterConfig(configBuilder);
 
-        VI_LOGGER.info("Loading virus breakends from {}", new File(config.virusBreakendTsv()).getParent());
-        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.virusBreakendTsv());
-        VI_LOGGER.info(" Loaded {} virus breakends from {}", virusBreakends.size(), config.virusBreakendTsv());
+        VI_LOGGER.info("Loading taxonomy db from {}", config.TaxonomyDbTsv);
+        TaxonomyDb taxonomyDb = TaxonomyDbFile.loadFromTsv(config.TaxonomyDbTsv);
 
-        VI_LOGGER.info("Loading purity context from purity {} and qc {}", config.purplePurityTsv(), config.purpleQcFile());
-        PurityContext purityContext = PurityContextFile.readWithQC(config.purpleQcFile(), config.purplePurityTsv());
+        VI_LOGGER.info("Building virus reporting db model from {}", config.VirusReportedDbTsv);
+        VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(config.VirusReportedDbTsv);
 
-        VI_LOGGER.info("Running coverage analysis based on {} and {}", config.purplePurityTsv(), config.tumorSampleWGSMetricsFile());
+        VI_LOGGER.info("Loading virus breakends from {}", new File(config.VirusBreakendTsv).getParent());
+        List<VirusBreakend> virusBreakends = VirusBreakendFile.read(config.VirusBreakendTsv);
+        VI_LOGGER.info("Loaded {} virus breakends from {}", virusBreakends.size(), config.VirusBreakendTsv);
+
+        VI_LOGGER.info("Loading purity context from Purple dir {}", config.PurpleDir);
+        PurityContext purityContext = PurityContextFile.read(config.PurpleDir, config.SampleId);
+
+        VI_LOGGER.info("Running coverage analysis based on tumor WGS metrics file {}", config.TumorSampleWGSMetricsFile);
         CoveragesAnalysis coveragesAnalysis =
-                CoveragesAnalyzer.run(purityContext, config.tumorSampleWGSMetricsFile());
-        VI_LOGGER.info(" Determined the expected clonal coverage to be {}", coveragesAnalysis.expectedClonalCoverage());
+                CoveragesAnalyzer.run(purityContext, config.TumorSampleWGSMetricsFile);
+        VI_LOGGER.info("Determined the expected clonal coverage to be {}", coveragesAnalysis.ExpectedClonalCoverage);
 
         VirusInterpreterAlgo algo = new VirusInterpreterAlgo(taxonomyDb, virusReportingDbModel, coveragesAnalysis);
         List<AnnotatedVirus> annotatedViruses = algo.analyze(virusBreakends, purityContext);
         VI_LOGGER.info("Interpreter classified {} viruses as reportable", annotatedViruses.stream().filter(x -> x.reported()).count());
 
-        String annotatedVirusTsv = AnnotatedVirusFile.generateFileName(config.outputDir(), config.sampleId());
+        String annotatedVirusTsv = AnnotatedVirusFile.generateFileName(config.OutputDir, config.SampleId);
         AnnotatedVirusFile.write(annotatedVirusTsv, annotatedViruses);
         VI_LOGGER.info("Written {} annotated viruses to {}", annotatedViruses.size(), annotatedVirusTsv);
     }

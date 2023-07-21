@@ -10,9 +10,7 @@ public final class CoveragesAnalyzer
 {
     public static CoveragesAnalysis run(final PurityContext purityContext, final String tumorSampleWGSMetricsFile) throws IOException
     {
-        return ImmutableCoveragesAnalysis.builder()
-                .expectedClonalCoverage(calculateExpectedClonalCoverage(purityContext, tumorSampleWGSMetricsFile))
-                .build();
+        return new CoveragesAnalysis(calculateExpectedClonalCoverage(purityContext, tumorSampleWGSMetricsFile));
     }
 
     static Double calculateExpectedClonalCoverage(final PurityContext purityContext, final String tumorSampleWGSMetricsFile) throws IOException

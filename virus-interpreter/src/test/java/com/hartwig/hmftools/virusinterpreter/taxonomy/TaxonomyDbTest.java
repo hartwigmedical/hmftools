@@ -11,10 +11,11 @@ import com.google.common.collect.Maps;
 
 import org.junit.Test;
 
-public class TaxonomyDbTest {
-
+public class TaxonomyDbTest
+{
     @Test
-    public void canMatchTaxidToName() {
+    public void canMatchTaxidToName()
+    {
         Map<Integer, String> taxidToNameMap = Maps.newHashMap();
         taxidToNameMap.put(1, "species1");
         TaxonomyDb taxonomyDb = new TaxonomyDb(taxidToNameMap);

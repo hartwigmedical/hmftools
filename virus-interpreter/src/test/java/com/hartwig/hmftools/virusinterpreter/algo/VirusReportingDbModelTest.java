@@ -11,10 +11,11 @@ import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.junit.Test;
 
-public class VirusReportingDbModelTest {
-
+public class VirusReportingDbModelTest
+{
     @Test
-    public void canInterpretVirus() {
+    public void canInterpretVirus()
+    {
         Map<Integer, VirusReportingDb> speciesToInterpretationMap = Maps.newHashMap();
 
         VirusReportingDb virusWhitelist = ImmutableVirusReportingDb.builder()
