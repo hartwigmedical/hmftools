@@ -25,7 +25,7 @@ public class PurpleVariantContextLoaderTest
     public void testCanReadVcfFile() throws IOException
     {
         PurpleVariantContextLoader contextLoader = PurpleVariantContextLoader.withPassingOnlyFilter();
-        List<PurpleVariantContext> variants = contextLoader.fromVCFFile("COLO829v003T", "COLO829v003R", null, PURPLE_VARIANT_FILE);
+        List<PurpleVariantContext> variants = contextLoader.fromVCFFile("tumor_sample", "ref_sample", null, PURPLE_VARIANT_FILE);
 
         assertEquals(1, variants.size());
 
