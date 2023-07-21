@@ -149,10 +149,13 @@ public class VafPeakModel
         double densityBandwidth = min(avgVaf / 2, 0.01);
         int maxVafLimit = min((int)round(maxVaf * 100), 99);
 
-        final KernelEstimator estimator = new KernelEstimator(0.001, densityBandwidth);
+        int vafFraction = 5;
+        double[] vafs = IntStream.rangeClosed(0, maxVafLimit * vafFraction).mapToDouble(x -> x / (100d * vafFraction)).toArray();
+
+        KernelEstimator estimator = new KernelEstimator(0.001, vafs.length * 2);
+
         sampleVafs.forEach(x -> estimator.addValue(x, 1.0));
 
-        double[] vafs = IntStream.rangeClosed(0, maxVafLimit * 2).mapToDouble(x -> x / 200d).toArray();
         double[] densities = DoubleStream.of(vafs).map(estimator::getProbability).toArray();
 
         final List<VafPeak> peakVafs = Lists.newArrayList();

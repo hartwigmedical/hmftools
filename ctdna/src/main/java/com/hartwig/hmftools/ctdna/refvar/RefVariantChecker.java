@@ -197,7 +197,7 @@ public class RefVariantChecker
             sj.add("Chromosome").add("Position").add("Ref").add("Alt").add("Type").add("Tier").add("Filter");
             sj.add("InTumor").add("Reported").add("TumorQual").add("TumorVaf").add("Hotspot");
             sj.add("Gene").add("CodingEffect");
-            sj.add("SampleDP").add("SampleAD").add("SampleRefDual").add("SampleAlleleDual");
+            sj.add("SampleDP").add("SampleAD").add("SampleDual").add("SampleAlleleDual");
 
             writer.write(sj.toString());
             writer.newLine();
@@ -243,7 +243,7 @@ public class RefVariantChecker
 
             Genotype genotype = variant.context().getGenotype(sampleId);
             UmiTypeCounts umiTypeCounts = UmiTypeCounts.fromAttribute(genotype.getExtendedAttribute(UMI_TYPE_COUNTS, null));
-            sj.add(String.valueOf(umiTypeCounts.refTotal()));
+            sj.add(String.valueOf(umiTypeCounts.total()));
             sj.add(String.valueOf(umiTypeCounts.alleleTotal()));
             sj.add(String.valueOf(umiTypeCounts.dualTotal()));
             sj.add(String.valueOf(umiTypeCounts.AlleleDual));

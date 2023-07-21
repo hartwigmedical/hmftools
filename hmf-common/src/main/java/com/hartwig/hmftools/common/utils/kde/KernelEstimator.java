@@ -23,19 +23,29 @@ package com.hartwig.hmftools.common.utils.kde;
  */
 public class KernelEstimator
 {
-    private double[] mValues = new double[50];
-    private double[] mWeights = new double[50];
-    private int mNumValues = 0;
-    private double mSumOfWeights = 0.0D;
+    private double[] mValues;
+    private double[] mWeights;
+    private int mNumValues;
+    private double mSumOfWeights;
     private final double mStandardDev;
     private double mPrecision;
 
-    private static final double MAX_ERROR = 0.01D;
+    private static final double MAX_ERROR = 0.01;
+    private static final int DEFAULT_VALUE_COUNT = 50;
 
     public KernelEstimator(double precision, double bandwidth)
     {
+        this(precision, bandwidth, DEFAULT_VALUE_COUNT);
+    }
+
+    public KernelEstimator(double precision, double bandwidth, int expectedValues)
+    {
         mPrecision = precision;
         mStandardDev = bandwidth;
+        mValues = new double[expectedValues+1];
+        mWeights = new double[expectedValues+1];
+        mNumValues = 0;
+        mSumOfWeights = 0.0;
     }
 
     public void addValue(double data, double weight)
