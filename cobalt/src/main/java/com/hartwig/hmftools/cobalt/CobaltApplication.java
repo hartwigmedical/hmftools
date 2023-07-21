@@ -88,17 +88,16 @@ public class CobaltApplication
 
     private int run(final String... args) throws IOException, ExecutionException, InterruptedException
     {
-        LocalDate runDate = LocalDate.now();
         Instant start = Instant.now();
         mConfig.validate();
         mLoggingOptions.setLogLevel();
 
         VersionInfo mVersionInfo = new VersionInfo("cobalt.version");
-        CB_LOGGER.info("COBALT version: {}, build timestamp: {}",
-                mVersionInfo.version(), mVersionInfo.buildTime().format(ISO_ZONED_DATE_TIME));
 
-        CB_LOGGER.info("run args: {}", String.join(" ", args));
-        CB_LOGGER.info("run date: {}", runDate);
+        CB_LOGGER.info("Cobalt version: {}", mVersionInfo.version());
+
+        CB_LOGGER.debug("build timestamp: {}, run args: {}",
+                mVersionInfo.buildTime().format(ISO_ZONED_DATE_TIME), String.join(" ", args));
 
         CB_LOGGER.info("Reading GC Profile from {}", mConfig.GcProfilePath);
 
