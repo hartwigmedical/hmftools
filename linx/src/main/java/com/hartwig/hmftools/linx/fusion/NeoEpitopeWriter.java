@@ -45,7 +45,7 @@ public class NeoEpitopeWriter
     private final KnownFusionCache mKnownFusionCache;
     private final List<NeoEpitopeFusion> mFusions;
 
-    public static final String NE_FUSION_COHORT_FILE = "LNX_NEO_EPITOPES.csv";
+    public static final String NE_FUSION_COHORT_FILE = "LNX_NEO_EPITOPES.tsv";
 
     public NeoEpitopeWriter(
             final String outputDir, final EnsemblDataCache geneDataCache, final KnownFusionCache knownFusionCache)
