@@ -84,7 +84,6 @@ public class SageConfig
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String MAX_READ_DEPTH = "max_read_depth";
     private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
-    private static final String REF_GENOME_VERSION = "ref_genome_version";
     private static final String SLICE_SIZE = "slice_size";
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String INCLUDE_MT = "include_mt";

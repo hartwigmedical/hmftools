@@ -33,7 +33,7 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 public class FragmentSync
 {
     private final FragmentSyncReadHandler mReadHandler;
-    private final Map<String, SAMRecord> mCachedReads;
+    private final Map<String,SAMRecord> mCachedReads;
 
     private final int[] mSyncCounts;
 
@@ -115,6 +115,7 @@ public class FragmentSync
             }
         }
 
+        // no cache for reads where the mate doesn't overlap
         if(!record.getContig().equals(record.getMateReferenceName()))
             return false;
 

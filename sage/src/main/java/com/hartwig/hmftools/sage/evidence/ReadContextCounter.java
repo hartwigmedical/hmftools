@@ -215,7 +215,7 @@ public class ReadContextCounter implements VariantHotspot
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
 
-    public boolean exceedsMaxCoverage() { return mCounts[RC_TOTAL] >= MaxCoverage; }
+    private boolean exceedsMaxCoverage() { return mCounts[RC_TOTAL] >= MaxCoverage; }
 
     public String toString()
     {
