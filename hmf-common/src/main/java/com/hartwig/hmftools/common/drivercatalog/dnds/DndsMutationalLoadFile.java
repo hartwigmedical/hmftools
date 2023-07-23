@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.dnds;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,41 +17,32 @@ import org.jetbrains.annotations.NotNull;
 
 public final class DndsMutationalLoadFile
 {
-    private static final String DELIMITER = "\t";
-
-    private DndsMutationalLoadFile()
-    {
-    }
-
-    @NotNull
-    public static List<DndsMutationalLoad> read(@NotNull final String filename) throws IOException
+    public static List<DndsMutationalLoad> read(final String filename) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<DndsMutationalLoad> variants) throws IOException
+    public static void write(final String filename, final List<DndsMutationalLoad> variants) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(true, variants));
     }
 
-    public static void writeHeader(@NotNull final String filename) throws IOException
+    public static void writeHeader(final String filename) throws IOException
     {
         Files.write(new File(filename).toPath(), Collections.singletonList(header()));
     }
 
-    public static void append(@NotNull final String filename, @NotNull final List<DndsMutationalLoad> load) throws IOException
+    public static void append(final String filename, final List<DndsMutationalLoad> load) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(false, load), StandardOpenOption.APPEND);
     }
 
-    @NotNull
-    private static List<DndsMutationalLoad> fromLines(@NotNull final List<String> lines)
+    private static List<DndsMutationalLoad> fromLines(final List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("sample")).map(DndsMutationalLoadFile::fromString).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static List<String> toLines(boolean header, @NotNull final List<DndsMutationalLoad> variants)
+    private static List<String> toLines(boolean header, final List<DndsMutationalLoad> variants)
     {
         final List<String> lines = Lists.newArrayList();
         if(header)
@@ -60,10 +53,10 @@ public final class DndsMutationalLoadFile
         return lines;
     }
 
-    @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER).add("sample")
+        return new StringJoiner(TSV_DELIM)
+                .add("sample")
                 .add("snvBiallelic")
                 .add("snvNonBiallelic")
                 .add("indelBiallelic")
@@ -71,10 +64,9 @@ public final class DndsMutationalLoadFile
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final DndsMutationalLoad variant)
+    private static String toString(final DndsMutationalLoad variant)
     {
-        return new StringJoiner(DELIMITER).add(variant.sampleId())
+        return new StringJoiner(TSV_DELIM).add(variant.sampleId())
                 .add(String.valueOf(variant.snvBiallelic()))
                 .add(String.valueOf(variant.snvNonBiallelic()))
                 .add(String.valueOf(variant.indelBiallelic()))
@@ -82,10 +74,9 @@ public final class DndsMutationalLoadFile
                 .toString();
     }
 
-    @NotNull
-    private static DndsMutationalLoad fromString(@NotNull final String line)
+    private static DndsMutationalLoad fromString(final String line)
     {
-        String[] values = line.split(DELIMITER);
+        String[] values = line.split(TSV_DELIM);
         return ImmutableDndsMutationalLoad.builder()
                 .sampleId(values[0])
                 .snvBiallelic(Integer.parseInt(values[1]))

@@ -1,7 +1,10 @@
 
 args <- commandArgs(trailing = T)
-
 work_dir <- args[1]
+
+# work_dir='~/data/purple/paddle'
+#install.packages("remotes")
+#remotes::install_github("im3sanger/dndscv")
 
 somatics_input_dir <- paste0(work_dir, "/somatics")
 mutation_load_input_file <- paste0(work_dir, "/mutationalLoad.tsv")

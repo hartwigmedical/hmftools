@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.dnds;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,41 +20,32 @@ import org.jetbrains.annotations.NotNull;
 
 public final class DndsVariantFile
 {
-    private static final String DELIMITER = "\t";
-
-    private DndsVariantFile()
-    {
-    }
-
-    @NotNull
-    public static List<DndsVariant> read(@NotNull final String filename) throws IOException
+    public static List<DndsVariant> read(final String filename) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<DndsVariant> variants) throws IOException
+    public static void write(final String filename, final List<DndsVariant> variants) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(true, variants));
     }
 
-    public static void writeHeader(@NotNull final String filename) throws IOException
+    public static void writeHeader(final String filename) throws IOException
     {
         Files.write(new File(filename).toPath(), Collections.singletonList(header()));
     }
 
-    public static void append(@NotNull final String filename, @NotNull final List<DndsVariant> variants) throws IOException
+    public static void append(final String filename, final List<DndsVariant> variants) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(false, variants), StandardOpenOption.APPEND);
     }
 
-    @NotNull
-    private static List<DndsVariant> fromLines(@NotNull final List<String> lines)
+    private static List<DndsVariant> fromLines(final List<String> lines)
     {
         return lines.stream().filter(x -> !x.startsWith("sample")).map(DndsVariantFile::fromString).collect(Collectors.toList());
     }
 
-    @NotNull
-    private static List<String> toLines(boolean header, @NotNull final List<DndsVariant> variants)
+    private static List<String> toLines(boolean header, final List<DndsVariant> variants)
     {
         final List<String> lines = Lists.newArrayList();
         if(header)
@@ -63,10 +56,9 @@ public final class DndsVariantFile
         return lines;
     }
 
-    @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER).add("sample")
+        return new StringJoiner(TSV_DELIM).add("sample")
                 .add("chromosome")
                 .add("position")
                 .add("ref")
@@ -81,10 +73,9 @@ public final class DndsVariantFile
     }
 
     @VisibleForTesting
-    @NotNull
-    static String toString(@NotNull final DndsVariant variant)
+    static String toString(final DndsVariant variant)
     {
-        return new StringJoiner(DELIMITER).add(variant.sampleId())
+        return new StringJoiner(TSV_DELIM).add(variant.sampleId())
                 .add(variant.chromosome())
                 .add(String.valueOf(variant.position()))
                 .add(variant.ref())
@@ -98,17 +89,15 @@ public final class DndsVariantFile
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull CodingEffect codingEffect)
+    private static String toString(CodingEffect codingEffect)
     {
         return codingEffect != CodingEffect.UNDEFINED ? codingEffect.toString() : Strings.EMPTY;
     }
 
     @VisibleForTesting
-    @NotNull
-    static DndsVariant fromString(@NotNull final String line)
+    static DndsVariant fromString(final String line)
     {
-        String[] values = line.split(DELIMITER);
+        String[] values = line.split(TSV_DELIM);
         return ImmutableDndsVariant.builder()
                 .sampleId(values[0])
                 .chromosome(values[1])
@@ -124,7 +113,6 @@ public final class DndsVariantFile
                 .build();
     }
 
-    @NotNull
     private static CodingEffect toCodingEffect(@NotNull String codingEffect)
     {
         return codingEffect.isEmpty() ? CodingEffect.UNDEFINED : CodingEffect.valueOf(codingEffect);
