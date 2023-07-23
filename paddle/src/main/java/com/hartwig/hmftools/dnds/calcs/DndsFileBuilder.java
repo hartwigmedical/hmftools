@@ -15,7 +15,6 @@ import static com.hartwig.hmftools.dnds.DndsCommon.logVersion;
 import static com.hartwig.hmftools.dnds.SampleMutationalLoad.cohortSampleMutationalLoadFilename;
 import static com.hartwig.hmftools.dnds.SampleMutationalLoad.loadCohortSampleMutationalLoads;
 import static com.hartwig.hmftools.dnds.SomaticVariant.cohortDndsVariantsFilename;
-import static com.hartwig.hmftools.dnds.SomaticVariant.readVariants;
 import static com.hartwig.hmftools.dnds.calcs.CohortMutationalLoad.fromSampleMap;
 
 import java.io.File;

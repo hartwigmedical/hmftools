@@ -14,8 +14,6 @@ import com.hartwig.hmftools.common.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.gene.GeneData;
@@ -348,27 +346,9 @@ public class DatabaseAccess implements AutoCloseable
     }
 
     @NotNull
-    public List<DndsVariant> readDndsVariants(int maxRepeatCount, @NotNull String sample)
-    {
-        return somaticVariantDAO.readDndsVariants(maxRepeatCount, sample);
-    }
-
-    @NotNull
-    public DndsMutationalLoad readDndsMutationLoad(@NotNull String sample)
-    {
-        return somaticVariantDAO.readDndsLoad(sample);
-    }
-
-    @NotNull
     public List<SomaticVariant> readSomaticVariants(@NotNull String sample, VariantType type)
     {
         return somaticVariantDAO.read(sample, type);
-    }
-
-    @NotNull
-    public List<String> readStructuralVariantSampleList(@NotNull String sampleSearch)
-    {
-        return structuralVariantDAO.getSamplesList(sampleSearch);
     }
 
     @NotNull
