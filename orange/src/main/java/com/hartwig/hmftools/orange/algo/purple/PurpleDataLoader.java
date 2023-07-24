@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,10 +7,16 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.purple.PurpleQCFile;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,9 +25,6 @@ import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public final class PurpleDataLoader
 {
-    private PurpleDataLoader()
-    {
-    }
 
     @NotNull
     public static PurpleData load(final String tumorSample, @Nullable final String referenceSample, @Nullable final String rnaSample,
@@ -57,10 +60,10 @@ public final class PurpleDataLoader
 
     private static String resolveVcfPath(final String vcfPath)
     {
-        if (!new File(vcfPath).exists() && vcfPath.endsWith(".gz"))
+        if(!new File(vcfPath).exists() && vcfPath.endsWith(".gz"))
         {
             String unzippedVcfPath = vcfPath.substring(0, vcfPath.length() - 3);
-            if (new File(unzippedVcfPath).exists())
+            if(new File(unzippedVcfPath).exists())
             {
                 return unzippedVcfPath;
             }
@@ -79,9 +82,9 @@ public final class PurpleDataLoader
 
         List<DriverCatalog> somaticDrivers = DriverCatalogFile.read(somaticDriverCatalogTsv);
 
-        List<SomaticVariant> allSomaticVariants =
-                SomaticVariantFactory.passOnlyInstance().fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
-        List<SomaticVariant> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
+        List<PurpleVariantContext> allSomaticVariants = PurpleVariantContextLoader.withPassingOnlyFilter()
+                .fromVCFFile(tumorSample, referenceSample, rnaSample, somaticVariantVcf);
+        List<PurpleVariantContext> reportableSomaticVariants = selectReportedVariants(allSomaticVariants);
 
         List<StructuralVariant> allSomaticStructuralVariants =
                 StructuralVariantFileLoader.fromFile(somaticStructuralVariantVcf, new PassingVariantFilter());
@@ -90,16 +93,17 @@ public final class PurpleDataLoader
 
         List<DriverCatalog> germlineDrivers = null;
         List<StructuralVariant> allGermlineStructuralVariants = null;
-        List<SomaticVariant> allGermlineVariants = null;
-        List<SomaticVariant> reportableGermlineVariants = null;
+        List<PurpleVariantContext> allGermlineVariants = null;
+        List<PurpleVariantContext> reportableGermlineVariants = null;
         List<GermlineDeletion> allGermlineDeletions = null;
         List<GermlineDeletion> reportableGermlineDeletions = null;
-        if (referenceSample != null)
+        if(referenceSample != null)
         {
             germlineDrivers = DriverCatalogFile.read(germlineDriverCatalogTsv);
             allGermlineStructuralVariants = StructuralVariantFileLoader.fromFile(germlineStructuralVariantVcf, new PassingVariantFilter());
 
-            allGermlineVariants = new SomaticVariantFactory().fromVCFFile(tumorSample, referenceSample, rnaSample, germlineVariantVcf);
+            allGermlineVariants = new PurpleVariantContextLoader().fromVCFFile(tumorSample, referenceSample, rnaSample,
+                    germlineVariantVcf);
             reportableGermlineVariants = selectReportedVariants(allGermlineVariants);
 
             allGermlineDeletions = selectPassDeletions(GermlineDeletion.read(germlineDeletionTsv));
@@ -124,12 +128,12 @@ public final class PurpleDataLoader
     }
 
     @NotNull
-    private static List<SomaticVariant> selectReportedVariants(@NotNull List<SomaticVariant> allVariants)
+    private static List<PurpleVariantContext> selectReportedVariants(@NotNull List<PurpleVariantContext> allVariants)
     {
-        List<SomaticVariant> reported = Lists.newArrayList();
-        for (SomaticVariant variant : allVariants)
+        List<PurpleVariantContext> reported = Lists.newArrayList();
+        for(PurpleVariantContext variant : allVariants)
         {
-            if (variant.reported())
+            if(variant.reported())
             {
                 reported.add(variant);
             }
@@ -141,9 +145,9 @@ public final class PurpleDataLoader
     private static List<GermlineDeletion> selectPassDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions)
     {
         List<GermlineDeletion> pass = Lists.newArrayList();
-        for (GermlineDeletion deletion : allGermlineDeletions)
+        for(GermlineDeletion deletion : allGermlineDeletions)
         {
-            if (deletion.Filter.equals("PASS"))
+            if(deletion.Filter.equals("PASS"))
             {
                 pass.add(deletion);
             }
@@ -156,9 +160,9 @@ public final class PurpleDataLoader
     private static List<GermlineDeletion> selectReportedDeletions(@NotNull List<GermlineDeletion> allGermlineDeletions)
     {
         List<GermlineDeletion> reported = Lists.newArrayList();
-        for (GermlineDeletion deletion : allGermlineDeletions)
+        for(GermlineDeletion deletion : allGermlineDeletions)
         {
-            if (deletion.Reported)
+            if(deletion.Reported)
             {
                 reported.add(deletion);
             }

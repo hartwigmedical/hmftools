@@ -1,10 +1,13 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
+import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.GermlineDeletion;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -24,16 +27,16 @@ public interface PurpleData
     List<DriverCatalog> germlineDrivers();
 
     @NotNull
-    List<SomaticVariant> allSomaticVariants();
+    List<PurpleVariantContext> allSomaticVariants();
 
     @NotNull
-    List<SomaticVariant> reportableSomaticVariants();
+    List<PurpleVariantContext> reportableSomaticVariants();
 
     @Nullable
-    List<SomaticVariant> allGermlineVariants();
+    List<PurpleVariantContext> allGermlineVariants();
 
     @Nullable
-    List<SomaticVariant> reportableGermlineVariants();
+    List<PurpleVariantContext> reportableGermlineVariants();
 
     @NotNull
     List<StructuralVariant> allSomaticStructuralVariants();

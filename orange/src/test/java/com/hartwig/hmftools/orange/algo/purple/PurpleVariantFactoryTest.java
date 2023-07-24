@@ -6,19 +6,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.test.SomaticVariantTestFactory;
-import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
-import com.hartwig.hmftools.common.variant.SomaticVariant;
-import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
@@ -28,135 +22,101 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PurpleVariantFactoryTest {
-
-    private static final double EPSILON = 1.0E-10;
-
-    @Test
-    public void canHandleNullVariants() {
-        PurpleVariantFactory factory = createTestFactory();
-        assertNull(factory.create(null));
-    }
+public class PurpleVariantFactoryTest
+{
 
     @Test
-    public void canCreateSimplePurpleVariant() {
-        SomaticVariant somaticVariant = SomaticVariantTestFactory.builder()
-                .totalReadCount(20)
-                .alleleReadCount(10)
-                .chromosome("1")
-                .position(15)
+    public void testCanCreateVariantFromContext()
+    {
+        var otherImpacts = List.of(
+                new VariantTranscriptImpact(
+                        "ENSG00000109265",
+                        "CRACD",
+                        "ENST00000264229",
+                        "synonymous_variant",
+                        false,
+                        "c.2187C>T",
+                        "p.Ser729="
+                ));
+
+        PurpleVariantContext context = ImmutablePurpleVariantContext.builder()
+                .chromosome("chromosome")
+                .position(57181855)
+                .totalReadCount(153)
+                .alleleReadCount(80)
                 .type(VariantType.INDEL)
-                .gene("gene")
+                .gene("CRACD")
                 .ref("C")
-                .alt("CA")
-                .canonicalTranscript("canonical transcript")
-                .canonicalEffect("missense_variant")
-                .canonicalCodingEffect(CodingEffect.MISSENSE)
-                .canonicalHgvsCodingImpact("canonical hgvs coding")
-                .canonicalHgvsProteinImpact("canonical hgvs protein")
-                .qual(1.5)
-                .filter("PASS")
-                .genesAffected(2)
-                .spliceRegion(false)
-                .otherReportedEffects(Strings.EMPTY)
-                .worstCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
-                .hotspot(com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT)
-                .recovered(true)
-                .mappability(0.5)
-                .adjustedCopyNumber(0.6)
-                .adjustedVAF(0.7)
-                .minorAlleleCopyNumber(0.2)
-                .variantCopyNumber(2.5)
-                .biallelic(false)
+                .alt("T")
+                .canonicalTranscript("ENST00000504228")
+                .canonicalEffect("frameshift_variant&missense_variant")
+                .canonicalCodingEffect(CodingEffect.NONE)
+                .canonicalHgvsCodingImpact("c.2187C>T")
+                .canonicalHgvsProteinImpact("p.Ser729=")
+                .spliceRegion(true)
+                .worstCodingEffect(CodingEffect.UNDEFINED)
+                .otherImpacts(otherImpacts)
+                .hotspot(Hotspot.HOTSPOT)
                 .reported(true)
-                .genotypeStatus(GenotypeStatus.HOM_REF)
-                .germlineStatus(GermlineStatus.NOISE)
-                .trinucleotideContext("TTT")
-                .microhomology("GC")
-                .repeatSequence("AT")
-                .repeatCount(3)
-                .kataegis("kataegis")
-                .tier(VariantTier.HOTSPOT)
-                .subclonalLikelihood(0.35)
-                .rnaDepth(createDepth(18, 14))
-                .referenceDepth(createDepth(28, 24))
-                .localPhaseSets(Lists.newArrayList(1, 2))
+                .rnaDepth(null)
+                .adjustedCopyNumber(3.84)
+                .adjustedVAF(0.5256)
+                .minorAlleleCopyNumber(1.84)
+                .variantCopyNumber(2.02)
+                .biallelic(false)
+                .genotypeStatus(GenotypeStatus.UNKNOWN)
+                .repeatCount(2)
+                .subclonalLikelihood(1)
+                .localPhaseSets(List.of(1, 2, 3))
                 .build();
 
-        PurpleVariantFactory factory = createTestFactory();
-        List<PurpleVariant> converted = factory.create(Lists.newArrayList(somaticVariant));
-        assertEquals(1, converted.size());
+        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache());
+        PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
 
-        PurpleVariant variant = converted.get(0);
-        assertEquals(PurpleVariantType.INDEL, variant.type());
-        assertEquals("gene", variant.gene());
-        assertEquals("1", variant.chromosome());
-        assertEquals(15, variant.position());
-        assertEquals("C", variant.ref());
-        assertEquals("CA", variant.alt());
-        assertEquals(PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT, variant.worstCodingEffect());
-        assertEquals("canonical transcript", variant.canonicalImpact().transcript());
-        assertEquals("canonical hgvs coding", variant.canonicalImpact().hgvsCodingImpact());
-        assertEquals("canonical hgvs protein", variant.canonicalImpact().hgvsProteinImpact());
-        assertNull(variant.canonicalImpact().affectedCodon());
-        assertNull(variant.canonicalImpact().affectedExon());
-        assertFalse(variant.canonicalImpact().spliceRegion());
-        assertEquals(1, variant.canonicalImpact().effects().size());
-        assertTrue(variant.canonicalImpact().effects().contains(PurpleVariantEffect.MISSENSE));
-        assertEquals(PurpleCodingEffect.MISSENSE, variant.canonicalImpact().codingEffect());
-        assertTrue(variant.otherImpacts().isEmpty());
-        assertEquals(Hotspot.NEAR_HOTSPOT, variant.hotspot());
-        assertTrue(variant.reported());
-        assertEquals(20, variant.tumorDepth().totalReadCount());
-        assertEquals(10, variant.tumorDepth().alleleReadCount());
-        assertEquals(18, variant.rnaDepth().totalReadCount());
-        assertEquals(14, variant.rnaDepth().alleleReadCount());
-        assertEquals(0.6, variant.adjustedCopyNumber(), EPSILON);
-        assertEquals(0.7, variant.adjustedVAF(), EPSILON);
-        assertEquals(0.2, variant.minorAlleleCopyNumber(), EPSILON);
-        assertEquals(2.5, variant.variantCopyNumber(), EPSILON);
-        assertFalse(variant.biallelic());
-        assertEquals(PurpleGenotypeStatus.HOM_REF, variant.genotypeStatus());
-        assertEquals(3, variant.repeatCount());
-        assertEquals(0.35, variant.subclonalLikelihood(), EPSILON);
-        assertEquals(2, variant.localPhaseSets().size());
-        assertTrue(variant.localPhaseSets().contains(1));
-        assertTrue(variant.localPhaseSets().contains(2));
-    }
+        assertEquals(PurpleVariantType.INDEL, purpleVariant.type());
+        assertEquals("CRACD", purpleVariant.gene());
+        assertEquals("chromosome", purpleVariant.chromosome());
+        assertEquals(57181855, purpleVariant.position());
+        assertEquals("C", purpleVariant.ref());
+        assertEquals("T", purpleVariant.alt());
+        assertEquals(PurpleCodingEffect.UNDEFINED, purpleVariant.worstCodingEffect());
 
-    @Test
-    public void canPopulateOtherTranscriptImpacts() {
-        AltTranscriptReportableInfo info =
-                new AltTranscriptReportableInfo("transcript", "hgvs coding", "hgvs protein", "missense_variant", CodingEffect.MISSENSE);
-        SomaticVariant somaticVariant = SomaticVariantTestFactory.builder().otherReportedEffects(info.serialise()).build();
+        var canonicalImpact = purpleVariant.canonicalImpact();
+        assertEquals("ENST00000504228", canonicalImpact.transcript());
+        assertEquals("c.2187C>T", canonicalImpact.hgvsCodingImpact());
+        assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
+        assertNull(canonicalImpact.affectedCodon());
+        assertNull(canonicalImpact.affectedExon());
+        assertTrue(canonicalImpact.spliceRegion());
+        assertEquals(Set.of(PurpleVariantEffect.FRAMESHIFT, PurpleVariantEffect.MISSENSE), canonicalImpact.effects());
 
-        PurpleVariantFactory factory = createTestFactory();
-        PurpleVariant variant = factory.create(Lists.newArrayList(somaticVariant)).get(0);
+        List<PurpleTranscriptImpact> purpleOtherImpacts = purpleVariant.otherImpacts();
+        assertEquals(1, purpleOtherImpacts.size());
+        var purpleOtherImpact = purpleOtherImpacts.get(0);
+        assertEquals("ENST00000264229", purpleOtherImpact.transcript());
+        assertEquals("c.2187C>T", purpleOtherImpact.hgvsCodingImpact());
+        assertEquals("p.Ser729=", purpleOtherImpact.hgvsProteinImpact());
+        assertEquals(Set.of(PurpleVariantEffect.SYNONYMOUS), purpleOtherImpact.effects());
+        assertEquals(PurpleCodingEffect.SYNONYMOUS, purpleOtherImpact.codingEffect());
+        assertFalse(purpleOtherImpact.spliceRegion());
+        assertNull(purpleOtherImpact.affectedCodon());
+        assertNull(purpleOtherImpact.affectedExon());
 
-        assertEquals(1, variant.otherImpacts().size());
-        PurpleTranscriptImpact impact = variant.otherImpacts().get(0);
-        assertEquals("transcript", impact.transcript());
-        assertEquals("hgvs coding", impact.hgvsCodingImpact());
-        assertEquals("hgvs protein", impact.hgvsProteinImpact());
-        assertNull(impact.affectedCodon());
-        assertNull(impact.affectedExon());
-        assertFalse(impact.spliceRegion());
-        assertEquals(1, impact.effects().size());
-        assertTrue(impact.effects().contains(PurpleVariantEffect.MISSENSE));
-        assertEquals(PurpleCodingEffect.MISSENSE, impact.codingEffect());
-    }
-
-    @NotNull
-    private static AllelicDepth createDepth(int totalReadCount, int alleleReadCount) {
-        return ImmutableAllelicDepthImpl.builder().totalReadCount(totalReadCount).alleleReadCount(alleleReadCount).build();
-    }
-
-    @NotNull
-    private static PurpleVariantFactory createTestFactory() {
-        return new PurpleVariantFactory(new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache()));
+        assertEquals(com.hartwig.hmftools.datamodel.purple.Hotspot.HOTSPOT, purpleVariant.hotspot());
+        assertTrue(purpleVariant.reported());
+        assertEquals(80, purpleVariant.tumorDepth().alleleReadCount());
+        assertEquals(153, purpleVariant.tumorDepth().totalReadCount());
+        assertNull(purpleVariant.rnaDepth());
+        assertEquals(3.84, purpleVariant.adjustedCopyNumber(), 0);
+        assertEquals(0.5256, purpleVariant.adjustedVAF(), 0);
+        assertEquals(1.84, purpleVariant.minorAlleleCopyNumber(), 0);
+        assertEquals(2.02, purpleVariant.variantCopyNumber(), 0);
+        assertFalse(purpleVariant.biallelic());
+        assertEquals(PurpleGenotypeStatus.UNKNOWN, purpleVariant.genotypeStatus());
+        assertEquals(2, purpleVariant.repeatCount());
+        assertEquals(1, purpleVariant.subclonalLikelihood(), 0);
+        assertEquals(List.of(1, 2, 3), purpleVariant.localPhaseSets());
     }
 }
