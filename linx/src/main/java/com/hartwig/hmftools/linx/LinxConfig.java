@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelCon
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_GERMLINE_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.purple.PurpleCommon.PURPLE_SV_VCF_SUFFIX;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
@@ -118,17 +119,28 @@ public class LinxConfig
             OutputDataPath = parseOutputDir(configBuilder);
         }
 
+        IsGermline = configBuilder.hasFlag(GERMLINE);
+
         if(svVcfFile.isEmpty())
         {
-            if(mSampleIds.size() == 1)
-                svVcfFile = PurpleCommon.purpleSomaticSvFile(PurpleDataPath, mSampleIds.get(0));
+            if(IsGermline)
+            {
+                if(mSampleIds.size() == 1)
+                    svVcfFile = PurpleCommon.purpleGermlineSvFile(PurpleDataPath, mSampleIds.get(0));
+                else
+                    svVcfFile = PurpleDataPath + "*" + PURPLE_SV_GERMLINE_VCF_SUFFIX;
+            }
             else
-                svVcfFile = PurpleDataPath + "*" + PURPLE_SV_VCF_SUFFIX;
+            {
+                if(mSampleIds.size() == 1)
+                    svVcfFile = PurpleCommon.purpleSomaticSvFile(PurpleDataPath, mSampleIds.get(0));
+                else
+                    svVcfFile = PurpleDataPath + "*" + PURPLE_SV_VCF_SUFFIX;
+            }
         }
 
         SvVcfFile = svVcfFile;
 
-        IsGermline = configBuilder.hasFlag(GERMLINE);
 
         RunFusions = configBuilder.hasValue(KNOWN_FUSIONS_FILE);
 

@@ -95,21 +95,6 @@ public class LinxApplication
                 ensemblDataCache.setRestrictedGeneIdList(config.RestrictedGeneIds);
                 ensemblLoadOk = ensemblDataCache.load(false);
             }
-            else if(!config.RunFusions && config.RunDrivers)
-            {
-                // only load transcripts for the driver gene panel
-                ensemblLoadOk = ensemblDataCache.load(true);
-
-                if(ensemblLoadOk)
-                {
-                    final List<String> geneIds = config.DriverGenes.stream()
-                            .map(x -> ensemblDataCache.getGeneDataByName(x.gene()))
-                            .filter(x -> x != null)
-                            .map(x -> x.GeneId).collect(Collectors.toList());
-
-                    ensemblLoadOk &= ensemblDataCache.loadTranscriptData(geneIds);
-                }
-            }
             else
             {
                 ensemblLoadOk = ensemblDataCache.load(false);
