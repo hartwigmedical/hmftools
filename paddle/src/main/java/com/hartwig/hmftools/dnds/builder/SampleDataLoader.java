@@ -21,6 +21,7 @@ import com.hartwig.hmftools.dnds.SomaticVariant;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jooq.Record;
+import org.jooq.Record10;
 import org.jooq.Record3;
 import org.jooq.Result;
 
@@ -109,7 +110,10 @@ public class SampleDataLoader
     {
         List<SomaticVariant> variants = Lists.newArrayList();
 
-        Result<Record> result = mDbAccess.context().select()
+        Result<Record10<String,Integer,String,String,String,Byte,String,String,String,Integer>> result = mDbAccess.context()
+                .select(SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION, SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.GENE,
+                        SOMATICVARIANT.BIALLELIC, SOMATICVARIANT.HOTSPOT, SOMATICVARIANT.WORSTCODINGEFFECT,
+                        SOMATICVARIANT.CANONICALCODINGEFFECT, SOMATICVARIANT.REPEATCOUNT)
                 .from(SOMATICVARIANT)
                 .where(SOMATICVARIANT.SAMPLEID.eq(sample))
                 .and(SOMATICVARIANT.FILTER.eq(PASS))

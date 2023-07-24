@@ -25,7 +25,6 @@ import java.util.Map;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.dnds.SampleMutationalLoad;
-import com.hartwig.hmftools.dnds.SomaticVariant;
 
 public class DndsFileBuilder
 {

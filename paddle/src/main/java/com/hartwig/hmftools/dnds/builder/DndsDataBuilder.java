@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.dnds.builder;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
@@ -23,8 +25,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.dnds.SampleMutationalLoad;
 import com.hartwig.hmftools.dnds.SomaticVariant;
@@ -39,12 +44,17 @@ public class DndsDataBuilder
     private final DatabaseAccess mDbAccess;
     private final SampleDataLoader mSampleDataLoader;
 
+    private BufferedWriter mMutLoadWriter;
+    private final String mSomaticsDir;
+
     public DndsDataBuilder(final ConfigBuilder configBuilder)
     {
         mSampleIds = loadSampleIdsFile(configBuilder);
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         mThreads = parseThreads(configBuilder);
         mOutputDir = parseOutputDir(configBuilder);
+        mSomaticsDir = mOutputDir + SOMATIC_CACHE_DIR + File.separator;
+        mMutLoadWriter = null;
 
         mDbAccess = DatabaseAccess.createDatabaseAccess(configBuilder);
         mSampleDataLoader = new SampleDataLoader(mPurpleDir, mDbAccess);
@@ -63,35 +73,98 @@ public class DndsDataBuilder
 
         Map<String, SampleMutationalLoad> sampleMutationalLoadMap = loadCohortSampleMutationalLoads(cohortSampleMutLoadFilename, false);
 
-        BufferedWriter mutLoadWriter = null;
-
         List<String> missingSampleIds = mSampleIds.stream().filter(x -> !sampleMutationalLoadMap.containsKey(x)).collect(Collectors.toList());
 
-        if(!missingSampleIds.isEmpty())
+        if(missingSampleIds.isEmpty())
         {
-            mutLoadWriter = initialiseWriter(cohortSampleMutLoadFilename);
+            DN_LOGGER.info("all {} samples have mutational load data", mSampleIds.size());
+            return;
+        }
 
-            DN_LOGGER.info("retrieving mutation load and variant data for {} samples", missingSampleIds.size());
+        mMutLoadWriter = initialiseWriter(cohortSampleMutLoadFilename);
 
-            for(String sampleId : missingSampleIds)
+        DN_LOGGER.info("retrieving mutation load and variant data for {} samples", missingSampleIds.size());
+
+        List<SampleTask> sampleTasks = Lists.newArrayList();
+
+        if(mThreads > 1)
+        {
+            for(int i = 0; i < min(missingSampleIds.size(), mThreads); ++i)
             {
-                processSample(sampleId, somaticsDir, mutLoadWriter);
+                sampleTasks.add(new SampleTask(i));
             }
 
-            closeBufferedWriter(mutLoadWriter);
+            int taskIndex = 0;
+            for(String sampleId : missingSampleIds)
+            {
+                if(taskIndex >= sampleTasks.size())
+                    taskIndex = 0;
+
+                sampleTasks.get(taskIndex).getSampleIds().add(sampleId);
+
+                ++taskIndex;
+            }
+
+            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+            TaskExecutor.executeTasks(callableList, mThreads);
         }
+        else
+        {
+            SampleTask sampleTask = new SampleTask(0);
+            sampleTask.getSampleIds().addAll(missingSampleIds);
+            sampleTasks.add(sampleTask);
+            sampleTask.call();
+        }
+
+        closeBufferedWriter(mMutLoadWriter);
 
         DN_LOGGER.info("DNDS sample data building complete");
     }
 
-    private void processSample(final String sampleId, final String somaticsDir, final BufferedWriter mutLoadWriter)
+    private class SampleTask implements Callable
     {
-        List<SomaticVariant> variants = mSampleDataLoader.loadVariants(sampleId);
-        DN_LOGGER.debug("sample({}) loaded {} variants", sampleId, variants.size());
+        private final int mTaskId;
+        private final List<String> mSampleIds;
 
-        SampleMutationalLoad sampleMutationalLoad = mSampleDataLoader.calcSampleMutationalLoad(sampleId);
-        SampleMutationalLoad.writeSampleMutationalLoad(mutLoadWriter, sampleId, sampleMutationalLoad);
-        SomaticVariant.writeVariants(somaticsDir, sampleId, variants);
+        public SampleTask(int taskId)
+        {
+            mTaskId = taskId;
+            mSampleIds = Lists.newArrayList();
+        }
+
+        public List<String> getSampleIds() { return mSampleIds; }
+
+        @Override
+        public Long call()
+        {
+            for(int i = 0; i < mSampleIds.size(); ++i)
+            {
+                String sampleId = mSampleIds.get(i);
+
+                processSample(sampleId);
+                if(i > 0 && (i % 10) == 0)
+                {
+                    DN_LOGGER.info("{}: processed {} samples", mTaskId, i);
+                }
+            }
+
+            if(mThreads > 1)
+            {
+                DN_LOGGER.info("{}: tasks complete for {} samples", mTaskId, mSampleIds.size());
+            }
+
+            return (long)0;
+        }
+
+        private void processSample(final String sampleId)
+        {
+            List<SomaticVariant> variants = mSampleDataLoader.loadVariants(sampleId);
+            DN_LOGGER.debug("sample({}) loaded {} variants", sampleId, variants.size());
+
+            SampleMutationalLoad sampleMutationalLoad = mSampleDataLoader.calcSampleMutationalLoad(sampleId);
+            SampleMutationalLoad.writeSampleMutationalLoad(mMutLoadWriter, sampleId, sampleMutationalLoad);
+            SomaticVariant.writeVariants(mSomaticsDir, sampleId, variants);
+        }
     }
 
     public static void main(final String... args)

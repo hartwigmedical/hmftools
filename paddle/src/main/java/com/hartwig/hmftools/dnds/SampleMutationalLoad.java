@@ -72,7 +72,6 @@ public class SampleMutationalLoad
             DN_LOGGER.error("failed to create cohort sample mut-load writer: {}", e.toString());
             return null;
         }
-
     }
 
     public synchronized  static void writeSampleMutationalLoad(

@@ -1,10 +1,28 @@
+#####
+# Testing
+#####
+
+work_dir='~/data/purple/paddle'
+#install.packages("remotes")
+#remotes::install_github("im3sanger/dndscv")
+
+refdb=paste0(work_dir,"/orig_data/HmfRefCDS.RData")
+load(refdb)
+
+View(RefCDS)
+View(gr_genes)
+
+View(allSomatics)
+
+length(newgenes)
+View(newgenes)
+View(oldgenes)
+
+#### End working
+
 
 args <- commandArgs(trailing = T)
 work_dir <- args[1]
-
-# work_dir='~/data/purple/paddle'
-#install.packages("remotes")
-#remotes::install_github("im3sanger/dndscv")
 
 somatics_input_dir <- paste0(work_dir, "/somatics")
 mutation_load_input_file <- paste0(work_dir, "/mutationalLoad.tsv")
