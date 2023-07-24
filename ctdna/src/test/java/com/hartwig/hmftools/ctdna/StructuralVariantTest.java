@@ -12,13 +12,17 @@ import static com.hartwig.hmftools.ctdna.TestUtils.TEST_CONFIG;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
+import com.hartwig.hmftools.common.gene.TranscriptCodingType;
+import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.common.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.ctdna.probe.StructuralVariant;
 
-import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
 
 public class StructuralVariantTest
@@ -34,6 +38,7 @@ public class StructuralVariantTest
                 createSv(0, "001", CHR_1, CHR_1, 20, 30, POS_ORIENT, NEG_ORIENT, StructuralVariantType.DEL,
                         2, 2, ""),
                 Lists.newArrayList(), Lists.newArrayList());
+        var.markAmpDelDriver(false);
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
         String sequence = REF_BASES_CHR_1.substring(11, 21) + REF_BASES_CHR_1.substring(30, 40);
@@ -65,10 +70,11 @@ public class StructuralVariantTest
 
         // SGL with positive orientation
         insertSeq = "AAAAA";
+        LinxBreakend reportableBreakend = createBreakend(true);
         var = new StructuralVariant(
                 createSv(0, "001", CHR_1, "-1", 20, 0, POS_ORIENT, 0, StructuralVariantType.SGL,
                         2, 0, insertSeq),
-                Lists.newArrayList(), Lists.newArrayList());
+                Lists.newArrayList(reportableBreakend), Lists.newArrayList());
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
         sequence = REF_BASES_CHR_1.substring(6, 21) + insertSeq;
@@ -80,7 +86,7 @@ public class StructuralVariantTest
         var = new StructuralVariant(
                 createSv(0, "001", CHR_1, "-1", 20, 0, POS_ORIENT, 0, StructuralVariantType.SGL,
                         2, 0, insertSeq),
-                Lists.newArrayList(), Lists.newArrayList());
+                Lists.newArrayList(reportableBreakend), Lists.newArrayList());
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
         sequence = REF_BASES_CHR_1.substring(11, 21) + insertSeq.substring(0, 10);
@@ -91,7 +97,7 @@ public class StructuralVariantTest
         var = new StructuralVariant(
                 createSv(0, "001", CHR_1, "-1", 20, 0, NEG_ORIENT, 0, StructuralVariantType.SGL,
                         2, 0, insertSeq),
-                Lists.newArrayList(), Lists.newArrayList());
+                Lists.newArrayList(reportableBreakend), Lists.newArrayList());
 
         var.generateSequences(MOCK_REF_GENOME, TEST_CONFIG);
         sequence = insertSeq.substring(insertSeq.length() - 10) + REF_BASES_CHR_1.substring(20, 30);
@@ -160,6 +166,39 @@ public class StructuralVariantTest
                         .endAnchoringSupportDistance(0)
                         .ponCount(0)
                         .build();
+    }
+
+    private static LinxBreakend createBreakend(boolean reportable)
+    {
+        return ImmutableLinxBreakend.builder()
+                .id(0)
+                .svId(0)
+                .isStart(true)
+                .gene("GENE")
+                .transcriptId("")
+                .canonical(true)
+                .geneOrientation("")
+                .disruptive(true)
+                .reportedDisruption(reportable)
+                .undisruptedCopyNumber(1.0)
+                .regionType(TranscriptRegionType.INTRONIC)
+                .codingType(TranscriptCodingType.CODING)
+                .biotype("")
+                .exonicBasePhase(0)
+                .nextSpliceExonRank(1)
+                .nextSpliceExonPhase(1)
+                .nextSpliceDistance(1000)
+                .totalExonCount(5)
+                .type(StructuralVariantType.DEL)
+                .chromosome("1")
+                .orientation(POS_ORIENT)
+                .strand(1)
+                .chrBand("")
+                .exonUp(1)
+                .exonDown(2)
+                .junctionCopyNumber(1)
+                .build();
+
     }
 
 }

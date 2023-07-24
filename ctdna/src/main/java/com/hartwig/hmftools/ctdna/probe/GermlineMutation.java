@@ -68,6 +68,9 @@ public class GermlineMutation extends Variant
     }
 
     @Override
+    boolean checkFilters() { return false; }
+
+    @Override
     public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
     {
         if(registeredLocations.isNearRegisteredLocation(mVariant.chromosome(), mVariant.position()))

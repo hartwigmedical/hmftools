@@ -80,6 +80,9 @@ public class GermlineSv extends Variant
     }
 
     @Override
+    boolean checkFilters() { return false; }
+
+    @Override
     public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
     {
         if(registeredLocations.isNearRegisteredLocation(mVariant.ChromosomeStart, mVariant.PositionStart, mVariant.OrientStart)

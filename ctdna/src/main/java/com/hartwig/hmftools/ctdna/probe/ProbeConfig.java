@@ -44,6 +44,7 @@ public class ProbeConfig
 
     public final double VafMin;
     public final int FragmentCountMin;
+    public final int FragmentCountOtherMutationMin;
     public final int ProbeCount;
     public final int ProbeLength;
     public final int NonReportableSvCount;
@@ -59,6 +60,7 @@ public class ProbeConfig
     private static final String REFERENCE_VARIANTS_FILE = "ref_variants";
     private static final String VAF_THRESHOLD = "vaf_min";
     private static final String FRAG_COUNT_THRESHOLD = "frag_count_min";
+    private static final String FRAG_COUNT_OTHER_MUT_THRESHOLD = "frag_count_other_mutation_min";
     private static final String PROBE_COUNT = "probe_count";
     private static final String PROBE_LENGTH = "probe_length";
     private static final String NON_REPORTABLE_SV_COUNT = "non_reportable_sv_count";
@@ -69,6 +71,7 @@ public class ProbeConfig
     private static final int DEFAULT_PROBE_COUNT = 500;
     private static final double DEFAULT_VAF_MIN = 0.05;
     private static final int DEFAULT_FRAG_COUNT_MIN = 11;
+    private static final int DEFAULT_FRAG_COUNT_OHTER_MUTATION_MIN = 8;
     private static final int DEFAULT_NON_REPORTABLE_SV_COUNT = 30;
     public static final double DEFAULT_GC_THRESHOLD_MIN = 0.4;
     public static final double DEFAULT_GC_THRESHOLD_MAX = 0.6;
@@ -113,6 +116,7 @@ public class ProbeConfig
         SubclonalCount = configBuilder.getInteger(SUBCLONAL_COUNT);
         VafMin = configBuilder.getDecimal(VAF_THRESHOLD);
         FragmentCountMin = configBuilder.getInteger(FRAG_COUNT_THRESHOLD);
+        FragmentCountOtherMutationMin = configBuilder.getInteger(FRAG_COUNT_OTHER_MUT_THRESHOLD);
         WriteAll = configBuilder.hasFlag(WRITE_ALL);
         AllowMissing = configBuilder.hasFlag(ALLOW_MISSING);
         Threads = parseThreads(configBuilder);
@@ -166,6 +170,7 @@ public class ProbeConfig
         SubclonalCount = 0;
         VafMin = vafMin;
         FragmentCountMin = fragmentCountMin;
+        FragmentCountOtherMutationMin = DEFAULT_FRAG_COUNT_OHTER_MUTATION_MIN;
         SampleIds = Lists.newArrayList();
         PurpleDir = "";
         LinxDir = "";
@@ -193,6 +198,11 @@ public class ProbeConfig
         configBuilder.addDecimal(VAF_THRESHOLD, "VAF threshold", DEFAULT_VAF_MIN);
 
         configBuilder.addInteger(FRAG_COUNT_THRESHOLD, "Fragment count threshold", DEFAULT_FRAG_COUNT_MIN);
+
+        configBuilder.addInteger(
+                FRAG_COUNT_OTHER_MUT_THRESHOLD, "Fragment count threshold for other somatic mutations",
+                DEFAULT_FRAG_COUNT_OHTER_MUTATION_MIN);
+
         configBuilder.addInteger(PROBE_COUNT, "Probe count", DEFAULT_PROBE_COUNT);
         configBuilder.addInteger(PROBE_LENGTH, "Probe length", DEFAULT_PROBE_LENGTH);
 

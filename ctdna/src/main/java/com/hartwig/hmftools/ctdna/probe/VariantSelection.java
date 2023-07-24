@@ -44,7 +44,7 @@ public final class VariantSelection
 
             boolean canAdd = false;
 
-            if(variant.categoryType().ordinal() <= REPORTABLE_MUTATION.ordinal())
+            if(!variant.checkFilters())
             {
                 canAdd = true;
             }

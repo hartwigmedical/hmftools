@@ -48,6 +48,7 @@ public abstract class Variant
 
     abstract void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config);
 
+    abstract boolean checkFilters();
     abstract boolean checkAndRegisterLocation(final ProximateLocations registeredLocations);
     boolean checkAndRegisterGeneLocation(final Map<String,Integer> geneDisruptions) { return true; }
 

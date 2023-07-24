@@ -153,6 +153,9 @@ public class SomaticMutation extends Variant
     }
 
     @Override
+    boolean checkFilters() { return !reported(); }
+
+    @Override
     public boolean passNonReportableFilters(final ProbeConfig config)
     {
         if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
@@ -161,7 +164,8 @@ public class SomaticMutation extends Variant
         if(categoryType() != SUBCLONAL_MUTATION && vaf() < config.VafMin)
             return false;
 
-        if(tumorFragments() < config.FragmentCountMin)
+        int fragmentThreshold = categoryType() == OTHER_MUTATION ? config.FragmentCountOtherMutationMin : config.FragmentCountMin;
+        if(tumorFragments() < fragmentThreshold)
             return false;
 
         if(mVariantDecorator.mappability() < DEFAULT_MAPPABILITY_MIN)

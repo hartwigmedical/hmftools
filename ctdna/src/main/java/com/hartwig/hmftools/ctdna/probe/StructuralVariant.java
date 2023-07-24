@@ -294,8 +294,11 @@ public class StructuralVariant extends Variant
     @Override
     public void generateSequences(final RefGenomeInterface refGenome, final ProbeConfig config)
     {
-        mRefSequences.addAll(generateSvReferenceSequences(
-                refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.endChromosome(), mVariant.endPosition()));
+        if(mCategoryType != OTHER_SV)
+        {
+            mRefSequences.addAll(generateSvReferenceSequences(
+                    refGenome, config, mVariant.startChromosome(), mVariant.startPosition(), mVariant.endChromosome(), mVariant.endPosition()));
+        }
 
         String sequence;
 
@@ -313,6 +316,9 @@ public class StructuralVariant extends Variant
 
         setSequence(sequence);
     }
+
+    @Override
+    boolean checkFilters() { return mCategoryType != FUSION && mCategoryType != AMP && mCategoryType != CategoryType.DEL; }
 
     @Override
     public boolean passNonReportableFilters(final ProbeConfig config)

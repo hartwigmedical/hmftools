@@ -101,6 +101,9 @@ public class ReferenceMutation extends Variant
     }
 
     @Override
+    boolean checkFilters() { return false; }
+
+    @Override
     public boolean checkAndRegisterLocation(final ProximateLocations registeredLocations)
     {
         registeredLocations.addRegisteredLocation(mChromosome, mPosition);
