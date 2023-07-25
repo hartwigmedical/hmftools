@@ -24,10 +24,10 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.PurpleData;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
@@ -42,7 +42,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.linx.BreakendUtil;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
@@ -54,12 +53,12 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PurpleInterpreter {
+public class PurpleInterpreter
+{
 
     private static final Logger LOGGER = LogManager.getLogger(PurpleInterpreter.class);
 
     private static final int MAX_LENGTH_FOR_IMPLIED_DELS = 1500;
-
     @NotNull
     private final PurpleVariantFactory purpleVariantFactory;
     @NotNull
@@ -73,7 +72,8 @@ public class PurpleInterpreter {
 
     public PurpleInterpreter(@NotNull final PurpleVariantFactory purpleVariantFactory,
             @NotNull final GermlineGainLossFactory germlineGainLossFactory, @NotNull final List<DriverGene> driverGenes,
-            @NotNull final LinxRecord linx, @Nullable final ChordData chord) {
+            @NotNull final LinxRecord linx, @Nullable final ChordData chord)
+    {
         this.purpleVariantFactory = purpleVariantFactory;
         this.germlineGainLossFactory = germlineGainLossFactory;
         this.driverGenes = driverGenes;
@@ -82,19 +82,23 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    public PurpleRecord interpret(@NotNull PurpleData purple) {
+    public PurpleRecord interpret(@NotNull PurpleData purple)
+    {
         LOGGER.info("Analysing purple data");
-        List<PurpleVariant> allSomaticVariants = purpleVariantFactory.create(purple.allSomaticVariants());
-        List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.create(purple.reportableSomaticVariants());
+
+        List<PurpleVariant> allSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allSomaticVariants());
+
+        List<PurpleVariant> reportableSomaticVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableSomaticVariants());
         List<PurpleVariant> additionalSuspectSomaticVariants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(allSomaticVariants, reportableSomaticVariants, driverGenes);
         LOGGER.info(" Found an additional {} somatic variants that are potentially interesting", additionalSuspectSomaticVariants.size());
 
-        List<PurpleVariant> allGermlineVariants = purpleVariantFactory.create(purple.allGermlineVariants());
-        List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.create(purple.reportableGermlineVariants());
+        List<PurpleVariant> allGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.allGermlineVariants());
+        List<PurpleVariant> reportableGermlineVariants = purpleVariantFactory.fromPurpleVariantContext(purple.reportableGermlineVariants());
         List<PurpleVariant> additionalSuspectGermlineVariants =
                 GermlineVariantSelector.selectInterestingUnreportedVariants(allGermlineVariants);
-        if (additionalSuspectGermlineVariants != null) {
+        if(additionalSuspectGermlineVariants != null)
+        {
             LOGGER.info(" Found an additional {} germline variants that are potentially interesting",
                     additionalSuspectGermlineVariants.size());
         }
@@ -129,7 +133,8 @@ public class PurpleInterpreter {
         List<PurpleGainLoss> allGermlineFullLosses = null;
         List<PurpleGainLoss> reportableGermlineFullLosses = null;
 
-        if (allGermlineDeletions != null) {
+        if(allGermlineDeletions != null)
+        {
             List<GermlineDeletion> impliedDeletions = implyDeletionsFromBreakends(allGermlineDeletions,
                     linx.reportableGermlineBreakends(),
                     purple.allGermlineStructuralVariants(),
@@ -179,14 +184,17 @@ public class PurpleInterpreter {
     @VisibleForTesting
     static List<GermlineDeletion> implyDeletionsFromBreakends(@NotNull List<GermlineDeletion> allGermlineDeletions,
             @Nullable List<LinxBreakend> reportableGermlineBreakends, @NotNull List<StructuralVariant> allPurpleGermlineSvs,
-            @Nullable List<LinxSvAnnotation> allLinxGermlineSvAnnotations) {
-        if (reportableGermlineBreakends == null || allLinxGermlineSvAnnotations == null) {
+            @Nullable List<LinxSvAnnotation> allLinxGermlineSvAnnotations)
+    {
+        if(reportableGermlineBreakends == null || allLinxGermlineSvAnnotations == null)
+        {
             LOGGER.warn("Linx germline data is missing while purple germline data is present!");
             return Lists.newArrayList();
         }
 
         List<GermlineDeletion> impliedDeletions = Lists.newArrayList();
-        for (Pair<LinxBreakend, LinxBreakend> breakendPair : BreakendUtil.createPairsPerSvId(reportableGermlineBreakends)) {
+        for(Pair<LinxBreakend, LinxBreakend> breakendPair : BreakendUtil.createPairsPerSvId(reportableGermlineBreakends))
+        {
             LinxBreakend first = breakendPair.getLeft();
             LinxBreakend second = breakendPair.getRight();
 
@@ -198,14 +206,16 @@ public class PurpleInterpreter {
 
             StructuralVariant sv = findBySvId(allPurpleGermlineSvs, allLinxGermlineSvAnnotations, first.svId());
             boolean meetsMaxLength = false;
-            if (sv != null) {
+            if(sv != null)
+            {
                 meetsMaxLength = Math.abs(sv.start().position() - sv.end().position()) <= MAX_LENGTH_FOR_IMPLIED_DELS;
             }
 
             boolean hasNoExistingGermlineDel = !hasGermlineDeletionInGene(allGermlineDeletions, first.gene());
 
-            if (bothReported && bothDel && sameGene && sameTranscript && noWildTypeRemaining && meetsMaxLength
-                    && hasNoExistingGermlineDel) {
+            if(bothReported && bothDel && sameGene && sameTranscript && noWildTypeRemaining && meetsMaxLength
+                    && hasNoExistingGermlineDel)
+            {
                 impliedDeletions.add(new GermlineDeletion(first.gene(),
                         first.chromosome(),
                         first.chrBand(),
@@ -229,20 +239,26 @@ public class PurpleInterpreter {
 
     @Nullable
     private static StructuralVariant findBySvId(@NotNull List<StructuralVariant> allPurpleSvs,
-            @NotNull List<LinxSvAnnotation> allLinxSvAnnotations, int svIdToFind) {
+            @NotNull List<LinxSvAnnotation> allLinxSvAnnotations, int svIdToFind)
+    {
         LinxSvAnnotation match = null;
         int index = 0;
-        while (match == null && index < allLinxSvAnnotations.size()) {
+        while(match == null && index < allLinxSvAnnotations.size())
+        {
             LinxSvAnnotation svAnnotation = allLinxSvAnnotations.get(index);
-            if (svAnnotation.svId() == svIdToFind) {
+            if(svAnnotation.svId() == svIdToFind)
+            {
                 match = svAnnotation;
             }
             index++;
         }
 
-        if (match != null) {
-            for (StructuralVariant structuralVariant : allPurpleSvs) {
-                if (structuralVariant.id().equals(match.vcfId())) {
+        if(match != null)
+        {
+            for(StructuralVariant structuralVariant : allPurpleSvs)
+            {
+                if(structuralVariant.id().equals(match.vcfId()))
+                {
                     return structuralVariant;
                 }
             }
@@ -252,9 +268,12 @@ public class PurpleInterpreter {
         return null;
     }
 
-    private static boolean hasGermlineDeletionInGene(@NotNull List<GermlineDeletion> germlineDeletions, @NotNull String geneToFind) {
-        for (GermlineDeletion deletion : germlineDeletions) {
-            if (deletion.GeneName.equals(geneToFind)) {
+    private static boolean hasGermlineDeletionInGene(@NotNull List<GermlineDeletion> germlineDeletions, @NotNull String geneToFind)
+    {
+        for(GermlineDeletion deletion : germlineDeletions)
+        {
+            if(deletion.GeneName.equals(geneToFind))
+            {
                 return true;
             }
         }
@@ -263,12 +282,15 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    private static List<PurpleGainLoss> selectReportable(@NotNull Map<PurpleGainLoss, GermlineDeletion> deletionMap) {
+    private static List<PurpleGainLoss> selectReportable(@NotNull Map<PurpleGainLoss, GermlineDeletion> deletionMap)
+    {
         List<PurpleGainLoss> reportable = Lists.newArrayList();
-        for (Map.Entry<PurpleGainLoss, GermlineDeletion> entry : deletionMap.entrySet()) {
+        for(Map.Entry<PurpleGainLoss, GermlineDeletion> entry : deletionMap.entrySet())
+        {
             PurpleGainLoss gainLoss = entry.getKey();
             GermlineDeletion deletion = entry.getValue();
-            if (deletion.Reported) {
+            if(deletion.Reported)
+            {
                 reportable.add(gainLoss);
             }
         }
@@ -277,9 +299,11 @@ public class PurpleInterpreter {
 
     @NotNull
     private static List<PurpleGainLoss> extractAllGainsLosses(@NotNull Set<PurpleQCStatus> qcStatus, double ploidy, boolean isTargetRegions,
-            @NotNull List<GeneCopyNumber> allGeneCopyNumbers) {
+            @NotNull List<GeneCopyNumber> allGeneCopyNumbers)
+    {
         List<DriverGene> allGenes = Lists.newArrayList();
-        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers) {
+        for(GeneCopyNumber geneCopyNumber : allGeneCopyNumbers)
+        {
             allGenes.add(ImmutableDriverGene.builder()
                     .gene(geneCopyNumber.geneName())
                     .reportMissenseAndInframe(false)
@@ -310,15 +334,18 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    private static List<PurpleGainLoss> somaticGainsLossesFromDrivers(@NotNull List<DriverCatalog> drivers) {
+    private static List<PurpleGainLoss> somaticGainsLossesFromDrivers(@NotNull List<DriverCatalog> drivers)
+    {
         List<PurpleGainLoss> gainsLosses = Lists.newArrayList();
 
         Map<DriverCatalogKey, DriverCatalog> geneDriverMap = DriverCatalogMap.toDriverMap(drivers);
-        for (DriverCatalogKey key : geneDriverMap.keySet()) {
+        for(DriverCatalogKey key : geneDriverMap.keySet())
+        {
             DriverCatalog geneDriver = geneDriverMap.get(key);
 
-            if (geneDriver.driver() == DriverType.AMP || geneDriver.driver() == DriverType.PARTIAL_AMP
-                    || geneDriver.driver() == DriverType.DEL) {
+            if(geneDriver.driver() == DriverType.AMP || geneDriver.driver() == DriverType.PARTIAL_AMP
+                    || geneDriver.driver() == DriverType.DEL)
+            {
                 gainsLosses.add(toGainLoss(geneDriver));
             }
         }
@@ -326,7 +353,8 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    private static PurpleGainLoss toGainLoss(@NotNull DriverCatalog driver) {
+    private static PurpleGainLoss toGainLoss(@NotNull DriverCatalog driver)
+    {
         return ImmutablePurpleGainLoss.builder()
                 .chromosome(driver.chromosome())
                 .chromosomeBand(driver.chromosomeBand())
@@ -340,7 +368,8 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    private static PurpleFit createFit(@NotNull PurpleData purple) {
+    private static PurpleFit createFit(@NotNull PurpleData purple)
+    {
         return ImmutablePurpleFit.builder()
                 .qc(PurpleConversion.convert(purple.purityContext().qc()))
                 .hasSufficientQuality(purple.purityContext().qc().pass())
@@ -356,13 +385,16 @@ public class PurpleInterpreter {
     }
 
     @NotNull
-    private static PurpleCharacteristics createCharacteristics(@NotNull PurpleData purple) {
+    private static PurpleCharacteristics createCharacteristics(@NotNull PurpleData purple)
+    {
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(purple.purityContext().wholeGenomeDuplication())
                 .microsatelliteIndelsPerMb(purple.purityContext().microsatelliteIndelsPerMb())
                 .microsatelliteStatus(PurpleMicrosatelliteStatus.valueOf(purple.purityContext().microsatelliteStatus().name()))
                 .tumorMutationalBurdenPerMb(purple.purityContext().tumorMutationalBurdenPerMb())
-                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalBurdenStatus().name()))
+                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext()
+                        .tumorMutationalBurdenStatus()
+                        .name()))
                 .tumorMutationalLoad(purple.purityContext().tumorMutationalLoad())
                 .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.valueOf(purple.purityContext().tumorMutationalLoadStatus().name()))
                 .svTumorMutationalBurden(purple.purityContext().svTumorMutationalBurden())

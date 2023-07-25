@@ -38,8 +38,6 @@ import com.hartwig.hmftools.common.peach.PeachGenotype;
 import com.hartwig.hmftools.common.peach.PeachGenotypeFile;
 import com.hartwig.hmftools.common.pipeline.PipelineVersionFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurpleData;
-import com.hartwig.hmftools.common.purple.PurpleDataLoader;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
@@ -72,6 +70,8 @@ import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.PlotManager;
 import com.hartwig.hmftools.orange.algo.purple.GermlineGainLossFactory;
+import com.hartwig.hmftools.orange.algo.purple.PurpleData;
+import com.hartwig.hmftools.orange.algo.purple.PurpleDataLoader;
 import com.hartwig.hmftools.orange.algo.purple.PurpleInterpreter;
 import com.hartwig.hmftools.orange.algo.purple.PurpleVariantFactory;
 import com.hartwig.hmftools.orange.algo.util.GermlineConversion;
@@ -96,7 +96,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class OrangeAlgo {
+public class OrangeAlgo
+{
 
     private static final Logger LOGGER = LogManager.getLogger(OrangeAlgo.class);
 
@@ -116,7 +117,8 @@ public class OrangeAlgo {
     private final PlotManager plotManager;
 
     @NotNull
-    public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException {
+    public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException
+    {
         LOGGER.info("Loading DOID database from {}", config.doidJsonFile());
         DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJsonFile());
         DoidParents doidParentModel = DoidParents.fromEdges(doidEntry.edges());
@@ -137,7 +139,8 @@ public class OrangeAlgo {
 
         LOGGER.info("Reading known fusions from {}", config.knownFusionFile());
         KnownFusionCache knownFusionCache = new KnownFusionCache();
-        if (!knownFusionCache.loadFile(config.knownFusionFile())) {
+        if(!knownFusionCache.loadFile(config.knownFusionFile()))
+        {
             throw new IOException("Could not load known fusions from " + config.knownFusionFile());
         }
         LOGGER.info(" Read {} known fusion entries", knownFusionCache.getData().size());
@@ -155,7 +158,8 @@ public class OrangeAlgo {
     private OrangeAlgo(@NotNull final DoidEntry doidEntry, @NotNull final CohortMapper cohortMapper,
             @NotNull final CohortPercentilesModel percentilesModel, @NotNull final List<DriverGene> driverGenes,
             @NotNull final KnownFusionCache knownFusionCache, @NotNull final EnsemblDataCache ensemblDataCache,
-            @NotNull final PlotManager plotManager) {
+            @NotNull final PlotManager plotManager)
+    {
         this.doidEntry = doidEntry;
         this.cohortMapper = cohortMapper;
         this.percentilesModel = percentilesModel;
@@ -166,13 +170,14 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    public OrangeRecord run(@NotNull OrangeConfig config) throws IOException {
+    public OrangeRecord run(@NotNull OrangeConfig config) throws IOException
+    {
         Set<DoidNode> configuredPrimaryTumor = loadConfiguredPrimaryTumor(config);
         String platinumVersion = determinePlatinumVersion(config);
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
-        PurpleData purpleData = loadPurpleData(config);
+        PurpleData purpleData = loadPurpleData(config, ensemblDataCache);
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
         ChordData chord = loadChordAnalysis(config);
@@ -196,13 +201,15 @@ public class OrangeAlgo {
         PurpleRecord purple = purpleInterpreter.interpret(purpleData);
 
         IsofoxRecord isofox = null;
-        if (isofoxData != null) {
+        if(isofoxData != null)
+        {
             IsofoxInterpreter isofoxInterpreter = new IsofoxInterpreter(driverGenes, knownFusionCache, linx);
             isofox = isofoxInterpreter.interpret(isofoxData);
         }
 
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
-        if (WildTypeAlgo.wildTypeCallingAllowed(purple.fit().qc().status())) {
+        if(WildTypeAlgo.wildTypeCallingAllowed(purple.fit().qc().status()))
+        {
             wildTypeGenes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
                     purple.reportableSomaticVariants(),
                     purple.reportableGermlineVariants(),
@@ -211,7 +218,9 @@ public class OrangeAlgo {
                     linx.somaticHomozygousDisruptions(),
                     linx.reportableSomaticBreakends());
             LOGGER.info("Identified {} of {} driver genes to be wild-type", wildTypeGenes.size(), driverGenes.size());
-        } else {
+        }
+        else
+        {
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
         }
 
@@ -239,11 +248,13 @@ public class OrangeAlgo {
                 .plots(buildPlots(config))
                 .build();
 
-        if (config.limitJsonOutput()) {
+        if(config.limitJsonOutput())
+        {
             report = ReportLimiter.limitAllListsToMaxOne(report);
         }
 
-        if (config.convertGermlineToSomatic()) {
+        if(config.convertGermlineToSomatic())
+        {
             report = GermlineConversion.convertGermlineToSomatic(report);
         }
 
@@ -251,15 +262,20 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private Set<DoidNode> loadConfiguredPrimaryTumor(@NotNull OrangeConfig config) {
+    private Set<DoidNode> loadConfiguredPrimaryTumor(@NotNull OrangeConfig config)
+    {
         Set<DoidNode> nodes = Sets.newHashSet();
         LOGGER.info("Determining configured primary tumor");
-        for (String doid : config.primaryTumorDoids()) {
+        for(String doid : config.primaryTumorDoids())
+        {
             DoidNode node = resolveDoid(doidEntry.nodes(), doid);
-            if (node != null) {
+            if(node != null)
+            {
                 LOGGER.info(" Adding DOID {} ({}) as configured primary tumor", doid, node.doidTerm());
                 nodes.add(node);
-            } else {
+            }
+            else
+            {
                 LOGGER.warn("Could not resolve doid '{}'", doid);
             }
         }
@@ -267,9 +283,12 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static DoidNode resolveDoid(@NotNull List<DoidNode> nodes, @NotNull String doid) {
-        for (DoidNode node : nodes) {
-            if (node.doid().equals(doid)) {
+    private static DoidNode resolveDoid(@NotNull List<DoidNode> nodes, @NotNull String doid)
+    {
+        for(DoidNode node : nodes)
+        {
+            if(node.doid().equals(doid))
+            {
                 return node;
             }
         }
@@ -277,30 +296,42 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static String determinePlatinumVersion(@NotNull OrangeConfig config) throws IOException {
+    private static String determinePlatinumVersion(@NotNull OrangeConfig config) throws IOException
+    {
         String pipelineVersionFile = config.pipelineVersionFile();
-        if (pipelineVersionFile == null) {
+        if(pipelineVersionFile == null)
+        {
             LOGGER.warn("No platinum version could be determined as pipeline version file was not passed");
             return null;
         }
 
         String platinumVersion = PipelineVersionFile.majorDotMinorVersion(pipelineVersionFile);
-        if (platinumVersion != null) {
+        if(platinumVersion != null)
+        {
             LOGGER.info("Determined platinum version to be 'v{}'", platinumVersion);
-        } else {
+        }
+        else
+        {
             LOGGER.warn("No platinum version could be determined as version could not be resolved from {}", pipelineVersionFile);
         }
         return platinumVersion;
     }
 
     @Nullable
-    private static OrangeSample loadSampleData(@NotNull OrangeConfig config, boolean loadTumorSample) throws IOException {
-        if (loadTumorSample) {
+    private static OrangeSample loadSampleData(@NotNull OrangeConfig config, boolean loadTumorSample) throws IOException
+    {
+        if(loadTumorSample)
+        {
             LOGGER.info("Loading tumor sample data");
-        } else {
-            if (config.refSampleWGSMetricsFile() != null && config.refSampleFlagstatFile() != null) {
+        }
+        else
+        {
+            if(config.refSampleWGSMetricsFile() != null && config.refSampleFlagstatFile() != null)
+            {
                 LOGGER.info("Loading reference sample data");
-            } else {
+            }
+            else
+            {
                 LOGGER.info("Skipping loading of reference sample data as no flagstat or WGS metrics has been provided");
                 return null;
             }
@@ -318,16 +349,20 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static EnsemblDataCache loadEnsemblDataCache(@NotNull OrangeConfig config) {
-        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(), RefGenomeVersion.from(config.refGenomeVersion().name()));
+    private static EnsemblDataCache loadEnsemblDataCache(@NotNull OrangeConfig config)
+    {
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(),
+                RefGenomeVersion.from(config.refGenomeVersion().name()));
         ensemblDataCache.load(false);
         return ensemblDataCache;
     }
 
     @Nullable
-    private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException {
+    private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException
+    {
         String sageGermlineGeneCoverageTsv = config.sageGermlineGeneCoverageTsv();
-        if (sageGermlineGeneCoverageTsv == null) {
+        if(sageGermlineGeneCoverageTsv == null)
+        {
             LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
             return null;
         }
@@ -341,7 +376,8 @@ public class OrangeAlgo {
         int geneIndex = fieldsIndexMap.get(GeneDepthFile.COL_GENE);
         int mvlhIndex = fieldsIndexMap.get(GeneDepthFile.COL_MV_LIKELIHOOD);
 
-        for (String line : lines.subList(1, lines.size())) {
+        for(String line : lines.subList(1, lines.size()))
+        {
             String[] values = line.split(TSV_DELIM);
             String gene = values[geneIndex];
             String mvlhString = values[mvlhIndex].substring(0, values[mvlhIndex].length() - 1);
@@ -354,7 +390,8 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException {
+    private static PurpleData loadPurpleData(@NotNull OrangeConfig config, @NotNull EnsemblDataCache ensemblDataCache) throws IOException
+    {
         LOGGER.info("Loading PURPLE data from {}", config.purpleDataDirectory());
 
         String referenceSample = config.referenceSampleId();
@@ -388,7 +425,8 @@ public class OrangeAlgo {
         LOGGER.info(" Loaded {} somatic gene copy numbers entries", purple.allSomaticGeneCopyNumbers().size());
         LOGGER.info(" Loaded {} somatic structural variants", purple.allSomaticStructuralVariants().size());
 
-        if (referenceSample != null) {
+        if(referenceSample != null)
+        {
             LOGGER.info(" Loaded {} germline driver catalog entries", purple.germlineDrivers().size());
             LOGGER.info(" Loaded {} germline variants (of which {} are reportable)",
                     purple.allGermlineVariants().size(),
@@ -399,7 +437,9 @@ public class OrangeAlgo {
                     purple.reportableGermlineDeletions().size());
 
             LOGGER.info(" Loaded {} germline structural variants", purple.allGermlineStructuralVariants().size());
-        } else {
+        }
+        else
+        {
             LOGGER.debug(" Skipped loading germline variants and deletions since no reference sample configured");
         }
 
@@ -407,7 +447,8 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException {
+    private static LinxData loadLinxData(@NotNull OrangeConfig config) throws IOException
+    {
         LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
 
         String linxGermlineDataDirectory = config.linxGermlineDataDirectory();
@@ -423,7 +464,8 @@ public class OrangeAlgo {
                 linx.reportableSomaticBreakends().size());
         LOGGER.info(" Loaded {} somatic reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
-        if (linxGermlineDataDirectory != null) {
+        if(linxGermlineDataDirectory != null)
+        {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
             LOGGER.info(" Loaded {} germline structural variants", linx.allGermlineStructuralVariants().size());
             LOGGER.info(" Loaded {} germline breakends (of which {} are reportable)",
@@ -433,7 +475,9 @@ public class OrangeAlgo {
                     linx.allGermlineDisruptions().size(),
                     linx.reportableGermlineDisruptions().size());
             LOGGER.info(" Loaded {} germline reportable homozygous disruptions", linx.germlineHomozygousDisruptions().size());
-        } else {
+        }
+        else
+        {
             LOGGER.info(" Skipped loading LINX germline data as no linx germline data directory has been provided");
         }
 
@@ -441,15 +485,18 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException {
+    private IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException
+    {
         OrangeRNAConfig rna = config.rnaConfig();
-        if (rna == null) {
+        if(rna == null)
+        {
             LOGGER.info("Skipping ISOFOX data loading as RNA is not configured");
             return null;
         }
 
         String isofoxCancerType = cohortMapper.cancerTypeForSample(createSample(config));
-        if (isofoxCancerType == null) {
+        if(isofoxCancerType == null)
+        {
             LOGGER.warn("Could not resolve isofox cancer type for {}" + config.tumorSampleId());
             return null;
         }
@@ -464,14 +511,17 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static LilacSummaryData loadLilacData(@NotNull OrangeConfig config) throws IOException {
+    private static LilacSummaryData loadLilacData(@NotNull OrangeConfig config) throws IOException
+    {
         return LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
     }
 
     @Nullable
-    private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException {
+    private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException
+    {
         String annotatedVirusTsv = config.annotatedVirusTsv();
-        if (annotatedVirusTsv == null) {
+        if(annotatedVirusTsv == null)
+        {
             LOGGER.debug("Skipping loading of annotated  viruses as no input has been provided");
             return null;
         }
@@ -480,9 +530,11 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException {
+    private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException
+    {
         String chordPredictionTxt = config.chordPredictionTxt();
-        if (chordPredictionTxt == null) {
+        if(chordPredictionTxt == null)
+        {
             LOGGER.debug("Skipping CHORD loading as no input has been provided");
             return null;
         }
@@ -494,9 +546,11 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException {
+    private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException
+    {
         String cuppaResultTsv = config.cuppaResultCsv();
-        if (cuppaResultTsv == null) {
+        if(cuppaResultTsv == null)
+        {
             LOGGER.debug("Skipping CUPPA loading as no input has been provided");
             return null;
         }
@@ -513,10 +567,12 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException {
+    private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException
+    {
         String peachGenotypeTsv = config.peachGenotypeTsv();
 
-        if (peachGenotypeTsv == null) {
+        if(peachGenotypeTsv == null)
+        {
             LOGGER.info("Skipping PEACH loading since no peach genotype tsv has been provided");
             return null;
         }
@@ -529,10 +585,12 @@ public class OrangeAlgo {
     }
 
     @Nullable
-    private static List<SignatureAllocation> loadSigAllocations(@NotNull OrangeConfig config) throws IOException {
+    private static List<SignatureAllocation> loadSigAllocations(@NotNull OrangeConfig config) throws IOException
+    {
         String sigsAllocationTsv = config.sigsAllocationTsv();
 
-        if (sigsAllocationTsv == null) {
+        if(sigsAllocationTsv == null)
+        {
             LOGGER.info("Skipping signature loading since no sigs allocation tsv has been provided");
             return null;
         }
@@ -545,7 +603,8 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleRecord purple) {
+    private Map<PercentileType, Evaluation> evaluateCohortPercentiles(@NotNull OrangeConfig config, @NotNull PurpleRecord purple)
+    {
         PercentileType type = PercentileType.SV_TMB;
 
         Observation svTmbObservation = ImmutableObservation.builder()
@@ -557,7 +616,8 @@ public class OrangeAlgo {
         LOGGER.info("Determining SV TMB percentile for value {}", svTmbObservation.value());
         Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
         Evaluation evaluation = percentilesModel.percentile(svTmbObservation);
-        if (evaluation != null) {
+        if(evaluation != null)
+        {
             String cancerType = evaluation.cancerType();
             Double cancerTypePercentile = evaluation.cancerTypePercentile();
             LOGGER.info(" Determined percentile '{}' for pan-cancer and '{}' for cancer type '{}'",
@@ -565,7 +625,9 @@ public class OrangeAlgo {
                     cancerTypePercentile != null ? cancerTypePercentile : "NA",
                     cancerType != null ? cancerType : "NA");
             evaluations.put(type, evaluation);
-        } else {
+        }
+        else
+        {
             LOGGER.warn("Could not evaluate SV TMB percentile for {}!", config.tumorSampleId());
         }
 
@@ -573,19 +635,24 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private OrangePlots buildPlots(@NotNull OrangeConfig config) throws IOException {
+    private OrangePlots buildPlots(@NotNull OrangeConfig config) throws IOException
+    {
         LOGGER.info("Loading plots");
 
         plotManager.createPlotDirectory();
 
         String linxPlotDir = config.linxPlotDirectory();
         List<String> linxDriverPlots = Lists.newArrayList();
-        if (new File(linxPlotDir).exists()) {
-            for (String file : new File(linxPlotDir).list()) {
+        if(new File(linxPlotDir).exists())
+        {
+            for(String file : new File(linxPlotDir).list())
+            {
                 linxDriverPlots.add(plotManager.processPlotFile(linxPlotDir + File.separator + file));
             }
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
-        } else {
+        }
+        else
+        {
             LOGGER.debug(" No linx plots have been loaded as plot directory {} does not exist", linxPlotDir);
         }
 
@@ -601,25 +668,31 @@ public class OrangeAlgo {
         String purplePurityRangePlot = plotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
 
         String purpleKataegisPlot = purplePlotBasePath + ".somatic.rainfall.png";
-        if (!new File(purpleKataegisPlot).exists()) {
+        if(!new File(purpleKataegisPlot).exists())
+        {
             LOGGER.debug(" Could not locate kataegis plot '{}'", purpleKataegisPlot);
             purpleKataegisPlot = null;
-        } else {
+        }
+        else
+        {
             purpleKataegisPlot = plotManager.processPlotFile(purpleKataegisPlot);
         }
 
         String cuppaSummaryPlot = null;
-        if (config.cuppaSummaryPlot() != null) {
+        if(config.cuppaSummaryPlot() != null)
+        {
             cuppaSummaryPlot = plotManager.processPlotFile(config.cuppaSummaryPlot());
         }
 
         String cuppaFeaturePlot = null;
-        if (config.cuppaFeaturePlot() != null && new File(config.cuppaFeaturePlot()).exists()) {
+        if(config.cuppaFeaturePlot() != null && new File(config.cuppaFeaturePlot()).exists())
+        {
             cuppaFeaturePlot = plotManager.processPlotFile(config.cuppaFeaturePlot());
         }
 
         String cuppaChartPlot = null;
-        if (config.cuppaChartPlot() != null) {
+        if(config.cuppaChartPlot() != null)
+        {
             cuppaChartPlot = plotManager.processPlotFile(config.cuppaChartPlot());
         }
 
@@ -641,7 +714,8 @@ public class OrangeAlgo {
     }
 
     @NotNull
-    private static Sample createSample(@NotNull OrangeConfig config) {
+    private static Sample createSample(@NotNull OrangeConfig config)
+    {
         return ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build();
     }
 }

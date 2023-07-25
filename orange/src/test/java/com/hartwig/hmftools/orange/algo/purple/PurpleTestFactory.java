@@ -1,13 +1,26 @@
-package com.hartwig.hmftools.common.purple;
+package com.hartwig.hmftools.orange.algo.purple;
 
+import com.hartwig.hmftools.common.purple.FittedPurity;
+import com.hartwig.hmftools.common.purple.FittedPurityMethod;
+import com.hartwig.hmftools.common.purple.FittedPurityScore;
+import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
+import com.hartwig.hmftools.common.purple.ImmutableFittedPurityScore;
+import com.hartwig.hmftools.common.purple.ImmutablePurityContext;
+import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
+import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurpleQC;
+import com.hartwig.hmftools.common.purple.RunMode;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class PurpleTestFactory {
+public final class PurpleTestFactory
+{
 
-    private PurpleTestFactory() {
+    private PurpleTestFactory()
+    {
     }
 
     @NotNull

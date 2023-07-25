@@ -11,17 +11,14 @@ import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDeletionTestFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleData;
-import com.hartwig.hmftools.common.purple.PurpleData;
-import com.hartwig.hmftools.common.purple.PurpleTestFactory;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantImpl;
 import com.hartwig.hmftools.common.sv.ImmutableStructuralVariantLegImpl;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
@@ -31,18 +28,21 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PurpleInterpreterTest {
+public class PurpleInterpreterTest
+{
 
     private static final String TEST_GENE = "gene";
 
     @Test
-    public void canInterpretMinimalPurpleData() {
+    public void canInterpretMinimalPurpleData()
+    {
         PurpleInterpreter interpreter = createTestInterpreter();
         assertNotNull(interpreter.interpret(PurpleTestFactory.createMinimalTestPurpleData()));
     }
 
     @Test
-    public void canCreateGermlineFullLosses() {
+    public void canCreateGermlineFullLosses()
+    {
         // Gene is needed to be able to match with ensembl test data
         GermlineDeletion hetReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION, 1);
         GermlineDeletion homReported = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HOM_DELETION, 2);
@@ -62,7 +62,8 @@ public class PurpleInterpreterTest {
     }
 
     @Test
-    public void canImplyDeletionsFromBreakends() {
+    public void canImplyDeletionsFromBreakends()
+    {
         LinxBreakend left = LinxOrangeTestFactory.breakendBuilder()
                 .reportedDisruption(true)
                 .gene(TEST_GENE)
@@ -111,17 +112,20 @@ public class PurpleInterpreterTest {
     }
 
     @NotNull
-    private static PurpleInterpreter createTestInterpreter() {
+    private static PurpleInterpreter createTestInterpreter()
+    {
         return createInterpreter(TestEnsemblDataCacheFactory.createDummyCache());
     }
 
     @NotNull
-    private static PurpleInterpreter createRealInterpreter() {
+    private static PurpleInterpreter createRealInterpreter()
+    {
         return createInterpreter(TestEnsemblDataCacheFactory.loadTestCache());
     }
 
     @NotNull
-    private static PurpleInterpreter createInterpreter(@NotNull EnsemblDataCache ensemblDataCache) {
+    private static PurpleInterpreter createInterpreter(@NotNull EnsemblDataCache ensemblDataCache)
+    {
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
 
@@ -133,7 +137,8 @@ public class PurpleInterpreterTest {
     }
 
     @NotNull
-    private static StructuralVariant create(@NotNull String vcfId, int start, int end) {
+    private static StructuralVariant create(@NotNull String vcfId, int start, int end)
+    {
         return ImmutableStructuralVariantImpl.builder()
                 .id(vcfId)
                 .start(ImmutableStructuralVariantLegImpl.builder()
