@@ -54,29 +54,6 @@ public class SvVisualiser implements AutoCloseable
 {
     public static final Logger VIS_LOGGER = LogManager.getLogger(SvVisualiser.class);
 
-    public static void main(String[] args)
-    {
-        ConfigBuilder configBuilder = new ConfigBuilder();
-
-        VisualiserConfig.registerConfig(configBuilder);
-        CircosConfig.registerConfig(configBuilder);
-
-        configBuilder.checkAndParseCommandLine(args);
-        setLogLevel(configBuilder);
-
-        logVersion();
-
-        try(final SvVisualiser application = new SvVisualiser(configBuilder))
-        {
-            application.run();
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-
     private final VisualiserConfig mConfig;
     private final SampleData mSampleData;
     private final CircosConfig mCircosConfig;
@@ -378,6 +355,29 @@ public class SvVisualiser implements AutoCloseable
         }
 
         return circosResult;
+    }
+
+    public static void main(String[] args)
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+
+        VisualiserConfig.registerConfig(configBuilder);
+        CircosConfig.registerConfig(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+        setLogLevel(configBuilder);
+
+        logVersion();
+
+        try(final SvVisualiser application = new SvVisualiser(configBuilder))
+        {
+            application.run();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     @Override

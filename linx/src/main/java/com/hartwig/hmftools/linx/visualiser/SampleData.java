@@ -128,8 +128,14 @@ public class SampleData
 
         if(Segments.isEmpty() || SvData.isEmpty() || CopyNumbers.isEmpty())
         {
-            VIS_LOGGER.warn("sample({}) empty segments, SVs or copy-number files", mConfig.Sample);
-            throw new Exception("invalid input sample data");
+            if(!mConfig.ChainIds.isEmpty() || !mConfig.ClusterIds.isEmpty())
+            {
+                VIS_LOGGER.warn("sample({}) empty Linx VIS input files with specific cluster/chain IDs", mConfig.Sample);
+                System.exit(1);
+            }
+
+            VIS_LOGGER.info("sample({}) empty Linx VIS input files, no plots to generate", mConfig.Sample);
+            return;
         }
 
         boolean loadSvData = !mConfig.UseCohortFiles
