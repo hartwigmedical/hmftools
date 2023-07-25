@@ -103,7 +103,18 @@ public class SampleDataLoader
 
         PurityContext purityContext = mDbAccess.readPurityContext(sample);
 
-        return new SampleMutationalLoad(purityContext.bestFit().purity(), indelBiallelic, indelNonBiallelic, snvBiallelic, snvNonBiallelic);
+        double purity = 0;
+
+        if(purityContext == null)
+        {
+            DN_LOGGER.warn("sample({}) missing purity info", sample);
+        }
+        else
+        {
+            purity = purityContext.bestFit().purity();
+        }
+
+        return new SampleMutationalLoad(purity, indelBiallelic, indelNonBiallelic, snvBiallelic, snvNonBiallelic);
     }
 
     private List<SomaticVariant> readDndsVariants(final String sample, int maxRepeatCount)

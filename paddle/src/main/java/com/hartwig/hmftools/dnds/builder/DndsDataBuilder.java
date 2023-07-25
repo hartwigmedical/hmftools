@@ -100,18 +100,20 @@ public class DndsDataBuilder
                 if(taskIndex >= sampleTasks.size())
                     taskIndex = 0;
 
-                sampleTasks.get(taskIndex).getSampleIds().add(sampleId);
+                sampleTasks.get(taskIndex).addSample(sampleId);
 
                 ++taskIndex;
             }
 
             final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mThreads);
+
+            if(!TaskExecutor.executeTasks(callableList, mThreads))
+                System.exit(1);
         }
         else
         {
             SampleTask sampleTask = new SampleTask(0);
-            sampleTask.getSampleIds().addAll(missingSampleIds);
+            sampleTask.addSamples(missingSampleIds);
             sampleTasks.add(sampleTask);
             sampleTask.call();
         }
@@ -132,7 +134,8 @@ public class DndsDataBuilder
             mSampleIds = Lists.newArrayList();
         }
 
-        public List<String> getSampleIds() { return mSampleIds; }
+        public void addSample(final String sampleId) { mSampleIds.add(sampleId); }
+        public void addSamples(final List<String> sampleIds) { mSampleIds.addAll(sampleIds); }
 
         @Override
         public Long call()
