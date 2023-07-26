@@ -7,10 +7,11 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class RefGenomeVersionTest {
-
+public class RefGenomeVersionTest
+{
     @Test
-    public void canVersionChromosomes() {
+    public void canVersionChromosomes()
+    {
         String chr37 = "10";
         String chr19 = "chr10";
         String chr38 = "chr10";
@@ -25,7 +26,8 @@ public class RefGenomeVersionTest {
     }
 
     @Test
-    public void canVersionFilePaths() {
+    public void canVersionFilePaths()
+    {
         String path = "/this/is/my/path.vcf";
         assertEquals("/this/is/my/path.37.vcf", RefGenomeVersion.V37.addVersionToFilePath(path));
 
@@ -37,12 +39,14 @@ public class RefGenomeVersionTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void cannotHandlePathsWithNoExtension() {
+    public void cannotHandlePathsWithNoExtension()
+    {
         RefGenomeVersion.V37.addVersionToFilePath("path");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void cannotHandlePathWithJustGzipExtension() {
+    public void cannotHandlePathWithJustGzipExtension()
+    {
         RefGenomeVersion.V37.addVersionToFilePath("path.gz");
     }
 }
