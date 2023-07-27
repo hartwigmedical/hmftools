@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -475,17 +476,13 @@ public class MissensePeptideScorer
         addEnsemblDir(configBuilder);
         ScoreConfig.registerConfig(configBuilder);
         configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
-        configBuilder.addPath(OUTPUT_FILE, true, "Output filename");
-        configBuilder.addConfigItem(OUTPUT_DIR, true, "Output directory");
+        configBuilder.addPath(GENE_ID_FILE, true, GENE_ID_FILE_DESC);
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
         configBuilder.addDecimal(LIKELIHOOD_CUTOFF, "Likelihood cutoff to write an allele peptide result", 0.02);
+        addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
         setLogLevel(configBuilder);
 
