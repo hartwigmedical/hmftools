@@ -76,6 +76,13 @@ public class FileSources
                 fileSources.RequiresLiftover);
     }
 
+    private static void addPathConfig(final ConfigBuilder configBuilder, final String toolDir, final String toolDesc, final String sourceName)
+    {
+        configBuilder.addPrefixedPath(
+                formSourceConfig(toolDir, sourceName), false, formSourceDescription(toolDesc, sourceName),
+                formSourceConfig(SAMPLE_DIR, sourceName));
+    }
+
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         List<String> sourceNames = Lists.newArrayList(REF_SOURCE, NEW_SOURCE);
@@ -86,23 +93,12 @@ public class FileSources
                     formSourceConfig(SAMPLE_DIR, sourceName), false,
                     formSourceDescription("Sample data root directory", sourceName));
 
-            configBuilder.addPrefixedPath(
-                    formSourceConfig(LINX_DIR_CFG, sourceName), false, formSourceDescription(LINX_DIR_DESC, sourceName), SAMPLE_DIR);
-
-            configBuilder.addPath(
-                    formSourceConfig(LINX_GERMLINE_DIR_CFG, sourceName), false, formSourceDescription(LINX_GERMLINE_DIR_DESC, sourceName));
-
-            configBuilder.addPath(
-                    formSourceConfig(PURPLE_DIR_CFG, sourceName), false, formSourceDescription(PURPLE_DIR_DESC, sourceName));
-
-            configBuilder.addPath(
-                    formSourceConfig(LILAC_DIR_CFG, sourceName), false, formSourceDescription(LILAC_DIR_DESC, sourceName));
-
-            configBuilder.addPath(
-                    formSourceConfig(CHORD_DIR_CFG, sourceName), false, formSourceDescription(CHORD_DIR_DESC, sourceName));
-
-            configBuilder.addPath(
-                    formSourceConfig(CUPPA_DIR_CFG, sourceName), false, formSourceDescription(CUPPA_DIR_DESC, sourceName));
+            addPathConfig(configBuilder, LINX_DIR_CFG, LINX_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, PURPLE_DIR_CFG, PURPLE_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, LILAC_DIR_CFG, LILAC_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, CHORD_DIR_CFG, CHORD_DIR_DESC, sourceName);
+            addPathConfig(configBuilder, CUPPA_DIR_CFG, CUPPA_DIR_DESC, sourceName);
 
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_VCF, sourceName), false,
@@ -179,102 +175,5 @@ public class FileSources
             directory = format("%s%s", sampleDir, toolDir);
 
         return checkAddDirSeparator(directory);
-    }
-
-    @Deprecated
-    private static String getDirectory(final String sampleDir, final String typeDir)
-    {
-        String directory = "";
-
-        if(sampleDir.isEmpty())
-            directory = typeDir;
-        else if(typeDir.isEmpty())
-            directory = sampleDir;
-        else
-            directory = format("%s%s", sampleDir, typeDir);
-
-        return checkAddDirSeparator(directory);
-    }
-
-    @Deprecated
-    public static FileSources fromConfig(final String sourceName, final String fileSourceStr)
-    {
-        String[] values = fileSourceStr.split(ITEM_DELIM, -1);
-
-        String sampleDir = "";
-
-        int itemIndex = 0;
-
-        if(values[itemIndex].startsWith(SAMPLE_DIR))
-        {
-            sampleDir = checkAddDirSeparator(values[itemIndex].split(SUB_ITEM_DELIM)[1]);
-            ++itemIndex;
-        }
-
-        // by default use the sample root directory and then default pipeline directory names per tool and mode
-        String linxDir = getDirectory(sampleDir, PipelineToolDirectories.LINX_SOMATIC_DIR);
-        String linxGermlineDir = getDirectory(sampleDir, PipelineToolDirectories.LINX_GERMLINE_DIR);
-        String purpleDir = getDirectory(sampleDir, PipelineToolDirectories.PURPLE_DIR);
-        String cuppaDir = getDirectory(sampleDir, PipelineToolDirectories.CUPPA_DIR);
-        String lilacDir = getDirectory(sampleDir, PipelineToolDirectories.LILAC_DIR);
-        String chordDir = getDirectory(sampleDir, PipelineToolDirectories.CHORD_DIR);
-        String somaticVcf = "";
-        String somaticUnfilteredVcf = "";
-
-        boolean requiresLiftover = false;
-
-        for(int i = itemIndex; i < values.length; ++i)
-        {
-            if(values[i].equals(REQUIRES_LIFTOVER))
-            {
-                requiresLiftover = true;
-                continue;
-            }
-
-            String[] itemStr = values[i].split(SUB_ITEM_DELIM);
-
-            if(itemStr.length != 2)
-                return null;
-
-            String type = itemStr[0];
-            String value = itemStr[1];
-
-            if(type.equals(LINX_DIR_CFG))
-            {
-                linxDir = getDirectory(sampleDir, value);
-            }
-            else if(type.equals(LINX_GERMLINE_DIR_CFG))
-            {
-                linxGermlineDir = getDirectory(sampleDir, value);
-            }
-            else if(type.equals(PURPLE_DIR_CFG))
-            {
-                purpleDir = getDirectory(sampleDir, value);
-            }
-            else if(type.equals(LILAC_DIR_CFG))
-            {
-                lilacDir = value;
-            }
-            else if(type.equals(CHORD_DIR_CFG))
-            {
-                chordDir = value;
-            }
-            else if(type.equals(CUPPA_DIR_CFG))
-            {
-                cuppaDir = value;
-            }
-            else if(type.equals(SOMATIC_VCF))
-            {
-                somaticVcf = value;
-            }
-            else if(type.equals(SOMATIC_UNFILTERED_VCF))
-            {
-                somaticUnfilteredVcf = value;
-            }
-        }
-
-        return new FileSources(
-                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir,
-                somaticVcf, somaticUnfilteredVcf, requiresLiftover);
     }
 }
