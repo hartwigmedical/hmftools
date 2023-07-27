@@ -7,10 +7,14 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -28,9 +32,14 @@ public class GenomeLiftoverCache
 
     private static final String NEG_ORIENT = "-";
 
-    public GenomeLiftoverCache()
+    public GenomeLiftoverCache() { this(false); }
+
+    public GenomeLiftoverCache(boolean loadDefaultMappings)
     {
         mMappings = Maps.newHashMap();
+
+        if(loadDefaultMappings)
+            loadDefaultResource();
     }
 
     public boolean hasMappings() { return !mMappings.isEmpty(); }
@@ -89,6 +98,13 @@ public class GenomeLiftoverCache
         }
 
         return false;
+    }
+
+    private void loadDefaultResource()
+    {
+        final InputStream inputStream = GenomeLiftoverCache.class.getResourceAsStream("/refgenome/hg37_38_mapping.tsv");
+        List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
+        loadFile(lines);
     }
 
     public boolean loadFile(final List<String> lines)

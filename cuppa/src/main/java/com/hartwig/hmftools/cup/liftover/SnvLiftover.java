@@ -43,13 +43,7 @@ public class SnvLiftover
         }
         mThreads = parseThreads(configBuilder);
 
-        mMappingCache = new GenomeLiftoverCache();
-
-        if(configBuilder.hasValue(LIFTOVER_MAPPING_FILE))
-        {
-            if(!mMappingCache.loadFile(configBuilder.getValue(LIFTOVER_MAPPING_FILE)))
-                System.exit(1);
-        }
+        mMappingCache = new GenomeLiftoverCache(true);
     }
 
     public void run()
