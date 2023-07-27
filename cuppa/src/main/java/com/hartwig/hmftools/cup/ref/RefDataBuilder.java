@@ -80,7 +80,11 @@ public class RefDataBuilder
             if(!classifierEnabled(classifier.categoryType(), mConfig.Categories))
                 continue;
 
-            classifier.buildRefDataSets();
+            if(!classifier.buildRefDataSets())
+            {
+                CUP_LOGGER.error("classifier({}) ref build failed", classifier.categoryType());
+                System.exit(1);
+            }
         }
 
         mConfig.NoiseAdjustments.writeNoiseAdjustments();

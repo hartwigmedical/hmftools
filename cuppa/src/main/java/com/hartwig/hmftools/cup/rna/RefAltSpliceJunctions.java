@@ -52,7 +52,8 @@ public class RefAltSpliceJunctions implements RefClassifier
         return config.Categories.contains(ALT_SJ) || !config.AltSjMatrixFile.isEmpty();
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         CUP_LOGGER.debug("loading RNA alternate splice-junction data");
 
@@ -61,13 +62,13 @@ public class RefAltSpliceJunctions implements RefClassifier
         final List<String> asjLocations = loadAltSjLocations(mConfig.AltSjMatrixFile);
 
         if(asjLocations == null)
-            return;
+            return false;
 
         int altSjSiteCount = asjLocations.size();
         final short[][] sampleFragCounts = loadSampleAltSjMatrixData(mConfig.AltSjMatrixFile, sampleIndexMap, altSjSiteCount);
 
         if(sampleFragCounts == null)
-            return;
+            return false;
 
         // alt-SJs in the columns, cancer types in the rows since the noise allocation expects this
         Matrix cancerFragCounts = new Matrix(mSampleDataCache.RefCancerSampleData.size(), altSjSiteCount);
@@ -116,6 +117,7 @@ public class RefAltSpliceJunctions implements RefClassifier
         CUP_LOGGER.debug("writing RNA alt-SJ cancer reference data");
 
         writeCancerAltSjMatrixData(cancerFragCounts, cancerTypes, asjLocations);
+        return true;
     }
 
     public static final int ASJ_LOCATION_COL_COUNT = 4;

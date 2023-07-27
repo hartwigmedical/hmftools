@@ -120,50 +120,21 @@ public class RefSampleTraits implements RefClassifier
         return config.Categories.contains(SAMPLE_TRAIT) || !config.CohortSampleTraitsFile.isEmpty() || config.DbAccess != null;
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         if(mConfig.CohortSampleTraitsFile.isEmpty() && mConfig.DbAccess == null && mConfig.PurpleDir.isEmpty())
-            return;
+        {
+            CUP_LOGGER.error("feature ref builder missing DB config or directories");
+            return false;
+        }
 
         CUP_LOGGER.info("building sample traits reference data");
 
         final Map<String,SampleTraitsData> sampleTraitsData = Maps.newHashMap();
 
-        if(!mConfig.CohortSampleTraitsFile.isEmpty())
-        {
-            final List<String> files = parseFileSet(mConfig.CohortSampleTraitsFile);
-            files.forEach(x -> loadRefPurityData(x, sampleTraitsData));
-        }
-        else if(mConfig.DbAccess != null)
-        {
-            loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleTraitsData);
-            sampleTraitsData.values().forEach(x -> assignSampleTraitsData(x));
-        }
-        else
-        {
-            // load from per-sample files
-            for(SampleData sample : mSampleDataCache.RefSampleDataList)
-            {
-                final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
-
-                try
-                {
-                    final PurityContext purityContext = PurityContextFile.read(purpleDataDir, sample.Id);
-
-                    // CUP_LOGGER.debug("sample({}) loading sample traits from purpleDir({})", sample.Id, purpleDataDir);
-
-                    SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityContext, 0);
-                    assignSampleTraitsData(traitsData);
-                    sampleTraitsData.put(sample.Id, traitsData);
-                }
-                catch(Exception e)
-                {
-                    CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                            sample.Id, purpleDataDir, e.toString());
-                    break;
-                }
-            }
-        }
+        if(!loadSampleData(sampleTraitsData))
+            return false;
 
         writeCohortData(sampleTraitsData);
 
@@ -199,6 +170,55 @@ public class RefSampleTraits implements RefClassifier
 
         closeBufferedWriter(mPercentilesWriter);
         closeBufferedWriter(mRatesWriter);
+        return true;
+    }
+
+    private boolean loadSampleData(final Map<String,SampleTraitsData> sampleTraitsData)
+    {
+        if(!mConfig.CohortSampleTraitsFile.isEmpty())
+        {
+            final List<String> files = parseFileSet(mConfig.CohortSampleTraitsFile);
+
+            for(String file : files)
+            {
+                if(!loadRefPurityData(file, sampleTraitsData))
+                    return false;
+            }
+        }
+        else if(mConfig.DbAccess != null)
+        {
+            if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleTraitsData))
+                return false;
+
+            sampleTraitsData.values().forEach(x -> assignSampleTraitsData(x));
+        }
+        else
+        {
+            // load from per-sample files
+            for(SampleData sample : mSampleDataCache.RefSampleDataList)
+            {
+                final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
+
+                try
+                {
+                    final PurityContext purityContext = PurityContextFile.read(purpleDataDir, sample.Id);
+
+                    // CUP_LOGGER.debug("sample({}) loading sample traits from purpleDir({})", sample.Id, purpleDataDir);
+
+                    SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityContext, 0);
+                    assignSampleTraitsData(traitsData);
+                    sampleTraitsData.put(sample.Id, traitsData);
+                }
+                catch(Exception e)
+                {
+                    CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
+                            sample.Id, purpleDataDir, e.toString());
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
     
     private void initialiseRefDataWriters()
@@ -370,11 +390,12 @@ public class RefSampleTraits implements RefClassifier
         }
     }
 
-    private void loadRefPurityData(final String filename, final Map<String,SampleTraitsData> sampleTraitsData)
+    private boolean loadRefPurityData(final String filename, final Map<String,SampleTraitsData> sampleTraitsData)
     {
         final Map<String,SampleTraitsData> traitsDataMap = Maps.newHashMap();
 
-        loadTraitsFromCohortFile(filename, traitsDataMap);
+        if(!loadTraitsFromCohortFile(filename, traitsDataMap))
+            return false;
 
         CUP_LOGGER.info("loaded {} sample traits records from file({})", traitsDataMap.size(), filename);
 
@@ -387,5 +408,7 @@ public class RefSampleTraits implements RefClassifier
                 assignSampleTraitsData(traits);
             }
         }
+
+        return true;
     }
 }

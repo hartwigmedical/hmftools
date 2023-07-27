@@ -85,7 +85,8 @@ public class RefGeneExpression implements RefClassifier
         return config.Categories.contains(GENE_EXP) || !config.GeneExpMatrixFile.isEmpty();
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         CUP_LOGGER.debug("loading RNA gene expression data");
 
@@ -102,7 +103,7 @@ public class RefGeneExpression implements RefClassifier
         if(mSampleGeneExpression == null)
         {
             CUP_LOGGER.warn("RNA gene expression data load failed");
-            return;
+            return false;
         }
 
         double[][] sampleData = mSampleGeneExpression.getData();
@@ -197,6 +198,7 @@ public class RefGeneExpression implements RefClassifier
         CUP_LOGGER.debug("writing RNA gene expression cohort data");
 
         writeMatrix(mCancerGeneExpression, mCancerTypes, REF_FILE_GENE_EXP_CANCER);
+        return true;
     }
 
     private void loadRefRnaGeneExpression(final String filename)

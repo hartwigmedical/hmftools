@@ -135,7 +135,8 @@ public class RefSomatics implements RefClassifier
         configBuilder.addInteger(GEN_POS_MAX_SAMPLE_COUNT_CFG, GEN_POS_MAX_SAMPLE_COUNT_DESC, GEN_POS_MAX_SAMPLE_COUNT);
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         CUP_LOGGER.info("building SNV and signatures reference data");
 
@@ -156,7 +157,8 @@ public class RefSomatics implements RefClassifier
             mSnv96Counts = loadReferenceSnvCounts(mConfig.Snv96MatrixFile, mSnv96CountsIndex, MATRIX_TYPE_SNV_96);
             mGenPosCounts = loadReferenceSnvCounts(mConfig.GenPosMatrixFile, mGenPosCountsIndex, MATRIX_TYPE_GEN_POS);
 
-            retrieveMissingSampleCounts();
+            if(!retrieveMissingSampleCounts())
+                return false;
         }
 
         // always exclude Y, if not already when the counts were made
@@ -200,6 +202,7 @@ public class RefSomatics implements RefClassifier
         writeCancerGenPosMatrix(cancerGenPosMatrix, cancerTypes, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS, DEC_3_FORMAT);
 
         closeBufferedWriter(mRefDataWriter);
+        return true;
     }
 
     private Matrix loadReferenceSnvCounts(final String refFilename, final Map<String,Integer> sampleCountsIndex, final String type)
@@ -270,7 +273,7 @@ public class RefSomatics implements RefClassifier
         return refMatrix;
     }
 
-    private void retrieveMissingSampleCounts()
+    private boolean retrieveMissingSampleCounts()
     {
         // returns true if both types of counts are already exactly accounted for in the loaded matrix data
         final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
@@ -279,7 +282,7 @@ public class RefSomatics implements RefClassifier
                 .filter(x -> !mSnv96CountsIndex.containsKey(x) || !mGenPosCountsIndex.containsKey(x)).count();
 
         if(missingSamples == 0)
-            return;
+            return true;
 
         int refSampleCount = refSampleIds.size();
         CUP_LOGGER.debug("retrieving SNV data for {} samples from refSampleCount({})", missingSamples, refSampleCount);
@@ -354,6 +357,8 @@ public class RefSomatics implements RefClassifier
                 mGenPosCounts.setRow(refSampleIndex, mPosFrequencies.getCounts());
             }
         }
+
+        return true;
     }
 
     private void buildSignaturePercentiles()

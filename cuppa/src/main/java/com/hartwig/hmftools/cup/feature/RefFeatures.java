@@ -69,15 +69,21 @@ public class RefFeatures implements RefClassifier
         return config.DbAccess != null || !config.CohortFeaturesFile.isEmpty() || !config.LinxDir.isEmpty();
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         if(mConfig.CohortFeaturesFile.isEmpty() && mConfig.DbAccess == null && mConfig.LinxDir.isEmpty())
-            return;
+        {
+            CUP_LOGGER.error("feature ref builder missing DB config or directories");
+            return false;
+        }
 
         CUP_LOGGER.info("building feature reference data");
 
         final Map<String,List<SampleFeatureData>> sampleFeaturesMap = Maps.newHashMap();
-        loadSampleData(sampleFeaturesMap);
+
+        if(!loadSampleData(sampleFeaturesMap))
+            return false;
 
         writeCohortData(sampleFeaturesMap);
 
@@ -93,16 +99,23 @@ public class RefFeatures implements RefClassifier
         writeFeaturePrevalenceFile(cancerFeatureCounts);
 
         writeAverageDriversFile(driversPerSampleMap, panCancerDriversPerSample);
+
+        return true;
     }
 
-    private void loadSampleData(final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
+    private boolean loadSampleData(final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
         if(!mConfig.CohortFeaturesFile.isEmpty())
         {
             final Map<String,List<SampleFeatureData>> allSampleFeatures = Maps.newHashMap();
 
-            final List<String> files = parseFileSet(mConfig.CohortFeaturesFile);
-            files.forEach(x -> loadFeaturesFromCohortFile(x, allSampleFeatures));
+            List<String> files = parseFileSet(mConfig.CohortFeaturesFile);
+
+            for(String file : files)
+            {
+                if(!loadFeaturesFromCohortFile(file, allSampleFeatures))
+                    return false;
+            }
 
             // extract only reference sample data
             for(Map.Entry<String,List<SampleFeatureData>> entry : allSampleFeatures.entrySet())
@@ -117,7 +130,8 @@ public class RefFeatures implements RefClassifier
         }
         else if(mConfig.DbAccess != null)
         {
-            loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleFeaturesMap);
+            if(!loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleFeaturesMap))
+                return false;
         }
         else
         {
@@ -131,7 +145,7 @@ public class RefFeatures implements RefClassifier
                 final String virusDataDir = formSamplePath(mConfig.VirusDir, sample.Id);
 
                 if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, virusDataDir, sampleFeaturesMap))
-                    break;
+                    return false;
 
                 if(i > 0 && (i % 100) == 0)
                 {
@@ -139,6 +153,8 @@ public class RefFeatures implements RefClassifier
                 }
             }
         }
+
+        return true;
     }
 
     private void assignFeatures(
