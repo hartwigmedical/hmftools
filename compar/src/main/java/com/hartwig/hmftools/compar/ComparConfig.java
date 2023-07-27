@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.L
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -171,14 +170,13 @@ public class ComparConfig
         {
             loadDatabaseSources(configBuilder);
         }
-        else if(configBuilder.hasValue(formConfigSourceStr(FILE_SOURCE, REF_SOURCE)) && configBuilder.hasValue(formConfigSourceStr(FILE_SOURCE, NEW_SOURCE)))
-        {
-            loadFileSources(configBuilder);
-        }
         else
         {
-            CMP_LOGGER.error("missing DB or file source ref and new config");
-            mIsValid = false;
+            if(!loadFileSources(configBuilder))
+            {
+                mIsValid = false;
+                CMP_LOGGER.error("missing DB or file source ref and new config");
+            }
         }
 
         Thresholds = new DiffThresholds();
@@ -362,25 +360,22 @@ public class ComparConfig
         }
     }
 
-    private void loadFileSources(final ConfigBuilder configBuilder)
+    private boolean loadFileSources(final ConfigBuilder configBuilder)
     {
-        // form: sample_dir=pipe_v1;/path_to_sample_dir/;linx_dir=linx;purple_dir=purple etc OR
-        // form: linx_dir=pipe_v1;/path_to_linx_data/;purple_dir/path_to_purple_data/ etc OR
-
         for(String sourceName : SourceNames)
         {
-            String fileConfigValue =  configBuilder.getValue(formConfigSourceStr(FILE_SOURCE, sourceName));
-
-            FileSources fileSources = fromConfig(sourceName, fileConfigValue);
+            FileSources fileSources = fromConfig(sourceName, configBuilder);
 
             if(fileSources == null)
             {
                 FileSources.clear();
-                return;
+                return false;
             }
 
             FileSources.put(fileSources.Source, fileSources);
         }
+
+        return true;
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -400,8 +395,9 @@ public class ComparConfig
 
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, REF_SOURCE), false, "Database configurations for reference data");
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, NEW_SOURCE), false, "Database configurations for new data");
-        configBuilder.addConfigItem(formConfigSourceStr(FILE_SOURCE, REF_SOURCE), false, "File locations for reference data");
-        configBuilder.addConfigItem(formConfigSourceStr(FILE_SOURCE, NEW_SOURCE), false, "File locations for new data");
+
+        com.hartwig.hmftools.compar.FileSources.registerConfig(configBuilder);
+
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
         configBuilder.addConfigItem(LIFTOVER_MAPPING_FILE, LIFTOVER_MAPPING_FILE_DESC);

@@ -9,8 +9,8 @@ java -jar compar.jar \
    -sample SAMPLE_T \
    -categories ALL \
    -match_level REPORTABLE \
-   -file_source_ref="sample_dir=/path_to_sample_data/run_01/"
-   -file_source_new="sample_dir=/path_to_sample_data/run_02/"
+   -sample_dir_ref /path_to_sample_data/run_01/
+   -sample_dir_new /path_to_sample_data/run_02/
    -output_dir /output_dir/ 
 ```
 
@@ -28,9 +28,12 @@ sample | Tumor sample ID, OR
 sample_id_file | File with column header SampleId and then list of sample IDs, optional Ref and New sample mappings (see example)
 categories | 'ALL', otherwise specify a comma-separated list from PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, GERMLINE_DELETION, GERMLINE_SV, FUSION, DISRUPTION, CUPPA, CHORD, LILAC
 match_level | REPORTABLE (default) or DETAILED
-file_source_ref & file_source_new | File locations for ref and new sample data - see format below
+sample_data_ref & sample_data_new | Sample root directory for pipeline output
+TOOL_dir_ref & TOOL_dir_new ** | Tool path overrides - each pipeline tool directory eg 'linx_dir_ref' - relative path to 'sample_dir' if specified, otherwise absolute path
 db_source_ref & db_source_new |  DB connection details for ref and new sample data - see format below
 output_dir | Path for output file
+
+** set of tools are: linx, linx_germline, purple, chord, cuppa and lilac
 
 ### Optional configuration
 
@@ -49,9 +52,10 @@ COLO829T,COLO829_Ref,COLO829T_New
 ```
 
 ### File Sourced Data
-Specify 'file_source_ref' and 'file_source_new' config with a comma-separated list paths to each of directories containing pipeline output files.
+Typically set the 'sample_dir_ref' and 'sample_dir_new' to the REF and NEW sample root directories, which then contain each tool's 
+output in a sub-directory as per the standard HMF pipeline.
 
-Set the path for each category of pipeline data being compared, or set 'sample_dir' as a default or some or all pipeline output files are in a single directory.
+Specify one or more tool directories to override the pipeline default paths.
 
 Category | Config Path Id
 ---|---
