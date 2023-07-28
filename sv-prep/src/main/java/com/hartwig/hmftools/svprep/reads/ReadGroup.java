@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.svprep.reads;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.svprep.SpanningReadCache.formChromosomePartition;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.SOFT_CLIP_LOW_BASE_QUAL;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
@@ -8,6 +11,7 @@ import static com.hartwig.hmftools.svprep.reads.ReadType.SUPPORT;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import com.beust.jcommander.internal.Nullable;
 import com.beust.jcommander.internal.Sets;
@@ -24,8 +28,20 @@ public class ReadGroup
     private ReadGroupStatus mStatus;
     private final Set<String> mRemotePartitions; // given that supplementaries are no longer included, this is now 0 or 1 entries
     private int mExpectedReadCount;
-    private Set<Integer> mJunctionPositions;
+    private List<JunctionPosition> mJunctionPositions;
     private boolean mHasRemoteJunctionReads;
+
+    private class JunctionPosition
+    {
+        public final int Position;
+        public final byte Orientation;
+
+        public JunctionPosition(final int position, final byte orientation)
+        {
+            Position = position;
+            Orientation = orientation;
+        }
+    }
 
     public ReadGroup(final ReadRecord read, @Nullable final String readId)
     {
@@ -55,22 +71,37 @@ public class ReadGroup
     public int expectedReadCount() { return mExpectedReadCount; }
     public Set<String> remotePartitions() { return mRemotePartitions; }
 
-    public Set<Integer> junctionPositions() { return mJunctionPositions; }
+    public String junctionPositionsStr()
+    {
+        if(mJunctionPositions == null || mJunctionPositions.isEmpty())
+            return "";
+
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+        mJunctionPositions.forEach(x -> sj.add(format("%d:%d", x.Position, x.Orientation)));
+        return sj.toString();
+    }
 
     public void addRead(final ReadRecord read)
     {
         mReads.add(read);
     }
 
-    public boolean hasJunctionPosition(int position) { return mJunctionPositions != null && mJunctionPositions.contains(position); }
+    public boolean hasJunctionPosition(final JunctionData junctionData)
+    {
+        return mJunctionPositions != null
+                && mJunctionPositions.stream().anyMatch(x -> x.Position == junctionData.Position && x.Orientation == junctionData.Orientation);
+    }
+
+    public boolean noRegisteredfJunctionPositions() { return mJunctionPositions == null; }
     public boolean hasJunctionPositions() { return mJunctionPositions != null && !mJunctionPositions.isEmpty(); }
 
-    public void addJunctionPosition(int position)
+    public void addJunctionPosition(final JunctionData junctionData)
     {
         if(mJunctionPositions == null)
-            mJunctionPositions = Sets.newHashSet();
+            mJunctionPositions = Lists.newArrayList();
 
-        mJunctionPositions.add(position);
+        if(!hasJunctionPosition(junctionData))
+            mJunctionPositions.add(new JunctionPosition(junctionData.Position, junctionData.Orientation));
     }
 
     public void clearJunctionPositions()
@@ -216,7 +247,7 @@ public class ReadGroup
 
     public String toString()
     {
-        return String.format("reads(%d) initRead(%s:%d-%d) id(%s) partitions(%d) state(%s)",
+        return format("reads(%d) initRead(%s:%d-%d) id(%s) partitions(%d) state(%s)",
                 mReads.size(), mReads.get(0).Chromosome, mReads.get(0).start(), mReads.get(0).end(), id(), partitionCount(), mStatus);
     }
 

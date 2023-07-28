@@ -105,14 +105,7 @@ public class ResultsWriter
 
             writeBamRecords(readGroup);
 
-            String junctionPosStr = "";
-
-            if(readGroup.junctionPositions() != null)
-            {
-                StringJoiner sjPos = new StringJoiner(ITEM_DELIM);
-                readGroup.junctionPositions().forEach(x -> sjPos.add(String.valueOf(x)));
-                junctionPosStr = sjPos.toString();
-            }
+            String junctionPosStr = readGroup.junctionPositionsStr();
 
             for(ReadRecord read : readGroup.reads())
             {
