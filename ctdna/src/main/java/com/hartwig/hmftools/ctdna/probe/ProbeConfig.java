@@ -49,6 +49,7 @@ public class ProbeConfig
     public final int ProbeLength;
     public final int NonReportableSvCount;
     public final int SubclonalCount;
+    public final int SampleBatchCount;
     public final boolean WriteAll;
     public final boolean AllowMissing;
 
@@ -67,6 +68,7 @@ public class ProbeConfig
     private static final String SUBCLONAL_COUNT = "subclonal_count";
     private static final String WRITE_ALL = "write_all";
     private static final String ALLOW_MISSING = "allow_missing";
+    private static final String SAMPLE_BATCH_COUNT = "sample_batch_count";
 
     private static final int DEFAULT_PROBE_COUNT = 500;
     private static final double DEFAULT_VAF_MIN = 0.05;
@@ -114,6 +116,7 @@ public class ProbeConfig
         ProbeLength = configBuilder.getInteger(PROBE_LENGTH);
         NonReportableSvCount = configBuilder.getInteger(NON_REPORTABLE_SV_COUNT);
         SubclonalCount = configBuilder.getInteger(SUBCLONAL_COUNT);
+        SampleBatchCount = configBuilder.getInteger(SAMPLE_BATCH_COUNT);
         VafMin = configBuilder.getDecimal(VAF_THRESHOLD);
         FragmentCountMin = configBuilder.getInteger(FRAG_COUNT_THRESHOLD);
         FragmentCountOtherMutationMin = configBuilder.getInteger(FRAG_COUNT_OTHER_MUT_THRESHOLD);
@@ -182,6 +185,7 @@ public class ProbeConfig
         RefGenVersion = V37;
         WriteAll = false;
         AllowMissing = false;
+        SampleBatchCount = 1;
         Threads = 1;
     }
 
@@ -205,6 +209,7 @@ public class ProbeConfig
 
         configBuilder.addInteger(PROBE_COUNT, "Probe count", DEFAULT_PROBE_COUNT);
         configBuilder.addInteger(PROBE_LENGTH, "Probe length", DEFAULT_PROBE_LENGTH);
+        configBuilder.addInteger(SAMPLE_BATCH_COUNT, "Sample batching count", 1);
 
         configBuilder.addInteger(NON_REPORTABLE_SV_COUNT,"Max count of non-reportable SVs", 0);
         configBuilder.addInteger(SUBCLONAL_COUNT, "Max count of subclonal mutations", 0);

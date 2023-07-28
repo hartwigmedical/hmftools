@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.ctdna.probe;
 
 import static java.lang.Math.abs;
+import static java.lang.String.format;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import com.google.common.collect.Sets;
 
 public class ProximateLocations
 {
-    private final Map<String, List<Location>> mRegisteredLocations;
+    private final Map<String,List<Location>> mRegisteredLocations;
 
     private final byte NO_ORIENTATION = 0;
 
@@ -85,5 +86,7 @@ public class ProximateLocations
             Orientations = Sets.newHashSet();
             Orientations.add(orientation);
         }
+
+        public String toString() { return format("%d orients(%d)", Position, Orientations.size()); }
     }
 }
