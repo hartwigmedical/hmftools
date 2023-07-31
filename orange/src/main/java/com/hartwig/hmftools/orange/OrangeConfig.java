@@ -19,6 +19,7 @@ import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SAGE_
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SAGE_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SIGS_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.VIRUS_BREAKEND_DIR;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.VIRUS_INTERPRETER_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
@@ -110,7 +111,6 @@ public interface OrangeConfig
 
     static void registerConfig(final ConfigBuilder configBuilder)
     {
-
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
                 false,
@@ -143,14 +143,14 @@ public interface OrangeConfig
         configBuilder.addPath(PIPELINE_SAMPLE_ROOT_DIR, false, PIPELINE_SAMPLE_ROOT_DESC);
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
 
-        configBuilder.addPath(SAGE_DIR_CFG, true, SAGE_DIR_DESC);
+        configBuilder.addPath(SAGE_DIR_CFG, false, SAGE_DIR_DESC);
         configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);
-        configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
-        configBuilder.addPath(PURPLE_PLOT_DIR_CFG, true, PURPLE_PLOT_DIR_DESC);
-        configBuilder.addPath(LINX_DIR_CFG, true, LINX_DIR_DESC);
-        configBuilder.addPath(LINX_PLOT_DIR_CFG, true, LINX_PLOT_DIR_DESC);
+        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
+        configBuilder.addPath(PURPLE_PLOT_DIR_CFG, false, PURPLE_PLOT_DIR_DESC);
+        configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
+        configBuilder.addPath(LINX_PLOT_DIR_CFG, false, LINX_PLOT_DIR_DESC);
         configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
-        configBuilder.addPath(LILAC_DIR_CFG, true, LILAC_DIR_DESC);
+        configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
         configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
         configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
         configBuilder.addPath(CUPPA_DIR_CFG, false, CUPPA_DIR_DESC);
@@ -352,7 +352,8 @@ public interface OrangeConfig
         String lilacCoverage = Config.fileIfExists(LilacAllele.generateFilename(lilacDir, tumorSampleId));
         String lilacQc = Config.fileIfExists(LilacQcData.generateFilename(lilacDir, tumorSampleId));
 
-        String virusDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, VIRUS_DIR_CFG, VIRUS_BREAKEND_DIR);
+        String virusDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
+
         String virusAnnotations =
                 virusDir != null ? Config.fileIfExists(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)) : null;
 
