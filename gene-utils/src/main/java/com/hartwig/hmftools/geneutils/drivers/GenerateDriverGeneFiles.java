@@ -41,6 +41,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.sv.SvCommonUtils;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -98,7 +99,7 @@ public class GenerateDriverGeneFiles
         return format("%s/%s", outputDir, refGenomeVersion.addVersionToFilePath(filename));
     }
 
-    public void process(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes) throws IOException
+    public void process(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes)
     {
         Collections.sort(driverGenes);
         writeDriverGeneFiles(refGenomeVersion, driverGenes);
@@ -183,6 +184,37 @@ public class GenerateDriverGeneFiles
                 // merge any overlap with the previous gene region
                 CodingRegion lastRegion = !panelRegions.isEmpty() ? panelRegions.get(panelRegions.size() - 1) : null;
 
+                if(!transcriptRegions.isEmpty())
+                {
+                    int regionsRemoved = 0;
+
+                    // check for overlaps with the previous region
+                    for(CodingRegion newRegion : transcriptRegions)
+                    {
+                        if(lastRegion != null && lastRegion.Chromosome.equals(chromosomeStr))
+                        {
+                            if(newRegion.start() <= lastRegion.end())
+                            {
+                                GU_LOGGER.trace("gene({}) merged region({}) with previous({})",
+                                        geneData.GeneName, newRegion, lastRegion);
+
+                                lastRegion.setEnd(newRegion.end());
+                                ++regionsRemoved;
+                                continue;
+                            }
+                        }
+
+                        panelRegions.add(newRegion);
+                        lastRegion = newRegion;
+                    }
+
+                    if(regionsRemoved > 0)
+                    {
+                        GU_LOGGER.debug("gene({}) merged {} regions from overlaps", geneData.GeneName, regionsRemoved);
+                    }
+                }
+
+                /*
                 if(!transcriptRegions.isEmpty() && lastRegion != null && lastRegion.Chromosome.equals(chromosomeStr))
                 {
                     int newLastRegionEnd = 0;
@@ -212,6 +244,7 @@ public class GenerateDriverGeneFiles
                 }
 
                 panelRegions.addAll(transcriptRegions);
+                */
             }
         }
 
