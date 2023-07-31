@@ -24,4 +24,6 @@ public final class PipelineToolDirectories
     public static final String TEAL_DIR = "teal";
     public static final String VIRUS_BREAKEND_DIR = "virusbreakend";
     public static final String VIRUS_INTERPRETER_DIR = "virusintrprtr";
+    public static final String METRICS_DIR = "bam_metrics";
+    public static final String FLAGSTAT_DIR = "flagstat";
 }

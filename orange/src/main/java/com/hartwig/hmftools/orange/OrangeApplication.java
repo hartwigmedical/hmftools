@@ -27,11 +27,7 @@ public class OrangeApplication
         ConfigBuilder configBuilder = new ConfigBuilder();
         OrangeConfig.registerConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
         OrangeConfig config = OrangeConfig.createConfig(configBuilder);
         new OrangeApplication(config).run();
