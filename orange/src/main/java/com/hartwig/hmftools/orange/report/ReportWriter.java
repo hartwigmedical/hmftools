@@ -24,15 +24,12 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.property.AreaBreakType;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ReportWriter
 {
-    private static final Logger LOGGER = LogManager.getLogger(ReportWriter.class);
-
     private final boolean writeToDisk;
     @Nullable
     private final String outputDir;

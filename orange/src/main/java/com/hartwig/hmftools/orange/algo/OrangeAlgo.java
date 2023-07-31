@@ -91,15 +91,12 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class OrangeAlgo
 {
-    private static final Logger LOGGER = LogManager.getLogger(OrangeAlgo.class);
-
     @NotNull
     private final DoidEntry doidEntry;
     @NotNull

@@ -1,13 +1,10 @@
 package com.hartwig.hmftools.orange.algo.plot;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 public class DummyPlotManager implements PlotManager
 {
-    private static final Logger LOGGER = LogManager.getLogger(DummyPlotManager.class);
-
     @Override
     public void createPlotDirectory()
     {

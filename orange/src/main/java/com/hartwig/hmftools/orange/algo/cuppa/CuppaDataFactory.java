@@ -18,19 +18,12 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class CuppaDataFactory
 {
-    private static final Logger LOGGER = LogManager.getLogger(CuppaDataFactory.class);
-
-    private CuppaDataFactory()
-    {
-    }
-
     @NotNull
     public static CuppaData create(@NotNull List<CuppaDataFile> entries)
     {

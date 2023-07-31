@@ -32,15 +32,12 @@ import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class GermlineConversion
 {
-    private static final Logger LOGGER = LogManager.getLogger(GermlineConversion.class);
-
     @NotNull
     public static OrangeRecord convertGermlineToSomatic(@NotNull OrangeRecord report)
     {

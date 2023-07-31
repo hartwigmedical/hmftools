@@ -17,10 +17,6 @@ final class ExpressionSelector
     private static final double HIGH_EXPRESSION_PERCENTILE_CUTOFF = 0.9;
     private static final double LOW_EXPRESSION_PERCENTILE_CUTOFF = 0.05;
 
-    private ExpressionSelector()
-    {
-    }
-
     @NotNull
     public static List<GeneExpression> selectHighExpressionGenes(@NotNull List<GeneExpression> expressions,
             @NotNull List<DriverGene> driverGenes)

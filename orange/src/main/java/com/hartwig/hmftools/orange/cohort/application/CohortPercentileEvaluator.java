@@ -31,14 +31,11 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
 public class CohortPercentileEvaluator
 {
-    private static final Logger LOGGER = LogManager.getLogger(CohortPercentileEvaluator.class);
-
     private static final String RESOURCE_DIR = "/data/resources/public";
     private static final String DOID_JSON = RESOURCE_DIR + "/disease_ontology/doid.json";
     private static final String COHORT_MAPPING_TSV = RESOURCE_DIR + "/orange/cohort_mapping.tsv";

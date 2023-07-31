@@ -9,15 +9,12 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class Expressions
 {
-    private static final Logger LOGGER = LogManager.getLogger(Expressions.class);
-
     @Nullable
     public static GeneExpression findByGene(@NotNull List<GeneExpression> expressions, @NotNull String geneToFind)
     {

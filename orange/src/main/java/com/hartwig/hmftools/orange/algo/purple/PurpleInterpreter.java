@@ -47,16 +47,13 @@ import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PurpleInterpreter
 {
-    private static final Logger LOGGER = LogManager.getLogger(PurpleInterpreter.class);
-
     private static final int MAX_LENGTH_FOR_IMPLIED_DELS = 1500;
     @NotNull
     private final PurpleVariantFactory purpleVariantFactory;

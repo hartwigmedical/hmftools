@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class OrangeApplication
 {
-    private static final Logger LOGGER = LogManager.getLogger(OrangeApplication.class);
+    public static final Logger LOGGER = LogManager.getLogger(OrangeApplication.class);
 
     private static final String APPLICATION = "ORANGE";
     public static final String VERSION = OrangeApplication.class.getPackage().getImplementationVersion();

@@ -14,14 +14,11 @@ import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.IsofoxConversion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
 public class IsofoxInterpreter
 {
-    private static final Logger LOGGER = LogManager.getLogger(IsofoxInterpreter.class);
-
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull

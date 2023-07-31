@@ -25,14 +25,11 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
 public class OrangeCohortDataGenerator
 {
-    private static final Logger LOGGER = LogManager.getLogger(OrangeCohortDataGenerator.class);
-
     private static final String APPLICATION = "ORANGE Cohort Data Generator";
     private static final String VERSION = OrangeCohortDataGenerator.class.getPackage().getImplementationVersion();
 

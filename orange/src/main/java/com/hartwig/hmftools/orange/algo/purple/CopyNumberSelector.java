@@ -14,15 +14,13 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 final class CopyNumberSelector
 {
-    private static final Logger LOGGER = LogManager.getLogger(CopyNumberSelector.class);
-
     @NotNull
     public static List<PurpleGainLoss> selectNearReportableSomaticGains(@NotNull List<GeneCopyNumber> allGeneCopyNumbers, double ploidy,
             @NotNull List<PurpleGainLoss> reportableGainsLosses, @NotNull List<DriverGene> driverGenes)

@@ -11,15 +11,12 @@ import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CohortPercentilesModel
 {
-    private static final Logger LOGGER = LogManager.getLogger(CohortPercentilesModel.class);
-
     @NotNull
     private final CohortMapper mapper;
     @NotNull

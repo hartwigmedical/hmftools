@@ -11,15 +11,12 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PaveAlgo
 {
-    private static final Logger LOGGER = LogManager.getLogger(PaveAlgo.class);
-
     private static final int MAX_SPLICE_DISTANCE = 8;
 
     @NotNull

@@ -15,8 +15,7 @@ import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.orange.util.Config;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,8 +24,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface OrangeRNAConfig
 {
-    Logger LOGGER = LogManager.getLogger(OrangeRNAConfig.class);
-
     String RNA_SAMPLE_ID = "rna_sample_id";
 
     String ISOFOX_GENE_DISTRIBUTION_CSV = "isofox_gene_distribution";

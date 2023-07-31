@@ -13,15 +13,12 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.doid.DoidParents;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class DoidCohortMapper implements CohortMapper
 {
-    private static final Logger LOGGER = LogManager.getLogger(DoidCohortMapper.class);
-
     @NotNull
     private final DoidParents doidParentModel;
     @NotNull

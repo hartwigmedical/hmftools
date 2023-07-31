@@ -9,8 +9,7 @@ import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.Record;
@@ -18,7 +17,6 @@ import org.jooq.Result;
 
 public final class SampleQuery
 {
-    private static final Logger LOGGER = LogManager.getLogger(SampleQuery.class);
     private static final String DOID_SEPARATOR = ",";
 
     @NotNull

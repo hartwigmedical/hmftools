@@ -10,14 +10,11 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 
 import org.apache.commons.compress.utils.Lists;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
 public final class VariantDedup
 {
-    private static final Logger LOGGER = LogManager.getLogger(VariantDedup.class);
-
     private static final Set<PurpleVariantEffect> PHASED_EFFECTS =
             Sets.newHashSet(PurpleVariantEffect.PHASED_INFRAME_DELETION, PurpleVariantEffect.PHASED_INFRAME_INSERTION,
                     PurpleVariantEffect.PHASED_MISSENSE, PurpleVariantEffect.PHASED_SYNONYMOUS);
