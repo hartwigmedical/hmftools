@@ -14,15 +14,14 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class SomaticVariantTable {
-
-    private SomaticVariantTable() {
-    }
-
+public final class SomaticVariantTable
+{
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<VariantEntry> variants,
-            @NotNull ReportResources reportResources) {
-        if (variants.isEmpty()) {
+            @NotNull ReportResources reportResources)
+    {
+        if(variants.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -33,7 +32,8 @@ public final class SomaticVariantTable {
                         cells.createHeader("Biallelic"), cells.createHeader("Hotspot"), cells.createHeader("DL"), cells.createHeader("CL"),
                         cells.createHeader("Phase ID"), cells.createHeader("RNA Depth") });
 
-        for (VariantEntry variant : Variants.sort(variants)) {
+        for(VariantEntry variant : Variants.sort(variants))
+        {
             table.addCell(cells.createContent(Variants.variantField(variant)));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));

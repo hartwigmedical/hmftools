@@ -12,17 +12,16 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class BreakendEntryFactory {
-
+public final class BreakendEntryFactory
+{
     private static final Logger LOGGER = LogManager.getLogger(BreakendEntryFactory.class);
 
-    private BreakendEntryFactory() {
-    }
-
     @NotNull
-    public static List<BreakendEntry> create(@NotNull List<LinxBreakend> breakends, @NotNull List<LinxSvAnnotation> variants) {
+    public static List<BreakendEntry> create(@NotNull List<LinxBreakend> breakends, @NotNull List<LinxSvAnnotation> variants)
+    {
         List<BreakendEntry> entries = Lists.newArrayList();
-        for (LinxBreakend breakend : breakends) {
+        for(LinxBreakend breakend : breakends)
+        {
             entries.add(ImmutableBreakendEntry.builder()
                     .location(breakend.chromosome() + breakend.chrBand())
                     .gene(breakend.gene())
@@ -40,19 +39,27 @@ public final class BreakendEntryFactory {
 
     @NotNull
     @VisibleForTesting
-    static String range(@NotNull LinxBreakend breakend) {
+    static String range(@NotNull LinxBreakend breakend)
+    {
         String exonRange = null;
-        if (breakend.exonUp() > 0) {
-            if (breakend.exonUp() == breakend.exonDown()) {
+        if(breakend.exonUp() > 0)
+        {
+            if(breakend.exonUp() == breakend.exonDown())
+            {
                 exonRange = String.format("Exon %d", breakend.exonUp());
-            } else if (breakend.exonDown() - breakend.exonUp() == 1) {
+            }
+            else if(breakend.exonDown() - breakend.exonUp() == 1)
+            {
                 exonRange = String.format("Intron %d", breakend.exonUp());
             }
-        } else if (breakend.exonUp() == 0 && (breakend.exonDown() == 1 || breakend.exonDown() == 2)) {
+        }
+        else if(breakend.exonUp() == 0 && (breakend.exonDown() == 1 || breakend.exonDown() == 2))
+        {
             exonRange = "Promoter Region";
         }
 
-        if (exonRange == null) {
+        if(exonRange == null)
+        {
             LOGGER.warn("Could not format range for breakend: {}", breakend);
             return Strings.EMPTY;
         }
@@ -60,9 +67,12 @@ public final class BreakendEntryFactory {
         return exonRange + " " + breakend.geneOrientation();
     }
 
-    private static int determineClusterId(@NotNull LinxBreakend breakend, @NotNull List<LinxSvAnnotation> variants) {
-        for (LinxSvAnnotation variant : variants) {
-            if (variant.svId() == breakend.svId()) {
+    private static int determineClusterId(@NotNull LinxBreakend breakend, @NotNull List<LinxSvAnnotation> variants)
+    {
+        for(LinxSvAnnotation variant : variants)
+        {
+            if(variant.svId() == breakend.svId())
+            {
                 return variant.clusterId();
             }
         }

@@ -23,15 +23,17 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class CuppaDataFactory {
-
+public final class CuppaDataFactory
+{
     private static final Logger LOGGER = LogManager.getLogger(CuppaDataFactory.class);
 
-    private CuppaDataFactory() {
+    private CuppaDataFactory()
+    {
     }
 
     @NotNull
-    public static CuppaData create(@NotNull List<CuppaDataFile> entries) {
+    public static CuppaData create(@NotNull List<CuppaDataFile> entries)
+    {
         return ImmutableCuppaData.builder()
                 .predictions(extractPredictions(entries))
                 .simpleDups32To200B(safeInt(entries, SvDataType.SIMPLE_DUP_32B_200B))
@@ -42,9 +44,11 @@ public final class CuppaDataFactory {
     }
 
     @NotNull
-    private static List<CuppaPrediction> extractPredictions(@NotNull List<CuppaDataFile> files) {
+    private static List<CuppaPrediction> extractPredictions(@NotNull List<CuppaDataFile> files)
+    {
         String bestCombinedType = determineBestCombinedDataType(files);
-        if (bestCombinedType == null) {
+        if(bestCombinedType == null)
+        {
             LOGGER.warn("Could not find a valid combined data type amongst cuppa entries");
             return Lists.newArrayList();
         }
@@ -60,7 +64,8 @@ public final class CuppaDataFactory {
                         ClassifierType.EXPRESSION_PAIRWISE)
                 .collect(Collectors.toMap(classifier -> classifier, classifier -> predictionsForClassifier(filesByType, classifier)));
 
-        return filesByType.get(bestCombinedType).CancerTypeValues.entrySet().stream().map(cancerPrediction -> {
+        return filesByType.get(bestCombinedType).CancerTypeValues.entrySet().stream().map(cancerPrediction ->
+        {
             String cancerType = cancerPrediction.getKey();
             return ImmutableCuppaPrediction.builder()
                     .cancerType(cancerType)
@@ -76,20 +81,25 @@ public final class CuppaDataFactory {
 
     @NotNull
     private static Map<String, Double> predictionsForClassifier(@NotNull Map<String, CuppaDataFile> filesByType,
-            @NotNull ClassifierType classifierType) {
+            @NotNull ClassifierType classifierType)
+    {
         CuppaDataFile cuppaDataFile = filesByType.get(classifierType.toString());
         return cuppaDataFile == null ? Collections.emptyMap() : cuppaDataFile.CancerTypeValues;
     }
 
     @Nullable
-    private static String determineBestCombinedDataType(@NotNull List<CuppaDataFile> entries) {
+    private static String determineBestCombinedDataType(@NotNull List<CuppaDataFile> entries)
+    {
         boolean hasDnaCombinedType = false;
         boolean hasRnaCombinedType = false;
         boolean hasOverallCombinedType = false;
 
-        for (CuppaDataFile entry : entries) {
-            if (entry.Category == CategoryType.COMBINED) {
-                switch (entry.DataType) {
+        for(CuppaDataFile entry : entries)
+        {
+            if(entry.Category == CategoryType.COMBINED)
+            {
+                switch(entry.DataType)
+                {
                     case DataTypes.DATA_TYPE_COMBINED:
                         hasOverallCombinedType = true;
                         break;
@@ -106,31 +116,43 @@ public final class CuppaDataFactory {
             }
         }
 
-        if (hasOverallCombinedType) {
+        if(hasOverallCombinedType)
+        {
             return DataTypes.DATA_TYPE_COMBINED;
-        } else if (hasDnaCombinedType) {
+        }
+        else if(hasDnaCombinedType)
+        {
             return DataTypes.DATA_TYPE_DNA_COMBINED;
-        } else if (hasRnaCombinedType) {
+        }
+        else if(hasRnaCombinedType)
+        {
             return DataTypes.DATA_TYPE_RNA_COMBINED;
         }
 
         return null;
     }
 
-    private static int safeInt(@NotNull List<CuppaDataFile> entries, @NotNull SvDataType svDataType) {
+    private static int safeInt(@NotNull List<CuppaDataFile> entries, @NotNull SvDataType svDataType)
+    {
         CuppaDataFile entry = findSvEntry(entries, svDataType);
-        if (entry != null) {
+        if(entry != null)
+        {
             return (int) Math.round(Double.parseDouble(entry.Value));
-        } else {
+        }
+        else
+        {
             // -1 is a magic value that can never exist in reality.
             return -1;
         }
     }
 
     @Nullable
-    private static CuppaDataFile findSvEntry(@NotNull List<CuppaDataFile> entries, @NotNull SvDataType dataType) {
-        for (CuppaDataFile entry : entries) {
-            if (entry.Category == CategoryType.SV && entry.DataType.equals(dataType.toString())) {
+    private static CuppaDataFile findSvEntry(@NotNull List<CuppaDataFile> entries, @NotNull SvDataType dataType)
+    {
+        for(CuppaDataFile entry : entries)
+        {
+            if(entry.Category == CategoryType.SV && entry.DataType.equals(dataType.toString()))
+            {
                 return entry;
             }
         }

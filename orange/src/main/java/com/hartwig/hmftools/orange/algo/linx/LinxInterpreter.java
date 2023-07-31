@@ -16,8 +16,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LinxInterpreter {
-
+public class LinxInterpreter
+{
     private static final Logger LOGGER = LogManager.getLogger(LinxInterpreter.class);
 
     @NotNull
@@ -25,13 +25,15 @@ public class LinxInterpreter {
     @NotNull
     private final KnownFusionCache knownFusionCache;
 
-    public LinxInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache) {
+    public LinxInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache)
+    {
         this.driverGenes = driverGenes;
         this.knownFusionCache = knownFusionCache;
     }
 
     @NotNull
-    public LinxRecord interpret(@NotNull LinxData linx) {
+    public LinxRecord interpret(@NotNull LinxData linx)
+    {
         LOGGER.info("Analysing linx data");
         List<LinxFusion> additionalSuspectSomaticFusions =
                 DNAFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);

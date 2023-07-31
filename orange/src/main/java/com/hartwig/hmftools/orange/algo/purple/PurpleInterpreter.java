@@ -55,7 +55,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class PurpleInterpreter
 {
-
     private static final Logger LOGGER = LogManager.getLogger(PurpleInterpreter.class);
 
     private static final int MAX_LENGTH_FOR_IMPLIED_DELS = 1500;

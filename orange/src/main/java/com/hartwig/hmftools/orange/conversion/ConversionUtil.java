@@ -9,19 +9,18 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ConversionUtil {
-
-    private ConversionUtil() {
-    }
-
+public final class ConversionUtil
+{
     @NotNull
-    public static <T, R> Iterable<R> mapToIterable(@Nullable Collection<T> collection, Function<T, R> mapper) {
+    public static <T, R> Iterable<R> mapToIterable(@Nullable Collection<T> collection, Function<T, R> mapper)
+    {
         Collection<T> nonNull = Objects.requireNonNullElseGet(collection, List::<T>of);
         return () -> nonNull.stream().map(mapper).iterator();
     }
 
     @NotNull
-    public static <T, R> List<R> mapToList(@Nullable Collection<T> collection, Function<T, R> mapper) {
+    public static <T, R> List<R> mapToList(@Nullable Collection<T> collection, Function<T, R> mapper)
+    {
         Collection<T> nonNull = Objects.requireNonNullElseGet(collection, List::<T>of);
         return nonNull.stream().map(mapper).collect(Collectors.toList());
     }

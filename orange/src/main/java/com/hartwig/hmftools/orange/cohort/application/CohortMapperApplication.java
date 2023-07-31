@@ -29,8 +29,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CohortMapperApplication {
-
+public class CohortMapperApplication
+{
     private static final Logger LOGGER = LogManager.getLogger(CohortMapperApplication.class);
 
     private static final String RESOURCE_DIR = "/data/resources/public";
@@ -39,7 +39,8 @@ public class CohortMapperApplication {
 
     private static final String OUTPUT_EVALUATION_TSV = "/data/experiments/orange/all_mapped_samples.tsv";
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) throws IOException, ParseException
+    {
         LOGGER.info("Running ORANGE Cohort Mapper");
 
         CommandLine cmd = new DefaultParser().parse(createOptions(), args);
@@ -54,7 +55,8 @@ public class CohortMapperApplication {
         CohortMapper mapper = createCohortMapper();
 
         Map<Sample, String> evaluations = Maps.newHashMap();
-        for (Sample sample : samples) {
+        for(Sample sample : samples)
+        {
             evaluations.put(sample, mapper.cancerTypeForSample(sample));
         }
 
@@ -67,14 +69,16 @@ public class CohortMapperApplication {
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         return options;
     }
 
     @NotNull
-    private static com.hartwig.hmftools.orange.cohort.mapping.CohortMapper createCohortMapper() throws IOException {
+    private static com.hartwig.hmftools.orange.cohort.mapping.CohortMapper createCohortMapper() throws IOException
+    {
         LOGGER.info("Loading cohort mappings from {}", COHORT_MAPPING_TSV);
         List<CohortMapping> mappings = CohortMappingFile.read(COHORT_MAPPING_TSV);
         LOGGER.info(" Loaded {} mappings", mappings.size());
@@ -87,21 +91,25 @@ public class CohortMapperApplication {
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner("\t").add("sampleId").add("cancerType").toString();
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull Map<Sample, String> evaluations) {
+    private static List<String> toLines(@NotNull Map<Sample, String> evaluations)
+    {
         List<String> lines = Lists.newArrayList();
-        for (Map.Entry<Sample, String> evaluation : evaluations.entrySet()) {
+        for(Map.Entry<Sample, String> evaluation : evaluations.entrySet())
+        {
             lines.add(toLine(evaluation.getKey(), evaluation.getValue()));
         }
         return lines;
     }
 
     @NotNull
-    private static String toLine(@NotNull Sample sample, @NotNull String cancerType) {
+    private static String toLine(@NotNull Sample sample, @NotNull String cancerType)
+    {
         return new StringJoiner("\t").add(sample.sampleId()).add(cancerType).toString();
     }
 }

@@ -19,19 +19,22 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class SignatureAllocationTable {
-
+public final class SignatureAllocationTable
+{
     private static final Logger LOGGER = LogManager.getLogger(SignatureAllocationTable.class);
 
     static final String MISALLOC_SIGNATURE = "MISALLOC";
 
-    private SignatureAllocationTable() {
+    private SignatureAllocationTable()
+    {
     }
 
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<SignatureAllocation> signatureAllocations,
-            @NotNull ReportResources reportResources) {
-        if (signatureAllocations.isEmpty()) {
+            @NotNull ReportResources reportResources)
+    {
+        if(signatureAllocations.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -41,7 +44,8 @@ public final class SignatureAllocationTable {
                 new Cell[] { cells.createHeader("Signature"), cells.createHeader("Allocation"), cells.createHeader("Percent"),
                         cells.createHeader(Strings.EMPTY) });
 
-        for (SignatureAllocation signatureAllocation : sort(signatureAllocations)) {
+        for(SignatureAllocation signatureAllocation : sort(signatureAllocations))
+        {
             table.addCell(cells.createContent(signatureAllocation.signature()));
             table.addCell(cells.createContent(formatSingleDigitDecimal(signatureAllocation.allocation())));
             table.addCell(cells.createContent(formatPercentage(signatureAllocation.percent())));
@@ -53,18 +57,24 @@ public final class SignatureAllocationTable {
 
     @NotNull
     @VisibleForTesting
-    static List<SignatureAllocation> sort(@NotNull List<SignatureAllocation> signatureAllocations) {
-        return signatureAllocations.stream().sorted((allocation1, allocation2) -> {
+    static List<SignatureAllocation> sort(@NotNull List<SignatureAllocation> signatureAllocations)
+    {
+        return signatureAllocations.stream().sorted((allocation1, allocation2) ->
+        {
             String sig1 = allocation1.signature().toLowerCase();
             String sig2 = allocation2.signature().toLowerCase();
 
-            if (sig1.equalsIgnoreCase(MISALLOC_SIGNATURE)) {
+            if(sig1.equalsIgnoreCase(MISALLOC_SIGNATURE))
+            {
                 return 1;
-            } else if (sig2.equalsIgnoreCase(MISALLOC_SIGNATURE)) {
+            }
+            else if(sig2.equalsIgnoreCase(MISALLOC_SIGNATURE))
+            {
                 return -1;
             }
 
-            if (!sig1.startsWith("sig") || !sig2.startsWith("sig")) {
+            if(!sig1.startsWith("sig") || !sig2.startsWith("sig"))
+            {
                 LOGGER.warn("Signatures do not start with 'sig': {} & {}", sig1, sig2);
                 return sig1.compareTo(sig2);
             }

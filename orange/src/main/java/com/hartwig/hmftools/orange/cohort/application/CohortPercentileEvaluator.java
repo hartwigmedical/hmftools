@@ -35,8 +35,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class CohortPercentileEvaluator {
-
+public class CohortPercentileEvaluator
+{
     private static final Logger LOGGER = LogManager.getLogger(CohortPercentileEvaluator.class);
 
     private static final String RESOURCE_DIR = "/data/resources/public";
@@ -46,7 +46,8 @@ public class CohortPercentileEvaluator {
 
     private static final String OUTPUT_EVALUATION_TSV = "/data/experiments/orange/sample_sv_tmb_percentile_evaluations.tsv";
 
-    public static void main(String[] args) throws ParseException, IOException {
+    public static void main(String[] args) throws ParseException, IOException
+    {
         LOGGER.info("Running ORANGE Cohort Percentile Evaluator");
         CommandLine cmd = new DefaultParser().parse(createOptions(), args);
 
@@ -60,7 +61,8 @@ public class CohortPercentileEvaluator {
         LOGGER.info("Creating percentiles model");
         CohortPercentilesModel model = createModel();
         Map<Observation, Evaluation> evaluations = Maps.newHashMap();
-        for (Observation observation : observations) {
+        for(Observation observation : observations)
+        {
             evaluations.put(observation, model.percentile(observation));
         }
 
@@ -73,14 +75,16 @@ public class CohortPercentileEvaluator {
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
         return options;
     }
 
     @NotNull
-    private static CohortPercentilesModel createModel() throws IOException {
+    private static CohortPercentilesModel createModel() throws IOException
+    {
         LOGGER.info(" Reading percentiles from {}", COHORT_PERCENTILES_TSV);
         Multimap<PercentileType, CohortPercentiles> percentilesMap = CohortPercentilesFile.read(COHORT_PERCENTILES_TSV);
 
@@ -95,7 +99,8 @@ public class CohortPercentileEvaluator {
     }
 
     @NotNull
-    private static String header() {
+    private static String header()
+    {
         return new StringJoiner("\t").add("sampleId")
                 .add("type")
                 .add("value")
@@ -106,16 +111,19 @@ public class CohortPercentileEvaluator {
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull Map<Observation, Evaluation> evaluations) {
+    private static List<String> toLines(@NotNull Map<Observation, Evaluation> evaluations)
+    {
         List<String> lines = Lists.newArrayList();
-        for (Map.Entry<Observation, Evaluation> evaluation : evaluations.entrySet()) {
+        for(Map.Entry<Observation, Evaluation> evaluation : evaluations.entrySet())
+        {
             lines.add(toLine(evaluation.getKey(), evaluation.getValue()));
         }
         return lines;
     }
 
     @NotNull
-    private static String toLine(@NotNull Observation observation, @NotNull Evaluation evaluation) {
+    private static String toLine(@NotNull Observation observation, @NotNull Evaluation evaluation)
+    {
         return new StringJoiner("\t").add(observation.sample().sampleId())
                 .add(observation.type().toString())
                 .add(String.valueOf(observation.value()))

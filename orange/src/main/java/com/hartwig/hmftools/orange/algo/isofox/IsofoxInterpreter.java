@@ -18,8 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class IsofoxInterpreter {
-
+public class IsofoxInterpreter
+{
     private static final Logger LOGGER = LogManager.getLogger(IsofoxInterpreter.class);
 
     @NotNull
@@ -38,7 +38,8 @@ public class IsofoxInterpreter {
     }
 
     @NotNull
-    public IsofoxRecord interpret(@NotNull IsofoxData isofox) {
+    public IsofoxRecord interpret(@NotNull IsofoxData isofox)
+    {
         List<GeneExpression> geneExpressions = ConversionUtil.mapToList(isofox.geneExpressions(), IsofoxConversion::convert);
         List<GeneExpression> highExpressionGenes = ExpressionSelector.selectHighExpressionGenes(geneExpressions, driverGenes);
         LOGGER.info(" Found {} genes with high expression", highExpressionGenes.size());

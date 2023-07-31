@@ -36,7 +36,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PurpleConversion
 {
-
     @NotNull
     public static PurpleCopyNumber convert(com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber)
     {

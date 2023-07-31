@@ -12,8 +12,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VariantEntry {
-
+public abstract class VariantEntry
+{
     @NotNull
     public abstract String gene();
 

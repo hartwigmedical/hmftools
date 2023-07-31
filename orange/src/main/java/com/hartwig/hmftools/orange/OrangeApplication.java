@@ -13,8 +13,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class OrangeApplication {
-
+public class OrangeApplication
+{
     private static final Logger LOGGER = LogManager.getLogger(OrangeApplication.class);
 
     private static final String APPLICATION = "ORANGE";
@@ -27,7 +27,7 @@ public class OrangeApplication {
         ConfigBuilder configBuilder = new ConfigBuilder();
         OrangeConfig.registerConfig(configBuilder);
 
-        if (!configBuilder.parseCommandLine(args))
+        if(!configBuilder.parseCommandLine(args))
         {
             configBuilder.logInvalidDetails();
             System.exit(1);

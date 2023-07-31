@@ -54,8 +54,8 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class FrontPageChapter implements ReportChapter {
-
+public class FrontPageChapter implements ReportChapter
+{
     private static final String NONE = "None";
 
     @NotNull
@@ -66,7 +66,8 @@ public class FrontPageChapter implements ReportChapter {
     private final ReportResources reportResources;
 
     public FrontPageChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver,
-            @NotNull final ReportResources reportResources) {
+            @NotNull final ReportResources reportResources)
+    {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
         this.reportResources = reportResources;
@@ -74,23 +75,27 @@ public class FrontPageChapter implements ReportChapter {
 
     @NotNull
     @Override
-    public String name() {
+    public String name()
+    {
         return "Front Page";
     }
 
     @NotNull
     @Override
-    public PageSize pageSize() {
+    public PageSize pageSize()
+    {
         return PageSize.A4;
     }
 
     @Override
-    public void render(@NotNull Document document) {
+    public void render(@NotNull Document document)
+    {
         addSummaryTable(document);
         addDetailsAndPlots(document);
     }
 
-    private void addSummaryTable(@NotNull Document document) {
+    private void addSummaryTable(@NotNull Document document)
+    {
         Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
                 new float[] { 3, 2, 1 },
@@ -104,8 +109,10 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String cuppaCancerType(@Nullable CuppaData cuppa) {
-        if (cuppa == null) {
+    private static String cuppaCancerType(@Nullable CuppaData cuppa)
+    {
+        if(cuppa == null)
+        {
             return ReportResources.NOT_AVAILABLE;
         }
 
@@ -114,9 +121,11 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private static String configuredPrimaryTumor(@NotNull Set<OrangeDoidNode> nodes) {
+    private static String configuredPrimaryTumor(@NotNull Set<OrangeDoidNode> nodes)
+    {
         Set<String> configured = Sets.newHashSet();
-        for (OrangeDoidNode node : nodes) {
+        for(OrangeDoidNode node : nodes)
+        {
             configured.add(node.doidTerm() + " (DOID " + node.doid() + ")");
         }
 
@@ -124,15 +133,18 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String purpleQCString() {
+    private String purpleQCString()
+    {
         Set<String> purpleStatuses = Sets.newHashSet();
-        for (PurpleQCStatus status : report.purple().fit().qc().status()) {
+        for(PurpleQCStatus status : report.purple().fit().qc().status())
+        {
             purpleStatuses.add(status.toString());
         }
         return concat(purpleStatuses);
     }
 
-    private void addDetailsAndPlots(@NotNull Document document) {
+    private void addDetailsAndPlots(@NotNull Document document)
+    {
         Table topTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 })).setWidth(contentWidth() - 5);
 
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
@@ -157,7 +169,8 @@ public class FrontPageChapter implements ReportChapter {
                 Maps.immutableEntry("Number of SVs:", svTmbString()),
                 Maps.immutableEntry("Max complex cluster size:", maxComplexSizeString()),
                 Maps.immutableEntry("Telomeric SGLs:", telomericSGLString()),
-                Maps.immutableEntry("Number of LINE insertions:", lineCountString())).forEach(entry -> {
+                Maps.immutableEntry("Number of LINE insertions:", lineCountString())).forEach(entry ->
+        {
             summary.addCell(cells.createKey(entry.getKey()));
             summary.addCell(cells.createValue(entry.getValue()));
         });
@@ -181,7 +194,8 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String purityString() {
+    private String purityString()
+    {
         return String.format("%s (%s-%s)",
                 formatPercentage(report.purple().fit().purity()),
                 formatPercentage(report.purple().fit().minPurity()),
@@ -189,7 +203,8 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String ploidyString() {
+    private String ploidyString()
+    {
         return String.format("%s (%s-%s)",
                 formatTwoDigitDecimal(report.purple().fit().ploidy()),
                 formatTwoDigitDecimal(report.purple().fit().minPloidy()),
@@ -197,31 +212,40 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String somaticVariantDriverString() {
+    private String somaticVariantDriverString()
+    {
         return variantDriverString(report.purple().reportableSomaticVariants(), report.purple().somaticDrivers());
     }
 
     @NotNull
-    private String germlineVariantDriverString() {
+    private String germlineVariantDriverString()
+    {
         List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
         List<PurpleDriver> germlineDrivers = report.purple().germlineDrivers();
-        if (reportableGermlineVariants != null && germlineDrivers != null) {
+        if(reportableGermlineVariants != null && germlineDrivers != null)
+        {
             return variantDriverString(reportableGermlineVariants, germlineDrivers);
-        } else {
+        }
+        else
+        {
             return ReportResources.NOT_AVAILABLE;
         }
     }
 
     @NotNull
-    private static String variantDriverString(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers) {
-        if (variants.isEmpty()) {
+    private static String variantDriverString(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers)
+    {
+        if(variants.isEmpty())
+        {
             return NONE;
         }
 
         Set<String> highDriverGenes = Sets.newTreeSet(Comparator.naturalOrder());
-        for (PurpleVariant variant : variants) {
+        for(PurpleVariant variant : variants)
+        {
             PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
-            if (driver != null && DriverInterpretation.interpret(driver.driverLikelihood()) == DriverInterpretation.HIGH) {
+            if(driver != null && DriverInterpretation.interpret(driver.driverLikelihood()) == DriverInterpretation.HIGH)
+            {
                 highDriverGenes.add(variant.gene());
             }
         }
@@ -230,89 +254,111 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String somaticCopyNumberDriverString() {
+    private String somaticCopyNumberDriverString()
+    {
         return copyNumberDriverString(report.purple().reportableSomaticGainsLosses());
     }
 
     @NotNull
-    private String germlineCopyNumberDriverString() {
+    private String germlineCopyNumberDriverString()
+    {
         List<PurpleGainLoss> germlineGainsLosses = report.purple().reportableGermlineFullLosses();
-        if (germlineGainsLosses == null) {
+        if(germlineGainsLosses == null)
+        {
             return ReportResources.NOT_AVAILABLE;
         }
         return copyNumberDriverString(germlineGainsLosses);
     }
 
     @NotNull
-    private static String copyNumberDriverString(@NotNull List<PurpleGainLoss> gainsLosses) {
-        if (gainsLosses.isEmpty()) {
+    private static String copyNumberDriverString(@NotNull List<PurpleGainLoss> gainsLosses)
+    {
+        if(gainsLosses.isEmpty())
+        {
             return NONE;
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for (PurpleGainLoss gainLoss : gainsLosses) {
+        for(PurpleGainLoss gainLoss : gainsLosses)
+        {
             genes.add(gainLoss.gene());
         }
         return gainsLosses.size() + " (" + concat(genes) + ")";
     }
 
     @NotNull
-    private String somaticDisruptionDriverString() {
+    private String somaticDisruptionDriverString()
+    {
         return disruptionDriverString(report.linx().somaticHomozygousDisruptions());
     }
 
     @NotNull
-    private String germlineDisruptionDriverString() {
+    private String germlineDisruptionDriverString()
+    {
         List<HomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
-        if (germlineHomozygousDisruptions == null) {
+        if(germlineHomozygousDisruptions == null)
+        {
             return ReportResources.NOT_AVAILABLE;
         }
         return disruptionDriverString(germlineHomozygousDisruptions);
     }
 
     @NotNull
-    private static String disruptionDriverString(@NotNull List<HomozygousDisruption> homozygousDisruptions) {
-        if (homozygousDisruptions.isEmpty()) {
+    private static String disruptionDriverString(@NotNull List<HomozygousDisruption> homozygousDisruptions)
+    {
+        if(homozygousDisruptions.isEmpty())
+        {
             return NONE;
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for (HomozygousDisruption homozygousDisruption : homozygousDisruptions) {
+        for(HomozygousDisruption homozygousDisruption : homozygousDisruptions)
+        {
             genes.add(homozygousDisruption.gene());
         }
         return homozygousDisruptions.size() + " (" + concat(genes) + ")";
     }
 
     @NotNull
-    private String fusionDriverString() {
-        if (report.linx().reportableSomaticFusions().isEmpty()) {
+    private String fusionDriverString()
+    {
+        if(report.linx().reportableSomaticFusions().isEmpty())
+        {
             return NONE;
         }
 
         Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
-        for (LinxFusion fusion : report.linx().reportableSomaticFusions()) {
+        for(LinxFusion fusion : report.linx().reportableSomaticFusions())
+        {
             fusions.add(fusion.name());
         }
         return report.linx().reportableSomaticFusions().size() + " (" + concat(fusions) + ")";
     }
 
     @NotNull
-    private String virusString() {
+    private String virusString()
+    {
         VirusInterpreterData virusInterpreter = report.virusInterpreter();
-        if (virusInterpreter == null) {
+        if(virusInterpreter == null)
+        {
             return ReportResources.NOT_AVAILABLE;
         }
 
-        if (virusInterpreter.reportableViruses().isEmpty()) {
+        if(virusInterpreter.reportableViruses().isEmpty())
+        {
             return NONE;
         }
 
         Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
-        for (AnnotatedVirus virus : virusInterpreter.reportableViruses()) {
+        for(AnnotatedVirus virus : virusInterpreter.reportableViruses())
+        {
             VirusInterpretation interpretation = virus.interpretation();
-            if (interpretation != null) {
+            if(interpretation != null)
+            {
                 viruses.add(interpretation.name());
-            } else {
+            }
+            else
+            {
                 viruses.add(virus.name());
             }
         }
@@ -321,19 +367,24 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String msiString() {
+    private String msiString()
+    {
         PurpleCharacteristics characteristics = report.purple().characteristics();
-        return formatSingleDigitDecimal(characteristics.microsatelliteIndelsPerMb()) + " (" + display(characteristics.microsatelliteStatus()) + ")";
+        return formatSingleDigitDecimal(characteristics.microsatelliteIndelsPerMb()) + " ("
+                + display(characteristics.microsatelliteStatus()) + ")";
     }
 
     @NotNull
-    private String tmlString() {
+    private String tmlString()
+    {
         PurpleCharacteristics characteristics = report.purple().characteristics();
         return characteristics.tumorMutationalLoad() + " (" + display(characteristics.tumorMutationalLoadStatus()) + ")";
     }
 
-    private static String display(PurpleMicrosatelliteStatus microsatelliteStatus) {
-        switch (microsatelliteStatus) {
+    private static String display(PurpleMicrosatelliteStatus microsatelliteStatus)
+    {
+        switch(microsatelliteStatus)
+        {
             case MSI:
                 return "Unstable";
             case MSS:
@@ -344,8 +395,9 @@ public class FrontPageChapter implements ReportChapter {
         throw new IllegalStateException();
     }
 
-    private static String display(@NotNull PurpleTumorMutationalStatus tumorMutationalStatus) {
-        switch (tumorMutationalStatus)
+    private static String display(@NotNull PurpleTumorMutationalStatus tumorMutationalStatus)
+    {
+        switch(tumorMutationalStatus)
         {
             case HIGH:
                 return "High";
@@ -358,50 +410,71 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String hrDeficiencyString() {
+    private String hrDeficiencyString()
+    {
         ChordRecord chord = report.chord();
-        if (chord == null) {
+        if(chord == null)
+        {
             return ReportResources.NOT_AVAILABLE;
         }
 
-        if (chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED) {
+        if(chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED)
+        {
             return displayChordStatus(ChordStatus.CANNOT_BE_DETERMINED);
         }
 
         String addon = Strings.EMPTY;
-        if (chord.hrStatus() == ChordStatus.HR_DEFICIENT && !chord.hrdType().isEmpty()) {
-            if (chord.hrdType().contains("BRCA1")) {
+        if(chord.hrStatus() == ChordStatus.HR_DEFICIENT && !chord.hrdType().isEmpty())
+        {
+            if(chord.hrdType().contains("BRCA1"))
+            {
                 addon = " - BRCA1 (" + formatTwoDigitDecimal(chord.brca1Value()) + ")";
-            } else if (chord.hrdType().contains("BRCA2")) {
+            }
+            else if(chord.hrdType().contains("BRCA2"))
+            {
                 addon = " - BRCA2 (" + formatTwoDigitDecimal(chord.brca2Value()) + ")";
-            } else if (chord.hrdType().equals("cannot_be_determined")) {
+            }
+            else if(chord.hrdType().equals("cannot_be_determined"))
+            {
                 addon = " - Undetermined";
-            } else {
+            }
+            else
+            {
                 addon = " - " + chord.hrdType();
             }
         }
         return formatSingleDigitDecimal(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
     }
 
-    private static String displayChordStatus(ChordStatus chordStatus) {
-        switch (chordStatus) {
-            case CANNOT_BE_DETERMINED: return "Cannot be determined";
-            case HR_PROFICIENT: return "Proficient";
-            case HR_DEFICIENT: return "Deficient";
-            default: return "Unknown";
+    private static String displayChordStatus(ChordStatus chordStatus)
+    {
+        switch(chordStatus)
+        {
+            case CANNOT_BE_DETERMINED:
+                return "Cannot be determined";
+            case HR_PROFICIENT:
+                return "Proficient";
+            case HR_DEFICIENT:
+                return "Deficient";
+            default:
+                return "Unknown";
         }
     }
 
     @NotNull
-    private String dpydStatus() {
+    private String dpydStatus()
+    {
         Set<PeachGenotype> genotypes = report.peach();
-        if (genotypes == null) {
+        if(genotypes == null)
+        {
             return ReportResources.NOT_AVAILABLE;
         }
 
         Set<String> haplotypes = Sets.newHashSet();
-        for (PeachGenotype genotype : genotypes) {
-            if (genotype.gene().equals("DPYD")) {
+        for(PeachGenotype genotype : genotypes)
+        {
+            if(genotype.gene().equals("DPYD"))
+            {
                 haplotypes.add(genotype.haplotype() + " (" + genotype.function() + ")");
             }
         }
@@ -409,17 +482,20 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String svTmbString() {
+    private String svTmbString()
+    {
         String svTmb = String.valueOf(report.purple().characteristics().svTumorMutationalBurden());
 
         Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
         String addon = Strings.EMPTY;
-        if (evaluation != null) {
+        if(evaluation != null)
+        {
             String panCancerPercentile = formatPercentage(evaluation.panCancerPercentile());
             addon = " (Pan " + panCancerPercentile;
             String cancerType = evaluation.cancerType();
-            if (cancerType != null && !cancerType.equals(CohortConstants.COHORT_OTHER)
-                    && !cancerType.equals(CohortConstants.COHORT_UNKNOWN)) {
+            if(cancerType != null && !cancerType.equals(CohortConstants.COHORT_OTHER)
+                    && !cancerType.equals(CohortConstants.COHORT_UNKNOWN))
+            {
                 Double percentile = evaluation.cancerTypePercentile();
                 String cancerTypePercentile = percentile != null ? formatPercentage(percentile) : "NA";
                 addon = addon + " | " + evaluation.cancerType() + " " + cancerTypePercentile;
@@ -431,27 +507,32 @@ public class FrontPageChapter implements ReportChapter {
     }
 
     @NotNull
-    private String maxComplexSizeString() {
+    private String maxComplexSizeString()
+    {
         CuppaData cuppa = report.cuppa();
         return cuppa != null ? Integer.toString(cuppa.maxComplexSize()) : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull
-    private String telomericSGLString() {
+    private String telomericSGLString()
+    {
         CuppaData cuppa = report.cuppa();
         return cuppa != null ? Integer.toString(cuppa.telomericSGLs()) : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull
-    private String lineCountString() {
+    private String lineCountString()
+    {
         CuppaData cuppa = report.cuppa();
         return cuppa != null ? Integer.toString(cuppa.lineCount()) : ReportResources.NOT_AVAILABLE;
     }
 
     @NotNull
-    private static String concat(@NotNull Iterable<String> strings) {
+    private static String concat(@NotNull Iterable<String> strings)
+    {
         StringJoiner joiner = new StringJoiner(", ");
-        for (String string : strings) {
+        for(String string : strings)
+        {
             joiner.add(string);
         }
 

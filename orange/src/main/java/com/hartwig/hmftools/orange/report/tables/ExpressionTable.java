@@ -20,17 +20,16 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ExpressionTable {
-
+public final class ExpressionTable
+{
     private static final Logger LOGGER = LogManager.getLogger(ExpressionTable.class);
-
-    private ExpressionTable() {
-    }
 
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<GeneExpression> expressions, boolean sortAscending,
-            @NotNull List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers, @NotNull ReportResources reportResources) {
-        if (expressions.isEmpty()) {
+            @NotNull List<PurpleGeneCopyNumber> allSomaticGeneCopyNumbers, @NotNull ReportResources reportResources)
+    {
+        if(expressions.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -42,7 +41,8 @@ public final class ExpressionTable {
                         cells.createHeader("FC (DB)") });
 
         // TODO Build the expression datamodel table prior to rendering.
-        for (GeneExpression expression : sort(expressions, sortAscending)) {
+        for(GeneExpression expression : sort(expressions, sortAscending))
+        {
             table.addCell(cells.createContent(expression.geneName()));
             table.addCell(cells.createContent(lookupTumorCN(allSomaticGeneCopyNumbers, expression.geneName())));
             table.addCell(cells.createContent(Expressions.tpm(expression)));
@@ -56,9 +56,11 @@ public final class ExpressionTable {
     }
 
     @NotNull
-    private static String lookupTumorCN(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind) {
+    private static String lookupTumorCN(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind)
+    {
         PurpleGeneCopyNumber geneCopyNumber = findByGene(geneCopyNumbers, geneToFind);
-        if (geneCopyNumber == null) {
+        if(geneCopyNumber == null)
+        {
             LOGGER.warn("Could not find gene copy number for '{}'", geneToFind);
             return ReportResources.NOT_AVAILABLE;
         }
@@ -67,9 +69,12 @@ public final class ExpressionTable {
     }
 
     @Nullable
-    private static PurpleGeneCopyNumber findByGene(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind) {
-        for (PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers) {
-            if (geneCopyNumber.geneName().equals(geneToFind)) {
+    private static PurpleGeneCopyNumber findByGene(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers, @NotNull String geneToFind)
+    {
+        for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
+        {
+            if(geneCopyNumber.geneName().equals(geneToFind))
+            {
                 return geneCopyNumber;
             }
         }
@@ -78,11 +83,16 @@ public final class ExpressionTable {
     }
 
     @NotNull
-    private static List<GeneExpression> sort(@NotNull List<GeneExpression> expressions, boolean sortDescending) {
-        return expressions.stream().sorted((expression1, expression2) -> {
-            if (sortDescending) {
+    private static List<GeneExpression> sort(@NotNull List<GeneExpression> expressions, boolean sortDescending)
+    {
+        return expressions.stream().sorted((expression1, expression2) ->
+        {
+            if(sortDescending)
+            {
                 return Doubles.compare(expression1.percentileCohort(), expression2.percentileCohort());
-            } else {
+            }
+            else
+            {
                 return Doubles.compare(expression2.percentileCohort(), expression1.percentileCohort());
             }
         }).collect(Collectors.toList());

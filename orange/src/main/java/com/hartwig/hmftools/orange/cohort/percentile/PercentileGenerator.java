@@ -14,29 +14,35 @@ import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PercentileGenerator {
-
+public class PercentileGenerator
+{
     @NotNull
     private final CohortMapper cohortMapper;
 
-    public PercentileGenerator(@NotNull final CohortMapper cohortMapper) {
+    public PercentileGenerator(@NotNull final CohortMapper cohortMapper)
+    {
         this.cohortMapper = cohortMapper;
     }
 
     @NotNull
-    public List<CohortPercentiles> run(@NotNull List<Observation> observations) {
+    public List<CohortPercentiles> run(@NotNull List<Observation> observations)
+    {
         Multimap<String, Double> valuesPerCancerType = ArrayListMultimap.create();
-        for (Observation observation : observations) {
+        for(Observation observation : observations)
+        {
             String cancerType = cohortMapper.cancerTypeForSample(observation.sample());
-            if (cancerType != null) {
+            if(cancerType != null)
+            {
                 valuesPerCancerType.put(cancerType, observation.value());
             }
         }
 
         List<CohortPercentiles> percentiles = Lists.newArrayList();
-        if (!valuesPerCancerType.isEmpty()) {
+        if(!valuesPerCancerType.isEmpty())
+        {
             percentiles.add(toPercentiles(CohortConstants.COHORT_PAN_CANCER, valuesPerCancerType.values()));
-            for (Map.Entry<String, Collection<Double>> entry : valuesPerCancerType.asMap().entrySet()) {
+            for(Map.Entry<String, Collection<Double>> entry : valuesPerCancerType.asMap().entrySet())
+            {
                 percentiles.add(toPercentiles(entry.getKey(), entry.getValue()));
             }
         }
@@ -45,7 +51,8 @@ public class PercentileGenerator {
     }
 
     @NotNull
-    private static CohortPercentiles toPercentiles(@NotNull String cancerType, @NotNull Collection<Double> values) {
+    private static CohortPercentiles toPercentiles(@NotNull String cancerType, @NotNull Collection<Double> values)
+    {
         List<Double> sorted = Lists.newArrayList(values);
         sorted.sort(Comparator.naturalOrder());
 
@@ -53,7 +60,8 @@ public class PercentileGenerator {
         double baseIndex = (double) sorted.size() / PercentileConstants.BUCKET_COUNT;
 
         percentiles.add(sorted.get(0));
-        for (int i = 1; i < PercentileConstants.BUCKET_COUNT - 1; i++) {
+        for(int i = 1; i < PercentileConstants.BUCKET_COUNT - 1; i++)
+        {
             int index = (int) Math.min(sorted.size() - 1, Math.round(((i + 0.49) * baseIndex)));
             percentiles.add(sorted.get(index));
         }

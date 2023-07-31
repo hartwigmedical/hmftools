@@ -16,15 +16,14 @@ import com.itextpdf.layout.element.Table;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class LossOfHeterozygosityTable {
-
-    private LossOfHeterozygosityTable() {
-    }
-
+public final class LossOfHeterozygosityTable
+{
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<PurpleGeneCopyNumber> lohGenes,
-            @NotNull ReportResources reportResources) {
-        if (lohGenes.isEmpty()) {
+            @NotNull ReportResources reportResources)
+    {
+        if(lohGenes.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -34,7 +33,8 @@ public final class LossOfHeterozygosityTable {
                 new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"), cells.createHeader("Tumor MACN"),
                         cells.createHeader("Tumor CN"), cells.createHeader(Strings.EMPTY) });
 
-        for (PurpleGeneCopyNumber lohGene : sort(lohGenes)) {
+        for(PurpleGeneCopyNumber lohGene : sort(lohGenes))
+        {
             table.addCell(cells.createContent(lohGene.chromosome() + lohGene.chromosomeBand()));
             table.addCell(cells.createContent(lohGene.geneName()));
             table.addCell(cells.createContent(formatSingleDigitDecimal(Math.max(0, lohGene.minMinorAlleleCopyNumber()))));
@@ -46,14 +46,19 @@ public final class LossOfHeterozygosityTable {
     }
 
     @NotNull
-    private static List<PurpleGeneCopyNumber> sort(@NotNull List<PurpleGeneCopyNumber> lohGenes) {
-        return lohGenes.stream().sorted((geneCopyNumber1, geneCopyNumber2) -> {
+    private static List<PurpleGeneCopyNumber> sort(@NotNull List<PurpleGeneCopyNumber> lohGenes)
+    {
+        return lohGenes.stream().sorted((geneCopyNumber1, geneCopyNumber2) ->
+        {
             String location1 = Chromosomes.zeroPrefixed(geneCopyNumber1.chromosome() + geneCopyNumber1.chromosomeBand());
             String location2 = Chromosomes.zeroPrefixed(geneCopyNumber2.chromosome() + geneCopyNumber2.chromosomeBand());
 
-            if (location1.equals(location2)) {
+            if(location1.equals(location2))
+            {
                 return geneCopyNumber1.geneName().compareTo(geneCopyNumber2.geneName());
-            } else {
+            }
+            else
+            {
                 return location1.compareTo(location2);
             }
         }).collect(Collectors.toList());

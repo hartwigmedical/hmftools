@@ -18,23 +18,26 @@ import com.hartwig.hmftools.datamodel.orange.PercentileType;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CohortPercentilesFile {
-
+public final class CohortPercentilesFile
+{
     private static final String COHORT_FILE_NAME = "orange_cohort_percentiles.tsv";
 
     private static final String FIELD_DELIMITER = "\t";
     private static final String PERCENTILE_DELIMITER = ";";
 
-    private CohortPercentilesFile() {
+    private CohortPercentilesFile()
+    {
     }
 
     @NotNull
-    public static String generateOutputTsv(@NotNull String outputDirectory) {
+    public static String generateOutputTsv(@NotNull String outputDirectory)
+    {
         String path = outputDirectory.endsWith(File.separator) ? outputDirectory : outputDirectory + File.separator;
         return path + COHORT_FILE_NAME;
     }
 
-    public static void write(@NotNull String tsv, @NotNull Multimap<PercentileType, CohortPercentiles> percentileMap) throws IOException {
+    public static void write(@NotNull String tsv, @NotNull Multimap<PercentileType, CohortPercentiles> percentileMap) throws IOException
+    {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         lines.addAll(toLines(percentileMap));
@@ -43,7 +46,8 @@ public final class CohortPercentilesFile {
     }
 
     @NotNull
-    public static Multimap<PercentileType, CohortPercentiles> read(@NotNull String tsv) throws IOException {
+    public static Multimap<PercentileType, CohortPercentiles> read(@NotNull String tsv) throws IOException
+    {
         List<String> lines = Files.readAllLines(new File(tsv).toPath());
 
         Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), FIELD_DELIMITER);
@@ -53,16 +57,20 @@ public final class CohortPercentilesFile {
 
     @NotNull
     @VisibleForTesting
-    static String header() {
+    static String header()
+    {
         return new StringJoiner(FIELD_DELIMITER).add("type").add("cancerType").add("cohortSize").add("percentiles").toString();
     }
 
     @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull Multimap<PercentileType, CohortPercentiles> percentileMap) {
+    static List<String> toLines(@NotNull Multimap<PercentileType, CohortPercentiles> percentileMap)
+    {
         List<String> lines = Lists.newArrayList();
-        for (Map.Entry<PercentileType, Collection<CohortPercentiles>> entry : percentileMap.asMap().entrySet()) {
-            for (CohortPercentiles percentiles : entry.getValue()) {
+        for(Map.Entry<PercentileType, Collection<CohortPercentiles>> entry : percentileMap.asMap().entrySet())
+        {
+            for(CohortPercentiles percentiles : entry.getValue())
+            {
                 lines.add(toLine(entry.getKey(), percentiles));
             }
         }
@@ -70,9 +78,11 @@ public final class CohortPercentilesFile {
     }
 
     @NotNull
-    private static String toLine(@NotNull PercentileType type, @NotNull CohortPercentiles percentiles) {
+    private static String toLine(@NotNull PercentileType type, @NotNull CohortPercentiles percentiles)
+    {
         StringJoiner percentileField = new StringJoiner(PERCENTILE_DELIMITER);
-        for (double value : percentiles.values()) {
+        for(double value : percentiles.values())
+        {
             percentileField.add(String.valueOf(value));
         }
 
@@ -84,10 +94,12 @@ public final class CohortPercentilesFile {
     }
 
     @NotNull
-    static Multimap<PercentileType, CohortPercentiles> fromLines(@NotNull Map<String, Integer> fields, @NotNull List<String> lines) {
+    static Multimap<PercentileType, CohortPercentiles> fromLines(@NotNull Map<String, Integer> fields, @NotNull List<String> lines)
+    {
         Multimap<PercentileType, CohortPercentiles> map = ArrayListMultimap.create();
 
-        for (String line : lines) {
+        for(String line : lines)
+        {
             String[] values = line.split(FIELD_DELIMITER, -1);
 
             CohortPercentiles percentiles = ImmutableCohortPercentiles.builder()
@@ -97,7 +109,8 @@ public final class CohortPercentilesFile {
                     .build();
 
             PercentileType type = PercentileType.valueOf(values[fields.get("type")]);
-            if (containsCancerTypeForPercentileType(map.get(type), percentiles.cancerType())) {
+            if(containsCancerTypeForPercentileType(map.get(type), percentiles.cancerType()))
+            {
                 throw new IllegalStateException("Double entry of cancer type " + percentiles.cancerType() + " for percentile type " + type);
             }
 
@@ -107,9 +120,12 @@ public final class CohortPercentilesFile {
     }
 
     private static boolean containsCancerTypeForPercentileType(@NotNull Collection<CohortPercentiles> percentiles,
-            @NotNull String cancerType) {
-        for (CohortPercentiles percentile : percentiles) {
-            if (percentile.cancerType().equals(cancerType)) {
+            @NotNull String cancerType)
+    {
+        for(CohortPercentiles percentile : percentiles)
+        {
+            if(percentile.cancerType().equals(cancerType))
+            {
                 return true;
             }
         }
@@ -118,9 +134,11 @@ public final class CohortPercentilesFile {
     }
 
     @NotNull
-    private static List<Double> toPercentileValues(@NotNull String percentileString) {
+    private static List<Double> toPercentileValues(@NotNull String percentileString)
+    {
         List<Double> percentileValues = Lists.newArrayList();
-        for (String percentile : percentileString.split(PERCENTILE_DELIMITER)) {
+        for(String percentile : percentileString.split(PERCENTILE_DELIMITER))
+        {
             percentileValues.add(Double.parseDouble(percentile));
         }
         return percentileValues;

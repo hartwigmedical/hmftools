@@ -82,8 +82,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeConfig {
-
+public interface OrangeConfig
+{
     Logger LOGGER = LogManager.getLogger(OrangeConfig.class);
 
     String DOID_SEPARATOR = ";";
@@ -111,7 +111,8 @@ public interface OrangeConfig {
     String LIMIT_JSON_OUTPUT = "limit_json_output";
     String ADD_DISCLAIMER = "add_disclaimer";
 
-    static void registerConfig(final ConfigBuilder configBuilder) {
+    static void registerConfig(final ConfigBuilder configBuilder)
+    {
 
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
@@ -282,38 +283,47 @@ public interface OrangeConfig {
     boolean addDisclaimer();
 
     @NotNull
-    static OrangeConfig createConfig(final ConfigBuilder configBuilder) {
+    static OrangeConfig createConfig(final ConfigBuilder configBuilder)
+    {
 
         setLogLevel(configBuilder);
 
-        if (LOGGER.isDebugEnabled()) {
+        if(LOGGER.isDebugEnabled())
+        {
             LOGGER.debug("Switched root level logging to DEBUG");
         }
 
         boolean addDisclaimer = configBuilder.hasFlag(ADD_DISCLAIMER);
-        if (addDisclaimer) {
+        if(addDisclaimer)
+        {
             LOGGER.info("Disclaimer will be included in footer.");
         }
 
         boolean limitJsonOutput = configBuilder.hasFlag(LIMIT_JSON_OUTPUT);
-        if (limitJsonOutput) {
+        if(limitJsonOutput)
+        {
             LOGGER.info("JSON limitation has been enabled.");
         }
 
         boolean convertGermlineToSomatic = configBuilder.hasFlag(CONVERT_GERMLINE_TO_SOMATIC);
-        if (convertGermlineToSomatic) {
+        if(convertGermlineToSomatic)
+        {
             LOGGER.info("Germline conversion to somatic has been enabled.");
         }
 
         String refSampleId = configBuilder.getValue(REFERENCE_SAMPLE_ID);
-        if (refSampleId != null) {
+        if(refSampleId != null)
+        {
             LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
         }
 
         LocalDate experimentDate;
-        if (configBuilder.hasValue(EXPERIMENT_DATE)) {
+        if(configBuilder.hasValue(EXPERIMENT_DATE))
+        {
             experimentDate = interpretExperimentDateParam(configBuilder.getValue(EXPERIMENT_DATE));
-        } else {
+        }
+        else
+        {
             experimentDate = LocalDate.now();
         }
 
@@ -415,12 +425,15 @@ public interface OrangeConfig {
 
     @Nullable
     static String getToolDirectory(@NotNull ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
-            @Nullable String sampleDataDir, @NotNull String toolDirConfig, @NotNull String pipelineToolDir) {
-        if (configBuilder.hasValue(toolDirConfig)) {
+            @Nullable String sampleDataDir, @NotNull String toolDirConfig, @NotNull String pipelineToolDir)
+    {
+        if(configBuilder.hasValue(toolDirConfig))
+        {
             return configBuilder.getValue(toolDirConfig);
         }
 
-        if (pipelineSampleRootDir != null) {
+        if(pipelineSampleRootDir != null)
+        {
             return pipelineSampleRootDir + pipelineToolDir;
         }
 
@@ -429,13 +442,16 @@ public interface OrangeConfig {
 
     @NotNull
     static String getToolPlotsDirectory(@NotNull ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
-            @NotNull String toolDirConfig, @NotNull String pipelineToolDir) {
-        if (configBuilder.hasValue(toolDirConfig)) {
+            @NotNull String toolDirConfig, @NotNull String pipelineToolDir)
+    {
+        if(configBuilder.hasValue(toolDirConfig))
+        {
             return configBuilder.getValue(toolDirConfig);
         }
 
         String plotDir = pipelineSampleRootDir != null ? Config.fileIfExists(pipelineSampleRootDir + pipelineToolDir + "/plot") : null;
-        if (plotDir == null) {
+        if(plotDir == null)
+        {
             throw new IllegalArgumentException(
                     "Plot directory cannot be determined from [%s]. Please define either the tool directory or the sample directory.");
         }
@@ -443,19 +459,24 @@ public interface OrangeConfig {
     }
 
     @NotNull
-    static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator) {
+    static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator)
+    {
         return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
     }
 
     @NotNull
-    private static LocalDate interpretExperimentDateParam(@NotNull String experimentDateString) {
+    private static LocalDate interpretExperimentDateParam(@NotNull String experimentDateString)
+    {
         String format = "yyMMdd";
 
         LocalDate experimentDate;
-        try {
+        try
+        {
             experimentDate = LocalDate.parse(experimentDateString, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
             LOGGER.debug("Configured experiment date to {}", experimentDate);
-        } catch (DateTimeParseException exception) {
+        }
+        catch(DateTimeParseException exception)
+        {
             experimentDate = LocalDate.now();
             LOGGER.warn("Could not parse configured experiment date '{}'. Expected format is '{}'", experimentDateString, format);
         }

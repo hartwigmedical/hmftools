@@ -98,7 +98,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class OrangeAlgo
 {
-
     private static final Logger LOGGER = LogManager.getLogger(OrangeAlgo.class);
 
     @NotNull

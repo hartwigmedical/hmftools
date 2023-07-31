@@ -20,8 +20,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeCohortDataGeneratorConfig {
-
+public interface OrangeCohortDataGeneratorConfig
+{
     Logger LOGGER = LogManager.getLogger(OrangeCohortDataGeneratorConfig.class);
 
     String DOID_JSON = "doid_json";
@@ -31,7 +31,8 @@ public interface OrangeCohortDataGeneratorConfig {
     String LOG_DEBUG = "log_debug";
 
     @NotNull
-    static Options createOptions() {
+    static Options createOptions()
+    {
         Options options = new Options();
         addDatabaseCmdLineArgs(options);
 
@@ -54,8 +55,10 @@ public interface OrangeCohortDataGeneratorConfig {
     String outputDirectory();
 
     @NotNull
-    static OrangeCohortDataGeneratorConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException {
-        if (cmd.hasOption(LOG_DEBUG)) {
+    static OrangeCohortDataGeneratorConfig createConfig(@NotNull CommandLine cmd) throws ParseException, IOException
+    {
+        if(cmd.hasOption(LOG_DEBUG))
+        {
             Configurator.setRootLevel(Level.DEBUG);
             LOGGER.debug("Switched root level logging to DEBUG");
         }
@@ -68,14 +71,17 @@ public interface OrangeCohortDataGeneratorConfig {
     }
 
     @NotNull
-    private static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param)   {
+    private static String nonOptionalFile(@NotNull CommandLine cmd, @NotNull String param)
+    {
         return Config.fileIfExists(nonOptionalValue(cmd, param));
     }
 
     @NotNull
-    private static String nonOptionalValue(@NotNull CommandLine cmd, @NotNull String param) {
+    private static String nonOptionalValue(@NotNull CommandLine cmd, @NotNull String param)
+    {
         String value = cmd.getOptionValue(param);
-        if (value == null) {
+        if(value == null)
+        {
             throw new IllegalArgumentException("Parameter must be provided: " + param);
         }
 
@@ -83,10 +89,12 @@ public interface OrangeCohortDataGeneratorConfig {
     }
 
     @NotNull
-    private static String outputDir(@NotNull CommandLine cmd, @NotNull String param) throws IOException {
+    private static String outputDir(@NotNull CommandLine cmd, @NotNull String param) throws IOException
+    {
         String value = nonOptionalValue(cmd, param);
         File outputDir = new File(value);
-        if (!outputDir.exists() && !outputDir.mkdirs()) {
+        if(!outputDir.exists() && !outputDir.mkdirs())
+        {
             throw new IOException("Unable to write to directory " + value);
         }
         return value;

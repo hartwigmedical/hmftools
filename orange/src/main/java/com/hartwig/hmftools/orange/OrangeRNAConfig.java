@@ -23,8 +23,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeRNAConfig {
-
+public interface OrangeRNAConfig
+{
     Logger LOGGER = LogManager.getLogger(OrangeRNAConfig.class);
 
     String RNA_SAMPLE_ID = "rna_sample_id";
@@ -32,7 +32,8 @@ public interface OrangeRNAConfig {
     String ISOFOX_GENE_DISTRIBUTION_CSV = "isofox_gene_distribution";
     String ISOFOX_ALT_SJ_COHORT_CSV = "isofox_alt_sj_cohort";
 
-    static void registerConfig(final ConfigBuilder configBuilder) {
+    static void registerConfig(final ConfigBuilder configBuilder)
+    {
 
         configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
 
@@ -64,7 +65,8 @@ public interface OrangeRNAConfig {
     String isofoxAltSpliceJunctionCsv();
 
     @Nullable
-    static OrangeRNAConfig createConfig(@NotNull ConfigBuilder configBuilder) {
+    static OrangeRNAConfig createConfig(@NotNull ConfigBuilder configBuilder)
+    {
 
         boolean hasRnaSampleId = configBuilder.hasValue(RNA_SAMPLE_ID);
         boolean hasIsofoxDir = configBuilder.hasValue(ISOFOX_DIR_CFG);
@@ -73,14 +75,16 @@ public interface OrangeRNAConfig {
 
         boolean anyConfigPresent = hasRnaSampleId || hasIsofoxDir || hasGeneDistribution || hasAltSjCohortFreq;
 
-        if (!anyConfigPresent) {
+        if(!anyConfigPresent)
+        {
             LOGGER.info("RNA config not present, will continue without RNA configuration.");
             return null;
         }
 
         boolean allConfigPresent = hasRnaSampleId && hasIsofoxDir && hasGeneDistribution && hasAltSjCohortFreq;
 
-        if (!allConfigPresent) {
+        if(!allConfigPresent)
+        {
             throw new IllegalArgumentException(String.format(
                     "RNA missing required config items: rnaSampleId(%s) isofoxDir(%s) geneCohort(%s) altSjCohort(%s)",
                     hasRnaSampleId,

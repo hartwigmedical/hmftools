@@ -14,23 +14,24 @@ import com.hartwig.hmftools.orange.algo.linx.DNAFusionEvaluator;
 
 import org.jetbrains.annotations.NotNull;
 
-final class NovelSpliceJunctionSelector {
-
-    private NovelSpliceJunctionSelector() {
-    }
-
+final class NovelSpliceJunctionSelector
+{
     @NotNull
     public static List<NovelSpliceJunction> selectSkippedExons(@NotNull List<NovelSpliceJunction> junctions,
-            @NotNull List<LinxFusion> linxFusions, @NotNull KnownFusionCache knownFusionCache) {
+            @NotNull List<LinxFusion> linxFusions, @NotNull KnownFusionCache knownFusionCache)
+    {
         List<NovelSpliceJunction> result = Lists.newArrayList();
 
-        for (NovelSpliceJunction junction : junctions) {
-            if (knownFusionCache.hasExonDelDup(junction.geneName())) {
+        for(NovelSpliceJunction junction : junctions)
+        {
+            if(knownFusionCache.hasExonDelDup(junction.geneName()))
+            {
                 boolean isTypeMatch = junction.type() == AltSpliceJunctionType.SKIPPED_EXONS;
                 boolean hasSufficientFragments = junction.fragmentCount() > 5;
                 boolean hasLimitedCohortFreq = junction.cohortFrequency() < 30;
                 boolean hasReportedLinxFusion = DNAFusionEvaluator.hasFusion(linxFusions, junction.geneName(), junction.geneName());
-                if (isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq && !hasReportedLinxFusion) {
+                if(isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq && !hasReportedLinxFusion)
+                {
                     result.add(junction);
                 }
             }
@@ -41,21 +42,26 @@ final class NovelSpliceJunctionSelector {
 
     @NotNull
     public static List<NovelSpliceJunction> selectNovelExonsIntrons(@NotNull List<NovelSpliceJunction> junctions,
-            @NotNull List<DriverGene> driverGenes) {
+            @NotNull List<DriverGene> driverGenes)
+    {
         List<NovelSpliceJunction> result = Lists.newArrayList();
 
         Set<String> drivers = Sets.newHashSet();
-        for (DriverGene driverGene : driverGenes) {
+        for(DriverGene driverGene : driverGenes)
+        {
             drivers.add(driverGene.gene());
         }
 
-        for (NovelSpliceJunction junction : junctions) {
-            if (drivers.contains(junction.geneName())) {
+        for(NovelSpliceJunction junction : junctions)
+        {
+            if(drivers.contains(junction.geneName()))
+            {
                 boolean isTypeMatch =
                         junction.type() == AltSpliceJunctionType.NOVEL_INTRON || junction.type() == AltSpliceJunctionType.NOVEL_EXON;
                 boolean hasSufficientFragments = junction.fragmentCount() > 5;
                 boolean hasLimitedCohortFreq = junction.cohortFrequency() < 10;
-                if (isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq) {
+                if(isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq)
+                {
                     result.add(junction);
                 }
             }

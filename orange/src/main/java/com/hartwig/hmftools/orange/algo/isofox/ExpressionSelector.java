@@ -12,17 +12,19 @@ import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 
 import org.jetbrains.annotations.NotNull;
 
-final class ExpressionSelector {
-
+final class ExpressionSelector
+{
     private static final double HIGH_EXPRESSION_PERCENTILE_CUTOFF = 0.9;
     private static final double LOW_EXPRESSION_PERCENTILE_CUTOFF = 0.05;
 
-    private ExpressionSelector() {
+    private ExpressionSelector()
+    {
     }
 
     @NotNull
     public static List<GeneExpression> selectHighExpressionGenes(@NotNull List<GeneExpression> expressions,
-            @NotNull List<DriverGene> driverGenes) {
+            @NotNull List<DriverGene> driverGenes)
+    {
         return selectGenesMatchingCriteria(expressions,
                 extractGenesOfType(driverGenes, DriverCategory.ONCO),
                 percentile -> percentile >= HIGH_EXPRESSION_PERCENTILE_CUTOFF);
@@ -30,7 +32,8 @@ final class ExpressionSelector {
 
     @NotNull
     public static List<GeneExpression> selectLowExpressionGenes(@NotNull List<GeneExpression> expressions,
-            @NotNull List<DriverGene> driverGenes) {
+            @NotNull List<DriverGene> driverGenes)
+    {
         return selectGenesMatchingCriteria(expressions,
                 extractGenesOfType(driverGenes, DriverCategory.TSG),
                 percentile -> percentile <= LOW_EXPRESSION_PERCENTILE_CUTOFF);
@@ -38,8 +41,10 @@ final class ExpressionSelector {
 
     @NotNull
     private static List<GeneExpression> selectGenesMatchingCriteria(@NotNull List<GeneExpression> expressions, Set<String> genesOfType,
-            Predicate<Double> evaluatePercentileThreshold) {
-        return expressions.stream().filter(expression -> {
+            Predicate<Double> evaluatePercentileThreshold)
+    {
+        return expressions.stream().filter(expression ->
+        {
             boolean geneMatchesType = genesOfType.contains(expression.geneName());
             boolean percentileCancerMeetsThreshold = evaluatePercentileThreshold.test(expression.percentileCancer());
             boolean percentileCohortMeetsThreshold =
@@ -50,7 +55,8 @@ final class ExpressionSelector {
     }
 
     @NotNull
-    private static Set<String> extractGenesOfType(@NotNull List<DriverGene> driverGenes, @NotNull DriverCategory categoryToInclude) {
+    private static Set<String> extractGenesOfType(@NotNull List<DriverGene> driverGenes, @NotNull DriverCategory categoryToInclude)
+    {
         return driverGenes.stream()
                 .filter(driverGene -> driverGene.likelihoodType() == categoryToInclude)
                 .map(DriverGene::gene)

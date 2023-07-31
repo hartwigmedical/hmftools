@@ -29,8 +29,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ReportWriter {
-
+public class ReportWriter
+{
     private static final Logger LOGGER = LogManager.getLogger(ReportWriter.class);
 
     private final boolean writeToDisk;
@@ -40,19 +40,22 @@ public class ReportWriter {
     private final PlotPathResolver plotPathResolver;
     private final boolean addDisclaimer;
 
-    ReportWriter(boolean writeToDisk, @Nullable String outputDir, @NotNull PlotPathResolver plotPathResolver, boolean addDisclaimer) {
+    ReportWriter(boolean writeToDisk, @Nullable String outputDir, @NotNull PlotPathResolver plotPathResolver, boolean addDisclaimer)
+    {
         this.writeToDisk = writeToDisk;
         this.outputDir = outputDir;
         this.plotPathResolver = plotPathResolver;
         this.addDisclaimer = addDisclaimer;
     }
 
-    public void write(@NotNull OrangeRecord report) throws IOException {
+    public void write(@NotNull OrangeRecord report) throws IOException
+    {
         writePdf(report);
         writeJson(report);
     }
 
-    private void writePdf(@NotNull OrangeRecord report) throws IOException {
+    private void writePdf(@NotNull OrangeRecord report) throws IOException
+    {
         ReportResources reportResources = ReportResources.create();
         ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver, reportResources),
                 new SomaticFindingsChapter(report, plotPathResolver, reportResources), new GermlineFindingsChapter(report, reportResources),
@@ -64,32 +67,39 @@ public class ReportWriter {
         writePdfChapters(report.sampleId(), platinumVersion, chapters, reportResources);
     }
 
-    private void writeJson(@NotNull OrangeRecord report) throws IOException {
-        if (writeToDisk && outputDir != null) {
+    private void writeJson(@NotNull OrangeRecord report) throws IOException
+    {
+        if(writeToDisk && outputDir != null)
+        {
             String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
 
             OrangeJson.getInstance().write(report, outputFilePath);
-        } else {
+        }
+        else
+        {
             LOGGER.info("Generating in-memory JSON report");
         }
     }
 
     private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportChapter[] chapters,
-            @NotNull ReportResources reportResources) throws IOException {
+            @NotNull ReportResources reportResources) throws IOException
+    {
         Document doc = initializeReport(sampleId);
         PdfDocument pdfDocument = doc.getPdfDocument();
 
         PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion, reportResources, addDisclaimer);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
-        for (int i = 0; i < chapters.length; i++) {
+        for(int i = 0; i < chapters.length; i++)
+        {
             ReportChapter chapter = chapters[i];
             pdfDocument.setDefaultPageSize(chapter.pageSize());
             pageEventHandler.chapterTitle(chapter.name());
             pageEventHandler.resetChapterPageCounter();
 
-            if (i > 0) {
+            if(i > 0)
+            {
                 doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
             }
             chapter.render(doc);
@@ -102,17 +112,21 @@ public class ReportWriter {
     }
 
     @NotNull
-    private Document initializeReport(@NotNull String sampleId) throws IOException {
+    private Document initializeReport(@NotNull String sampleId) throws IOException
+    {
         PdfWriter writer;
         WriterProperties properties = new WriterProperties()
                 .setFullCompressionMode(true)
                 .setCompressionLevel(CompressionConstants.BEST_COMPRESSION)
                 .useSmartMode();
-        if (writeToDisk) {
+        if(writeToDisk)
+        {
             String outputFilePath = outputDir + File.separator + sampleId + ".orange.pdf";
             LOGGER.info("Writing PDF report to {}", outputFilePath);
             writer = new PdfWriter(outputFilePath, properties);
-        } else {
+        }
+        else
+        {
             LOGGER.info("Generating in-memory PDF report");
             writer = new PdfWriter(new ByteArrayOutputStream(), properties);
         }
