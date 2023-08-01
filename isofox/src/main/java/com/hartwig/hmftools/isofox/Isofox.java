@@ -2,6 +2,8 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_PANEL_THRESHOLD;
+import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
@@ -297,9 +299,13 @@ public class Isofox
         {
             double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
 
+            int lowCoverageThreshold = !mConfig.Filters.RestrictedGeneIds.isEmpty() && !mConfig.PanelTpmNormFile.isEmpty()
+                    ? LOW_COVERAGE_PANEL_THRESHOLD : LOW_COVERAGE_THRESHOLD;
+
             final RnaStatistics summaryStats = createSummaryStats(
                     totalFragmentCounts, enrichedGeneFragCount, spliceGeneCount,
-                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
+                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength,
+                    lowCoverageThreshold);
 
             mResultsWriter.writeSummaryStats(summaryStats);
         }
