@@ -8,7 +8,7 @@ import java.io.File
 
 object VDJSequenceTsvWriter
 {
-    private enum class Column
+    enum class Column
     {
         cdr3Seq,
         cdr3AA,

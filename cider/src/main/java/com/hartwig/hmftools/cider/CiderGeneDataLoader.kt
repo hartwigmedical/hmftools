@@ -124,7 +124,7 @@ object CiderGeneDataLoader
                     }
                 }
 
-                val geneType = if (geneName == "IGKKDE") VJGeneType.IGKKDE else VJGeneType.valueOf(geneName.substring(0, 4))
+                val geneType = if (geneName == "IGKDEL") VJGeneType.IGKDEL else VJGeneType.valueOf(geneName.substring(0, 4))
 
                 val vjAnchorTemplate = VJAnchorTemplate(
                     geneType, geneName, allele, genomeRegionStrand, sequence, anchorSequence, anchorLocation)

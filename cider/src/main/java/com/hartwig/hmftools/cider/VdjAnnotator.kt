@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.VdjAnnotator.Companion.PASS_FILTER
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
@@ -11,7 +10,7 @@ import kotlin.collections.HashMap
 
 // some annotation that we want to print out
 data class VdjAnnotation(val vdj: VDJSequence,
-                         val filters: List<String>,
+                         val filters: List<Filter>,
                          val matchesRef: Boolean,
                          val vAlignedReads: Int,
                          val jAlignedReads: Int,
@@ -23,9 +22,24 @@ data class VdjAnnotation(val vdj: VDJSequence,
                          val vPrimerMatchCount: Int,
                          val jPrimerMatchCount: Int)
 {
+    enum class Filter
+    {
+        PASS,
+        MATCHES_REF,
+        NO_V_ANCHOR,
+        NO_J_ANCHOR,
+        POOR_V_ANCHOR,
+        POOR_J_ANCHOR,
+        DUPLICATE,
+        MIN_LENGTH,
+        MAX_LENGTH,
+        CDR3_DELETED,
+        NO_HIGH_QUAL_SUPPORT,
+    }
+    
     val passesFilter : Boolean get()
     {
-        return filters.contains(PASS_FILTER)
+        return filters.contains(Filter.PASS)
     }
 }
 
@@ -248,7 +262,6 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         const val CDR3_FILTER_AA_MIN_LENGTH = 5
         const val CDR3_FILTER_AA_MAX_LENGTH = 40
         const val MAX_NONSPLIT_READS = 2
-        const val PASS_FILTER = "PASS"
 
         private val sLogger = LogManager.getLogger(VdjAnnotator::class.java)
 
@@ -281,54 +294,54 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             }
         }
 
-        fun annotateFilterReasons(vdj: VDJSequence, isDuplicate: Boolean, matchesRef: Boolean, cdr3SupportMin: Int): List<String>
+        fun annotateFilterReasons(vdj: VDJSequence, isDuplicate: Boolean, matchesRef: Boolean, cdr3SupportMin: Int): List<VdjAnnotation.Filter>
         {
-            val filters = ArrayList<String>()
+            val filters = ArrayList<VdjAnnotation.Filter>()
 
             if (matchesRef)
             {
-                filters.add("MATCHES_REF")
+                filters.add(VdjAnnotation.Filter.MATCHES_REF)
             }
             if (vdj.vAnchor == null)
             {
-                filters.add("NO_V_ANCHOR")
+                filters.add(VdjAnnotation.Filter.NO_V_ANCHOR)
             }
             if (vdj.jAnchor == null)
             {
-                filters.add("NO_J_ANCHOR")
+                filters.add(VdjAnnotation.Filter.NO_J_ANCHOR)
             }
             if ((vdj.vAnchor is VJAnchorByBlosum) && (vdj.vAnchor.similarityScore < 0))
             {
-                filters.add("POOR_V_ANCHOR")
+                filters.add(VdjAnnotation.Filter.POOR_V_ANCHOR)
             }
             if ((vdj.jAnchor is VJAnchorByBlosum) && (vdj.jAnchor.similarityScore < 0))
             {
-                filters.add("POOR_J_ANCHOR")
+                filters.add(VdjAnnotation.Filter.POOR_J_ANCHOR)
             }
             if (isDuplicate)
             {
-                filters.add("DUPLICATE")
+                filters.add(VdjAnnotation.Filter.DUPLICATE)
             }
             if (vdj.cdr3Sequence.length < CDR3_FILTER_AA_MIN_LENGTH * 3)
             {
-                filters.add("MIN_LENGTH")
+                filters.add(VdjAnnotation.Filter.MIN_LENGTH)
             }
             if (vdj.cdr3Sequence.length > CDR3_FILTER_AA_MAX_LENGTH * 3)
             {
-                filters.add("MAX_LENGTH")
+                filters.add(VdjAnnotation.Filter.MAX_LENGTH)
             }
             if (vdj.vAnchor != null && vdj.jAnchor != null &&
                 vdj.vAnchorBoundary!! > vdj.jAnchorBoundary!!)
             {
-                filters.add("CDR3_DELETED")
+                filters.add(VdjAnnotation.Filter.CDR3_DELETED)
             }
             if (cdr3SupportMin <= 0)
             {
-                filters.add("NO_HIGH_QUAL_SUPPORT")
+                filters.add(VdjAnnotation.Filter.NO_HIGH_QUAL_SUPPORT)
             }
             if (filters.isEmpty())
             {
-                filters.add(PASS_FILTER)
+                filters.add(VdjAnnotation.Filter.PASS)
             }
             return filters
         }

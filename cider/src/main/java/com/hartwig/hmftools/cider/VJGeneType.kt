@@ -12,7 +12,17 @@ enum class IgTcrLocus
     TRA,
     TRB,
     TRD,
-    TRG
+    TRG;
+
+    fun isIg() : Boolean
+    {
+        return this == IGH || this == IGK || this == IGL
+    }
+
+    fun isTcr() : Boolean
+    {
+        return this == TRA || this == TRB || this == TRD || this == TRG
+    }
 }
 
 enum class VJ
@@ -25,26 +35,23 @@ enum class VJ
 // note: IGH, TRA etc are locus, IGHV, TRAJ etc are gene segments
 // this also include KDE, for simplicity we treat it just like a J anchor
 //
-enum class VJGeneType
+enum class VJGeneType(val locus: IgTcrLocus, val vj: VJ)
 {
-    IGHV,
-    IGHJ,
-    IGKV,
-    IGKJ,
-    IGLV,
-    IGLJ,
-    TRAV,
-    TRAJ,
-    TRBV,
-    TRBJ,
-    TRDV,
-    TRDJ,
-    TRGV,
-    TRGJ,
-    IGKKDE;
-
-    val locus: IgTcrLocus = IgTcrLocus.valueOf(name.take(3))
-    val vj: VJ = if (name == "IGKKDE") VJ.J else VJ.valueOf(name[3].toString())
+    IGHV(IgTcrLocus.IGH, VJ.V),
+    IGHJ(IgTcrLocus.IGH, VJ.J),
+    IGKV(IgTcrLocus.IGK, VJ.V),
+    IGKJ(IgTcrLocus.IGK, VJ.J),
+    IGLV(IgTcrLocus.IGL, VJ.V),
+    IGLJ(IgTcrLocus.IGL, VJ.J),
+    TRAV(IgTcrLocus.TRA, VJ.V),
+    TRAJ(IgTcrLocus.TRA, VJ.J),
+    TRBV(IgTcrLocus.TRB, VJ.V),
+    TRBJ(IgTcrLocus.TRB, VJ.J),
+    TRDV(IgTcrLocus.TRD, VJ.V),
+    TRDJ(IgTcrLocus.TRD, VJ.J),
+    TRGV(IgTcrLocus.TRG, VJ.V),
+    TRGJ(IgTcrLocus.TRG, VJ.J),
+    IGKDEL(IgTcrLocus.IGK, VJ.J);
 
     // gene types that can be paired with
     fun pairedVjGeneTypes() : List<VJGeneType>
@@ -53,7 +60,7 @@ enum class VJGeneType
         {
             IGHV -> listOf(IGHJ)
             IGHJ -> listOf(IGHV)
-            IGKV -> listOf(IGKJ, IGKKDE)
+            IGKV -> listOf(IGKJ, IGKDEL)
             IGKJ -> listOf(IGKV)
             IGLV -> listOf(IGLJ)
             IGLJ -> listOf(IGLV)
@@ -65,7 +72,7 @@ enum class VJGeneType
             TRDJ -> listOf(TRDV, TRAV)
             TRGV -> listOf(TRGJ)
             TRGJ -> listOf(TRGV)
-            IGKKDE -> listOf(IGKV)
+            IGKDEL -> listOf(IGKV)
         }
     }
 }

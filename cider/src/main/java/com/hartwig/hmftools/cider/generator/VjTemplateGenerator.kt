@@ -104,7 +104,7 @@ class VjTemplateGeneWriter
 
             try
             {
-                vjGeneType = if (geneName == "IGKKDE") VJGeneType.IGKKDE else VJGeneType.valueOf(geneName.take(4))
+                vjGeneType = if (geneName == "IGKDEL") VJGeneType.IGKDEL else VJGeneType.valueOf(geneName.take(4))
             }
             catch (e: IllegalArgumentException)
             {
@@ -485,7 +485,7 @@ class VjTemplateGeneWriter
             val anchorSeq = queryRefSequence(refGenome, anchorGenomeRegionStrand)
 
             // now we can create the template
-            return VJAnchorTemplate(VJGeneType.IGKKDE, "IGKKDE", "01",
+            return VJAnchorTemplate(VJGeneType.IGKDEL, "IGKDEL", "01",
                 genomeRegionStrand, kdeSeq, anchorSeq, anchorGenomeRegionStrand)
         }
     }
