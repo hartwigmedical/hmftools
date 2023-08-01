@@ -128,7 +128,7 @@ A custom model is used for TMB estimated in targeted mode. The main challenges o
 - !HOTSPOT
 - AF < 0.9
 
-Each variant included is classified as ‘somatic’ if AF is more than 0.08 away from the expected germline allele frequencies based on the minor and major allele copy numbers at that loci and the purity of the sample. Other variants are classified as ‘unclear’
+Each variant included is classified as ‘somatic’ if somatic likelihood = HIGH.    If somatic likelihood = MEDIUM, then the variant is marked as 'unclear'.
 
 The final somatic count estimate is set to = somatic + unclear^2 / ( CodingBases/170,000 + unclear).
 
@@ -136,10 +136,10 @@ This function is intended to reflect that when the number of unclear variants is
 
 Using this number we then estimate the mutational burden as follows
 ```
-TML = 0.74 * somatic Variant Estimate / CodingBases * RefGenomeCodingBases 
+TML = somatic Variant Estimate / CodingBases * RefGenomeCodingBases 
 TMB = 0.05 * TML + MSIIndelPerMb
 ```
-The constant 0.74 is the approximate proportion of coding variants expected to be missense, since TML is defined as count of missense variants in Hartwig’s platform. The 0.05 conversion from TML to TMB is the empirically observed relationship in the Hartwig database.
+The 0.05 conversion from TML to TMB is the empirically observed relationship in the Hartwig database.
 
 For driver likelihood calculations, we assume 20% of variants are biallelic for targeted sequencing samples.
 
