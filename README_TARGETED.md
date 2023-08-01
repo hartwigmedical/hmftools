@@ -35,8 +35,8 @@ COBALT
 ```
 SAGE
 ```
--hotspot_min_tumor_vaf 0.01
--hotspot_min_tumor_qual 150
+-hotspot_min_tumor_vaf 0.005
+-hotspot_min_tumor_qual 100
 -panel_min_tumor_qual 250
 -high_confidence_min_tumor_qual 350
 -low_confidence_min_tumor_qual 500
