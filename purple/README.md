@@ -295,6 +295,7 @@ Purple can be run in a limited mode on germline only output so that germline poi
   - somatic VCF tags are set to fixed values PURPLE_CN: 2, PURPLE_MACN: 1, PURPLE_AF: 0.5, PURPLE_VCN: 1, BIALLELIC: FALSE
   - All TMB fields are set to zero
   - No geneCopyNumber,somatic or sv output is produced
+  - A 'somatic likelihood' is calculated (see somatic enrichment section below)
 
 Example command:
 
@@ -584,6 +585,14 @@ We apply an iterative algorithm to find peaks in the variant copy number distrib
 This process yields a set of variant copy number peaks, each with a copy number and a total density (i.e. count of variants). 
 To avoid overfitting small amounts of noise in the distribution, we filter out any peaks that account for less than 40% of the variants in the copy number bucket at the peak itself.   After this filtering we scale the fitted peaks by a constant so that the sum of fitted peaks = the total variant count of the sample.  We mark a peak as subclonal if the peak variant copy number < 0.85.   We also calculate the subclonal likelihood for each individual variant as the proportion of variants in that same copy number bucket fitted as belonging to a subclonal peak. 
 
+#### Somatic Likelihood (tumor only mode only)
+
+In tumor only mode, for each variant a set of expected somatic and germline VAF are calculated using the purity and the assumption that for somatic variants that the VCN = {minor allele, major allele or <=1} and that for germline variants the variant is either homozygous or if heterozygous shares the VCN of either the major or minor allele in the tumor.    The minimum distance to each of the expected germline and somatic vaf sets is calculated and annotated as VAF_DIS_MIN in the vcf.   The variant is assigned a likelihood of being somatic (SOM_LH={HIGH;MED;LOW}) based on the following logic: 
+```
+HIGH: abs(somatic_vaf_distance) - abs(germline_vaf_dist) < -0.05 OR IS HOTSPOT 
+LOW: abs(somatic_vaf_distance) - abs(germline_vaf_dist) > 0.08 
+MED: all other 
+```
 ### 11. Germline Enrichment
 If a germline VCF is supplied to PURPLE each variant is enriched with the following fields:
 
