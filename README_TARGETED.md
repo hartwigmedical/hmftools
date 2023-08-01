@@ -41,6 +41,7 @@ SAGE
 -high_confidence_min_tumor_qual 350
 -low_confidence_min_tumor_qual 500
 -max_read_depth 100000
+-sync_fragments=True
 ```
 GRIPSS
 ```
