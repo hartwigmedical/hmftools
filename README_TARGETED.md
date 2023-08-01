@@ -64,9 +64,9 @@ PURPLE
 ## Targeted specific methods
 ### Cobalt depth coverage normalisation
 
-#### Steps to generated target regions Cobalt normalisation file
+A cobalt normalisation file for an arbitary panel can becreated using a set of training samples (recommended at least 20 samples) to learn the copy number biases in on-target regions.  The procedrue for doing this is as follows:
 
-1. Run Cobalt without a '-target_region' file in tumor-only mode on all applicable samples
+1. Run Cobalt on the training samples without in tumor-only mode WITHOUT a '-target_region' file specified
 
 2a. Run Amber on applicable samples in tumor-only mode
 - set '-tumor_only_min_depth 2' to ensure sufficient read coverage over heterozygous points
@@ -74,7 +74,7 @@ OR
 2b. Set Amber gender in for each applicable sample in sample ID file in step 3
 
 3. Run the Cobalt normalisation file builder command described below.  This performs the following steps
-- for each 1K region covering any target region, extract each sample's tumor read count and teh GC profile mappability and GC ratio bucket
+- for each 1K region covering any target region, extract each sample's tumor read count and the GC profile mappability and GC ratio bucket
 - calculate median and median read counts for each sample, and overall sample mean and median counts
 - normalise each sample's tumor read counts per region
 - calculate a median read count from all samples per GC ratio bucket  
@@ -108,7 +108,7 @@ java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder
 ```
 
 ### COBALT behaviour in targeted mode
-If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.   Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample and then by the relativeEnrichment for that depth window.
+If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.   Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment.
 
 ### PURPLE MSI 
 
