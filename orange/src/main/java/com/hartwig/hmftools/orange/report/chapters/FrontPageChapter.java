@@ -99,29 +99,18 @@ public class FrontPageChapter implements ReportChapter
     {
         Cells cells = new Cells(reportResources);
 
-        float[] headerComponents;
-        Cell[] headerCells;
-
-        if(!report.tumorOnlyMode())
-        {
-            headerComponents = new float[] { 3, 2, 1 };
-            headerCells = new Cell[] { cells.createHeader("Configured Primary Tumor"), cells.createHeader("Cuppa Cancer Type"),
-                    cells.createHeader("QC") };
-        }
-        else
-        {
-            headerComponents = new float[] { 2, 1 };
-            headerCells = new Cell[] { cells.createHeader("Configured Primary Tumor"), cells.createHeader("QC") };
-        }
+        float[] headerComponents = new float[] { 3, 2, 1 };
+        Cell[] headerCells = headerCells = new Cell[] {
+                cells.createHeader("Configured Primary Tumor"),
+                !report.tumorOnlyMode() ? cells.createHeader("Cuppa Cancer Type") : cells.createHeader("Tumor-Only"),
+                cells.createHeader("QC") };
 
         Table table = Tables.createContent(contentWidth(), headerComponents, headerCells);
 
         table.addCell(cells.createContent(configuredPrimaryTumor(report.configuredPrimaryTumor())));
-
-        if(!report.tumorOnlyMode())
-            table.addCell(cells.createContent(cuppaCancerType(report.cuppa())));
-
+        table.addCell(cells.createContent(!report.tumorOnlyMode() ? cuppaCancerType(report.cuppa()) : ""));
         table.addCell(cells.createContent(purpleQCString()));
+
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
@@ -198,12 +187,11 @@ public class FrontPageChapter implements ReportChapter
         addCellEntry(summary, cells, "Tumor mutational load:", tmlString());
 
         if(includeGermline) // will change once we solve HRD for panel
+        {
             addCellEntry(summary, cells, "HR deficiency score:", hrDeficiencyString());
 
-        addCellEntry(summary, cells, "DPYD status:", dpydStatus());
+            addCellEntry(summary, cells, "DPYD status:", dpydStatus());
 
-        if(includeGermline)
-        {
             addCellEntry(summary, cells, "Number of SVs:", svTmbString());
             addCellEntry(summary, cells, "Max complex cluster size:", maxComplexSizeString());
             addCellEntry(summary, cells, "Telomeric SGLs:", telomericSGLString());

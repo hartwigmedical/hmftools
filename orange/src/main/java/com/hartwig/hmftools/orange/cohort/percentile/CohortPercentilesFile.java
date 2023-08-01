@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.cohort.percentile;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
@@ -22,7 +23,6 @@ public final class CohortPercentilesFile
 {
     private static final String COHORT_FILE_NAME = "orange_cohort_percentiles.tsv";
 
-    private static final String FIELD_DELIMITER = "\t";
     private static final String PERCENTILE_DELIMITER = ";";
 
     private CohortPercentilesFile()
@@ -50,7 +50,7 @@ public final class CohortPercentilesFile
     {
         List<String> lines = Files.readAllLines(new File(tsv).toPath());
 
-        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), FIELD_DELIMITER);
+        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), TSV_DELIM);
 
         return fromLines(fields, lines.subList(1, lines.size()));
     }
@@ -59,7 +59,7 @@ public final class CohortPercentilesFile
     @VisibleForTesting
     static String header()
     {
-        return new StringJoiner(FIELD_DELIMITER).add("type").add("cancerType").add("cohortSize").add("percentiles").toString();
+        return new StringJoiner(TSV_DELIM).add("type").add("cancerType").add("cohortSize").add("percentiles").toString();
     }
 
     @NotNull
@@ -86,7 +86,7 @@ public final class CohortPercentilesFile
             percentileField.add(String.valueOf(value));
         }
 
-        return new StringJoiner(FIELD_DELIMITER).add(type.toString())
+        return new StringJoiner(TSV_DELIM).add(type.toString())
                 .add(percentiles.cancerType())
                 .add(String.valueOf(percentiles.cohortSize()))
                 .add(percentileField.toString())
@@ -100,7 +100,7 @@ public final class CohortPercentilesFile
 
         for(String line : lines)
         {
-            String[] values = line.split(FIELD_DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             CohortPercentiles percentiles = ImmutableCohortPercentiles.builder()
                     .cancerType(values[fields.get("cancerType")])

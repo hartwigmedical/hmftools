@@ -360,10 +360,6 @@ public interface OrangeConfig
         String lilacCoverage = Config.fileIfExists(LilacAllele.generateFilename(lilacDir, tumorSampleId));
         String lilacQc = Config.fileIfExists(LilacQcData.generateFilename(lilacDir, tumorSampleId));
 
-        String peachDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PEACH_DIR_CFG, PEACH_DIR);
-        String peachGenotype =
-                peachDir != null ? Config.fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv") : null;
-
         String tumorMetricsFile = getWgsMetricsFile(configBuilder, TUMOR_SAMPLE_WGS_METRICS_FILE, tumorSampleId, pipelineSampleRootDir);
         String tumorFlagstatFile = getFlagstatFile(configBuilder, TUMOR_SAMPLE_FLAGSTAT_FILE, tumorSampleId, pipelineSampleRootDir);
 
@@ -374,6 +370,7 @@ public interface OrangeConfig
         String cuppaFeaturesPlot = null;
         String cuppaChartPlot = null;
         String sigAllocations = null;
+        String peachGenotype = null;
         String refMetricsFile = null;
         String refFlagstatFile = null;
 
@@ -398,6 +395,10 @@ public interface OrangeConfig
 
             String sigsDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SIGS_DIR_CFG, SIGS_DIR);
             sigAllocations = sigsDir != null ? Config.fileIfExists(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)) : null;
+
+            String peachDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PEACH_DIR_CFG, PEACH_DIR);
+            peachGenotype = peachDir != null ?
+                    Config.fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv") : null;
 
             refMetricsFile = getWgsMetricsFile(configBuilder, REF_SAMPLE_WGS_METRICS_FILE, refSampleId, pipelineSampleRootDir);
             refFlagstatFile = getFlagstatFile(configBuilder, REF_SAMPLE_FLAGSTAT_FILE, refSampleId, pipelineSampleRootDir);
