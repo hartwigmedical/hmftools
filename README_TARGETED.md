@@ -30,7 +30,7 @@ AMBER
 ```
 COBALT
 ```
--target_region Target Regions Normalisation file
+-target_region {targetRegionsNormalisation}
 -pcf_gamma 15
 ```
 SAGE
@@ -62,7 +62,7 @@ PURPLE
 ```
 
 ## Targeted specific methods
-### Cobalt depth coverage normalisation
+### Cobalt target regions normalisation file creation
 
 A cobalt normalisation file for an arbitary panel can becreated using a set of training samples (recommended at least 20 samples) to learn the copy number biases in on-target regions.  The procedrue for doing this is as follows:
 
@@ -80,6 +80,8 @@ OR
 - calculate a median read count from all samples per GC ratio bucket  
 - write a relative enrichment for each region to the output file, with a min enrichment of 0.1
 - if no WGS is available for normalisation, the tumorGCRatio is assumed to be 1 for autosomes. The gender of each sample must be provided. Female samples are excluded from Y chromosome normalisation and males use a tumorGCRatio of 0.5 for the sex chromosomes
+
+The output of this process is a targetRegionsNormalisation file with the expected relative enrichment for each on target region.
 
 #### Arguments
 
@@ -108,7 +110,7 @@ java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder
 ```
 
 ### COBALT behaviour in targeted mode
-If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.   Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment.
+If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.   Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment.   The GC bias is calculated using on target regions only.
 
 ### PURPLE MSI 
 
