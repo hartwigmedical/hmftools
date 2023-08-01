@@ -40,6 +40,7 @@ SAGE
 -panel_min_tumor_qual 250
 -high_confidence_min_tumor_qual 350
 -low_confidence_min_tumor_qual 500
+-max_read_depth 100000
 ```
 GRIPSS
 ```
