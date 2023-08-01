@@ -64,7 +64,6 @@ public interface OrangeRNAConfig
     @Nullable
     static OrangeRNAConfig createConfig(@NotNull ConfigBuilder configBuilder)
     {
-
         boolean hasRnaSampleId = configBuilder.hasValue(RNA_SAMPLE_ID);
         boolean hasIsofoxDir = configBuilder.hasValue(ISOFOX_DIR_CFG);
         boolean hasGeneDistribution = configBuilder.hasValue(ISOFOX_GENE_DISTRIBUTION_CSV);

@@ -48,7 +48,7 @@ public class CohortComparisonChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
-        if(report.plots().cuppaSummaryPlot() != null)
+        if(!report.tumorOnlyMode() && report.plots().cuppaSummaryPlot() != null)
         {
             addCuppaSummaryPlot(document);
             addCuppaFeaturePlot(document);

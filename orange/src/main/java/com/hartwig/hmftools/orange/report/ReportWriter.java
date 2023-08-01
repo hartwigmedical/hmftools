@@ -3,7 +3,9 @@ package com.hartwig.hmftools.orange.report;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
@@ -54,11 +56,24 @@ public class ReportWriter
     private void writePdf(@NotNull OrangeRecord report) throws IOException
     {
         ReportResources reportResources = ReportResources.create();
-        ReportChapter[] chapters = new ReportChapter[] { new FrontPageChapter(report, plotPathResolver, reportResources),
-                new SomaticFindingsChapter(report, plotPathResolver, reportResources), new GermlineFindingsChapter(report, reportResources),
-                new ImmunologyChapter(report, reportResources), new RNAFindingsChapter(report, reportResources),
-                new CohortComparisonChapter(report, plotPathResolver, reportResources),
-                new QualityControlChapter(report, plotPathResolver, reportResources) };
+
+        List<ReportChapter> chapters = Lists.newArrayList();
+
+        chapters.add(new FrontPageChapter(report, plotPathResolver, reportResources));
+        chapters.add(new SomaticFindingsChapter(report, plotPathResolver, reportResources));
+
+        if(!report.tumorOnlyMode())
+            chapters.add(new GermlineFindingsChapter(report, reportResources));
+
+        chapters.add(new ImmunologyChapter(report, reportResources));
+
+        if(report.isofox() != null)
+            chapters.add(new RNAFindingsChapter(report, reportResources));
+
+        if(!report.tumorOnlyMode())
+            chapters.add(new CohortComparisonChapter(report, plotPathResolver, reportResources));
+
+        chapters.add(new QualityControlChapter(report, plotPathResolver, reportResources));
 
         String platinumVersion = report.platinumVersion() != null ? report.platinumVersion() : ReportResources.NOT_AVAILABLE;
         writePdfChapters(report.sampleId(), platinumVersion, chapters, reportResources);
@@ -79,7 +94,7 @@ public class ReportWriter
         }
     }
 
-    private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportChapter[] chapters,
+    private void writePdfChapters(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull List<ReportChapter> chapters,
             @NotNull ReportResources reportResources) throws IOException
     {
         Document doc = initializeReport(sampleId);
@@ -88,9 +103,9 @@ public class ReportWriter
         PageEventHandler pageEventHandler = PageEventHandler.create(sampleId, platinumVersion, reportResources, addDisclaimer);
         pdfDocument.addEventHandler(PdfDocumentEvent.START_PAGE, pageEventHandler);
 
-        for(int i = 0; i < chapters.length; i++)
+        for(int i = 0; i < chapters.size(); i++)
         {
-            ReportChapter chapter = chapters[i];
+            ReportChapter chapter = chapters.get(i);
             pdfDocument.setDefaultPageSize(chapter.pageSize());
             pageEventHandler.chapterTitle(chapter.name());
             pageEventHandler.resetChapterPageCounter();

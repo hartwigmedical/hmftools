@@ -286,6 +286,8 @@ public interface OrangeConfig
 
     boolean addDisclaimer();
 
+    default boolean tumorOnlyMode() { return referenceSampleId() == null || referenceSampleId().isEmpty(); }
+
     @NotNull
     static OrangeConfig createConfig(final ConfigBuilder configBuilder)
     {
@@ -358,36 +360,48 @@ public interface OrangeConfig
         String lilacCoverage = Config.fileIfExists(LilacAllele.generateFilename(lilacDir, tumorSampleId));
         String lilacQc = Config.fileIfExists(LilacQcData.generateFilename(lilacDir, tumorSampleId));
 
-        String virusDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
-
-        String virusAnnotations =
-                virusDir != null ? Config.fileIfExists(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)) : null;
-
-        String chordDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CHORD_DIR_CFG, CHORD_DIR);
-        String chordPredictions = chordDir != null ? Config.fileIfExists(ChordDataFile.generateFilename(chordDir, tumorSampleId)) : null;
-
-        String cuppaDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CUPPA_DIR_CFG, CUPPA_DIR);
-        String cuppaDataFile = cuppaDir != null ? Config.fileIfExists(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)) : null;
-        String cuppaSummaryPlot =
-                cuppaDir != null ? Config.fileIfExists(CuppaDataFile.generateReportSummaryPlotFilename(cuppaDir, tumorSampleId)) : null;
-        String cuppaFeaturesPlot = cuppaDir != null
-                ? Config.optionalFileIfExists(CuppaDataFile.generateReportFeaturesPlotFilename(cuppaDir, tumorSampleId))
-                : null;
-        String cuppaChartPlot =
-                cuppaDir != null ? Config.fileIfExists(CuppaDataFile.generateChartPlotFilename(cuppaDir, tumorSampleId)) : null;
-
-        String sigsDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SIGS_DIR_CFG, SIGS_DIR);
-        String sigAllocations =
-                sigsDir != null ? Config.fileIfExists(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)) : null;
-
         String peachDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PEACH_DIR_CFG, PEACH_DIR);
         String peachGenotype =
                 peachDir != null ? Config.fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv") : null;
 
         String tumorMetricsFile = getWgsMetricsFile(configBuilder, TUMOR_SAMPLE_WGS_METRICS_FILE, tumorSampleId, pipelineSampleRootDir);
-        String refMetricsFile = getWgsMetricsFile(configBuilder, REF_SAMPLE_WGS_METRICS_FILE, refSampleId, pipelineSampleRootDir);
         String tumorFlagstatFile = getFlagstatFile(configBuilder, TUMOR_SAMPLE_FLAGSTAT_FILE, tumorSampleId, pipelineSampleRootDir);
-        String refFlagstatFile = getFlagstatFile(configBuilder, REF_SAMPLE_FLAGSTAT_FILE, refSampleId, pipelineSampleRootDir);
+
+        String virusAnnotations = null;
+        String chordPredictions = null;
+        String cuppaDataFile = null;
+        String cuppaSummaryPlot = null;
+        String cuppaFeaturesPlot = null;
+        String cuppaChartPlot = null;
+        String sigAllocations = null;
+        String refMetricsFile = null;
+        String refFlagstatFile = null;
+
+        if(refSampleId != null)
+        {
+            String virusDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
+
+            virusAnnotations = virusDir != null ? Config.fileIfExists(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)) : null;
+
+            String chordDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CHORD_DIR_CFG, CHORD_DIR);
+            chordPredictions = chordDir != null ? Config.fileIfExists(ChordDataFile.generateFilename(chordDir, tumorSampleId)) : null;
+
+            String cuppaDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CUPPA_DIR_CFG, CUPPA_DIR);
+
+            if(cuppaDir != null)
+            {
+                cuppaDataFile = Config.fileIfExists(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId));
+                cuppaSummaryPlot = Config.fileIfExists(CuppaDataFile.generateReportSummaryPlotFilename(cuppaDir, tumorSampleId));
+                cuppaFeaturesPlot = Config.optionalFileIfExists(CuppaDataFile.generateReportFeaturesPlotFilename(cuppaDir, tumorSampleId));
+                cuppaChartPlot = Config.fileIfExists(CuppaDataFile.generateChartPlotFilename(cuppaDir, tumorSampleId));
+            }
+
+            String sigsDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SIGS_DIR_CFG, SIGS_DIR);
+            sigAllocations = sigsDir != null ? Config.fileIfExists(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)) : null;
+
+            refMetricsFile = getWgsMetricsFile(configBuilder, REF_SAMPLE_WGS_METRICS_FILE, refSampleId, pipelineSampleRootDir);
+            refFlagstatFile = getFlagstatFile(configBuilder, REF_SAMPLE_FLAGSTAT_FILE, refSampleId, pipelineSampleRootDir);
+        }
 
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(configBuilder.getValue(TUMOR_SAMPLE_ID))
@@ -439,7 +453,7 @@ public interface OrangeConfig
             return configBuilder.getValue(configStr);
 
         if(pipelineDir == null || sampleId == null)
-            return "";
+            return null;
 
         String directory = pipelineDir + sampleId + File.separator + FLAGSTAT_DIR;
         return FlagstatFile.generateFilename(directory, sampleId);
@@ -452,7 +466,7 @@ public interface OrangeConfig
             return configBuilder.getValue(configStr);
 
         if(pipelineDir == null || sampleId == null)
-            return "";
+            return null;
 
         String directory = pipelineDir + sampleId + File.separator + METRICS_DIR;
         return WGSMetricsFile.generateFilename(directory, sampleId);

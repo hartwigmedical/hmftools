@@ -41,7 +41,7 @@ import org.jetbrains.annotations.NotNull;
 public class SomaticFindingsChapter implements ReportChapter
 {
     @NotNull
-    private final OrangeRecord report;
+    private final OrangeRecord  report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
     @NotNull
@@ -78,11 +78,17 @@ public class SomaticFindingsChapter implements ReportChapter
         addKataegisPlot(document);
         addSomaticAmpDels(document);
         addFusions(document);
-        addViralPresence(document);
+
+        if(!report.tumorOnlyMode())
+            addViralPresence(document);
+
         addHomozygousDisruptions(document);
         addBreakends(document);
         addLossOfHeterozygosity(document);
-        addSignatureAllocations(document);
+
+        if(!report.tumorOnlyMode())
+            addSignatureAllocations(document);
+
         addStructuralDriverPlots(document);
     }
 

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitD
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
@@ -97,13 +98,29 @@ public class FrontPageChapter implements ReportChapter
     private void addSummaryTable(@NotNull Document document)
     {
         Cells cells = new Cells(reportResources);
-        Table table = Tables.createContent(contentWidth(),
-                new float[] { 3, 2, 1 },
-                new Cell[] { cells.createHeader("Configured Primary Tumor"), cells.createHeader("Cuppa Cancer Type"),
-                        cells.createHeader("QC") });
+
+        float[] headerComponents;
+        Cell[] headerCells;
+
+        if(!report.tumorOnlyMode())
+        {
+            headerComponents = new float[] { 3, 2, 1 };
+            headerCells = new Cell[] { cells.createHeader("Configured Primary Tumor"), cells.createHeader("Cuppa Cancer Type"),
+                    cells.createHeader("QC") };
+        }
+        else
+        {
+            headerComponents = new float[] { 2, 1 };
+            headerCells = new Cell[] { cells.createHeader("Configured Primary Tumor"), cells.createHeader("QC") };
+        }
+
+        Table table = Tables.createContent(contentWidth(), headerComponents, headerCells);
 
         table.addCell(cells.createContent(configuredPrimaryTumor(report.configuredPrimaryTumor())));
-        table.addCell(cells.createContent(cuppaCancerType(report.cuppa())));
+
+        if(!report.tumorOnlyMode())
+            table.addCell(cells.createContent(cuppaCancerType(report.cuppa())));
+
         table.addCell(cells.createContent(purpleQCString()));
         document.add(new Tables(reportResources).createWrapping(table));
     }
@@ -149,31 +166,49 @@ public class FrontPageChapter implements ReportChapter
 
         Table summary = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         Cells cells = new Cells(reportResources);
-        Stream.of(Maps.immutableEntry("Purity:", purityString()),
-                Maps.immutableEntry("Ploidy:", ploidyString()),
-                Maps.immutableEntry("Somatic variant drivers:", somaticVariantDriverString()),
-                Maps.immutableEntry("Germline variant drivers:", germlineVariantDriverString()),
-                Maps.immutableEntry("Somatic copy number drivers:", somaticCopyNumberDriverString()),
-                Maps.immutableEntry("Germline copy number drivers:", germlineCopyNumberDriverString()),
-                Maps.immutableEntry("Somatic disruption drivers:", somaticDisruptionDriverString()),
-                Maps.immutableEntry("Germline disruption drivers:", germlineDisruptionDriverString()),
-                Maps.immutableEntry("Fusion drivers:", fusionDriverString()),
-                Maps.immutableEntry("Viral presence:", virusString()),
-                Maps.immutableEntry("Whole genome duplicated:", report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No"),
-                Maps.immutableEntry("Microsatellite indels per Mb:", msiString()),
-                Maps.immutableEntry("Tumor mutations per Mb:",
-                        formatSingleDigitDecimal(report.purple().characteristics().tumorMutationalBurdenPerMb())),
-                Maps.immutableEntry("Tumor mutational load:", tmlString()),
-                Maps.immutableEntry("HR deficiency score:", hrDeficiencyString()),
-                Maps.immutableEntry("DPYD status:", dpydStatus()),
-                Maps.immutableEntry("Number of SVs:", svTmbString()),
-                Maps.immutableEntry("Max complex cluster size:", maxComplexSizeString()),
-                Maps.immutableEntry("Telomeric SGLs:", telomericSGLString()),
-                Maps.immutableEntry("Number of LINE insertions:", lineCountString())).forEach(entry ->
+
+        boolean includeGermline = !report.tumorOnlyMode();
+
+        addCellEntry(summary, cells, "Purity:", purityString());
+        addCellEntry(summary, cells, "Ploidy:", ploidyString());
+        addCellEntry(summary, cells, "Somatic variant drivers:", somaticVariantDriverString());
+
+        if(includeGermline)
+            addCellEntry(summary, cells, "Germline variant drivers:", germlineVariantDriverString());
+
+        addCellEntry(summary, cells, "Somatic copy number drivers:", somaticCopyNumberDriverString());
+
+        if(includeGermline)
+            addCellEntry(summary, cells, "Germline copy number drivers:", germlineCopyNumberDriverString());
+
+        addCellEntry(summary, cells, "Somatic disruption drivers:", somaticDisruptionDriverString());
+
+        if(includeGermline)
+            addCellEntry(summary, cells, "Germline disruption drivers:", germlineDisruptionDriverString());
+
+        addCellEntry(summary, cells, "Fusion drivers:", fusionDriverString());
+
+        if(includeGermline)
+            addCellEntry(summary, cells, "Viral presence:", virusString());
+
+        addCellEntry(summary, cells, "Whole genome duplicated:", report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No");
+        addCellEntry(summary, cells, "Microsatellite indels per Mb:", msiString());
+        addCellEntry(summary, cells, "Tumor mutations per Mb:",
+                formatSingleDigitDecimal(report.purple().characteristics().tumorMutationalBurdenPerMb()));
+        addCellEntry(summary, cells, "Tumor mutational load:", tmlString());
+
+        if(includeGermline) // will change once we solve HRD for panel
+            addCellEntry(summary, cells, "HR deficiency score:", hrDeficiencyString());
+
+        addCellEntry(summary, cells, "DPYD status:", dpydStatus());
+
+        if(includeGermline)
         {
-            summary.addCell(cells.createKey(entry.getKey()));
-            summary.addCell(cells.createValue(entry.getValue()));
-        });
+            addCellEntry(summary, cells, "Number of SVs:", svTmbString());
+            addCellEntry(summary, cells, "Max complex cluster size:", maxComplexSizeString());
+            addCellEntry(summary, cells, "Telomeric SGLs:", telomericSGLString());
+            addCellEntry(summary, cells, "Number of LINE insertions:", lineCountString());
+        }
 
         Image circosImage = Images.build(plotPathResolver.resolve(report.plots().purpleFinalCircosPlot()));
         circosImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -191,6 +226,12 @@ public class FrontPageChapter implements ReportChapter
 
         table.addCell(clonalityImage);
         document.add(table);
+    }
+
+    private static void addCellEntry(final Table summary, final Cells cells, final String name, final String value)
+    {
+        summary.addCell(cells.createKey(name));
+        summary.addCell(cells.createValue(value));
     }
 
     @NotNull

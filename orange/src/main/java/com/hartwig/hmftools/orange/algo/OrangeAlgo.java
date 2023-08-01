@@ -448,7 +448,8 @@ public class OrangeAlgo
         LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
 
         String linxGermlineDataDirectory = config.linxGermlineDataDirectory();
-        LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
+        LinxData linx = LinxDataLoader.load(
+                config.tumorSampleId(), config.linxSomaticDataDirectory(), !config.tumorOnlyMode() ? linxGermlineDataDirectory : null);
 
         LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticStructuralVariants().size());
         LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDrivers().size());
@@ -460,7 +461,7 @@ public class OrangeAlgo
                 linx.reportableSomaticBreakends().size());
         LOGGER.info(" Loaded {} somatic reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
-        if(linxGermlineDataDirectory != null)
+        if(!config.tumorOnlyMode() && linxGermlineDataDirectory != null)
         {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
             LOGGER.info(" Loaded {} germline structural variants", linx.allGermlineStructuralVariants().size());
@@ -515,6 +516,9 @@ public class OrangeAlgo
     @Nullable
     private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException
     {
+        if(config.tumorOnlyMode())
+            return null;
+
         String annotatedVirusTsv = config.annotatedVirusTsv();
         if(annotatedVirusTsv == null)
         {
@@ -528,6 +532,9 @@ public class OrangeAlgo
     @Nullable
     private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException
     {
+        if(config.tumorOnlyMode())
+            return null;
+
         String chordPredictionTxt = config.chordPredictionTxt();
         if(chordPredictionTxt == null)
         {
@@ -544,6 +551,9 @@ public class OrangeAlgo
     @Nullable
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException
     {
+        if(config.tumorOnlyMode())
+            return null;
+
         String cuppaResultTsv = config.cuppaResultCsv();
         if(cuppaResultTsv == null)
         {
@@ -583,6 +593,9 @@ public class OrangeAlgo
     @Nullable
     private static List<SignatureAllocation> loadSigAllocations(@NotNull OrangeConfig config) throws IOException
     {
+        if(config.tumorOnlyMode())
+            return null;
+
         String sigsAllocationTsv = config.sigsAllocationTsv();
 
         if(sigsAllocationTsv == null)
