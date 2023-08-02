@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical.lims;
 
+import java.lang.reflect.Array;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,6 +60,23 @@ abstract class LimsJsonSampleData {
     @NotNull
     @SerializedName("ptum")
     public abstract String primaryTumor();
+
+    // tumor_location/tumor_type/tumor_extra/tumor_doids are only present for samples already curated in LAMA
+    @Nullable
+    @SerializedName("tumor_location")
+    public abstract String tumorLocation();
+
+    @Nullable
+    @SerializedName("tumor_type")
+    public abstract String tumorType();
+
+    @Nullable
+    @SerializedName("tumor_extra")
+    public abstract String tumorExtra();
+
+    @Nullable
+    @SerializedName("tumor_doids")
+    public abstract String tumorDoids();
 
     // Biopsy Location is only known for COREDB samples
     @Nullable

@@ -84,6 +84,10 @@ public class LimsSampleReader {
                 .reportedDate(reportedDate)
                 .dnaNanograms(lims.dnaNanograms(sampleBarcode))
                 .limsPrimaryTumor(lims.primaryTumor(sampleBarcode))
+                .limsTumorType(lims.tumorType(sampleBarcode))
+                .limsTumorLocation(lims.tumorLocation(sampleBarcode))
+                .limsTumorExtra(lims.tumorExtra(sampleBarcode))
+                .limsTumorDoids(lims.tumorDoids(sampleBarcode))
                 .pathologyTumorPercentage(lims.pathologyTumorPercentage(sampleBarcode))
                 .pathologySampleId(lims.hospitalPathologySampleId(sampleBarcode))
                 .build();

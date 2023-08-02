@@ -240,6 +240,46 @@ public class Lims {
     }
 
     @Nullable
+    public String tumorLocation(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        if (sampleData != null) {
+            return sampleData.tumorLocation();
+        }
+        // No warning raised since LAMA will take time to be complete (only recent samples are curated in LAMA atm).
+        return null;
+    }
+
+    @Nullable
+    public String tumorType(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        if (sampleData != null) {
+            return sampleData.tumorType();
+        }
+        // No warning raised since LAMA will take time to be complete (only recent samples are curated in LAMA atm).
+        return null;
+    }
+
+    @Nullable
+    public String tumorExtra(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        if (sampleData != null) {
+            return sampleData.tumorExtra();
+        }
+        // No warning raised since LAMA will take time to be complete (only recent samples are curated in LAMA atm).
+        return null;
+    }
+
+    @Nullable
+    public String tumorDoids(@NotNull String sampleBarcode) {
+        LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
+        if (sampleData != null) {
+            return sampleData.tumorDoids();
+        }
+        // No warning raised since LAMA will take time to be complete (only recent samples are curated in LAMA atm).
+        return null;
+    }
+
+    @Nullable
     public String biopsyLocation(@NotNull String sampleBarcode) {
         LimsJsonSampleData sampleData = dataPerSampleBarcode.get(sampleBarcode);
         if (sampleData != null) {
