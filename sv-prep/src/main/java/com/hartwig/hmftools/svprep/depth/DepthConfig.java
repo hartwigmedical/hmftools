@@ -9,11 +9,9 @@ import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
-import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.util.Arrays;
@@ -56,6 +54,8 @@ public class DepthConfig
     private static final String VAF_CAP = "vaf_cap";
     private static final String PERF_LOG_TIME = "perf_log_time";
     public static final String VCF_TAG_PREFIX = "vcf_tag_prefix";
+
+    private static final String DELIM = ",";
 
     protected static final int DEFAULT_PROXIMITY_DISTANCE = 2000;
     protected static final double DEFAULT_VAF_CAP = 0.001;
