@@ -308,7 +308,7 @@ if [ "${reference_id}" != "none" ]; then
     ${tumor_id} ${reference_id} \
     ${gripss_germline_dir} ${gridss_vcf} \
     ${ref_genome_version} ${ref_genome} \
-    ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file}
+    ${sv_hotspot_file} ${sv_pon_file} ${sgl_pon_file} ${repeat_mask_file}
 fi
 
 
