@@ -33,6 +33,12 @@ public class CoordMapping
             return DestEnd - posDiff;
     }
 
+    public int reversePosition(int position)
+    {
+        int posDiff = !Reverse ? position - DestStart : DestEnd - position;
+        return posDiff + SourceStart;
+    }
+
     public String toString()
     {
         return format("%s:%d-%d -> %d-%d %s", Chromosome, SourceStart, SourceEnd, DestStart, DestEnd, Reverse ? "reversed" : "");

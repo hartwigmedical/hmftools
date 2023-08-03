@@ -17,7 +17,7 @@ import org.junit.Test;
 public class LiftoverMappingTest
 {
     @Test
-    public void testv37to38()
+    public void testConversions()
     {
         final InputStream inputStream = LiftoverMappingTest.class.getResourceAsStream("/genome/liftover_mappings.tsv");
         List<String> lines = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
@@ -33,5 +33,12 @@ public class LiftoverMappingTest
         // test a reversed region
         assertEquals(501617, genomeLiftoverCache.convertPosition(CHR_1, 317720));
         assertEquals(347969, genomeLiftoverCache.convertPosition(CHR_1, 471368));
+
+        // test reversing these positions
+        assertEquals(317720, genomeLiftoverCache.convertPositionTo37(CHR_1, 501617));
+        assertEquals(471368, genomeLiftoverCache.convertPositionTo37(CHR_1, 347969));
+        assertEquals(10001, genomeLiftoverCache.convertPositionTo37(CHR_1, 10001));
+
+
     }
 }

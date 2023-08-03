@@ -4,6 +4,7 @@ import static java.lang.Double.isFinite;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+import static com.hartwig.hmftools.amber.AmberUtils.logVersion;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +55,8 @@ public class AmberApplication implements AutoCloseable
         mLoggingOptions.setLogLevel();
 
         mVersionInfo = new VersionInfo("amber.version");
-        AMB_LOGGER.info("AMBER version: {}", mVersionInfo.version());
+
+        logVersion();
 
         mPersistence = new AmberPersistence(mConfig);
 

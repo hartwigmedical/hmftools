@@ -46,21 +46,40 @@ public class GenomeLiftoverCache
 
     public List<CoordMapping> getChromosomeMappings(final String chromosome) { return mMappings.get(chromosome); }
 
-    public int convertPositionv37(final String chromosome, final int position) { return convertPosition(chromosome, position, V37); }
-    public int convertPositionv38(final String chromosome, final int position)
+    public int convertPosition(final String chromosome, final int position) { return convertPositionTo38(chromosome, position); }
+
+    public int convertPosition(final String chromosome, final int position, final RefGenomeVersion destinationVersion)
     {
-        return convertPosition(stripChrPrefix(chromosome), position, V38);
+        return destinationVersion == V38 ? convertPositionTo38(chromosome, position) : convertPositionTo37(chromosome, position);
     }
 
-    public int convertPosition(final String chromosome, final int position) { return convertPosition(chromosome, position, V37); }
+    public int convertPositionTo37(final String chromosome, final int position)
+    {
+        List<CoordMapping> mappings = mMappings.get(stripChrPrefix(chromosome));
 
-    public int convertPosition(final String chromosome, final int position, final RefGenomeVersion refGenomeVersion)
+        if(mappings == null || mappings.isEmpty())
+            return position;
+
+        for(CoordMapping mapping : mappings)
+        {
+            if(mapping.DestEnd < position)
+                continue;
+
+            if(mapping.DestStart > position)
+                return UNMAPPED_POSITION;
+
+            return mapping.reversePosition(position);
+        }
+
+        return UNMAPPED_POSITION;
+    }
+
+    public int convertPositionTo38(final String chromosome, final int position)
     {
         List<CoordMapping> mappings = mMappings.get(chromosome);
 
         if(mappings == null || mappings.isEmpty())
             return position;
-
 
         for(CoordMapping mapping : mappings)
         {

@@ -11,6 +11,7 @@ import com.google.common.io.Files;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 public class AmberUtils
 {
@@ -49,5 +50,11 @@ public class AmberUtils
         }
 
         return genomeRegions;
+    }
+
+    public static void logVersion()
+    {
+        VersionInfo versionInfo = new VersionInfo("amber.version");
+        AMB_LOGGER.info("AMBER version: {}", versionInfo.version());
     }
 }
