@@ -3,8 +3,6 @@ package com.hartwig.hmftools.compar;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.util.List;
@@ -14,13 +12,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class Compar
@@ -110,29 +102,12 @@ public class Compar
 
     public static void main(@NotNull final String[] args)
     {
-        final VersionInfo version = new VersionInfo("compar.version");
-        CMP_LOGGER.info("Compar version: {}", version.version());
-
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder("Compar");
         ComparConfig.addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         Compar compar = new Compar(configBuilder);
         compar.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

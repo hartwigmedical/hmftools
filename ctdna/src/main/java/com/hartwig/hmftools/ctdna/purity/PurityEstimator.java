@@ -166,8 +166,6 @@ public class PurityEstimator
 
         configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(configBuilder);
-
         PurityEstimator purityEstimator = new PurityEstimator(configBuilder);
         purityEstimator.run();
     }
