@@ -87,7 +87,7 @@ public class AmberApplication implements AutoCloseable
         AmberGermline germline = new AmberGermline(mConfig, readerFactory(mConfig), mChromosomeSites);
 
         final List<AmberBAF> amberBAFList = germline.getHeterozygousLoci().values().stream().map(AmberBAF::create)
-                .filter(AmberUtils::isValid).sorted().collect(toList());
+                .sorted().collect(toList());
 
         mPersistence.persistQC(Collections.emptyList(), germline.getConsanguinityProportion(), germline.getUniparentalDisomy());
         mPersistence.persistVersionInfo(mVersionInfo);

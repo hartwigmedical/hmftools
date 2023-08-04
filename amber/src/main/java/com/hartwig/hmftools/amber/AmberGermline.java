@@ -81,7 +81,8 @@ public class AmberGermline
             mHetNormalEvidence.add(sample, additionalHetNormal);
         }
 
-        mHeterozygousLoci = filterEntries(primaryHeterozygousLoci, mHetNormalEvidence.intersectionFilter());
+        //mHeterozygousLoci = filterEntries(primaryHeterozygousLoci, mHetNormalEvidence.intersectionFilter());
+        mHeterozygousLoci = unfilteredLoci;
 
         AMB_LOGGER.info("{} heterozygous, {} homozygous in reference bams", mHeterozygousLoci.size(), mHomozygousLoci.size());
 
