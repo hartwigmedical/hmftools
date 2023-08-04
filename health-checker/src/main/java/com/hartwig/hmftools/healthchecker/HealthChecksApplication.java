@@ -172,11 +172,6 @@ public class HealthChecksApplication
         registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-        setLogLevel(configBuilder);
-
-        final VersionInfo version = new VersionInfo("health-checker.version");
-        HC_LOGGER.info("Health-checker version: {}", version.version());
-
 
         HealthChecksApplication healthChecksApplication = new HealthChecksApplication(configBuilder);
         healthChecksApplication.run();

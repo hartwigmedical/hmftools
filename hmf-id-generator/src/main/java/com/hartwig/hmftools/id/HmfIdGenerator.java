@@ -305,16 +305,10 @@ public class HmfIdGenerator
 
     public static void main(String[] args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder("HmfIdGenerator");
         addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         HmfIdGenerator generator = new HmfIdGenerator(configBuilder);
         generator.run();
