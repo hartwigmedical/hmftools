@@ -67,9 +67,6 @@ public class GripssApplication
             final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome,
             final ConfigBuilder configBuilder)
     {
-        final VersionInfo version = new VersionInfo("gripss.version");
-        GR_LOGGER.info("Gripss version: {}", version.version());
-
         mConfig = config;
         mFilterConstants = filterConstants;
 
@@ -362,18 +359,12 @@ public class GripssApplication
         mSvDataCache.addSvData(svData);
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder("Gripss");
         addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         GripssApplication gripss = GripssApplication.fromCommandArgs(configBuilder);
         gripss.run();

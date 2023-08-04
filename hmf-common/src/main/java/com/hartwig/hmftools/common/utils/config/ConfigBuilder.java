@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.utils.config;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.FLAG;
@@ -66,7 +67,7 @@ public class ConfigBuilder
 
     public void addConfigItem(final ConfigItem item)
     {
-        ConfigItem matched = mItems.stream().filter(x -> x.Name.equals(item.Name)).findFirst().orElse(null);
+        ConfigItem matched = getItem(item.Name, false);
 
         if(matched != null)
         {
@@ -146,11 +147,13 @@ public class ConfigBuilder
         addConfigItem(STRING, name, true, description, null);
     }
 
-    public ConfigItem getItem(final String name)
+    public ConfigItem getItem(final String name) { return getItem(name, true); }
+
+    public ConfigItem getItem(final String name, boolean logWarning)
     {
         ConfigItem item = mItems.stream().filter(x -> x.Name.equals(name)).findFirst().orElse(null);
 
-        if(item == null)
+        if(item == null && logWarning)
         {
             LOGGER.warn("invalid config item({}) requested", name);
         }
@@ -160,6 +163,8 @@ public class ConfigBuilder
 
     public String getValue(final String name) { return getItem(name).value(); }
     public boolean hasValue(final String name) { return getItem(name).hasValue(); }
+
+    public boolean isRegistered(final String name) { return getItem(name, false) != null; }
 
     public String getValue(final String name, final String defaultValue)
     {
@@ -236,6 +241,8 @@ public class ConfigBuilder
             System.exit(1);
         }
 
+        setLogLevel(this);
+
         logAppVersion();
     }
 
@@ -268,7 +275,7 @@ public class ConfigBuilder
             else if(argument.startsWith(mConfigPrefix))
             {
                 String configName = argument.substring(mConfigPrefix.length());
-                matchedItem = mItems.stream().filter(x -> x.Name.equals(configName)).findFirst().orElse(null);
+                matchedItem = getItem(configName, false);
 
                 if(matchedItem == null)
                 {
