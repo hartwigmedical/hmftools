@@ -2,6 +2,8 @@ package com.hartwig.hmftools.common.genome.refgenome;
 
 import static java.lang.String.format;
 
+import java.util.Comparator;
+
 public class CoordMapping
 {
     public final String Chromosome;
@@ -43,4 +45,16 @@ public class CoordMapping
     {
         return format("%s:%d-%d -> %d-%d %s", Chromosome, SourceStart, SourceEnd, DestStart, DestEnd, Reverse ? "reversed" : "");
     }
+
+    public static class CoordComparatorOnDestination implements Comparator<CoordMapping>
+    {
+        public int compare(final CoordMapping first, final CoordMapping second)
+        {
+            if(first.DestStart == second.DestStart)
+                return 0;
+
+            return first.DestStart < second.DestStart ? -1 : 1;
+        }
+    }
+
 }
