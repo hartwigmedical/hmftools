@@ -10,31 +10,28 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.apache.logging.log4j.core.util.IOUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class VersionInfo {
-
-    @NotNull
+public class VersionInfo
+{
     private final String resource;
 
-    public VersionInfo(@NotNull final String resource) {
+    public VersionInfo(final String resource)
+    {
         this.resource = resource;
     }
 
-    @NotNull
-    public String version() {
+    public String version()
+    {
         return value("version=", "UNKNOWN");
     }
 
-    @NotNull
-    public ZonedDateTime buildTime() {
+    public ZonedDateTime buildTime()
+    {
         String timeStr = value("build.date=", "UNKNOWN");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -42,27 +39,33 @@ public class VersionInfo {
         return ZonedDateTime.of(localDateTime, UTC);
     }
 
-    @NotNull
-    private String value(@NotNull final String key, @NotNull final String defaultValue) {
-        try {
-            for (String entry : readResource().split("\n")) {
-                if (entry.startsWith(key)) {
+    private String value(final String key, final String defaultValue)
+    {
+        try
+        {
+            for(String entry : readResource().split("\n"))
+            {
+                if(entry.startsWith(key))
+                {
                     return entry.substring(key.length());
                 }
             }
-        } catch (IOException ignored) {
+        }
+        catch(IOException ignored)
+        {
         }
         return defaultValue;
     }
 
-    public void write(@NotNull final String outputDirectory) throws IOException {
+    public void write(final String outputDirectory) throws IOException
+    {
         final String content = readResource();
         final Charset charset = StandardCharsets.UTF_8;
         Files.write(new File(outputDirectory + File.separator + resource).toPath(), content.getBytes(charset));
     }
 
-    @NotNull
-    private String readResource() throws IOException {
+    private String readResource() throws IOException
+    {
         InputStream in = VersionInfo.class.getClassLoader().getResourceAsStream(resource);
         assert in != null;
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));

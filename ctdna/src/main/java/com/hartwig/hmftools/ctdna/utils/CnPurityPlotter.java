@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.ctdna.utils;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.CN_SEGMENT_FILE_ID;
 import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.SUMMARY_FILE_ID;
@@ -53,18 +54,14 @@ public class CnPurityPlotter
         }
     }
 
-    public static void main(final String[] args) throws ParseException
+    public static void main(final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         PurityConfig.addConfig(configBuilder);
 
         ConfigUtils.addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
         setLogLevel(configBuilder);
 

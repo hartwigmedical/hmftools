@@ -5,11 +5,13 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
 import java.io.BufferedWriter;
@@ -370,19 +372,12 @@ public class ProbeFinder
 
     public static void main(@NotNull final String[] args)
     {
-        final VersionInfo version = new VersionInfo("ctdna.version");
-        CT_LOGGER.info("ProbeVariantSelection version: {}", version.version());
-
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         ProbeConfig.addConfig(configBuilder);
 
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
         setLogLevel(configBuilder);
 

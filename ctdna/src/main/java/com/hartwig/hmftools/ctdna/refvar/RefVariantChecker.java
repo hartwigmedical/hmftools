@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
+import static com.hartwig.hmftools.ctdna.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 
 import java.io.BufferedWriter;
@@ -259,10 +260,7 @@ public class RefVariantChecker
 
     public static void main(@NotNull final String[] args)
     {
-        final VersionInfo version = new VersionInfo("ctdna.version");
-        CT_LOGGER.info("RefVariantChecker version: {}", version.version());
-
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         addSampleIdFile(configBuilder, true);
         configBuilder.addPath(CTDNA_VCFS, true, "CtDNA VCFs");

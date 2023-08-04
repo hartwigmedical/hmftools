@@ -9,6 +9,8 @@ public final class CommonUtils
 {
     public static final Logger CT_LOGGER = LogManager.getLogger(CommonUtils.class);
 
+    public static final String APP_NAME = "CtDNA";
+
     public static final int DEFAULT_PROBE_LENGTH = 120;
 
     public static String generateMutationSequence(
