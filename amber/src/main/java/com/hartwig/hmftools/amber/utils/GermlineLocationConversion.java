@@ -1,13 +1,21 @@
 package com.hartwig.hmftools.amber.utils;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.AmberUtils.logVersion;
+import static com.hartwig.hmftools.amber.utils.Mappability.MAPPABILITY_BED;
 import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_ALT;
 import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_POSITION;
 import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_REF;
 import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_SNP_CHECK;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -15,12 +23,11 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -28,11 +35,16 @@ import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSiteFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.genome.gc.GcCalcs;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.jetbrains.annotations.NotNull;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class GermlineLocationConversion
 {
@@ -41,32 +53,40 @@ public class GermlineLocationConversion
     private static final String SNP_CHECKS_FILE = "snp_checks_file";
     private static final String DESTINATION_REF_GEN_VERSION = "dest_ref_genome_version";
 
+    private static final int GC_SEQUENCE_LENGTH = 120;
+
     private final String mInputFile;
     private final String mOutputFile;
     private final String mSnpCheckFile;
     private final GenomeLiftoverCache mGenomeLiftoverCache;
     private final RefGenomeVersion mDestRefGenVersion;
+    private final Mappability mMappability;
+    private final RefGenomeSource mRefGenome;
 
     public GermlineLocationConversion(final ConfigBuilder configBuilder)
     {
         mInputFile = configBuilder.getValue(INPUT_GERMLINE_HET_FILE);
         mOutputFile = configBuilder.getValue(OUTPUT_GERMLINE_HET_FILE);
         mSnpCheckFile = configBuilder.getValue(SNP_CHECKS_FILE);
-        mGenomeLiftoverCache = new GenomeLiftoverCache(true);
         mDestRefGenVersion = RefGenomeVersion.from(configBuilder.getValue(DESTINATION_REF_GEN_VERSION));
+        mGenomeLiftoverCache = new GenomeLiftoverCache(true, mDestRefGenVersion == V38);
+        mMappability = new Mappability(configBuilder);
+
+        String refGenomeFile = configBuilder.getValue(REF_GENOME);
+        mRefGenome = loadRefGenome(refGenomeFile);
     }
 
     public void run()
     {
         try
         {
-            ListMultimap<Chromosome,AmberSite> chrSites = AmberSiteFactory.sites(mInputFile);
+            ListMultimap<Chromosome, AmberReferenceSite> chrSites = loadReferenceAmberSites(mInputFile);
 
             Map<String,Set<Integer>> chrSnpChecks = Maps.newHashMap();
 
             if(mSnpCheckFile != null)
             {
-                ListMultimap<Chromosome,AmberSite> existingSnpCheckSites = AmberSiteFactory.sites(mSnpCheckFile);
+                ListMultimap<Chromosome, AmberSite> existingSnpCheckSites = AmberSiteFactory.sites(mSnpCheckFile);
 
                 for(HumanChromosome chromosome : HumanChromosome.values())
                 {
@@ -83,14 +103,11 @@ public class GermlineLocationConversion
 
                 AMB_LOGGER.info("applying {} existing SNP-check sites from {}",
                         chrSnpChecks.values().stream().mapToInt(x -> x.size()).sum(), mSnpCheckFile);
-
             }
 
             BufferedWriter writer = createBufferedWriter(mOutputFile);
 
-            StringJoiner header = new StringJoiner(TSV_DELIM);
-            header.add(FLD_CHROMOSOME).add(FLD_POSITION).add(FLD_REF).add(FLD_ALT).add(FLD_SNP_CHECK);
-            writer.write(header.toString());
+            writer.write(AmberSiteFactory.header());
             writer.newLine();
 
             int unmappedPositions = 0;
@@ -100,7 +117,7 @@ public class GermlineLocationConversion
             {
                 Set<Integer> snpCheckPositions = chrSnpChecks.get(mDestRefGenVersion.versionedChromosome(chromosome.toString()));
 
-                for(AmberSite site : chrSites.get(chromosome))
+                for(AmberReferenceSite site : chrSites.get(chromosome))
                 {
                     if(!writeVariant(writer, site, snpCheckPositions))
                         ++unmappedPositions;
@@ -120,33 +137,106 @@ public class GermlineLocationConversion
         }
     }
 
-    private boolean writeVariant(final BufferedWriter writer, final AmberSite site, final Set<Integer> snpCheckPositions) throws IOException
+    private boolean writeVariant(final BufferedWriter writer, final AmberReferenceSite site, final Set<Integer> snpCheckPositions) throws IOException
     {
-        int convertedPos = mGenomeLiftoverCache.convertPosition(site.chromosome(), site.position(), mDestRefGenVersion);
+        int convertedPos = mGenomeLiftoverCache.convertPosition(site.Chromosome, site.Position, mDestRefGenVersion);
 
         if(convertedPos == UNMAPPED_POSITION)
         {
-            AMB_LOGGER.trace("unmapped site({}:{} {}>{})", site.chromosome(), site.position(), site.ref(), site.alt());
+            AMB_LOGGER.trace("unmapped site({}:{} {}>{})", site.Chromosome, site.Position, site.Ref, site.Alt);
             return false;
         }
 
-        boolean snpCheckSite = (snpCheckPositions != null && snpCheckPositions.contains(convertedPos)) || site.snpCheck();
+        boolean snpCheckSite = snpCheckPositions != null && snpCheckPositions.contains(convertedPos);
+        String destChr = mDestRefGenVersion.versionedChromosome(site.Chromosome);
+
+        double mappability = mMappability.getMappability(destChr, convertedPos);
+
+        double gcRatio = calcsGcContent(destChr, convertedPos, site.Ref, site.Alt);
 
         AMB_LOGGER.trace("converted site({}:{} {}>{}) new position({})",
-                site.chromosome(), site.position(), site.ref(), site.alt(), convertedPos);
-
-        String destChr = mDestRefGenVersion.versionedChromosome(site.chromosome());
+                site.Chromosome, site.Position, site.Ref, site.Alt, convertedPos);
 
         StringJoiner data = new StringJoiner(TSV_DELIM);
         data.add(destChr);
         data.add(String.valueOf(convertedPos));
-        data.add(site.ref());
-        data.add(site.alt());
+        data.add(site.Ref);
+        data.add(site.Alt);
         data.add(String.valueOf(snpCheckSite));
+        data.add(String.valueOf(site.GnomadFrequency));
+        data.add(String.valueOf(mappability));
+        data.add(format("%.3f", gcRatio));
 
         writer.write(data.toString());
         writer.newLine();
         return true;
+    }
+
+    private double calcsGcContent(final String chromosome, final int position, final String ref, final String alt)
+    {
+        int altLength = alt.length();
+        int refLength = ref.length();
+        int startLength = GC_SEQUENCE_LENGTH / 2 - altLength / 2;
+        int startPos = position - startLength;
+
+        String basesStart = mRefGenome.getBaseString(chromosome, startPos, position - 1);
+        int endBaseLength = GC_SEQUENCE_LENGTH - basesStart.length() - altLength;
+
+        int postPosition = position + refLength;
+        String basesEnd = mRefGenome.getBaseString(chromosome, postPosition, postPosition + endBaseLength - 1);
+
+        String sequence = basesStart + alt + basesEnd;
+        return GcCalcs.calcGcPercent(sequence);
+    }
+
+    private class AmberReferenceSite
+    {
+        public final String Chromosome;
+        public final int Position;
+        public final String Ref;
+        public final String Alt;
+        public final double GnomadFrequency;
+
+        public AmberReferenceSite(final String chromosome, final int position, final String ref, final String alt, final double gnomadFrequency)
+        {
+            Chromosome = chromosome;
+            Position = position;
+            Ref = ref;
+            Alt = alt;
+            GnomadFrequency = gnomadFrequency;
+        }
+    }
+
+    private static final String GNOMAD_AF = "AF";
+
+    private ListMultimap<Chromosome, AmberReferenceSite> loadReferenceAmberSites(final String vcfFile) throws IOException
+    {
+        final ListMultimap<Chromosome, AmberReferenceSite> result = ArrayListMultimap.create();
+
+        VcfFileReader reader = new VcfFileReader(vcfFile);
+
+        if(!reader.fileValid())
+            throw new IOException("invalid Amber sites file");
+
+        for(VariantContext variant : reader.iterator())
+        {
+            if(variant.isFiltered())
+                continue;
+
+            if(!HumanChromosome.contains(variant.getContig()))
+                continue;
+
+            HumanChromosome chromosome = HumanChromosome.fromString(variant.getContig());
+
+            result.put(
+                    chromosome,
+                    new AmberReferenceSite(variant.getContig(), variant.getStart(),
+                            variant.getReference().getBaseString(), variant.getAlternateAllele(0).getBaseString(),
+                            variant.getAttributeAsDouble(GNOMAD_AF, 0)));
+        }
+
+        AMB_LOGGER.info("loaded {} Amber germline sites", result.size());
+        return result;
     }
 
     public static void main(@NotNull final String[] args)
@@ -159,6 +249,8 @@ public class GermlineLocationConversion
         configBuilder.addPath(SNP_CHECKS_FILE, false, "Input germline locations file");
         configBuilder.addConfigItem(OUTPUT_GERMLINE_HET_FILE, true, "Output germline locations file");
         configBuilder.addConfigItem(DESTINATION_REF_GEN_VERSION, true, "Ref genome version to convert to V37 or 38)");
+        configBuilder.addPath(MAPPABILITY_BED, false, "Mappability file");
+        configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC);
         addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

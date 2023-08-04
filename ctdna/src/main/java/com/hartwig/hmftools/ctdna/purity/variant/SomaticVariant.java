@@ -21,7 +21,7 @@ public class SomaticVariant
     public final boolean PassFilters;
 
     private final VariantContextDecorator mVariant;
-    private double mSequenceVcRatio;
+    private double mSequenceGcRatio;
 
     public SomaticVariant(final VariantContextDecorator variant, final double subclonalPerc, final boolean passFilters)
     {
@@ -34,7 +34,7 @@ public class SomaticVariant
         Samples = Lists.newArrayList();
         PassFilters = passFilters;
         mVariant = variant;
-        mSequenceVcRatio = 0;
+        mSequenceGcRatio = 0;
     }
 
     public GenotypeFragments findGenotypeData(final String sampleId)
@@ -42,8 +42,8 @@ public class SomaticVariant
         return Samples.stream().filter(x -> x.SampleName.equals(sampleId)).findFirst().orElse(null);
     }
 
-    public void setSequenceGcRatio(double ratio) { mSequenceVcRatio = ratio; }
-    public double sequenceGcRatio() { return mSequenceVcRatio; }
+    public void setSequenceGcRatio(double ratio) { mSequenceGcRatio = ratio; }
+    public double sequenceGcRatio() { return mSequenceGcRatio; }
 
     public VariantContextDecorator decorator() { return mVariant; }
 

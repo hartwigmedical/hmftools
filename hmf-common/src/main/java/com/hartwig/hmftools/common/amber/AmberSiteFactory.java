@@ -4,21 +4,15 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
-import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
-
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import org.apache.logging.log4j.LogManager;
@@ -100,6 +94,23 @@ public final class AmberSiteFactory
     public static final String FLD_REF = "Ref";
     public static final String FLD_ALT = "Alt";
     public static final String FLD_SNP_CHECK = "SnpCheck";
+    public static final String FLD_GNOMAD = "GnomadFreq";
+    public static final String FLD_MAPPABILITY = "Mappability";
+    public static final String FLD_GC_RATIO = "GcRatio";
+
+    public static String header()
+    {
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+        sj.add(FLD_CHROMOSOME);
+        sj.add(FLD_POSITION);
+        sj.add(FLD_REF);
+        sj.add(FLD_ALT);
+        sj.add(FLD_SNP_CHECK);
+        sj.add(FLD_GNOMAD);
+        sj.add(FLD_MAPPABILITY);
+        sj.add(FLD_GC_RATIO);
+        return sj.toString();
+    }
 
     public static ListMultimap<Chromosome,AmberSite> loadFile(final String filename) throws IOException
     {

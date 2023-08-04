@@ -3,6 +3,7 @@ package com.hartwig.hmftools.ctdna.purity.variant;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REALIGNED;
@@ -11,7 +12,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.DEFAULT_PROBE_LENGTH;
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.generateMutationSequence;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.LOW_QUAL_NOISE_CUTOFF;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MAX_REPEAT_COUNT;
@@ -300,7 +300,10 @@ public class SomaticVariants
             if(vafPeakModel.maxSomaticVaf() > 0)
             {
                 maxSomaticPeakVaf = vafPeakModel.maxSomaticVaf();
-                double newPurity = estimatedPurity(maxSomaticPeakVaf, tumorPloidy, tumorVaf);
+                double newPurity = estimatedPurity(maxSomaticPeakVaf, tumorPloidy, adjustedTumorVaf);
+
+                CT_LOGGER.debug(format("sample(%s) tumor(purity=%.4f ploidy=%.1f adjVaf=%.4f) vaf(basic=%.6f peak=%.6f) newPurity(%.6f)",
+                        sampleId, tumorPurity, tumorPloidy, adjustedTumorVaf, allFragsResult.VAF, maxSomaticPeakVaf, newPurity));
 
                 allFragsResult = new FragmentCalcResult(
                         vafPeakModel.maxSomaticVaf(), newPurity, allFragsResult.PurityProbability,

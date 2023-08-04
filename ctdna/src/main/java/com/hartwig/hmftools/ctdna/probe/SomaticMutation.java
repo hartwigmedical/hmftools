@@ -3,13 +3,13 @@ package com.hartwig.hmftools.ctdna.probe;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.generateMutationSequence;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_CLONAL_MUTATION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.OTHER_CODING_MUTATION;

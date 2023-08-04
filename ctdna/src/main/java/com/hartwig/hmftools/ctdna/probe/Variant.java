@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.ctdna.probe;
 
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
+import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.NOT_SET;
 import static com.hartwig.hmftools.ctdna.probe.SelectionStatus.SELECTED;
 

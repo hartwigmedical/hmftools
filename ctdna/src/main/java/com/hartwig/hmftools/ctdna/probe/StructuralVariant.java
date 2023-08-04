@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.linx.DriverEventType.DEL;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
@@ -15,7 +16,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.ctdna.common.CommonUtils.calcGcPercent;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.AMP;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.ctdna.probe.CategoryType.FUSION;

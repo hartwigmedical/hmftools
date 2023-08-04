@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DROPOUT_RATE_MIN_DEPTH;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DROPOUT_RATE_PROBABILITY;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DROPOUT_RATE_VAF_INCREMENT;
+import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MIN_QUAL_PER_AD;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.SOMATIC_PEAK_MAX_PROBABILITY;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.SOMATIC_PEAK_MIN_AD;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.SOMATIC_PEAK_MIN_DEPTH;
@@ -110,8 +111,13 @@ public class VafPeakModel
         {
             mMaxSomaticVaf = vafPeaks.stream().mapToDouble(x -> x.Peak).max().orElse(0);
 
-            CT_LOGGER.debug("sample({}) found {} somatic vaf peaks, max({})",
-                    sampleId, vafPeaks.size(), format("%.3f", mMaxSomaticVaf));
+            CT_LOGGER.debug("sample({}) filteredVars({}) found {} somatic vaf peaks, max({})",
+                    sampleId, filteredVariants.size(), vafPeaks.size(), format("%.3f", mMaxSomaticVaf));
+
+            for(VafPeak vafPeak : vafPeaks)
+            {
+                CT_LOGGER.debug("sample({}) somatic vaf peak({})", sampleId, vafPeak);
+            }
         }
     }
 
@@ -146,13 +152,15 @@ public class VafPeakModel
 
         double avgVaf = vafTotal / sampleVafs.size();
 
-        double densityBandwidth = min(avgVaf / 2, 0.01);
+        // double densityBandwidth = min(avgVaf / 2, 0.01);
+        double densityBandwidth = max(avgVaf/8, min(avgVaf/2, 0.01));
+        // bandwidth=pmax(mean(filteredVars$SampleVaf)/8,pmin(mean(filteredVars$SampleVaf)/2,0.01))  # mean = 0.076, min(avgVaf / 2, 0.01)
         int maxVafLimit = min((int)round(maxVaf * 100), 99);
 
         int vafFraction = 5;
         double[] vafs = IntStream.rangeClosed(0, maxVafLimit * vafFraction).mapToDouble(x -> x / (100d * vafFraction)).toArray();
 
-        KernelEstimator estimator = new KernelEstimator(0.001, vafs.length * 2);
+        KernelEstimator estimator = new KernelEstimator(0.001, densityBandwidth);
 
         sampleVafs.forEach(x -> estimator.addValue(x, 1.0));
 
@@ -186,7 +194,7 @@ public class VafPeakModel
             if(peakCount < SOMATIC_PEAK_MIN_PEAK_VARIANTS)
                 continue;
 
-            CT_LOGGER.debug(format("somatic peak: count(%d) vaf(%.3f)", peakCount, densityVaf));
+            CT_LOGGER.debug(format("somatic peak: count(%d) vaf(%.3f) densityBandwidth(%.4f)", peakCount, densityVaf, densityBandwidth));
             peakVafs.add(new VafPeak(densityVaf, peakCount));
         }
 
@@ -197,6 +205,7 @@ public class VafPeakModel
     {
         return variant.PassFilters
                 && variant.sequenceGcRatio() >= mConfig.GcRatioMin
+                && sampleFragData.qualPerAlleleFragment() > MIN_QUAL_PER_AD
                 && sampleFragData.UmiCounts.total() >= SOMATIC_PEAK_MIN_DEPTH
                 && sampleFragData.UmiCounts.alleleTotal() >= SOMATIC_PEAK_MIN_AD;
     }
