@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -142,11 +144,10 @@ public class ImpactComparisons
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         ComparisonConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-        setLogLevel(configBuilder);
 
         ImpactComparisons impactComparison = new ImpactComparisons(configBuilder);
         impactComparison.run();

@@ -23,6 +23,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.utils.DiffType.ALLELE_DEPTH;
 import static com.hartwig.hmftools.sage.utils.DiffType.FILTER_DIFF;
@@ -433,7 +434,7 @@ public class SageCompareVcfs
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
         configBuilder.addPath(ORIGINAL_VCF, true, "Original VCF file");
         configBuilder.addPath(NEW_VCF, true, "New VCF file");
@@ -444,13 +445,7 @@ public class SageCompareVcfs
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         SageCompareVcfs sageCompare = new SageCompareVcfs(configBuilder);
         sageCompare.run();

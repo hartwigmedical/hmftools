@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageCommon.calcMemoryUsage;
 import static com.hartwig.hmftools.sage.SageCommon.logMemoryUsage;
@@ -37,8 +38,6 @@ public class SageApplication implements AutoCloseable
     private SageApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("sage.version");
-        SG_LOGGER.info("Sage version: {}", version.version());
-
         mConfig = new SageCallConfig(version.version(), configBuilder);
 
         if(!mConfig.isValid())
@@ -132,16 +131,10 @@ public class SageApplication implements AutoCloseable
 
     public static void main(final String... args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         SageCallConfig.registerConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         SageApplication application = new SageApplication(configBuilder);
         application.run();
