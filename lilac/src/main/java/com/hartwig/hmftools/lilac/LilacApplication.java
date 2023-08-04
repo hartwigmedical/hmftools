@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
@@ -724,18 +725,12 @@ public class LilacApplication
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         LilacConfig.addConfig(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         LilacApplication lilac = new LilacApplication(new LilacConfig(configBuilder));
 

@@ -106,7 +106,6 @@ public class PurpleApplication
     private PurpleApplication(final ConfigBuilder configBuilder) throws IOException
     {
         mPurpleVersion = new VersionInfo("purple.version");
-        PPL_LOGGER.info("Purple version: {}", mPurpleVersion.version());
 
         // load config
         mConfig = new PurpleConfig(mPurpleVersion.version(), configBuilder);
@@ -610,19 +609,13 @@ public class PurpleApplication
 
     public static void main(final String... args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder("Purple");
 
         PurpleConfig.addOptions(configBuilder);
 
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         PurpleApplication purpleApplication = new PurpleApplication(configBuilder);
         purpleApplication.run();
