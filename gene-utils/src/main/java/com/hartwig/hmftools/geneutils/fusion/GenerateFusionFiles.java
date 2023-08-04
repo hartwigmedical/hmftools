@@ -17,11 +17,11 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.getEnsemblDirectory;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -493,21 +493,14 @@ public class GenerateFusionFiles
 
     public static void main(final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(KNOWN_FUSION_DB_FILE, true, "File containing the driver gene panel for 37");
         configBuilder.addPath(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
         addOutputDir(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         GenerateFusionFiles generator = new GenerateFusionFiles(configBuilder);
         generator.run();

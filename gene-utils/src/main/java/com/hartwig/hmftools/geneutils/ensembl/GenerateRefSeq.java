@@ -3,12 +3,10 @@ package com.hartwig.hmftools.geneutils.ensembl;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.readQueryString;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.writeRecordsAsTsv;
 import static com.hartwig.hmftools.geneutils.ensembl.EnsemblDAO.createEnsemblDbConnection;
@@ -30,7 +28,7 @@ public class GenerateRefSeq
 {
     public static void main(String[] args) throws ParseException, IOException, SQLException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
         EnsemblDAO.addCmdLineArgs(configBuilder);
@@ -38,14 +36,7 @@ public class GenerateRefSeq
         ConfigUtils.addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(configBuilder);
         String outputDir = parseOutputDir(configBuilder);

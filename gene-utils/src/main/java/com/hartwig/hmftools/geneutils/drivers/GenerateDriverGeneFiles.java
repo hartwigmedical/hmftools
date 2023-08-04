@@ -5,16 +5,16 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.addGenePanelOption;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.getEnsemblDirectory;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,9 +39,7 @@ import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.sv.SvCommonUtils;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -366,22 +364,15 @@ public class GenerateDriverGeneFiles
 
     public static void main(String[] args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         addGenePanelOption(configBuilder, true);
         configBuilder.addPath(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
         configBuilder.addConfigItem(PANEL_GENE_OVERRIDES, "List of comma-separated genes to include in panel");
         addOutputDir(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         GenerateDriverGeneFiles generator = new GenerateDriverGeneFiles(configBuilder);
         generator.run();

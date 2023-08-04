@@ -24,17 +24,13 @@ import org.jooq.tools.StringUtils;
 
 public final class CommonUtils
 {
+    public static final String APP_NAME = "GeneUtils";
+
     public static final Logger GU_LOGGER = LogManager.getLogger(CommonUtils.class);
 
     public static final String RESOURCE_REPO_DIR = "resource_repo_dir";
     public static final String RESOURCE_REPO_DIR_DESC = "The directory holding the public HMF resources repo";
     public static final String ENSEMBL_DIR = "ensembl_data_cache";
-
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("gene-utils.version");
-        GU_LOGGER.info("GeneUtils version: {}", version.version());
-    }
 
     public static String getEnsemblDirectory(final RefGenomeVersion refGenomeVersion, final String resourceRepoDir)
     {
