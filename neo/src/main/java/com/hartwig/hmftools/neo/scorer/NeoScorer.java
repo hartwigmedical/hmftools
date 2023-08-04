@@ -3,8 +3,8 @@ package com.hartwig.hmftools.neo.scorer;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.logVersion;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -73,18 +73,11 @@ public class NeoScorer
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         NeoScorerConfig.addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         NeoScorer neoScorer = new NeoScorer(configBuilder);
         neoScorer.run();

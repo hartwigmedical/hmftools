@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox.refdata;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.logVersion;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.APP_NAME;
 
 import java.util.List;
 import java.util.Map;
@@ -100,17 +100,10 @@ public class GenerateReferenceData
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         RefDataConfig.registerConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         GenerateReferenceData generateReferenceData = new GenerateReferenceData(configBuilder);
         generateReferenceData.run();

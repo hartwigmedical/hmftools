@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE;
@@ -305,7 +306,7 @@ public class PeptideProteomeLocator
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         configBuilder.addPath(PEPTIDE_FILE, true, "Peptides to search for");
         configBuilder.addInteger(FLANK_LENGTH, "Number of amino acid flanks to retrieve", 0);
         configBuilder.addFlag(FIND_REPEATS, "Look for repeated matches");
@@ -315,13 +316,7 @@ public class PeptideProteomeLocator
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         PeptideProteomeLocator peptideProteomeLocator = new PeptideProteomeLocator(configBuilder);
         peptideProteomeLocator.run();

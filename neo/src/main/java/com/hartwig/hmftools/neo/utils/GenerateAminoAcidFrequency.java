@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.io.BufferedWriter;
@@ -91,19 +92,13 @@ public class GenerateAminoAcidFrequency
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addEnsemblDir(configBuilder);
         configBuilder.addPath(AMINO_ACID_FREQ_FILE, true, "Output filename");
         addLoggingOptions(configBuilder);
         addOutputDir(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         GenerateAminoAcidFrequency neoBinder = new GenerateAminoAcidFrequency(configBuilder);
         neoBinder.generateFrequencies();
