@@ -74,6 +74,9 @@ public class BindingLikelihood
         if(pepLenIndex == INVALID_PEP_LEN)
             return INVALID_LIKELIHOOD;
 
+        if(rank >= mScoreRankBuckets.get(mScoreRankBuckets.size() - 1))
+            return 0;
+
         double[][] likelihoods = mAlleleLikelihoodMap.get(allele);
         if(likelihoods == null)
         {

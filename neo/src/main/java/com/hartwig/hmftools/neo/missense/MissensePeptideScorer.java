@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_DIR;
 import static com.hartwig.hmftools.neo.missense.MissenseConfig.registerConfig;
 import static com.hartwig.hmftools.neo.scorer.NeoRnaData.NO_TPM_VALUE;
@@ -216,10 +217,10 @@ public class MissensePeptideScorer
 
                 mPeptideScorer.calcScoreData(bindData);
 
-                if(mConfig.LikelihoodCutoff > 0 && bindData.likelihoodRank() > mConfig.LikelihoodCutoff)
-                    continue;
-
-                mWriter.writePeptideData(misensePeptide, bindData);
+                if(mMissenseCalcs.passesRankThreshold(bindData.likelihoodRank()))
+                {
+                    mWriter.writePeptideData(misensePeptide, bindData);
+                }
             }
         }
     }

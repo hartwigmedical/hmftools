@@ -62,7 +62,7 @@ public class NeoScorerConfig
     public static final String COHORT_TPM_MEDIANS_FILE = "cancer_tpm_medians_file";
     public static final String COHORT_TPM_MEDIANS_FILE_DESC = "TPM medians per cancer type and pan-cancer";
 
-    private static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
+    public static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
     private static final String SIMILARITY_THRESHOLD = "sim_threshold";
     public static final String PEPTIDE_LENGTHS = "peptide_lengths";
 

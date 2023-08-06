@@ -20,7 +20,9 @@ public class MissenseWriter
     {
         mRunScoring = runScoring;
         mConfig = config;
-        mWriter = initialiseWriter(formOutputFile("missense_peptides"));
+
+        String filePrefix = mRunScoring ? "missense_peptide_scores" : "missense_peptides";
+        mWriter = initialiseWriter(formOutputFile(filePrefix));
     }
 
     private String formOutputFile(final String fileType)

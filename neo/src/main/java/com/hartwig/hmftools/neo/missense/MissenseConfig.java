@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
 import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE;
 import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE_DESC;
+import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.LIKELIHOOD_THRESHOLD;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +39,6 @@ public class MissenseConfig
     public final String OutputId;
     public final int Threads;
 
-    private static final String LIKELIHOOD_CUTOFF = "likelihood_cutoff";
     private static final String SPECIFIC_ALLELES = "specific_alleles";
     private static final String KEEP_DUPLICATES = "keep_duplicates";
 
@@ -48,7 +48,7 @@ public class MissenseConfig
         FlankLength = FLANK_AA_COUNT;
 
         GeneIds = loadGeneIdsFile(configBuilder.getValue(GENE_ID_FILE));
-        LikelihoodCutoff = configBuilder.getDecimal(LIKELIHOOD_CUTOFF);
+        LikelihoodCutoff = configBuilder.getDecimal(LIKELIHOOD_THRESHOLD);
         KeepDuplicates = configBuilder.hasFlag(KEEP_DUPLICATES);
         Threads = parseThreads(configBuilder);
         OutputDir = parseOutputDir(configBuilder);
@@ -68,7 +68,10 @@ public class MissenseConfig
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(GENE_ID_FILE, true, GENE_ID_FILE_DESC);
         configBuilder.addConfigItem(SPECIFIC_ALLELES, false, "Specific alleles to score, must be from training set");
-        configBuilder.addDecimal(LIKELIHOOD_CUTOFF, "Likelihood cutoff to write an allele peptide result", 0.02);
+
+        configBuilder.addDecimal(
+                LIKELIHOOD_THRESHOLD, "Rank threshold to write full peptide data, default 0 (not applied)", 0.02);
+
         configBuilder.addPath(COHORT_TPM_MEDIANS_FILE, false, COHORT_TPM_MEDIANS_FILE_DESC);
         configBuilder.addFlag(KEEP_DUPLICATES, "Keep duplicate peptides");
         addThreadOptions(configBuilder);

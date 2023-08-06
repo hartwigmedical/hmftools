@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 
 import java.util.List;
 import java.util.Set;
@@ -270,5 +271,10 @@ public class MissenseCalcs
                 mPeptideData.add(peptideData);
             }
         }
+    }
+
+    public boolean passesRankThreshold(double value)
+    {
+        return value != INVALID_CALC && (mConfig.LikelihoodCutoff == 0 || mConfig.LikelihoodCutoff > 0 && value <= mConfig.LikelihoodCutoff);
     }
 }
