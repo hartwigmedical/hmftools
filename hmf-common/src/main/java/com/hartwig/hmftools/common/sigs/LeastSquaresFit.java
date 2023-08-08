@@ -4,6 +4,8 @@ package com.hartwig.hmftools.common.sigs;
 // Package: edu.rit.numeric
 // Unit:    Class edu.rit.numeric.NonNegativeLeastSquares
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.VectorUtils.initVector;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.copy;
@@ -82,7 +84,9 @@ public class LeastSquaresFit
         if (rows <= 0 || cols <= 0)
         {
             mValid = false;
-            throw new IllegalArgumentException("invalid rows or cols");
+            String errorStr = format("invalid rows(%d) or cols(%d)", rows, cols);
+            LOGGER.error(errorStr);
+            throw new IllegalArgumentException(errorStr);
         }
 
         M = rows;
