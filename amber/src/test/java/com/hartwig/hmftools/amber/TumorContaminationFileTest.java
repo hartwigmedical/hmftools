@@ -15,7 +15,6 @@ import org.junit.Test;
 
 public class TumorContaminationFileTest
 {
-
     @Test
     public void testReadWrite()
     {

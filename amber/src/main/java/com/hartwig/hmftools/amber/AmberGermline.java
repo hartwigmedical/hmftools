@@ -62,7 +62,7 @@ public class AmberGermline
         mHetNormalEvidence = new AmberHetNormalEvidence();
 
         // Primary Reference Data
-        ListMultimap<Chromosome, BaseDepth> unfilteredLoci = germlineDepth(readerFactory, mConfig.ReferenceBamPath.get(0), chromosomeSites);
+        ListMultimap<Chromosome, BaseDepth> unfilteredLoci = germlineDepth(readerFactory, mConfig.ReferenceBams.get(0), chromosomeSites);
 
         final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(mConfig.MinDepthPercent, mConfig.MaxDepthPercent, unfilteredLoci);
         mSnpCheckedLoci = filterEntries(unfilteredLoci, snpCheckFilter);
@@ -74,7 +74,7 @@ public class AmberGermline
         for(int i = 1; i < mConfig.ReferenceIds.size(); i++)
         {
             final String sample = mConfig.ReferenceIds.get(i);
-            final String sampleBam = mConfig.ReferenceBamPath.get(i);
+            final String sampleBam = mConfig.ReferenceBams.get(i);
             final Collection<BaseDepth> additional = germlineDepth(readerFactory, sampleBam, mHetNormalEvidence.intersection()).values();
             final Predicate<BaseDepth> filter = new BaseDepthFilter(mConfig.MinDepthPercent, mConfig.MaxDepthPercent, additional);
             final Collection<BaseDepth> additionalHetNormal = additional.stream().filter(filter.and(heterozygousFilter)).collect(toList());
@@ -85,7 +85,7 @@ public class AmberGermline
 
         AMB_LOGGER.info("{} heterozygous, {} homozygous in reference bams", mHeterozygousLoci.size(), mHomozygousLoci.size());
 
-        RegionOfHomozygosityFinder rohFinder = new RegionOfHomozygosityFinder(mConfig.refGenomeVersion, mConfig.MinDepthPercent, mConfig.MaxDepthPercent);
+        RegionOfHomozygosityFinder rohFinder = new RegionOfHomozygosityFinder(mConfig.RefGenersion, mConfig.MinDepthPercent, mConfig.MaxDepthPercent);
         mRegionsOfHomozygosity = rohFinder.findRegions(unfilteredLoci);
 
         mConsanguinityProportion = ConsanguinityAnalyser.calcConsanguinityProportion(mRegionsOfHomozygosity);
@@ -101,7 +101,7 @@ public class AmberGermline
         final List<ModifiableBaseDepth> baseDepths = bedRegionsSortedSet.values().stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
         var bafFactory = new BaseDepthFactory(mConfig.MinBaseQuality);
 
-        AsyncBamLociReader.processBam(bamPath, readerFactory, baseDepths, bafFactory::addEvidence, mConfig.ThreadCount,
+        AsyncBamLociReader.processBam(bamPath, readerFactory, baseDepths, bafFactory::addEvidence, mConfig.Threads,
                 mConfig.MinMappingQuality);
 
         final ListMultimap<Chromosome, BaseDepth> normalEvidence = ArrayListMultimap.create();

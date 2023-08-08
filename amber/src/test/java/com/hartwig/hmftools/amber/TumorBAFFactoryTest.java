@@ -14,7 +14,6 @@ import htsjdk.samtools.SAMRecord;
 
 public class TumorBAFFactoryTest
 {
-
     @Test
     public void useQualityOfBaseAfterDel()
     {

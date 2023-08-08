@@ -4,7 +4,8 @@ import static java.lang.Double.isFinite;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
-import static com.hartwig.hmftools.amber.AmberUtils.logVersion;
+import static com.hartwig.hmftools.amber.AmberConstants.APP_NAME;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,10 +17,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParametersDelegate;
-import com.beust.jcommander.UnixStyleUsageFormatter;
-
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSiteFactory;
@@ -29,8 +26,7 @@ import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.common.utils.config.DeclaredOrderParameterComparator;
-import com.hartwig.hmftools.common.utils.config.LoggingOptions;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import htsjdk.samtools.SamReaderFactory;
@@ -38,25 +34,22 @@ import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class AmberApplication implements AutoCloseable
 {
-    // add the AmberConfig options
-    @ParametersDelegate
-    private final AmberConfig mConfig = new AmberConfig();
-
-    // add to the logging options
-    @ParametersDelegate
-    private final LoggingOptions mLoggingOptions = new LoggingOptions();
+    private final AmberConfig mConfig;
 
     private AmberPersistence mPersistence;
     private VersionInfo mVersionInfo;
     private ImmutableListMultimap<Chromosome,AmberSite> mChromosomeSites;
 
+    public AmberApplication(final ConfigBuilder configBuilder)
+    {
+        mConfig = new AmberConfig(configBuilder);
+    }
+
     public int run() throws IOException, InterruptedException
     {
-        mLoggingOptions.setLogLevel();
+        long startTimeMs = System.currentTimeMillis();
 
         mVersionInfo = new VersionInfo("amber.version");
-
-        logVersion();
 
         mPersistence = new AmberPersistence(mConfig);
 
@@ -81,6 +74,9 @@ public class AmberApplication implements AutoCloseable
         {
             runNormalMode();
         }
+
+        AMB_LOGGER.info("Amber complete, mins({})", runTimeMinsStr(startTimeMs));
+
         return 0;
     }
 
@@ -184,10 +180,10 @@ public class AmberApplication implements AutoCloseable
 
     private static SamReaderFactory readerFactory(final AmberConfig config)
     {
-        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.Stringency);
-        if(config.RefGenomePath != null)
+        final SamReaderFactory readerFactory = SamReaderFactory.make().validationStringency(config.BamStringency);
+        if(config.RefGenomeFile != null)
         {
-            return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomePath)));
+            return readerFactory.referenceSource(new ReferenceSource(new File(config.RefGenomeFile)));
         }
         return readerFactory;
     }
@@ -195,7 +191,7 @@ public class AmberApplication implements AutoCloseable
     private List<GenomeRegion> loadTumorOnlyExcludedSnp() throws IOException
     {
         String resourcePath = null;
-        switch (mConfig.refGenomeVersion)
+        switch (mConfig.RefGenersion)
         {
             case V37:
                 // we don't have excluded region for v37 genome
@@ -211,41 +207,17 @@ public class AmberApplication implements AutoCloseable
     @Override
     public void close()
     {
-        AMB_LOGGER.info("Complete");
+        AMB_LOGGER.info("Amber complete");
     }
 
     public static void main(final String... args) throws IOException, InterruptedException
     {
-        AmberApplication amberApp = new AmberApplication();
-        JCommander commander = JCommander.newBuilder()
-                .addObject(amberApp)
-                .build();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        AmberConfig.registerConfig(configBuilder);
 
-        // use unix style formatter
-        commander.setUsageFormatter(new UnixStyleUsageFormatter(commander));
-        // help message show in order parameters are declared
-        commander.setParameterDescriptionComparator(new DeclaredOrderParameterComparator(AmberApplication.class));
+        configBuilder.checkAndParseCommandLine(args);
 
-        try
-        {
-            commander.parse(args);
-        }
-        catch (com.beust.jcommander.ParameterException e)
-        {
-            System.out.println("Unable to parse args: " + e.getMessage());
-            commander.usage();
-            System.exit(1);
-        }
-
-        // set all thread exception handler
-        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) ->
-        {
-            AMB_LOGGER.error("[{}]: uncaught exception: {}", t, e);
-            e.printStackTrace(System.err);
-            System.exit(1);
-        });
-
-        System.exit(amberApp.run());
+        AmberApplication amberApp = new AmberApplication(configBuilder);
+        amberApp.run();
     }
-
 }

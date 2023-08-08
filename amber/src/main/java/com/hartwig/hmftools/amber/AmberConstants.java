@@ -2,6 +2,8 @@ package com.hartwig.hmftools.amber;
 
 public class AmberConstants
 {
+    public static final String APP_NAME = "Amber";
+
     public static final int DEFAULT_MIN_BASE_QUALITY = 13;
     public static final int DEFAULT_MIN_PARTITION = 10000;
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;

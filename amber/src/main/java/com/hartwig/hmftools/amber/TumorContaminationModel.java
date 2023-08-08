@@ -57,7 +57,7 @@ public class TumorContaminationModel
             return contamination;
         }
 
-        AMB_LOGGER.info("No evidence of contamination.");
+        AMB_LOGGER.info("No evidence of contamination");
         return 0;
     }
 

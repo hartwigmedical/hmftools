@@ -45,8 +45,8 @@ public class AmberTumor
     private void tumorBAFAndContamination(final SamReaderFactory readerFactory,
             final ListMultimap<Chromosome, BaseDepth> germlineHetLoci, final ListMultimap<Chromosome, BaseDepth> germlineHomLoci) throws InterruptedException
     {
-        AMB_LOGGER.info("Processing {} germline heterozygous loci in tumor bam {}", germlineHetLoci.values().size(), mConfig.TumorBamPath);
-        AMB_LOGGER.info("Processing {} germline homozygous loci in tumor bam {} for contamination", germlineHomLoci.size(), mConfig.TumorBamPath);
+        AMB_LOGGER.info("Processing {} germline heterozygous loci in tumor bam {}", germlineHetLoci.values().size(), mConfig.TumorBam);
+        AMB_LOGGER.info("Processing {} germline homozygous loci in tumor bam {} for contamination", germlineHomLoci.size(), mConfig.TumorBam);
 
         final List<ModifiableTumorBAF> tumorBAFs = germlineHetLoci.values().stream().sorted().map(TumorBAFFactory::create).collect(Collectors.toList());
         final Map<BaseDepth, ModifiableBaseDepth> contaminationBafMap = germlineHomLoci.values().stream().collect(
@@ -68,8 +68,8 @@ public class AmberTumor
                 contaminationBafFactory.addEvidence((ModifiableBaseDepth)genomePosition, samRecord);
         };
 
-        AsyncBamLociReader.processBam(mConfig.TumorBamPath, readerFactory, mergedLoci,
-                lociBamRecordHander, mConfig.ThreadCount, mConfig.MinMappingQuality);
+        AsyncBamLociReader.processBam(mConfig.TumorBam, readerFactory, mergedLoci,
+                lociBamRecordHander, mConfig.Threads, mConfig.MinMappingQuality);
 
         mBafs = ArrayListMultimap.create();
 
