@@ -3,6 +3,7 @@ package com.hartwig.hmftools.compar;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.util.List;
@@ -86,10 +87,7 @@ public class Compar
 
         if(mConfig.multiSample())
         {
-            long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-            double timeTakeMins = timeTakenMs / 60000.0;
-
-            CMP_LOGGER.info("comparison of {} samples complete, mins({})", mConfig.SampleIds.size(), format("%.3f", timeTakeMins));
+            CMP_LOGGER.info("comparison of {} samples complete, mins({})", mConfig.SampleIds.size(), runTimeMinsStr(startTimeMs));
         }
         else
         {

@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_PANEL_THRESHOLD;
 import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -99,7 +100,7 @@ public class Isofox
 
     public boolean runAnalysis()
     {
-        long startTime = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
 
         // all other routines split work by chromosome
         Map<String,List<GeneData>> chrGeneMap = getChromosomeGeneLists();
@@ -128,10 +129,7 @@ public class Isofox
         if(!allocateBamFragments(chrGeneMap))
             return false;
 
-        long timeTakenMs = System.currentTimeMillis() - startTime;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        ISF_LOGGER.info("Isofox complete, mins({})", String.format("%.3f", timeTakeMins));
+        ISF_LOGGER.info("Isofox complete, mins({})", runTimeMinsStr(startTimeMs));
         return true;
     }
 

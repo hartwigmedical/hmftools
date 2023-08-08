@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.lilac;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
@@ -734,16 +735,13 @@ public class LilacApplication
 
         LilacApplication lilac = new LilacApplication(new LilacConfig(configBuilder));
 
-        long startTime = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
 
         if(lilac.run())
         {
             lilac.writeFileOutputs();
         }
 
-        long endTime = System.currentTimeMillis();
-        double runTime = (endTime - startTime) / 1000.0;
-
-        LL_LOGGER.info("Lilac complete, run time({}s)", String.format("%.2f", runTime));
+        LL_LOGGER.info("Lilac complete, run time({}s)", runTimeMinsStr(startTimeMs));
     }
 }

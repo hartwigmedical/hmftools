@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -63,7 +64,7 @@ public class SageApplication implements AutoCloseable
 
     private void run() throws IOException
     {
-        long startTime = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
         final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values(), mConfig.Common);
 
         BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
@@ -99,10 +100,7 @@ public class SageApplication implements AutoCloseable
 
         coverage.writeFiles(mConfig.Common.OutputFile);
 
-        long timeTakenMs = System.currentTimeMillis() - startTime;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        SG_LOGGER.info("Sage complete, mins({})", String.format("%.3f", timeTakeMins));
+        SG_LOGGER.info("Sage complete, mins({})", runTimeMinsStr(startTimeMs));
         SG_LOGGER.debug("Sage memory init({}mb) max({}mb)", initMemory, maxTaskMemory);
     }
 

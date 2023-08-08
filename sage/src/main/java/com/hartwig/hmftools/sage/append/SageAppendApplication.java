@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.append;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
@@ -94,7 +95,7 @@ public class SageAppendApplication
 
         SG_LOGGER.info("reading and validating file: {}", mConfig.InputVcf);
 
-        long startTime = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
 
         VcfFileReader vcfFileReader = new VcfFileReader(mConfig.InputVcf);
 
@@ -200,10 +201,7 @@ public class SageAppendApplication
 
         mRefGenome.close();
 
-        long timeTakenMs = System.currentTimeMillis() - startTime;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        SG_LOGGER.info("SageAppend complete, mins({})", String.format("%.3f", timeTakeMins));
+        SG_LOGGER.info("SageAppend complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private boolean validateInputHeader(VCFHeader header)

@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFil
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
@@ -171,8 +172,7 @@ public class PurpleApplication
             System.exit(1);
         }
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        PPL_LOGGER.info("Purple complete, run time({}s)", format("%.1f", timeTakenMs/1000.0));
+        PPL_LOGGER.info("Purple complete, mins({}s)", runTimeMinsStr(startTimeMs));
         mExecutorService.shutdown();
     }
 
