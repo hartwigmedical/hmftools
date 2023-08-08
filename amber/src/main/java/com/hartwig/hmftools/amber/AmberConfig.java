@@ -43,7 +43,7 @@ public class AmberConfig
     public final List<String> ReferenceBams;
 
     public final String BafLociPath;
-    public final RefGenomeVersion RefGenersion;
+    public final RefGenomeVersion RefGenVersion;
     public final String RefGenomeFile;
 
     public final int TumorOnlyMinSupport;
@@ -55,6 +55,7 @@ public class AmberConfig
     public final double MaxDepthPercent;
     public final double MinHetAfPercent;
     public final double MaxHetAfPercent;
+    public final boolean WriteUnfilteredGermline;
 
     public final String OutputDir;
     public final ValidationStringency BamStringency;
@@ -74,6 +75,7 @@ public class AmberConfig
     private static final String MAX_DEPTH_PERC = "max_depth_percent";
     private static final String MIN_HIT_AT_PERC = "min_het_af_percent";
     private static final String MAX_HIT_AT_PERC = "max_het_af_percent";
+    private static final String WRITE_UNFILTERED_GERMLINE = "write_unfiltered_germline";
 
     public AmberConfig(final ConfigBuilder configBuilder)
     {
@@ -88,7 +90,7 @@ public class AmberConfig
 
         BafLociPath = configBuilder.getValue(LOCI_FILE);
 
-        RefGenersion = RefGenomeVersion.from(configBuilder);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
 
         TumorOnlyMinSupport = configBuilder.getInteger(TUMOR_ONLY_MIN_SUPPORT);
@@ -100,6 +102,8 @@ public class AmberConfig
         MaxDepthPercent = configBuilder.getDecimal(MAX_DEPTH_PERC);
         MinHetAfPercent = configBuilder.getDecimal(MIN_HIT_AT_PERC);
         MaxHetAfPercent = configBuilder.getDecimal(MAX_HIT_AT_PERC);
+
+        WriteUnfilteredGermline = configBuilder.hasFlag(WRITE_UNFILTERED_GERMLINE);
 
         OutputDir = parseOutputDir(configBuilder);
         Threads = parseThreads(configBuilder);
@@ -137,6 +141,8 @@ public class AmberConfig
         configBuilder.addDecimal(MAX_DEPTH_PERC, "Max percentage of median depth", DEFAULT_MAX_DEPTH_PERCENTAGE);
         configBuilder.addDecimal(MIN_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MIN_HET_AF_PERCENTAGE);
         configBuilder.addDecimal(MAX_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MAX_HET_AF_PERCENTAGE);
+
+        configBuilder.addFlag(WRITE_UNFILTERED_GERMLINE, "Write all (unfiltered) germline points");
 
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);

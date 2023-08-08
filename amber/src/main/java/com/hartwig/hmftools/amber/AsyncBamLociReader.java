@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,8 +23,6 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class AsyncBamLociReader
 {
-    private static final Logger logger = LogManager.getLogger(AsyncBamLociReader.class);
-
     // use inheritance to save some memory, it is a bit dirty
     // but Amber is running out of memory
     static class Task<E extends GenomePosition> extends ArrayList<E>
@@ -39,7 +39,8 @@ public class AsyncBamLociReader
         final int mMinMappingQuality;
         BiConsumer<E, SAMRecord> mConsumer;
 
-        BamReaderThread(final String bamFile, final SamReaderFactory samReaderFactory, final Queue<Task<E>> inTaskQ,
+        BamReaderThread(
+                final String bamFile, final SamReaderFactory samReaderFactory, final Queue<Task<E>> inTaskQ,
                 int minMappingQuality, BiConsumer<E, SAMRecord> consumer)
         {
             mTaskQ = inTaskQ;
@@ -51,7 +52,7 @@ public class AsyncBamLociReader
         @Override
         public void run()
         {
-            logger.debug("bam reader thread start");
+            AMB_LOGGER.debug("bam reader thread start");
 
             while (true)
             {
@@ -92,15 +93,16 @@ public class AsyncBamLociReader
                 }
             }
 
-            try {
+            try
+            {
                 mSamReader.close();
             }
             catch (IOException e)
             {
-                logger.error("IO exception in SamReader::close: {}", e.getMessage());
+                AMB_LOGGER.error("IO exception in SamReader::close: {}", e.getMessage());
             }
 
-            logger.debug("bam reader thread finish");
+            AMB_LOGGER.debug("bam reader thread finish");
         }
 
         private boolean passesFilters(final SAMRecord record)
@@ -122,7 +124,7 @@ public class AsyncBamLociReader
             final List<E> loci, BiConsumer<E, SAMRecord> asyncRecordHandler, int threadCount, int minMappingQuality)
             throws InterruptedException
     {
-        logger.debug("Processing {} potential sites in bam {}", loci.size(), bamFile);
+        AMB_LOGGER.debug("processing {} potential sites in bam {}", loci.size(), bamFile);
 
         final Queue<Task<E>> taskQ = new ConcurrentLinkedQueue<>();
         
@@ -140,7 +142,7 @@ public class AsyncBamLociReader
             bamReaders.add(t);
         }
 
-        logger.info("{} bam reader threads started", bamReaders.size());
+        AMB_LOGGER.debug("{} bam reader threads started", bamReaders.size());
 
         AmberTaskCompletion taskCompletion = new AmberTaskCompletion(taskQ.size());
         for (BamReaderThread<E> t : bamReaders)
@@ -155,16 +157,14 @@ public class AsyncBamLociReader
             }
         }
 
-        logger.info("{} bam reader threads finished", bamReaders.size());
+        AMB_LOGGER.debug("{} bam reader threads finished", bamReaders.size());
     }
 
-    /**
-     * Group the genome regions
-     * cram file is much less efficient at handling seeks than bam files, therefore we merge more regions together when using cram.
-     */
-    public static <E extends GenomePosition> void populateTaskQueue(final List<E> sortedGenomePositions,
-            final Queue<Task<E>> taskQ, boolean isCram)
+    public static <E extends GenomePosition> void populateTaskQueue(
+            final List<E> sortedGenomePositions, final Queue<Task<E>> taskQ, boolean isCram)
     {
+        // Group the genome regions
+        // cram file is much less efficient at handling seeks than bam files, therefore we merge more regions together when using cram
         final int optimalNumRegions = isCram ? AmberConstants.OPTIMAL_CRAM_SLICE_REGIONS : AmberConstants.OPTIMAL_BAM_SLICE_REGIONS;
 
         int minGap = isCram ? 10000 : 2000;
@@ -218,6 +218,6 @@ public class AsyncBamLociReader
         }
         taskQ.addAll(tasks);
 
-        logger.info("{} loci, {} genome regions, min gap = {}", sortedGenomePositions.size(), taskQ.size(), minGap);
+        AMB_LOGGER.debug("{} loci, {} genome regions, min gap = {}", sortedGenomePositions.size(), taskQ.size(), minGap);
     }
 }

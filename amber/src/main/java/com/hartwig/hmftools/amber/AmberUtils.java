@@ -57,14 +57,15 @@ public class AmberUtils
 
     public static AmberBAF fromTumorBaf(final TumorBAF tumor)
     {
-        int tumorAltCount = tumor.tumorAltSupport();
-        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.tumorRefSupport());
-        int normalAltCount = tumor.normalAltSupport();
-        double normalBaf = normalAltCount / (double) (normalAltCount + tumor.normalRefSupport());
+        int tumorAltCount = tumor.TumorAltSupport;
+        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.TumorRefSupport);
+        int normalAltCount = tumor.NormalAltSupport;
+        double normalBaf = normalAltCount / (double) (normalAltCount + tumor.NormalRefSupport);
+
         return ImmutableAmberBAF.builder()
                 .from(tumor)
-                .normalDepth(tumor.normalReadDepth())
-                .tumorDepth(tumor.tumorReadDepth())
+                .normalDepth(tumor.NormalReadDepth)
+                .tumorDepth(tumor.TumorReadDepth)
                 .normalBAF(normalBaf)
                 .tumorBAF(tumorBaf)
                 .build();

@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.AmberConstants.APP_NAME;
 import static com.hartwig.hmftools.amber.AmberUtils.fromBaseDepth;
 import static com.hartwig.hmftools.amber.AmberUtils.fromTumorBaf;
+import static com.hartwig.hmftools.amber.AmberUtils.isValid;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
@@ -85,8 +87,17 @@ public class AmberApplication implements AutoCloseable
     {
         AmberGermline germline = new AmberGermline(mConfig, readerFactory(mConfig), mChromosomeSites);
 
-        final List<AmberBAF> amberBAFList = germline.getHeterozygousLoci().values().stream().map(x -> fromBaseDepth(x))
-                .filter(AmberUtils::isValid).sorted().collect(toList());
+        List<AmberBAF> amberBAFList = Lists.newArrayList();
+
+        for(BaseDepth baseDepth : germline.getHeterozygousLoci().values())
+        {
+            AmberBAF amberBAF = fromBaseDepth(baseDepth);
+
+            if(mConfig.WriteUnfilteredGermline || isValid(amberBAF))
+                amberBAFList.add(amberBAF);
+        }
+
+        Collections.sort(amberBAFList);
 
         mPersistence.persistQC(Collections.emptyList(), germline.getConsanguinityProportion(), germline.getUniparentalDisomy());
         mPersistence.persistVersionInfo(mVersionInfo);
@@ -128,9 +139,9 @@ public class AmberApplication implements AutoCloseable
 
         final List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
-                .filter(x -> x.tumorReadDepth() >= mConfig.TumorOnlyMinDepth)
-                .filter(x -> x.tumorRefSupport() >= mConfig.TumorOnlyMinSupport)
-                .filter(x -> x.tumorAltSupport() >= mConfig.TumorOnlyMinSupport)
+                .filter(x -> x.TumorReadDepth >= mConfig.TumorOnlyMinDepth)
+                .filter(x -> x.TumorRefSupport >= mConfig.TumorOnlyMinSupport)
+                .filter(x -> x.TumorAltSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
                 .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), mConfig.TumorOnlyMinVaf))
                 .sorted()
@@ -193,7 +204,7 @@ public class AmberApplication implements AutoCloseable
     private List<GenomeRegion> loadTumorOnlyExcludedSnp() throws IOException
     {
         String resourcePath = null;
-        switch (mConfig.RefGenersion)
+        switch (mConfig.RefGenVersion)
         {
             case V37:
                 // we don't have excluded region for v37 genome

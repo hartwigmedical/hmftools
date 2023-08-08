@@ -34,21 +34,10 @@ public class AmberGermline
     private final ListMultimap<Chromosome, BaseDepth> mHeterozygousLoci;
     private final List<RegionOfHomozygosity> mRegionsOfHomozygosity;
     private final double mConsanguinityProportion;
+
     @Nullable private final Chromosome mUniparentalDisomy;
 
-    AmberHetNormalEvidence getHetEvidence() { return mHetNormalEvidence; }
-
-    ListMultimap<Chromosome, BaseDepth> getSnpCheckedLoci() { return mSnpCheckedLoci; }
-    ListMultimap<Chromosome, BaseDepth> getHomozygousLoci() { return mHomozygousLoci; }
-    ListMultimap<Chromosome, BaseDepth> getHeterozygousLoci() { return mHeterozygousLoci; }
-
-    List<RegionOfHomozygosity> getRegionsOfHomozygosity() { return mRegionsOfHomozygosity; }
-    double getConsanguinityProportion() { return mConsanguinityProportion; }
-
-    @Nullable
-    Chromosome getUniparentalDisomy() { return mUniparentalDisomy; }
-
-    AmberGermline(final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chromosomeSites)
+    public AmberGermline(final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chromosomeSites)
             throws InterruptedException, IOException
     {
         mConfig = config;
@@ -80,16 +69,30 @@ public class AmberGermline
             mHetNormalEvidence.add(sample, additionalHetNormal);
         }
 
-        mHeterozygousLoci = filterEntries(primaryHeterozygousLoci, mHetNormalEvidence.intersectionFilter());
+        if(mConfig.WriteUnfilteredGermline)
+            mHeterozygousLoci = unfilteredLoci;
+        else
+            mHeterozygousLoci = filterEntries(primaryHeterozygousLoci, mHetNormalEvidence.intersectionFilter());
 
         AMB_LOGGER.info("{} heterozygous, {} homozygous in reference bams", mHeterozygousLoci.size(), mHomozygousLoci.size());
 
-        RegionOfHomozygosityFinder rohFinder = new RegionOfHomozygosityFinder(mConfig.RefGenersion, mConfig.MinDepthPercent, mConfig.MaxDepthPercent);
+        RegionOfHomozygosityFinder rohFinder = new RegionOfHomozygosityFinder(mConfig.RefGenVersion, mConfig.MinDepthPercent, mConfig.MaxDepthPercent);
         mRegionsOfHomozygosity = rohFinder.findRegions(unfilteredLoci);
 
         mConsanguinityProportion = ConsanguinityAnalyser.calcConsanguinityProportion(mRegionsOfHomozygosity);
         mUniparentalDisomy = ConsanguinityAnalyser.findUniparentalDisomy(mRegionsOfHomozygosity);
     }
+
+    public AmberHetNormalEvidence getHetEvidence() { return mHetNormalEvidence; }
+
+    public ListMultimap<Chromosome, BaseDepth> getSnpCheckedLoci() { return mSnpCheckedLoci; }
+    public ListMultimap<Chromosome, BaseDepth> getHomozygousLoci() { return mHomozygousLoci; }
+    public ListMultimap<Chromosome, BaseDepth> getHeterozygousLoci() { return mHeterozygousLoci; }
+    public List<RegionOfHomozygosity> getRegionsOfHomozygosity() { return mRegionsOfHomozygosity; }
+    public double getConsanguinityProportion() { return mConsanguinityProportion; }
+
+    @Nullable
+    Chromosome getUniparentalDisomy() { return mUniparentalDisomy; }
 
     private ListMultimap<Chromosome, BaseDepth> germlineDepth(
             final SamReaderFactory readerFactory, final String bamPath,

@@ -2,41 +2,46 @@ package com.hartwig.hmftools.amber;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public class TumorBAF implements GenomePosition
+{
+    public final String Chromosome;
+    public final int Position;
+    public final String Ref;
+    public final String Alt;
 
-@Value.Modifiable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface TumorBAF extends GenomePosition {
+    public int NormalReadDepth;
+    public int NormalRefSupport;
+    public int NormalAltSupport;
 
-    @NotNull
-    String ref();
+    public int TumorReadDepth;
+    public int TumorRefSupport;
+    public int TumorAltSupport;
+    public int TumorAltQuality;
+    public int TumorIndelCount;
 
-    @NotNull
-    String alt();
+    public TumorBAF(final String chromosome, final int position, final String ref, final String alt)
+    {
+        Chromosome = chromosome;
+        Position = position;
+        Ref = ref;
+        Alt = alt;
 
-    int normalReadDepth();
+        NormalReadDepth = 0;
+        NormalRefSupport = 0;
+        NormalAltSupport = 0;
 
-    int normalRefSupport();
-
-    int normalAltSupport();
-
-    int tumorReadDepth();
-
-    int tumorRefSupport();
-
-    int tumorAltSupport();
-
-    int tumorAltQuality();
-
-    int tumorIndelCount();
-
-    default double refFrequency() {
-        return tumorRefSupport() / (double) tumorReadDepth();
+        TumorReadDepth = 0;
+        TumorRefSupport = 0;
+        TumorAltSupport = 0;
+        TumorAltQuality = 0;
+        TumorIndelCount = 0;
     }
 
-    default double altFrequency() {
-        return tumorAltSupport() / (double) tumorReadDepth();
+    public String chromosome() { return Chromosome; }
+    public int position() { return Position; }
+
+    public double refFrequency() { return TumorRefSupport / (double)TumorReadDepth; }
+    public double altFrequency() {
+        return TumorAltSupport / (double)TumorReadDepth;
     }
 }

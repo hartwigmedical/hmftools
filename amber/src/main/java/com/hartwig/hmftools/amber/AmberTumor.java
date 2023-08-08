@@ -46,7 +46,7 @@ public class AmberTumor
         AMB_LOGGER.info("Processing {} germline heterozygous loci in tumor bam {}", germlineHetLoci.values().size(), mConfig.TumorBam);
         AMB_LOGGER.info("Processing {} germline homozygous loci in tumor bam {} for contamination", germlineHomLoci.size(), mConfig.TumorBam);
 
-        final List<ModifiableTumorBAF> tumorBAFs = germlineHetLoci.values().stream().sorted().map(TumorBAFFactory::create).collect(Collectors.toList());
+        final List<TumorBAF> tumorBAFs = germlineHetLoci.values().stream().sorted().map(TumorBAFFactory::create).collect(Collectors.toList());
         final Map<BaseDepth, ModifiableBaseDepth> contaminationBafMap = germlineHomLoci.values().stream().collect(
                 Collectors.toMap(x -> x, BaseDepthFactory::create));
 
@@ -60,8 +60,8 @@ public class AmberTumor
 
         BiConsumer<GenomePosition, SAMRecord> lociBamRecordHander = (GenomePosition genomePosition, SAMRecord samRecord) ->
         {
-            if (genomePosition instanceof ModifiableTumorBAF)
-                tumorBafFactory.addEvidence((ModifiableTumorBAF)genomePosition, samRecord);
+            if (genomePosition instanceof TumorBAF)
+                tumorBafFactory.addEvidence((TumorBAF)genomePosition, samRecord);
             else if (genomePosition instanceof ModifiableBaseDepth)
                 contaminationBafFactory.addEvidence((ModifiableBaseDepth)genomePosition, samRecord);
         };
@@ -71,7 +71,7 @@ public class AmberTumor
 
         mBafs = ArrayListMultimap.create();
 
-        tumorBAFs.stream().filter(x -> x.tumorIndelCount() == 0).forEach(x ->
+        tumorBAFs.stream().filter(x -> x.TumorIndelCount == 0).forEach(x ->
             mBafs.put(HumanChromosome.fromString(x.chromosome()), x));
 
         mContamination = ArrayListMultimap.create();

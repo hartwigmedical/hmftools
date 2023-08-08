@@ -20,17 +20,16 @@ public class TumorBAFFactoryTest
 
         final SAMRecord lowQualDel = buildSamRecord(1000, "1M1D1M", "CT", "FI");
         final SAMRecord highQualDel = buildSamRecord(1000, "1M1D1M", "CT", "FJ");
-        final ModifiableTumorBAF victim = createDefault("5", 1001);
+        final TumorBAF victim = createDefault("5", 1001);
 
         new TumorBAFFactory(minQuality).addEvidence(victim, lowQualDel);
-        assertEquals(0, victim.tumorReadDepth());
+        assertEquals(0, victim.TumorReadDepth);
 
         new TumorBAFFactory(minQuality).addEvidence(victim, highQualDel);
-        assertEquals(1, victim.tumorReadDepth());
+        assertEquals(1, victim.TumorReadDepth);
     }
 
-    @NotNull
-    private static ModifiableTumorBAF createDefault(@NotNull final String chromosome, final int position)
+    private static TumorBAF createDefault(final String chromosome, final int position)
     {
         final ModifiableBaseDepth normal = ModifiableBaseDepth.create()
                 .setChromosome(chromosome)
@@ -41,6 +40,7 @@ public class TumorBAFFactoryTest
                 .setAltSupport(3)
                 .setReadDepth(6)
                 .setIndelCount(0);
+
         return TumorBAFFactory.create(normal);
     }
 
