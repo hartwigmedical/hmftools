@@ -200,8 +200,10 @@ public class SageAppendApplication
 
         mRefGenome.close();
 
-        long timeTaken = System.currentTimeMillis() - startTime;
-        SG_LOGGER.info("completed in {} seconds", String.format("%.1f",timeTaken / 1000.0));
+        long timeTakenMs = System.currentTimeMillis() - startTime;
+        double timeTakeMins = timeTakenMs / 60000.0;
+
+        SG_LOGGER.info("SageAppend complete, mins({})", String.format("%.3f", timeTakeMins));
     }
 
     private boolean validateInputHeader(VCFHeader header)
