@@ -52,10 +52,10 @@ public class Compar
 
         long startTimeMs = System.currentTimeMillis();
 
-        List<ComparTask> sampleTasks = Lists.newArrayList();
-
         if(mConfig.Threads > 1)
         {
+            List<ComparTask> sampleTasks = Lists.newArrayList();
+
             for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
                 sampleTasks.add(new ComparTask(i, mConfig, mWriter));
@@ -78,10 +78,7 @@ public class Compar
         else
         {
             ComparTask sampleTask = new ComparTask(0, mConfig, mWriter);
-
             sampleTask.getSampleIds().addAll(mConfig.SampleIds);
-
-            sampleTasks.add(sampleTask);
             sampleTask.call();
         }
 
