@@ -11,9 +11,9 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.qc.AmberQC;
-import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
-import com.hartwig.hmftools.common.amber.qc.ImmutableAmberQC;
+import com.hartwig.hmftools.common.amber.AmberQC;
+import com.hartwig.hmftools.common.amber.AmberQCFile;
+import com.hartwig.hmftools.common.amber.ImmutableAmberQC;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 

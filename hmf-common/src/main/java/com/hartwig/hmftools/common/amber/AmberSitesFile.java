@@ -20,22 +20,12 @@ import org.apache.logging.log4j.Logger;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public final class AmberSiteFactory
+public final class AmberSitesFile
 {
-    private static final Logger LOGGER = LogManager.getLogger(AmberSiteFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger(AmberSitesFile.class);
     private static final String SNPCHECK = "SNPCHECK";
 
-    public static AmberSite asSite(final BaseDepth baseDepth)
-    {
-        return ImmutableAmberSite.builder()
-                .from(baseDepth)
-                .snpCheck(false)
-                .ref(baseDepth.ref().toString())
-                .alt(baseDepth.alt().toString())
-                .build();
-    }
-
-    public static ListMultimap<Chromosome, AmberSite> sites(final String filename) throws IOException
+    public static ListMultimap<Chromosome,AmberSite> sites(final String filename) throws IOException
     {
         BufferedReader reader = createBufferedReader(filename);
 

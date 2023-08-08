@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.amber.AmberUtils.depthAsSite;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -8,7 +10,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.AmberSiteFactory;
 import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.ImmutableAmberSite;
 
@@ -57,7 +58,7 @@ public class AmberVCF
         {
             for(BaseDepth baseDepth : hetNormalEvidence.evidence(sample))
             {
-                genotypeMap.put(AmberSiteFactory.asSite(baseDepth), createGenotype(sample, baseDepth));
+                genotypeMap.put(depthAsSite(baseDepth), createGenotype(sample, baseDepth));
             }
         }
 

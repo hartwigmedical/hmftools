@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.amber.qc;
+package com.hartwig.hmftools.common.amber;
 
 import com.hartwig.hmftools.common.utils.Doubles;
 

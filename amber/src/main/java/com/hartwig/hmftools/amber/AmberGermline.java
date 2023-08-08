@@ -18,7 +18,6 @@ import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.amber.NormalHeterozygousFilter;
-import com.hartwig.hmftools.common.amber.NormalHomozygousFilter;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 

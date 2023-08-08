@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.AmberSiteFactory;
+import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -52,7 +52,7 @@ public class LoadAmberData
         String mappingLoci = configBuilder.getValue(SNPCHECK_VCF);
 
         LOGGER.info("Loading mapping loci from {}", mappingLoci);
-        final ListMultimap<Chromosome, AmberSite> mappingSites = AmberSiteFactory.sites(mappingLoci);
+        final ListMultimap<Chromosome, AmberSite> mappingSites = AmberSitesFile.sites(mappingLoci);
 
         final GenomePositionSelector<AmberSite> selector = GenomePositionSelectorFactory.create(mappingSites);
 

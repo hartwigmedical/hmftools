@@ -21,7 +21,7 @@ import com.google.common.collect.ListMultimap;
 
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.AmberSiteFactory;
+import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
@@ -55,7 +55,7 @@ public class AmberApplication implements AutoCloseable
         mPersistence = new AmberPersistence(mConfig);
 
         AMB_LOGGER.info("Loading vcf file {}", mConfig.BafLociPath);
-        mChromosomeSites = ImmutableListMultimap.copyOf(AmberSiteFactory.sites(mConfig.BafLociPath));
+        mChromosomeSites = ImmutableListMultimap.copyOf(AmberSitesFile.sites(mConfig.BafLociPath));
 
         if(!mConfig.isValid())
         {

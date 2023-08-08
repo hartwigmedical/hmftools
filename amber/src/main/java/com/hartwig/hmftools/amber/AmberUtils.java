@@ -9,8 +9,10 @@ import java.util.List;
 
 import com.google.common.io.Files;
 import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
+import com.hartwig.hmftools.common.amber.ImmutableAmberSite;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
@@ -81,4 +83,13 @@ public class AmberUtils
                 .build();
     }
 
+    public static AmberSite depthAsSite(final BaseDepth baseDepth)
+    {
+        return ImmutableAmberSite.builder()
+                .from(baseDepth)
+                .snpCheck(false)
+                .ref(baseDepth.ref().toString())
+                .alt(baseDepth.alt().toString())
+                .build();
+    }
 }

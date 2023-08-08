@@ -10,7 +10,6 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
@@ -25,7 +24,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.AmberSiteFactory;
+import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GcCalcs;
@@ -79,7 +78,7 @@ public class GermlineLocationConversion
 
             if(mSnpCheckFile != null)
             {
-                ListMultimap<Chromosome, AmberSite> existingSnpCheckSites = AmberSiteFactory.sites(mSnpCheckFile);
+                ListMultimap<Chromosome, AmberSite> existingSnpCheckSites = AmberSitesFile.sites(mSnpCheckFile);
 
                 for(HumanChromosome chromosome : HumanChromosome.values())
                 {
@@ -100,7 +99,7 @@ public class GermlineLocationConversion
 
             BufferedWriter writer = createBufferedWriter(mOutputFile);
 
-            writer.write(AmberSiteFactory.header());
+            writer.write(AmberSitesFile.header());
             writer.newLine();
 
             int unmappedPositions = 0;

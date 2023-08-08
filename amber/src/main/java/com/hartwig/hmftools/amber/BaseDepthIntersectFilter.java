@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.amber.AmberUtils.depthAsSite;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +13,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.AmberSiteFactory;
 import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -70,13 +71,13 @@ public class BaseDepthIntersectFilter implements Predicate<BaseDepth>
     @Override
     public boolean test(final BaseDepth baseDepth)
     {
-        return !mAdditional || mIntersection.contains(AmberSiteFactory.asSite(baseDepth));
+        return !mAdditional || mIntersection.contains(depthAsSite(baseDepth));
     }
 
     @NotNull
     private static Set<AmberSite> asSet(@NotNull final Collection<BaseDepth> depth)
     {
-        return depth.stream().map(AmberSiteFactory::asSite).collect(Collectors.toSet());
+        return depth.stream().map(x -> depthAsSite(x)).collect(Collectors.toSet());
     }
 
 }

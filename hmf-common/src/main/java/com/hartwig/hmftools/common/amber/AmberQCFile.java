@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.amber.qc;
+package com.hartwig.hmftools.common.amber;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getValue;
