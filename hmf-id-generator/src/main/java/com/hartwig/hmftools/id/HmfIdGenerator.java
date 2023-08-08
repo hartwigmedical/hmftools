@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.id;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.id.HmfIdConfig.DATA_DELIM;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
-import com.hartwig.hmftools.common.amber.AmberPatient;
+import com.hartwig.hmftools.patientdb.amber.AmberPatient;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 

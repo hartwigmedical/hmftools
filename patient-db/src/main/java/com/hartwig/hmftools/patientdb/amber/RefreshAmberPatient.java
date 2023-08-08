@@ -1,7 +1,7 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.amber;
 
+import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -10,16 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.amber.AmberMapping;
-import com.hartwig.hmftools.common.amber.AmberMappingFactory;
-import com.hartwig.hmftools.common.amber.AmberPatient;
-import com.hartwig.hmftools.common.amber.AmberPatientFactory;
-import com.hartwig.hmftools.common.amber.AmberSample;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,12 +20,11 @@ public class RefreshAmberPatient
 {
     public static void main(@NotNull String[] args) throws ParseException, SQLException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        addDatabaseCmdLineArgs(configBuilder, true);
+        configBuilder.checkAndParseCommandLine(args);
 
-        logVersion();
-
-        try(DatabaseAccess dbAccess = databaseAccess(cmd))
+        try(DatabaseAccess dbAccess = databaseAccess(configBuilder))
         {
             LOGGER.info("Reading sample data");
             List<AmberPatient> previousPatients = dbAccess.readAmberPatients();
@@ -67,13 +59,5 @@ public class RefreshAmberPatient
         }
 
         LOGGER.info("Complete");
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-        addDatabaseCmdLineArgs(options);
-        return options;
     }
 }

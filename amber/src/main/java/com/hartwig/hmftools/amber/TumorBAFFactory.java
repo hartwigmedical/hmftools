@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.amber.BaseDepthFactory.getBaseQuality;
 import static com.hartwig.hmftools.common.amber.BaseDepthFactory.indel;
 
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.ModifiableTumorBAF;
 
 import org.jetbrains.annotations.NotNull;
 

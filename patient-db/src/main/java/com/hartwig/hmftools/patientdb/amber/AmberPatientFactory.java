@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.patientdb.amber;
 
 import java.util.Collection;
 import java.util.List;

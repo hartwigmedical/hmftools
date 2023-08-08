@@ -5,6 +5,8 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.AmberConstants.APP_NAME;
+import static com.hartwig.hmftools.amber.AmberUtils.fromBaseDepth;
+import static com.hartwig.hmftools.amber.AmberUtils.fromTumorBaf;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.io.File;
@@ -22,7 +24,6 @@ import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSiteFactory;
 import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthFactory;
-import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -84,7 +85,7 @@ public class AmberApplication implements AutoCloseable
     {
         AmberGermline germline = new AmberGermline(mConfig, readerFactory(mConfig), mChromosomeSites);
 
-        final List<AmberBAF> amberBAFList = germline.getHeterozygousLoci().values().stream().map(AmberBAF::create)
+        final List<AmberBAF> amberBAFList = germline.getHeterozygousLoci().values().stream().map(x -> fromBaseDepth(x))
                 .filter(AmberUtils::isValid).sorted().collect(toList());
 
         mPersistence.persistQC(Collections.emptyList(), germline.getConsanguinityProportion(), germline.getUniparentalDisomy());
@@ -104,7 +105,7 @@ public class AmberApplication implements AutoCloseable
                 germline.getHeterozygousLoci(), germline.getHomozygousLoci());
 
         final List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream().sorted().collect(toList());
-        final List<AmberBAF> amberBAFList = tumorBAFList.stream().map(AmberBAF::create).filter(AmberUtils::isValid).collect(toList());
+        final List<AmberBAF> amberBAFList = tumorBAFList.stream().map(x -> fromTumorBaf(x)).filter(AmberUtils::isValid).collect(toList());
 
         final List<TumorContamination> contaminationList = new ArrayList<>(tumor.getContamination().values());
 
@@ -134,8 +135,9 @@ public class AmberApplication implements AutoCloseable
                 .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), mConfig.TumorOnlyMinVaf))
                 .sorted()
                 .collect(toList());
-        final List<AmberBAF> amberBAFList =
-                tumorBAFList.stream().map(AmberBAF::create).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
+
+        final List<AmberBAF> amberBAFList = tumorBAFList.stream()
+                .map(x -> fromTumorBaf(x)).filter(x -> Double.isFinite(x.tumorBAF())).collect(toList());
 
         mPersistence.persistQC(Collections.emptyList(), 0.0, null);
         mPersistence.persistVersionInfo(mVersionInfo);

@@ -10,7 +10,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSiteFactory;
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.TumorBAF;
+import com.hartwig.hmftools.common.amber.ImmutableAmberSite;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -63,12 +63,22 @@ public class AmberVCF
 
         for(final TumorBAF tumorBAF : list)
         {
-            AmberSite tumorSite = AmberSiteFactory.tumorSite(tumorBAF);
+            AmberSite tumorSite = tumorSite(tumorBAF);
             genotypeMap.put(tumorSite, createGenotype(tumorBAF));
             writer.add(create(tumorBAF, genotypeMap.get(tumorSite)));
         }
 
         writer.close();
+    }
+
+    private static AmberSite tumorSite(final TumorBAF baseDepth)
+    {
+        return ImmutableAmberSite.builder()
+                .from(baseDepth)
+                .snpCheck(false)
+                .ref(baseDepth.ref())
+                .alt(baseDepth.alt())
+                .build();
     }
 
     void writeContamination(@NotNull final String filename, @NotNull final Collection<TumorContamination> evidence)

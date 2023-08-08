@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.patientdb.amber;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;

@@ -1,8 +1,9 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.patientdb.amber;
 
 import java.util.List;
 
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.amber.BaseDepth;
+import com.hartwig.hmftools.common.amber.NormalHeterozygousFilter;
 
 public class AmberSampleFactory
 {
@@ -15,7 +16,7 @@ public class AmberSampleFactory
         mHeterozygousFilter = new NormalHeterozygousFilter(minHetAFPercentage, maxHetAFPercentage);
     }
 
-    public AmberSample fromBaseDepth(@NotNull final String sample, @NotNull final List<BaseDepth> baseDepths)
+    public AmberSample fromBaseDepth(final String sample, final List<BaseDepth> baseDepths)
     {
         byte[] entries = new byte[baseDepths.size()];
         for(int i = 0; i < baseDepths.size(); i++)
@@ -50,5 +51,4 @@ public class AmberSampleFactory
 
         return AmberSample.DO_NOT_MATCH;
     }
-
 }

@@ -3,17 +3,10 @@ package com.hartwig.hmftools.amber.utils;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
-import static com.hartwig.hmftools.amber.AmberUtils.logVersion;
 import static com.hartwig.hmftools.amber.utils.Mappability.MAPPABILITY_BED;
-import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_ALT;
-import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_POSITION;
-import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_REF;
-import static com.hartwig.hmftools.common.amber.AmberSiteFactory.FLD_SNP_CHECK;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -241,8 +234,6 @@ public class GermlineLocationConversion
 
     public static void main(@NotNull final String[] args)
     {
-        logVersion();
-
         ConfigBuilder configBuilder = new ConfigBuilder();
 
         configBuilder.addPath(INPUT_GERMLINE_HET_FILE, true, "Input germline locations file");
@@ -254,7 +245,6 @@ public class GermlineLocationConversion
         addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-        setLogLevel(configBuilder);
 
         GermlineLocationConversion application = new GermlineLocationConversion(configBuilder);
         application.run();

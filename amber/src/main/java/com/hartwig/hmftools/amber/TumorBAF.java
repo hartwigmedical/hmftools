@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.amber;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 

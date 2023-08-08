@@ -25,16 +25,6 @@ public final class AmberSiteFactory
     private static final Logger LOGGER = LogManager.getLogger(AmberSiteFactory.class);
     private static final String SNPCHECK = "SNPCHECK";
 
-    public static AmberSite tumorSite(final TumorBAF baseDepth)
-    {
-        return ImmutableAmberSite.builder()
-                .from(baseDepth)
-                .snpCheck(false)
-                .ref(baseDepth.ref())
-                .alt(baseDepth.alt())
-                .build();
-    }
-
     public static AmberSite asSite(final BaseDepth baseDepth)
     {
         return ImmutableAmberSite.builder()

@@ -11,10 +11,9 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.TumorBAF;
 import com.hartwig.hmftools.common.amber.qc.AmberQC;
-import com.hartwig.hmftools.common.amber.qc.AmberQCFactory;
 import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
+import com.hartwig.hmftools.common.amber.qc.ImmutableAmberQC;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
@@ -51,8 +50,12 @@ class AmberPersistence
             double consanguinityProportion, @Nullable Chromosome uniparentalDisomy) throws IOException
     {
         final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
-        final AmberQC qcStats = AmberQCFactory.create(contamination, consanguinityProportion,
-                uniparentalDisomy != null ? uniparentalDisomy.toString() : null);
+
+        AmberQC qcStats = ImmutableAmberQC.builder()
+                .contamination(contamination)
+                .consanguinityProportion(consanguinityProportion)
+                .uniparentalDisomy(uniparentalDisomy != null ? uniparentalDisomy.toString() : null).build();
+
         final String qcFilename = AmberQCFile.generateFilename(mConfig.OutputDir, mConfig.getSampleId());
         AmberQCFile.write(qcFilename, qcStats);
     }

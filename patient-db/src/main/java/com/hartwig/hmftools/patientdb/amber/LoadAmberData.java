@@ -1,8 +1,9 @@
-package com.hartwig.hmftools.patientdb;
+package com.hartwig.hmftools.patientdb.amber;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
-import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -15,12 +16,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.amber.AmberMapping;
-import com.hartwig.hmftools.common.amber.AmberMappingFactory;
-import com.hartwig.hmftools.common.amber.AmberPatient;
-import com.hartwig.hmftools.common.amber.AmberPatientFactory;
-import com.hartwig.hmftools.common.amber.AmberSample;
-import com.hartwig.hmftools.common.amber.AmberSampleFactory;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSiteFactory;
 import com.hartwig.hmftools.common.amber.BaseDepth;
@@ -28,11 +23,9 @@ import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,22 +42,23 @@ public class LoadAmberData
 
     public static void main(@NotNull String[] args) throws ParseException, IOException, SQLException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        registerConfig(configBuilder);
 
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
-        String tumorSample = cmd.getOptionValue(SAMPLE);
-        String amberSnpPath = cmd.getOptionValue(AMBER_SNP_VCF);
-        String mappingLoci = cmd.getOptionValue(SNPCHECK_VCF);
+        String tumorSample = configBuilder.getValue(SAMPLE);
+        String amberSnpPath = configBuilder.getValue(AMBER_SNP_VCF);
+        String mappingLoci = configBuilder.getValue(SNPCHECK_VCF);
 
         LOGGER.info("Loading mapping loci from {}", mappingLoci);
         final ListMultimap<Chromosome, AmberSite> mappingSites = AmberSiteFactory.sites(mappingLoci);
 
         final GenomePositionSelector<AmberSite> selector = GenomePositionSelectorFactory.create(mappingSites);
 
-        try(final DatabaseAccess dbAccess = databaseAccess(cmd);
-                final VCFFileReader fileReader = new VCFFileReader(new File(amberSnpPath), false))
+        try(final DatabaseAccess dbAccess = databaseAccess(configBuilder);
+
+        final VCFFileReader fileReader = new VCFFileReader(new File(amberSnpPath), false))
         {
             LOGGER.info("Loading vcf snp data from {}", amberSnpPath);
             final List<BaseDepth> baseDepths = fileReader.iterator()
@@ -75,12 +69,13 @@ public class LoadAmberData
 
             final AmberSampleFactory amberSampleFactory =
                     new AmberSampleFactory(DEFAULT_MIN_DEPTH, DEFAULT_MIN_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
+
             final AmberSample sample = amberSampleFactory.fromBaseDepth(tumorSample, baseDepths);
 
             processSample(sample, dbAccess);
         }
 
-        LOGGER.info("Complete");
+        LOGGER.info("Amber data loading complete");
     }
 
     public static void processSample(final AmberSample sample, final DatabaseAccess dbAccess)
@@ -111,14 +106,11 @@ public class LoadAmberData
         dbAccess.writeAmberPatients(Collections.singletonList(patient));
     }
 
-    @NotNull
-    private static Options createOptions()
+    private static void registerConfig(final ConfigBuilder configBuilder)
     {
-        Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample");
-        options.addOption(AMBER_SNP_VCF, true, "Path to the amber snp vcf");
-        options.addOption(SNPCHECK_VCF, true, "Path to the downsampled snp check vcf");
-        addDatabaseCmdLineArgs(options);
-        return options;
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addPath(AMBER_SNP_VCF, true, "Path to the amber snp vcf");
+        configBuilder.addPath(SNPCHECK_VCF, true, "Path to the downsampled snp check vcf");
+        addDatabaseCmdLineArgs(configBuilder, true);
     }
 }

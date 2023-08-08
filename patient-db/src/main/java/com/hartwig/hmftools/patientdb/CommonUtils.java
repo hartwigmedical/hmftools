@@ -8,13 +8,15 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CommonUtils
 {
+    public static final String APP_NAME = "PatientDb";
+
     public static final Logger LOGGER = LogManager.getLogger(CommonUtils.class);
 
     private CommonUtils() {}
 
     public static void logVersion()
     {
-        final VersionInfo version = new VersionInfo("patient-db.version");
+        final VersionInfo version = new VersionInfo("patientdb.version");
         LOGGER.info("Patient-DB version: {}", version.version());
     }
 

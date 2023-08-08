@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.patientdb.amber;
 
-import static com.hartwig.hmftools.common.amber.AmberSample.DO_NOT_MATCH;
+import static com.hartwig.hmftools.patientdb.amber.AmberSample.DO_NOT_MATCH;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,11 +12,11 @@ import org.jetbrains.annotations.NotNull;
 public class AmberMappingFactory
 {
     @NotNull
-    public static AmberMapping create(@NotNull final AmberSample victim, @NotNull final AmberSample other)
+    public static AmberMapping create(final AmberSample firstSample, final AmberSample secondSample)
     {
-        final byte[] entries = victim.entries();
-        byte[] otherEntries = other.entries();
-        if(victim.sampleId().equals(other.sampleId()))
+        final byte[] entries = firstSample.entries();
+        byte[] otherEntries = secondSample.entries();
+        if(firstSample.sampleId().equals(secondSample.sampleId()))
         {
             throw new IllegalArgumentException("Matching same sample");
         }
@@ -40,7 +40,7 @@ public class AmberMappingFactory
             }
         }
 
-        final List<String> sampleNames = Lists.newArrayList(victim.sampleId(), other.sampleId());
+        final List<String> sampleNames = Lists.newArrayList(firstSample.sampleId(), secondSample.sampleId());
         Collections.sort(sampleNames);
 
         return ImmutableAmberMapping.builder()
