@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
@@ -130,10 +131,7 @@ public class MissensePeptideScorer
 
         mWriter.close();
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        NE_LOGGER.info("missense peptide generation complete, mins({})", format("%.3f", timeTakeMins));
+        NE_LOGGER.info("missense peptide generation complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private class GeneTask implements Callable

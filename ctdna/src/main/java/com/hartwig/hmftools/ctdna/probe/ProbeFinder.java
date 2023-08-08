@@ -379,8 +379,6 @@ public class ProbeFinder
 
         configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(configBuilder);
-
         ProbeFinder application = new ProbeFinder(configBuilder);
         application.run();
     }
