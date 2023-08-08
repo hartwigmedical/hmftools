@@ -17,7 +17,7 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.ctdna.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.ctdna.purity.cn.CopyNumberGcData;
-import com.hartwig.hmftools.ctdna.purity.variant.DropoutRateModel;
+import com.hartwig.hmftools.ctdna.purity.variant.LowCountModel;
 import com.hartwig.hmftools.ctdna.purity.variant.GenotypeFragments;
 import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariant;
 import com.hartwig.hmftools.ctdna.purity.variant.SomaticVariantResult;
@@ -41,7 +41,7 @@ public class ResultsWriter
         mSampleWriter = initialiseWriter();
         mVariantWriter = config.WriteSomatics ? initialiseVariantWriter() : null;
         mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
-        mDropoutCalcWriter = config.ApplyPeakModel ? DropoutRateModel.initialiseWriter(mConfig) : null;
+        mDropoutCalcWriter = config.WriteSomatics ? LowCountModel.initialiseWriter(mConfig) : null;
     }
 
     public BufferedWriter getDropoutWriter() { return mDropoutCalcWriter; }

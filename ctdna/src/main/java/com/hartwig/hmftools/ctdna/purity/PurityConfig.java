@@ -53,7 +53,6 @@ public class PurityConfig
     public final boolean WriteSomatics;
     public final boolean WriteCnRatios;
     public final boolean PlotCnFit;
-    public final boolean ApplyPeakModel;
     public final boolean WriteFilteredSomatics;
     public final double NoiseReadsPerMillion;
     public final double NoiseReadsPerMillionDualStrand;
@@ -71,7 +70,6 @@ public class PurityConfig
     private static final String PLOT_CN = "plot_cn_fit";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
-    private static final String APPLY_PEAK_MODEL = "somatic_vaf_peaks";
     private static final String GC_RATIO_MIN = "gc_ratio_min";
 
     public PurityConfig(final ConfigBuilder configBuilder)
@@ -105,7 +103,6 @@ public class PurityConfig
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
         GcRatioMin = configBuilder.getDecimal(GC_RATIO_MIN);
 
-        ApplyPeakModel = configBuilder.hasFlag(APPLY_PEAK_MODEL);
         WriteSomatics = configBuilder.hasFlag(WRITE_VARIANTS);
         WriteCnRatios = configBuilder.hasFlag(WRITE_CN_RATIOS);
         WriteFilteredSomatics = configBuilder.hasFlag(INCLUDE_FILTERED_VARIANTS);
@@ -178,10 +175,9 @@ public class PurityConfig
                 "List of purity methods separated by ',' default(all) from: " + sj);
 
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
-        configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, true, SAMPLE_DATA_DIR_DESC);
+        configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
-        configBuilder.addFlag(APPLY_PEAK_MODEL, "Apply somatic drop-out logic");
         configBuilder.addFlag(WRITE_VARIANTS, "Write variants");
         configBuilder.addFlag(WRITE_CN_RATIOS, "Write copy number segment GC ratio summary");
         configBuilder.addFlag(PLOT_CN,"Plot copy number / GC ratio fit");
@@ -196,7 +192,7 @@ public class PurityConfig
                 NOISE_READS_PER_MILLION_DUAL,
                 "Expected reads-per-million from noise for dual-strand reads", DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND);
 
-        configBuilder.addDecimal( GC_RATIO_MIN,"GC ratio minimum permitted", DEFAULT_GC_RATIO_MIN);
+        configBuilder.addDecimal(GC_RATIO_MIN,"GC ratio minimum permitted", DEFAULT_GC_RATIO_MIN);
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);

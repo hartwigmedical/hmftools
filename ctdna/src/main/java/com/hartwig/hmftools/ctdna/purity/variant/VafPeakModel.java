@@ -1,31 +1,18 @@
 package com.hartwig.hmftools.ctdna.purity.variant;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
-import static java.lang.Math.log10;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.pow;
 import static java.lang.Math.round;
-import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.ctdna.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DROPOUT_RATE_MIN_DEPTH;
-import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DROPOUT_RATE_PROBABILITY;
-import static com.hartwig.hmftools.ctdna.purity.PurityConstants.DROPOUT_RATE_VAF_INCREMENT;
-import static com.hartwig.hmftools.ctdna.purity.PurityConstants.MIN_QUAL_PER_AD;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.SOMATIC_PEAK_MAX_PROBABILITY;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.SOMATIC_PEAK_MIN_AD;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.SOMATIC_PEAK_MIN_DEPTH;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.SOMATIC_PEAK_MIN_PEAK_VARIANTS;
 import static com.hartwig.hmftools.ctdna.purity.PurityConstants.SOMATIC_PEAK_MIN_VARIANTS;
-import static com.hartwig.hmftools.ctdna.purity.ResultsWriter.DROPOUT_FILE_ID;
+import static com.hartwig.hmftools.ctdna.purity.variant.ClonalityResult.INVALID_RESULT;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,40 +25,25 @@ import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
 import com.hartwig.hmftools.ctdna.common.SampleData;
 import com.hartwig.hmftools.ctdna.purity.PurityConfig;
 import com.hartwig.hmftools.ctdna.purity.ResultsWriter;
+import com.hartwig.hmftools.ctdna.purity.cn.GcRatioData;
 
-import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.checkerframework.checker.units.qual.C;
-
-public class VafPeakModel
+public class VafPeakModel extends ClonalityModel
 {
-    private final PurityConfig mConfig;
-    private final ResultsWriter mResultsWriter;
-
-    private final SampleData mSample;
-    private final List<SomaticVariant> mVariants;
-
-    // calculate state
     private double mTumorAvgVaf;
-    private double mMaxSomaticVaf;
 
     public VafPeakModel(
             final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample, final List<SomaticVariant> variants)
     {
-        mConfig = config;
-        mResultsWriter = resultsWriter;
-        mSample = sample;
-        mVariants = variants;
+        super(config, resultsWriter, sample,  variants);
 
         mTumorAvgVaf = calcTumorAvgVaf();
-        mMaxSomaticVaf = 0;
     }
 
-    public double maxSomaticVaf() { return mMaxSomaticVaf; }
-
-    public void calculate(final String sampleId, final FragmentCalcResult estimatedResult)
+    @Override
+    public ClonalityResult calculate(final String sampleId, final FragmentCalcResult estimatedResult)
     {
         if(estimatedResult.PurityProbability > SOMATIC_PEAK_MAX_PROBABILITY)
-            return;
+            return INVALID_RESULT;
 
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
         List<VariantCalcs> variantCalcData = Lists.newArrayList();
@@ -84,24 +56,17 @@ public class VafPeakModel
             if(sampleFragData == null)
                 continue;
 
-            if(useVariant(variant, sampleFragData))
+            if(canUseVariant(variant, sampleFragData))
             {
                 filteredVariants.add(variant);
 
                 VariantCalcs varCalcData = calcAdjustedVaf(sampleFragData, tumorFragData);
                 variantCalcData.add(varCalcData);
-
-                if(varCalcData.SampleVaf > 0)
-                {
-                    double sampleAdjVaf = varCalcData.sampleAdjustedVaf();
-                    // maxSampleVaf = max(maxSampleVaf, sampleAdjVaf);
-                    // minSampleVaf = minSampleVaf == 0 ? sampleAdjVaf : min(minSampleVaf, sampleAdjVaf);
-                }
             }
         }
 
         if(filteredVariants.size() < SOMATIC_PEAK_MIN_VARIANTS)
-            return;
+            return INVALID_RESULT;
 
         List<Double> variantVafs = variantCalcData.stream().map(x -> x.SampleVaf).collect(Collectors.toList());
 
@@ -109,19 +74,24 @@ public class VafPeakModel
 
         if(!vafPeaks.isEmpty())
         {
-            mMaxSomaticVaf = vafPeaks.stream().mapToDouble(x -> x.Peak).max().orElse(0);
+            VafPeak maxVafPeak = vafPeaks.get(vafPeaks.size() - 1);
+            VafPeak minVafPeak = vafPeaks.get(0);
 
             CT_LOGGER.debug("sample({}) filteredVars({}) found {} somatic vaf peaks, max({})",
-                    sampleId, filteredVariants.size(), vafPeaks.size(), format("%.3f", mMaxSomaticVaf));
+                    sampleId, filteredVariants.size(), vafPeaks.size(), format("%.3f", maxVafPeak.Peak));
 
             for(VafPeak vafPeak : vafPeaks)
             {
                 CT_LOGGER.debug("sample({}) somatic vaf peak({})", sampleId, vafPeak);
             }
+
+            return new ClonalityResult(ClonalityMethod.VAF_PEAK, maxVafPeak.Peak, maxVafPeak.Peak, minVafPeak.Peak, maxVafPeak.Count);
         }
+
+        return INVALID_RESULT;
     }
 
-    private class VafPeak
+    private class VafPeak implements Comparable<VafPeak>
     {
         public final double Peak;
         public final int Count;
@@ -130,6 +100,15 @@ public class VafPeakModel
         {
             Peak = peak;
             Count = count;
+        }
+
+        @Override
+        public int compareTo(final VafPeak other)
+        {
+            if(Peak == other.Peak)
+                return 0;
+
+            return Peak < other.Peak ? -1 : 1;
         }
 
         public String toString() { return format("%.3f=%d", Peak, Count); }
@@ -198,28 +177,16 @@ public class VafPeakModel
             peakVafs.add(new VafPeak(densityVaf, peakCount));
         }
 
+        Collections.sort(peakVafs);
+
         return peakVafs;
     }
 
-    private boolean useVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData)
+    private boolean canUseVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
-        return variant.PassFilters
-                && variant.sequenceGcRatio() >= mConfig.GcRatioMin
-                && sampleFragData.qualPerAlleleFragment() > MIN_QUAL_PER_AD
+        return useVariant(variant, sampleFragData)
                 && sampleFragData.UmiCounts.total() >= SOMATIC_PEAK_MIN_DEPTH
                 && sampleFragData.UmiCounts.alleleTotal() >= SOMATIC_PEAK_MIN_AD;
-    }
-
-    public class VariantSimVafCalcs
-    {
-        public final double ExpectedAD;
-        public final double Probability;
-
-        public VariantSimVafCalcs(final double expectedAD, final double probability)
-        {
-            ExpectedAD = expectedAD;
-            Probability = probability;
-        }
     }
 
     private class VariantCalcs
@@ -274,56 +241,4 @@ public class VafPeakModel
 
         return sampleVafCount > 0 ? sampleVafTotal / sampleVafCount : 0;
     }
-
-    public static BufferedWriter initialiseWriter(final PurityConfig config)
-    {
-        try
-        {
-            String fileName = config.formFilename(DROPOUT_FILE_ID);
-
-            BufferedWriter writer = createBufferedWriter(fileName, false);
-
-            if(config.multipleSamples())
-                writer.write("PatientId\t");
-
-            writer.write("SampleId\tSimulatedVaf\tVariantCount\tDropoutCount");
-            writer.write("\tProbabilityScore\tLowMeanDiffTotal\tHighMeanDiffTotal\tVafStdDev\tZScoreAvg");
-            writer.newLine();
-
-            return writer;
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to initialise variant output file: {}", e.toString());
-            return null;
-        }
-    }
-
-    /*
-    public synchronized static void writeCalcData(
-            final BufferedWriter writer, final PurityConfig config, final SampleData sample, final String sampleId,
-            int varCount, final SimulatedVafCalcs simVafCalcs)
-    {
-        if(writer == null)
-            return;
-
-        try
-        {
-            if(config.multipleSamples())
-                writer.write(format("%s\t", sample.PatientId));
-
-            writer.write(format("%s\t%.2f\t%d\t%d", sampleId, simVafCalcs.SimulatedVaf, varCount, simVafCalcs.DropoutCount));
-
-            writer.write(format("\t%4.3f\t%.3f\t%.3f\t%.3f\t%.3f",
-                    simVafCalcs.ProbabilityScore, simVafCalcs.LowMeanDiffTotal, simVafCalcs.HighMeanDiffTotal,
-                    simVafCalcs.VafStdDev, simVafCalcs.ZScoreAvg));
-            writer.newLine();
-        }
-        catch(IOException e)
-        {
-            CT_LOGGER.error("failed to write dropout calc file: {}", e.toString());
-        }
-
-    }
-    */
 }

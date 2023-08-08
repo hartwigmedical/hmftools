@@ -28,10 +28,10 @@ public class PurityConstants
     public static final int SOMATIC_PEAK_MIN_AD = 5;
     public static final int SOMATIC_PEAK_MIN_PEAK_VARIANTS = 5;
 
-    @Deprecated
-    public static final double DROPOUT_RATE_VAF_INCREMENT = 0.05;
-    public static final int DROPOUT_RATE_MIN_DEPTH = 100;
-    public static final double DROPOUT_RATE_PROBABILITY = pow(10, -5);
+    public static final int SOMATIC_MODEL_MIN_FRAGS = 2;
+    public static final int SOMATIC_MODEL_MIN_FRAG_VARIANTS = 10;
+    public static final double DROPOUT_RATE_INCREMENT = 0.1;
+    // public static final double DROPOUT_RATE_PROBABILITY = pow(10, -5);
 
     public static final String PURPLE_CTDNA_SOMATIC_VCF_ID = ".purple.somatic.ctdna.";
 }
