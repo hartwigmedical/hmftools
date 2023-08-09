@@ -42,9 +42,6 @@ object VDJSequenceTsvWriter
         jMatchMethod,
         jSimilarityScore,
         jNonSplitReads,
-        vPrimerMatches,
-        jPrimerMatches,
-        layoutId,
         vGene,
         vPIdent,
         vAlignStart,
@@ -57,6 +54,9 @@ object VDJSequenceTsvWriter
         jPIdent,
         jAlignStart,
         jAlignEnd,
+        vPrimerMatches,
+        jPrimerMatches,
+        layoutId,
         fullSeq,
         support
     }
@@ -138,9 +138,6 @@ object VDJSequenceTsvWriter
                 Column.jMatchMethod -> csvPrinter.print(vdj.jAnchor?.matchMethod)
                 Column.jSimilarityScore -> csvPrinter.print(vdjAnnotation.jSimilarityScore)
                 Column.jNonSplitReads -> csvPrinter.print(vdjAnnotation.jNonSplitReads)
-                Column.vPrimerMatches -> csvPrinter.print(vdjAnnotation.vPrimerMatchCount)
-                Column.jPrimerMatches -> csvPrinter.print(vdjAnnotation.jPrimerMatchCount)
-                Column.layoutId -> csvPrinter.print(vdj.layout.id)
                 Column.vGene -> if (vdjAnnotation.blastnAnnotation != null)
                     {
                         csvPrinter.print(vdjAnnotation.blastnAnnotation!!.vGene)
@@ -237,6 +234,9 @@ object VDJSequenceTsvWriter
                     {
                         csvPrinter.print(null)
                     }
+                Column.vPrimerMatches -> csvPrinter.print(vdjAnnotation.vPrimerMatchCount)
+                Column.jPrimerMatches -> csvPrinter.print(vdjAnnotation.jPrimerMatchCount)
+                Column.layoutId -> csvPrinter.print(vdj.layout.id)
                 Column.fullSeq -> csvPrinter.print(vdj.layout.consensusSequence())
                 Column.support -> csvPrinter.print(CiderUtils.countsToString(vdj.layout.highQualSupportCounts()))
             }

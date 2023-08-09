@@ -285,27 +285,29 @@ class BlastnAnnotator
             assert(gene.chromosome == chromosome)
             assert(gene.strand == blastnMatch.subjectFrame)
 
-            // check if they overlap
+            val contigAlignStart: Int
+            val contigAlignEnd: Int
+
             if (gene.strand == Strand.FORWARD)
             {
-                if (gene.start <= blastnMatch.subjectAlignEnd &&
-                    gene.end >= blastnMatch.subjectAlignStart)
-                {
-                    // should only match one gene
-                    return gene
-                }
+                contigAlignStart = blastnMatch.subjectAlignStart
+                contigAlignEnd = blastnMatch.subjectAlignEnd
             }
             else
             {
                 // for negative strand, the align start > align end
-                require(gene.start < gene.end)
-                require(blastnMatch.subjectAlignEnd < blastnMatch.subjectAlignStart)
-                if (gene.start <= blastnMatch.subjectAlignStart &&
-                    gene.end >= blastnMatch.subjectAlignEnd)
-                {
-                    // should only match one gene
-                    return gene
-                }
+                contigAlignStart = blastnMatch.subjectAlignEnd
+                contigAlignEnd = blastnMatch.subjectAlignStart
+            }
+
+            require(contigAlignStart < contigAlignEnd)
+
+            // check if they overlap
+            if (gene.start <= contigAlignEnd + GENE_REGION_TOLERANCE &&
+                gene.end >= contigAlignStart - GENE_REGION_TOLERANCE)
+            {
+                // should only match one gene
+                return gene
             }
         }
 
@@ -327,6 +329,10 @@ class BlastnAnnotator
         const val MIN_FULL_MATCH_IDENTITY = 95
 
         const val FLANKING_BASES = 50
+
+        // D genes often are very short, for example, TRBD1 is only 12 bases. We allow more leeway to match
+        // an alignment to the gene
+        const val GENE_REGION_TOLERANCE = 50
 
         fun blastnQuerySeqRange(vdj: VDJSequence) : IntRange
         {

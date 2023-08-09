@@ -406,7 +406,7 @@ def main():
         "jPIdent",
         "jAlignStart",
         "jAlignEnd",
-        "blastnStatus"], inplace=True)
+        "blastnStatus"], inplace=True, errors='ignore')
 
     # strip out the tsv / csv / .gz
     file_prefix = re.sub("(\.[tc]sv\.gz)|(\.[tc]sv)", "", os.path.basename(args.in_tsv))
