@@ -36,6 +36,14 @@ object CiderConstants
 
     const val MIN_NON_SPLIT_READ_STRADDLE_LENGTH: Int = 30
 
+    // filter out matches that have too low identity
+    // reason for doing this is that we use match/mismatch of 1/-4, in worst case we can
+    // get 1 mismatch for every 4 matches, and could find alignments with 80% identity.
+    // those are probably too different to use. We use 90% for V / J identities, and 95%
+    // cut off for full match
+    const val BLASTN_MATCH_MIN_VJ_IDENTITY = 90
+    const val BLASTN_MATCH_FULL_MATCH_IDENTITY = 95
+
     // blast uses v38
     val BLAST_REF_GENOME_VERSION = RefGenomeVersion.V38
 

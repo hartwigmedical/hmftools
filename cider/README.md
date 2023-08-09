@@ -47,10 +47,6 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 | primer_csv                 |         | Path to csv file containing primers                                                                     |
 | primer_mismatch_max        | 0       | Maximum number of mismatch bases for matching primer sequence                                           |
 
-The ensembl data cache can be downloaded using the following links:
- [v37](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/37/common/ensembl_data/ensembl_gene_data.csv), 
- [v38](https://console.cloud.google.com/storage/browser/_details/hmf-public/HMFtools-Resources/dna_pipeline/v5_31/38/common/ensembl_data/ensembl_gene_data.csv)
-
 ## Algorithm
 ### Anchor sequences and coordinates 
 To create reference data, we have queried from IMGT (https://www.imgt.org/genedb/) to get all sequences for species Homo Sapiens and (separately) for Molecular Component: IG and TR.   Then we select all query results choosing “F+ORF+in-frame P nucleotide sequences with IMGT gaps”.    Following this, for all genes which exist in ensembl (separately for 37 and 38) we have deterimined reference genome anchor coordinates for each gene. 
@@ -191,23 +187,24 @@ In addition, CIDER writes a locus summary output file `<sample_id>.cider.locus_s
 
 When the command line arguments `-blast` and `-blast_db` are supplied, CIDER uses [BLAST+](https://www.ncbi.nlm.nih.gov/books/NBK62051/def-item/blast/)
 to query each sequence found against the human genome (GCF_000001405.39_top_level). It uses this information to assign V, D, J alleles and also
-weed out false positives. This requires BLASTN to be set up. See [Setting up BLASTN](# setting up BLASTN)
+weed out false positives. This requires BLASTN to be set up. See [Setting up BLASTN](#setting-up-blastn)
 
 Following briefly describe the annotation logic:
-1. CIDER would run blastn locally and query the sequences against the human genome database.
-2. The alignments for each VDJ sequence are annotated.
-3. Filter alignments to find the V, D, J gene matches. The rules to choose the alignment is follows:
-   + If there is one alignment that can encompass the whole sequence we will select it
-     as it indicates that this sequence matches the ref genome
+1. CIDER would run blastn locally and query the sequences against the human genome database. We use match/mismatch/gapopen/gapextend scores of
+   1/-4/-5/-2 and word size of 9.
+2. For each VDJ sequence, filter alignments to find the V, D, J gene matches. The rules to choose the alignment is follows:
+   + If there is one alignment with >= 95% identity that can encompass the whole sequence we will select it
+     as it indicates that this sequence matches the reference genome.
    + Then for each aligned section we choose the one that is aligned V, D, J, IGK-Intron or IGK-Del
-     genes. If there are more than one, we choose the highest score one
-4. If there is a V gene, the D, and J gene loci must match the V locus, otherwise the D and J alignments are filtered out. One
+     genes. If there are more than one, we choose the highest scoring alignment. V and J alignments must have at least 90%
+     sequence identity.
+3. If there is a V gene, the D, and J gene loci must match the V locus, otherwise the D and J alignments are filtered out. One
     exception is we allow TRA and TRD to match each other.
-5. If there is a V or J gene, the D gene locus must match either the V or the J locus. Otherwise the D alignment is removed. We also
+4. If there is a V or J gene, the D gene locus must match either the V or the J locus. Otherwise the D alignment is removed. We also
   allow TRA and TRD to match one another.
-6. Finally the V, D, J gene alignment information are combined and added as annotation into the output file.
+5. Finally the V, D, J gene alignment information are combined and added as annotation into the output file.
 
-### setting up BLASTN
+### Setting up BLASTN
 To set up BLASTN, do the following:
 1. Follow the instruction in https://www.ncbi.nlm.nih.gov/books/NBK1762/ to install BLAST+
 2. Set up the `human_genome` blast DB:
@@ -251,6 +248,11 @@ Running with `-xmx32G`.
 "Max reads per gene" is the maximum number of reads we found in each of the IG/TCR gene segment, i.e. IGHV, TRBJ etc. 
 
 # Version History and Download Links
+- [0.10.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.10.0)
+  - Incorporate BLASTN annotation into CIDER.
+  - Change output columns to include BLASTN annotations.
+  - Add cider.blastn_match.tsv.gz output
+  - Colourise layout file.
 - [0.9.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.9.0)
   - Fix an issue in 0.8.0 where layout can get into infinite loop.
   - Add cider.locus_stats.tsv output

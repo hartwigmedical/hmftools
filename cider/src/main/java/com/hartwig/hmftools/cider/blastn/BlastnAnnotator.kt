@@ -149,17 +149,14 @@ class BlastnAnnotator
 
         for (blastnMatch in sortedMatches)
         {
-            // check if it matches whole way
-            if (blastnMatch.percentageIdent >= MIN_FULL_MATCH_IDENTITY &&
+            // check if it matches whole way. Require 95% sequence identity
+            if (blastnMatch.percentageIdent >= CiderConstants.BLASTN_MATCH_FULL_MATCH_IDENTITY &&
                 blastnMatch.querySeqLen <= (blastnMatch.queryAlignEnd - blastnMatch.queryAlignStart) + 5)
             {
                 // sLogger.debug("blastn matches ref genome: {}", blastnMatch.subjectTitle)
                 // sLogger.debug("  query seq: {}", blastnMatch.alignedPartOfQuerySeq)
                 // sLogger.debug("subject seq: {}", blastnMatch.alignedPartOfSubjectSeq)
 
-                // this means this one has no rearrangment, however we want to be sure, might have to check
-                // pidentity etc
-                // TODO: check against
                 return BlastnAnnotation(
                     vdjSequence = vdjSequence,
                     fullMatch = blastnMatch, blastnStatus = BlastnStatus.NO_REARRANGEMENT)
@@ -168,7 +165,7 @@ class BlastnAnnotator
             var vdjGene: IgTcrGene? = findGene(blastnMatch)
 
             // for V/J gene segments, we mandate 90% identity
-            if (vdjGene != null && vdjGene.geneSegmentType in "VJ" && blastnMatch.percentageIdent < MIN_VJ_IDENTITY)
+            if (vdjGene != null && vdjGene.geneSegmentType in "VJ" && blastnMatch.percentageIdent < CiderConstants.BLASTN_MATCH_MIN_VJ_IDENTITY)
             {
                 vdjGene = null
             }
@@ -319,14 +316,6 @@ class BlastnAnnotator
         // from my test, it evalue of 1 can only match minimum 20 bases. If we want to match D segment that is shorter
         // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches
         const val BLASTN_MAX_EVALUE = 1.0
-
-        // filter out matches that have too low identity
-        // reason for doing this is that we use match/mismatch of 1/-4, in worst case we can
-        // get 1 mismatch for every 4 matches, and could find alignments with 80% identity.
-        // those are probably too different to use. We use 90% for V / J identities, and 95%
-        // cut off for full match
-        const val MIN_VJ_IDENTITY = 90
-        const val MIN_FULL_MATCH_IDENTITY = 95
 
         const val FLANKING_BASES = 50
 
