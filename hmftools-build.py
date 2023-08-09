@@ -19,9 +19,9 @@ class Maven:
                         '-DgenerateBackupPoms=false', f'-DnewVersion={version}'], check=True)
 
     @staticmethod
-    def deploy_all(modules):
+    def deploy_all(*modules):
         module_str = ','.join([m.name for m in modules])
-        subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am'])
+        subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am', '-DdeployAtEnd=true'])
 
 
 ### Helper methods
@@ -55,7 +55,7 @@ if len(sys.argv) != 2:
 tag = sys.argv[1]
 
 # check if the tag name is according to the regex
-semver_pattern = '^([a-z-]+)-v?([0-9]+\.[0-9]+\.[0-9]+(?:-(?:alpha|beta)\.[0-9]+)?)$'
+semver_pattern = '^([a-z-]+)-v?([0-9]+\.[0-9]+\.[0-9]+(?:-(?:alpha|beta)\.[0-9]+)?(?:-(?:[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?)$'
 match = re.match(semver_pattern, tag)
 
 if not match:
@@ -73,7 +73,7 @@ module_pom = Maven(f'{module}/pom.xml', name=module)
 dependencies_pom = [Maven(f'{hmf_dep}/pom.xml', name=hmf_dep) for hmf_dep in hmftools_dependencies]
 
 # Set versions in appropriate poms
-# For the module we are targetting, we will use only the version part of the semver tag
+# For the module we are targeting, we will use only the version part of the semver tag
 # For all dependencies, we will use the entire semver tag
 parent_pom.set_property(f'{module}.version', version)
 for hmf_dep in hmftools_dependencies:
@@ -81,4 +81,4 @@ for hmf_dep in hmftools_dependencies:
 parent_pom.set_version(tag)
 module_pom.set_version(version)
 
-Maven.deploy_all(dependencies_pom + module_pom)
+Maven.deploy_all(module_pom, *dependencies_pom)
