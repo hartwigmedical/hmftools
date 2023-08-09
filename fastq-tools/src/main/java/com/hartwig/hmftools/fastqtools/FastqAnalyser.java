@@ -3,6 +3,7 @@ package com.hartwig.hmftools.fastqtools;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.DNA_BASES;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.fastqtools.FastqCommon.FQ_LOGGER;
@@ -60,10 +61,7 @@ public class FastqAnalyser
 
         analyseFastqFile();
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        FQ_LOGGER.info("Fastq analysis complete, mins({})", format("%.3f", timeTakeMins));
+        FQ_LOGGER.info("Fastq analysis complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private void analyseFastqFile()

@@ -172,7 +172,7 @@ public class PurpleApplication
             System.exit(1);
         }
 
-        PPL_LOGGER.info("Purple complete, mins({}s)", runTimeMinsStr(startTimeMs));
+        PPL_LOGGER.info("Purple complete, mins({})", runTimeMinsStr(startTimeMs));
         mExecutorService.shutdown();
     }
 

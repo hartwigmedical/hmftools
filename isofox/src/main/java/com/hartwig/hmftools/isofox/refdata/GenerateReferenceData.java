@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.refdata;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.APP_NAME;
@@ -39,7 +40,7 @@ public class GenerateReferenceData
         mEnsemblDataCache.setRequiredData(true, false, false, false);
         mEnsemblDataCache.load(false);
 
-        long startTime = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
 
         Map<String,List<GeneData>> chrGeneMap = mEnsemblDataCache.getChrGeneDataMap();
 
@@ -56,9 +57,7 @@ public class GenerateReferenceData
 
         mWriter.close();
 
-        long timeTakenMs = System.currentTimeMillis() - startTime;
-
-        ISF_LOGGER.info("Isofox ref data generation complete, mins({})", String.format("%.3f", timeTakenMs / 60000.0));
+        ISF_LOGGER.info("Isofox ref data generation complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private boolean generateExpectedCounts(final Map<String, List<GeneData>> chrGeneMap)
