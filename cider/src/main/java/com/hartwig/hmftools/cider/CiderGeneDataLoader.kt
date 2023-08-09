@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache
-import com.hartwig.hmftools.common.gene.GeneData
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.genome.region.Strand
 import org.apache.commons.csv.CSVFormat
@@ -11,34 +9,23 @@ import org.eclipse.collections.impl.list.mutable.FastList
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
-import java.util.stream.Collectors
 
-typealias Column = CiderConstants.VjAnchorTemplateTsvColumn
+typealias VdjAnchorTemplateColumn = CiderConstants.VjAnchorTemplateTsvColumn
 
 object CiderGeneDataLoader
 {
     private val sLogger = LogManager.getLogger(CiderGeneDataLoader::class.java)
 
-    fun loadConstantRegionGenes(refGenomeVersion: RefGenomeVersion, ensemblDataDir: String): List<IgTcrConstantRegion>
+    fun loadConstantRegionGenes(refGenomeVersion: RefGenomeVersion): List<IgTcrConstantRegion>
     {
-        val ensemblDataCache = EnsemblDataCache(ensemblDataDir, refGenomeVersion)
-        val ensemblLoadOk = ensemblDataCache.load(true)
-        if (!ensemblLoadOk)
-        {
-            sLogger.error("Ensembl data cache load failed")
-            throw RuntimeException("Ensembl data cache load failed")
-        }
+        val igTcrGenes = IgTcrGeneLoader.load(refGenomeVersion)
+
         val igTcrConstantRegions = FastList<IgTcrConstantRegion>()
-
-        // find all the constant region genes
-        val chrGeneDataMap: MutableMap<String, List<GeneData>> = ensemblDataCache.chrGeneDataMap
-        val geneDataList = chrGeneDataMap.values.stream().flatMap { obj: List<GeneData> -> obj.stream() }.collect(Collectors.toList())
-
-        // find every gene that is constant region
-        for (geneData in geneDataList)
+        for (geneData in igTcrGenes)
         {
-            if (geneData.GeneName.length <= 4) continue
-            val geneNamePrefix = geneData.GeneName.substring(0, 4)
+            if (geneData.geneName.length <= 4) continue
+            val geneNamePrefix = geneData.geneName.substring(0, 4)
+
             val igConstantRegionType: IgTcrConstantRegion.Type = try
             {
                 IgTcrConstantRegion.Type.valueOf(geneNamePrefix)
@@ -47,16 +34,14 @@ object CiderGeneDataLoader
             {
                 continue
             }
-            val genomeRegionStrand = GenomeRegionStrand(
-                geneData.Chromosome, geneData.GeneStart, geneData.GeneEnd,
-                if (geneData.forwardStrand()) Strand.FORWARD else Strand.REVERSE
-            )
+
+            val genomeRegionStrand = GenomeRegionStrand(geneData.chromosome, geneData.start, geneData.end, geneData.strand)
+
             igTcrConstantRegions.add(IgTcrConstantRegion(igConstantRegionType, genomeRegionStrand))
-            sLogger.debug(
-                "found constant region gene: {}, type: {}, location: {}",
-                geneData.GeneName, igConstantRegionType, genomeRegionStrand
-            )
+            sLogger.debug("found constant region gene: {}, type: {}, location: {}",
+                geneData.geneName, igConstantRegionType, genomeRegionStrand)
         }
+
         return igTcrConstantRegions
     }
 
@@ -92,18 +77,18 @@ object CiderGeneDataLoader
             val records: Iterable<CSVRecord> = format.parse(reader)
             for (record in records)
             {
-                val geneName = record[Column.gene]
-                val allele = record[Column.allele]
-                val posStart = record[Column.posStart].toInt()
-                val posEnd = record[Column.posEnd].toInt()
-                val anchorSequence = record[Column.anchorSequence]
-                var chromosome = record[Column.chr]
-                val strandStr = record[Column.strand]
+                val geneName = record[VdjAnchorTemplateColumn.gene]
+                val allele = record[VdjAnchorTemplateColumn.allele]
+                val posStart = record[VdjAnchorTemplateColumn.posStart].toInt()
+                val posEnd = record[VdjAnchorTemplateColumn.posEnd].toInt()
+                val anchorSequence = record[VdjAnchorTemplateColumn.anchorSequence]
+                var chromosome = record[VdjAnchorTemplateColumn.chr]
+                val strandStr = record[VdjAnchorTemplateColumn.strand]
                 var strand: Strand? = null
                 if (strandStr == "+") strand = Strand.FORWARD else if (strandStr == "-") strand = Strand.REVERSE
-                val anchorStart = record[Column.anchorStart].toInt()
-                val anchorEnd = record[Column.anchorEnd].toInt()
-                val sequence = record[Column.sequence]
+                val anchorStart = record[VdjAnchorTemplateColumn.anchorStart].toInt()
+                val anchorEnd = record[VdjAnchorTemplateColumn.anchorEnd].toInt()
+                val sequence = record[VdjAnchorTemplateColumn.sequence]
                 var genomeRegionStrand: GenomeRegionStrand? = null
                 var anchorLocation: GenomeRegionStrand? = null
                 if (chromosome.isNotEmpty())

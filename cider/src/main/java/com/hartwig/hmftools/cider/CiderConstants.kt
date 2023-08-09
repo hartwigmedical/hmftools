@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
+
 object CiderConstants
 {
     // for partially rearranged VDJs, we designate that the "interesting"
@@ -12,7 +14,7 @@ object CiderConstants
     const val BLOSUM_UNKNOWN_BASE_PENALTY: Int = 2
 
     const val CANDIDATE_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 10
-    const val VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 1
+    const val VDJ_MIN_PARTIAL_ANCHOR_AA_LENGTH: Int = 3
 
     const val MAX_READ_DISTANCE_FROM_ANCHOR: Int = 50
 
@@ -33,6 +35,9 @@ object CiderConstants
     const val POLY_G_TRIM_EXTRA_BASE_COUNT: Int = 5
 
     const val MIN_NON_SPLIT_READ_STRADDLE_LENGTH: Int = 30
+
+    // blast uses v38
+    val BLAST_REF_GENOME_VERSION = RefGenomeVersion.V38
 
     enum class VjAnchorTemplateTsvColumn
     {

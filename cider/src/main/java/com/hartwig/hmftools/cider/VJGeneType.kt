@@ -9,11 +9,11 @@ enum class IgTcrLocus
     IGH,
     IGK,
     IGL,
-    TRA,
+    TRA_TRD,
     TRB,
-    TRD,
     TRG;
 
+    /*
     fun isIg() : Boolean
     {
         return this == IGH || this == IGK || this == IGL
@@ -21,7 +21,28 @@ enum class IgTcrLocus
 
     fun isTcr() : Boolean
     {
-        return this == TRA || this == TRB || this == TRD || this == TRG
+        return this == TRA_TRD || this == TRB || this == TRG
+    }*/
+
+    fun prettyPrint() : String
+    {
+        return if (this == TRA_TRD)
+            "TRA/TRD"
+        else
+            toString()
+    }
+
+    companion object
+    {
+        fun fromGeneName(geneName: String) : IgTcrLocus
+        {
+            val locusName = geneName.substring(0, 3)
+
+            if (locusName == "TRA" || locusName == "TRD")
+                return TRA_TRD
+
+            return valueOf(locusName)
+        }
     }
 }
 
@@ -43,12 +64,12 @@ enum class VJGeneType(val locus: IgTcrLocus, val vj: VJ)
     IGKJ(IgTcrLocus.IGK, VJ.J),
     IGLV(IgTcrLocus.IGL, VJ.V),
     IGLJ(IgTcrLocus.IGL, VJ.J),
-    TRAV(IgTcrLocus.TRA, VJ.V),
-    TRAJ(IgTcrLocus.TRA, VJ.J),
+    TRAV(IgTcrLocus.TRA_TRD, VJ.V),
+    TRAJ(IgTcrLocus.TRA_TRD, VJ.J),
     TRBV(IgTcrLocus.TRB, VJ.V),
     TRBJ(IgTcrLocus.TRB, VJ.J),
-    TRDV(IgTcrLocus.TRD, VJ.V),
-    TRDJ(IgTcrLocus.TRD, VJ.J),
+    TRDV(IgTcrLocus.TRA_TRD, VJ.V),
+    TRDJ(IgTcrLocus.TRA_TRD, VJ.J),
     TRGV(IgTcrLocus.TRG, VJ.V),
     TRGJ(IgTcrLocus.TRG, VJ.J),
     IGKDEL(IgTcrLocus.IGK, VJ.J);

@@ -7,6 +7,8 @@ import com.beust.jcommander.UnixStyleUsageFormatter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.cider.AsyncBamReader.processBam
 import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
+import com.hartwig.hmftools.cider.blastn.BlastnAnnotation
+import com.hartwig.hmftools.cider.blastn.BlastnAnnotator
 import com.hartwig.hmftools.cider.primer.*
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
@@ -66,7 +68,7 @@ class CiderApplication
 
         val ciderGeneDatastore: ICiderGeneDatastore = CiderGeneDatastore(
             CiderGeneDataLoader.loadAnchorTemplateTsv(mParams.refGenomeVersion),
-            CiderGeneDataLoader.loadConstantRegionGenes(mParams.refGenomeVersion, mParams.ensemblDataDir))
+            CiderGeneDataLoader.loadConstantRegionGenes(mParams.refGenomeVersion))
 
         val candidateBlosumSearcher = AnchorBlosumSearcher(
             ciderGeneDatastore,
@@ -109,7 +111,22 @@ class CiderApplication
         }
 
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
-        val vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, primerMatchList)
+        val blastnAnnotations: Collection<BlastnAnnotation>
+
+        if (mParams.blast != null)
+        {
+            // we need to filter out VDJ sequences that already match reference. In this version we avoid running blastn on those
+            val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
+
+            val blastnAnnotator = BlastnAnnotator()
+            blastnAnnotations = blastnAnnotator.runAnnotate(mParams.sampleId, mParams.blast!!, mParams.blastDb!!, filteredVdjs, mParams.outputDir, mParams.threadCount)
+        }
+        else
+        {
+            blastnAnnotations = emptyList()
+        }
+
+        val vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, blastnAnnotations, primerMatchList)
 
         writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, mParams.reportMatchRefSeq, true)
 
@@ -135,6 +152,7 @@ class CiderApplication
         // first add all the VJ anchor locations
         for (anchorGenomeLoc: VJAnchorGenomeLocation in ciderGeneDatastore.getVjAnchorGeneLocations())
         {
+            require(anchorGenomeLoc.start < anchorGenomeLoc.end)
             genomeRegions.add(GenomeRegions.create(
                 anchorGenomeLoc.chromosome,
                 anchorGenomeLoc.start - mParams.approxMaxFragmentLength,
@@ -144,6 +162,7 @@ class CiderApplication
         // then add all the constant region genome locations
         for (constantRegion: IgTcrConstantRegion in ciderGeneDatastore.getIgConstantRegions())
         {
+            require(constantRegion.genomeLocation.posStart < constantRegion.genomeLocation.posEnd)
             genomeRegions.add(GenomeRegions.create(
                 constantRegion.genomeLocation.chromosome,
                 constantRegion.genomeLocation.posStart - mParams.approxMaxFragmentLength,
