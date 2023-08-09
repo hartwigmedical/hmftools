@@ -311,8 +311,6 @@ public class PurpleApplication
 
             sampleData.SvCache.inferMissingVariant(copyNumbers);
 
-            final List<ObservedRegion> enrichedObservedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
-
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
 

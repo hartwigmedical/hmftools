@@ -14,6 +14,7 @@ public class SomaticVariantResult
 
     public final ClonalityMethod Method;
     public final int ClonalityVariants;
+    public final double ClonalityDropoutRate;
 
     public final int TotalFragments;
     public final int UmiRefNonDual;
@@ -29,6 +30,7 @@ public class SomaticVariantResult
 
     public final double TumorVaf;
     public final double AdjustedTumorVaf;
+    public final double RawSomaticPurity;
     public final FragmentCalcResult AllFragsResult;
     public final FragmentCalcResult DualFragsResult;
     public final FragmentCalcResult LimitOfDetectionResult;
@@ -38,14 +40,15 @@ public class SomaticVariantResult
     public static final SomaticVariantResult INVALID_RESULT = new SomaticVariantResult(false);
 
     public SomaticVariantResult(
-            boolean valid, int totalVariants, int calcVariants, int clonalityVariants, final ClonalityMethod method,
+            boolean valid, int totalVariants, int calcVariants, int clonalityVariants, final ClonalityMethod method, final double dropoutRate,
             final SomaticVariantCounts sampleCounts, final UmiTypeCounts umiTypeCounts,
-            double qualPerAdTotal, double tumorVaf, double adjustedTumorVaf,
+            double qualPerAdTotal, double tumorVaf, double adjustedTumorVaf, double rawSomaticPurity,
             final FragmentCalcResult allFragsResult, final FragmentCalcResult dualFragsResult, final FragmentCalcResult lodFragsResult)
     {
         TotalVariants = totalVariants;
         CalcVariants = calcVariants;
         ClonalityVariants = clonalityVariants;
+        ClonalityDropoutRate = dropoutRate;
         Method = method;
         TotalFragments = sampleCounts.totalFragments();
         UmiRefNonDual = umiTypeCounts.RefNone + umiTypeCounts.RefSingle;
@@ -59,6 +62,7 @@ public class SomaticVariantResult
         NonZeroDepthMedian = sampleCounts.medianDepth(true);
         TumorVaf = tumorVaf;
         AdjustedTumorVaf = adjustedTumorVaf;
+        RawSomaticPurity = rawSomaticPurity;
         AllFragsResult = allFragsResult;
         DualFragsResult = dualFragsResult;
         LimitOfDetectionResult = lodFragsResult;
@@ -71,6 +75,7 @@ public class SomaticVariantResult
         TotalVariants = 0;
         CalcVariants = 0;
         ClonalityVariants = 0;
+        ClonalityDropoutRate = 0;
         Method = ClonalityMethod.NONE;
         TotalFragments = 0;
         UmiRefNonDual = 0;
@@ -84,6 +89,7 @@ public class SomaticVariantResult
         NonZeroDepthMedian = 0;
         TumorVaf = 0;
         AdjustedTumorVaf = 0;
+        RawSomaticPurity = 0;
         AllFragsResult = FragmentCalcResult.INVALID;
         DualFragsResult = FragmentCalcResult.INVALID;
         LimitOfDetectionResult = FragmentCalcResult.INVALID;
@@ -101,6 +107,8 @@ public class SomaticVariantResult
         sj.add("CalcVariants");
         sj.add("ClonalityVariants");
         sj.add("ClonalityMethod");
+        sj.add("ClonalityDropoutRate");
+        sj.add("RawSomaticPurity");
         sj.add("TotalFragments");
         sj.add("UmiRefNonDual");
         sj.add("UmiRefDual");
@@ -130,6 +138,8 @@ public class SomaticVariantResult
         sj.add(format("%d", CalcVariants));
         sj.add(format("%d", ClonalityVariants));
         sj.add(String.valueOf(Method));
+        sj.add(format("%.2f", ClonalityDropoutRate));
+        sj.add(formatPurityValue(RawSomaticPurity));
         sj.add(format("%d", TotalFragments));
         sj.add(format("%d", UmiRefNonDual));
         sj.add(format("%d", UmiRefDual));

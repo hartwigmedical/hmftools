@@ -23,15 +23,10 @@ import org.apache.commons.math3.distribution.PoissonDistribution;
 
 public class LowCountModel extends ClonalityModel
 {
-    // calculate state
-    private double mTumorAvgVaf;
-
     public LowCountModel(
             final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample, final List<SomaticVariant> variants)
     {
         super(config, resultsWriter, sample,  variants);
-
-        mTumorAvgVaf = calcTumorAvgVaf();
     }
 
     @Override
@@ -101,21 +96,24 @@ public class LowCountModel extends ClonalityModel
 
         // now find the closest ratio to the observed ratio
         double observedRatio = observedFrag2Plus / (double)observedFrag1;
-        double calcVaf = findVafRatio(observedRatio, simulatedVafCalcs);
+        double[] calcValues = findVafRatio(observedRatio, simulatedVafCalcs);
+        double calcVaf = calcValues[0];
+        double calcDropout = calcValues[1];
 
-        double lowObservedRatio = max(observedFrag2Plus - 2, 1) / (double)observedFrag1;
-        double lowCalcVaf = findVafRatio(lowObservedRatio, simulatedVafCalcs);
+        double lowObservedRatio = max(observedFrag2Plus - 2, 0) / (double)observedFrag1;
+        double lowCalcVaf = findVafRatio(lowObservedRatio, simulatedVafCalcs)[0];
 
         double highObservedRatio = (observedFrag2Plus + 2) / (double)observedFrag1;
-        double highCalcVaf = findVafRatio(highObservedRatio, simulatedVafCalcs);
+        double highCalcVaf = findVafRatio(highObservedRatio, simulatedVafCalcs)[0];
 
         CT_LOGGER.debug(format("sample(%s) low-count model: obsRatio(%.2f 1=%d 2+=%d) vaf((%.6f low=%.6f high=%.6f)",
                 sampleId, observedRatio, observedFrag1, observedFrag2Plus, calcVaf, lowCalcVaf, highCalcVaf));
 
-        return new ClonalityResult(ClonalityMethod.LOW_COUNT, calcVaf, lowCalcVaf, highCalcVaf, observedFrag1 + observedFrag2Plus);
+        return new ClonalityResult(
+                ClonalityMethod.LOW_COUNT, calcVaf, lowCalcVaf, highCalcVaf, observedFrag1 + observedFrag2Plus, calcDropout);
     }
 
-    private static double findVafRatio(double observedRatio, final List<SimulatedVafCalcs> simulatedVafCalcs)
+    private static double[] findVafRatio(double observedRatio, final List<SimulatedVafCalcs> simulatedVafCalcs)
     {
         SimulatedVafCalcs closestRatioUp = null;
         SimulatedVafCalcs closestRatioDown = null;
@@ -137,6 +135,7 @@ public class LowCountModel extends ClonalityModel
         }
 
         double calcVaf = 0;
+        double calcDropout = 0;
 
         if(closestRatioUp != null && closestRatioDown != null)
         {
@@ -144,17 +143,20 @@ public class LowCountModel extends ClonalityModel
                     / (closestRatioUp.fragmentRatio() - closestRatioDown.fragmentRatio());
 
             calcVaf = upperFraction * closestRatioUp.SimulatedVaf + (1 - upperFraction) * closestRatioDown.SimulatedVaf;
+            calcDropout = upperFraction * closestRatioUp.DropoutRate + (1 - upperFraction) * closestRatioDown.DropoutRate;
         }
         else if(closestRatioUp != null)
         {
             calcVaf = closestRatioUp.SimulatedVaf;
+            calcDropout = closestRatioUp.DropoutRate;
         }
         else
         {
             calcVaf = closestRatioDown.SimulatedVaf;
+            calcDropout = closestRatioDown.DropoutRate;
         }
 
-        return calcVaf;
+        return new double[] { calcVaf, calcDropout };
     }
 
     private class SimulatedVafCalcs

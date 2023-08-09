@@ -85,7 +85,7 @@ public class VafPeakModel extends ClonalityModel
                 CT_LOGGER.debug("sample({}) somatic vaf peak({})", sampleId, vafPeak);
             }
 
-            return new ClonalityResult(ClonalityMethod.VAF_PEAK, maxVafPeak.Peak, maxVafPeak.Peak, minVafPeak.Peak, maxVafPeak.Count);
+            return new ClonalityResult(ClonalityMethod.VAF_PEAK, maxVafPeak.Peak, maxVafPeak.Peak, minVafPeak.Peak, maxVafPeak.Count, 0);
         }
 
         return INVALID_RESULT;

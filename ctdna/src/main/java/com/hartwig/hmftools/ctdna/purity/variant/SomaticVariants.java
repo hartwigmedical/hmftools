@@ -295,6 +295,8 @@ public class SomaticVariants
         FragmentCalcResult allFragsResult = SomaticPurityCalc.calc(
                 tumorPloidy, adjustedTumorVaf, sampleDepthTotal, sampleCounts.alleleFragments(), allFragsNoise);
 
+        double rawSamplePurity = allFragsResult.EstimatedPurity;
+
         ClonalityModel model;
 
         if(minFragVariants >= SOMATIC_MODEL_MIN_FRAG_VARIANTS)
@@ -309,11 +311,14 @@ public class SomaticVariants
         ClonalityResult modelResult = model.calculate(sampleId, allFragsResult);
         ClonalityMethod clonalityMethod = ClonalityMethod.NONE;
         int clonalityVarCount = calcVariants;
+        double clonalityDropout = 0;
 
         if(modelResult != ClonalityResult.INVALID_RESULT)
         {
             clonalityMethod = modelResult.Method;
             clonalityVarCount = modelResult.VariantCount;
+            clonalityDropout = modelResult.DropoutRate;
+
             double modelPurity = estimatedPurity(modelResult.Vaf, tumorPloidy, adjustedTumorVaf);
             double modelPurityLow = estimatedPurity(modelResult.VafLow, tumorPloidy, adjustedTumorVaf);
             double modelPurityHigh = estimatedPurity(modelResult.VafHigh, tumorPloidy, adjustedTumorVaf);
@@ -340,8 +345,8 @@ public class SomaticVariants
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
 
         return new SomaticVariantResult(
-                true, totalVariants, calcVariants,  clonalityVarCount, clonalityMethod, sampleCounts, umiTypeCounts, qualPerAllele,
-                tumorVaf, adjustedTumorVaf, allFragsResult, dualFragsResult, lodFragsResult);
+                true, totalVariants, calcVariants,  clonalityVarCount, clonalityMethod, clonalityDropout, sampleCounts, umiTypeCounts,
+                qualPerAllele, tumorVaf, adjustedTumorVaf, rawSamplePurity, allFragsResult, dualFragsResult, lodFragsResult);
     }
 
     private class SampleMetrics
