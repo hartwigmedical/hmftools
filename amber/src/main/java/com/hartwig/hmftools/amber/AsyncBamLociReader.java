@@ -13,9 +13,6 @@ import java.util.function.BiConsumer;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -74,7 +71,7 @@ public class AsyncBamLociReader
                     {
                         final SAMRecord record = iterator.next();
 
-                        if (!passesFilters(record))
+                        if(!passesFilters(record))
                         {
                             continue;
                         }
@@ -84,7 +81,7 @@ public class AsyncBamLociReader
                         for (E genomePosition : task)
                         {
                             // check overlap
-                            if (genomePosition.position() >= record.getAlignmentStart() && genomePosition.position() <= alignmentEnd)
+                            if(genomePosition.position() >= record.getAlignmentStart() && genomePosition.position() <= alignmentEnd)
                             {
                                 mConsumer.accept(genomePosition, record);
                             }
@@ -127,7 +124,7 @@ public class AsyncBamLociReader
         AMB_LOGGER.debug("processing {} potential sites in bam {}", loci.size(), bamFile);
 
         final Queue<Task<E>> taskQ = new ConcurrentLinkedQueue<>();
-        
+
         // create genome regions from the loci
         populateTaskQueue(loci, taskQ, bamFile.endsWith(".cram"));
 
@@ -180,9 +177,9 @@ public class AsyncBamLociReader
 
             for (E position : sortedGenomePositions)
             {
-                if (task.chromosome == null || !task.chromosome.equals(position.chromosome()) || task.positionEnd + minGap < position.position())
+                if(task.chromosome == null || !task.chromosome.equals(position.chromosome()) || task.positionEnd + minGap < position.position())
                 {
-                    if (task.chromosome != null)
+                    if(task.chromosome != null)
                     {
                         // we finalise previous one
                         tasks.add(task);
@@ -193,7 +190,7 @@ public class AsyncBamLociReader
                     task.positionStart = position.position();
                 }
 
-                if (task.positionEnd > position.position())
+                if(task.positionEnd > position.position())
                 {
                     // this means the input genome positions are not sorted
                     throw new RuntimeException("Genome position going backwards, input might not be sorted");
@@ -204,13 +201,13 @@ public class AsyncBamLociReader
                 task.add(position);
             }
 
-            if (task.chromosome != null)
+            if(task.chromosome != null)
             {
                 // we finalise previous one
                 tasks.add(task);
             }
 
-            if (tasks.size() <= optimalNumRegions)
+            if(tasks.size() <= optimalNumRegions)
             {
                 break;
             }

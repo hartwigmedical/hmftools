@@ -73,11 +73,11 @@ public class AmberUtils
 
     public static AmberBAF fromBaseDepth(final BaseDepth baseDepth)
     {
-        int normalAltCount = baseDepth.altSupport();
-        double normalBaf = normalAltCount / (double) (normalAltCount + baseDepth.refSupport());
+        int normalAltCount = baseDepth.AltSupport;
+        double normalBaf = normalAltCount / (double) (normalAltCount + baseDepth.RefSupport);
         return ImmutableAmberBAF.builder()
                 .from(baseDepth)
-                .normalDepth(baseDepth.readDepth())
+                .normalDepth(baseDepth.ReadDepth)
                 .tumorDepth(-1)
                 .normalBAF(normalBaf)
                 .tumorBAF(-1)

@@ -39,7 +39,7 @@ class AmberPersistence
         final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
         AmberBAFFile.write(filename, result);
 
-        if (mConfig.TumorId != null)
+        if(mConfig.TumorId != null)
         {
             AMB_LOGGER.info("Applying pcf segmentation");
             new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);

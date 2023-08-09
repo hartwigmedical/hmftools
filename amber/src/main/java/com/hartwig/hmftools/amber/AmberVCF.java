@@ -166,10 +166,11 @@ public class AmberVCF
         alleles.add(Allele.create(snp.alt().toString(), false));
 
         final List<Integer> adField = Lists.newArrayList();
-        adField.add(snp.refSupport());
-        adField.add(snp.altSupport());
+        adField.add(snp.RefSupport);
+        adField.add(snp.AltSupport);
 
-        final Genotype normal = new GenotypeBuilder(sampleName).DP(snp.readDepth())
+        final Genotype normal = new GenotypeBuilder(sampleName)
+                .DP(snp.ReadDepth)
                 .AD(adField.stream().mapToInt(i -> i).toArray())
                 .alleles(alleles)
                 .make();
@@ -196,8 +197,9 @@ public class AmberVCF
 
     private static Genotype createGenotype(final String sample, final BaseDepth depth)
     {
-        return new GenotypeBuilder(sample).DP(depth.readDepth())
-                .AD(new int[] { depth.refSupport(), depth.altSupport() })
+        return new GenotypeBuilder(sample)
+                .DP(depth.ReadDepth)
+                .AD(new int[] { depth.RefSupport, depth.AltSupport })
                 .alleles(alleles(depth))
                 .make();
     }

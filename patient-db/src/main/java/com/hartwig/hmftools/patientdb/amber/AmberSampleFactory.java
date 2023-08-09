@@ -29,12 +29,12 @@ public class AmberSampleFactory
 
     public byte asByte(BaseDepth depth)
     {
-        if(!depth.isValid() || depth.readDepth() < mMminReadDepth)
+        if(!depth.isValid() || depth.ReadDepth < mMminReadDepth)
         {
             return AmberSample.DO_NOT_MATCH;
         }
 
-        if(depth.refSupport() == depth.readDepth())
+        if(depth.RefSupport == depth.ReadDepth)
         {
             return (byte) 1;
         }
@@ -44,7 +44,7 @@ public class AmberSampleFactory
             return (byte) 2;
         }
 
-        if(depth.altSupport() == depth.readDepth())
+        if(depth.AltSupport == depth.ReadDepth)
         {
             return (byte) 3;
         }

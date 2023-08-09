@@ -18,9 +18,9 @@ public class NormalHeterozygousFilter implements Predicate<BaseDepth>
     @Override
     public boolean test(final BaseDepth bafEvidence)
     {
-        return bafEvidence.isValid() && bafEvidence.altSupport() > 0 && bafEvidence.refSupport() > 0
-                && isHeterozygousRef(bafEvidence.refSupport(), bafEvidence.readDepth())
-                && isHeterozygousAlt(bafEvidence.altSupport(), bafEvidence.readDepth());
+        return bafEvidence.isValid() && bafEvidence.AltSupport > 0 && bafEvidence.RefSupport > 0
+                && isHeterozygousRef(bafEvidence.RefSupport, bafEvidence.ReadDepth)
+                && isHeterozygousAlt(bafEvidence.AltSupport, bafEvidence.ReadDepth);
     }
 
     private boolean isHeterozygousRef(int refSupport, int readDepth)

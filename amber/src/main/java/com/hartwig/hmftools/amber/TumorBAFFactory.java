@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.amber;
 
-import static com.hartwig.hmftools.common.amber.BaseDepthFactory.getBaseQuality;
-import static com.hartwig.hmftools.common.amber.BaseDepthFactory.indel;
+import static com.hartwig.hmftools.amber.BaseDepthFactory.getBaseQuality;
+import static com.hartwig.hmftools.amber.BaseDepthFactory.isIndel;
 
 import com.hartwig.hmftools.common.amber.BaseDepth;
 
@@ -18,10 +18,10 @@ class TumorBAFFactory
 
     public static TumorBAF create(final BaseDepth normal)
     {
-        TumorBAF tumorBAF = new TumorBAF(normal.chromosome(), normal.position(), normal.ref().toString(), normal.alt().toString());
-        tumorBAF.NormalReadDepth = normal.readDepth();
-        tumorBAF.NormalRefSupport = normal.refSupport();
-        tumorBAF.NormalAltSupport = normal.altSupport();
+        TumorBAF tumorBAF = new TumorBAF(normal.chromosome(), normal.position(), normal.ref(), normal.alt());
+        tumorBAF.NormalReadDepth = normal.ReadDepth;
+        tumorBAF.NormalRefSupport = normal.RefSupport;
+        tumorBAF.NormalAltSupport = normal.AltSupport;
         return tumorBAF;
     }
 
@@ -36,7 +36,7 @@ class TumorBAFFactory
             int readPosition = samRecord.getReadPositionAtReferencePosition(bafPosition);
             if(readPosition != 0)
             {
-                if(!indel(bafPosition, readPosition, samRecord))
+                if(!isIndel(bafPosition, readPosition, samRecord))
                 {
                     final String base = String.valueOf(samRecord.getReadString().charAt(readPosition - 1));
                     if(base.equals(evidence.Ref))

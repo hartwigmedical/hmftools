@@ -3,7 +3,6 @@ package com.hartwig.hmftools.amber;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,17 +30,11 @@ public class TumorBAFFactoryTest
 
     private static TumorBAF createDefault(final String chromosome, final int position)
     {
-        final ModifiableBaseDepth normal = ModifiableBaseDepth.create()
-                .setChromosome(chromosome)
-                .setPosition(position)
-                .setRef(BaseDepth.Base.A)
-                .setRefSupport(3)
-                .setAlt(BaseDepth.Base.T)
-                .setAltSupport(3)
-                .setReadDepth(6)
-                .setIndelCount(0);
-
-        return TumorBAFFactory.create(normal);
+        BaseDepth baseDepth = new BaseDepth(chromosome, position, "A", "T");
+        baseDepth.ReadDepth = 6;
+        baseDepth.RefSupport = 3;
+        baseDepth.AltSupport = 3;
+        return TumorBAFFactory.create(baseDepth);
     }
 
     private SAMRecord buildSamRecord(

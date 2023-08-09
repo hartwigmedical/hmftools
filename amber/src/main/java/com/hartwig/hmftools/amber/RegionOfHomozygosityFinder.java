@@ -330,7 +330,7 @@ public class RegionOfHomozygosityFinder
 
     static Zygosity calcZygosity(BaseDepth baseDepth)
     {
-        if (isAlleleHomozygous(baseDepth.readDepth(), baseDepth.refSupport()) || isAlleleHomozygous(baseDepth.readDepth(), baseDepth.altSupport()))
+        if (isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.RefSupport) || isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.AltSupport))
         {
             return Zygosity.HOMOZYGOUS;
         }

@@ -18,14 +18,13 @@ public class BaseDepthFilter implements Predicate<BaseDepth>
     private final int mMinDepth;
     private final int mMaxDepth;
 
-    public BaseDepthFilter(final double minDepthPercentage, final double maxDepthPercentage,
-            @NotNull final Multimap<Chromosome, BaseDepth> evidence)
+    public BaseDepthFilter(
+            final double minDepthPercentage, final double maxDepthPercentage, final Multimap<Chromosome, BaseDepth> evidence)
     {
         this(minDepthPercentage, maxDepthPercentage, evidence.values());
     }
 
-    public BaseDepthFilter(final double minDepthPercentage, final double maxDepthPercentage,
-            @NotNull final Collection<BaseDepth> evidence)
+    public BaseDepthFilter(final double minDepthPercentage, final double maxDepthPercentage, final Collection<BaseDepth> evidence)
     {
         int medianDepth = medianDepth(evidence);
         mMinDepth = (int) Math.round(medianDepth * minDepthPercentage);
@@ -36,11 +35,11 @@ public class BaseDepthFilter implements Predicate<BaseDepth>
     @Override
     public boolean test(final BaseDepth bafEvidence)
     {
-        return bafEvidence.readDepth() > 0 && bafEvidence.readDepth() >= mMinDepth && bafEvidence.readDepth() <= mMaxDepth;
+        return bafEvidence.ReadDepth > 0 && bafEvidence.ReadDepth >= mMinDepth && bafEvidence.ReadDepth <= mMaxDepth;
     }
 
-    private int medianDepth(@NotNull final Collection<BaseDepth> evidence)
+    private int medianDepth(final Collection<BaseDepth> evidence)
     {
-        return Integers.medianPositiveValue(evidence.stream().map(BaseDepth::readDepth).collect(Collectors.toList()));
+        return Integers.medianPositiveValue(evidence.stream().map(x -> x.ReadDepth).collect(Collectors.toList()));
     }
 }

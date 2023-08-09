@@ -15,8 +15,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.BaseDepthFactory;
-import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.amber.NormalHeterozygousFilter;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -100,11 +98,11 @@ public class AmberGermline
     {
         AMB_LOGGER.info("Processing {} potential sites in reference bam {}", bedRegionsSortedSet.values().size(), bamPath);
 
-        final List<ModifiableBaseDepth> baseDepths = bedRegionsSortedSet.values().stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
+        final List<BaseDepth> baseDepths = bedRegionsSortedSet.values().stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
         var bafFactory = new BaseDepthFactory(mConfig.MinBaseQuality);
 
-        AsyncBamLociReader.processBam(bamPath, readerFactory, baseDepths, bafFactory::addEvidence, mConfig.Threads,
-                mConfig.MinMappingQuality);
+        AsyncBamLociReader.processBam(
+                bamPath, readerFactory, baseDepths, bafFactory::addEvidence, mConfig.Threads, mConfig.MinMappingQuality);
 
         final ListMultimap<Chromosome, BaseDepth> normalEvidence = ArrayListMultimap.create();
         baseDepths.forEach(x -> normalEvidence.put(HumanChromosome.fromString(x.chromosome()), x));

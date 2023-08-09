@@ -19,7 +19,6 @@ import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.BaseDepthFactory;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
@@ -63,12 +62,12 @@ public class LoadAmberData
             LOGGER.info("Loading vcf snp data from {}", amberSnpPath);
             final List<BaseDepth> baseDepths = fileReader.iterator()
                     .stream()
-                    .map(BaseDepthFactory::fromVariantContext)
+                    .map(BaseDepth::fromVariantContext)
                     .filter(x -> selector.select(x).isPresent())
                     .collect(Collectors.toList());
 
-            final AmberSampleFactory amberSampleFactory =
-                    new AmberSampleFactory(DEFAULT_MIN_DEPTH, DEFAULT_MIN_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
+            final AmberSampleFactory amberSampleFactory = new AmberSampleFactory(
+                    DEFAULT_MIN_DEPTH, DEFAULT_MIN_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
 
             final AmberSample sample = amberSampleFactory.fromBaseDepth(tumorSample, baseDepths);
 

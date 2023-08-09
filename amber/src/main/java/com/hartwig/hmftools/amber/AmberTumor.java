@@ -11,8 +11,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.BaseDepthFactory;
-import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -29,7 +27,8 @@ public class AmberTumor
     public ListMultimap<Chromosome, TumorBAF> getBafs() { return mBafs; }
     public ListMultimap<Chromosome, TumorContamination> getContamination() { return mContamination; }
 
-    AmberTumor(final AmberConfig config, SamReaderFactory readerFactory,
+    public AmberTumor(
+            final AmberConfig config, SamReaderFactory readerFactory,
             final ListMultimap<Chromosome, BaseDepth> germlineHetLoci,
             final ListMultimap<Chromosome, BaseDepth> germlineHomLoci)
             throws InterruptedException
@@ -47,8 +46,8 @@ public class AmberTumor
         AMB_LOGGER.info("Processing {} germline homozygous loci in tumor bam {} for contamination", germlineHomLoci.size(), mConfig.TumorBam);
 
         final List<TumorBAF> tumorBAFs = germlineHetLoci.values().stream().sorted().map(TumorBAFFactory::create).collect(Collectors.toList());
-        final Map<BaseDepth, ModifiableBaseDepth> contaminationBafMap = germlineHomLoci.values().stream().collect(
-                Collectors.toMap(x -> x, BaseDepthFactory::create));
+        final Map<BaseDepth,BaseDepth> contaminationBafMap = germlineHomLoci.values().stream().collect(
+                Collectors.toMap(x -> x, BaseDepthFactory::copyBaseDepth));
 
         var tumorBafFactory = new TumorBAFFactory(mConfig.MinBaseQuality);
         var contaminationBafFactory = new BaseDepthFactory(mConfig.MinBaseQuality);
@@ -62,26 +61,31 @@ public class AmberTumor
         {
             if (genomePosition instanceof TumorBAF)
                 tumorBafFactory.addEvidence((TumorBAF)genomePosition, samRecord);
-            else if (genomePosition instanceof ModifiableBaseDepth)
-                contaminationBafFactory.addEvidence((ModifiableBaseDepth)genomePosition, samRecord);
+            else if (genomePosition instanceof BaseDepth)
+                contaminationBafFactory.addEvidence((BaseDepth)genomePosition, samRecord);
         };
 
-        AsyncBamLociReader.processBam(mConfig.TumorBam, readerFactory, mergedLoci,
-                lociBamRecordHander, mConfig.Threads, mConfig.MinMappingQuality);
+        AsyncBamLociReader.processBam(
+                mConfig.TumorBam, readerFactory, mergedLoci, lociBamRecordHander, mConfig.Threads, mConfig.MinMappingQuality);
 
         mBafs = ArrayListMultimap.create();
 
-        tumorBAFs.stream().filter(x -> x.TumorIndelCount == 0).forEach(x ->
-            mBafs.put(HumanChromosome.fromString(x.chromosome()), x));
+        tumorBAFs.stream().filter(x -> x.TumorIndelCount == 0).forEach(x -> mBafs.put(HumanChromosome.fromString(x.chromosome()), x));
 
         mContamination = ArrayListMultimap.create();
 
         contaminationBafMap.forEach((normal, tumor) ->
         {
-            if (tumor.altSupport() != 0)
+            if(tumor.AltSupport != 0)
             {
-                mContamination.put(HumanChromosome.fromString(normal.chromosome()),
-                        ImmutableTumorContamination.builder().from(normal).normal(normal).tumor(tumor).build());
+                TumorContamination tumorContamination = ImmutableTumorContamination.builder()
+                        .chromosome(normal.chromosome())
+                        .position(normal.position())
+                        .normal(normal.toBaseDepthData())
+                        .tumor(tumor.toBaseDepthData())
+                        .build();
+
+                mContamination.put(HumanChromosome.fromString(normal.chromosome()), tumorContamination);
             }
         });
     }

@@ -9,7 +9,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
@@ -74,15 +73,11 @@ public class BaseDepthIntersectFilterTest
 
     private BaseDepth createRandom(@NotNull final String chromosome, @NotNull final Random random)
     {
-        return ModifiableBaseDepth.create()
-                .setChromosome(chromosome)
-                .setPosition(random.nextInt())
-                .setRef(BaseDepth.Base.A)
-                .setAlt(BaseDepth.Base.T)
-                .setReadDepth(random.nextInt())
-                .setRefSupport(random.nextInt())
-                .setAltSupport(random.nextInt())
-                .setIndelCount(0);
+        BaseDepth baseDepth = new BaseDepth(chromosome, random.nextInt(), "A", "T");
+        baseDepth.ReadDepth = random.nextInt();
+        baseDepth.RefSupport = random.nextInt();
+        baseDepth.AltSupport = random.nextInt();
+        return baseDepth;
     }
 
 }
