@@ -32,7 +32,7 @@ class TumorBAFFactory
         {
             evidence.TumorReadDepth = evidence.TumorReadDepth + 1;
 
-            int bafPosition = (int) evidence.position();
+            int bafPosition = evidence.position();
             int readPosition = samRecord.getReadPositionAtReferencePosition(bafPosition);
             if(readPosition != 0)
             {

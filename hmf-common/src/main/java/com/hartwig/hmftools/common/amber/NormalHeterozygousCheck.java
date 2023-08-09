@@ -1,26 +1,23 @@
 package com.hartwig.hmftools.common.amber;
 
-import java.util.function.Predicate;
-
 import com.hartwig.hmftools.common.utils.Doubles;
 
-public class NormalHeterozygousFilter implements Predicate<BaseDepth>
+public class NormalHeterozygousCheck
 {
     private final double mMinHetAFPercentage;
     private final double mMaxHetAFPercentage;
 
-    public NormalHeterozygousFilter(final double minHetAFPercentage, final double maxHetAFPercentage)
+    public NormalHeterozygousCheck(final double minHetAFPercentage, final double maxHetAFPercentage)
     {
         mMinHetAFPercentage = minHetAFPercentage;
         mMaxHetAFPercentage = maxHetAFPercentage;
     }
 
-    @Override
-    public boolean test(final BaseDepth bafEvidence)
+    public boolean test(int readDepth, int refSupport, int altSupport, int indelCount)
     {
-        return bafEvidence.isValid() && bafEvidence.AltSupport > 0 && bafEvidence.RefSupport > 0
-                && isHeterozygousRef(bafEvidence.RefSupport, bafEvidence.ReadDepth)
-                && isHeterozygousAlt(bafEvidence.AltSupport, bafEvidence.ReadDepth);
+        return indelCount == 0 && altSupport > 0 && refSupport > 0
+                && isHeterozygousRef(refSupport, readDepth)
+                && isHeterozygousAlt(altSupport, readDepth);
     }
 
     private boolean isHeterozygousRef(int refSupport, int readDepth)

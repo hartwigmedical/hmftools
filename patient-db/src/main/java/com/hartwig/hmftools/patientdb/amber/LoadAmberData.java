@@ -2,6 +2,7 @@ package com.hartwig.hmftools.patientdb.amber;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.patientdb.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -18,7 +19,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.AmberSitesFile;
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
@@ -60,16 +60,16 @@ public class LoadAmberData
         final VCFFileReader fileReader = new VCFFileReader(new File(amberSnpPath), false))
         {
             LOGGER.info("Loading vcf snp data from {}", amberSnpPath);
-            final List<BaseDepth> baseDepths = fileReader.iterator()
+            final List<SiteEvidence> sites = fileReader.iterator()
                     .stream()
-                    .map(BaseDepth::fromVariantContext)
+                    .map(SiteEvidence::fromVariantContext)
                     .filter(x -> selector.select(x).isPresent())
                     .collect(Collectors.toList());
 
             final AmberSampleFactory amberSampleFactory = new AmberSampleFactory(
                     DEFAULT_MIN_DEPTH, DEFAULT_MIN_HET_AF_PERCENTAGE, DEFAULT_MAX_HET_AF_PERCENTAGE);
 
-            final AmberSample sample = amberSampleFactory.fromBaseDepth(tumorSample, baseDepths);
+            final AmberSample sample = amberSampleFactory.createSampleData(tumorSample, sites);
 
             processSample(sample, dbAccess);
         }
@@ -111,5 +111,6 @@ public class LoadAmberData
         configBuilder.addPath(AMBER_SNP_VCF, true, "Path to the amber snp vcf");
         configBuilder.addPath(SNPCHECK_VCF, true, "Path to the downsampled snp check vcf");
         addDatabaseCmdLineArgs(configBuilder, true);
+        addLoggingOptions(configBuilder);
     }
 }

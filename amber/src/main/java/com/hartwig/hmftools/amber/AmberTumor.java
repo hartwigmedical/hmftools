@@ -66,7 +66,7 @@ public class AmberTumor
         };
 
         AsyncBamLociReader.processBam(
-                mConfig.TumorBam, readerFactory, mergedLoci, lociBamRecordHander, mConfig.Threads, mConfig.MinMappingQuality);
+                mConfig.ReadMode, mConfig.TumorBam, readerFactory, mergedLoci, lociBamRecordHander, mConfig.Threads, mConfig.MinMappingQuality);
 
         mBafs = ArrayListMultimap.create();
 

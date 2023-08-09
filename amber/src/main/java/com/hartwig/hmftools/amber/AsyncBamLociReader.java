@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+import static com.hartwig.hmftools.amber.BamReadMode.groupMax;
 
 import java.io.File;
 import java.io.IOException;
@@ -117,7 +118,8 @@ public class AsyncBamLociReader
         }
     }
 
-    public static <E extends GenomePosition> void processBam(final String bamFile, final SamReaderFactory samReaderFactory,
+    public static <E extends GenomePosition> void processBam(
+            final BamReadMode readMode, final String bamFile, final SamReaderFactory samReaderFactory,
             final List<E> loci, BiConsumer<E, SAMRecord> asyncRecordHandler, int threadCount, int minMappingQuality)
             throws InterruptedException
     {
@@ -126,7 +128,7 @@ public class AsyncBamLociReader
         final Queue<Task<E>> taskQ = new ConcurrentLinkedQueue<>();
 
         // create genome regions from the loci
-        populateTaskQueue(loci, taskQ, bamFile.endsWith(".cram"));
+        populateTaskQueue(loci, taskQ, readMode);
 
         // we create the consumer and producer
         var bamReaders = new ArrayList<BamReaderThread<E>>();
@@ -158,13 +160,15 @@ public class AsyncBamLociReader
     }
 
     public static <E extends GenomePosition> void populateTaskQueue(
-            final List<E> sortedGenomePositions, final Queue<Task<E>> taskQ, boolean isCram)
+            final List<E> sortedGenomePositions, final Queue<Task<E>> taskQ, BamReadMode bamReadMode)
     {
         // Group the genome regions
         // cram file is much less efficient at handling seeks than bam files, therefore we merge more regions together when using cram
-        final int optimalNumRegions = isCram ? AmberConstants.OPTIMAL_CRAM_SLICE_REGIONS : AmberConstants.OPTIMAL_BAM_SLICE_REGIONS;
+        int optimalNumRegions = BamReadMode.groupMax(bamReadMode);
 
-        int minGap = isCram ? 10000 : 2000;
+        int minGap = BamReadMode.minGapStart(bamReadMode);
+        int gapIncrement = BamReadMode.minGapIncrement(bamReadMode);
+
         List<Task<E>> tasks = new ArrayList<>();
 
         while (true)
@@ -211,10 +215,11 @@ public class AsyncBamLociReader
             {
                 break;
             }
-            minGap += isCram ? 1000 : 200;
+
+            minGap += gapIncrement;
         }
         taskQ.addAll(tasks);
 
-        AMB_LOGGER.debug("{} loci, {} genome regions, min gap = {}", sortedGenomePositions.size(), taskQ.size(), minGap);
+        AMB_LOGGER.debug("split {} sites across {} regions", sortedGenomePositions.size(), taskQ.size());
     }
 }

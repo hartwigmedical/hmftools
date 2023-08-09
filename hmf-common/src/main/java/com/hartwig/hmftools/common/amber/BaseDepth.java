@@ -51,7 +51,8 @@ public class BaseDepth implements GenomePosition
 
     public String toString()
     {
-        return format("%s>%s depth(%d) indels(%d) support(%d/%d)", Ref, Alt, ReadDepth, IndelCount, RefSupport, AltSupport);
+        return format("%s:%d %s>%s depth(%d) indels(%d) support(%d/%d)",
+                Chromosome, Position, Ref, Alt, ReadDepth, IndelCount, RefSupport, AltSupport);
     }
 
     @Override

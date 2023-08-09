@@ -11,8 +11,6 @@ import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.Integers;
 
-import org.jetbrains.annotations.NotNull;
-
 public class BaseDepthFilter implements Predicate<BaseDepth>
 {
     private final int mMinDepth;

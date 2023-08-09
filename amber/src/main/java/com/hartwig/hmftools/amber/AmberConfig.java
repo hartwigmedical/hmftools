@@ -19,6 +19,9 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomes;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -61,6 +64,9 @@ public class AmberConfig
     public final ValidationStringency BamStringency;
     public final int Threads;
 
+    public final BamReadMode ReadMode;
+    public final List<String> SpecificChromosomes;
+
     public static final Logger AMB_LOGGER = LogManager.getLogger(AmberConfig.class);
 
     private static final String SAMPLE_DELIM = ",";
@@ -76,6 +82,8 @@ public class AmberConfig
     private static final String MIN_HIT_AT_PERC = "min_het_af_percent";
     private static final String MAX_HIT_AT_PERC = "max_het_af_percent";
     private static final String WRITE_UNFILTERED_GERMLINE = "write_unfiltered_germline";
+
+    private static final String BAM_MODE = "bam_mode";
 
     public AmberConfig(final ConfigBuilder configBuilder)
     {
@@ -108,6 +116,15 @@ public class AmberConfig
         OutputDir = parseOutputDir(configBuilder);
         Threads = parseThreads(configBuilder);
         BamStringency = BamUtils.validationStringency(configBuilder);
+
+        SpecificChromosomes = loadSpecificChromsomes(configBuilder.getValue(SPECIFIC_CHROMOSOMES));
+
+        if(configBuilder.hasValue(BAM_MODE))
+            ReadMode = BamReadMode.valueOf(configBuilder.getValue(BAM_MODE));
+        else if((TumorBam != null && TumorBam.endsWith(".cram")) || (ReferenceBams.get(0) != null && ReferenceBams.get(0).endsWith(".cram")))
+            ReadMode = BamReadMode.CRAM;
+        else
+            ReadMode = BamReadMode.DEFAULT;
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -144,10 +161,14 @@ public class AmberConfig
 
         configBuilder.addFlag(WRITE_UNFILTERED_GERMLINE, "Write all (unfiltered) germline points");
 
+        configBuilder.addConfigItem(BAM_MODE,"BAM reading mode");
+
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);
         addValidationStringencyOption(configBuilder);
         addLoggingOptions(configBuilder);
+
+        addSpecificChromosomesRegionsConfig(configBuilder);
     }
 
     public String primaryReference()
