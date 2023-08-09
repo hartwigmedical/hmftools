@@ -6,8 +6,9 @@ import xml.etree.ElementTree as ET
 ### Classes
 
 class Maven:
-    def __init__(self, pom_path):
+    def __init__(self, pom_path, name=''):
         self.pom_path = pom_path
+        self.name = name
     
     def set_property(self, property, value):
         subprocess.run(['mvn', '-f', self.pom_path, 'versions:set-property',
@@ -16,11 +17,10 @@ class Maven:
     def set_version(self, version):
         subprocess.run(['mvn', '-f', self.pom_path, 'versions:set',
                         '-DgenerateBackupPoms=false', f'-DnewVersion={version}'], check=True)
-        
 
     @staticmethod
     def deploy_all(modules):
-        module_str = ','.join(modules)
+        module_str = ','.join([m.name for m in modules])
         subprocess.run(['mvn', 'deploy', '-B', '-pl', module_str, '-am'])
 
 
@@ -45,7 +45,7 @@ def extract_hmftools_dependencies(pom_path):
     return hmftools_dependencies
 
 
-### Script
+## Script
 
 # Check if a semver version is included as argument.
 if len(sys.argv) != 2:
@@ -69,16 +69,16 @@ version = match.group(2)
 hmftools_dependencies = extract_hmftools_dependencies(f'{module}/pom.xml')
 
 parent_pom = Maven('pom.xml')
-module_pom = Maven(f'{module}/pom.xml')
-dependencies_pom = [Maven(f'{hmf_dep}/pom.xml') for hmf_dep in hmftools_dependencies]
+module_pom = Maven(f'{module}/pom.xml', name=module)
+dependencies_pom = [Maven(f'{hmf_dep}/pom.xml', name=hmf_dep) for hmf_dep in hmftools_dependencies]
 
 # Set versions in appropriate poms
 # For the module we are targetting, we will use only the version part of the semver tag
-# For all dependencies, we will use the entire semver tag 
+# For all dependencies, we will use the entire semver tag
 parent_pom.set_property(f'{module}.version', version)
 for hmf_dep in hmftools_dependencies:
     parent_pom.set_property(f'{hmf_dep}.version', tag)
 parent_pom.set_version(tag)
 module_pom.set_version(version)
 
-Maven.deploy_all(list(hmftools_dependencies.copy()) + [module])
+Maven.deploy_all(dependencies_pom + module_pom)
