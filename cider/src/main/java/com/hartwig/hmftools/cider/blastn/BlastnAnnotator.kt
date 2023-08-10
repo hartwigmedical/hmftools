@@ -11,7 +11,7 @@ import kotlin.collections.HashMap
 
 enum class BlastnStatus
 {
-    V_D_J, V_J, V_D, D_J, V_ONLY, D_ONLY, J_ONLY, NO_REARRANGEMENT, NO_VDJ_ALIGNMENT
+    V_D_J, V_J, V_D, D_J, V_ONLY, D_ONLY, J_ONLY, NO_REARRANGEMENT, NO_VDJ_ALIGNMENT, SKIPPED_BLASTN
 }
 
 data class BlastnAnnotation(

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.blastn.BlastnMatch
+import com.hartwig.hmftools.cider.blastn.BlastnStatus
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import org.apache.commons.csv.CSVFormat
@@ -70,8 +71,7 @@ object VDJSequenceTsvWriter
     }
 
     @JvmStatic
-    fun writeVDJSequences(
-        basePath: String, sample: String, vdjAnnotations: List<VdjAnnotation>, reportMatchRefVdj: Boolean, reportPartialSeq: Boolean)
+    fun writeVDJSequences(basePath: String, sample: String, vdjAnnotations: List<VdjAnnotation>)
     {
         val filePath = generateFilename(basePath, sample)
 
@@ -83,11 +83,7 @@ object VDJSequenceTsvWriter
         csvFormat.print(FileWriterUtils.createGzipBufferedWriter(filePath)).use { printer: CSVPrinter ->
             for (vdjAnn in vdjAnnotations)
             {
-                if ((reportMatchRefVdj || !vdjAnn.filters.contains(VdjAnnotation.Filter.MATCHES_REF)) &&
-                    (reportPartialSeq || vdjAnn.vdj.isFullyRearranged))
-                {
-                    writeVDJSequence(printer, vdjAnn)
-                }
+                writeVDJSequence(printer, vdjAnn)
             }
         }
     }
@@ -104,14 +100,7 @@ object VDJSequenceTsvWriter
                 Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(vdj))
                 Column.locus -> csvPrinter.print(getLocus(vdj).prettyPrint())
                 Column.filter -> csvPrinter.print(vdjAnnotation.filters.joinToString(separator = ";"))
-                Column.blastnStatus -> if (vdjAnnotation.blastnAnnotation != null)
-                {
-                    csvPrinter.print(vdjAnnotation.blastnAnnotation!!.blastnStatus)
-                }
-                else
-                {
-                    csvPrinter.print("SKIPPED_BLASTN")
-                }
+                Column.blastnStatus -> csvPrinter.print(vdjAnnotation.blastnAnnotation?.blastnStatus ?: BlastnStatus.SKIPPED_BLASTN)
                 Column.minHighQualBaseReads -> csvPrinter.print(vdjAnnotation.cdr3SupportMin)
                 Column.assignedReads -> csvPrinter.print(vdj.numReads)
                 Column.vAlignedReads -> csvPrinter.print(vdjAnnotation.vAlignedReads)

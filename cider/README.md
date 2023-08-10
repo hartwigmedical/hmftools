@@ -18,7 +18,7 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
    -write_cider_bam \
    -blast /tools/ncbi-blast/ncbi-blast-2.13.0+ \
    -blast_db /data/blastdb \
-   -threads 16
+   -threads 8
 ```
 ### Mandatory Arguments
 
@@ -128,8 +128,8 @@ The full set of fields output are:
 
 | Field                                 | Explanation                                                                                                                                         | 
 |---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| CDR3Seq                               | CDR3 nucleotide sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                      | 
-| CDR3aa                                | CDR3 aa sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                              | 
+| cdr3Seq                               | CDR3 nucleotide sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                      | 
+| cdr3AA                                | CDR3 aa sequence. If either the V or J anchor is missing only the first 63 bases of sequence are shown                                              | 
 | locus                                 | Ig/TCR locus of the sequence                                                                                                                        |
 | Filter                                | PASS if viable CDR3 sequence or one or more filter reasons  (see above)                                                                             |
 | blastnStatus                          | SKIPPED_BLASTN, V_D_J, V_J, V_D, D_J, V_ONLY, D_ONLY, J_ONLY, NO_REARRANGEMENT, NO_VDJ_ALIGNMENT                                                    |
@@ -156,7 +156,7 @@ The full set of fields output are:
 | jAnchorAA                             | J anchor sequence in AA                                                                                                                             | 
 | jAnchorTemplateAA                     | Best scoring J template Anchor in AA (or null if read aligned to J anchor)                                                                          | 
 | jSimilarityScore                      | Blosum62 similarity score for template anchor (or null if read aligned to J anchor)                                                                 | 
-| vNonSplitReads                        | Count of reads supporting sequence with at least 30 aligned bases either side of first base of conserved W/F                                        | 
+| jNonSplitReads                        | Count of reads supporting sequence with at least 30 aligned bases either side of first base of conserved W/F                                        | 
 | vGene, dGene, jGene                   | The V, D or J gene alleles that this sequence is aligned to                                                                                         | 
 | vPIdent, dPIdent, jPIdent             | The align sequence % identity with the V, D or J gene                                                                                               | 
 | vAlignStart, dAlignStart, jAlignStart | Start of the alignment with the V, D or J gene                                                                                                      | 
@@ -248,10 +248,12 @@ Running with `-xmx32G`.
 "Max reads per gene" is the maximum number of reads we found in each of the IG/TCR gene segment, i.e. IGHV, TRBJ etc. 
 
 # Version History and Download Links
+- [0.10.1](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.10.1)
+  - Filter out V or J only sequences that are too short. 
 - [0.10.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.10.0)
   - Incorporate BLASTN annotation into CIDER.
   - Change output columns to include BLASTN annotations.
-  - Add cider.blastn_match.tsv.gz output
+  - Add `cider.blastn_match.tsv.gz` output
   - Colourise layout file.
 - [0.9.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v0.9.0)
   - Fix an issue in 0.8.0 where layout can get into infinite loop.

@@ -27,6 +27,8 @@ object BlastnRunner
     const val GAP_OPENING_SCORE = -5
     const val GAP_EXTEND_SCORE = -2
 
+    const val WORD_SIZE = 9
+
     enum class BlastColumns
     {
         qseqid, qlen, sseqid, stitle, pident, qcovs, length, mismatch, gapopen,
@@ -60,7 +62,7 @@ object BlastnRunner
             "-task", "blastn",
             // "-outfmt", "6 " + BLAST_COLUMNS.joinToString(" "),
             "-evalue", expectedValueCutoff.toString(),
-            "-word_size", "9",
+            "-word_size", WORD_SIZE.toString(),
             "-reward", MATCH_SCORE.toString(),
             "-penalty", MISMATCH_SCORE.toString(),
             "-gapopen", (-GAP_OPENING_SCORE).toString(),
