@@ -2,7 +2,6 @@ package com.hartwig.hmftools.amber;
 
 import java.util.function.Predicate;
 
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.NormalHeterozygousCheck;
 
 public class NormalHeterozygousFilter implements Predicate<BaseDepth>

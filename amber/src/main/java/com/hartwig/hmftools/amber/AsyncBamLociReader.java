@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
-import static com.hartwig.hmftools.amber.BamReadMode.groupMax;
+import static com.hartwig.hmftools.amber.AmberConstants.BAM_MIN_GAP_INCREMENT;
+import static com.hartwig.hmftools.amber.AmberConstants.BAM_MIN_GAP_START;
+import static com.hartwig.hmftools.amber.AmberConstants.BAM_REGION_GROUP_MAX;
+import static com.hartwig.hmftools.amber.AmberConstants.CRAM_MIN_GAP_INCREMENT;
+import static com.hartwig.hmftools.amber.AmberConstants.CRAM_MIN_GAP_START;
+import static com.hartwig.hmftools.amber.AmberConstants.CRAM_REGION_GROUP_MAX;
 
 import java.io.File;
 import java.io.IOException;
@@ -119,7 +124,7 @@ public class AsyncBamLociReader
     }
 
     public static <E extends GenomePosition> void processBam(
-            final BamReadMode readMode, final String bamFile, final SamReaderFactory samReaderFactory,
+            final String bamFile, final SamReaderFactory samReaderFactory,
             final List<E> loci, BiConsumer<E, SAMRecord> asyncRecordHandler, int threadCount, int minMappingQuality)
             throws InterruptedException
     {
@@ -128,7 +133,8 @@ public class AsyncBamLociReader
         final Queue<Task<E>> taskQ = new ConcurrentLinkedQueue<>();
 
         // create genome regions from the loci
-        populateTaskQueue(loci, taskQ, readMode);
+        boolean isCram = bamFile.endsWith(".cram");
+        populateTaskQueue(loci, taskQ, isCram);
 
         // we create the consumer and producer
         var bamReaders = new ArrayList<BamReaderThread<E>>();
@@ -160,14 +166,13 @@ public class AsyncBamLociReader
     }
 
     public static <E extends GenomePosition> void populateTaskQueue(
-            final List<E> sortedGenomePositions, final Queue<Task<E>> taskQ, BamReadMode bamReadMode)
+            final List<E> sortedGenomePositions, final Queue<Task<E>> taskQ, boolean isCram)
     {
         // Group the genome regions
         // cram file is much less efficient at handling seeks than bam files, therefore we merge more regions together when using cram
-        int optimalNumRegions = BamReadMode.groupMax(bamReadMode);
-
-        int minGap = BamReadMode.minGapStart(bamReadMode);
-        int gapIncrement = BamReadMode.minGapIncrement(bamReadMode);
+        int optimalNumRegions = isCram ? CRAM_REGION_GROUP_MAX : BAM_REGION_GROUP_MAX;
+        int minGap = isCram ? CRAM_MIN_GAP_START : BAM_MIN_GAP_START;
+        int gapIncrement = isCram ? CRAM_MIN_GAP_INCREMENT : BAM_MIN_GAP_INCREMENT;
 
         List<Task<E>> tasks = new ArrayList<>();
 

@@ -1,12 +1,10 @@
-package com.hartwig.hmftools.common.amber;
+package com.hartwig.hmftools.amber;
 
 import static java.lang.String.format;
 
+import com.hartwig.hmftools.common.amber.BaseDepthData;
+import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
-
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.VariantContext;
 
 public class BaseDepth implements GenomePosition
 {
@@ -27,6 +25,7 @@ public class BaseDepth implements GenomePosition
     public int IndelCount;
     public int RefSupport;
     public int AltSupport;
+    public int AltQuality;
 
     public BaseDepth(final String chromosome, final int position, final String ref, final String alt)
     {
@@ -38,6 +37,7 @@ public class BaseDepth implements GenomePosition
         IndelCount = 0;
         RefSupport = 0;
         AltSupport = 0;
+        AltQuality = 0;
     }
 
     public static BaseDepth copy(final BaseDepth other)
@@ -45,9 +45,7 @@ public class BaseDepth implements GenomePosition
         return new BaseDepth(other.Chromosome, other.Position, other.ref(), other.alt());
     }
 
-    public boolean isValid() {
-        return IndelCount == 0;
-    }
+    public boolean isValid() { return IndelCount == 0; }
 
     public String toString()
     {
@@ -75,20 +73,5 @@ public class BaseDepth implements GenomePosition
                 .altSupport(AltSupport)
                 .indelCount(IndelCount)
                 .build();
-    }
-
-    public static BaseDepth fromVariantContext(final VariantContext context)
-    {
-        final Allele refAllele = context.getReference();
-        final Allele altAllele = context.getAlternateAllele(0);
-        final Genotype normal = context.getGenotype(0);
-
-        BaseDepth baseDepth = new BaseDepth(
-                context.getContig(), context.getStart(), refAllele.getBaseString(), altAllele.getBaseString());
-
-        baseDepth.AltSupport = normal.getAD()[0];
-        baseDepth.RefSupport = normal.getAD()[1];
-        baseDepth.ReadDepth = normal.getDP();
-        return baseDepth;
     }
 }

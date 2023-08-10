@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.amber;
 
-import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.samtools.SamRecordUtils;
+import java.util.List;
+import java.util.Map;
 
-import org.jetbrains.annotations.NotNull;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.amber.AmberSite;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -20,32 +22,34 @@ public class BaseDepthFactory
 
     public void addEvidence(final BaseDepth evidence, final SAMRecord samRecord)
     {
-        int quality = getBaseQuality(evidence, samRecord);
-        if(quality >= mMinBaseQuality)
+        int baseQuality = getBaseQuality(evidence.Position, samRecord);
+
+        if(baseQuality < mMinBaseQuality)
+            return;
+
+        ++evidence.ReadDepth;
+
+        int bafPosition = evidence.position();
+        int readPosition = samRecord.getReadPositionAtReferencePosition(bafPosition);
+        if(readPosition != 0)
         {
-            ++evidence.ReadDepth;
-
-            int bafPosition = evidence.position();
-            int readPosition = samRecord.getReadPositionAtReferencePosition(bafPosition);
-            if(readPosition != 0)
+            if(!isIndel(bafPosition, readPosition, samRecord))
             {
-                if(!isIndel(bafPosition, readPosition, samRecord))
-                {
-                    char baseChar = samRecord.getReadString().charAt(readPosition - 1);
+                char baseChar = samRecord.getReadString().charAt(readPosition - 1);
 
-                    if(evidence.equalsRef(baseChar))
-                    {
-                        ++evidence.RefSupport;
-                    }
-                    else if(evidence.equalsAlt(baseChar))
-                    {
-                        ++evidence.AltSupport;
-                    }
-                }
-                else
+                if(evidence.equalsRef(baseChar))
                 {
-                    ++evidence.IndelCount;
+                    ++evidence.RefSupport;
                 }
+                else if(evidence.equalsAlt(baseChar))
+                {
+                    ++evidence.AltSupport;
+                    evidence.AltQuality += baseQuality;
+                }
+            }
+            else
+            {
+                ++evidence.IndelCount;
             }
         }
     }
@@ -67,10 +71,10 @@ public class BaseDepthFactory
         return false;
     }
 
-    public static int getBaseQuality(@NotNull final GenomePosition position, @NotNull final SAMRecord samRecord)
+    public static int getBaseQuality(final int position, final SAMRecord samRecord)
     {
         // Get quality of base after del if necessary
-        for(int pos = position.position(); pos <= samRecord.getAlignmentEnd(); pos++)
+        for(int pos = position; pos <= samRecord.getAlignmentEnd(); pos++)
         {
             int readPosition = samRecord.getReadPositionAtReferencePosition(pos);
             if(readPosition != 0)

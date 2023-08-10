@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;

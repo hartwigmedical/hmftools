@@ -3,18 +3,21 @@ package com.hartwig.hmftools.amber;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
+import static com.hartwig.hmftools.amber.BaseDepthFactory.fromAmberSite;
 import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntries;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
@@ -34,7 +37,8 @@ public class AmberGermline
 
     @Nullable private final Chromosome mUniparentalDisomy;
 
-    public AmberGermline(final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chromosomeSites)
+    public AmberGermline(
+            final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chromosomeSites)
             throws InterruptedException, IOException
     {
         mConfig = config;
@@ -91,18 +95,54 @@ public class AmberGermline
 
     private ListMultimap<Chromosome, BaseDepth> germlineDepth(
             final SamReaderFactory readerFactory, final String bamPath,
-            final ListMultimap<Chromosome, AmberSite> bedRegionsSortedSet) throws InterruptedException
+            final ListMultimap<Chromosome,AmberSite> bedRegionsSortedSet) throws InterruptedException
     {
-        AMB_LOGGER.info("Processing {} potential sites in reference bam {}", bedRegionsSortedSet.values().size(), bamPath);
+        AMB_LOGGER.info("processing {} Amber sites in reference bam({})", bedRegionsSortedSet.values().size(), bamPath);
 
+        Map<Chromosome,List<BaseDepth>> chrBaseDepth = Maps.newHashMap();
+
+        for(Map.Entry<Chromosome,AmberSite> entry : bedRegionsSortedSet.entries())
+        {
+            Chromosome chromosome = entry.getKey();
+
+            List<BaseDepth> positions = chrBaseDepth.get(chromosome);
+
+            if(positions == null)
+            {
+                positions = Lists.newArrayList();
+                chrBaseDepth.put(chromosome, positions);
+            }
+
+            positions.add(fromAmberSite(entry.getValue()));
+        }
+
+
+        BamEvidenceReader bamEvidenceReader = new BamEvidenceReader(mConfig);
+        bamEvidenceReader.processBam(bamPath, readerFactory, chrBaseDepth);
+
+        ListMultimap<Chromosome,BaseDepth> normalEvidence = ArrayListMultimap.create();
+
+        for(Map.Entry<Chromosome,List<BaseDepth>> entry : chrBaseDepth.entrySet())
+        {
+            Chromosome chromosome = entry.getKey();
+            List<BaseDepth> positions = entry.getValue();
+
+            positions.forEach(x -> normalEvidence.put(chromosome, x));
+        }
+
+        /*
         final List<BaseDepth> baseDepths = bedRegionsSortedSet.values().stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
+
         BaseDepthFactory bafFactory = new BaseDepthFactory(mConfig.MinBaseQuality);
 
         AsyncBamLociReader.processBam(
-                mConfig.ReadMode, bamPath, readerFactory, baseDepths, bafFactory::addEvidence, mConfig.Threads, mConfig.MinMappingQuality);
+                bamPath, readerFactory, baseDepths, bafFactory::addEvidence, mConfig.Threads, mConfig.MinMappingQuality);
 
-        final ListMultimap<Chromosome, BaseDepth> normalEvidence = ArrayListMultimap.create();
+
+        final ListMultimap<Chromosome,BaseDepth> normalEvidence = ArrayListMultimap.create();
         baseDepths.forEach(x -> normalEvidence.put(HumanChromosome.fromString(x.chromosome()), x));
+        */
+
         return normalEvidence;
     }
 }

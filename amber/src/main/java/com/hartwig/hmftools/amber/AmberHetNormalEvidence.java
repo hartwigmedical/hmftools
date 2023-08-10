@@ -8,7 +8,6 @@ import java.util.function.Predicate;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 import org.jetbrains.annotations.NotNull;

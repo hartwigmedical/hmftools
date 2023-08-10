@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 

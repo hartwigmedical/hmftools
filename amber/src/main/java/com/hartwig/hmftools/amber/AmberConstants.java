@@ -25,4 +25,15 @@ public class AmberConstants
     public static final double HOMOZYGOUS_REGION_MAX_HET_RATIO = 0.05;
     public static final int HOMOZYGOUS_REGION_LONG_SIZE = 3_000_000;
     public static final int UNIPARENTAL_DISOMY_MIN_LENGTH = 10_000_000;
+
+    // BAM/CRAM slicing optimisations
+    public static final int BAM_REGION_GROUP_MAX = 150000;
+    public static final int CRAM_REGION_GROUP_MAX = 10000;
+
+    public static final int CRAM_MIN_GAP_START = 10000;
+    public static final int BAM_MIN_GAP_START = 2000;
+
+    public static final int CRAM_MIN_GAP_INCREMENT = 1000;
+    public static final int BAM_MIN_GAP_INCREMENT = 200;
+
 }

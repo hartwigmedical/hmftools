@@ -3,8 +3,6 @@ package com.hartwig.hmftools.amber;
 import static com.hartwig.hmftools.amber.BaseDepthFactory.getBaseQuality;
 import static com.hartwig.hmftools.amber.BaseDepthFactory.isIndel;
 
-import com.hartwig.hmftools.common.amber.BaseDepth;
-
 import htsjdk.samtools.SAMRecord;
 
 class TumorBAFFactory
@@ -27,7 +25,7 @@ class TumorBAFFactory
 
     void addEvidence(final TumorBAF evidence, final SAMRecord samRecord)
     {
-        int quality = getBaseQuality(evidence, samRecord);
+        int quality = getBaseQuality(evidence.position(), samRecord);
         if(quality >= mMinBaseQuality)
         {
             evidence.TumorReadDepth = evidence.TumorReadDepth + 1;

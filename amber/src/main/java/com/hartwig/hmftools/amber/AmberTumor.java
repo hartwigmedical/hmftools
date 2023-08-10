@@ -3,6 +3,7 @@ package com.hartwig.hmftools.amber;
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -10,7 +11,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.amber.BaseDepth;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -40,33 +42,86 @@ public class AmberTumor
 
     // we process them together
     private void tumorBAFAndContamination(final SamReaderFactory readerFactory,
-            final ListMultimap<Chromosome, BaseDepth> germlineHetLoci, final ListMultimap<Chromosome, BaseDepth> germlineHomLoci) throws InterruptedException
+            final ListMultimap<Chromosome,BaseDepth> germlineHetLoci, final ListMultimap<Chromosome, BaseDepth> germlineHomLoci) throws InterruptedException
     {
-        AMB_LOGGER.info("Processing {} germline heterozygous loci in tumor bam {}", germlineHetLoci.values().size(), mConfig.TumorBam);
-        AMB_LOGGER.info("Processing {} germline homozygous loci in tumor bam {} for contamination", germlineHomLoci.size(), mConfig.TumorBam);
+        AMB_LOGGER.info("processing {} germline heterozygous sites", germlineHetLoci.values().size());
+        AMB_LOGGER.info("processing {} germline homozygous sites", germlineHomLoci.size());
 
+        /*
         final List<TumorBAF> tumorBAFs = germlineHetLoci.values().stream().sorted().map(TumorBAFFactory::create).collect(Collectors.toList());
         final Map<BaseDepth,BaseDepth> contaminationBafMap = germlineHomLoci.values().stream().collect(
                 Collectors.toMap(x -> x, BaseDepthFactory::copyBaseDepth));
+        */
 
-        var tumorBafFactory = new TumorBAFFactory(mConfig.MinBaseQuality);
-        var contaminationBafFactory = new BaseDepthFactory(mConfig.MinBaseQuality);
+        Map<Chromosome,List<BaseDepth>> chrBaseDepthMap = Maps.newHashMap();
+        Map<BaseDepth,BaseDepth> contaminationBafMap = Maps.newHashMap();
+        List<TumorBAF> tumorBAFs = Lists.newArrayList();
 
-        // merge both into one list
-        final List<GenomePosition> mergedLoci = new ArrayList<>(tumorBAFs);
-        mergedLoci.addAll(contaminationBafMap.values());
-        mergedLoci.sort(null);
-
-        BiConsumer<GenomePosition, SAMRecord> lociBamRecordHander = (GenomePosition genomePosition, SAMRecord samRecord) ->
+        for(Map.Entry<Chromosome,BaseDepth> entry : germlineHetLoci.entries())
         {
-            if (genomePosition instanceof TumorBAF)
-                tumorBafFactory.addEvidence((TumorBAF)genomePosition, samRecord);
-            else if (genomePosition instanceof BaseDepth)
-                contaminationBafFactory.addEvidence((BaseDepth)genomePosition, samRecord);
-        };
+            List<BaseDepth> positions = chrBaseDepthMap.get(entry.getKey());
 
-        AsyncBamLociReader.processBam(
-                mConfig.ReadMode, mConfig.TumorBam, readerFactory, mergedLoci, lociBamRecordHander, mConfig.Threads, mConfig.MinMappingQuality);
+            if(positions == null)
+            {
+                positions = Lists.newArrayList();
+                chrBaseDepthMap.put(entry.getKey(), positions);
+            }
+
+            BaseDepth normal = entry.getValue();
+
+            TumorBAF tumorBAF = TumorBAFFactory.create(normal);
+
+            positions.add(tumorBAF.TumorEvidence);
+        }
+
+        for(Map.Entry<Chromosome,BaseDepth> entry : germlineHomLoci.entries())
+        {
+            List<BaseDepth> positions = chrBaseDepthMap.get(entry.getKey());
+
+            if(positions == null)
+            {
+                positions = Lists.newArrayList();
+                chrBaseDepthMap.put(entry.getKey(), positions);
+            }
+
+            BaseDepth normal = entry.getValue();
+            BaseDepth tumor = BaseDepth.copy(normal);
+
+            positions.add(tumor);
+            contaminationBafMap.put(normal, tumor);
+        }
+
+        // ensure positions are sorted after the merge
+        for(List<BaseDepth> positions : chrBaseDepthMap.values())
+        {
+            Collections.sort(positions);
+        }
+
+        BamEvidenceReader bamEvidenceReader = new BamEvidenceReader(mConfig);
+        bamEvidenceReader.processBam(mConfig.TumorBam, readerFactory, chrBaseDepthMap);
+
+        // OLD CODE, to be deprecated
+
+        /*
+            TumorBAFFactory tumorBafFactory = new TumorBAFFactory(mConfig.MinBaseQuality);
+            BaseDepthFactory contaminationBafFactory = new BaseDepthFactory(mConfig.MinBaseQuality);
+
+            // merge both into one list
+            final List<GenomePosition> mergedLoci = new ArrayList<>(tumorBAFs);
+            mergedLoci.addAll(contaminationBafMap.values());
+            mergedLoci.sort(null);
+
+            BiConsumer<GenomePosition, SAMRecord> lociBamRecordHander = (GenomePosition genomePosition, SAMRecord samRecord) ->
+            {
+                if (genomePosition instanceof TumorBAF)
+                    tumorBafFactory.addEvidence((TumorBAF)genomePosition, samRecord);
+                else if (genomePosition instanceof BaseDepth)
+                    contaminationBafFactory.addEvidence((BaseDepth)genomePosition, samRecord);
+            };
+
+            AsyncBamLociReader.processBam(
+                    mConfig.TumorBam, readerFactory, mergedLoci, lociBamRecordHander, mConfig.Threads, mConfig.MinMappingQuality);
+        */
 
         mBafs = ArrayListMultimap.create();
 

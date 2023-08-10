@@ -10,7 +10,6 @@ import java.util.List;
 import com.google.common.collect.ListMultimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.amber.AmberQC;
 import com.hartwig.hmftools.common.amber.AmberQCFile;
 import com.hartwig.hmftools.common.amber.ImmutableAmberQC;

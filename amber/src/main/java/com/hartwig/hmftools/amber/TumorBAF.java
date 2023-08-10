@@ -13,6 +13,8 @@ public class TumorBAF implements GenomePosition
     public int NormalRefSupport;
     public int NormalAltSupport;
 
+    public final BaseDepth TumorEvidence;
+
     public int TumorReadDepth;
     public int TumorRefSupport;
     public int TumorAltSupport;
@@ -29,6 +31,8 @@ public class TumorBAF implements GenomePosition
         NormalReadDepth = 0;
         NormalRefSupport = 0;
         NormalAltSupport = 0;
+
+        TumorEvidence = new BaseDepth(chromosome, position, ref, alt);
 
         TumorReadDepth = 0;
         TumorRefSupport = 0;

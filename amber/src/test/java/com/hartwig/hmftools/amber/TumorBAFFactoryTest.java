@@ -2,7 +2,6 @@ package com.hartwig.hmftools.amber;
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import org.jetbrains.annotations.NotNull;
