@@ -19,11 +19,11 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class AmberPersistence
+class ResultsWriter
 {
     private final AmberConfig mConfig;
 
-    public AmberPersistence(final AmberConfig config)
+    public ResultsWriter(final AmberConfig config)
     {
         mConfig = config;
     }
@@ -65,7 +65,7 @@ class AmberPersistence
 
         final String outputVcf = mConfig.OutputDir + File.separator + mConfig.TumorId + ".amber.contamination.vcf.gz";
         AMB_LOGGER.info("Writing {} contamination records to {}", contaminationList.size(), outputVcf);
-        new AmberVCF(mConfig).writeContamination(outputVcf, contaminationList);
+        new VCFWriter(mConfig).writeContamination(outputVcf, contaminationList);
 
         final String filename = TumorContaminationFile.generateContaminationFilename(mConfig.OutputDir, mConfig.TumorId);
         TumorContaminationFile.write(filename, contaminationList);
@@ -77,7 +77,7 @@ class AmberPersistence
         {
             final String outputVcf = mConfig.OutputDir + File.separator + mConfig.primaryReference() + ".amber.snp.vcf.gz";
             AMB_LOGGER.info("Writing {} germline snp records to {}", baseDepths.size(), outputVcf);
-            AmberVCF.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
+            VCFWriter.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
         }
     }
 
@@ -87,7 +87,7 @@ class AmberPersistence
         {
             final String outputVcf = mConfig.OutputDir + File.separator + mConfig.primaryReference() + ".amber.unfiltered.vcf.gz";
             AMB_LOGGER.info("Writing {} germline unfiltered records to {}", baseDepths.size(), outputVcf);
-            AmberVCF.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
+            VCFWriter.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
         }
     }
 

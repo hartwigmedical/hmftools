@@ -149,7 +149,7 @@ public class AsyncBamLociReader
 
         AMB_LOGGER.debug("{} bam reader threads started", bamReaders.size());
 
-        AmberTaskCompletion taskCompletion = new AmberTaskCompletion(taskQ.size());
+        ProgressTracker taskCompletion = new ProgressTracker(taskQ.size());
         for (BamReaderThread<E> t : bamReaders)
         {
             while (t.isAlive())

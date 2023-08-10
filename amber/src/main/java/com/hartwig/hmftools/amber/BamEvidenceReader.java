@@ -180,7 +180,7 @@ public class BamEvidenceReader
 
         AMB_LOGGER.trace("{} bam reader threads started", bamReaders.size());
 
-        AmberTaskCompletion taskCompletion = new AmberTaskCompletion(taskQueue.size());
+        ProgressTracker taskCompletion = new ProgressTracker(taskQueue.size());
         for(BamReaderThread thread : bamReaders)
         {
             while(thread.isAlive())
@@ -235,6 +235,8 @@ public class BamEvidenceReader
                 }
             }
         }
+
+        // TODO - log longest region and one with highest position count
 
         taskQueue.addAll(tasks);
 

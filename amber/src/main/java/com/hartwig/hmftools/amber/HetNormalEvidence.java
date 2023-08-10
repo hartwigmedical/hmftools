@@ -12,24 +12,22 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AmberHetNormalEvidence
+public class HetNormalEvidence
 {
     private final Map<String, Collection<BaseDepth>> mMap;
     private final BaseDepthIntersectFilter mIntersectFilter;
 
-    public AmberHetNormalEvidence()
+    public HetNormalEvidence()
     {
         mMap = Maps.newHashMap();
         mIntersectFilter = new BaseDepthIntersectFilter();
     }
 
-    @NotNull
     public ListMultimap<Chromosome, AmberSite> intersection()
     {
         return mIntersectFilter.sites();
     }
 
-    @NotNull
     public Set<String> samples()
     {
         return mMap.keySet();

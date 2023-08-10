@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -19,16 +18,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SamReaderFactory;
 
-public class AmberGermline
+public class GermlineAnalysis
 {
     private final AmberConfig mConfig;
-    private final AmberHetNormalEvidence mHetNormalEvidence;
+    private final HetNormalEvidence mHetNormalEvidence;
     private final ListMultimap<Chromosome, BaseDepth> mSnpCheckedLoci;
     private final ListMultimap<Chromosome, BaseDepth> mHomozygousLoci;
     private final ListMultimap<Chromosome, BaseDepth> mHeterozygousLoci;
@@ -37,7 +35,7 @@ public class AmberGermline
 
     @Nullable private final Chromosome mUniparentalDisomy;
 
-    public AmberGermline(
+    public GermlineAnalysis(
             final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chromosomeSites)
             throws InterruptedException, IOException
     {
@@ -48,7 +46,7 @@ public class AmberGermline
         Predicate<BaseDepth> heterozygousFilter = new NormalHeterozygousFilter(mConfig.MinHetAfPercent, mConfig.MaxHetAfPercent).and(isValidFilter);
         Predicate<BaseDepth> snpCheckFilter = new SnpCheckFilter(chromosomeSites);
 
-        mHetNormalEvidence = new AmberHetNormalEvidence();
+        mHetNormalEvidence = new HetNormalEvidence();
 
         // Primary Reference Data
         ListMultimap<Chromosome, BaseDepth> unfilteredLoci = germlineDepth(readerFactory, mConfig.ReferenceBams.get(0), chromosomeSites);

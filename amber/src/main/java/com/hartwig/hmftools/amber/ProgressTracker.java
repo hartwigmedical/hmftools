@@ -6,12 +6,12 @@ import com.google.common.base.Strings;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AmberTaskCompletion
+public class ProgressTracker
 {
     private final int mExpected;
     private double mPreviousPercentComplete;
 
-    public AmberTaskCompletion(int numTasks)
+    public ProgressTracker(int numTasks)
     {
         mExpected = numTasks;
         mPreviousPercentComplete = 0;

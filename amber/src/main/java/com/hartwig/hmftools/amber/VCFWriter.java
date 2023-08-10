@@ -1,16 +1,10 @@
 package com.hartwig.hmftools.amber;
 
-import static com.hartwig.hmftools.amber.AmberUtils.depthAsSite;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.ImmutableAmberSite;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -27,58 +21,15 @@ import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
 
-public class AmberVCF
+public class VCFWriter
 {
     private static final String PASS = "PASS";
 
     private final AmberConfig mConfig;
 
-    public AmberVCF(final AmberConfig config)
+    public VCFWriter(final AmberConfig config)
     {
         mConfig = config;
-    }
-
-    public void writeBAF(final String filename, final Collection<TumorBAF> tumorEvidence,
-            final AmberHetNormalEvidence hetNormalEvidence)
-    {
-        final List<TumorBAF> list = Lists.newArrayList(tumorEvidence);
-        Collections.sort(list);
-
-        final VariantContextWriter writer =
-                new VariantContextWriterBuilder().setOutputFile(filename).modifyOption(Options.INDEX_ON_THE_FLY, true).build();
-
-        final VCFHeader header = header(mConfig.isTumorOnly() ? Collections.singletonList(mConfig.TumorId) : mConfig.allSamples());
-
-        writer.setHeader(header);
-        writer.writeHeader(header);
-
-        final ListMultimap<AmberSite, Genotype> genotypeMap = ArrayListMultimap.create();
-        for(final String sample : hetNormalEvidence.samples())
-        {
-            for(BaseDepth baseDepth : hetNormalEvidence.evidence(sample))
-            {
-                genotypeMap.put(depthAsSite(baseDepth), createGenotype(sample, baseDepth));
-            }
-        }
-
-        for(final TumorBAF tumorBAF : list)
-        {
-            AmberSite tumorSite = tumorSite(tumorBAF);
-            genotypeMap.put(tumorSite, createGenotype(tumorBAF));
-            writer.add(create(tumorBAF, genotypeMap.get(tumorSite)));
-        }
-
-        writer.close();
-    }
-
-    private static AmberSite tumorSite(final TumorBAF baseDepth)
-    {
-        return ImmutableAmberSite.builder()
-                .from(baseDepth)
-                .snpCheck(false)
-                .ref(baseDepth.Ref)
-                .alt(baseDepth.Alt)
-                .build();
     }
 
     void writeContamination(final String filename, final Collection<TumorContamination> evidence)
@@ -109,23 +60,6 @@ public class AmberVCF
 
         list.forEach(x -> writer.add(create(x, sampleName)));
         writer.close();
-    }
-
-    @NotNull
-    private static VariantContext create(final TumorBAF tumorBaf, final List<Genotype> genotypes)
-    {
-
-        final List<Allele> alleles = alleles(tumorBaf);
-
-        final VariantContextBuilder builder = new VariantContextBuilder().chr(tumorBaf.chromosome())
-                .start(tumorBaf.position())
-                .computeEndFromAlleles(alleles, tumorBaf.position())
-                .genotypes(genotypes)
-                .alleles(alleles);
-
-        final VariantContext context = builder.make();
-        context.getCommonInfo().setLog10PError(tumorBaf.TumorAltQuality / -10d);
-        return context;
     }
 
     @NotNull
@@ -226,5 +160,4 @@ public class AmberVCF
 
         return Lists.newArrayList(ref, alt);
     }
-
 }

@@ -2,12 +2,9 @@ package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -15,12 +12,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReaderFactory;
 
-public class AmberTumor
+public class TumorAnalysis
 {
     private final AmberConfig mConfig;
     private ListMultimap<Chromosome, TumorBAF> mBafs;
@@ -29,7 +24,7 @@ public class AmberTumor
     public ListMultimap<Chromosome, TumorBAF> getBafs() { return mBafs; }
     public ListMultimap<Chromosome, TumorContamination> getContamination() { return mContamination; }
 
-    public AmberTumor(
+    public TumorAnalysis(
             final AmberConfig config, SamReaderFactory readerFactory,
             final ListMultimap<Chromosome, BaseDepth> germlineHetLoci,
             final ListMultimap<Chromosome, BaseDepth> germlineHomLoci)

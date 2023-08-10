@@ -37,7 +37,7 @@ public class AmberApplication implements AutoCloseable
 {
     private final AmberConfig mConfig;
 
-    private AmberPersistence mPersistence;
+    private ResultsWriter mPersistence;
     private VersionInfo mVersionInfo;
     private ImmutableListMultimap<Chromosome,AmberSite> mChromosomeSites;
 
@@ -52,7 +52,7 @@ public class AmberApplication implements AutoCloseable
 
         mVersionInfo = new VersionInfo("amber.version");
 
-        mPersistence = new AmberPersistence(mConfig);
+        mPersistence = new ResultsWriter(mConfig);
 
         AMB_LOGGER.info("Loading vcf file {}", mConfig.BafLociPath);
         mChromosomeSites = ImmutableListMultimap.copyOf(AmberSitesFile.sites(mConfig.BafLociPath));
@@ -83,7 +83,7 @@ public class AmberApplication implements AutoCloseable
 
     private void runGermlineOnly() throws InterruptedException, IOException
     {
-        AmberGermline germline = new AmberGermline(mConfig, readerFactory(mConfig), mChromosomeSites);
+        GermlineAnalysis germline = new GermlineAnalysis(mConfig, readerFactory(mConfig), mChromosomeSites);
 
         List<AmberBAF> amberBAFList = Lists.newArrayList();
 
@@ -108,9 +108,9 @@ public class AmberApplication implements AutoCloseable
     {
         final SamReaderFactory readerFactory = readerFactory(mConfig);
 
-        AmberGermline germline = new AmberGermline(mConfig, readerFactory, mChromosomeSites);
+        GermlineAnalysis germline = new GermlineAnalysis(mConfig, readerFactory, mChromosomeSites);
 
-        AmberTumor tumor = new AmberTumor(mConfig, readerFactory,
+        TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory,
                 germline.getHeterozygousLoci(), germline.getHomozygousLoci());
 
         final List<TumorBAF> tumorBAFList = tumor.getBafs().values().stream().sorted().collect(toList());
@@ -133,7 +133,7 @@ public class AmberApplication implements AutoCloseable
         final ListMultimap<Chromosome, BaseDepth> allNormal = hetLociTumorOnly();
 
         // no homozygous sites
-        AmberTumor tumor = new AmberTumor(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
+        TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
         final List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
