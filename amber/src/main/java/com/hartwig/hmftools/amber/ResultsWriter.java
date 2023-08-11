@@ -2,7 +2,6 @@ package com.hartwig.hmftools.amber;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +39,7 @@ class ResultsWriter
 
         if(mConfig.TumorId != null)
         {
-            AMB_LOGGER.info("Applying pcf segmentation");
+            AMB_LOGGER.info("applying pcf segmentation");
             new BAFSegmentation(mConfig.OutputDir).applySegmentation(mConfig.TumorId, filename);
         }
     }
@@ -63,30 +62,30 @@ class ResultsWriter
     {
         Collections.sort(contaminationList);
 
-        final String outputVcf = mConfig.OutputDir + File.separator + mConfig.TumorId + ".amber.contamination.vcf.gz";
-        AMB_LOGGER.info("Writing {} contamination records to {}", contaminationList.size(), outputVcf);
+        final String outputVcf = mConfig.OutputDir + mConfig.TumorId + ".amber.contamination.vcf.gz";
+        AMB_LOGGER.info("writing {} contamination records to {}", contaminationList.size(), outputVcf);
         new VCFWriter(mConfig).writeContamination(outputVcf, contaminationList);
 
         final String filename = TumorContaminationFile.generateContaminationFilename(mConfig.OutputDir, mConfig.TumorId);
         TumorContaminationFile.write(filename, contaminationList);
     }
 
-    void persistSnpCheck(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths)
+    void persistSnpCheck(@NotNull final ListMultimap<Chromosome, PositionEvidence> baseDepths)
     {
         if (baseDepths.size() > 0)
         {
-            final String outputVcf = mConfig.OutputDir + File.separator + mConfig.primaryReference() + ".amber.snp.vcf.gz";
-            AMB_LOGGER.info("Writing {} germline snp records to {}", baseDepths.size(), outputVcf);
+            final String outputVcf = mConfig.OutputDir + mConfig.primaryReference() + ".amber.snp.vcf.gz";
+            AMB_LOGGER.info("writing {} germline snp records to {}", baseDepths.size(), outputVcf);
             VCFWriter.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
         }
     }
 
-    void persistPrimaryRefUnfiltered(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths)
+    void persistPrimaryRefUnfiltered(@NotNull final ListMultimap<Chromosome, PositionEvidence> baseDepths)
     {
         if (baseDepths.size() > 0)
         {
-            final String outputVcf = mConfig.OutputDir + File.separator + mConfig.primaryReference() + ".amber.unfiltered.vcf.gz";
-            AMB_LOGGER.info("Writing {} germline unfiltered records to {}", baseDepths.size(), outputVcf);
+            final String outputVcf = mConfig.OutputDir + mConfig.primaryReference() + ".amber.unfiltered.vcf.gz";
+            AMB_LOGGER.info("writing {} germline unfiltered records to {}", baseDepths.size(), outputVcf);
             VCFWriter.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
         }
     }

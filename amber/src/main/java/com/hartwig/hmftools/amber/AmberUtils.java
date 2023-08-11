@@ -56,21 +56,21 @@ public class AmberUtils
 
     public static AmberBAF fromTumorBaf(final TumorBAF tumor)
     {
-        int tumorAltCount = tumor.TumorAltSupport;
-        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.TumorRefSupport);
+        int tumorAltCount = tumor.TumorEvidence.AltSupport;
+        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.TumorEvidence.RefSupport);
         int normalAltCount = tumor.NormalAltSupport;
         double normalBaf = normalAltCount / (double) (normalAltCount + tumor.NormalRefSupport);
 
         return ImmutableAmberBAF.builder()
                 .from(tumor)
                 .normalDepth(tumor.NormalReadDepth)
-                .tumorDepth(tumor.TumorReadDepth)
+                .tumorDepth(tumor.TumorEvidence.ReadDepth)
                 .normalBAF(normalBaf)
                 .tumorBAF(tumorBaf)
                 .build();
     }
 
-    public static AmberBAF fromBaseDepth(final BaseDepth baseDepth)
+    public static AmberBAF fromBaseDepth(final PositionEvidence baseDepth)
     {
         int normalAltCount = baseDepth.AltSupport;
         double normalBaf = normalAltCount / (double) (normalAltCount + baseDepth.RefSupport);
@@ -83,13 +83,13 @@ public class AmberUtils
                 .build();
     }
 
-    public static AmberSite depthAsSite(final BaseDepth baseDepth)
+    public static AmberSite depthAsSite(final PositionEvidence baseDepth)
     {
         return ImmutableAmberSite.builder()
                 .from(baseDepth)
                 .snpCheck(false)
-                .ref(baseDepth.ref().toString())
-                .alt(baseDepth.alt().toString())
+                .ref(baseDepth.ref())
+                .alt(baseDepth.alt())
                 .build();
     }
 }

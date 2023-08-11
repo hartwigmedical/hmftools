@@ -56,7 +56,7 @@ public final class TumorContaminationFile
     {
         String[] values = line.split(TSV_DELIM);
 
-        BaseDepth template = new BaseDepth(values[0], Integer.parseInt(values[1]), values[2], values[3]);
+        PositionEvidence template = new PositionEvidence(values[0], Integer.parseInt(values[1]), values[2], values[3]);
 
         BaseDepthData normalDepth = ImmutableBaseDepthData.builder()
                 .ref(BaseDepthData.Base.valueOf(template.ref()))
@@ -74,12 +74,7 @@ public final class TumorContaminationFile
                 .altSupport(Integer.parseInt(values[9]))
                 .build();
 
-        return ImmutableTumorContamination.builder()
-                .chromosome(template.Chromosome)
-                .position(template.Position)
-                .normal(normalDepth)
-                .tumor(tumorDepth)
-                .build();
+        return new TumorContamination(template.Chromosome, template.Position, normalDepth, tumorDepth);
     }
 
     @NotNull
@@ -112,14 +107,14 @@ public final class TumorContaminationFile
     {
         return new StringJoiner(TSV_DELIM).add(ratio.chromosome())
                 .add(String.valueOf(ratio.position()))
-                .add(String.valueOf(ratio.tumor().ref()))
-                .add(String.valueOf(ratio.tumor().alt()))
-                .add(String.valueOf(ratio.normal().readDepth()))
-                .add(String.valueOf(ratio.normal().refSupport()))
-                .add(String.valueOf(ratio.normal().altSupport()))
-                .add(String.valueOf(ratio.tumor().readDepth()))
-                .add(String.valueOf(ratio.tumor().refSupport()))
-                .add(String.valueOf(ratio.tumor().altSupport()))
+                .add(String.valueOf(ratio.Tumor.ref()))
+                .add(String.valueOf(ratio.Tumor.alt()))
+                .add(String.valueOf(ratio.Normal.readDepth()))
+                .add(String.valueOf(ratio.Normal.refSupport()))
+                .add(String.valueOf(ratio.Normal.altSupport()))
+                .add(String.valueOf(ratio.Tumor.readDepth()))
+                .add(String.valueOf(ratio.Tumor.refSupport()))
+                .add(String.valueOf(ratio.Tumor.altSupport()))
                 .toString();
     }
 }

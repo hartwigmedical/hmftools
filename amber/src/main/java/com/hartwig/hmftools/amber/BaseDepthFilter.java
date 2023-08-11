@@ -10,18 +10,18 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.utils.Integers;
 
-public class BaseDepthFilter implements Predicate<BaseDepth>
+public class BaseDepthFilter implements Predicate<PositionEvidence>
 {
     private final int mMinDepth;
     private final int mMaxDepth;
 
     public BaseDepthFilter(
-            final double minDepthPercentage, final double maxDepthPercentage, final Multimap<Chromosome, BaseDepth> evidence)
+            final double minDepthPercentage, final double maxDepthPercentage, final Multimap<Chromosome, PositionEvidence> evidence)
     {
         this(minDepthPercentage, maxDepthPercentage, evidence.values());
     }
 
-    public BaseDepthFilter(final double minDepthPercentage, final double maxDepthPercentage, final Collection<BaseDepth> evidence)
+    public BaseDepthFilter(final double minDepthPercentage, final double maxDepthPercentage, final Collection<PositionEvidence> evidence)
     {
         int medianDepth = medianDepth(evidence);
         mMinDepth = (int) Math.round(medianDepth * minDepthPercentage);
@@ -31,12 +31,12 @@ public class BaseDepthFilter implements Predicate<BaseDepth>
     }
 
     @Override
-    public boolean test(final BaseDepth bafEvidence)
+    public boolean test(final PositionEvidence bafEvidence)
     {
         return bafEvidence.ReadDepth > 0 && bafEvidence.ReadDepth >= mMinDepth && bafEvidence.ReadDepth <= mMaxDepth;
     }
 
-    private int medianDepth(final Collection<BaseDepth> evidence)
+    private int medianDepth(final Collection<PositionEvidence> evidence)
     {
         return Integers.medianPositiveValue(evidence.stream().map(x -> x.ReadDepth).collect(Collectors.toList()));
     }

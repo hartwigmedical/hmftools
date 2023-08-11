@@ -3,7 +3,7 @@ package com.hartwig.hmftools.amber;
 import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
-import static com.hartwig.hmftools.amber.BaseDepthFactory.fromAmberSite;
+import static com.hartwig.hmftools.amber.PositionEvidenceChecker.fromAmberSite;
 import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntries;
 
 import java.io.IOException;
@@ -27,31 +27,31 @@ public class GermlineAnalysis
 {
     private final AmberConfig mConfig;
     private final HetNormalEvidence mHetNormalEvidence;
-    private final ListMultimap<Chromosome, BaseDepth> mSnpCheckedLoci;
-    private final ListMultimap<Chromosome, BaseDepth> mHomozygousLoci;
-    private final ListMultimap<Chromosome, BaseDepth> mHeterozygousLoci;
+    private final ListMultimap<Chromosome, PositionEvidence> mSnpCheckedLoci;
+    private final ListMultimap<Chromosome, PositionEvidence> mHomozygousLoci;
+    private final ListMultimap<Chromosome, PositionEvidence> mHeterozygousLoci;
     private final List<RegionOfHomozygosity> mRegionsOfHomozygosity;
     private final double mConsanguinityProportion;
 
     @Nullable private final Chromosome mUniparentalDisomy;
 
     public GermlineAnalysis(
-            final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chromosomeSites)
+            final AmberConfig config, SamReaderFactory readerFactory, ListMultimap<Chromosome,AmberSite> chrAmberSites)
             throws InterruptedException, IOException
     {
         mConfig = config;
 
-        final Predicate<BaseDepth> isValidFilter = BaseDepth::isValid;
-        Predicate<BaseDepth> homozygousFilter = new NormalHomozygousFilter().and(isValidFilter);
-        Predicate<BaseDepth> heterozygousFilter = new NormalHeterozygousFilter(mConfig.MinHetAfPercent, mConfig.MaxHetAfPercent).and(isValidFilter);
-        Predicate<BaseDepth> snpCheckFilter = new SnpCheckFilter(chromosomeSites);
+        final Predicate<PositionEvidence> isValidFilter = PositionEvidence::isValid;
+        Predicate<PositionEvidence> homozygousFilter = new NormalHomozygousFilter().and(isValidFilter);
+        Predicate<PositionEvidence> heterozygousFilter = new NormalHeterozygousFilter(mConfig.MinHetAfPercent, mConfig.MaxHetAfPercent).and(isValidFilter);
+        Predicate<PositionEvidence> snpCheckFilter = new SnpCheckFilter(chrAmberSites);
 
         mHetNormalEvidence = new HetNormalEvidence();
 
         // Primary Reference Data
-        ListMultimap<Chromosome, BaseDepth> unfilteredLoci = germlineDepth(readerFactory, mConfig.ReferenceBams.get(0), chromosomeSites);
+        ListMultimap<Chromosome, PositionEvidence> unfilteredLoci = germlineDepth(readerFactory, mConfig.ReferenceBams.get(0), chrAmberSites);
 
-        final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(mConfig.MinDepthPercent, mConfig.MaxDepthPercent, unfilteredLoci);
+        final Predicate<PositionEvidence> depthFilter = new BaseDepthFilter(mConfig.MinDepthPercent, mConfig.MaxDepthPercent, unfilteredLoci);
         mSnpCheckedLoci = filterEntries(unfilteredLoci, snpCheckFilter);
         mHomozygousLoci = filterEntries(unfilteredLoci, depthFilter.and(homozygousFilter));
         var primaryHeterozygousLoci = filterEntries(unfilteredLoci, depthFilter.and(heterozygousFilter));
@@ -62,9 +62,9 @@ public class GermlineAnalysis
         {
             final String sample = mConfig.ReferenceIds.get(i);
             final String sampleBam = mConfig.ReferenceBams.get(i);
-            final Collection<BaseDepth> additional = germlineDepth(readerFactory, sampleBam, mHetNormalEvidence.intersection()).values();
-            final Predicate<BaseDepth> filter = new BaseDepthFilter(mConfig.MinDepthPercent, mConfig.MaxDepthPercent, additional);
-            final Collection<BaseDepth> additionalHetNormal = additional.stream().filter(filter.and(heterozygousFilter)).collect(toList());
+            final Collection<PositionEvidence> additional = germlineDepth(readerFactory, sampleBam, mHetNormalEvidence.intersection()).values();
+            final Predicate<PositionEvidence> filter = new BaseDepthFilter(mConfig.MinDepthPercent, mConfig.MaxDepthPercent, additional);
+            final Collection<PositionEvidence> additionalHetNormal = additional.stream().filter(filter.and(heterozygousFilter)).collect(toList());
             mHetNormalEvidence.add(sample, additionalHetNormal);
         }
 
@@ -82,64 +82,50 @@ public class GermlineAnalysis
         mUniparentalDisomy = ConsanguinityAnalyser.findUniparentalDisomy(mRegionsOfHomozygosity);
     }
 
-    public ListMultimap<Chromosome, BaseDepth> getSnpCheckedLoci() { return mSnpCheckedLoci; }
-    public ListMultimap<Chromosome, BaseDepth> getHomozygousLoci() { return mHomozygousLoci; }
-    public ListMultimap<Chromosome, BaseDepth> getHeterozygousLoci() { return mHeterozygousLoci; }
+    public ListMultimap<Chromosome, PositionEvidence> getSnpCheckedLoci() { return mSnpCheckedLoci; }
+    public ListMultimap<Chromosome, PositionEvidence> getHomozygousLoci() { return mHomozygousLoci; }
+    public ListMultimap<Chromosome, PositionEvidence> getHeterozygousLoci() { return mHeterozygousLoci; }
     public List<RegionOfHomozygosity> getRegionsOfHomozygosity() { return mRegionsOfHomozygosity; }
     public double getConsanguinityProportion() { return mConsanguinityProportion; }
 
     @Nullable
     Chromosome getUniparentalDisomy() { return mUniparentalDisomy; }
 
-    private ListMultimap<Chromosome, BaseDepth> germlineDepth(
+    private ListMultimap<Chromosome, PositionEvidence> germlineDepth(
             final SamReaderFactory readerFactory, final String bamPath,
-            final ListMultimap<Chromosome,AmberSite> bedRegionsSortedSet) throws InterruptedException
+            final ListMultimap<Chromosome,AmberSite> chrAmberSites) throws InterruptedException
     {
-        AMB_LOGGER.info("processing {} Amber sites in reference bam({})", bedRegionsSortedSet.values().size(), bamPath);
+        AMB_LOGGER.info("processing {} Amber sites in reference bam({})", chrAmberSites.values().size(), bamPath);
 
-        Map<Chromosome,List<BaseDepth>> chrBaseDepth = Maps.newHashMap();
+        Map<Chromosome,List<PositionEvidence>> chrPositionEvidence = Maps.newHashMap();
 
-        for(Map.Entry<Chromosome,AmberSite> entry : bedRegionsSortedSet.entries())
+        for(Map.Entry<Chromosome,AmberSite> entry : chrAmberSites.entries())
         {
             Chromosome chromosome = entry.getKey();
 
-            List<BaseDepth> positions = chrBaseDepth.get(chromosome);
+            List<PositionEvidence> positions = chrPositionEvidence.get(chromosome);
 
             if(positions == null)
             {
                 positions = Lists.newArrayList();
-                chrBaseDepth.put(chromosome, positions);
+                chrPositionEvidence.put(chromosome, positions);
             }
 
             positions.add(fromAmberSite(entry.getValue()));
         }
 
-
         BamEvidenceReader bamEvidenceReader = new BamEvidenceReader(mConfig);
-        bamEvidenceReader.processBam(bamPath, readerFactory, chrBaseDepth);
+        bamEvidenceReader.processBam(bamPath, readerFactory, chrPositionEvidence);
 
-        ListMultimap<Chromosome,BaseDepth> normalEvidence = ArrayListMultimap.create();
+        ListMultimap<Chromosome, PositionEvidence> normalEvidence = ArrayListMultimap.create();
 
-        for(Map.Entry<Chromosome,List<BaseDepth>> entry : chrBaseDepth.entrySet())
+        for(Map.Entry<Chromosome,List<PositionEvidence>> entry : chrPositionEvidence.entrySet())
         {
             Chromosome chromosome = entry.getKey();
-            List<BaseDepth> positions = entry.getValue();
+            List<PositionEvidence> positions = entry.getValue();
 
             positions.forEach(x -> normalEvidence.put(chromosome, x));
         }
-
-        /*
-        final List<BaseDepth> baseDepths = bedRegionsSortedSet.values().stream().map(BaseDepthFactory::fromAmberSite).collect(Collectors.toList());
-
-        BaseDepthFactory bafFactory = new BaseDepthFactory(mConfig.MinBaseQuality);
-
-        AsyncBamLociReader.processBam(
-                bamPath, readerFactory, baseDepths, bafFactory::addEvidence, mConfig.Threads, mConfig.MinMappingQuality);
-
-
-        final ListMultimap<Chromosome,BaseDepth> normalEvidence = ArrayListMultimap.create();
-        baseDepths.forEach(x -> normalEvidence.put(HumanChromosome.fromString(x.chromosome()), x));
-        */
 
         return normalEvidence;
     }

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class HetNormalEvidence
 {
-    private final Map<String, Collection<BaseDepth>> mMap;
+    private final Map<String, Collection<PositionEvidence>> mMap;
     private final BaseDepthIntersectFilter mIntersectFilter;
 
     public HetNormalEvidence()
@@ -33,19 +33,19 @@ public class HetNormalEvidence
         return mMap.keySet();
     }
 
-    public Collection<BaseDepth> evidence(String sample)
+    public Collection<PositionEvidence> evidence(String sample)
     {
         return mMap.get(sample);
     }
 
-    public void add(@NotNull final String sample, @NotNull Collection<BaseDepth> baseDepths)
+    public void add(@NotNull final String sample, @NotNull Collection<PositionEvidence> positionEvidences)
     {
-        mMap.put(sample, baseDepths);
-        mIntersectFilter.additional(baseDepths);
+        mMap.put(sample, positionEvidences);
+        mIntersectFilter.additional(positionEvidences);
     }
 
     @NotNull
-    public Predicate<BaseDepth> intersectionFilter()
+    public Predicate<PositionEvidence> intersectionFilter()
     {
         return mIntersectFilter;
     }

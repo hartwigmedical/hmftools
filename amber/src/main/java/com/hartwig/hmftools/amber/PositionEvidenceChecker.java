@@ -1,35 +1,29 @@
 package com.hartwig.hmftools.amber;
 
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import htsjdk.samtools.SAMRecord;
 
-public class BaseDepthFactory
+public class PositionEvidenceChecker
 {
     private final int mMinBaseQuality;
 
-    public BaseDepthFactory(final int minBaseQuality)
+    public PositionEvidenceChecker(final int minBaseQuality)
     {
         mMinBaseQuality = minBaseQuality;
     }
 
-    public void addEvidence(final BaseDepth evidence, final SAMRecord samRecord)
+    public void addEvidence(final PositionEvidence posEvidence, final SAMRecord samRecord)
     {
-        int baseQuality = getBaseQuality(evidence.Position, samRecord);
+        int baseQuality = getBaseQuality(posEvidence.Position, samRecord);
 
         if(baseQuality < mMinBaseQuality)
             return;
 
-        ++evidence.ReadDepth;
+        ++posEvidence.ReadDepth;
 
-        int bafPosition = evidence.position();
+        int bafPosition = posEvidence.position();
         int readPosition = samRecord.getReadPositionAtReferencePosition(bafPosition);
         if(readPosition != 0)
         {
@@ -37,19 +31,19 @@ public class BaseDepthFactory
             {
                 char baseChar = samRecord.getReadString().charAt(readPosition - 1);
 
-                if(evidence.equalsRef(baseChar))
+                if(posEvidence.equalsRef(baseChar))
                 {
-                    ++evidence.RefSupport;
+                    ++posEvidence.RefSupport;
                 }
-                else if(evidence.equalsAlt(baseChar))
+                else if(posEvidence.equalsAlt(baseChar))
                 {
-                    ++evidence.AltSupport;
-                    evidence.AltQuality += baseQuality;
+                    ++posEvidence.AltSupport;
+                    posEvidence.AltQuality += baseQuality;
                 }
             }
             else
             {
-                ++evidence.IndelCount;
+                ++posEvidence.IndelCount;
             }
         }
     }
@@ -86,13 +80,8 @@ public class BaseDepthFactory
         return 0;
     }
 
-    public static BaseDepth copyBaseDepth(final BaseDepth pos)
+    public static PositionEvidence fromAmberSite(final AmberSite site)
     {
-        return new BaseDepth(pos.Chromosome, pos.Position, pos.ref(), pos.alt());
-    }
-
-    public static BaseDepth fromAmberSite(final AmberSite site)
-    {
-        return new BaseDepth(site.chromosome(), site.position(), site.ref(), site.alt());
+        return new PositionEvidence(site.chromosome(), site.position(), site.ref(), site.alt());
     }
 }

@@ -4,48 +4,39 @@ import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 public class TumorBAF implements GenomePosition
 {
-    public final String Chromosome;
-    public final int Position;
-    public final String Ref;
-    public final String Alt;
-
     public int NormalReadDepth;
     public int NormalRefSupport;
     public int NormalAltSupport;
 
-    public final BaseDepth TumorEvidence;
-
-    public int TumorReadDepth;
-    public int TumorRefSupport;
-    public int TumorAltSupport;
-    public int TumorAltQuality;
-    public int TumorIndelCount;
+    public final PositionEvidence TumorEvidence;
 
     public TumorBAF(final String chromosome, final int position, final String ref, final String alt)
     {
-        Chromosome = chromosome;
-        Position = position;
-        Ref = ref;
-        Alt = alt;
-
         NormalReadDepth = 0;
         NormalRefSupport = 0;
         NormalAltSupport = 0;
 
-        TumorEvidence = new BaseDepth(chromosome, position, ref, alt);
-
-        TumorReadDepth = 0;
-        TumorRefSupport = 0;
-        TumorAltSupport = 0;
-        TumorAltQuality = 0;
-        TumorIndelCount = 0;
+        TumorEvidence = new PositionEvidence(chromosome, position, ref, alt);
     }
 
-    public String chromosome() { return Chromosome; }
-    public int position() { return Position; }
+    @Override
+    public String chromosome() { return TumorEvidence.Chromosome; }
+    public int position() { return TumorEvidence.Position; }
 
-    public double refFrequency() { return TumorRefSupport / (double)TumorReadDepth; }
+    public String ref() { return TumorEvidence.ref(); }
+    public String alt() { return TumorEvidence.alt(); }
+
+    public double refFrequency() { return TumorEvidence.RefSupport / (double)TumorEvidence.ReadDepth; }
     public double altFrequency() {
-        return TumorAltSupport / (double)TumorReadDepth;
+        return TumorEvidence.AltSupport / (double)TumorEvidence.ReadDepth;
+    }
+
+    public static TumorBAF fromNormal(final PositionEvidence normal)
+    {
+        TumorBAF tumorBAF = new TumorBAF(normal.Chromosome, normal.Position, normal.ref(), normal.alt());
+        tumorBAF.NormalReadDepth = normal.ReadDepth;
+        tumorBAF.NormalRefSupport = normal.RefSupport;
+        tumorBAF.NormalAltSupport = normal.AltSupport;
+        return tumorBAF;
     }
 }

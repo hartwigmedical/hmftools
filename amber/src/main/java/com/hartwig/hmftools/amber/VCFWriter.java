@@ -47,9 +47,9 @@ public class VCFWriter
         writer.close();
     }
 
-    public static void writeBaseDepths(final String filename, final Collection<BaseDepth> baseDepths, String sampleName)
+    public static void writeBaseDepths(final String filename, final Collection<PositionEvidence> baseDepths, String sampleName)
     {
-        final List<BaseDepth> list = Lists.newArrayList(baseDepths);
+        final List<PositionEvidence> list = Lists.newArrayList(baseDepths);
         Collections.sort(list);
 
         final VariantContextWriter writer =
@@ -65,20 +65,18 @@ public class VCFWriter
     @NotNull
     private VariantContext create(final TumorContamination contamination)
     {
-        assert (contamination.normal().altSupport() == 0);
-
-        final Allele ref = Allele.create(contamination.tumor().ref().toString(), true);
-        final Allele alt = Allele.create(contamination.tumor().alt().toString(), false);
+        final Allele ref = Allele.create(contamination.Tumor.ref().toString(), true);
+        final Allele alt = Allele.create(contamination.Tumor.alt().toString(), false);
 
         final List<Allele> alleles = Lists.newArrayList(ref, alt);
 
-        final Genotype tumor = new GenotypeBuilder(mConfig.TumorId).DP(contamination.tumor().readDepth())
-                .AD(new int[] { contamination.tumor().refSupport(), contamination.tumor().altSupport() })
+        final Genotype tumor = new GenotypeBuilder(mConfig.TumorId).DP(contamination.Tumor.readDepth())
+                .AD(new int[] { contamination.Tumor.refSupport(), contamination.Tumor.altSupport() })
                 .alleles(alleles)
                 .make();
 
-        final Genotype normal = new GenotypeBuilder(mConfig.primaryReference()).DP(contamination.normal().readDepth())
-                .AD(new int[] { contamination.normal().refSupport(), contamination.normal().altSupport() })
+        final Genotype normal = new GenotypeBuilder(mConfig.primaryReference()).DP(contamination.Normal.readDepth())
+                .AD(new int[] { contamination.Normal.refSupport(), contamination.Normal.altSupport() })
                 .alleles(alleles)
                 .make();
 
@@ -92,7 +90,7 @@ public class VCFWriter
     }
 
     @NotNull
-    private static VariantContext create(final BaseDepth snp, String sampleName)
+    private static VariantContext create(final PositionEvidence snp, String sampleName)
     {
         final List<Allele> alleles = Lists.newArrayList();
         alleles.add(Allele.create(snp.ref().toString(), true));
@@ -128,35 +126,18 @@ public class VCFWriter
         return header;
     }
 
-    private static Genotype createGenotype(final String sample, final BaseDepth depth)
+    private static List<Allele> alleles(final PositionEvidence baseDepth)
     {
-        return new GenotypeBuilder(sample)
-                .DP(depth.ReadDepth)
-                .AD(new int[] { depth.RefSupport, depth.AltSupport })
-                .alleles(alleles(depth))
-                .make();
-    }
-
-    private Genotype createGenotype(final TumorBAF tumorBaf)
-    {
-        return new GenotypeBuilder(mConfig.TumorId).DP(tumorBaf.TumorReadDepth)
-                .AD(new int[] { tumorBaf.TumorRefSupport, tumorBaf.TumorAltSupport })
-                .alleles(alleles(tumorBaf))
-                .make();
-    }
-
-    private static List<Allele> alleles(final BaseDepth baseDepth)
-    {
-        final Allele ref = Allele.create(baseDepth.ref().toString(), true);
-        final Allele alt = Allele.create(baseDepth.alt().toString(), false);
+        final Allele ref = Allele.create(baseDepth.ref(), true);
+        final Allele alt = Allele.create(baseDepth.alt(), false);
 
         return Lists.newArrayList(ref, alt);
     }
 
     private static List<Allele> alleles(final TumorBAF baf)
     {
-        final Allele ref = Allele.create(baf.Ref, true);
-        final Allele alt = Allele.create(baf.Alt, false);
+        final Allele ref = Allele.create(baf.ref(), true);
+        final Allele alt = Allele.create(baf.alt(), false);
 
         return Lists.newArrayList(ref, alt);
     }

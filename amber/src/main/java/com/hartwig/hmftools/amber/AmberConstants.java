@@ -31,7 +31,7 @@ public class AmberConstants
     public static final int CRAM_REGION_GROUP_MAX = 10000;
 
     public static final int CRAM_MIN_GAP_START = 10000;
-    public static final int BAM_MIN_GAP_START = 2000;
+    public static final int BAM_MIN_GAP_START = 4000;
 
     public static final int CRAM_MIN_GAP_INCREMENT = 1000;
     public static final int BAM_MIN_GAP_INCREMENT = 200;

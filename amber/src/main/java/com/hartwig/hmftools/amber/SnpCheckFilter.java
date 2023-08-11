@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SnpCheckFilter implements Predicate<BaseDepth>
+public class SnpCheckFilter implements Predicate<PositionEvidence>
 {
     private final Set<GenomePosition> mSnpLoci;
 
@@ -26,7 +26,7 @@ public class SnpCheckFilter implements Predicate<BaseDepth>
     }
 
     @Override
-    public boolean test(final BaseDepth baseDepth)
+    public boolean test(final PositionEvidence baseDepth)
     {
         return mSnpLoci.contains(GenomePositions.create(baseDepth));
     }

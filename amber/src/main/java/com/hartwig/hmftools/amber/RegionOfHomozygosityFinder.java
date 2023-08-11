@@ -89,10 +89,10 @@ public class RegionOfHomozygosityFinder
     }
 
     @NotNull
-    public List<RegionOfHomozygosity> findRegions(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths)
+    public List<RegionOfHomozygosity> findRegions(@NotNull final ListMultimap<Chromosome, PositionEvidence> baseDepths)
     {
-        final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(mMinDepthPercent, mMaxDepthPercent, baseDepths);
-        final ListMultimap<Chromosome, BaseDepth> filteredBaseDepths = filterEntries(baseDepths, depthFilter);
+        final Predicate<PositionEvidence> depthFilter = new BaseDepthFilter(mMinDepthPercent, mMaxDepthPercent, baseDepths);
+        final ListMultimap<Chromosome, PositionEvidence> filteredBaseDepths = filterEntries(baseDepths, depthFilter);
 
         var homozygousRegions = new ArrayList<RegionOfHomozygosity>();
 
@@ -327,7 +327,7 @@ public class RegionOfHomozygosityFinder
         return false;
     }
 
-    static Zygosity calcZygosity(BaseDepth baseDepth)
+    static Zygosity calcZygosity(PositionEvidence baseDepth)
     {
         if (isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.RefSupport) || isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.AltSupport))
         {
@@ -336,12 +336,12 @@ public class RegionOfHomozygosityFinder
         return Zygosity.HETEROZYGOUS;
     }
 
-    static LocusZygosity toLocusZygosity(BaseDepth depth)
+    static LocusZygosity toLocusZygosity(PositionEvidence depth)
     {
         return new LocusZygosity(depth.position(), calcZygosity(depth));
     }
 
-    private static List<LocusZygosity> toLocusZygosityList(@NotNull final List<BaseDepth> bafs)
+    private static List<LocusZygosity> toLocusZygosityList(@NotNull final List<PositionEvidence> bafs)
     {
         var locusZygosityList = new ArrayList<LocusZygosity>();
 

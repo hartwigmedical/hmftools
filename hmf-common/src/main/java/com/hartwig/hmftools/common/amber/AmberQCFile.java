@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.amber;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getValue;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +23,7 @@ public final class AmberQCFile
     @NotNull
     public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
     public static AmberQC read(@NotNull final String filename) throws IOException

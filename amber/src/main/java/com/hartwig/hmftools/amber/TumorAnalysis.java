@@ -26,8 +26,8 @@ public class TumorAnalysis
 
     public TumorAnalysis(
             final AmberConfig config, SamReaderFactory readerFactory,
-            final ListMultimap<Chromosome, BaseDepth> germlineHetLoci,
-            final ListMultimap<Chromosome, BaseDepth> germlineHomLoci)
+            final ListMultimap<Chromosome, PositionEvidence> germlineHetLoci,
+            final ListMultimap<Chromosome, PositionEvidence> germlineHomLoci)
             throws InterruptedException
     {
         mConfig = config;
@@ -37,106 +37,76 @@ public class TumorAnalysis
 
     // we process them together
     private void tumorBAFAndContamination(final SamReaderFactory readerFactory,
-            final ListMultimap<Chromosome,BaseDepth> germlineHetLoci, final ListMultimap<Chromosome, BaseDepth> germlineHomLoci) throws InterruptedException
+            final ListMultimap<Chromosome, PositionEvidence> germlineHetLoci, final ListMultimap<Chromosome, PositionEvidence> germlineHomLoci) throws InterruptedException
     {
-        AMB_LOGGER.info("processing {} germline heterozygous sites", germlineHetLoci.values().size());
-        AMB_LOGGER.info("processing {} germline homozygous sites", germlineHomLoci.size());
+        AMB_LOGGER.info("processing tumor germline heterozygous({}) and homozygous({}) sites",
+                germlineHetLoci.values().size(), germlineHomLoci.size());
 
-        /*
-        final List<TumorBAF> tumorBAFs = germlineHetLoci.values().stream().sorted().map(TumorBAFFactory::create).collect(Collectors.toList());
-        final Map<BaseDepth,BaseDepth> contaminationBafMap = germlineHomLoci.values().stream().collect(
-                Collectors.toMap(x -> x, BaseDepthFactory::copyBaseDepth));
-        */
-
-        Map<Chromosome,List<BaseDepth>> chrBaseDepthMap = Maps.newHashMap();
-        Map<BaseDepth,BaseDepth> contaminationBafMap = Maps.newHashMap();
+        Map<Chromosome,List<PositionEvidence>> chrPositionEvidence = Maps.newHashMap();
+        Map<PositionEvidence, PositionEvidence> contaminationBafMap = Maps.newHashMap();
         List<TumorBAF> tumorBAFs = Lists.newArrayList();
 
-        for(Map.Entry<Chromosome,BaseDepth> entry : germlineHetLoci.entries())
+        for(Map.Entry<Chromosome, PositionEvidence> entry : germlineHetLoci.entries())
         {
-            List<BaseDepth> positions = chrBaseDepthMap.get(entry.getKey());
+            List<PositionEvidence> positions = chrPositionEvidence.get(entry.getKey());
 
             if(positions == null)
             {
                 positions = Lists.newArrayList();
-                chrBaseDepthMap.put(entry.getKey(), positions);
+                chrPositionEvidence.put(entry.getKey(), positions);
             }
 
-            BaseDepth normal = entry.getValue();
+            PositionEvidence normal = entry.getValue();
 
-            TumorBAF tumorBAF = TumorBAFFactory.create(normal);
+            TumorBAF tumorBAF = TumorBAF.fromNormal(normal);
+            tumorBAFs.add(tumorBAF);
 
             positions.add(tumorBAF.TumorEvidence);
         }
 
-        for(Map.Entry<Chromosome,BaseDepth> entry : germlineHomLoci.entries())
+        for(Map.Entry<Chromosome, PositionEvidence> entry : germlineHomLoci.entries())
         {
-            List<BaseDepth> positions = chrBaseDepthMap.get(entry.getKey());
+            List<PositionEvidence> positions = chrPositionEvidence.get(entry.getKey());
 
             if(positions == null)
             {
                 positions = Lists.newArrayList();
-                chrBaseDepthMap.put(entry.getKey(), positions);
+                chrPositionEvidence.put(entry.getKey(), positions);
             }
 
-            BaseDepth normal = entry.getValue();
-            BaseDepth tumor = BaseDepth.copy(normal);
+            PositionEvidence normal = entry.getValue();
+            PositionEvidence tumor = PositionEvidence.copy(normal);
 
             positions.add(tumor);
             contaminationBafMap.put(normal, tumor);
         }
 
         // ensure positions are sorted after the merge
-        for(List<BaseDepth> positions : chrBaseDepthMap.values())
+        for(List<PositionEvidence> positions : chrPositionEvidence.values())
         {
             Collections.sort(positions);
         }
 
         BamEvidenceReader bamEvidenceReader = new BamEvidenceReader(mConfig);
-        bamEvidenceReader.processBam(mConfig.TumorBam, readerFactory, chrBaseDepthMap);
-
-        // OLD CODE, to be deprecated
-
-        /*
-            TumorBAFFactory tumorBafFactory = new TumorBAFFactory(mConfig.MinBaseQuality);
-            BaseDepthFactory contaminationBafFactory = new BaseDepthFactory(mConfig.MinBaseQuality);
-
-            // merge both into one list
-            final List<GenomePosition> mergedLoci = new ArrayList<>(tumorBAFs);
-            mergedLoci.addAll(contaminationBafMap.values());
-            mergedLoci.sort(null);
-
-            BiConsumer<GenomePosition, SAMRecord> lociBamRecordHander = (GenomePosition genomePosition, SAMRecord samRecord) ->
-            {
-                if (genomePosition instanceof TumorBAF)
-                    tumorBafFactory.addEvidence((TumorBAF)genomePosition, samRecord);
-                else if (genomePosition instanceof BaseDepth)
-                    contaminationBafFactory.addEvidence((BaseDepth)genomePosition, samRecord);
-            };
-
-            AsyncBamLociReader.processBam(
-                    mConfig.TumorBam, readerFactory, mergedLoci, lociBamRecordHander, mConfig.Threads, mConfig.MinMappingQuality);
-        */
+        bamEvidenceReader.processBam(mConfig.TumorBam, readerFactory, chrPositionEvidence);
 
         mBafs = ArrayListMultimap.create();
 
-        tumorBAFs.stream().filter(x -> x.TumorIndelCount == 0).forEach(x -> mBafs.put(HumanChromosome.fromString(x.chromosome()), x));
+        tumorBAFs.stream().filter(x -> x.TumorEvidence.IndelCount == 0).forEach(x -> mBafs.put(HumanChromosome.fromString(x.chromosome()), x));
 
         mContamination = ArrayListMultimap.create();
 
-        contaminationBafMap.forEach((normal, tumor) ->
+        for(Map.Entry<PositionEvidence, PositionEvidence> entry : contaminationBafMap.entrySet())
         {
-            if(tumor.AltSupport != 0)
-            {
-                TumorContamination tumorContamination = ImmutableTumorContamination.builder()
-                        .chromosome(normal.chromosome())
-                        .position(normal.position())
-                        .normal(normal.toBaseDepthData())
-                        .tumor(tumor.toBaseDepthData())
-                        .build();
+            PositionEvidence normal = entry.getKey();
+            PositionEvidence tumor = entry.getValue();
 
-                mContamination.put(HumanChromosome.fromString(normal.chromosome()), tumorContamination);
+            if(tumor.AltSupport > 0)
+            {
+                mContamination.put(
+                        HumanChromosome.fromString(normal.chromosome()),
+                        new TumorContamination(normal.Chromosome, normal.Position, normal.toBaseDepthData(), tumor.toBaseDepthData()));
             }
-        });
+        }
     }
 }

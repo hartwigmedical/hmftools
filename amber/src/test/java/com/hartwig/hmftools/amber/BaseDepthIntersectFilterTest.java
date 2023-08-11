@@ -17,11 +17,11 @@ import org.junit.Test;
 
 public class BaseDepthIntersectFilterTest
 {
-    private BaseDepth first;
-    private BaseDepth second;
-    private BaseDepth third;
+    private PositionEvidence first;
+    private PositionEvidence second;
+    private PositionEvidence third;
     private BaseDepthIntersectFilter victim;
-    private ListMultimap<Chromosome, BaseDepth> depth;
+    private ListMultimap<Chromosome, PositionEvidence> depth;
 
     @Before
     public void setup()
@@ -70,9 +70,9 @@ public class BaseDepthIntersectFilterTest
         assertFalse(victim.test(third));
     }
 
-    private BaseDepth createRandom(@NotNull final String chromosome, @NotNull final Random random)
+    private PositionEvidence createRandom(@NotNull final String chromosome, @NotNull final Random random)
     {
-        BaseDepth baseDepth = new BaseDepth(chromosome, random.nextInt(), "A", "T");
+        PositionEvidence baseDepth = new PositionEvidence(chromosome, random.nextInt(), "A", "T");
         baseDepth.ReadDepth = random.nextInt();
         baseDepth.RefSupport = random.nextInt();
         baseDepth.AltSupport = random.nextInt();

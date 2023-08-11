@@ -3,17 +3,23 @@ package com.hartwig.hmftools.amber;
 import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface TumorContamination extends GenomePosition
+public class TumorContamination implements GenomePosition
 {
-    @NotNull
-    BaseDepthData normal();
+    public final String Chromosome;
+    public final int Position;
+    public final BaseDepthData Normal;
+    public final BaseDepthData Tumor;
 
-    @NotNull
-    BaseDepthData tumor();
+    public TumorContamination(final String chromosome, final int position, final BaseDepthData normal, final BaseDepthData tumor)
+    {
+        Chromosome = chromosome;
+        Position = position;
+        Normal = normal;
+        Tumor = tumor;
+    }
+
+    @Override
+    public String chromosome() { return Chromosome; }
+    public int position() { return Position; }
+
 }

@@ -54,7 +54,6 @@ public class AmberApplication implements AutoCloseable
 
         mPersistence = new ResultsWriter(mConfig);
 
-        AMB_LOGGER.info("Loading vcf file {}", mConfig.BafLociPath);
         mChromosomeSites = ImmutableListMultimap.copyOf(AmberSitesFile.sites(mConfig.BafLociPath));
 
         if(!mConfig.isValid())
@@ -87,7 +86,7 @@ public class AmberApplication implements AutoCloseable
 
         List<AmberBAF> amberBAFList = Lists.newArrayList();
 
-        for(BaseDepth baseDepth : germline.getHeterozygousLoci().values())
+        for(PositionEvidence baseDepth : germline.getHeterozygousLoci().values())
         {
             AmberBAF amberBAF = fromBaseDepth(baseDepth);
 
@@ -130,16 +129,16 @@ public class AmberApplication implements AutoCloseable
     {
         final SamReaderFactory readerFactory = readerFactory(mConfig);
 
-        final ListMultimap<Chromosome, BaseDepth> allNormal = hetLociTumorOnly();
+        final ListMultimap<Chromosome, PositionEvidence> allNormal = hetLociTumorOnly();
 
         // no homozygous sites
         TumorAnalysis tumor = new TumorAnalysis(mConfig, readerFactory, allNormal, ArrayListMultimap.create());
 
         final List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
-                .filter(x -> x.TumorReadDepth >= mConfig.TumorOnlyMinDepth)
-                .filter(x -> x.TumorRefSupport >= mConfig.TumorOnlyMinSupport)
-                .filter(x -> x.TumorAltSupport >= mConfig.TumorOnlyMinSupport)
+                .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorOnlyMinDepth)
+                .filter(x -> x.TumorEvidence.RefSupport >= mConfig.TumorOnlyMinSupport)
+                .filter(x -> x.TumorEvidence.AltSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
                 .filter(x -> isFinite(x.altFrequency()) && Doubles.greaterOrEqual(x.altFrequency(), mConfig.TumorOnlyMinVaf))
                 .sorted()
@@ -157,10 +156,10 @@ public class AmberApplication implements AutoCloseable
     // this is not a problem if we use those to identify loci that are heterozygous in the
     // germline sample. However, in tumor only mode we would be better off removing those
     // regions.
-    private ListMultimap<Chromosome, BaseDepth> hetLociTumorOnly() throws IOException
+    private ListMultimap<Chromosome, PositionEvidence> hetLociTumorOnly() throws IOException
     {
         List<GenomeRegion> excludedRegions = loadTumorOnlyExcludedSnp();
-        final ListMultimap<Chromosome, BaseDepth> result = ArrayListMultimap.create();
+        final ListMultimap<Chromosome, PositionEvidence> result = ArrayListMultimap.create();
         int numBlackListed = 0;
 
         // filter out everything in loaded genome positions that are in these regions
@@ -182,7 +181,7 @@ public class AmberApplication implements AutoCloseable
             }
             else
             {
-                result.put(entry.getKey(), BaseDepthFactory.fromAmberSite(entry.getValue()));
+                result.put(entry.getKey(), PositionEvidenceChecker.fromAmberSite(entry.getValue()));
             }
         }
         AMB_LOGGER.info("removed {} blacklisted loci, {} remaining", numBlackListed, result.size());

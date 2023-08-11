@@ -7,165 +7,40 @@ import static com.hartwig.hmftools.amber.AmberConfig.AMB_LOGGER;
 import static com.hartwig.hmftools.amber.AmberConstants.BAM_MIN_GAP_START;
 import static com.hartwig.hmftools.amber.AmberConstants.CRAM_MIN_GAP_START;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 public class BamEvidenceReader
 {
-    final AmberConfig mConfig;
-    private final BaseDepthFactory mBaseDepthFactory;
+    private final AmberConfig mConfig;
+    private final PositionEvidenceChecker mEvidenceChecker;
 
     public BamEvidenceReader(final AmberConfig config)
     {
         mConfig = config;
-        mBaseDepthFactory = new BaseDepthFactory(mConfig.MinBaseQuality);
-    }
-
-    private class RegionTask
-    {
-        public final ChrBaseRegion Region;
-
-        private final List<BaseDepth> mPositions;
-        private int mCurrentIndex;
-        private boolean mComplete;
-
-        public RegionTask(final String chromosome, final BaseDepth baseDepth)
-        {
-            Region = new ChrBaseRegion(chromosome, baseDepth.Position, baseDepth.Position);
-            mPositions = Lists.newArrayList(baseDepth);
-            mCurrentIndex = 0;
-            mComplete = false;
-        }
-
-        public void addPosition(final BaseDepth baseDepth)
-        {
-            mPositions.add(baseDepth);
-            Region.setEnd(max(Region.end(), baseDepth.Position));
-        }
-
-        public void processRecord(final SAMRecord record)
-        {
-            int alignmentStart = record.getAlignmentStart();
-            int alignmentEnd = record.getAlignmentEnd();
-
-            int index = mCurrentIndex;
-            for(; index < mPositions.size(); ++index)
-            {
-                BaseDepth baseDepth = mPositions.get(index);
-
-                if(alignmentStart > baseDepth.Position)
-                {
-                    ++mCurrentIndex;
-                    continue;
-                }
-
-                if(alignmentEnd < baseDepth.Position)
-                    break;
-
-                mBaseDepthFactory.addEvidence(baseDepth, record);
-            }
-
-            if(mCurrentIndex >= mPositions.size())
-                mComplete = true;
-        }
-
-        public boolean isComplete() { return mComplete; }
-
-        public String toString() { return format("region(%s) positions(%d) index(%d)", Region, mPositions.size(), mCurrentIndex); }
-    }
-
-    private class BamReaderThread extends Thread
-    {
-        final Queue<RegionTask> mTaskQueue;
-        final SamReader mSamReader;
-        final BamSlicer mBamSlicer;
-        RegionTask mCurrentTask;
-
-        BamReaderThread(
-                final String bamFile, final SamReaderFactory samReaderFactory, final Queue<RegionTask> inTaskQueue,
-                int minMappingQuality)
-        {
-            mTaskQueue = inTaskQueue;
-            mSamReader = samReaderFactory.open(new File(bamFile));
-            mBamSlicer = new BamSlicer(minMappingQuality, false, false, false);
-            mCurrentTask = null;
-        }
-
-        @Override
-        public void run()
-        {
-            // AMB_LOGGER.debug("bam reader thread start");
-
-            while(true)
-            {
-                RegionTask task;
-                try
-                {
-                    task = mTaskQueue.remove();
-                    mCurrentTask = task;
-                }
-                catch (NoSuchElementException e)
-                {
-                    // finished processing
-                    break;
-                }
-
-                mBamSlicer.slice(mSamReader, task.Region, this::processRecord);
-            }
-
-            try
-            {
-                mSamReader.close();
-            }
-            catch(IOException e)
-            {
-                AMB_LOGGER.error("IO exception in SamReader::close: {}", e.getMessage());
-            }
-
-            // AMB_LOGGER.debug("bam reader thread finish");
-        }
-
-        private void processRecord(final SAMRecord record)
-        {
-            if(mCurrentTask == null)
-            {
-                mBamSlicer.haltProcessing();
-                return;
-            }
-
-            mCurrentTask.processRecord(record);
-
-            if(mCurrentTask.isComplete())
-                mBamSlicer.haltProcessing();
-        }
+        mEvidenceChecker = new PositionEvidenceChecker(mConfig.MinBaseQuality);
     }
 
     public void processBam(
-            final String bamFile, final SamReaderFactory samReaderFactory, final Map<Chromosome,List<BaseDepth>> chrBaseDepth)
+            final String bamFile, final SamReaderFactory samReaderFactory, final Map<Chromosome,List<PositionEvidence>> chrPositionEvidence)
             throws InterruptedException
     {
-        AMB_LOGGER.debug("processing bam({})", bamFile);
+        AMB_LOGGER.trace("processing bam({})", bamFile);
 
         final Queue<RegionTask> taskQueue = new ConcurrentLinkedQueue<>();
 
         // create genome regions from the loci
         boolean limitRegions = bamFile.endsWith(".cram");
-        populateTaskQueue(chrBaseDepth, taskQueue, limitRegions);
+        populateTaskQueue(chrPositionEvidence, taskQueue, limitRegions);
 
         // we create the consumer and producer
         List<BamReaderThread> bamReaders = new ArrayList<BamReaderThread>();
@@ -194,52 +69,73 @@ public class BamEvidenceReader
         }
 
         AMB_LOGGER.trace("{} bam reader threads finished", bamReaders.size());
+
+        if(AMB_LOGGER.isDebugEnabled())
+        {
+            PerformanceCounter combinedPc = new PerformanceCounter("Read");
+            bamReaders.forEach(x -> combinedPc.merge(x.perfCounter()));
+            combinedPc.logStats();
+        }
     }
 
     private void populateTaskQueue(
-            final Map<Chromosome,List<BaseDepth>> chrBaseDepth, final Queue<RegionTask> taskQueue, boolean limitRegions)
+            final Map<Chromosome,List<PositionEvidence>> chrBaseDepth, final Queue<RegionTask> taskQueue, boolean limitRegions)
     {
         int positionCount = chrBaseDepth.values().stream().mapToInt(x -> x.size()).sum();
 
-        int minGap = limitRegions ? CRAM_MIN_GAP_START : BAM_MIN_GAP_START;
+        int minGap = mConfig.PositionGap > 0 ? mConfig.PositionGap : (limitRegions ? CRAM_MIN_GAP_START : BAM_MIN_GAP_START);
 
         // int maxPositionsPerRegion = limitRegions ? CRAM_REGION_GROUP_MAX : BAM_REGION_GROUP_MAX;
         // int gapIncrement = limitRegions ? CRAM_MIN_GAP_INCREMENT : BAM_MIN_GAP_INCREMENT;
 
         List<RegionTask> tasks = Lists.newArrayList();
 
-        for(Map.Entry<Chromosome,List<BaseDepth>> entry : chrBaseDepth.entrySet())
+        for(Map.Entry<Chromosome,List<PositionEvidence>> entry : chrBaseDepth.entrySet())
         {
             String chromosome = entry.getKey().toString();
-            List<BaseDepth> positions = entry.getValue();
+
+            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
+                continue;
+
+            List<PositionEvidence> positions = entry.getValue();
 
             if(positions.isEmpty())
                 continue;
 
-            RegionTask currentTask = new RegionTask(chromosome, positions.get(0));
+            RegionTask currentTask = new RegionTask(mEvidenceChecker, chromosome, positions.get(0));
             tasks.add(currentTask);
 
             for(int i = 1; i < positions.size(); ++i)
             {
-                BaseDepth position = positions.get(i);
+                PositionEvidence posEvidence = positions.get(i);
 
-                if(currentTask.Region.end() + minGap < position.Position) // or  || tasks.size() >= maxPositionsPerRegion
+                if(currentTask.Region.end() + minGap < posEvidence.Position) // or  || tasks.size() >= maxPositionsPerRegion
                 {
                     // start a new region
-                    currentTask = new RegionTask(chromosome, position);
+                    currentTask = new RegionTask(mEvidenceChecker, chromosome, posEvidence);
                     tasks.add(currentTask);
                 }
                 else
                 {
-                    currentTask.addPosition(position);
+                    currentTask.addPosition(posEvidence);
                 }
             }
         }
 
-        // TODO - log longest region and one with highest position count
+        if(AMB_LOGGER.isDebugEnabled())
+        {
+            RegionTask maxRegion = null;
+
+            for(RegionTask task : tasks)
+            {
+                if(maxRegion == null || task.Region.length() > maxRegion.Region.length() || task.positionCount() > maxRegion.positionCount())
+                    maxRegion = task;
+            }
+
+            AMB_LOGGER.debug("split {} sites across {} regions, max region({} size={} length={})",
+                    positionCount, tasks.size(), maxRegion.Region, maxRegion.positionCount(), maxRegion.Region.length());
+        }
 
         taskQueue.addAll(tasks);
-
-        AMB_LOGGER.debug("split {} sites across {} regions", positionCount, taskQueue.size());
     }
 }

@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -65,7 +67,7 @@ public final class AmberSitesFile
                             .build());
         }
 
-        LOGGER.info("loaded {} Amber germline sites", result.size());
+        LOGGER.info("loaded {} Amber germline sites from {}", result.size(), vcfFile);
         return result;
     }
 
@@ -131,7 +133,7 @@ public final class AmberSitesFile
                             .build());
         }
 
-        LOGGER.info("loaded {} Amber germline sites", result.size());
+        LOGGER.info("loaded {} Amber germline sites from {}", result.size(), filename);
         return result;
     }
 }

@@ -4,12 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class TumorBAFFactoryTest
+public class TumorEvidenceTest
 {
     @Test
     public void useQualityOfBaseAfterDel()
@@ -18,26 +17,20 @@ public class TumorBAFFactoryTest
 
         final SAMRecord lowQualDel = buildSamRecord(1000, "1M1D1M", "CT", "FI");
         final SAMRecord highQualDel = buildSamRecord(1000, "1M1D1M", "CT", "FJ");
-        final TumorBAF victim = createDefault("5", 1001);
 
-        new TumorBAFFactory(minQuality).addEvidence(victim, lowQualDel);
-        assertEquals(0, victim.TumorReadDepth);
+        final PositionEvidence baseDepth = new PositionEvidence("5", 1001, "A", "T");
 
-        new TumorBAFFactory(minQuality).addEvidence(victim, highQualDel);
-        assertEquals(1, victim.TumorReadDepth);
-    }
+        PositionEvidenceChecker evidenceChecker = new PositionEvidenceChecker(minQuality);
 
-    private static TumorBAF createDefault(final String chromosome, final int position)
-    {
-        BaseDepth baseDepth = new BaseDepth(chromosome, position, "A", "T");
-        baseDepth.ReadDepth = 6;
-        baseDepth.RefSupport = 3;
-        baseDepth.AltSupport = 3;
-        return TumorBAFFactory.create(baseDepth);
+        evidenceChecker.addEvidence(baseDepth, lowQualDel);
+        assertEquals(0, baseDepth.ReadDepth);
+
+        evidenceChecker.addEvidence(baseDepth, highQualDel);
+        assertEquals(1, baseDepth.ReadDepth);
     }
 
     private SAMRecord buildSamRecord(
-            final int alignmentStart, @NotNull final String cigar, @NotNull final String readString, @NotNull final String qualities)
+            final int alignmentStart, final String cigar, final String readString, final String qualities)
     {
         final SAMRecord record = new SAMRecord(null);
         record.setAlignmentStart(alignmentStart);

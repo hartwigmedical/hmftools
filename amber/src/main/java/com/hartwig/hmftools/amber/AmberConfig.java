@@ -24,7 +24,6 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChro
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomes;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -59,6 +58,7 @@ public class AmberConfig
     public final double MinHetAfPercent;
     public final double MaxHetAfPercent;
     public final boolean WriteUnfilteredGermline;
+    public final int PositionGap;
 
     public final String OutputDir;
     public final ValidationStringency BamStringency;
@@ -81,6 +81,7 @@ public class AmberConfig
     private static final String MIN_HIT_AT_PERC = "min_het_af_percent";
     private static final String MAX_HIT_AT_PERC = "max_het_af_percent";
     private static final String WRITE_UNFILTERED_GERMLINE = "write_unfiltered_germline";
+    private static final String POSITION_GAP = "position_gap";
 
     public AmberConfig(final ConfigBuilder configBuilder)
     {
@@ -107,6 +108,7 @@ public class AmberConfig
         MaxDepthPercent = configBuilder.getDecimal(MAX_DEPTH_PERC);
         MinHetAfPercent = configBuilder.getDecimal(MIN_HIT_AT_PERC);
         MaxHetAfPercent = configBuilder.getDecimal(MAX_HIT_AT_PERC);
+        PositionGap = configBuilder.getInteger(POSITION_GAP);
 
         WriteUnfilteredGermline = configBuilder.hasFlag(WRITE_UNFILTERED_GERMLINE);
 
@@ -115,6 +117,11 @@ public class AmberConfig
         BamStringency = BamUtils.validationStringency(configBuilder);
 
         SpecificChromosomes = loadSpecificChromsomes(configBuilder.getValue(SPECIFIC_CHROMOSOMES));
+
+        if(!SpecificChromosomes.isEmpty())
+        {
+            AMB_LOGGER.info("restricting to chromosomes: {}", configBuilder.getValue(SPECIFIC_CHROMOSOMES));
+        }
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)
@@ -144,6 +151,8 @@ public class AmberConfig
         configBuilder.addInteger(
                 MIN_MAP_QUALITY, "Minimum mapping quality for an alignment to be used", DEFAULT_MIN_MAPPING_QUALITY);
 
+        configBuilder.addInteger(POSITION_GAP, "Gap between site for BAM reading", 0);
+
         configBuilder.addDecimal(MIN_DEPTH_PERC, "Min percentage of median depth", DEFAULT_MIN_DEPTH_PERCENTAGE);
         configBuilder.addDecimal(MAX_DEPTH_PERC, "Max percentage of median depth", DEFAULT_MAX_DEPTH_PERCENTAGE);
         configBuilder.addDecimal(MIN_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MIN_HET_AF_PERCENTAGE);
@@ -164,15 +173,7 @@ public class AmberConfig
         return ReferenceIds.get(0);
     }
 
-    public List<String> allSamples()
-    {
-        List<String> samples = new ArrayList<>(ReferenceIds);
-        samples.add(TumorId);
-        return samples;
-    }
-
     public boolean isTumorOnly() { return ReferenceBams.isEmpty() && TumorBam != null; }
-
     public boolean isGermlineOnly()
     {
         return !ReferenceBams.isEmpty() && TumorBam == null;

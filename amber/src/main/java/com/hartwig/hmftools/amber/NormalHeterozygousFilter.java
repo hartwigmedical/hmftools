@@ -4,7 +4,7 @@ import java.util.function.Predicate;
 
 import com.hartwig.hmftools.common.amber.NormalHeterozygousCheck;
 
-public class NormalHeterozygousFilter implements Predicate<BaseDepth>
+public class NormalHeterozygousFilter implements Predicate<PositionEvidence>
 {
     private final NormalHeterozygousCheck mCheck;
 
@@ -14,7 +14,7 @@ public class NormalHeterozygousFilter implements Predicate<BaseDepth>
     }
 
     @Override
-    public boolean test(final BaseDepth bafEvidence)
+    public boolean test(final PositionEvidence bafEvidence)
     {
         return mCheck.test(bafEvidence.ReadDepth, bafEvidence.RefSupport, bafEvidence.AltSupport, bafEvidence.IndelCount);
     }

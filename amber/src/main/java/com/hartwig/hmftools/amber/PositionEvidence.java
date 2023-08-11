@@ -6,7 +6,7 @@ import com.hartwig.hmftools.common.amber.BaseDepthData;
 import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-public class BaseDepth implements GenomePosition
+public class PositionEvidence implements GenomePosition
 {
     enum Base {
         G,
@@ -27,7 +27,7 @@ public class BaseDepth implements GenomePosition
     public int AltSupport;
     public int AltQuality;
 
-    public BaseDepth(final String chromosome, final int position, final String ref, final String alt)
+    public PositionEvidence(final String chromosome, final int position, final String ref, final String alt)
     {
         Chromosome = chromosome;
         Position = position;
@@ -40,9 +40,9 @@ public class BaseDepth implements GenomePosition
         AltQuality = 0;
     }
 
-    public static BaseDepth copy(final BaseDepth other)
+    public static PositionEvidence copy(final PositionEvidence other)
     {
-        return new BaseDepth(other.Chromosome, other.Position, other.ref(), other.alt());
+        return new PositionEvidence(other.Chromosome, other.Position, other.ref(), other.alt());
     }
 
     public boolean isValid() { return IndelCount == 0; }
