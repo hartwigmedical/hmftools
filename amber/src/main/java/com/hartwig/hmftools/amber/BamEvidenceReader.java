@@ -92,7 +92,7 @@ public class BamEvidenceReader
 
         for(Map.Entry<Chromosome,List<PositionEvidence>> entry : chrBaseDepth.entrySet())
         {
-            String chromosome = entry.getKey().toString();
+            String chromosome = mConfig.RefGenVersion.versionedChromosome(entry.getKey().toString());
 
             if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
                 continue;

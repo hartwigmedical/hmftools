@@ -91,8 +91,11 @@ public class AmberConfig
         ReferenceIds = Lists.newArrayList();
         ReferenceBams = Lists.newArrayList();
 
-        ReferenceIds.addAll(Arrays.asList(configBuilder.getValue(REFERENCE).split(SAMPLE_DELIM)));
-        ReferenceBams.addAll(Arrays.asList(configBuilder.getValue(REFERENCE_BAM).split(SAMPLE_DELIM)));
+        if(configBuilder.hasValue(REFERENCE) && configBuilder.hasValue(REFERENCE_BAM))
+        {
+            ReferenceIds.addAll(Arrays.asList(configBuilder.getValue(REFERENCE).split(SAMPLE_DELIM)));
+            ReferenceBams.addAll(Arrays.asList(configBuilder.getValue(REFERENCE_BAM).split(SAMPLE_DELIM)));
+        }
 
         BafLociPath = configBuilder.getValue(LOCI_FILE);
 
