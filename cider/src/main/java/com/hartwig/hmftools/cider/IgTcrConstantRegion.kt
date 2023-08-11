@@ -5,7 +5,7 @@ data class IgTcrConstantRegion(val type: Type, val genomeLocation: GenomeRegionS
     enum class Type
     {
         IGHA, IGHG, IGHD, IGHE, IGHM,
-        IGKC, IGLC, TRAC, TRBC, TRDC, TRGC
+        IGKC, IGLC, TRAC, TRBC, TRBD, TRDC, TRDD, TRGC
     }
 
     fun getCorrespondingJ() : VJGeneType
@@ -19,6 +19,8 @@ data class IgTcrConstantRegion(val type: Type, val genomeLocation: GenomeRegionS
             Type.TRBC -> VJGeneType.TRBJ
             Type.TRDC -> VJGeneType.TRDJ
             Type.TRGC -> VJGeneType.TRGJ
+            Type.TRBD -> VJGeneType.TRBJ
+            Type.TRDD -> VJGeneType.TRDJ
         }
     }
 }

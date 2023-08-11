@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.cider
 
 import com.beust.jcommander.Parameter
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
 import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter
+import org.apache.logging.log4j.LogManager
 
 class CiderParams
 {
@@ -42,11 +42,6 @@ class CiderParams
     )
     lateinit var refGenomeVersion: RefGenomeVersion
 
-    @Parameter(names = ["-" + EnsemblDataCache.ENSEMBL_DATA_DIR],
-               required = true,
-               description = EnsemblDataCache.ENSEMBL_DATA_DIR_CFG)
-    lateinit var ensemblDataDir: String
-
     @Parameter(names = ["-min_base_quality"], description = "Minimum quality for a base to be considered")
     var minBaseQuality = 25
 
@@ -74,7 +69,26 @@ class CiderParams
     @Parameter(names = ["-primer_mismatch_max"], description = "Maximum number of mismatch bases for matching primer sequence")
     var primerMismatchMax: Int = 0
 
-    val isValid: Boolean get() = true
+    @Parameter(names = ["-blast"], description = "Location of blast installation")
+    var blast: String? = null
+
+    @Parameter(names = ["-blast_db"], description = "Location of blast database")
+    var blastDb: String? = null
+
+    val isValid: Boolean get()
+    {
+        if (blast != null && blastDb == null)
+        {
+            sLogger.error("invalid parameters: requires -blast_db if -blast is configured")
+            return false
+        }
+        if (blast == null && blastDb != null)
+        {
+            sLogger.error("invalid parameters: requires -blast if -blast_db is configured")
+            return false
+        }
+        return true
+    }
 
     companion object
     {
@@ -83,5 +97,7 @@ class CiderParams
         const val DEFAULT_MAX_READ_COUNT_PER_GENE = 600_000
         // maximum proportion of read bases that are low quality
         const val MAX_LOW_QUAL_BASES_FRACTION: Double = 0.1
+
+        val sLogger = LogManager.getLogger(CiderParams::class.java)
     }
 }

@@ -102,6 +102,24 @@ def run_blastn(blastn_path, fa_file, blastn_out_file, threads):
     else:
         logger.error(f"blastn failed")
 
+    # run again with normal output
+    cmd = [blastn_path,
+           "-db", "GCF_000001405.39_top_level",
+           "-query", fa_file,
+           "-task", "blastn",
+           "-evalue", "1",
+           "-mt_mode", "0",
+           "-num_threads", str(threads),
+           "-out", blastn_out_file + ".human_readable"]
+
+    logger.info(cmd)
+
+    proc = subprocess.run(cmd, cwd=".")
+    if proc.returncode == 0:
+        logger.info("blastn success")
+    else:
+        logger.error(f"blastn failed")
+
 class Gene:
     def __init__(self, gene_name, chromosome: str, strand: int, gene_start, gene_end, vdj_type):
         self.gene_name = gene_name
@@ -145,13 +163,13 @@ def get_ensembl(ensembl_gene_data, only_vdj):
             genes.append(Gene(row["GeneName"], row["Chromosome"], row["Strand"], row["GeneStart"], row["GeneEnd"], vdj_type))
 
     # manually add in the KDE section
-    # v38: IGKKDE	01	chr2	88832222	88833331	-
+    # v38: IGKDEL	01	chr2	88832222	88833331	-
     genes.append(Gene(gene_name='IGKDEL', chromosome="2", strand=-1,
                       gene_start=88832222, gene_end=88833331, vdj_type="J"))
     
-    # KINT, obtained by BLAT of CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT
+    # KINTR, obtained by BLAT of CACCGCGCTCTTGGGGCAGCCGCCTTGCCGCTAGTGGCCGTGGCCACCCTGTGTCTGCCCGATT
     # v38
-    genes.append(Gene(gene_name='IGKINT', chromosome="2", strand=-1,
+    genes.append(Gene(gene_name='IGKINTR', chromosome="2", strand=-1,
                       gene_start=88859633, gene_end=88859697, vdj_type="V"))
 
     #for g in genes:
@@ -194,6 +212,7 @@ def add_gene_data(df, gene_finder):
         # in negative strand, start and end would be reversed
         if sstart > send:
             sstart, send = send, sstart
+        assert(sstart < send)
         matching_genes = gene_finder.find_gene(row["chromosome"], row["sframe"], sstart, send)
 
         if not matching_genes:
@@ -373,6 +392,21 @@ def main():
 
     # read in all the VDJ sequences and blast them
     vdj_df = pd.read_csv(args.in_tsv, sep="\t")
+
+    vdj_df.drop(columns=[
+        "vGene",
+        "vPIdent",
+        "vAlignStart",
+        "vAlignEnd",
+        "dGene",
+        "dPIdent",
+        "dAlignStart",
+        "dAlignEnd",
+        "jGene",
+        "jPIdent",
+        "jAlignStart",
+        "jAlignEnd",
+        "blastnStatus"], inplace=True, errors='ignore')
 
     # strip out the tsv / csv / .gz
     file_prefix = re.sub("(\.[tc]sv\.gz)|(\.[tc]sv)", "", os.path.basename(args.in_tsv))
