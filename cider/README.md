@@ -2,10 +2,9 @@
 Using WTS/WGS or targeted data, we determine a comprehensive list of CDR3 sequences for each of the IG and TCR loci including an abundance estimate.  Notably this includes incomplete rearrangements and IGK-KDE deletions.
 
 The intended purposes of this are the following: 
-- For B cell & T cell tumors, the IG / TCR loci can be used as a proxy for the number of clones in the tumor. The CDR3 sequence can also be used for MRD detection.  
+- For B cell & T cell tumors, clonal CDR3 sequence can be used for MRD detection.  
 - For other tumors, the abundance estimate can be used to estimate immune infiltration and may give insight into diversity, and/or recurrent and cancer specific T-cell clones. 
-- We may be able to use epitope-TCR binding prediction tools (such as TCRex, NetTCR, Repitope) to predict binding of specific sequences 
-- With very deep targeted sequencing we could determine the full IG/TCR receptor repertoire (eg. TCR beta diversity is estimated at 1-3M distinct sequences per individual). Diversity and evenness are also proposed as important characteristics 
+- With very deep targeted sequencing CIDER could determine the full IG/TCR receptor repertoire (eg. TCR beta diversity is estimated at 1-3M distinct sequences per individual). Diversity and evenness are also proposed as important characteristics 
 
 ## Usage
 
@@ -217,7 +216,9 @@ To set up BLASTN, do the following:
 ## Idenfitification of clonal rearrangements in WGS samples
 
 Clonal IGH/TCR rearrangements may be useful biomarkers to monitor tumor presence and progression via liquid biopsy.   For WGS tumor saples, the number of fragments in a clonal sequence will depend on the depth of coverage as well as the purity and ploidy of a sample.    For a 100x tumor sample we recommend using a threshold of approximately 8-10 high quality read support to identify clonal sequences.  For lower depth samples this number may need to be scaled downwards somewhat.  In lower purity & higher ploidy tumor samples, clonal sequences may have less than 10 reads support, but lowering the threshold may risk identifying non clonal sequences as clonal.   
-  
+
+## Known issues and future improvements
+
 ### Bam extraction:
 - **Reads mapped to other locations** - We only use reads where the alignment overlaps a known V or J anchor sequence coordinate which means the program is fast. We could also look for more reads with sequences that precisely or partially match known anchors but which have not been mapped to the expected locations.    
 - **Mate overlap** - Where fragment lengths are short the reads may overlap (particularly relevant for RNA). For each extracted read pair test for overlap by searching for an exact match for the innermost 10 bases of each read (allowing for differences if base quality < 25). If a match is found then check that the full overlapped region is identical (again allowing for base quality trimming). Create a consensus sequence for the 2 reads, using the highest base quality where the sequences differ.  
