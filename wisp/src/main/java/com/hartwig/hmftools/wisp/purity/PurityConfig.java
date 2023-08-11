@@ -27,9 +27,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.wisp.common.SampleData;
@@ -47,10 +50,7 @@ public class PurityConfig
     public final String OutputDir;
     public final String OutputId;
     public final RefGenomeInterface RefGenome;
-    public final boolean WriteSomatics;
-    public final boolean WriteCnRatios;
-    public final boolean PlotCnFit;
-    public final boolean WriteFilteredSomatics;
+    public final Set<WriteType> WriteTypes;
     public final double NoiseReadsPerMillion;
     public final double NoiseReadsPerMillionDualStrand;
     public final double GcRatioMin;
@@ -61,13 +61,10 @@ public class PurityConfig
     private static final String CTDNA_SAMPLES = "ctdna_samples";
     private static final String PURITY_METHODS = "purity_methods";
     private static final String SOMATIC_VCF = "somatic_vcf";
-    private static final String WRITE_VARIANTS = "write_somatics";
-    private static final String INCLUDE_FILTERED_VARIANTS = "write_filtered_somatics";
-    private static final String WRITE_CN_RATIOS = "write_cn_ratios";
-    private static final String PLOT_CN = "plot_cn_fit";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
     private static final String GC_RATIO_MIN = "gc_ratio_min";
+    private static final String WRITE_TYPES = "write_types";
 
     public PurityConfig(final ConfigBuilder configBuilder)
     {
@@ -100,12 +97,22 @@ public class PurityConfig
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
         GcRatioMin = configBuilder.getDecimal(GC_RATIO_MIN);
 
-        WriteSomatics = configBuilder.hasFlag(WRITE_VARIANTS);
-        WriteCnRatios = configBuilder.hasFlag(WRITE_CN_RATIOS);
-        WriteFilteredSomatics = configBuilder.hasFlag(INCLUDE_FILTERED_VARIANTS);
-        PlotCnFit = configBuilder.hasFlag(PLOT_CN);
+        WriteTypes = Sets.newHashSet();
+
+        if(configBuilder.hasValue(WRITE_TYPES))
+        {
+            String writeTypes = configBuilder.getValue(WRITE_TYPES);
+
+            if(writeTypes.equals(WriteType.ALL))
+                Arrays.stream(WriteType.values()).forEach(x -> WriteTypes.add(x));
+            else
+                Arrays.stream(writeTypes.split(",", -1)).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
+        }
+
         Threads = parseThreads(configBuilder);
     }
+
+    public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
 
     private void loadSampleData(final ConfigBuilder configBuilder)
     {
@@ -137,15 +144,15 @@ public class PurityConfig
 
         if(multipleSamples())
         {
-            fileName += "ctdna_cohort.";
+            fileName += "wisp_cohort.";
         }
         else if(Samples.get(0).CtDnaSamples.size() > 1)
         {
-            fileName += format("%s.ctdna.", Samples.get(0).PatientId);
+            fileName += format("%s.wisp.", Samples.get(0).PatientId);
         }
         else
         {
-            fileName += format("%s_%s.ctdna.", Samples.get(0).PatientId, Samples.get(0).CtDnaSamples.get(0));
+            fileName += format("%s_%s.wisp.", Samples.get(0).PatientId, Samples.get(0).CtDnaSamples.get(0));
         }
 
         fileName += fileType;
@@ -165,20 +172,19 @@ public class PurityConfig
         configBuilder.addConfigItem(TUMOR_ID, false, "Original tumor sample ID");
         configBuilder.addConfigItem(CTDNA_SAMPLES, false, "List of ctDNA sample IDs separated by ','");
 
-        StringJoiner sj = new StringJoiner(", ");
-        Arrays.stream(PurityMethod.values()).forEach(x -> sj.add(x.toString()));
         configBuilder.addConfigItem(
                 PURITY_METHODS, false,
-                "List of purity methods separated by ',' default(all) from: " + sj);
+                "List of purity methods separated by ',' default(all) from: "
+                        + Arrays.stream(PurityMethod.values()).map(x -> x.toString()).collect(Collectors.joining(",")));
 
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
         configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
-        configBuilder.addFlag(WRITE_VARIANTS, "Write variants");
-        configBuilder.addFlag(WRITE_CN_RATIOS, "Write copy number segment GC ratio summary");
-        configBuilder.addFlag(PLOT_CN,"Plot copy number / GC ratio fit");
-        configBuilder.addFlag(INCLUDE_FILTERED_VARIANTS, "Include filtered somatic variants in output (not purity calcs)");
+
+        configBuilder.addConfigItem(
+                WRITE_TYPES, "Output file types: default(none), 'ALL' or set separated by ',': "
+                        + Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(",")));
 
         addRefGenomeConfig(configBuilder, false);
 

@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
+import com.hartwig.hmftools.wisp.purity.WriteType;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 import com.hartwig.hmftools.wisp.common.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConstants;
@@ -224,7 +225,7 @@ public class SomaticVariants
 
             boolean useForTotals = useVariantForPurityCalcs(variant, sampleFragData);
 
-            if(mConfig.WriteFilteredSomatics || useForTotals)
+            if(mConfig.writeType(WriteType.FILTERED_SOMATICS) || useForTotals)
             {
                 String filter = variant.PassFilters && useForTotals ? "PASS" : (!variant.PassFilters ? "FILTERED" : "NO_FRAGS");
                 mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleFragData, tumorFragData, filter);

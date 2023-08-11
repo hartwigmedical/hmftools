@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.WriteType.CN_DATA;
+import static com.hartwig.hmftools.wisp.purity.WriteType.FILTERED_SOMATICS;
+import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATICS;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -39,9 +42,9 @@ public class ResultsWriter
     {
         mConfig = config;
         mSampleWriter = initialiseWriter();
-        mVariantWriter = config.WriteSomatics ? initialiseVariantWriter() : null;
-        mCnRatioWriter = config.WriteCnRatios ? initialiseCnRatioWriter() : null;
-        mDropoutCalcWriter = config.WriteSomatics ? LowCountModel.initialiseWriter(mConfig) : null;
+        mVariantWriter = config.writeType(SOMATICS) || config.writeType(FILTERED_SOMATICS) ? initialiseVariantWriter() : null;
+        mCnRatioWriter = config.writeType(CN_DATA) ? initialiseCnRatioWriter() : null;
+        mDropoutCalcWriter = null; // config.WriteSomatics ? LowCountModel.initialiseWriter(mConfig) : null;
     }
 
     public BufferedWriter getDropoutWriter() { return mDropoutCalcWriter; }

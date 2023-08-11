@@ -4,6 +4,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.wisp.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.WriteType.CN_DATA;
+import static com.hartwig.hmftools.wisp.purity.WriteType.CN_PLOTS;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -70,7 +72,7 @@ public class PurityEstimator
 
         mResultsWriter.close();
 
-        if(mConfig.PlotCnFit && mConfig.WriteCnRatios)
+        if(mConfig.writeType(CN_PLOTS) && mConfig.writeType(CN_DATA))
         {
             boolean hasError = false;
             for(SampleData sample : mConfig.Samples)
