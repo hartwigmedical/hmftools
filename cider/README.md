@@ -215,7 +215,7 @@ To set up BLASTN, do the following:
 
 ## Idenfitification of clonal rearrangements in WGS samples
 
-Clonal IGH/TCR rearrangements may be useful biomarkers to monitor tumor presence and progression via liquid biopsy.   For WGS tumor saples, the number of fragments in a clonal sequence will depend on the depth of coverage as well as the purity and ploidy of a sample.    For a 100x tumor sample we recommend using a threshold of approximately 8-10 high quality read support to identify clonal sequences.  For lower depth samples this number may need to be scaled downwards somewhat.  In lower purity & higher ploidy tumor samples, clonal sequences may have less than 10 reads support, but lowering the threshold may risk identifying non clonal sequences as clonal.   
+Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence and progression via liquid biopsy.   For WGS tumor saples, the number of fragments in a clonal sequence will depend on the depth of coverage as well as the purity and ploidy of a sample.    For a 100x tumor sample we recommend using a threshold of approximately 8-10 high quality read support to identify clonal sequences.  For lower depth samples this number may need to be scaled downwards somewhat.  In lower purity & higher ploidy tumor samples, clonal sequences may have less than 10 reads support, but lowering the threshold may risk identifying non clonal sequences as clonal.   
 
 ## Known issues and future improvements
 
