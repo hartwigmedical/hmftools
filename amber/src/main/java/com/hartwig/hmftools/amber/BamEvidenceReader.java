@@ -132,8 +132,8 @@ public class BamEvidenceReader
                     maxRegion = task;
             }
 
-            AMB_LOGGER.debug("split {} sites across {} regions, max region({} size={} length={})",
-                    positionCount, tasks.size(), maxRegion.Region, maxRegion.positionCount(), maxRegion.Region.length());
+            AMB_LOGGER.debug("split {} sites across {} regions, max region({} size={} length={}) minGap({})",
+                    positionCount, tasks.size(), maxRegion.Region, maxRegion.positionCount(), maxRegion.Region.length(), minGap);
         }
 
         taskQueue.addAll(tasks);
