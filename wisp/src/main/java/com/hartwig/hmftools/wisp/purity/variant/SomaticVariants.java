@@ -225,7 +225,7 @@ public class SomaticVariants
 
             boolean useForTotals = useVariantForPurityCalcs(variant, sampleFragData);
 
-            if(mConfig.writeType(WriteType.FILTERED_SOMATICS) || useForTotals)
+            if(mConfig.writeType(WriteType.SOMATICS_ALL) || useForTotals)
             {
                 String filter = variant.PassFilters && useForTotals ? "PASS" : (!variant.PassFilters ? "FILTERED" : "NO_FRAGS");
                 mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleFragData, tumorFragData, filter);
@@ -288,7 +288,7 @@ public class SomaticVariants
 
         double rawSamplePurity = allFragsResult.EstimatedPurity;
 
-        double weightedAvgDepth = fragTotal > 0 ? depthFragTotal / fragTotal : 0;
+        double weightedAvgDepth = fragTotal > 0 ? depthFragTotal / fragTotal : sampleDepthTotal / (double)calcVariants;
 
         ClonalityResult modelResult = ClonalityResult.INVALID_RESULT;
         ClonalityMethod clonalityMethod = ClonalityMethod.NONE;
@@ -344,7 +344,7 @@ public class SomaticVariants
         return new SomaticVariantResult(
                 true, totalVariants, calcVariants,  frag1Variants, frag2PlusVariants,
                 clonalityVarCount, clonalityMethod, clonalityDropout, weightedAvgDepth, sampleCounts, umiTypeCounts,
-                qualPerAllele, tumorVaf, adjustedTumorVaf, rawSamplePurity, allFragsResult, dualFragsResult, lodFragsResult);
+                tumorVaf, adjustedTumorVaf, rawSamplePurity, allFragsResult, dualFragsResult, lodFragsResult);
     }
 
     private boolean useVariantForPurityCalcs(final SomaticVariant variant, final GenotypeFragments sampleFragData)

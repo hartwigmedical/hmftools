@@ -7,7 +7,7 @@ public enum WriteType
     CN_DATA,
     CN_PLOTS,
     SOMATICS,
-    FILTERED_SOMATICS;
+    SOMATICS_ALL;
 
     public static final String ALL = "ALL";
 }

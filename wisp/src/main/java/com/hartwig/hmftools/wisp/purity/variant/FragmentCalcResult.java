@@ -33,11 +33,11 @@ public class FragmentCalcResult
     public static String header(final String context)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
-        sj.add(format("%sSomaticPurity", context));
-        sj.add(format("%sSomaticProbability", context));
+        sj.add(format("%sSNVPurity", context));
+        sj.add(format("%sSNVProbability", context));
         sj.add(format("%sSampleVAF", context));
-        sj.add(format("%sSomaticPurityLow", context));
-        sj.add(format("%sSomaticPurityHigh", context));
+        sj.add(format("%sSNVPurityLow", context));
+        sj.add(format("%sSNVPurityHigh", context));
         return sj.toString();
     }
 

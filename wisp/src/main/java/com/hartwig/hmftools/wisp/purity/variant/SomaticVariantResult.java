@@ -3,10 +3,10 @@ package com.hartwig.hmftools.wisp.purity.variant;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatProbabilityValue;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.formatPurityValue;
 
 import java.util.StringJoiner;
-
-import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 
 public class SomaticVariantResult
 {
@@ -19,16 +19,9 @@ public class SomaticVariantResult
     public final double ClonalDropoutRate;
     public final double WeightedAvgDepth;
     public final int TotalFragments;
-    public final int UmiRefNonDual;
     public final int UmiRefDual;
-    public final int AlleleFragments; //
-    public final int UmiAlleleNonDual;
+    public final int AlleleFragments;
     public final int UmiAlleleDual;
-    public final double DepthMedian;
-    public final int NonZeroDepthCount;
-    public final double NonZeroDepthMedian;
-
-    public final double QualPerAdTotal;
 
     public final double TumorVaf;
     public final double AdjustedTumorVaf;
@@ -45,7 +38,7 @@ public class SomaticVariantResult
             boolean valid, int totalVariants, int calcVariants, int frag1Variants, int frag2PlusVariants, int clonalVariants,
             final ClonalityMethod method, final double dropoutRate, double weightedAvgDepth,
             final SomaticVariantCounts sampleCounts, final UmiTypeCounts umiTypeCounts,
-            double qualPerAdTotal, double tumorVaf, double adjustedTumorVaf, double rawSomaticPurity,
+            double tumorVaf, double adjustedTumorVaf, double rawSomaticPurity,
             final FragmentCalcResult allFragsResult, final FragmentCalcResult dualFragsResult, final FragmentCalcResult lodFragsResult)
     {
         TotalVariants = totalVariants;
@@ -57,15 +50,9 @@ public class SomaticVariantResult
         Method = method;
         WeightedAvgDepth = weightedAvgDepth;
         TotalFragments = sampleCounts.totalFragments();
-        UmiRefNonDual = umiTypeCounts.RefNone + umiTypeCounts.RefSingle;
         UmiRefDual = umiTypeCounts.RefDual;
         AlleleFragments = sampleCounts.alleleFragments();
-        UmiAlleleNonDual = umiTypeCounts.AlleleNone + umiTypeCounts.AlleleSingle;
         UmiAlleleDual = umiTypeCounts.AlleleDual;
-        QualPerAdTotal = qualPerAdTotal;
-        DepthMedian = sampleCounts.medianDepth(false);
-        NonZeroDepthCount = sampleCounts.nonZeroDepth();
-        NonZeroDepthMedian = sampleCounts.medianDepth(true);
         TumorVaf = tumorVaf;
         AdjustedTumorVaf = adjustedTumorVaf;
         RawSomaticPurity = rawSomaticPurity;
@@ -87,15 +74,9 @@ public class SomaticVariantResult
         ClonalDropoutRate = 0;
         WeightedAvgDepth = 0;
         TotalFragments = 0;
-        UmiRefNonDual = 0;
         UmiRefDual = 0;
-        UmiAlleleNonDual = 0;
         UmiAlleleDual = 0;
         AlleleFragments = 0;
-        QualPerAdTotal = 0;
-        DepthMedian = 0;
-        NonZeroDepthCount = 0;
-        NonZeroDepthMedian = 0;
         TumorVaf = 0;
         AdjustedTumorVaf = 0;
         RawSomaticPurity = 0;
@@ -118,21 +99,15 @@ public class SomaticVariantResult
         sj.add("ClonalDropoutRate");
         sj.add("RawSomaticPurity");
         sj.add(FragmentCalcResult.header(""));
-        sj.add(FragmentCalcResult.header("Dual"));
+        sj.add("DualSNVProbability");
         sj.add("LodPurity");
         sj.add("TotalFragments");
-        sj.add("UmiRefNonDual");
         sj.add("UmiRefDual");
         sj.add("AlleleFragments");
-        sj.add("UmiAlleleNonDual");
         sj.add("UmiAlleleDual");
-        sj.add("QualPerAdTotal");
         sj.add("TumorVaf");
         sj.add("AdjustedTumorVaf");
         sj.add("WeightedAvgDepth");
-        sj.add("DepthMedian");
-        sj.add("NonZeroDepthCount");
-        sj.add("NonZeroDepthMedian");
         return sj.toString();
     }
 
@@ -147,25 +122,19 @@ public class SomaticVariantResult
         sj.add(format("%d", ClonalVariants));
         sj.add(String.valueOf(Method));
         sj.add(format("%.2f", ClonalDropoutRate));
-        sj.add(ResultsWriter.formatPurityValue(RawSomaticPurity));
+        sj.add(formatPurityValue(RawSomaticPurity));
         sj.add(AllFragsResult.toTsv());
-        sj.add(DualFragsResult.toTsv());
-        sj.add(ResultsWriter.formatPurityValue(LimitOfDetectionResult.EstimatedPurity));
+        sj.add(formatProbabilityValue(DualFragsResult.PurityProbability));
+        sj.add(formatPurityValue(LimitOfDetectionResult.EstimatedPurity));
 
         // inputs
         sj.add(format("%d", TotalFragments));
-        sj.add(format("%d", UmiRefNonDual));
         sj.add(format("%d", UmiRefDual));
         sj.add(format("%d", AlleleFragments));
-        sj.add(format("%d", UmiAlleleNonDual));
         sj.add(format("%d", UmiAlleleDual));
-        sj.add(format("%.1f", QualPerAdTotal));
-        sj.add(ResultsWriter.formatPurityValue(TumorVaf));
-        sj.add(ResultsWriter.formatPurityValue(AdjustedTumorVaf));
+        sj.add(formatPurityValue(TumorVaf));
+        sj.add(formatPurityValue(AdjustedTumorVaf));
         sj.add(format("%.0f", WeightedAvgDepth));
-        sj.add(format("%.1f", DepthMedian));
-        sj.add(format("%d", NonZeroDepthCount));
-        sj.add(format("%.1f", NonZeroDepthMedian));
 
         return sj.toString();
     }

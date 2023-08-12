@@ -3,6 +3,7 @@ package com.hartwig.hmftools.wisp.purity;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
@@ -179,14 +180,14 @@ public class PurityConfig
 
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
-        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
 
         configBuilder.addConfigItem(
                 WRITE_TYPES, "Output file types: default(none), 'ALL' or set separated by ',': "
                         + Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(",")));
 
-        addRefGenomeConfig(configBuilder, false);
+        configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC);
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION, "Expected reads-per-million from noise", PurityConstants.DEFAULT_NOISE_READS_PER_MILLION);

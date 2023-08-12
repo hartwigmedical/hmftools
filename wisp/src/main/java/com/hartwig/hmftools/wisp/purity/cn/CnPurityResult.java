@@ -56,9 +56,6 @@ public class CnPurityResult
         sj.add("CnFitResidualsPerc");
         sj.add("CnFitCoeff");
         sj.add("CnFitIntercept");
-        sj.add("GcRatioMedianPerSegment");
-        sj.add("CnSegments");
-        sj.add("GcRatioSegments");
         return sj.toString();
     }
 
@@ -73,9 +70,6 @@ public class CnPurityResult
         sj.add(format("%.4f", Residuals));
         sj.add(format("%.3f", FitCoefficient));
         sj.add(format("%.4f", FitIntercept));
-        sj.add(format("%.1f", MedianGcRatiosPerSegments));
-        sj.add(format("%d", CopyNumberSegments));
-        sj.add(format("%d", GcRatioSegments));
 
         return sj.toString();
     }
