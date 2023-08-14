@@ -63,7 +63,7 @@
         <cider.version>0.10.1</cider.version>
         <cobalt.version>1.15.2</cobalt.version>
         <compar.version>1.1.1</compar.version>
-        <cuppa.version>1.8.1</cuppa.version>
+        <cuppa.version>1.9</cuppa.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.1</gene-utils.version>
         <gripss.version>2.4</gripss.version>
