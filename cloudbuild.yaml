@@ -3,13 +3,6 @@ steps:
     name: 'eu.gcr.io/hmf-build/jdk-mvn-python'
     entrypoint: 'python3'
     args: ['hmftools-build.py', '$TAG_NAME']
-  - id: 'Release on git'
-    name: 'maniator/gh'
-    entrypoint: 'bash'
-    env:
-      - 'TAG=$TAG_NAME'
-    args: ['git-release.sh']
-
 
 logsBucket: 'gs://hmf-build-logs'
 timeout: 1800s
