@@ -14,9 +14,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE_DESC;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.LIKELIHOOD_THRESHOLD;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE_DESC;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.LIKELIHOOD_THRESHOLD;
 
 import java.util.Arrays;
 import java.util.List;

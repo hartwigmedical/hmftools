@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo.scorer;
+package com.hartwig.hmftools.neo.score;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -13,7 +13,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
-import static com.hartwig.hmftools.neo.scorer.NeoRnaData.NO_TPM_VALUE;
+import static com.hartwig.hmftools.neo.score.NeoRnaData.NO_TPM_VALUE;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

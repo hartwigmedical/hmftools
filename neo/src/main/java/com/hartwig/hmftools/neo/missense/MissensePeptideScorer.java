@@ -8,16 +8,13 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_DIR;
 import static com.hartwig.hmftools.neo.missense.MissenseConfig.registerConfig;
-import static com.hartwig.hmftools.neo.scorer.NeoRnaData.NO_TPM_VALUE;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE;
-import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.CANCER_VALUE;
-import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.PAN_CANCER_VALUE;
+import static com.hartwig.hmftools.neo.score.NeoRnaData.NO_TPM_VALUE;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE;
+import static com.hartwig.hmftools.neo.score.TpmMediansCache.PAN_CANCER_VALUE;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -31,7 +28,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
-import com.hartwig.hmftools.neo.scorer.TpmMediansCache;
+import com.hartwig.hmftools.neo.score.TpmMediansCache;
 
 import org.jetbrains.annotations.NotNull;
 
