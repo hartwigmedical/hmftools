@@ -177,7 +177,7 @@ public class OrangeAlgo
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
-        PurpleData purpleData = loadPurpleData(config, ensemblDataCache);
+        PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
         ChordData chord = loadChordAnalysis(config);
@@ -353,6 +353,7 @@ public class OrangeAlgo
     {
         EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(),
                 RefGenomeVersion.from(config.refGenomeVersion().name()));
+        ensemblDataCache.setRequireNonEnsemblTranscripts();
         ensemblDataCache.load(false);
         return ensemblDataCache;
     }
@@ -390,7 +391,7 @@ public class OrangeAlgo
     }
 
     @NotNull
-    private static PurpleData loadPurpleData(@NotNull OrangeConfig config, @NotNull EnsemblDataCache ensemblDataCache) throws IOException
+    private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException
     {
         LOGGER.info("Loading PURPLE data from {}", config.purpleDataDirectory());
 
