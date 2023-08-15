@@ -168,7 +168,7 @@ public class HealthChecksApplication
 
     public static void main(final String... args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder("HealthChecker");
         registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);

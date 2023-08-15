@@ -243,7 +243,7 @@ public class ConfigBuilder
 
         setLogLevel(this);
 
-        logAppVersion();
+        printAppVersion(false);
     }
 
     public boolean parseCommandLine(final String[] args)
@@ -314,7 +314,14 @@ public class ConfigBuilder
 
     public void logItems()
     {
-        LOGGER.info("registered config items:");
+        printItems(true);
+    }
+
+    private void printItems(boolean asLog)
+    {
+        List<String> output = Lists.newArrayList();
+
+        output.add("registered config items:");
 
         for(ConfigItem item : mItems)
         {
@@ -332,8 +339,13 @@ public class ConfigBuilder
 
             sb.append(format(" desc(%s)", item.Description));
 
-            LOGGER.info(sb.toString());
+            output.add(sb.toString());
         }
+
+        if(asLog)
+            output.forEach(x -> LOGGER.info(x));
+        else
+            output.forEach(x -> System.out.println(x));
     }
 
     public void clearValues()
@@ -342,13 +354,17 @@ public class ConfigBuilder
         mItems.forEach(x -> x.clearValue());
     }
 
-    private void logAppVersion()
+    private void printAppVersion(boolean asLog)
     {
         VersionInfo versionInfo = mAppName != null ? new VersionInfo(format("%s.version", mAppName.toLowerCase())) : null;
 
         if(versionInfo != null)
         {
-            LOGGER.info("{} version {}", mAppName, versionInfo.version());
+            String versionMessage = format("%s version %s", mAppName, versionInfo.version());
+            if(asLog)
+                LOGGER.info(versionMessage);
+            else
+                System.out.println(versionMessage);
         }
     }
 
@@ -357,11 +373,11 @@ public class ConfigBuilder
         if(!argument.equals(PRINT_HELP) && !argument.equals(PRINT_VERSION))
             return false;
 
-        logAppVersion();
+        printAppVersion(false);
 
         if(argument.equals(PRINT_HELP))
         {
-            logItems();
+            printItems(false);
             System.exit(0);
         }
         else if(argument.equals(PRINT_VERSION))
