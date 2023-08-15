@@ -45,6 +45,22 @@ public class DoidCohortMapper implements CohortMapper {
             return CohortConstants.COHORT_OTHER;
         }
 
+        if (CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.contains(sample.doids())) {
+            LOGGER.debug("Mapping {} to {} because of specific doid combination: {}",
+                    sample.sampleId(),
+                    CohortConstants.COHORT_ESOPHAGUS,
+                    sample.doids());
+            return CohortConstants.COHORT_ESOPHAGUS;
+        }
+
+        if (CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_STOMACH.contains(sample.doids())) {
+            LOGGER.debug("Mapping {} to {} because of specific doid combination: {}",
+                    sample.sampleId(),
+                    CohortConstants.COHORT_STOMACH,
+                    sample.doids());
+            return CohortConstants.COHORT_STOMACH;
+        }
+
         for (String doid : sample.doids()) {
             for (CohortMapping mapping : mappings) {
                 if (isMatch(mapping, doid, doidParentModel.parents(doid))) {
@@ -93,7 +109,7 @@ public class DoidCohortMapper implements CohortMapper {
                 bestMappings.add(mappings.iterator().next());
             } else if (mappings.size() > 1) {
                 String doid = entry.getKey();
-                LOGGER.warn("DOID '{}' for {} matched to multiple cancer types: '{}'", doid, sample.sampleId(), toString(mappings));
+                LOGGER.error("DOID '{}' for {} matched to multiple cancer types: '{}'", doid, sample.sampleId(), toString(mappings));
                 return null;
             }
         }
@@ -104,7 +120,7 @@ public class DoidCohortMapper implements CohortMapper {
             for (int i = 1; i < bestMappings.size(); i++) {
                 CohortMapping compare = bestMappings.get(i);
                 if (bestMapping.preferenceRank() == compare.preferenceRank() && !bestMapping.cancerType().equals(compare.cancerType())) {
-                    LOGGER.warn("Multiple different cancer types for {} with same preference rank: '{}'",
+                    LOGGER.error("Multiple different cancer types for {} with same preference rank: '{}'",
                             toString(sample),
                             toString(bestMappings));
                     return null;
