@@ -41,7 +41,7 @@ object BlastnRunner
     // from my test, it evalue of 1 can only match minimum 20 bases. If we want to match D segment that is shorter
     // we will need a higher cut off, maybe 10, but will get many false positive hits that are longer but more mismatches
     fun runBlastn(sampleId: String, blastDir: String, blastDb: String, vdjSequences: Map<Int, String>, outputDir: String, numThreads: Int,
-                  expectedValueCutoff: Double = 1.0)
+                  expectedValueCutoff: Double = 1.0, keepOutput: Boolean = false)
     : Multimap<Int, BlastnMatch>
     {
         if (vdjSequences.isEmpty())
@@ -108,8 +108,13 @@ object BlastnRunner
 
         val blastnMatches = processBlast(outputFileCsv.absolutePath)
 
-        // delete the csv file
-        outputFileCsv.delete()
+        if (!keepOutput)
+        {
+            // delete the csv file
+            outputFileCsv.delete()
+            // delete the fasta file
+            File(fastaFile).delete()
+        }
 
         return blastnMatches
     }

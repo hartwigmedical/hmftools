@@ -1,45 +1,29 @@
 package com.hartwig.hmftools.cider
 
+import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.codon.Codons
 import com.hartwig.hmftools.common.genome.region.Strand
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
-
-data class GenomeRegionStrand(val chromosome: String, val posStart: Int, val posEnd: Int, val strand: Strand)
-    : ChrBaseRegion(chromosome, posStart, posEnd)
-{
-    operator fun compareTo(other: GenomeRegionStrand): Int
-    {
-        val baseRegionCompare = super.compareTo(other)
-        return if (baseRegionCompare == 0) strand.compareTo(other.strand) else baseRegionCompare
-    }
-
-    override fun toString(): String
-    {
-        return "${chromosome}:${posStart}-${posEnd}(${strand.asChar()})"
-    }
-}
 
 data class VJAnchorTemplate
     (
     val type: VJGeneType,
     val geneName: String, // IGHV1-45
     val allele: String, // 01
-    val geneLocation: GenomeRegionStrand?,
-    val sequence: String,
+    val geneLocation: GenomicLocation?,
     val anchorSequence: String,
-    val anchorLocation: GenomeRegionStrand?
+    val anchorLocation: GenomicLocation?
 )
 {
     val vj: VJ get() { return type.vj }
     val anchorAminoAcidSequence: String = Codons.aminoAcidFromBases(anchorSequence)
-    val chromosome: String? get() { return geneLocation?.chromosome() }
+    val chromosome: String? get() { return geneLocation?.chromosome }
     //val startPosition: Int get() { return geneLocation?.start() ?: -1 }
     //val endPosition: Int get() { return geneLocation?.end() ?: -1 }
     val strand: Strand? get() { return geneLocation?.strand }
 }
 
 // store the anchor location and also the type of the gene segment
-data class VJAnchorGenomeLocation(val vjGeneType: VJGeneType, val genomeLocation: GenomeRegionStrand)
+data class VJAnchorGenomeLocation(val vjGeneType: VJGeneType, val genomeLocation: GenomicLocation)
 {
     val vj: VJ get() = vjGeneType.vj
     val chromosome: String get() = genomeLocation.chromosome
