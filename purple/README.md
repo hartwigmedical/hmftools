@@ -567,9 +567,18 @@ if there are three or more mutations of that type, strand and context localised 
 
 For each point mutation we determined the clonality and biallelic status by comparing the estimated number of copies of the variant to the local copy number at the exact base of the variant.    The copy number of each variant is calculated by adjusting the observed VAF by the purity and then multiplying by the local copy number to work out the absolute number of chromatids that contain the variant. 
 
-We mark a mutation as biallelic (i.e. no wild type remaining) if Variant copy number > local copy number - 0.5. 
-The 0.5 tolerance is used to allow for the binomial distribution of VAF measurements for each variant. 
-For example, if the local copy number is 2 than any somatic variant with estimated variant copy number > 1.5 is marked as biallelic.
+To determine whether a mutation should be marked as biallelic (i.e. no wild type remaining), there are two cases. 
+
+If the local minor allele copy number is less than 0.5, then the mutation is marked as biallelic if Variant copy number > local copy number - 0.5.
+The 0.5 tolerance is used to allow for the binomial distribution of VAF measurements for each variant.
+For example, if the local copy number is 2 and the local minor allele copy number is 0, then any somatic variant with estimated variant copy number > 1.5 is marked as biallelic.
+
+If the local minor allele copy number is at least 0.5, then an additional check is done. 
+In this case a biallelic state is only possible if the minor allele copy number is measured incorrectly or the mutation has developed independently on both alleles.
+Such independent identical mutations are not very likely, so when the local minor allele copy number is at least 0.5 a mutation is marked biallelic if both:
+- Variant copy number > local copy number - 0.5.
+- The probability to see at least the observed number of reads with the mutation, assuming that the variant only exists on the major allele, is at most 0.5%.
+  - More precisely: `1 - Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN), AlleleReadCount-1)<0.005`, where `Poisson` is the Poisson cumulative probability density function.
 
 For each variant we also determine a probability that it is subclonal. This is achieved via a two-step process. 
 
