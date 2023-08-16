@@ -39,10 +39,7 @@ public class DoidCohortMapper implements CohortMapper {
 
         String mappedCohort = CohortConstants.DOID_COMBINATION_MAP.get(sample.doids());
         if (mappedCohort != null) {
-            LOGGER.debug("Mapping {} to {} because of specific doid combination: {}",
-                    sample.sampleId(),
-                    mappedCohort,
-                    sample.doids());
+            LOGGER.debug("Mapping {} to {} because of specific doid combination: {}", sample.sampleId(), mappedCohort, sample.doids());
             return mappedCohort;
         }
 
@@ -85,7 +82,7 @@ public class DoidCohortMapper implements CohortMapper {
         return include && !exclude;
     }
 
-    @Nullable
+    @NotNull
     private static String pickBestCancerType(@NotNull Sample sample, @NotNull Multimap<String, CohortMapping> positiveMatchesPerDoid) {
         List<CohortMapping> bestMappings = Lists.newArrayList();
         for (Map.Entry<String, Collection<CohortMapping>> entry : positiveMatchesPerDoid.asMap().entrySet()) {
@@ -94,8 +91,7 @@ public class DoidCohortMapper implements CohortMapper {
                 bestMappings.add(mappings.iterator().next());
             } else if (mappings.size() > 1) {
                 String doid = entry.getKey();
-                LOGGER.error("DOID '{}' for {} matched to multiple cancer types: '{}'", doid, sample.sampleId(), toString(mappings));
-                return null;
+                throw new IllegalStateException("DOID " + doid + " for " + sample.sampleId() + " matched to multiple cancer types: " + toString(mappings));
             }
         }
 
@@ -105,10 +101,7 @@ public class DoidCohortMapper implements CohortMapper {
             for (int i = 1; i < bestMappings.size(); i++) {
                 CohortMapping compare = bestMappings.get(i);
                 if (bestMapping.preferenceRank() == compare.preferenceRank() && !bestMapping.cancerType().equals(compare.cancerType())) {
-                    LOGGER.error("Multiple different cancer types for {} with same preference rank: '{}'",
-                            toString(sample),
-                            toString(bestMappings));
-                    return null;
+                    throw new IllegalStateException("Multiple different cancer types for " + toString(sample) + " with same preference rank: " + toString(bestMappings));
                 }
             }
         }
