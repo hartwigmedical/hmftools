@@ -30,7 +30,8 @@ public class MissenseConfig
     public final List<String> GeneIds;
     public final List<String> Alleles;
 
-    public final int[] PeptideLengths;
+    public final int PeptideLengthMin;
+    public final int PeptideLengthMax;
     public final int FlankLength;
 
     public final double LikelihoodCutoff;
@@ -44,7 +45,8 @@ public class MissenseConfig
 
     public MissenseConfig(final ConfigBuilder configBuilder)
     {
-        PeptideLengths = new int[] { MIN_PEPTIDE_LENGTH, REF_PEPTIDE_LENGTH };
+        PeptideLengthMin = MIN_PEPTIDE_LENGTH;
+        PeptideLengthMax = REF_PEPTIDE_LENGTH;
         FlankLength = FLANK_AA_COUNT;
 
         GeneIds = loadGeneIdsFile(configBuilder.getValue(GENE_ID_FILE));
@@ -81,7 +83,8 @@ public class MissenseConfig
 
     public MissenseConfig(int peptideLength, int flankLength)
     {
-        PeptideLengths = new int[] { peptideLength };
+        PeptideLengthMin = peptideLength;
+        PeptideLengthMax = peptideLength;
         FlankLength = flankLength;
         GeneIds = Lists.newArrayList();
         Alleles = Lists.newArrayList();
