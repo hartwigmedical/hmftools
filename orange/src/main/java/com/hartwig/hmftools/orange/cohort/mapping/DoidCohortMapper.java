@@ -37,12 +37,13 @@ public class DoidCohortMapper implements CohortMapper {
     public String cancerTypeForSample(@NotNull Sample sample) {
         Multimap<String, CohortMapping> positiveMatchesPerDoid = ArrayListMultimap.create();
 
-        if (CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_OTHER.contains(sample.doids())) {
+        String mappedCohort = CohortConstants.DOID_COMBINATION_MAP.get(sample.doids());
+        if (mappedCohort != null) {
             LOGGER.debug("Mapping {} to {} because of specific doid combination: {}",
                     sample.sampleId(),
-                    CohortConstants.COHORT_OTHER,
+                    mappedCohort,
                     sample.doids());
-            return CohortConstants.COHORT_OTHER;
+            return mappedCohort;
         }
 
         for (String doid : sample.doids()) {
@@ -93,7 +94,7 @@ public class DoidCohortMapper implements CohortMapper {
                 bestMappings.add(mappings.iterator().next());
             } else if (mappings.size() > 1) {
                 String doid = entry.getKey();
-                LOGGER.warn("DOID '{}' for {} matched to multiple cancer types: '{}'", doid, sample.sampleId(), toString(mappings));
+                LOGGER.error("DOID '{}' for {} matched to multiple cancer types: '{}'", doid, sample.sampleId(), toString(mappings));
                 return null;
             }
         }
@@ -104,7 +105,7 @@ public class DoidCohortMapper implements CohortMapper {
             for (int i = 1; i < bestMappings.size(); i++) {
                 CohortMapping compare = bestMappings.get(i);
                 if (bestMapping.preferenceRank() == compare.preferenceRank() && !bestMapping.cancerType().equals(compare.cancerType())) {
-                    LOGGER.warn("Multiple different cancer types for {} with same preference rank: '{}'",
+                    LOGGER.error("Multiple different cancer types for {} with same preference rank: '{}'",
                             toString(sample),
                             toString(bestMappings));
                     return null;
