@@ -123,7 +123,7 @@ public class CopyNumberProfile
             int clonalRatios = 0;
 
             List<Integer> segmentGcCounts = Lists.newArrayList();
-            Map<Integer,Integer> cnLevelRatioaTotals = Maps.newHashMap();
+            Map<Integer,Integer> cnLevelRatiosTotals = Maps.newHashMap();
             int maxCnLevelCount = 0;
 
             for(CopyNumberGcData cnSegment : mCopyNumberGcRatios)
@@ -136,10 +136,10 @@ public class CopyNumberProfile
                      clonalRatios += ratioCount;
                      segmentGcCounts.add(ratioCount);
 
-                     Integer levelTotal = cnLevelRatioaTotals.get(cnSegment.CopyNumberLevel);
+                     Integer levelTotal = cnLevelRatiosTotals.get(cnSegment.CopyNumberLevel);
                      int newTotal = levelTotal != null ? levelTotal + ratioCount : ratioCount;
                      maxCnLevelCount = max(maxCnLevelCount, newTotal);
-                     cnLevelRatioaTotals.put(cnSegment.CopyNumberLevel, newTotal);
+                     cnLevelRatiosTotals.put(cnSegment.CopyNumberLevel, newTotal);
                  }
             }
 
