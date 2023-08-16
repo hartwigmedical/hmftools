@@ -578,7 +578,7 @@ In this case a biallelic state is only possible if the minor allele copy number 
 Such independent identical mutations are not very likely, so when the local minor allele copy number is at least 0.5 a mutation is marked biallelic if both:
 - Variant copy number > local copy number - 0.5.
 - The probability to see at least the observed number of reads with the mutation, assuming that the variant only exists on the major allele, is at most 0.5%.
-  - More precisely: `1 - Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN), AlleleReadCount-1)<0.005`, where `Poisson` is the Poisson cumulative probability density function.
+  - More precisely: `1 - Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN)], AlleleReadCount-1)<0.005`, where `Poisson` is the Poisson cumulative probability density function.
 
 For each variant we also determine a probability that it is subclonal. This is achieved via a two-step process. 
 
