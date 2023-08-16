@@ -37,28 +37,13 @@ public class DoidCohortMapper implements CohortMapper {
     public String cancerTypeForSample(@NotNull Sample sample) {
         Multimap<String, CohortMapping> positiveMatchesPerDoid = ArrayListMultimap.create();
 
-        if (CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_OTHER.contains(sample.doids())) {
+        String mappedCohort = CohortConstants.DOID_COMBINATION_MAP.get(sample.doids());
+        if (mappedCohort != null) {
             LOGGER.debug("Mapping {} to {} because of specific doid combination: {}",
                     sample.sampleId(),
-                    CohortConstants.COHORT_OTHER,
+                    mappedCohort,
                     sample.doids());
-            return CohortConstants.COHORT_OTHER;
-        }
-
-        if (CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.contains(sample.doids())) {
-            LOGGER.debug("Mapping {} to {} because of specific doid combination: {}",
-                    sample.sampleId(),
-                    CohortConstants.COHORT_ESOPHAGUS,
-                    sample.doids());
-            return CohortConstants.COHORT_ESOPHAGUS;
-        }
-
-        if (CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_STOMACH.contains(sample.doids())) {
-            LOGGER.debug("Mapping {} to {} because of specific doid combination: {}",
-                    sample.sampleId(),
-                    CohortConstants.COHORT_STOMACH,
-                    sample.doids());
-            return CohortConstants.COHORT_STOMACH;
+            return mappedCohort;
         }
 
         for (String doid : sample.doids()) {

@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.orange.cohort.mapping;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -17,6 +19,7 @@ public final class CohortConstants {
     public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_OTHER = Lists.newArrayList();
     public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS = Lists.newArrayList();
     public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_STOMACH = Lists.newArrayList();
+    public static final Map<Set<String>, String> DOID_COMBINATION_MAP = new HashMap<>();
 
     static {
         // The combination of liver cancer and bile duct is occasionally used but not easily mapped.
@@ -48,6 +51,16 @@ public final class CohortConstants {
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("4944", "10534"));
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("4944", "5517"));
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("4944", "3717"));
+
+        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_OTHER) {
+            DOID_COMBINATION_MAP.put(combination, COHORT_OTHER);
+        }
+        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS) {
+            DOID_COMBINATION_MAP.put(combination, COHORT_ESOPHAGUS);
+        }
+        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_STOMACH) {
+            DOID_COMBINATION_MAP.put(combination, COHORT_STOMACH);
+        }
     }
 
     private CohortConstants() {
