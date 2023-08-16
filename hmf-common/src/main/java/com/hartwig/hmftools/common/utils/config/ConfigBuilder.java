@@ -243,7 +243,7 @@ public class ConfigBuilder
 
         setLogLevel(this);
 
-        printAppVersion(false);
+        printAppVersion(true);
     }
 
     public boolean parseCommandLine(final String[] args)
