@@ -46,19 +46,4 @@ object CiderConstants
 
     // blast uses v38
     val BLAST_REF_GENOME_VERSION = RefGenomeVersion.V38
-
-    enum class VjAnchorTemplateTsvColumn
-    {
-        gene,
-        allele,
-        chr,
-        posStart,
-        posEnd,
-        strand,
-        anchorStart,
-        anchorEnd,
-        anchorSequence,
-        anchorAA,
-        sequence
-    }
 }

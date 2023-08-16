@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.cider.blastn
 
+import com.hartwig.hmftools.cider.CiderConstants
+import com.hartwig.hmftools.cider.genes.GenomicLocation
 import com.hartwig.hmftools.common.genome.region.Strand
 
 data class BlastnMatch(
@@ -21,3 +23,44 @@ data class BlastnMatch(
     val alignedPartOfQuerySeq: String,
     val alignedPartOfSubjectSeq: String
 )
+{
+    fun toGenomicLocation() : GenomicLocation?
+    {
+        require(subjectTitle.contains(REF_GENOME_NAME)) { "subject title must contain $REF_GENOME_NAME" }
+
+        // parse the chromosome / assembly
+        val m = CHROMOSOME_ASSEMBLY_REGEX.matchEntire(subjectTitle)
+
+        if (m == null)
+        {
+            // might not have a chromosome
+            return null
+        }
+
+        val chromosome = CiderConstants.BLAST_REF_GENOME_VERSION.versionedChromosome(m.groupValues[1]).intern()
+        val assembly = m.groupValues[2].intern()
+
+        val start: Int
+        val end: Int
+
+        when (subjectFrame)
+        {
+            Strand.FORWARD -> { start = subjectAlignStart; end = subjectAlignEnd }
+            Strand.REVERSE -> { start = subjectAlignEnd; end = subjectAlignStart }
+        }
+
+        return GenomicLocation(isPrimaryAssembly(assembly), assembly, chromosome, start, end, subjectFrame)
+    }
+
+    companion object
+    {
+        val REF_GENOME_NAME = "GRCh38.p13"
+        val CHROMOSOME_ASSEMBLY_REGEX = Regex("^Homo sapiens chromosome (\\w+).*, GRCh38.p13 (.+)$")
+        val PRIMARY_ASSEMBLY_NAME = "Primary Assembly".intern()
+
+        fun isPrimaryAssembly(assemblyName: String) : Boolean
+        {
+            return assemblyName == PRIMARY_ASSEMBLY_NAME
+        }
+    }
+}

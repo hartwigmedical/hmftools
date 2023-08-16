@@ -55,6 +55,22 @@ public class DoidCohortMapperTest {
         assertEquals(CohortConstants.COHORT_OTHER, mapper.cancerTypeForSample(sample));
     }
 
+    @Test
+    public void hardCodedSetsMapToEsophagus() {
+        DoidCohortMapper mapper = createTestCohortMapper();
+        Sample sample =
+                ImmutableSample.builder().sampleId("TestSample").doids(CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.get(0)).build();
+        assertEquals(CohortConstants.COHORT_ESOPHAGUS, mapper.cancerTypeForSample(sample));
+    }
+
+    @Test
+    public void hardCodedSetsMapToStomach() {
+        DoidCohortMapper mapper = createTestCohortMapper();
+        Sample sample =
+                ImmutableSample.builder().sampleId("TestSample").doids(CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_STOMACH.get(0)).build();
+        assertEquals(CohortConstants.COHORT_STOMACH, mapper.cancerTypeForSample(sample));
+    }
+
     @Nullable
     private static String evaluate(@NotNull DoidCohortMapper mapper, @NotNull String... doids) {
         Sample sample = ImmutableSample.builder().sampleId("TestSample").addDoids(doids).build();
