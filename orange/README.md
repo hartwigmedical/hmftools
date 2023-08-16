@@ -217,6 +217,8 @@ investigate potential causes for QC failure.
       - `isofox_gene_distribution_csv` parameter has been renamed to `isofox_gene_distribution`
       - `isofox_alt_sj_cohort_csv` parameter has been renamed to `isofox_alt_sj_cohort`
       - `log_level` parameter has been added to allow manual override of the default log level
+    - DOID cohort mapper results in error instead of warn in case of unresolvable DOID combinations
+    - Various DOID combinations are added to resolve to Esophagus or Stomach cohorts when combined with Gastroesophageal cancer DOIDs
 - [2.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.5.0)
     - Bugfix: Maintain linx clusters after ORANGE germline conversion
     - Include breakdown by classifier in CUPPA predictions
