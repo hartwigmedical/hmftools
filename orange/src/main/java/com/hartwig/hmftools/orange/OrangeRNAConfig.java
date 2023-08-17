@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.getToolDirectory;
 
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
@@ -15,7 +16,6 @@ import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.orange.util.Config;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +31,6 @@ public interface OrangeRNAConfig
 
     static void registerConfig(final ConfigBuilder configBuilder)
     {
-
         configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
 
         configBuilder.addPath(ISOFOX_GENE_DISTRIBUTION_CSV, false, "(Optional) Path to isofox gene distribution CSV");

@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CHORD_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CUPPA_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.FLAGSTAT_DIR;
@@ -21,7 +19,6 @@ import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PURPL
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SAGE_GERMLINE_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SAGE_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SIGS_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.VIRUS_BREAKEND_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.VIRUS_INTERPRETER_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
@@ -56,9 +53,9 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DE
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -82,7 +79,6 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.orange.util.Config;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -286,7 +282,10 @@ public interface OrangeConfig
 
     boolean addDisclaimer();
 
-    default boolean tumorOnlyMode() { return referenceSampleId() == null || referenceSampleId().isEmpty(); }
+    default boolean tumorOnlyMode()
+    {
+        return referenceSampleId() == null || referenceSampleId().isEmpty();
+    }
 
     @NotNull
     static OrangeConfig createConfig(final ConfigBuilder configBuilder)
@@ -451,10 +450,14 @@ public interface OrangeConfig
             final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir)
     {
         if(configBuilder.hasValue(configStr))
+        {
             return configBuilder.getValue(configStr);
+        }
 
         if(pipelineDir == null || sampleId == null)
+        {
             return null;
+        }
 
         String directory = pipelineDir + sampleId + File.separator + FLAGSTAT_DIR;
         return FlagstatFile.generateFilename(directory, sampleId);
@@ -464,10 +467,14 @@ public interface OrangeConfig
             final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir)
     {
         if(configBuilder.hasValue(configStr))
+        {
             return configBuilder.getValue(configStr);
+        }
 
         if(pipelineDir == null || sampleId == null)
+        {
             return null;
+        }
 
         String directory = pipelineDir + sampleId + File.separator + METRICS_DIR;
         return WGSMetricsFile.generateFilename(directory, sampleId);
