@@ -213,6 +213,8 @@ investigate potential causes for QC failure.
 - Upcoming
     - DOID cohort mapper throws exception instead of warn in case of invalid DOID combinations
     - Various DOID combinations are added to resolve to Esophagus or Stomach cohorts when combined with Gastroesophageal cancer DOIDs
+    - A bug has been fixed with respect to using transcripts from the ensembl data cache that are not ensembl transcripts.
+    - Test data and test report have been bumped to v5.33 pipeline
 - [2.6.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.6.0)
     - Various updates to configuration:
         - All inputs are now configured via one directory per tool rather than individual files
