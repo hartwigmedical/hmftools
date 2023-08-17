@@ -209,16 +209,18 @@ investigate potential causes for QC failure.
 - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ### Version History and Download Links
+
 - Upcoming
-    - Various updates to configuration:
-      - All inputs are now configured via one directory per tool rather than individual files
-      - `ensembl_data_directory` parameter has been renamed to `ensembl_data_dir`
-      - `driver_gene_panel_tsv` parameter has been renamed to `driver_gene_panel`
-      - `isofox_gene_distribution_csv` parameter has been renamed to `isofox_gene_distribution`
-      - `isofox_alt_sj_cohort_csv` parameter has been renamed to `isofox_alt_sj_cohort`
-      - `log_level` parameter has been added to allow manual override of the default log level
     - DOID cohort mapper throws exception instead of warn in case of invalid DOID combinations
     - Various DOID combinations are added to resolve to Esophagus or Stomach cohorts when combined with Gastroesophageal cancer DOIDs
+- [2.6.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.6.0)
+    - Various updates to configuration:
+        - All inputs are now configured via one directory per tool rather than individual files
+        - `ensembl_data_directory` parameter has been renamed to `ensembl_data_dir`
+        - `driver_gene_panel_tsv` parameter has been renamed to `driver_gene_panel`
+        - `isofox_gene_distribution_csv` parameter has been renamed to `isofox_gene_distribution`
+        - `isofox_alt_sj_cohort_csv` parameter has been renamed to `isofox_alt_sj_cohort`
+        - `log_level` parameter has been added to allow manual override of the default log level
 - [2.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.5.0)
     - Bugfix: Maintain linx clusters after ORANGE germline conversion
     - Include breakdown by classifier in CUPPA predictions
