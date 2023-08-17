@@ -8,7 +8,6 @@ import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import com.hartwig.hmftools.orange.report.ReportWriter;
 import com.hartwig.hmftools.orange.report.ReportWriterFactory;
 
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +19,7 @@ public class OrangeApplication
     private static final String APPLICATION = "ORANGE";
     public static final String VERSION = OrangeApplication.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws IOException, ParseException
+    public static void main(String[] args) throws IOException
     {
         LOGGER.info("Running {} v{}", APPLICATION, VERSION);
 
