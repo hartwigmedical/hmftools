@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.neo.missense;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
@@ -8,6 +9,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
 import static com.hartwig.hmftools.neo.bind.ScoreConfig.SCORE_FILE_DIR;
 import static com.hartwig.hmftools.neo.missense.MissenseConfig.registerConfig;
 import static com.hartwig.hmftools.neo.score.NeoRnaData.NO_TPM_VALUE;
@@ -42,7 +44,6 @@ public class MissensePeptideScorer
     private final MissenseWriter mWriter;
     private final TpmMediansCache mCohortTpmMedians;
 
-    private final MissenseCalcs mMissenseCalcs;
     private final List<String> mAlleleList;
 
     public MissensePeptideScorer(final ConfigBuilder configBuilder)
@@ -55,8 +56,6 @@ public class MissensePeptideScorer
         mConfig = new MissenseConfig(configBuilder);
 
         mPeptideScorer = configBuilder.hasValue(SCORE_FILE_DIR) ? new BindScorer(new ScoreConfig(configBuilder)) : null;
-
-        mMissenseCalcs = new MissenseCalcs(mConfig, mRefGenome);
 
         mAlleleList = Lists.newArrayList();
 
@@ -100,20 +99,41 @@ public class MissensePeptideScorer
 
         if(mConfig.Threads > 1)
         {
-            for(int i = 0; i < min(mConfig.GeneIds.size(), mConfig.Threads); ++i)
+            boolean allocateByGene = mConfig.GeneIds.size() >= mAlleleList.size();
+            int maxItems = allocateByGene ? mConfig.GeneIds.size() : mAlleleList.size();
+
+            for(int i = 0; i < min(maxItems, mConfig.Threads); ++i)
             {
                 geneTasks.add(new GeneTask(i));
             }
 
             int taskIndex = 0;
-            for(String geneId : mConfig.GeneIds)
+
+            if(allocateByGene)
             {
-                if(taskIndex >= geneTasks.size())
-                    taskIndex = 0;
+                geneTasks.forEach(x -> x.Alleles.addAll(mAlleleList));
 
-                geneTasks.get(taskIndex).GeneIds.add(geneId);
+                for(String geneId : mConfig.GeneIds)
+                {
+                    if(taskIndex >= geneTasks.size())
+                        taskIndex = 0;
 
-                ++taskIndex;
+                    geneTasks.get(taskIndex).GeneIds.add(geneId);
+                    ++taskIndex;
+                }
+            }
+            else
+            {
+                geneTasks.forEach(x -> x.GeneIds.addAll(mConfig.GeneIds));
+
+                for(String allele : mAlleleList)
+                {
+                    if(taskIndex >= geneTasks.size())
+                        taskIndex = 0;
+
+                    geneTasks.get(taskIndex).Alleles.add(allele);
+                    ++taskIndex;
+                }
             }
 
             final List<Callable> callableList = geneTasks.stream().collect(Collectors.toList());
@@ -123,6 +143,7 @@ public class MissensePeptideScorer
         {
             GeneTask geneTask = new GeneTask(0);
             geneTask.GeneIds.addAll(mConfig.GeneIds);
+            geneTask.Alleles.addAll(mAlleleList);
             geneTask.call();
         }
 
@@ -134,12 +155,16 @@ public class MissensePeptideScorer
     private class GeneTask implements Callable
     {
         public final List<String> GeneIds;
+        public final List<String> Alleles;
         private final int mTaskId;
+        private final MissenseCalcs mMissenseCalcs;
 
         public GeneTask(int taskId)
         {
             GeneIds = Lists.newArrayList();
+            Alleles = Lists.newArrayList();
             mTaskId = taskId;
+            mMissenseCalcs = new MissenseCalcs(mConfig, mRefGenome);
         }
 
         @Override
@@ -147,7 +172,9 @@ public class MissensePeptideScorer
         {
             int geneCount = 0;
 
-            for(String geneId : mConfig.GeneIds)
+            NE_LOGGER.info("{}: processing {} genes for {} alleles", mTaskId, GeneIds.size(), Alleles.size());
+
+            for(String geneId : GeneIds)
             {
                 GeneData geneData = mEnsemblDataCache.getGeneDataById(geneId);
 
@@ -170,7 +197,7 @@ public class MissensePeptideScorer
 
                     if(mPeptideScorer != null)
                     {
-                        scorePeptides(mMissenseCalcs.peptideData());
+                        scorePeptides(mMissenseCalcs.peptideData(), Alleles);
                     }
                     else
                     {
@@ -190,7 +217,7 @@ public class MissensePeptideScorer
         }
     }
 
-    private void scorePeptides(final List<MissensePeptide> peptideData)
+    private void scorePeptides(final List<MissensePeptide> peptideData, final List<String> alleles)
     {
         if(peptideData.isEmpty())
             return;
@@ -198,7 +225,7 @@ public class MissensePeptideScorer
         // NOTE: peptides are processed gene by gene, so all have the same transcript
         double[] tpmValues = mCohortTpmMedians.getTranscriptTpm(peptideData.get(0).TransName, null);
 
-        for(String allele : mAlleleList)
+        for(String allele : alleles)
         {
             NE_LOGGER.debug("gene({}) allele({}) calculating binding scores for {} peptides",
                     peptideData.get(0).GeneName, allele, peptideData.size());
@@ -212,12 +239,17 @@ public class MissensePeptideScorer
 
                 mPeptideScorer.calcScoreData(bindData);
 
-                if(mMissenseCalcs.passesRankThreshold(bindData.likelihoodRank()))
+                if(passesRankThreshold(bindData.likelihoodRank()))
                 {
                     mWriter.writePeptideData(misensePeptide, bindData);
                 }
             }
         }
+    }
+
+    private boolean passesRankThreshold(double value)
+    {
+        return value != INVALID_CALC && (mConfig.LikelihoodCutoff == 0 || mConfig.LikelihoodCutoff > 0 && value <= mConfig.LikelihoodCutoff);
     }
 
     public static void main(@NotNull final String[] args)

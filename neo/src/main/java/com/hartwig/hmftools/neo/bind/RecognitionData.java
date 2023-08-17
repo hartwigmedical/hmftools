@@ -42,7 +42,10 @@ public class RecognitionData
 
     public static boolean loadRecognitionData(final String filename, final List<RecognitionData> recognitionData)
     {
-        if(filename == null || !Files.exists(Paths.get(filename)))
+        if(filename == null)
+            return true;
+
+        if(!Files.exists(Paths.get(filename)))
         {
             NE_LOGGER.error("recognition data file({}) not found", filename);
             return false;

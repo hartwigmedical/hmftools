@@ -326,9 +326,4 @@ public class MissenseCalcs
             mPeptideData.add(peptideData);
         }
     }
-
-    public boolean passesRankThreshold(double value)
-    {
-        return value != INVALID_CALC && (mConfig.LikelihoodCutoff == 0 || mConfig.LikelihoodCutoff > 0 && value <= mConfig.LikelihoodCutoff);
-    }
 }

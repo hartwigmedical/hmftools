@@ -40,13 +40,24 @@ public class MissenseConfig
     public final String OutputId;
     public final int Threads;
 
+    private static final String PEPTIDE_LENGTHS = "peptide_lengths";
     private static final String SPECIFIC_ALLELES = "specific_alleles";
     private static final String KEEP_DUPLICATES = "keep_duplicates";
 
     public MissenseConfig(final ConfigBuilder configBuilder)
     {
-        PeptideLengthMin = MIN_PEPTIDE_LENGTH;
-        PeptideLengthMax = REF_PEPTIDE_LENGTH;
+        if(configBuilder.hasValue(PEPTIDE_LENGTHS))
+        {
+            String[] lengths = configBuilder.getValue(PEPTIDE_LENGTHS).split("-",2);
+            PeptideLengthMin = Integer.parseInt(lengths[0]);
+            PeptideLengthMax = Integer.parseInt(lengths[1]);
+        }
+        else
+        {
+            PeptideLengthMin = MIN_PEPTIDE_LENGTH;
+            PeptideLengthMax = REF_PEPTIDE_LENGTH;
+        }
+
         FlankLength = FLANK_AA_COUNT;
 
         GeneIds = loadGeneIdsFile(configBuilder.getValue(GENE_ID_FILE));
@@ -69,6 +80,7 @@ public class MissenseConfig
         ScoreConfig.registerConfig(configBuilder);
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(GENE_ID_FILE, true, GENE_ID_FILE_DESC);
+        configBuilder.addConfigItem(PEPTIDE_LENGTHS, false, "Peptide lengths in form min-max (default 8-12)");
         configBuilder.addConfigItem(SPECIFIC_ALLELES, false, "Specific alleles to score, must be from training set");
 
         configBuilder.addDecimal(
