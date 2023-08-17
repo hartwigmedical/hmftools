@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.amber.AmberPatient;
-import com.hartwig.hmftools.common.amber.ImmutableAmberPatient;
+import com.hartwig.hmftools.patientdb.amber.ImmutableAmberPatient;
 
 import org.junit.Test;
 
