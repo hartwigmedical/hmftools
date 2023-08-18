@@ -21,10 +21,12 @@ public class PaveAlgo
 
     @NotNull
     private final EnsemblDataCache ensemblDataCache;
+    private boolean expectGenesExist;
 
     public PaveAlgo(@NotNull final EnsemblDataCache ensemblDataCache)
     {
         this.ensemblDataCache = ensemblDataCache;
+        expectGenesExist = true;
     }
 
     @Nullable
@@ -55,7 +57,10 @@ public class PaveAlgo
         {
             if(!gene.isEmpty())
             {
-                LOGGER.warn("Could not resolve gene against ensembl data cache: '{}'", gene);
+                if(expectGenesExist)
+                {
+                    LOGGER.warn("Could not resolve gene against ensembl data cache: '{}'", gene);
+                }
             }
             return null;
         }
@@ -182,4 +187,7 @@ public class PaveAlgo
     {
         return ImmutablePaveEntry.builder().affectedCodon(affectedCodon).affectedExon(affectedExon).build();
     }
+
+    @VisibleForTesting
+    public void setExpectedGenesMissing() { expectGenesExist = false;}
 }

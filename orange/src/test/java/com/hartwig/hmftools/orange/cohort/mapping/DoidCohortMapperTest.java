@@ -18,10 +18,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class DoidCohortMapperTest {
+public class DoidCohortMapperTest
+{
 
     @Test
-    public void canMatchDoidsToCancerType() {
+    public void canMatchDoidsToCancerType()
+    {
         DoidCohortMapper mapper = createTestCohortMapper();
 
         assertNull(evaluate(mapper, "not a doid"));
@@ -59,7 +61,8 @@ public class DoidCohortMapperTest {
     }
 
     @Test
-    public void hardCodedSetsMapToOther() {
+    public void hardCodedSetsMapToOther()
+    {
         DoidCohortMapper mapper = createTestCohortMapper();
         Sample sample =
                 ImmutableSample.builder().sampleId("TestSample").doids(CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_OTHER.get(0)).build();
@@ -67,7 +70,8 @@ public class DoidCohortMapperTest {
     }
 
     @Test
-    public void hardCodedSetsMapToEsophagus() {
+    public void hardCodedSetsMapToEsophagus()
+    {
         DoidCohortMapper mapper = createTestCohortMapper();
         Sample sample = ImmutableSample.builder()
                 .sampleId("TestSample")
@@ -77,7 +81,8 @@ public class DoidCohortMapperTest {
     }
 
     @Test
-    public void hardCodedSetsMapToStomach() {
+    public void hardCodedSetsMapToStomach()
+    {
         DoidCohortMapper mapper = createTestCohortMapper();
         Sample sample =
                 ImmutableSample.builder().sampleId("TestSample").doids(CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_STOMACH.get(0)).build();
@@ -85,12 +90,14 @@ public class DoidCohortMapperTest {
     }
 
     @Nullable
-    private static String evaluate(@NotNull DoidCohortMapper mapper, @NotNull String... doids) {
+    private static String evaluate(@NotNull DoidCohortMapper mapper, @NotNull String... doids)
+    {
         Sample sample = ImmutableSample.builder().sampleId("TestSample").addDoids(doids).build();
         return mapper.cancerTypeForSample(sample);
     }
 
-    private static DoidCohortMapper createTestCohortMapper() {
+    private static DoidCohortMapper createTestCohortMapper()
+    {
         ListMultimap<String, String> relationship = ArrayListMultimap.create();
         relationship.put("doid1.2", "doid1.1");
         relationship.put("doid1.1", "doid1.0");

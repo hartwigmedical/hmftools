@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -113,6 +114,8 @@ public class OrangeAlgo
     @NotNull
     private final PlotManager plotManager;
 
+    private boolean suppressGeneWarnings;
+
     @NotNull
     public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException
     {
@@ -164,6 +167,7 @@ public class OrangeAlgo
         this.knownFusionCache = knownFusionCache;
         this.ensemblDataCache = ensemblDataCache;
         this.plotManager = plotManager;
+        suppressGeneWarnings = false;
     }
 
     @NotNull
@@ -191,7 +195,11 @@ public class OrangeAlgo
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
-        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
+        PaveAlgo pave = new PaveAlgo(ensemblDataCache);
+        if(suppressGeneWarnings)
+            pave.setExpectedGenesMissing();
+
+        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
         PurpleInterpreter purpleInterpreter =
                 new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
@@ -736,4 +744,7 @@ public class OrangeAlgo
     {
         return ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build();
     }
+
+    @VisibleForTesting
+    public void setSuppressGeneWarnings() { suppressGeneWarnings = true;}
 }

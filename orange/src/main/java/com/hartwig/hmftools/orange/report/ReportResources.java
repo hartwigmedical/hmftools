@@ -1,10 +1,19 @@
 package com.hartwig.hmftools.orange.report;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.orange.OrangeApplication;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
@@ -43,8 +52,8 @@ public class ReportResources
     public static final DeviceRgb PALETTE_ORANGE_5 = new DeviceRgb(175, 125, 0);
     public static final DeviceRgb PALETTE_ORANGE_6 = new DeviceRgb(155, 115, 0);
 
-    private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
-    private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
+    private static final String FONT_REGULAR_PATH = "/fonts/nimbus-sans/NimbusSansL-Regular.ttf";
+    private static final String FONT_BOLD_PATH = "/fonts/nimbus-sans/NimbusSansL-Bold.ttf";
 
     @NotNull
     private final PdfFont fontRegular;

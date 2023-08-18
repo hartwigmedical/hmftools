@@ -11,49 +11,62 @@ import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 
 import org.junit.Test;
 
-public class OrangeAlgoTest {
+public class OrangeAlgoTest
+{
 
     @Test
-    public void canRunReportFromTestDirPanel() throws IOException {
+    public void canRunReportFromTestDirPanel() throws IOException
+    {
         OrangeConfig config = TestOrangeConfigFactory.createPanelConfig();
-        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+        OrangeAlgo algo = createOrangeAlgo(config);
 
         assertNotNull(algo.run(config));
     }
 
     @Test
-    public void canRunReportFromTestDirWGSTumorOnly() throws IOException {
+    public void canRunReportFromTestDirWGSTumorOnly() throws IOException
+    {
         OrangeConfig config = TestOrangeConfigFactory.createWGSConfigTumorOnly();
-        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+        OrangeAlgo algo = createOrangeAlgo(config);
 
         assertNotNull(algo.run(config));
     }
 
     @Test
-    public void canRunReportFromTestDirWGSTumorNormal() throws IOException {
+    public void canRunReportFromTestDirWGSTumorNormal() throws IOException
+    {
         OrangeConfig config = TestOrangeConfigFactory.createWGSConfigTumorNormal();
-        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+        OrangeAlgo algo = createOrangeAlgo(config);
 
         assertNotNull(algo.run(config));
     }
 
     @Test
-    public void canRunReportFromTestDirWGTSTumorNormal() throws IOException {
+    public void canRunReportFromTestDirWGTSTumorNormal() throws IOException
+    {
         OrangeConfig config = TestOrangeConfigFactory.createWGTSConfigTumorNormal();
-        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+        OrangeAlgo algo = createOrangeAlgo(config);
 
         assertNotNull(algo.run(config));
     }
 
     @Test
-    public void canCreateReportWithoutTumorDoids() throws IOException {
+    public void canCreateReportWithoutTumorDoids() throws IOException
+    {
         OrangeConfig config = ImmutableOrangeConfig.builder()
                 .from(TestOrangeConfigFactory.createWGSConfigTumorNormal())
                 .primaryTumorDoids(Sets.newHashSet())
                 .build();
 
-        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+        OrangeAlgo algo = createOrangeAlgo(config);
 
         assertNotNull(algo.run(config));
+    }
+
+    private static OrangeAlgo createOrangeAlgo(final OrangeConfig config) throws IOException
+    {
+        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+        algo.setSuppressGeneWarnings();
+        return algo;
     }
 }

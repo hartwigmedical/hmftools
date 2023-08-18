@@ -73,6 +73,7 @@ public class PurpleVariantFactoryTest
                 .build();
 
         PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache());
+        paveAlgo.setExpectedGenesMissing();
         PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
 
         assertEquals(PurpleVariantType.INDEL, purpleVariant.type());
