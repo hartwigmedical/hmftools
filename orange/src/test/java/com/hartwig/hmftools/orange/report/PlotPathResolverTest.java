@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class PlotPathResolverTest {
+public class PlotPathResolverTest
+{
 
     @Test
-    public void canResolvePlotPaths() {
+    public void canResolvePlotPaths()
+    {
         PlotPathResolver nullResolver = new PlotPathResolver(null);
         PlotPathResolver realResolver = new PlotPathResolver("/path/to/output");
 

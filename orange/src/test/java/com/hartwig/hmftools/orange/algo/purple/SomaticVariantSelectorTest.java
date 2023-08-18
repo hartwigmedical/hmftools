@@ -15,10 +15,12 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 
 import org.junit.Test;
 
-public class SomaticVariantSelectorTest {
+public class SomaticVariantSelectorTest
+{
 
     @Test
-    public void canSelectUnreportedNearHotspots() {
+    public void canSelectUnreportedNearHotspots()
+    {
         PurpleVariant hotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.HOTSPOT).reported(false).build();
         PurpleVariant nearHotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.NEAR_HOTSPOT).reported(false).build();
         PurpleVariant nonHotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
@@ -34,7 +36,8 @@ public class SomaticVariantSelectorTest {
     }
 
     @Test
-    public void canSelectVariantsWithReportedPhaseSet() {
+    public void canSelectVariantsWithReportedPhaseSet()
+    {
         PurpleVariant withMatch = TestPurpleVariantFactory.builder().gene("gene").reported(false).addLocalPhaseSets(1).build();
         PurpleVariant withoutMatch = TestPurpleVariantFactory.builder().gene("gene").reported(false).addLocalPhaseSets(2).build();
         PurpleVariant withoutPhase = TestPurpleVariantFactory.builder().gene("gene").reported(false).build();
@@ -52,7 +55,8 @@ public class SomaticVariantSelectorTest {
     }
 
     @Test
-    public void canSelectVariantsRelevantForCuppa() {
+    public void canSelectVariantsRelevantForCuppa()
+    {
         String cuppaGene = SomaticVariantSelector.CUPPA_GENES.iterator().next();
         PurpleVariant cuppaRelevant =
                 TestPurpleVariantFactory.builder().gene(cuppaGene).type(PurpleVariantType.INDEL).repeatCount(4).reported(false).build();
@@ -72,7 +76,8 @@ public class SomaticVariantSelectorTest {
     }
 
     @Test
-    public void canSelectSynonymousVariantsForDriverGenes() {
+    public void canSelectSynonymousVariantsForDriverGenes()
+    {
         String gene = "driver";
         DriverGene driverGene = DriverGeneTestFactory.builder()
                 .gene(gene)
@@ -116,7 +121,8 @@ public class SomaticVariantSelectorTest {
     }
 
     @Test
-    public void canSelectSpliceRegionVariants() {
+    public void canSelectSpliceRegionVariants()
+    {
         DriverGene driverGeneYes = DriverGeneTestFactory.builder().gene("driver 1").reportSplice(true).build();
         DriverGene driverGeneNo = DriverGeneTestFactory.builder().gene("driver 2").reportSplice(false).build();
 

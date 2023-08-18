@@ -6,18 +6,21 @@ import java.nio.file.Files;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class PlotPathResolver {
-
+public class PlotPathResolver
+{
     @Nullable
     private final String outputDir;
 
-    PlotPathResolver(@Nullable final String outputDir) {
+    PlotPathResolver(@Nullable final String outputDir)
+    {
         this.outputDir = outputDir;
     }
 
     @NotNull
-    public String resolve(@NotNull String path) {
-        if (outputDir == null || Files.exists(new File(path).toPath())) {
+    public String resolve(@NotNull String path)
+    {
+        if(outputDir == null || Files.exists(new File(path).toPath()))
+        {
             return path;
         }
 

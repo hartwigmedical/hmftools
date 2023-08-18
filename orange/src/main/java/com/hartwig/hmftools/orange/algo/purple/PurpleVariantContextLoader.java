@@ -163,7 +163,8 @@ public class PurpleVariantContextLoader
     }
 
     @NotNull
-    private static List<VariantTranscriptImpact> filterOutCanonicalImpact(@NotNull List<VariantTranscriptImpact> impacts, String canonicalTranscript)
+    private static List<VariantTranscriptImpact> filterOutCanonicalImpact(@NotNull List<VariantTranscriptImpact> impacts,
+            String canonicalTranscript)
     {
         return impacts.stream().filter(impact -> !impact.Transcript.equals(canonicalTranscript)).collect(Collectors.toList());
     }

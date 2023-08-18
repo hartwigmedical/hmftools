@@ -10,10 +10,12 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 
 import org.junit.Test;
 
-public class DNAFusionEvaluatorTest {
+public class DNAFusionEvaluatorTest
+{
 
     @Test
-    public void canDetermineIfFusionIsPresent() {
+    public void canDetermineIfFusionIsPresent()
+    {
         LinxFusion fusion1 = LinxOrangeTestFactory.fusionBuilder().geneStart("start 1").geneEnd("end 1").build();
         LinxFusion fusion2 = LinxOrangeTestFactory.fusionBuilder().geneStart("start 2").geneEnd("end 1").build();
 

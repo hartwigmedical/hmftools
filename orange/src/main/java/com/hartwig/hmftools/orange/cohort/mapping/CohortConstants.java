@@ -8,8 +8,8 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public final class CohortConstants {
-
+public final class CohortConstants
+{
     public static final String COHORT_PAN_CANCER = "Pan-cancer";
     public static final String COHORT_OTHER = "Other";
     public static final String COHORT_UNKNOWN = "Unknown";
@@ -21,7 +21,8 @@ public final class CohortConstants {
     public static final List<Set<String>> DOID_COMBINATIONS_TO_MAP_TO_STOMACH = Lists.newArrayList();
     public static final Map<Set<String>, String> DOID_COMBINATION_MAP = new HashMap<>();
 
-    static {
+    static
+    {
         // The combination of liver cancer and bile duct is occasionally used but not easily mapped.
         DOID_COMBINATIONS_TO_MAP_TO_OTHER.add(Sets.newHashSet("686", "4947"));
 
@@ -52,17 +53,23 @@ public final class CohortConstants {
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("4944", "5517"));
         DOID_COMBINATIONS_TO_MAP_TO_STOMACH.add(Sets.newHashSet("4944", "3717"));
 
-        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_OTHER) {
+        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_OTHER)
+        {
             DOID_COMBINATION_MAP.put(combination, COHORT_OTHER);
         }
-        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS) {
+
+        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS)
+        {
             DOID_COMBINATION_MAP.put(combination, COHORT_ESOPHAGUS);
         }
-        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_STOMACH) {
+
+        for (Set<String> combination : DOID_COMBINATIONS_TO_MAP_TO_STOMACH)
+        {
             DOID_COMBINATION_MAP.put(combination, COHORT_STOMACH);
         }
     }
 
-    private CohortConstants() {
+    private CohortConstants()
+    {
     }
 }

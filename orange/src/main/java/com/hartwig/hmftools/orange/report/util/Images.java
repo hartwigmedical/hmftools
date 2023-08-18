@@ -8,16 +8,17 @@ import com.itextpdf.layout.element.Image;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class Images {
-
-    private Images() {
-    }
-
+public final class Images
+{
     @NotNull
-    public static Image build(@NotNull String path) {
-        try {
+    public static Image build(@NotNull String path)
+    {
+        try
+        {
             return new Image(ImageDataFactory.create(path));
-        } catch (MalformedURLException e) {
+        }
+        catch(MalformedURLException e)
+        {
             throw new IOException("Could not read image from " + path);
         }
     }

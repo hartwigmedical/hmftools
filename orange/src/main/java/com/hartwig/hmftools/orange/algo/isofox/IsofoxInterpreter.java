@@ -14,14 +14,11 @@ import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.IsofoxConversion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
-public class IsofoxInterpreter {
-
-    private static final Logger LOGGER = LogManager.getLogger(IsofoxInterpreter.class);
-
+public class IsofoxInterpreter
+{
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
@@ -38,7 +35,8 @@ public class IsofoxInterpreter {
     }
 
     @NotNull
-    public IsofoxRecord interpret(@NotNull IsofoxData isofox) {
+    public IsofoxRecord interpret(@NotNull IsofoxData isofox)
+    {
         List<GeneExpression> geneExpressions = ConversionUtil.mapToList(isofox.geneExpressions(), IsofoxConversion::convert);
         List<GeneExpression> highExpressionGenes = ExpressionSelector.selectHighExpressionGenes(geneExpressions, driverGenes);
         LOGGER.info(" Found {} genes with high expression", highExpressionGenes.size());

@@ -90,4 +90,5 @@ public interface OrangeRecord {
     @NotNull
     OrangePlots plots();
 
+    default boolean tumorOnlyMode() { return refSample() == null; }
 }

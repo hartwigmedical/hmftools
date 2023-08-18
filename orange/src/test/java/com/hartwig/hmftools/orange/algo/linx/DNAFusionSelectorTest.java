@@ -18,10 +18,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class DNAFusionSelectorTest {
+public class DNAFusionSelectorTest
+{
 
     @Test
-    public void canSelectFusionsWithReportedType() {
+    public void canSelectFusionsWithReportedType()
+    {
         LinxFusion withReportedType = LinxTestFactory.fusionBuilder()
                 .reported(false)
                 .name("with reported")
@@ -42,7 +44,8 @@ public class DNAFusionSelectorTest {
     }
 
     @Test
-    public void canSelectFusionOfOncogene() {
+    public void canSelectFusionOfOncogene()
+    {
         DriverGene oncogene = DriverGeneTestFactory.builder().gene("onco").likelihoodType(DriverCategory.ONCO).build();
         DriverGene tsg = DriverGeneTestFactory.builder().gene("tsg").likelihoodType(DriverCategory.TSG).build();
 
@@ -96,9 +99,12 @@ public class DNAFusionSelectorTest {
     }
 
     @Nullable
-    private static LinxFusion findByName(@NotNull List<LinxFusion> fusions, @NotNull String nameToFind) {
-        for (LinxFusion fusion : fusions) {
-            if (fusion.name().equals(nameToFind)) {
+    private static LinxFusion findByName(@NotNull List<LinxFusion> fusions, @NotNull String nameToFind)
+    {
+        for(LinxFusion fusion : fusions)
+        {
+            if(fusion.name().equals(nameToFind))
+            {
                 return fusion;
             }
         }

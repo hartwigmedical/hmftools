@@ -8,8 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class Sample {
-
+public abstract class Sample
+{
     @NotNull
     public abstract String sampleId();
 

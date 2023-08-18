@@ -16,7 +16,8 @@ import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CohortPercentilesModelTest {
+public class CohortPercentilesModelTest
+{
 
     private static final String CANCER_TYPE = "type";
     private static final PercentileType PERCENTILE_TYPE = PercentileType.SV_TMB;
@@ -24,7 +25,8 @@ public class CohortPercentilesModelTest {
     private static final double EPSILON = 1.0E-10;
 
     @Test
-    public void canDeterminePercentileForCohort() {
+    public void canDeterminePercentileForCohort()
+    {
         List<Double> percentiles = Lists.newArrayList(1D, 3D, 5D, 7D, 9D);
 
         CohortPercentilesModel model = new CohortPercentilesModel(sample -> CANCER_TYPE, createPercentileMap(percentiles));
@@ -45,8 +47,9 @@ public class CohortPercentilesModelTest {
         assertEquals(1D, model.percentile(observedValue(10D)).cancerTypePercentile(), EPSILON);
     }
 
-    @Test (expected = IllegalStateException.class)
-    public void crashOnExpectedCohort() {
+    @Test(expected = IllegalStateException.class)
+    public void crashOnExpectedCohort()
+    {
         List<Double> percentiles = Lists.newArrayList(1D, 3D, 5D, 7D, 9D);
         CohortPercentilesModel model = new CohortPercentilesModel(sample -> "non-existing cancer type", createPercentileMap(percentiles));
 
@@ -54,7 +57,8 @@ public class CohortPercentilesModelTest {
 
     }
 
-    private static Multimap<PercentileType, CohortPercentiles> createPercentileMap(@NotNull List<Double> percentiles) {
+    private static Multimap<PercentileType, CohortPercentiles> createPercentileMap(@NotNull List<Double> percentiles)
+    {
         Multimap<PercentileType, CohortPercentiles> percentileMap = ArrayListMultimap.create();
         percentileMap.put(PERCENTILE_TYPE,
                 ImmutableCohortPercentiles.builder().cancerType(CANCER_TYPE).cohortSize(20).values(percentiles).build());
@@ -70,7 +74,8 @@ public class CohortPercentilesModelTest {
     }
 
     @NotNull
-    private static Observation observedValue(double value) {
+    private static Observation observedValue(double value)
+    {
         return ImmutableObservation.builder()
                 .type(PERCENTILE_TYPE)
                 .sample(ImmutableSample.builder().sampleId("test").build())

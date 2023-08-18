@@ -15,10 +15,12 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class VariantsTest {
+public class VariantsTest
+{
 
     @Test
-    public void canSortVariantEntries() {
+    public void canSortVariantEntries()
+    {
         VariantEntry entry1 = TestVariantEntryFactory.builder().gene("gene A").driverLikelihood(1D).affectedCodon(600).build();
         VariantEntry entry2 = TestVariantEntryFactory.builder().gene("gene A").driverLikelihood(1D).affectedCodon(700).build();
         VariantEntry entry3 = TestVariantEntryFactory.builder().gene("gene B").driverLikelihood(1D).affectedCodon(600).build();
@@ -38,7 +40,8 @@ public class VariantsTest {
     }
 
     @Test
-    public void canRenderVariantField() {
+    public void canRenderVariantField()
+    {
         VariantEntry canonical = TestVariantEntryFactory.builder().gene("gene").isCanonical(true).impact("impact").build();
         assertEquals("gene impact", Variants.variantField(canonical));
 
@@ -47,15 +50,18 @@ public class VariantsTest {
     }
 
     @Test
-    public void canHandleAllHotspotValues() {
-        for (Hotspot hotspot : Hotspot.values()) {
+    public void canHandleAllHotspotValues()
+    {
+        for(Hotspot hotspot : Hotspot.values())
+        {
             VariantEntry entry = TestVariantEntryFactory.builder().hotspot(hotspot).build();
             assertNotNull(Variants.hotspotField(entry));
         }
     }
 
     @Test
-    public void canRenderDriverLikelihood() {
+    public void canRenderDriverLikelihood()
+    {
         VariantEntry driver = TestVariantEntryFactory.builder().driverLikelihood(0.4).build();
         assertEquals("40%", Variants.driverLikelihoodField(driver));
 
@@ -64,7 +70,8 @@ public class VariantsTest {
     }
 
     @Test
-    public void canRenderClonalLikelihood() {
+    public void canRenderClonalLikelihood()
+    {
         VariantEntry clonal = TestVariantEntryFactory.builder().clonalLikelihood(1D).build();
         assertEquals("100%", Variants.clonalLikelihoodField(clonal));
 
@@ -73,7 +80,8 @@ public class VariantsTest {
     }
 
     @Test
-    public void canRenderRNADepthField() {
+    public void canRenderRNADepthField()
+    {
         VariantEntry missingRNA = TestVariantEntryFactory.builder().rnaDepth(null).build();
         assertEquals(ReportResources.NOT_AVAILABLE, Variants.rnaDepthField(missingRNA));
 
@@ -89,14 +97,15 @@ public class VariantsTest {
     }
 
     @Test
-    public void canRenderPhaseSetField() {
+    public void canRenderPhaseSetField()
+    {
         VariantEntry missingPhaseSet = TestVariantEntryFactory.builder().localPhaseSets(null).build();
         assertEquals(Strings.EMPTY, Variants.phaseSetField(missingPhaseSet));
 
-        VariantEntry emptyPhaseSet =TestVariantEntryFactory.builder().localPhaseSets(Lists.newArrayList()).build();
+        VariantEntry emptyPhaseSet = TestVariantEntryFactory.builder().localPhaseSets(Lists.newArrayList()).build();
         assertEquals(Strings.EMPTY, Variants.phaseSetField(emptyPhaseSet));
 
-        VariantEntry multiPhaseSet =TestVariantEntryFactory.builder().localPhaseSets(Lists.newArrayList(1, 2)).build();
+        VariantEntry multiPhaseSet = TestVariantEntryFactory.builder().localPhaseSets(Lists.newArrayList(1, 2)).build();
         assertEquals("1, 2", Variants.phaseSetField(multiPhaseSet));
     }
 }

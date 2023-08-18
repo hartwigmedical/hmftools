@@ -16,13 +16,11 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ReportLimiter {
-
-    private ReportLimiter() {
-    }
-
+public final class ReportLimiter
+{
     @NotNull
-    public static OrangeRecord limitAllListsToMaxOne(@NotNull OrangeRecord report) {
+    public static OrangeRecord limitAllListsToMaxOne(@NotNull OrangeRecord report)
+    {
         return ImmutableOrangeRecord.builder()
                 .from(report)
                 .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
@@ -33,13 +31,16 @@ public final class ReportLimiter {
     }
 
     @Nullable
-    private static Map<String, Double> limitGermlineMVLHToOne(@Nullable Map<String, Double> germlineMVLHPerGene) {
-        if (germlineMVLHPerGene == null) {
+    private static Map<String, Double> limitGermlineMVLHToOne(@Nullable Map<String, Double> germlineMVLHPerGene)
+    {
+        if(germlineMVLHPerGene == null)
+        {
             return null;
         }
 
         Map<String, Double> filtered = Maps.newHashMap();
-        if (!germlineMVLHPerGene.isEmpty()) {
+        if(!germlineMVLHPerGene.isEmpty())
+        {
             String firstKey = germlineMVLHPerGene.keySet().iterator().next();
             filtered.put(firstKey, germlineMVLHPerGene.get(firstKey));
         }
@@ -47,7 +48,8 @@ public final class ReportLimiter {
     }
 
     @NotNull
-    private static PurpleRecord limitPurpleDataToOne(@NotNull PurpleRecord purple) {
+    private static PurpleRecord limitPurpleDataToOne(@NotNull PurpleRecord purple)
+    {
         return ImmutablePurpleRecord.builder()
                 .from(purple)
                 .somaticDrivers(max1(purple.somaticDrivers()))
@@ -72,7 +74,8 @@ public final class ReportLimiter {
     }
 
     @NotNull
-    private static LinxRecord limitLinxDataToOne(@NotNull LinxRecord linx) {
+    private static LinxRecord limitLinxDataToOne(@NotNull LinxRecord linx)
+    {
         return ImmutableLinxRecord.builder()
                 .from(linx)
                 .allSomaticStructuralVariants(max1(linx.allSomaticStructuralVariants()))
@@ -91,8 +94,10 @@ public final class ReportLimiter {
     }
 
     @Nullable
-    private static IsofoxRecord limitIsofoxDataToOne(@Nullable IsofoxRecord isofox) {
-        if (isofox == null) {
+    private static IsofoxRecord limitIsofoxDataToOne(@Nullable IsofoxRecord isofox)
+    {
+        if(isofox == null)
+        {
             return null;
         }
 
@@ -111,7 +116,8 @@ public final class ReportLimiter {
     }
 
     @Nullable
-    private static <T> List<T> max1(@Nullable List<T> elements) {
+    private static <T> List<T> max1(@Nullable List<T> elements)
+    {
         return elements != null ? elements.subList(0, Math.min(1, elements.size())) : null;
     }
 }

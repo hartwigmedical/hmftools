@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -91,16 +92,13 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class OrangeAlgo
 {
-
-    private static final Logger LOGGER = LogManager.getLogger(OrangeAlgo.class);
-
     @NotNull
     private final DoidEntry doidEntry;
     @NotNull
@@ -115,6 +113,8 @@ public class OrangeAlgo
     private final EnsemblDataCache ensemblDataCache;
     @NotNull
     private final PlotManager plotManager;
+
+    private boolean suppressGeneWarnings;
 
     @NotNull
     public static OrangeAlgo fromConfig(@NotNull OrangeConfig config) throws IOException
@@ -167,6 +167,7 @@ public class OrangeAlgo
         this.knownFusionCache = knownFusionCache;
         this.ensemblDataCache = ensemblDataCache;
         this.plotManager = plotManager;
+        suppressGeneWarnings = false;
     }
 
     @NotNull
@@ -194,7 +195,9 @@ public class OrangeAlgo
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
-        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
+        PaveAlgo pave = new PaveAlgo(ensemblDataCache, !suppressGeneWarnings);
+
+        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
         PurpleInterpreter purpleInterpreter =
                 new PurpleInterpreter(purpleVariantFactory, germlineGainLossFactory, driverGenes, linx, chord);
@@ -465,7 +468,7 @@ public class OrangeAlgo
                 linx.reportableSomaticBreakends().size());
         LOGGER.info(" Loaded {} somatic reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
-        if(linxGermlineDataDirectory != null)
+        if(!config.tumorOnlyMode() && linxGermlineDataDirectory != null)
         {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
             LOGGER.info(" Loaded {} germline structural variants", linx.allGermlineStructuralVariants().size());
@@ -520,6 +523,11 @@ public class OrangeAlgo
     @Nullable
     private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException
     {
+        if(config.tumorOnlyMode())
+        {
+            return null;
+        }
+
         String annotatedVirusTsv = config.annotatedVirusTsv();
         if(annotatedVirusTsv == null)
         {
@@ -533,6 +541,11 @@ public class OrangeAlgo
     @Nullable
     private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException
     {
+        if(config.tumorOnlyMode())
+        {
+            return null;
+        }
+
         String chordPredictionTxt = config.chordPredictionTxt();
         if(chordPredictionTxt == null)
         {
@@ -549,6 +562,11 @@ public class OrangeAlgo
     @Nullable
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException
     {
+        if(config.tumorOnlyMode())
+        {
+            return null;
+        }
+
         String cuppaResultTsv = config.cuppaResultCsv();
         if(cuppaResultTsv == null)
         {
@@ -588,6 +606,11 @@ public class OrangeAlgo
     @Nullable
     private static List<SignatureAllocation> loadSigAllocations(@NotNull OrangeConfig config) throws IOException
     {
+        if(config.tumorOnlyMode())
+        {
+            return null;
+        }
+
         String sigsAllocationTsv = config.sigsAllocationTsv();
 
         if(sigsAllocationTsv == null)
@@ -719,4 +742,7 @@ public class OrangeAlgo
     {
         return ImmutableSample.builder().sampleId(config.tumorSampleId()).doids(config.primaryTumorDoids()).build();
     }
+
+    @VisibleForTesting
+    public void setSuppressGeneWarnings() { suppressGeneWarnings = true;}
 }

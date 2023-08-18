@@ -9,34 +9,40 @@ import com.hartwig.hmftools.orange.conversion.IsofoxConversion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class OrangeIsofoxTestFactory {
+public class OrangeIsofoxTestFactory
+{
 
-    private OrangeIsofoxTestFactory() {
+    private OrangeIsofoxTestFactory()
+    {
     }
 
     @NotNull
-    public static ImmutableIsofoxRnaStatistics.Builder rnaStatisticsBuilder() {
+    public static ImmutableIsofoxRnaStatistics.Builder rnaStatisticsBuilder()
+    {
         var common = IsofoxTestFactory.rnaStatisticsBuilder().build();
         var converted = IsofoxConversion.convert(common);
         return ImmutableIsofoxRnaStatistics.builder().from(converted);
     }
 
     @NotNull
-    public static ImmutableGeneExpression.Builder geneExpressionBuilder() {
+    public static ImmutableGeneExpression.Builder geneExpressionBuilder()
+    {
         var common = IsofoxTestFactory.geneExpressionBuilder().build();
         var converted = IsofoxConversion.convert(common);
         return ImmutableGeneExpression.builder().from(converted);
     }
 
     @NotNull
-    public static ImmutableRnaFusion.Builder rnaFusionBuilder() {
+    public static ImmutableRnaFusion.Builder rnaFusionBuilder()
+    {
         var common = IsofoxTestFactory.rnaFusionBuilder().build();
         var converted = IsofoxConversion.convert(common);
         return ImmutableRnaFusion.builder().from(converted);
     }
 
     @NotNull
-    public static ImmutableNovelSpliceJunction.Builder novelSpliceJunctionBuilder() {
+    public static ImmutableNovelSpliceJunction.Builder novelSpliceJunctionBuilder()
+    {
         var common = IsofoxTestFactory.novelSpliceJunctionBuilder().build();
         var converted = IsofoxConversion.convert(common);
         return ImmutableNovelSpliceJunction.builder().from(converted);

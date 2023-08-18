@@ -10,12 +10,14 @@ import com.google.common.io.Resources;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CohortMappingFileTest {
+public class CohortMappingFileTest
+{
 
     private static final String EXAMPLE_MAPPING_TSV = Resources.getResource("cohort/mapping/example_cohort_mapping.tsv").getPath();
 
     @Test
-    public void canReadExampleCohortMappingTsv() throws IOException {
+    public void canReadExampleCohortMappingTsv() throws IOException
+    {
         List<CohortMapping> mappings = CohortMappingFile.read(EXAMPLE_MAPPING_TSV);
         assertEquals(7, mappings.size());
 
@@ -29,9 +31,12 @@ public class CohortMappingFileTest {
     }
 
     @NotNull
-    private static CohortMapping find(@NotNull List<CohortMapping> mappings, @NotNull String cancerType) {
-        for (CohortMapping mapping : mappings) {
-            if (mapping.cancerType().equals(cancerType)) {
+    private static CohortMapping find(@NotNull List<CohortMapping> mappings, @NotNull String cancerType)
+    {
+        for(CohortMapping mapping : mappings)
+        {
+            if(mapping.cancerType().equals(cancerType))
+            {
                 return mapping;
             }
         }

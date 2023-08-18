@@ -25,27 +25,28 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
-public class OrangeCohortDataGenerator {
-
-    private static final Logger LOGGER = LogManager.getLogger(OrangeCohortDataGenerator.class);
-
+public class OrangeCohortDataGenerator
+{
     private static final String APPLICATION = "ORANGE Cohort Data Generator";
     private static final String VERSION = OrangeCohortDataGenerator.class.getPackage().getImplementationVersion();
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) throws IOException, ParseException
+    {
         LOGGER.info("Running {} v{}", APPLICATION, VERSION);
 
         Options options = OrangeCohortDataGeneratorConfig.createOptions();
 
         OrangeCohortDataGeneratorConfig config = null;
         CommandLine cmd = new DefaultParser().parse(options, args);
-        try {
+        try
+        {
             config = OrangeCohortDataGeneratorConfig.createConfig(cmd);
-        } catch (ParseException exception) {
+        }
+        catch(ParseException exception)
+        {
             LOGGER.warn(exception);
             new HelpFormatter().printHelp(APPLICATION, options);
             System.exit(1);
@@ -59,12 +60,14 @@ public class OrangeCohortDataGenerator {
     @NotNull
     private final CommandLine commandLine;
 
-    public OrangeCohortDataGenerator(@NotNull final OrangeCohortDataGeneratorConfig config, @NotNull final CommandLine commandLine) {
+    public OrangeCohortDataGenerator(@NotNull final OrangeCohortDataGeneratorConfig config, @NotNull final CommandLine commandLine)
+    {
         this.config = config;
         this.commandLine = commandLine;
     }
 
-    private void run() throws IOException {
+    private void run() throws IOException
+    {
         LOGGER.info("Generating ORANGE cohort data");
 
         DatabaseAccess database = DatabaseAccess.createDatabaseAccess(commandLine);
@@ -92,7 +95,8 @@ public class OrangeCohortDataGenerator {
     }
 
     @NotNull
-    private static CohortMapper createCohortMapper(@NotNull OrangeCohortDataGeneratorConfig config) throws IOException {
+    private static CohortMapper createCohortMapper(@NotNull OrangeCohortDataGeneratorConfig config) throws IOException
+    {
         LOGGER.info("Loading cohort mappings from {}", config.cohortMappingTsv());
         List<CohortMapping> mappings = CohortMappingFile.read(config.cohortMappingTsv());
         LOGGER.info(" Loaded {} mappings", mappings.size());

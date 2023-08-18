@@ -12,26 +12,25 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
-public class LinxInterpreter {
-
-    private static final Logger LOGGER = LogManager.getLogger(LinxInterpreter.class);
-
+public class LinxInterpreter
+{
     @NotNull
     private final List<DriverGene> driverGenes;
     @NotNull
     private final KnownFusionCache knownFusionCache;
 
-    public LinxInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache) {
+    public LinxInterpreter(@NotNull final List<DriverGene> driverGenes, @NotNull final KnownFusionCache knownFusionCache)
+    {
         this.driverGenes = driverGenes;
         this.knownFusionCache = knownFusionCache;
     }
 
     @NotNull
-    public LinxRecord interpret(@NotNull LinxData linx) {
+    public LinxRecord interpret(@NotNull LinxData linx)
+    {
         LOGGER.info("Analysing linx data");
         List<LinxFusion> additionalSuspectSomaticFusions =
                 DNAFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);
