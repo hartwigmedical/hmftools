@@ -201,7 +201,7 @@ public class MissensePeptideScorer
                     }
                     else
                     {
-                        mMissenseCalcs.peptideData().forEach(x -> mWriter.writePeptideData(x, null));
+                        mWriter.writePeptideData(mMissenseCalcs.peptideData(), null);
                     }
                 }
 
@@ -230,6 +230,9 @@ public class MissensePeptideScorer
             NE_LOGGER.debug("gene({}) allele({}) calculating binding scores for {} peptides",
                     peptideData.get(0).GeneName, allele, peptideData.size());
 
+            final List<MissensePeptide> peptideDataList = Lists.newArrayList();
+            final List<BindData> bindDataList = Lists.newArrayList();
+
             for(MissensePeptide misensePeptide : peptideData)
             {
                 BindData bindData = new BindData(allele, misensePeptide.Peptide, "", misensePeptide.UpFlank, misensePeptide.DownFlank);
@@ -241,9 +244,12 @@ public class MissensePeptideScorer
 
                 if(passesRankThreshold(bindData.likelihoodRank()))
                 {
-                    mWriter.writePeptideData(misensePeptide, bindData);
+                    peptideDataList.add(misensePeptide);
+                    bindDataList.add(bindData);
                 }
             }
+
+            mWriter.writePeptideData(peptideDataList, bindDataList);
         }
     }
 
