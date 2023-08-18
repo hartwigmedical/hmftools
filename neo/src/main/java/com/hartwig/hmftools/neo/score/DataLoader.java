@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo.scorer;
+package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_AA_DOWN;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_AA_NOVEL;
@@ -25,7 +25,7 @@ import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.extractTranscriptNa
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.scorer.AlleleCoverage.EXPECTED_ALLELE_COUNT;
+import static com.hartwig.hmftools.neo.score.AlleleCoverage.EXPECTED_ALLELE_COUNT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 

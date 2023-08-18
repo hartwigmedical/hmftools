@@ -3,6 +3,8 @@ package com.hartwig.hmftools.neo.missense;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
+import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
@@ -155,14 +157,18 @@ public class MissenseCalcs
         MissensePeptide peptideData = new MissensePeptide(geneData.GeneId, geneData.GeneName, transData.TransName);
 
         // create peptides for the specified length range and with flanks
-        for(int codonIndex = mConfig.FlankLength; codonIndex < codonCount - mConfig.FlankLength; ++codonIndex)
+        for(int codonIndex = 0; codonIndex < codonCount; ++codonIndex)
         {
             peptideData.CodonIndex = codonIndex + 1; // 1 based
             int codonStartBaseIndex = codonIndex * 3;
 
             // cycle through each missense variant
             String refCodon = codingBases.substring(codonStartBaseIndex, codonStartBaseIndex + 3);
-            String codonRefAminoAcid = AminoAcids.findAminoAcidForCodon(refCodon);
+
+            String codonRefAminoAcid = isStopCodon(refCodon) ? String.valueOf(STOP_AMINO_ACID) : AminoAcids.findAminoAcidForCodon(refCodon);
+
+            if(codonRefAminoAcid == null)
+                return;
 
             for(int codonBaseIndex = 0; codonBaseIndex <= 2; ++codonBaseIndex)
             {
@@ -202,79 +208,122 @@ public class MissenseCalcs
     private void generatePeptides(
             final MissensePeptide basePeptideData, final String codingBases, int codonIndex, final String altAminoAcid)
     {
-        for(int pepLen = mConfig.PeptideLengths[0]; pepLen <= mConfig.PeptideLengths[1]; ++pepLen)
+        for(int pepLen = mConfig.PeptideLengthMin; pepLen <= mConfig.PeptideLengthMax; ++pepLen)
         {
-            // if say length is 8 and the current codon index is 15 with flank of 3, then the peptide + flanks needs to cover
-            // the codon range 8 -> 15 to 15 -> 22, which flanks becomes 5 -> 15 up to 15 -> 25
-            int peptideCodonStartIndex = max(0, codonIndex - pepLen - mConfig.FlankLength + 1);
-
-            NE_LOGGER.trace("gene({}) pepLen({}) codonIndex({}) codonRangeStart({})",
-                    basePeptideData.GeneName, pepLen, codonIndex, peptideCodonStartIndex);
-
-            for(int pepStartCodonIndex = peptideCodonStartIndex; pepStartCodonIndex <= codonIndex - mConfig.FlankLength; ++pepStartCodonIndex)
-            {
-                int pepPlusFlanksLen = pepLen + mConfig.FlankLength * 2;
-
-                int peptideEndCodingBaseIndex = (pepStartCodonIndex + pepPlusFlanksLen - 1) * 3;
-                if(peptideEndCodingBaseIndex >= codingBases.length())
-                    break;
-
-                String peptidePlusFlanks = "";
-
-                for(int pepIndex = 0; pepIndex < pepPlusFlanksLen; ++pepIndex)
-                {
-                    int codingBaseCodonIndex = pepStartCodonIndex + pepIndex;
-
-                    if(codingBaseCodonIndex == codonIndex)
-                    {
-                        peptidePlusFlanks += altAminoAcid;
-                    }
-                    else
-                    {
-                        int pepCodonBaseIndex = (pepStartCodonIndex + pepIndex) * 3;
-                        String codon = codingBases.substring(pepCodonBaseIndex, pepCodonBaseIndex + 3);
-                        String aminoAcid = AminoAcids.findAminoAcidForCodon(codon);;
-
-                        if(aminoAcid == null)
-                        {
-                            peptidePlusFlanks = "";
-                            break;
-                        }
-
-                        peptidePlusFlanks += aminoAcid;
-                    }
-                }
-
-                if(peptidePlusFlanks.isEmpty() || peptidePlusFlanks.length() < mConfig.FlankLength * 2 + 1)
-                    continue;
-
-                MissensePeptide peptideData = new MissensePeptide(basePeptideData.GeneId, basePeptideData.GeneName, basePeptideData.TransName);
-                peptideData.Position = basePeptideData.Position;
-                peptideData.CodonIndex = basePeptideData.CodonIndex;
-                peptideData.Context = basePeptideData.Context;
-                peptideData.RefBase = basePeptideData.RefBase;
-                peptideData.AltBase = basePeptideData.AltBase;
-
-                peptideData.Peptide = peptidePlusFlanks.substring(mConfig.FlankLength, peptidePlusFlanks.length() - mConfig.FlankLength);
-
-                if(!mConfig.KeepDuplicates)
-                {
-                    if(mUniqiuePeptides.contains(peptideData.Peptide))
-                        continue;
-
-                    mUniqiuePeptides.add(peptideData.Peptide);
-                }
-
-                peptideData.UpFlank = peptidePlusFlanks.substring(0, mConfig.FlankLength);
-                peptideData.DownFlank = peptidePlusFlanks.substring(peptidePlusFlanks.length() - mConfig.FlankLength);
-
-                mPeptideData.add(peptideData);
-            }
+            generatePeptides(basePeptideData, codingBases, codonIndex, altAminoAcid, pepLen);
         }
     }
 
-    public boolean passesRankThreshold(double value)
+    private void generatePeptides(
+            final MissensePeptide basePeptideData, final String codingBases, int targetCodonIndex, final String altAminoAcid, int pepLen)
     {
-        return value != INVALID_CALC && (mConfig.LikelihoodCutoff == 0 || mConfig.LikelihoodCutoff > 0 && value <= mConfig.LikelihoodCutoff);
+        // if say length is 8 and the current codon index is 15 with flank of 3, then the peptide + flanks needs to cover
+        // the codon range 8 -> 15 to 15 -> 22, which flanks becomes 5 -> 15 up to 15 -> 25
+        // where enough AA / codons are missing flanks, take whatever is available
+        int peptideCodonStartIndex = max(targetCodonIndex - pepLen + 1, 0);
+
+        NE_LOGGER.trace("gene({}) pepLen({}) codonIndex({}) codonRangeStart({})",
+                basePeptideData.GeneName, pepLen, targetCodonIndex, peptideCodonStartIndex);
+
+        int codonCount = codingBases.length() / 3;
+
+        // test peptides of the specified length
+
+        // for(int pepStartCodonIndex = peptideCodonStartIndex; pepStartCodonIndex <= codonIndex; ++pepStartCodonIndex)
+        for(int codonIndex = peptideCodonStartIndex; codonIndex <= targetCodonIndex; ++codonIndex)
+        {
+            int peptideEndCodingBaseIndex = (codonIndex + pepLen - 1) * 3;
+            if(peptideEndCodingBaseIndex >= codingBases.length())
+                break;
+
+            String peptide = "";
+
+            for(int pepIndex = 0; pepIndex < pepLen; ++pepIndex)
+            {
+                int codingBaseCodonIndex = codonIndex + pepIndex;
+
+                if(codingBaseCodonIndex == targetCodonIndex)
+                {
+                    peptide += altAminoAcid;
+                }
+                else
+                {
+                    int codonBaseIndex = (codonIndex + pepIndex) * 3;
+                    String codon = codingBases.substring(codonBaseIndex, codonBaseIndex + 3);
+                    String aminoAcid = AminoAcids.findAminoAcidForCodon(codon);
+
+                    if(aminoAcid == null)
+                    {
+                        peptide = "";
+                        break;
+                    }
+
+                    peptide += aminoAcid;
+                }
+            }
+
+            if(peptide.isEmpty())
+                continue;
+
+            MissensePeptide peptideData = new MissensePeptide(basePeptideData.GeneId, basePeptideData.GeneName, basePeptideData.TransName);
+            peptideData.Position = basePeptideData.Position;
+            peptideData.CodonIndex = basePeptideData.CodonIndex;
+            peptideData.Context = basePeptideData.Context;
+            peptideData.RefBase = basePeptideData.RefBase;
+            peptideData.AltBase = basePeptideData.AltBase;
+            peptideData.Peptide = peptide;
+            peptideData.PeptideStartIndex = codonIndex + 1; // also 1-based
+
+            if(!mConfig.KeepDuplicates)
+            {
+                if(mUniqiuePeptides.contains(peptideData.Peptide))
+                    continue;
+
+                mUniqiuePeptides.add(peptideData.Peptide);
+            }
+
+            if(mConfig.FlankLength > 0)
+            {
+                String upFlank = "";
+
+                int flankUpStartIndex = max(codonIndex - mConfig.FlankLength, 0);
+                for(int flankIndex = flankUpStartIndex; flankIndex < codonIndex; ++flankIndex)
+                {
+                    int codonBaseIndex = flankIndex * 3;
+                    String codon = codingBases.substring(codonBaseIndex, codonBaseIndex + 3);
+                    String aminoAcid = AminoAcids.findAminoAcidForCodon(codon);
+
+                    if(aminoAcid == null)
+                    {
+                        upFlank = "";
+                        break;
+                    }
+
+                    upFlank += aminoAcid;
+                }
+
+                peptideData.UpFlank = upFlank;
+
+                String downFlank = "";
+
+                int flankDownStartIndex = codonIndex + pepLen;
+                int flankDownEndIndex = min(flankDownStartIndex + mConfig.FlankLength, codonCount);
+                for(int flankIndex = flankDownStartIndex; flankIndex < flankDownEndIndex; ++flankIndex)
+                {
+                    int codonBaseIndex = flankIndex * 3;
+                    String codon = codingBases.substring(codonBaseIndex, codonBaseIndex + 3);
+                    String aminoAcid = AminoAcids.findAminoAcidForCodon(codon);
+
+                    if(aminoAcid == null)
+                        break;
+
+                    downFlank += aminoAcid;
+                }
+
+                peptideData.DownFlank = downFlank;
+            }
+
+            mPeptideData.add(peptideData);
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo.scorer;
+package com.hartwig.hmftools.neo.score;
 
 import static java.lang.String.format;
 
@@ -7,16 +7,13 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
-import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.scorer.TpmCalculator.HIGH_PROBABILITY;
-import static com.hartwig.hmftools.neo.scorer.TpmCalculator.LOW_PROBABILITY;
+import static com.hartwig.hmftools.neo.score.TpmCalculator.HIGH_PROBABILITY;
+import static com.hartwig.hmftools.neo.score.TpmCalculator.LOW_PROBABILITY;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;

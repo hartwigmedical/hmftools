@@ -1,15 +1,15 @@
-package com.hartwig.hmftools.neo.scorer;
+package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
-import static com.hartwig.hmftools.neo.scorer.DataLoader.loadAlleleCoverage;
-import static com.hartwig.hmftools.neo.scorer.DataLoader.loadNeoEpitopes;
-import static com.hartwig.hmftools.neo.scorer.DataLoader.loadPurpleContext;
-import static com.hartwig.hmftools.neo.scorer.DataLoader.loadRnaNeoData;
-import static com.hartwig.hmftools.neo.scorer.DataLoader.loadSomaticVariants;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.RNA_SAMPLE_APPEND_SUFFIX;
-import static com.hartwig.hmftools.neo.scorer.TpmCalculator.DEFAULT_PEPTIDE_LENGTH_RANGE;
+import static com.hartwig.hmftools.neo.score.DataLoader.loadAlleleCoverage;
+import static com.hartwig.hmftools.neo.score.DataLoader.loadNeoEpitopes;
+import static com.hartwig.hmftools.neo.score.DataLoader.loadPurpleContext;
+import static com.hartwig.hmftools.neo.score.DataLoader.loadRnaNeoData;
+import static com.hartwig.hmftools.neo.score.DataLoader.loadSomaticVariants;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.RNA_SAMPLE_APPEND_SUFFIX;
+import static com.hartwig.hmftools.neo.score.TpmCalculator.DEFAULT_PEPTIDE_LENGTH_RANGE;
 
 import java.util.List;
 import java.util.Map;
@@ -22,12 +22,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.isofox.TranscriptExpressionLoader;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.common.purple.PurityContextFile;
-import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.neo.bind.BindData;
-import com.hartwig.hmftools.neo.bind.BindScorer;
-
-import org.jetbrains.annotations.Nullable;
 
 public class NeoScorerTask implements Callable
 {

@@ -15,8 +15,6 @@ public class CohortFrequency
 {
     private final Map<HlaAllele,Double> mAlleleFrequencies;
 
-    public static final String ALLELE_FREQUENCY_FILE = "allele_freq_file";
-
     public CohortFrequency(final String freqFile)
     {
         mAlleleFrequencies = Maps.newHashMap();

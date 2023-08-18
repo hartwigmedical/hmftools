@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
 
 import com.hartwig.hmftools.neo.bind.BindData;
 
@@ -58,30 +59,34 @@ public class MissenseWriter
         }
     }
 
-    public synchronized void writePeptideData(final MissensePeptide peptideData, final BindData bindData)
+    public synchronized void writePeptideData(final List<MissensePeptide> peptideDataList, final List<BindData> bindDataList)
     {
-        // NE_LOGGER.trace("gene({}) pepLen({}) codonIndex({}) codonRange({} -> {}) peptide({})",
-        //        peptideData.GeneName, peptideData.Peptide.length(), peptideData.CodonIndex, peptideData.Peptide);
-
         try
         {
-            mWriter.write(String.format("%s\t%s\t%s",
-                    peptideData.GeneId, peptideData.GeneName, peptideData.TransName));
-
-            mWriter.write(String.format("\t%d\t%d\t%s\t%c\t%c",
-                    peptideData.Position, peptideData.CodonIndex, peptideData.Context, peptideData.RefBase, peptideData.AltBase));
-
-            mWriter.write(String.format("\t%s\t%s\t%s",
-                    peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank));
-
-            if(mRunScoring)
+            for(int i = 0; i < peptideDataList.size(); ++i)
             {
-                mWriter.write(String.format("\t%s\t%.4f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f",
-                        bindData.Allele, bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank(),
-                        bindData.expressionLikelihood(), bindData.expressionLikelihoodRank()));
-            }
+                MissensePeptide peptideData = peptideDataList.get(i);
 
-            mWriter.newLine();
+                mWriter.write(String.format("%s\t%s\t%s",
+                        peptideData.GeneId, peptideData.GeneName, peptideData.TransName));
+
+                mWriter.write(String.format("\t%d\t%d\t%s\t%c\t%c",
+                        peptideData.Position, peptideData.CodonIndex, peptideData.Context, peptideData.RefBase, peptideData.AltBase));
+
+                mWriter.write(String.format("\t%s\t%s\t%s",
+                        peptideData.Peptide, peptideData.UpFlank, peptideData.DownFlank));
+
+                if(mRunScoring)
+                {
+                    BindData bindData = bindDataList.get(i);
+
+                    mWriter.write(String.format("\t%s\t%.4f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f",
+                            bindData.Allele, bindData.score(), bindData.rankPercentile(), bindData.likelihood(), bindData.likelihoodRank(),
+                            bindData.expressionLikelihood(), bindData.expressionLikelihoodRank()));
+                }
+
+                mWriter.newLine();
+            }
         }
         catch(IOException e)
         {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo.scorer;
+package com.hartwig.hmftools.neo.score;
 
 public class AlleleCoverage
 {

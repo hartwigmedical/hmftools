@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo.scorer;
+package com.hartwig.hmftools.neo.score;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -9,11 +9,10 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_PAIR;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.INVALID_EXP;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.scorer.NeoRnaData.NO_TPM_VALUE;
-import static com.hartwig.hmftools.neo.scorer.TpmCalculator.EFFECTIVE_TPM_ACTUAL_PERC;
-import static com.hartwig.hmftools.neo.scorer.TpmCalculator.calcEffectiveTpm;
-import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.CANCER_VALUE;
-import static com.hartwig.hmftools.neo.scorer.TpmMediansCache.PAN_CANCER_VALUE;
+import static com.hartwig.hmftools.neo.score.NeoRnaData.NO_TPM_VALUE;
+import static com.hartwig.hmftools.neo.score.TpmCalculator.calcEffectiveTpm;
+import static com.hartwig.hmftools.neo.score.TpmMediansCache.CANCER_VALUE;
+import static com.hartwig.hmftools.neo.score.TpmMediansCache.PAN_CANCER_VALUE;
 
 import java.util.List;
 import java.util.Map;

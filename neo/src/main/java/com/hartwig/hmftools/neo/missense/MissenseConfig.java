@@ -14,9 +14,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE_DESC;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.LIKELIHOOD_THRESHOLD;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.COHORT_TPM_MEDIANS_FILE_DESC;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.LIKELIHOOD_THRESHOLD;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +30,8 @@ public class MissenseConfig
     public final List<String> GeneIds;
     public final List<String> Alleles;
 
-    public final int[] PeptideLengths;
+    public final int PeptideLengthMin;
+    public final int PeptideLengthMax;
     public final int FlankLength;
 
     public final double LikelihoodCutoff;
@@ -39,12 +40,24 @@ public class MissenseConfig
     public final String OutputId;
     public final int Threads;
 
+    private static final String PEPTIDE_LENGTHS = "peptide_lengths";
     private static final String SPECIFIC_ALLELES = "specific_alleles";
     private static final String KEEP_DUPLICATES = "keep_duplicates";
 
     public MissenseConfig(final ConfigBuilder configBuilder)
     {
-        PeptideLengths = new int[] { MIN_PEPTIDE_LENGTH, REF_PEPTIDE_LENGTH };
+        if(configBuilder.hasValue(PEPTIDE_LENGTHS))
+        {
+            String[] lengths = configBuilder.getValue(PEPTIDE_LENGTHS).split("-",2);
+            PeptideLengthMin = Integer.parseInt(lengths[0]);
+            PeptideLengthMax = Integer.parseInt(lengths[1]);
+        }
+        else
+        {
+            PeptideLengthMin = MIN_PEPTIDE_LENGTH;
+            PeptideLengthMax = REF_PEPTIDE_LENGTH;
+        }
+
         FlankLength = FLANK_AA_COUNT;
 
         GeneIds = loadGeneIdsFile(configBuilder.getValue(GENE_ID_FILE));
@@ -67,6 +80,7 @@ public class MissenseConfig
         ScoreConfig.registerConfig(configBuilder);
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addPath(GENE_ID_FILE, true, GENE_ID_FILE_DESC);
+        configBuilder.addConfigItem(PEPTIDE_LENGTHS, false, "Peptide lengths in form min-max (default 8-12)");
         configBuilder.addConfigItem(SPECIFIC_ALLELES, false, "Specific alleles to score, must be from training set");
 
         configBuilder.addDecimal(
@@ -81,7 +95,8 @@ public class MissenseConfig
 
     public MissenseConfig(int peptideLength, int flankLength)
     {
-        PeptideLengths = new int[] { peptideLength };
+        PeptideLengthMin = peptideLength;
+        PeptideLengthMax = peptideLength;
         FlankLength = flankLength;
         GeneIds = Lists.newArrayList();
         Alleles = Lists.newArrayList();

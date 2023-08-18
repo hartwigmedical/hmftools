@@ -78,6 +78,9 @@ public class RefDataWriter
             {
                 final double[] lengthCounts = tcData.fragmentCountsByLength();
 
+                if(lengthCounts == null)
+                    continue;
+
                 writer.write(String.format("%s,%s,%.0f", collectionId, tcData.combinedKey(), lengthCounts[0]));
 
                 for (int i = 1; i < lengthCounts.length; ++i)

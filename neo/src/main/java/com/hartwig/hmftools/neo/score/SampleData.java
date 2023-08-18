@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.neo.scorer;
+package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FIL
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.CANCER_TYPE;
-import static com.hartwig.hmftools.neo.scorer.NeoScorerConfig.RNA_SOMATIC_VCF;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.CANCER_TYPE;
+import static com.hartwig.hmftools.neo.score.NeoScorerConfig.RNA_SOMATIC_VCF;
 
 import java.io.File;
 import java.io.IOException;
