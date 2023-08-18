@@ -45,6 +45,14 @@ data class VdjAnnotation(val vdj: VDJSequence,
     {
         return filters.contains(Filter.PASS)
     }
+
+    val locus : IgTcrLocus get()
+    {
+        return if (vdj.vAnchor != null)
+            vdj.vAnchor.geneType.locus
+        else
+            vdj.jAnchor!!.geneType.locus
+    }
 }
 
 // helper object to annotate the VDJ sequences that we found

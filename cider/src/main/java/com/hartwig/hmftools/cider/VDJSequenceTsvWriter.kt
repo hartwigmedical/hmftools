@@ -98,7 +98,7 @@ object VDJSequenceTsvWriter
             {
                 Column.cdr3Seq -> csvPrinter.print(vdj.cdr3Sequence)
                 Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(vdj))
-                Column.locus -> csvPrinter.print(getLocus(vdj).prettyPrint())
+                Column.locus -> csvPrinter.print(vdjAnnotation.locus.prettyPrint())
                 Column.filter -> csvPrinter.print(vdjAnnotation.filters.joinToString(separator = ";"))
                 Column.blastnStatus -> csvPrinter.print(vdjAnnotation.blastnAnnotation?.blastnStatus ?: BlastnStatus.SKIPPED_BLASTN)
                 Column.minHighQualBaseReads -> csvPrinter.print(vdjAnnotation.cdr3SupportMin)
@@ -189,18 +189,6 @@ object VDJSequenceTsvWriter
             }
         }
         csvPrinter.println()
-    }
-
-    private fun getLocus(vdj: VDJSequence): IgTcrLocus
-    {
-        return if (vdj.vAnchor != null)
-        {
-            vdj.vAnchor.geneType.locus
-        }
-        else
-        {
-            vdj.jAnchor!!.geneType.locus
-        }
     }
 
     private fun zeroBaseAlignStart(blastnMatch: BlastnMatch?) : Int?
