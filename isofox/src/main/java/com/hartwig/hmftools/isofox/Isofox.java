@@ -2,12 +2,14 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_PANEL_THRESHOLD;
+import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.logVersion;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.APP_NAME;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.PRIORITISED_CHROMOSOMES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NEO_EPITOPES;
@@ -98,7 +100,7 @@ public class Isofox
 
     public boolean runAnalysis()
     {
-        long startTime = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
 
         // all other routines split work by chromosome
         Map<String,List<GeneData>> chrGeneMap = getChromosomeGeneLists();
@@ -127,10 +129,7 @@ public class Isofox
         if(!allocateBamFragments(chrGeneMap))
             return false;
 
-        long timeTakenMs = System.currentTimeMillis() - startTime;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        ISF_LOGGER.info("Isofox complete, mins({})", String.format("%.3f", timeTakeMins));
+        ISF_LOGGER.info("Isofox complete, mins({})", runTimeMinsStr(startTimeMs));
         return true;
     }
 
@@ -297,9 +296,13 @@ public class Isofox
         {
             double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
 
+            int lowCoverageThreshold = !mConfig.Filters.RestrictedGeneIds.isEmpty() && !mConfig.PanelTpmNormFile.isEmpty()
+                    ? LOW_COVERAGE_PANEL_THRESHOLD : LOW_COVERAGE_THRESHOLD;
+
             final RnaStatistics summaryStats = createSummaryStats(
                     totalFragmentCounts, enrichedGeneFragCount, spliceGeneCount,
-                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
+                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength,
+                    lowCoverageThreshold);
 
             mResultsWriter.writeSummaryStats(summaryStats);
         }
@@ -424,17 +427,10 @@ public class Isofox
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         IsofoxConfig.registerConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         IsofoxConfig config = new IsofoxConfig(configBuilder);
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svprep;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
@@ -79,7 +80,6 @@ public class SvPrepApplication
         mWriter.close();
 
         long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        double timeTakeMins = timeTakenMs / 60000.0;
 
         if(mConfig.PerfDebug && (combinedStats.ReadStats.TotalReads > 10000 || timeTakenMs > 10000))
         {
@@ -91,7 +91,7 @@ public class SvPrepApplication
                 combinedStats.PerfCounters.forEach(x -> x.logStats());
         }
 
-        SV_LOGGER.info("SvPrep complete, mins({})", format("%.3f", timeTakeMins));
+        SV_LOGGER.info("SvPrep complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private void calcFragmentDistribution()

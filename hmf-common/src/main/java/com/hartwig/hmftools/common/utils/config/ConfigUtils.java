@@ -47,11 +47,11 @@ public class ConfigUtils
 
     public static void setLogLevel(final ConfigBuilder configBuilder)
     {
-        if(configBuilder.hasFlag(LOG_DEBUG))
+        if(configBuilder.isRegistered(LOG_DEBUG) && configBuilder.hasFlag(LOG_DEBUG))
         {
             Configurator.setRootLevel(Level.DEBUG);
         }
-        else if(configBuilder.hasValue(LOG_LEVEL))
+        else if(configBuilder.isRegistered(LOG_LEVEL) && configBuilder.hasValue(LOG_LEVEL))
         {
             Configurator.setRootLevel(Level.valueOf(configBuilder.getValue(LOG_LEVEL)));
         }

@@ -26,9 +26,6 @@ import com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO;
 import org.jooq.Record;
 import org.jooq.Result;
 
-import htsjdk.variant.variantcontext.filter.CompoundFilter;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
-
 public class GermlineVariantComparer implements ItemComparer
 {
     private final ComparConfig mConfig;
@@ -85,15 +82,12 @@ public class GermlineVariantComparer implements ItemComparer
     {
         final List<ComparableItem> comparableItems = Lists.newArrayList();
 
-        CompoundFilter filter = new CompoundFilter(true);
-        filter.add(new PassingVariantFilter());
-
         String vcfFile = PurpleCommon.purpleGermlineVcfFile(fileSources.Purple, sampleId);
 
         try
         {
             List<GermlineVariant> variants = GermlineVariantFactory.fromVCFFile(sampleId, vcfFile);
-            variants.forEach(x -> comparableItems.add(new GermlineVariantData(x)));
+            variants.stream().filter(x -> !x.isFiltered()).forEach(x -> comparableItems.add(new GermlineVariantData(x)));
 
             CMP_LOGGER.debug("sample({}) loaded {} {} germline variants", sampleId, fileSources.Source, comparableItems.size());
         }

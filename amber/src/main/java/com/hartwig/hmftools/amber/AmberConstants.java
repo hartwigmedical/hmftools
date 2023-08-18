@@ -2,6 +2,8 @@ package com.hartwig.hmftools.amber;
 
 public class AmberConstants
 {
+    public static final String APP_NAME = "Amber";
+
     public static final int DEFAULT_MIN_BASE_QUALITY = 13;
     public static final int DEFAULT_MIN_PARTITION = 10000;
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
@@ -13,8 +15,6 @@ public class AmberConstants
     public static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
     public static final double DEFAULT_MAX_HET_AF_PERCENTAGE = 0.65;
 
-    public static final int OPTIMAL_BAM_SLICE_REGIONS = 150_000;
-    public static final int OPTIMAL_CRAM_SLICE_REGIONS = 10000;
     public static final int MIN_NORMAL_READ_DEPTH = 7;
     public static final long MIN_THREE_PLUS_READS = 2000;
 
@@ -25,4 +25,15 @@ public class AmberConstants
     public static final double HOMOZYGOUS_REGION_MAX_HET_RATIO = 0.05;
     public static final int HOMOZYGOUS_REGION_LONG_SIZE = 3_000_000;
     public static final int UNIPARENTAL_DISOMY_MIN_LENGTH = 10_000_000;
+
+    // BAM/CRAM slicing optimisations
+    public static final int BAM_REGION_GROUP_MAX = 150000;
+    public static final int CRAM_REGION_GROUP_MAX = 10000;
+
+    public static final int CRAM_MIN_GAP_START = 10000;
+    public static final int BAM_MIN_GAP_START = 4000;
+
+    public static final int CRAM_MIN_GAP_INCREMENT = 1000;
+    public static final int BAM_MIN_GAP_INCREMENT = 200;
+
 }

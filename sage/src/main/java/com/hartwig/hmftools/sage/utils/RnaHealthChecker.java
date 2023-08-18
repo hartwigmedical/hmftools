@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.Integers.median;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.BufferedWriter;
@@ -351,7 +352,7 @@ public class RnaHealthChecker
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
         addSampleIdFile(configBuilder, false);
@@ -368,13 +369,7 @@ public class RnaHealthChecker
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         RnaHealthChecker rnaHealthChecker = new RnaHealthChecker(configBuilder);
         rnaHealthChecker.run();

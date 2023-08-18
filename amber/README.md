@@ -166,7 +166,7 @@ The sample is assigned either a new patient id or an existing one (if it matches
 A sample can be loaded with the following command:
 
 ```
-java -cp amber.jar com.hartwig.hmftools.patientdb.LoadAmberData \
+java -cp amber.jar com.hartwig.hmftools.patientdb.amber.LoadAmberData \
     -sample TUMOR \
     -amber_snp_vcf /path/to/REFERENCE.amber.snp.vcf.gz \
     -snpcheck_vcf /path/to/Amber.snpcheck.37.vcf \

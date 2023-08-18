@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups.fastq;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -87,10 +88,7 @@ public class FastqUmiExtracter
 
         processFiles(fastqFiles[0], fastqFiles[1]);
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        MD_LOGGER.info("Extraction complete, mins({})", format("%.3f", timeTakeMins));
+        MD_LOGGER.info("Extraction complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private static final int READ_ITEM_ID = 0;

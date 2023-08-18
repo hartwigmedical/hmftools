@@ -9,6 +9,9 @@ import java.util.List;
 
 import com.google.common.io.Files;
 import com.hartwig.hmftools.common.amber.AmberBAF;
+import com.hartwig.hmftools.common.amber.AmberSite;
+import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
+import com.hartwig.hmftools.common.amber.ImmutableAmberSite;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
@@ -49,5 +52,44 @@ public class AmberUtils
         }
 
         return genomeRegions;
+    }
+
+    public static AmberBAF fromTumorBaf(final TumorBAF tumor)
+    {
+        int tumorAltCount = tumor.TumorEvidence.AltSupport;
+        double tumorBaf = tumorAltCount / (double) (tumorAltCount + tumor.TumorEvidence.RefSupport);
+        int normalAltCount = tumor.NormalAltSupport;
+        double normalBaf = normalAltCount / (double) (normalAltCount + tumor.NormalRefSupport);
+
+        return ImmutableAmberBAF.builder()
+                .from(tumor)
+                .normalDepth(tumor.NormalReadDepth)
+                .tumorDepth(tumor.TumorEvidence.ReadDepth)
+                .normalBAF(normalBaf)
+                .tumorBAF(tumorBaf)
+                .build();
+    }
+
+    public static AmberBAF fromBaseDepth(final PositionEvidence baseDepth)
+    {
+        int normalAltCount = baseDepth.AltSupport;
+        double normalBaf = normalAltCount / (double) (normalAltCount + baseDepth.RefSupport);
+        return ImmutableAmberBAF.builder()
+                .from(baseDepth)
+                .normalDepth(baseDepth.ReadDepth)
+                .tumorDepth(-1)
+                .normalBAF(normalBaf)
+                .tumorBAF(-1)
+                .build();
+    }
+
+    public static AmberSite depthAsSite(final PositionEvidence baseDepth)
+    {
+        return ImmutableAmberSite.builder()
+                .from(baseDepth)
+                .snpCheck(false)
+                .ref(baseDepth.ref())
+                .alt(baseDepth.alt())
+                .build();
     }
 }

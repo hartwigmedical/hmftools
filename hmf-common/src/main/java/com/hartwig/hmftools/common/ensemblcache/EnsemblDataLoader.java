@@ -55,13 +55,13 @@ public final class EnsemblDataLoader
     }
 
     public static boolean loadEnsemblGeneData(final String dataPath, final List<String> restrictedGeneIds,
-            final Map<String,List<GeneData>> chrGeneDataMap, RefGenomeVersion version, boolean loadSynonyms)
+            final Map<String,List<GeneData>> chrGeneDataMap, final RefGenomeVersion version, boolean loadSynonyms)
     {
         String filename = dataPath;
 
         filename += ENSEMBL_GENE_DATA_FILE;
 
-        if (!Files.exists(Paths.get(filename)))
+        if(!Files.exists(Paths.get(filename)))
             return false;
 
         try
@@ -72,7 +72,7 @@ public final class EnsemblDataLoader
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
 
-            if (line == null)
+            if(line == null)
             {
                 LOGGER.error("empty Ensembl gene data file({})", filename);
                 return false;
@@ -153,7 +153,7 @@ public final class EnsemblDataLoader
 
         filename += ENSEMBL_TRANS_EXON_DATA_FILE;
 
-        if (!Files.exists(Paths.get(filename)))
+        if(!Files.exists(Paths.get(filename)))
             return false;
 
         try
@@ -164,7 +164,7 @@ public final class EnsemblDataLoader
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
 
-            if (line == null)
+            if(line == null)
             {
                 LOGGER.error("empty Ensembl gene-exon data file({})", filename);
                 return false;
@@ -282,7 +282,7 @@ public final class EnsemblDataLoader
 
         filename += ENSEMBL_PROTEIN_FEATURE_DATA_FILE;
 
-        if (!Files.exists(Paths.get(filename)))
+        if(!Files.exists(Paths.get(filename)))
             return false;
 
         try
@@ -293,7 +293,7 @@ public final class EnsemblDataLoader
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
 
-            if (line == null)
+            if(line == null)
             {
                 LOGGER.error("empty Ensembl protein feature data file({})", filename);
                 return false;
@@ -362,7 +362,7 @@ public final class EnsemblDataLoader
 
         filename += ENSEMBL_TRANS_SPLICE_DATA_FILE;
 
-        if (!Files.exists(Paths.get(filename)))
+        if(!Files.exists(Paths.get(filename)))
             return false;
 
         try
@@ -373,7 +373,7 @@ public final class EnsemblDataLoader
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
 
-            if (line == null)
+            if(line == null)
             {
                 LOGGER.error("empty Ensembl trans splice acceptor data file({})", filename);
                 return false;
@@ -432,7 +432,7 @@ public final class EnsemblDataLoader
 
             final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, ENSEMBL_DELIM);
 
-            if (line == null)
+            if(line == null)
             {
                 LOGGER.error("empty Ensembl trans splice acceptor data file({})", filename);
                 return false;

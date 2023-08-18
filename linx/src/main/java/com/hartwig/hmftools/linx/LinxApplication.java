@@ -204,15 +204,11 @@ public class LinxApplication
         }
     }
 
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("linx.version");
-        LNX_LOGGER.info("Linx version: {}", version.version());
-    }
+    public static final String APP_NAME = "Linx";
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         LinxConfig.addConfig(configBuilder);
         FusionConfig.addConfig(configBuilder);
 
@@ -221,10 +217,6 @@ public class LinxApplication
         ConfigUtils.addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        logVersion();
-
-        setLogLevel(configBuilder);
 
         new LinxApplication(configBuilder);
     }

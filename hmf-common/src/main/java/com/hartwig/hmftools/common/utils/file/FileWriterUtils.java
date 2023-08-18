@@ -104,13 +104,20 @@ public final class FileWriterUtils
         return outputDir + File.separator;
     }
 
+    // Note: if filename ends with .gz returns a Gzipped buffered writer
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException
     {
-        return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile, appendIfExists), StandardCharsets.UTF_8));
+        OutputStream outputStream = new FileOutputStream(outputFile, appendIfExists);
+        if(outputFile.endsWith(".gz"))
+        {
+            outputStream = new GZIPOutputStream(outputStream);
+        }
+        return new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
     }
 
     // overwrite if file exists
+    // Note: if filename ends with .gz returns a Gzipped buffered writer
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile) throws IOException
     {

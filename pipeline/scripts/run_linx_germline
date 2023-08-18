@@ -5,7 +5,6 @@ tumor_id=$1 && shift
 sv_vcf=$1 && shift
 output_dir=$1 && shift
 ref_genome_version=$1 && shift
-line_element_file=$1 && shift
 ensembl_dir=$1 && shift
 driver_gene_panel=$1 && shift
 

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.isofox.expression;
 
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;

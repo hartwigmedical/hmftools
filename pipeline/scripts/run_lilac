@@ -5,8 +5,7 @@ tumor_id=$1 && shift
 tumor_bam=$1 && shift
 reference_id=$1 && shift
 reference_bam=$1 && shift
-gene_copy_number_file=$1 && shift
-somatic_vcf=$1 && shift
+purple_dir=$1 && shift
 output_dir=$1 && shift
 ref_genome_version=$1 && shift
 ref_genome=$1 && shift
@@ -24,11 +23,6 @@ if [[ -f "${lilac_tsv}" ]]; then
   exit
 fi
 
-if [[ ! -f "${somatic_vcf}" ]]; then
-  echo "Missing Purple somatic VCF, not running Lilac for ${tumor_id}"
-  exit
-fi
-
 args="-sample ${tumor_id}"
 
 if [ "${reference_bam}" != "none" ]; then
@@ -40,8 +34,7 @@ fi
 args="${args} -ref_genome_version ${ref_genome_version} \
   -ref_genome ${ref_genome} \
   -resource_dir ${resource_dir} \
-  -gene_copy_number ${gene_copy_number_file} \
-  -somatic_vcf ${somatic_vcf} \
+  -purple_dir ${purple_dir} \
   -threads ${threads} \
   -output_dir ${output_dir}"
 

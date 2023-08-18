@@ -12,14 +12,12 @@ import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -223,7 +221,7 @@ public class ProteomeWriter
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         addEnsemblDir(configBuilder, true);
         addRefGenomeConfig(configBuilder, true);
@@ -231,14 +229,7 @@ public class ProteomeWriter
         ConfigUtils.addLoggingOptions(configBuilder);
         configBuilder.addFlag(CANONICAL_ONLY, "Only write canonical proteome");
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         ProteomeWriter proteomeWriter = new ProteomeWriter(configBuilder);
         proteomeWriter.run();

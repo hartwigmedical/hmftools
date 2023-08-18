@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIds
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.dnds.DndsCommon.APP_NAME;
 import static com.hartwig.hmftools.dnds.DndsCommon.DN_LOGGER;
 import static com.hartwig.hmftools.dnds.DndsCommon.SOMATIC_CACHE_DIR;
-import static com.hartwig.hmftools.dnds.DndsCommon.logVersion;
 import static com.hartwig.hmftools.dnds.SampleMutationalLoad.cohortSampleMutationalLoadFilename;
 import static com.hartwig.hmftools.dnds.SampleMutationalLoad.loadCohortSampleMutationalLoads;
 import static com.hartwig.hmftools.dnds.SomaticVariant.cohortDndsVariantsFilename;
@@ -67,13 +67,10 @@ public class DndsFileBuilder
 
     public static void main(final String... args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-        setLogLevel(configBuilder);
-
-        logVersion();
 
         DndsFileBuilder dndsFileBuilder = new DndsFileBuilder(configBuilder);
         dndsFileBuilder.run();

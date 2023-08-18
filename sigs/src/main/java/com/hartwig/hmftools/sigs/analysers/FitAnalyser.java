@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.MatrixFile.writeMatrixData;
 import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -20,7 +21,6 @@ import static com.hartwig.hmftools.sigs.buckets.BaSampleFitter.DEFAULT_NOISE_PRO
 import static com.hartwig.hmftools.sigs.buckets.BaSampleFitter.NOISE_PROB;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_COUNTS_FILE;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.formOutputFilename;

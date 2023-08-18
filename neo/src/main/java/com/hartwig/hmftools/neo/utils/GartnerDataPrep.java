@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELES;
@@ -319,7 +320,7 @@ public class GartnerDataPrep
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         // RandomPeptideConfig.addConfig(configBuilder);
         configBuilder.addPath(PATIENT_ALLELES_FILE, true, "MCF predictions file");
         configBuilder.addPath(MUTATIONS_FILE, true, "Binding validation file");
@@ -327,13 +328,7 @@ public class GartnerDataPrep
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         GartnerDataPrep gartnerDataPrep = new GartnerDataPrep(configBuilder);
         gartnerDataPrep.run();
