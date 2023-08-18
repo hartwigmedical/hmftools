@@ -346,7 +346,7 @@ class BlastnAnnotator
                 newGene.isFunctional)
             {
                 // if bitscores are equal, we prefer the functional one
-                sLogger.info("prefer functional gene: {}, bitscore: {} over non functional: {}, bitscore: {}",
+                sLogger.trace("prefer functional gene: {}, bitscore: {} over non functional: {}, bitscore: {}",
                     newGene.geneAllele, newMatch.bitScore, existingGene.geneAllele, existingMatch.bitScore)
                 return true
             }
