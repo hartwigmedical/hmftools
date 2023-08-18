@@ -195,9 +195,7 @@ public class OrangeAlgo
         LinxInterpreter linxInterpreter = new LinxInterpreter(driverGenes, knownFusionCache);
         LinxRecord linx = linxInterpreter.interpret(linxData);
 
-        PaveAlgo pave = new PaveAlgo(ensemblDataCache);
-        if(suppressGeneWarnings)
-            pave.setExpectedGenesMissing();
+        PaveAlgo pave = new PaveAlgo(ensemblDataCache, !suppressGeneWarnings);
 
         PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);

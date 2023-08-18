@@ -25,8 +25,7 @@ public class PaveAlgoTest
     public void canCreatePaveEntries()
     {
         // "gene", coding range: 300-800, reverse strand. exon1: 600-900, exon2: 450-550, exon3: 250:350
-        PaveAlgo pave = new PaveAlgo(TestEnsemblDataCacheFactory.loadTestCache());
-        pave.setExpectedGenesMissing();
+        PaveAlgo pave = new PaveAlgo(TestEnsemblDataCacheFactory.loadTestCache(), false);
 
         // Missing gene
         assertNull(pave.run("other gene", MATCHING_TRANSCRIPT, 0));

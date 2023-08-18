@@ -52,8 +52,8 @@ public class ReportResources
     public static final DeviceRgb PALETTE_ORANGE_5 = new DeviceRgb(175, 125, 0);
     public static final DeviceRgb PALETTE_ORANGE_6 = new DeviceRgb(155, 115, 0);
 
-    private static final String FONT_REGULAR_PATH = "/fonts/nimbus-sans/NimbusSansL-Regular.ttf";
-    private static final String FONT_BOLD_PATH = "/fonts/nimbus-sans/NimbusSansL-Bold.ttf";
+    private static final String FONT_REGULAR_PATH = "fonts/nimbus-sans/NimbusSansL-Regular.ttf";
+    private static final String FONT_BOLD_PATH = "fonts/nimbus-sans/NimbusSansL-Bold.ttf";
 
     @NotNull
     private final PdfFont fontRegular;
