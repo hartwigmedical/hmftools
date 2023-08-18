@@ -7,8 +7,6 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CHORD_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CUPPA_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.FLAGSTAT_DIR;
@@ -21,7 +19,6 @@ import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PURPL
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SAGE_GERMLINE_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SAGE_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SIGS_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.VIRUS_BREAKEND_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.VIRUS_INTERPRETER_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
@@ -55,10 +52,9 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -80,10 +76,8 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
-import com.hartwig.hmftools.orange.util.Config;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.util.Config.fileIfExists;
 import static com.hartwig.hmftools.orange.util.Config.optionalFileIfExists;
 
@@ -290,7 +284,10 @@ public interface OrangeConfig
 
     boolean addDisclaimer();
 
-    default boolean tumorOnlyMode() { return referenceSampleId() == null || referenceSampleId().isEmpty(); }
+    default boolean tumorOnlyMode()
+    {
+        return referenceSampleId() == null || referenceSampleId().isEmpty();
+    }
 
     @NotNull
     static OrangeConfig createConfig(final ConfigBuilder configBuilder)
@@ -425,18 +422,6 @@ public interface OrangeConfig
         return builder.build();
     }
 
-    private static String getMetricsDirectory(
-            final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir, final String toolDir)
-    {
-        if(configBuilder.hasValue(configStr))
-            return configBuilder.getValue(configStr);
-
-        if(pipelineDir == null || sampleId == null)
-            return null;
-
-        return pipelineDir + sampleId + File.separator + toolDir;
-    }
-
     private static String getFlagstatFile(
             final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir, final String toolDir)
     {
@@ -465,9 +450,9 @@ public interface OrangeConfig
         return sampleDataDir;
     }
 
-    @NotNull
-    static String getToolPlotsDirectory(@NotNull ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
-            @NotNull String toolDirConfig, @NotNull String pipelineToolDir)
+    static String getToolPlotsDirectory(
+            final ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
+            final String toolDirConfig, final String pipelineToolDir)
     {
         if(configBuilder.hasValue(toolDirConfig))
         {
@@ -482,6 +467,19 @@ public interface OrangeConfig
         }
         return plotDir;
     }
+
+    private static String getMetricsDirectory(
+            final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir, final String toolDir)
+    {
+        if(configBuilder.hasValue(configStr))
+            return configBuilder.getValue(configStr);
+
+        if(pipelineDir == null || sampleId == null)
+            return null;
+
+        return pipelineDir + sampleId + File.separator + toolDir;
+    }
+
 
     @NotNull
     static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator)
