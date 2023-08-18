@@ -386,7 +386,7 @@ We also modify the map quality taking into account the number of events, soft cl
 readEvents = NM tag from BAM record adjusted so that INDELs and (candidate) MNVs count as only 1 event
 distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)`^ 
 softClipPenalty =  if(hasSoftClip,(max(1,soft clip bases /12),0)  * `map_qual_read_events_penalty (8)`^    
-improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if proper pair flag not set else 0  
+improperPairPenalty = `mapQualityImproperPairPenalty (15)`  if proper pair flag not set else 0  
 modifiedMapQuality^ = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty - softClipPenalty 
 </pre>
 
