@@ -3,9 +3,9 @@ package com.hartwig.hmftools.orange.report;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
@@ -57,7 +57,7 @@ public class ReportWriter
     {
         ReportResources reportResources = ReportResources.create();
 
-        List<ReportChapter> chapters = Lists.newArrayList();
+        List<ReportChapter> chapters = new ArrayList<>();
 
         chapters.add(new FrontPageChapter(report, plotPathResolver, reportResources));
         chapters.add(new SomaticFindingsChapter(report, plotPathResolver, reportResources));

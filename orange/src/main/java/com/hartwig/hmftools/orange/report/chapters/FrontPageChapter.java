@@ -100,9 +100,10 @@ public class FrontPageChapter implements ReportChapter
         Cells cells = new Cells(reportResources);
 
         float[] headerComponents = new float[] { 3, 2, 1 };
-        Cell[] headerCells = headerCells = new Cell[] {
+
+        Cell[] headerCells = new Cell[] {
                 cells.createHeader("Configured Primary Tumor"),
-                !report.tumorOnlyMode() ? cells.createHeader("Cuppa Cancer Type") : cells.createHeader("Tumor-Only"),
+                cells.createHeader(!report.tumorOnlyMode() ? "Cuppa Cancer Type" : "Tumor-Only"),
                 cells.createHeader("QC") };
 
         Table table = Tables.createContent(contentWidth(), headerComponents, headerCells);
