@@ -73,7 +73,7 @@ object IgTcrGeneFile
                 val region = IgTcrRegion.valueOf(record[Column.region])
                 val functionality = IgTcrFunctionality.fromCode(record[Column.functionality])
                 val isPrimaryAssembly = record[Column.primaryAssembly].toBoolean()
-                val assemblyName = record[Column.assemblyName].intern()
+                val assemblyName = if (isPrimaryAssembly) record[Column.assemblyName].intern() else null
                 val anchorSequence = record[Column.anchorSequence]
                 var chromosome = record[Column.chromosome].intern()
                 var genomicLocation: GenomicLocation? = null
@@ -98,14 +98,14 @@ object IgTcrGeneFile
                     {
                         throw RuntimeException("chromosome exist but pos start or pos end invalid")
                     }
-                    genomicLocation = GenomicLocation(isPrimaryAssembly, assemblyName, chromosome, posStart, posEnd, strand)
+                    genomicLocation = GenomicLocation(chromosome, posStart, posEnd, strand, assemblyName)
 
                     val anchorStart = record[Column.anchorStart]
                     val anchorEnd = record[Column.anchorEnd]
 
                     if (anchorStart.isNotEmpty() && anchorEnd.isNotEmpty())
                     {
-                        anchorLocation = GenomicLocation(isPrimaryAssembly, assemblyName, chromosome, anchorStart.toInt(), anchorEnd.toInt(), strand)
+                        anchorLocation = GenomicLocation(chromosome, anchorStart.toInt(), anchorEnd.toInt(), strand, assemblyName)
                     }
                 }
                 
@@ -138,7 +138,7 @@ object IgTcrGeneFile
                         Column.region -> csvPrinter.print(gene.region)
                         Column.functionality -> csvPrinter.print(gene.functionality.toCode())
                         Column.primaryAssembly -> csvPrinter.print(gene.geneLocation?.isPrimaryAssembly)
-                        Column.assemblyName -> csvPrinter.print(gene.geneLocation?.assemblyName)
+                        Column.assemblyName -> csvPrinter.print(gene.geneLocation?.altAssemblyName)
                         Column.chromosome -> csvPrinter.print(gene.geneLocation?.chromosome)
                         Column.posStart -> csvPrinter.print(gene.geneLocation?.posStart)
                         Column.posEnd -> csvPrinter.print(gene.geneLocation?.posEnd)

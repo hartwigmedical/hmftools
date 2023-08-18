@@ -49,7 +49,7 @@ data class BlastnMatch(
             Strand.REVERSE -> { start = subjectAlignEnd; end = subjectAlignStart }
         }
 
-        return GenomicLocation(isPrimaryAssembly(assembly), assembly, chromosome, start, end, subjectFrame)
+        return GenomicLocation(chromosome, start, end, subjectFrame, if (isPrimaryAssembly(assembly)) null else assembly)
     }
 
     companion object

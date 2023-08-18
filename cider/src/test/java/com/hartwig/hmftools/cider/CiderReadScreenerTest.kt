@@ -135,8 +135,8 @@ class CiderReadScreenerTest
         // this tests the function to work out if a read is potentially near and on the
         // correct side of the anchor genome location
         val anchorLocations = arrayOf(
-            VJAnchorGenomeLocation(VJGeneType.IGHV, GenomicLocation(true, "Primary","1", anchorRefStart, anchorRefEnd, Strand.FORWARD)),
-            VJAnchorGenomeLocation(VJGeneType.IGHJ, GenomicLocation(true, "Primary","1", anchorRefStart, anchorRefEnd, Strand.REVERSE))
+            VJAnchorGenomeLocation(VJGeneType.IGHV, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.FORWARD)),
+            VJAnchorGenomeLocation(VJGeneType.IGHJ, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.REVERSE))
         )
         for (anchorLocation in anchorLocations)
         {
@@ -177,8 +177,8 @@ class CiderReadScreenerTest
         // this tests the function to work out if a read is potentially near and on the
         // correct side of the anchor genome location
         val anchorLocations = arrayOf(
-            VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(true, "Primary", "1", anchorRefStart, anchorRefEnd, Strand.REVERSE)),
-            VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(true, "Primary", "1", anchorRefStart, anchorRefEnd, Strand.FORWARD))
+            VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.REVERSE)),
+            VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation("1", anchorRefStart, anchorRefEnd, Strand.FORWARD))
         )
         for (anchorLocation in anchorLocations)
         {
@@ -240,9 +240,9 @@ class CiderReadScreenerTest
             VJGeneType.IGHJ,
             "IGHJ1",
             "01",
-            GenomicLocation(true, "Primary", "14", 106330701, 106330840, Strand.REVERSE),
+            GenomicLocation("14", 106330701, 106330840, Strand.REVERSE),
             "TGGGGCCAGGGCACCCTGGTCACCGTCTCC",
-            GenomicLocation(true, "Primary", "14", 106330801, 106330830, Strand.REVERSE)
+            GenomicLocation("14", 106330801, 106330830, Strand.REVERSE)
         )
         val vjGeneStore = TestCiderGeneDatastore(listOf(ighJ1))
         val mockAnchorBlosumSearcher = MockAnchorBlosumSearcher()
@@ -261,7 +261,7 @@ class CiderReadScreenerTest
         // template loc: 14:106330801-106330830(-)
         val anchorLocation = VJAnchorGenomeLocation(
             VJGeneType.IGHJ,
-            GenomicLocation(true, "Primary", "14", 106330801, 106330830, Strand.REVERSE)
+            GenomicLocation("14", 106330801, 106330830, Strand.REVERSE)
         )
         val readCandidate = ciderReadScreener.matchesAnchorLocation(record, mapped!!, anchorLocation, true)
         TestCase.assertNotNull(readCandidate)
@@ -300,7 +300,7 @@ class CiderReadScreenerTest
         // ======>  <=====
         //  mate     this
         //
-        var anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(true, "Primary", chr, anchorRefStart, anchorRefEnd, Strand.FORWARD))
+        var anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(chr, anchorRefStart, anchorRefEnd, Strand.FORWARD))
 
         read.mateAlignmentStart = anchorRefStart - 500
         read.mateNegativeStrandFlag = false
@@ -328,7 +328,7 @@ class CiderReadScreenerTest
         //                          ======>  <=====
         //                           this     mate
         //
-        anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(true, "Primary", chr, anchorRefStart, anchorRefEnd, Strand.REVERSE))
+        anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAV, GenomicLocation(chr, anchorRefStart, anchorRefEnd, Strand.REVERSE))
 
         read.mateAlignmentStart = anchorRefEnd + 500
         read.mateNegativeStrandFlag = true
@@ -379,7 +379,7 @@ class CiderReadScreenerTest
         //                      ======>  <=====
         //                       this     mate
         //
-        var anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(true, "Primary", chr, anchorRefStart, anchorRefEnd, Strand.FORWARD))
+        var anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(chr, anchorRefStart, anchorRefEnd, Strand.FORWARD))
 
         read.mateAlignmentStart = anchorRefEnd + 500
         read.mateNegativeStrandFlag = true
@@ -407,7 +407,7 @@ class CiderReadScreenerTest
         // ======>  <=====
         //  mate     this
         //
-        anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(true, "Primary", chr, anchorRefStart, anchorRefEnd, Strand.REVERSE))
+        anchorLocation = VJAnchorGenomeLocation(VJGeneType.TRAJ, GenomicLocation(chr, anchorRefStart, anchorRefEnd, Strand.REVERSE))
 
         read.mateAlignmentStart = anchorRefStart - 500
         read.mateNegativeStrandFlag = false
@@ -458,7 +458,7 @@ class CiderReadScreenerTest
         //         ======>  <=====
         //          this     mate
         //
-        var constantRegion = GenomicLocation(true, "Primary", chr, constantRegionRefStart, constantRegionRefEnd, Strand.FORWARD)
+        var constantRegion = GenomicLocation(chr, constantRegionRefStart, constantRegionRefEnd, Strand.FORWARD)
 
         read.mateAlignmentStart = constantRegionRefEnd + 500
         read.mateNegativeStrandFlag = true
@@ -487,7 +487,7 @@ class CiderReadScreenerTest
         //   ======>   <=====
         //     mate     this
         //
-        constantRegion = GenomicLocation(true, "Primary", chr, constantRegionRefStart, constantRegionRefEnd, Strand.REVERSE)
+        constantRegion = GenomicLocation(chr, constantRegionRefStart, constantRegionRefEnd, Strand.REVERSE)
 
         read.mateAlignmentStart = constantRegionRefStart - 500
         read.mateNegativeStrandFlag = false
