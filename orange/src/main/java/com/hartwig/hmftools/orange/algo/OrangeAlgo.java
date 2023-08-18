@@ -450,8 +450,7 @@ public class OrangeAlgo
         LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
 
         String linxGermlineDataDirectory = config.linxGermlineDataDirectory();
-        LinxData linx = LinxDataLoader.load(
-                config.tumorSampleId(), config.linxSomaticDataDirectory(), !config.tumorOnlyMode() ? linxGermlineDataDirectory : null);
+        LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
         LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticStructuralVariants().size());
         LOGGER.info(" Loaded {} somatic structural drivers", linx.somaticDrivers().size());
