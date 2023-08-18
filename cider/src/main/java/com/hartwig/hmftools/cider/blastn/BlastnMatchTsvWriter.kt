@@ -14,6 +14,7 @@ object BlastnMatchTsvWriter
         cdr3AA,
         matchType,
         gene,
+        functionality,
         pIdent,
         seqLength,
         alignStart,
@@ -82,7 +83,8 @@ object BlastnMatchTsvWriter
                     Column.cdr3Seq -> csvPrinter.print(blastnAnnotation.vdjSequence.cdr3Sequence)
                     Column.cdr3AA -> csvPrinter.print(CiderFormatter.cdr3AminoAcid(blastnAnnotation.vdjSequence))
                     Column.matchType -> csvPrinter.print(type)
-                    Column.gene -> csvPrinter.print(gene)
+                    Column.gene -> csvPrinter.print(gene?.geneName)
+                    Column.functionality -> csvPrinter.print(gene?.functionality?.toCode())
                     Column.pIdent -> csvPrinter.print(match.percentageIdent)
                     Column.seqLength -> csvPrinter.print(match.querySeqLen)
                     Column.alignStart -> csvPrinter.print(match.queryAlignStart)

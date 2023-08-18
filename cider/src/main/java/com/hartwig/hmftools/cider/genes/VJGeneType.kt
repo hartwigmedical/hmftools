@@ -71,8 +71,7 @@ enum class VJGeneType(val locus: IgTcrLocus, val vj: VJ)
     TRDV(IgTcrLocus.TRA_TRD, VJ.V),
     TRDJ(IgTcrLocus.TRA_TRD, VJ.J),
     TRGV(IgTcrLocus.TRG, VJ.V),
-    TRGJ(IgTcrLocus.TRG, VJ.J),
-    IGKDEL(IgTcrLocus.IGK, VJ.J);
+    TRGJ(IgTcrLocus.TRG, VJ.J);
 
     // gene types that can be paired with
     fun pairedVjGeneTypes() : List<VJGeneType>
@@ -81,7 +80,7 @@ enum class VJGeneType(val locus: IgTcrLocus, val vj: VJ)
         {
             IGHV -> listOf(IGHJ)
             IGHJ -> listOf(IGHV)
-            IGKV -> listOf(IGKJ, IGKDEL)
+            IGKV -> listOf(IGKJ)
             IGKJ -> listOf(IGKV)
             IGLV -> listOf(IGLJ)
             IGLJ -> listOf(IGLV)
@@ -93,7 +92,22 @@ enum class VJGeneType(val locus: IgTcrLocus, val vj: VJ)
             TRDJ -> listOf(TRDV, TRAV)
             TRGV -> listOf(TRGJ)
             TRGJ -> listOf(TRGV)
-            IGKDEL -> listOf(IGKV)
+        }
+    }
+
+    companion object
+    {
+        val IGKINTR = "IGKINTR"
+        val IGKDEL = "IGKDEL"
+
+        fun fromGeneName(geneName: String) : VJGeneType
+        {
+            return when (geneName)
+            {
+                IGKINTR -> IGKV
+                IGKDEL -> IGKJ
+                else -> valueOf(geneName.substring(0, 4))
+            }
         }
     }
 }

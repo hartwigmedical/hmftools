@@ -10,6 +10,7 @@ import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
 import com.hartwig.hmftools.cider.blastn.BlastnAnnotation
 import com.hartwig.hmftools.cider.blastn.BlastnAnnotator
 import com.hartwig.hmftools.cider.blastn.BlastnStatus
+import com.hartwig.hmftools.cider.genes.IgTcrConstantRegion
 import com.hartwig.hmftools.cider.primer.*
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
@@ -68,7 +69,7 @@ class CiderApplication
         val start = Instant.now()
 
         val ciderGeneDatastore: ICiderGeneDatastore = CiderGeneDatastore(
-            CiderGeneDataLoader.loadAnchorTemplateTsv(mParams.refGenomeVersion),
+            CiderGeneDataLoader.loadAnchorTemplates(mParams.refGenomeVersion),
             CiderGeneDataLoader.loadConstantRegionGenes(mParams.refGenomeVersion))
 
         val candidateBlosumSearcher = AnchorBlosumSearcher(
@@ -118,6 +119,9 @@ class CiderApplication
         {
             // we need to filter out VDJ sequences that already match reference. In this version we avoid running blastn on those
             val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
+
+            // perform a GC collection before running blastn. This is to reduce memory used by JVM
+            System.gc()
 
             val blastnAnnotator = BlastnAnnotator()
             blastnAnnotations = blastnAnnotator.runAnnotate(mParams.sampleId, mParams.blast!!, mParams.blastDb!!, filteredVdjs, mParams.outputDir, mParams.threadCount)

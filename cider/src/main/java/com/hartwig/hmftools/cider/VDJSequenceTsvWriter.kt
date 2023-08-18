@@ -127,22 +127,8 @@ object VDJSequenceTsvWriter
                 Column.jMatchMethod -> csvPrinter.print(vdj.jAnchor?.matchMethod)
                 Column.jSimilarityScore -> csvPrinter.print(vdjAnnotation.jSimilarityScore)
                 Column.jNonSplitReads -> csvPrinter.print(vdjAnnotation.jNonSplitReads)
-                Column.vGene -> if (vdjAnnotation.blastnAnnotation != null)
-                    {
-                        csvPrinter.print(vdjAnnotation.blastnAnnotation!!.vGene)
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
-                Column.vPIdent -> if (vdjAnnotation.blastnAnnotation != null)
-                    {
-                        csvPrinter.print(vdjAnnotation.blastnAnnotation!!.vMatch?.percentageIdent)
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
+                Column.vGene -> csvPrinter.print(vdjAnnotation.blastnAnnotation?.vGene?.geneName)
+                Column.vPIdent -> csvPrinter.print(vdjAnnotation.blastnAnnotation?.vMatch?.percentageIdent)
                 Column.vAlignStart -> if (vdjAnnotation.blastnAnnotation != null)
                     {
                         csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.blastnAnnotation!!.vMatch))
@@ -159,22 +145,8 @@ object VDJSequenceTsvWriter
                     {
                         csvPrinter.print(null)
                     }
-                Column.dGene -> if (vdjAnnotation.blastnAnnotation != null)
-                    {
-                        csvPrinter.print(vdjAnnotation.blastnAnnotation!!.dGene)
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
-                Column.dPIdent -> if (vdjAnnotation.blastnAnnotation != null)
-                    {
-                        csvPrinter.print(vdjAnnotation.blastnAnnotation!!.dMatch?.percentageIdent)
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
+                Column.dGene -> csvPrinter.print(vdjAnnotation.blastnAnnotation?.dGene?.geneName)
+                Column.dPIdent -> csvPrinter.print(vdjAnnotation.blastnAnnotation?.dMatch?.percentageIdent)
                 Column.dAlignStart -> if (vdjAnnotation.blastnAnnotation != null)
                     {
                         csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.blastnAnnotation!!.dMatch))
@@ -191,22 +163,8 @@ object VDJSequenceTsvWriter
                     {
                         csvPrinter.print(null)
                     }
-                Column.jGene -> if (vdjAnnotation.blastnAnnotation != null)
-                    {
-                        csvPrinter.print(vdjAnnotation.blastnAnnotation!!.jGene)
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
-                Column.jPIdent -> if (vdjAnnotation.blastnAnnotation != null)
-                    {
-                        csvPrinter.print(vdjAnnotation.blastnAnnotation!!.jMatch?.percentageIdent)
-                    }
-                    else
-                    {
-                        csvPrinter.print(null)
-                    }
+                Column.jGene -> csvPrinter.print(vdjAnnotation.blastnAnnotation?.jGene?.geneName)
+                Column.jPIdent -> csvPrinter.print(vdjAnnotation.blastnAnnotation?.jMatch?.percentageIdent)
                 Column.jAlignStart -> if (vdjAnnotation.blastnAnnotation != null)
                     {
                         csvPrinter.print(zeroBaseAlignStart(vdjAnnotation.blastnAnnotation!!.jMatch))

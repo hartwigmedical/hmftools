@@ -4,7 +4,9 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.google.common.collect.Multimaps
 import com.hartwig.hmftools.cider.*
+import com.hartwig.hmftools.cider.genes.IgTcrGeneFile
 import com.hartwig.hmftools.common.genome.region.Strand
+import com.hartwig.hmftools.common.utils.Doubles
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.HashMap
@@ -16,9 +18,9 @@ enum class BlastnStatus
 
 data class BlastnAnnotation(
     val vdjSequence: VDJSequence,
-    val vGene: String? = null,
-    val dGene: String? = null,
-    val jGene: String? = null,
+    val vGene: IgTcrGene? = null,
+    val dGene: IgTcrGene? = null,
+    val jGene: IgTcrGene? = null,
     val vMatch: BlastnMatch? = null,
     val dMatch: BlastnMatch? = null,
     val jMatch: BlastnMatch? = null,
@@ -40,17 +42,22 @@ class BlastnAnnotator
         vdjGenes = ArrayListMultimap.create()
 
         // since we use V38 for blast
-        val igTcrGenes = IgTcrGeneLoader.load(CiderConstants.BLAST_REF_GENOME_VERSION)
+        val igTcrGenes = IgTcrGeneFile.read(CiderConstants.BLAST_REF_GENOME_VERSION)
 
         // find all the genes that are we need
         for (geneData in igTcrGenes)
         {
-            if (geneData.geneSegmentType !in "VDJ")
+            if (geneData.region !in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.D_REGION, IgTcrRegion.J_REGION))
             {
                 continue
             }
 
-            vdjGenes.put(Pair(geneData.chromosome, geneData.strand), geneData)
+            if (geneData.geneLocation == null)
+            {
+                continue
+            }
+
+            vdjGenes.put(Pair(geneData.geneLocation.chromosome, geneData.geneLocation.strand), geneData)
 
             /* sLogger.debug(
                 "found constant region gene: {}, type: {}, location: {}",
@@ -138,7 +145,11 @@ class BlastnAnnotator
                                                     queryAlignEnd = blastnMatch.queryAlignEnd + alignStartOffset) }
             .sortedBy { m -> m.expectedValue }
 
-        var locus: IgTcrLocus? = null
+        // we freeze the locus here. Reason is that there are cases where a low identity match (92%) from another
+        // locus supercedes a 100% identity match from the correct locus
+        val locus: IgTcrLocus? = vdjSequence.vAnchor?.geneType?.locus ?: vdjSequence.jAnchor?.geneType?.locus
+
+        require(locus != null)
 
         var vGene: IgTcrGene? = null
         var vMatch: BlastnMatch? = null
@@ -165,7 +176,7 @@ class BlastnAnnotator
             var vdjGene: IgTcrGene? = findGene(blastnMatch)
 
             // for V/J gene segments, we mandate 90% identity
-            if (vdjGene != null && vdjGene.geneSegmentType in "VJ" && blastnMatch.percentageIdent < CiderConstants.BLASTN_MATCH_MIN_VJ_IDENTITY)
+            if (vdjGene != null && vdjGene.region in arrayOf(IgTcrRegion.V_REGION, IgTcrRegion.J_REGION) && blastnMatch.percentageIdent < CiderConstants.BLASTN_MATCH_MIN_VJ_IDENTITY)
             {
                 vdjGene = null
             }
@@ -174,28 +185,23 @@ class BlastnAnnotator
             {
                 val geneLocus = IgTcrLocus.fromGeneName(vdjGene.geneName)
 
-                if (locus == null)
-                {
-                    locus = geneLocus
-                }
-
                 if (locus == geneLocus)
                 {
                     // we must check to make sure the locus matches the top alignment
                     // this ensure we do not annotate incorrect genes
                     // we found a VDJ gene, see which one it is
                     // but also need to check against identity
-                    if (vdjGene.geneSegmentType == 'V' && vGene == null)
+                    if (vdjGene.region == IgTcrRegion.V_REGION && isBetterMatch(vMatch, vGene, blastnMatch, vdjGene))
                     {
                         vGene = vdjGene
                         vMatch = blastnMatch
                     }
-                    if (vdjGene.geneSegmentType == 'D' && dGene == null)
+                    if (vdjGene.region == IgTcrRegion.D_REGION && isBetterMatch(dMatch, dGene, blastnMatch, vdjGene))
                     {
                         dGene = vdjGene
                         dMatch = blastnMatch
                     }
-                    if (vdjGene.geneSegmentType == 'J' && jGene == null)
+                    if (vdjGene.region == IgTcrRegion.J_REGION && isBetterMatch(jMatch, jGene, blastnMatch, vdjGene))
                     {
                         jGene = vdjGene
                         jMatch = blastnMatch
@@ -252,9 +258,9 @@ class BlastnAnnotator
 
         return BlastnAnnotation(
             vdjSequence = vdjSequence,
-            vGene = vGene?.geneName,
-            dGene = dGene?.geneName,
-            jGene = jGene?.geneName,
+            vGene = vGene,
+            dGene = dGene,
+            jGene = jGene,
             vMatch = vMatch,
             dMatch = dMatch,
             jMatch = jMatch,
@@ -263,52 +269,33 @@ class BlastnAnnotator
 
     fun findGene(blastnMatch: BlastnMatch) : IgTcrGene?
     {
-        // If this is part of non alt ref genome, the subject title would look like this
-        // Homo sapiens chromosome 4, GRCh38.p13 Primary Assembly
-        val regex = Regex("Homo sapiens chromosome (\\w+), GRCh38.p13 Primary Assembly")
-        val regexMatch = regex.matchEntire(blastnMatch.subjectTitle)
+        val matchLocation = blastnMatch.toGenomicLocation() ?: return null
 
-        if (regexMatch == null)
-        {
-            return null
-        }
-
-        val chromosome = CiderConstants.BLAST_REF_GENOME_VERSION.versionedChromosome(regexMatch.groupValues[1])
+        val chromosome = matchLocation.chromosome
 
         val geneDataList = vdjGenes[Pair(chromosome, blastnMatch.subjectFrame)]
 
+        var bestGene : IgTcrGene? = null
+
         for (gene in geneDataList)
         {
-            assert(gene.chromosome == chromosome)
-            assert(gene.strand == blastnMatch.subjectFrame)
+            val geneLocation = gene.geneLocation ?: continue
 
-            val contigAlignStart: Int
-            val contigAlignEnd: Int
+            require(geneLocation.chromosome == chromosome)
+            require(geneLocation.strand == blastnMatch.subjectFrame)
 
-            if (gene.strand == Strand.FORWARD)
+            if (bestGene == null || !bestGene.isFunctional)
             {
-                contigAlignStart = blastnMatch.subjectAlignStart
-                contigAlignEnd = blastnMatch.subjectAlignEnd
-            }
-            else
-            {
-                // for negative strand, the align start > align end
-                contigAlignStart = blastnMatch.subjectAlignEnd
-                contigAlignEnd = blastnMatch.subjectAlignStart
-            }
-
-            require(contigAlignStart < contigAlignEnd)
-
-            // check if they overlap
-            if (gene.start <= contigAlignEnd + GENE_REGION_TOLERANCE &&
-                gene.end >= contigAlignStart - GENE_REGION_TOLERANCE)
-            {
-                // should only match one gene
-                return gene
+                // check if they overlap. We prioritise functional genes
+                if (geneLocation.posStart <= matchLocation.posEnd + GENE_REGION_TOLERANCE &&
+                    geneLocation.posEnd >= matchLocation.posStart - GENE_REGION_TOLERANCE)
+                {
+                    bestGene = gene
+                }
             }
         }
 
-        return null
+        return bestGene
     }
 
     companion object
@@ -322,6 +309,8 @@ class BlastnAnnotator
         // D genes often are very short, for example, TRBD1 is only 12 bases. We allow more leeway to match
         // an alignment to the gene
         const val GENE_REGION_TOLERANCE = 50
+
+        private val sLogger = LogManager.getLogger(BlastnAnnotator::class.java)
 
         fun blastnQuerySeqRange(vdj: VDJSequence) : IntRange
         {
@@ -337,6 +326,32 @@ class BlastnAnnotator
             val range = Math.max(i - FLANKING_BASES, 0) until
                     Math.min(i + vdjSeq.length + FLANKING_BASES, fullSeq.length)
             return range
+        }
+
+        fun isBetterMatch(existingMatch: BlastnMatch?, existingGene: IgTcrGene?, newMatch: BlastnMatch, newGene: IgTcrGene) : Boolean
+        {
+            if (existingMatch == null || existingGene == null)
+            {
+                return true
+            }
+
+            if (Doubles.greaterThan(newMatch.bitScore, existingMatch.bitScore))
+            {
+                // always prefer higher bit score
+                return true
+            }
+
+            if (Doubles.equal(newMatch.bitScore, existingMatch.bitScore) &&
+                !existingGene.isFunctional &&
+                newGene.isFunctional)
+            {
+                // if bitscores are equal, we prefer the functional one
+                sLogger.info("prefer functional gene: {}, bitscore: {} over non functional: {}, bitscore: {}",
+                    newGene.geneAllele, newMatch.bitScore, existingGene.geneAllele, existingMatch.bitScore)
+                return true
+            }
+
+            return false
         }
     }
 }

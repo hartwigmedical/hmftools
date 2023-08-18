@@ -40,11 +40,22 @@ public class DoidCohortMapperTest {
         assertEquals("type 5", evaluate(mapper, "doid3", "doid4", "doid5"));
         // However, if only one DOID present, that should still win!
         assertEquals("type 4", evaluate(mapper, "doid4"));
-        // DOID 4 and 7 have multiple mappings with same preference though!.
-        assertNull(evaluate(mapper, "doid4", "doid7"));
+    }
 
-        // DOID 6 maps to multiple cancer types on its own - wrong config.
-        assertNull(evaluate(mapper, "doid6"));
+    @Test(expected = IllegalStateException.class)
+    public void cannotHandleMultipleMappingsWithSamePreference()
+    // DOID 4 and 7 have multiple mappings with same preference!
+    {
+        DoidCohortMapper mapper = createTestCohortMapper();
+        evaluate(mapper, "doid4", "doid7");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void cannotHandleMultipleCancerTypesByOneDoid()
+    // DOID 6 maps to multiple cancer types on its own - wrong config.
+    {
+        DoidCohortMapper mapper = createTestCohortMapper();
+        evaluate(mapper, "doid6");
     }
 
     @Test
@@ -53,6 +64,24 @@ public class DoidCohortMapperTest {
         Sample sample =
                 ImmutableSample.builder().sampleId("TestSample").doids(CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_OTHER.get(0)).build();
         assertEquals(CohortConstants.COHORT_OTHER, mapper.cancerTypeForSample(sample));
+    }
+
+    @Test
+    public void hardCodedSetsMapToEsophagus() {
+        DoidCohortMapper mapper = createTestCohortMapper();
+        Sample sample = ImmutableSample.builder()
+                .sampleId("TestSample")
+                .doids(CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_ESOPHAGUS.get(0))
+                .build();
+        assertEquals(CohortConstants.COHORT_ESOPHAGUS, mapper.cancerTypeForSample(sample));
+    }
+
+    @Test
+    public void hardCodedSetsMapToStomach() {
+        DoidCohortMapper mapper = createTestCohortMapper();
+        Sample sample =
+                ImmutableSample.builder().sampleId("TestSample").doids(CohortConstants.DOID_COMBINATIONS_TO_MAP_TO_STOMACH.get(0)).build();
+        assertEquals(CohortConstants.COHORT_STOMACH, mapper.cancerTypeForSample(sample));
     }
 
     @Nullable
