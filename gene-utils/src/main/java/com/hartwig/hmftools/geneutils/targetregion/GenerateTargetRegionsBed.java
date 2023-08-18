@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.targetregion.RegionData.validate;
 import static com.hartwig.hmftools.geneutils.targetregion.RegionType.CODING;
@@ -290,7 +291,7 @@ public class GenerateTargetRegionsBed
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(SOURCE_DIR, true, "Path to all input and output files");
         configBuilder.addPrefixedPath(CODING_GENE_FILE, true, "Panel definition BED", SOURCE_DIR);
@@ -303,9 +304,6 @@ public class GenerateTargetRegionsBed
         addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
-        CommonUtils.logVersion();
 
         GenerateTargetRegionsBed generateTargetRegionsBed = new GenerateTargetRegionsBed(configBuilder);
         generateTargetRegionsBed.run();

@@ -50,6 +50,11 @@ public class BamSlicer
 
     public void haltProcessing() { mConsumerHalt = true; }
 
+    public void slice(final SamReader samReader, final ChrBaseRegion region, final Consumer<SAMRecord> consumer)
+    {
+        slice(samReader, List.of(region), consumer);
+    }
+
     public void slice(final SamReader samReader, final List<ChrBaseRegion> regions, final Consumer<SAMRecord> consumer)
     {
         mConsumerHalt = false;

@@ -91,7 +91,7 @@ public class SomaticPurityEnrichment
         or the variant is on both alleles. Therefore, we add an extra check for biallelic:
 
         If minorAlleleCopyNumber > 0.5 then only call as biallelic if:
-            Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN),AlleleReadCount)<0.005
+            Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN)],AlleleReadCount)<0.005
         */
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
 

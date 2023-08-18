@@ -20,6 +20,12 @@ public final class CommonConfig
     public static final String REFERENCE = "reference";
     public static final String REFERENCE_DESC = "Reference ID";
 
+    public static final String TUMOR_BAM = "tumor_bam";
+    public static final String TUMOR_BAM_DESC = "Tumor BAM file";
+
+    public static final String REFERENCE_BAM = "reference_bam";
+    public static final String REFERENCE_BAM_DESC = "Reference BAM file";
+
     public static final String LOG_READ_IDS = "log_read_ids";
     public static final String LOG_READ_IDS_DESC = "Log specific read IDs, separated by ';'";
 

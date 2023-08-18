@@ -354,7 +354,6 @@ public class IsofoxConfig
 
         configBuilder.addFlag(FRAG_LENGTHS_BY_GENE, "Write fragment lengths by gene");
         configBuilder.addPath(BAM_FILE, true, "RNA BAM file location");
-        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
         configBuilder.addFlag(WRITE_EXON_DATA, "Exon region data");
         configBuilder.addFlag(WRITE_SPLICE_JUNC_DATA, "Write canonical splice junction counts");
         configBuilder.addFlag(WRITE_READ_DATA, "BAM read data");
@@ -379,11 +378,5 @@ public class IsofoxConfig
         GeneRegionFilters.registerConfig(configBuilder);
         FusionConfig.registerConfig(configBuilder);
         addThreadOptions(configBuilder);
-    }
-
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("isofox.version");
-        ISF_LOGGER.info("Isofox version: {}", version.version());
     }
 }

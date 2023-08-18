@@ -92,6 +92,7 @@ import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -173,7 +174,7 @@ public class OrangeAlgo
         OrangeSample refSample = loadSampleData(config, false);
         OrangeSample tumorSample = loadSampleData(config, true);
 
-        PurpleData purpleData = loadPurpleData(config, ensemblDataCache);
+        PurpleData purpleData = loadPurpleData(config);
         LinxData linxData = loadLinxData(config);
         Map<String, Double> mvlhPerGene = loadGermlineMVLHPerGene(config);
         ChordData chord = loadChordAnalysis(config);
@@ -349,6 +350,7 @@ public class OrangeAlgo
     {
         EnsemblDataCache ensemblDataCache = new EnsemblDataCache(config.ensemblDataDirectory(),
                 RefGenomeVersion.from(config.refGenomeVersion().name()));
+        ensemblDataCache.setRequireNonEnsemblTranscripts();
         ensemblDataCache.load(false);
         return ensemblDataCache;
     }
@@ -386,7 +388,7 @@ public class OrangeAlgo
     }
 
     @NotNull
-    private static PurpleData loadPurpleData(@NotNull OrangeConfig config, @NotNull EnsemblDataCache ensemblDataCache) throws IOException
+    private static PurpleData loadPurpleData(@NotNull OrangeConfig config) throws IOException
     {
         LOGGER.info("Loading PURPLE data from {}", config.purpleDataDirectory());
 
@@ -517,7 +519,9 @@ public class OrangeAlgo
     private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException
     {
         if(config.tumorOnlyMode())
+        {
             return null;
+        }
 
         String annotatedVirusTsv = config.annotatedVirusTsv();
         if(annotatedVirusTsv == null)
@@ -533,7 +537,9 @@ public class OrangeAlgo
     private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException
     {
         if(config.tumorOnlyMode())
+        {
             return null;
+        }
 
         String chordPredictionTxt = config.chordPredictionTxt();
         if(chordPredictionTxt == null)
@@ -552,7 +558,9 @@ public class OrangeAlgo
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException
     {
         if(config.tumorOnlyMode())
+        {
             return null;
+        }
 
         String cuppaResultTsv = config.cuppaResultCsv();
         if(cuppaResultTsv == null)
@@ -594,7 +602,9 @@ public class OrangeAlgo
     private static List<SignatureAllocation> loadSigAllocations(@NotNull OrangeConfig config) throws IOException
     {
         if(config.tumorOnlyMode())
+        {
             return null;
+        }
 
         String sigsAllocationTsv = config.sigsAllocationTsv();
 

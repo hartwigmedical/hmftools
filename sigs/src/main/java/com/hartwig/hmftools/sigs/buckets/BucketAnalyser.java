@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndic
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
 import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.BA_EXT_SAMPLE_DATA_FILE;
@@ -48,7 +49,6 @@ import static com.hartwig.hmftools.sigs.buckets.SigOptimiser.BUCKET_RANGE_MAX_PE
 import static com.hartwig.hmftools.sigs.buckets.SigOptimiser.SMALL_RATIO_PERC_CUTOFF;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_COUNTS_FILE;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.getDiffList;

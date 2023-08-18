@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -7,14 +9,13 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
+import com.hartwig.hmftools.common.amber.BaseDepthData;
+import com.hartwig.hmftools.common.amber.ImmutableBaseDepthData;
 
 import org.jetbrains.annotations.NotNull;
 
 public final class TumorContaminationFile
 {
-    private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "chr";
 
     private static final String AMBER_EXTENSION = ".amber.contamination.tsv";
@@ -53,30 +54,27 @@ public final class TumorContaminationFile
     @NotNull
     private static TumorContamination fromString(@NotNull final String line)
     {
-        String[] values = line.split(DELIMITER);
+        String[] values = line.split(TSV_DELIM);
 
-        final BaseDepth template = ModifiableBaseDepth.create()
-                .setChromosome(values[0])
-                .setPosition(Integer.parseInt(values[1]))
-                .setRef(BaseDepth.Base.valueOf(values[2]))
-                .setAlt(BaseDepth.Base.valueOf(values[3]))
-                .setReadDepth(0)
-                .setRefSupport(0)
-                .setAltSupport(0)
-                .setIndelCount(0);
+        PositionEvidence template = new PositionEvidence(values[0], Integer.parseInt(values[1]), values[2], values[3]);
 
-        final BaseDepth normalDepth = ModifiableBaseDepth.create()
-                .from(template)
-                .setReadDepth(Integer.parseInt(values[4]))
-                .setRefSupport(Integer.parseInt(values[5]))
-                .setAltSupport(Integer.parseInt(values[6]));
-        final BaseDepth tumorDepth = ModifiableBaseDepth.create()
-                .from(template)
-                .setReadDepth(Integer.parseInt(values[7]))
-                .setRefSupport(Integer.parseInt(values[8]))
-                .setAltSupport(Integer.parseInt(values[9]));
+        BaseDepthData normalDepth = ImmutableBaseDepthData.builder()
+                .ref(BaseDepthData.Base.valueOf(template.ref()))
+                .alt(BaseDepthData.Base.valueOf(template.alt()))
+                .readDepth(Integer.parseInt(values[4]))
+                .refSupport(Integer.parseInt(values[5]))
+                .altSupport(Integer.parseInt(values[6]))
+                .build();
 
-        return ImmutableTumorContamination.builder().from(template).normal(normalDepth).tumor(tumorDepth).build();
+        BaseDepthData tumorDepth = ImmutableBaseDepthData.builder()
+                .ref(BaseDepthData.Base.valueOf(template.ref()))
+                .alt(BaseDepthData.Base.valueOf(template.alt()))
+                .readDepth(Integer.parseInt(values[7]))
+                .refSupport(Integer.parseInt(values[8]))
+                .altSupport(Integer.parseInt(values[9]))
+                .build();
+
+        return new TumorContamination(template.Chromosome, template.Position, normalDepth, tumorDepth);
     }
 
     @NotNull
@@ -91,7 +89,8 @@ public final class TumorContaminationFile
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "").add("chromosome")
+        return new StringJoiner(TSV_DELIM, "", "")
+                .add("chromosome")
                 .add("position")
                 .add("ref")
                 .add("alt")
@@ -104,19 +103,18 @@ public final class TumorContaminationFile
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final TumorContamination ratio)
+    private static String toString(final TumorContamination ratio)
     {
-        return new StringJoiner(DELIMITER).add(ratio.chromosome())
+        return new StringJoiner(TSV_DELIM).add(ratio.chromosome())
                 .add(String.valueOf(ratio.position()))
-                .add(String.valueOf(ratio.tumor().ref()))
-                .add(String.valueOf(ratio.tumor().alt()))
-                .add(String.valueOf(ratio.normal().readDepth()))
-                .add(String.valueOf(ratio.normal().refSupport()))
-                .add(String.valueOf(ratio.normal().altSupport()))
-                .add(String.valueOf(ratio.tumor().readDepth()))
-                .add(String.valueOf(ratio.tumor().refSupport()))
-                .add(String.valueOf(ratio.tumor().altSupport()))
+                .add(String.valueOf(ratio.Tumor.ref()))
+                .add(String.valueOf(ratio.Tumor.alt()))
+                .add(String.valueOf(ratio.Normal.readDepth()))
+                .add(String.valueOf(ratio.Normal.refSupport()))
+                .add(String.valueOf(ratio.Normal.altSupport()))
+                .add(String.valueOf(ratio.Tumor.readDepth()))
+                .add(String.valueOf(ratio.Tumor.refSupport()))
+                .add(String.valueOf(ratio.Tumor.altSupport()))
                 .toString();
     }
 }

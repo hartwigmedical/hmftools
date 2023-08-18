@@ -3,18 +3,14 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.linx.LinxApplication.logVersion;
+import static com.hartwig.hmftools.linx.LinxApplication.APP_NAME;
 
-import java.io.EOFException;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -359,15 +355,12 @@ public class SvVisualiser implements AutoCloseable
 
     public static void main(String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         VisualiserConfig.registerConfig(configBuilder);
         CircosConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-        setLogLevel(configBuilder);
-
-        logVersion();
 
         try(final SvVisualiser application = new SvVisualiser(configBuilder))
         {

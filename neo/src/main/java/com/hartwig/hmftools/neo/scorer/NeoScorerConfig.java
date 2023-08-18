@@ -58,9 +58,11 @@ public class NeoScorerConfig
     public static final String RNA_SOMATIC_VCF = "rna_somatic_vcf";
     public static final String RNA_SAMPLE_SUFFIX = "rna_sample_suffix";
     public static final String COHORT_SAMPLE_TPM_FILE = "cohort_trans_exp_file";
-    public static final String COHORT_TPM_MEDIANS_FILE = "cancer_tpm_medians_file";
 
-    private static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
+    public static final String COHORT_TPM_MEDIANS_FILE = "cancer_tpm_medians_file";
+    public static final String COHORT_TPM_MEDIANS_FILE_DESC = "TPM medians per cancer type and pan-cancer";
+
+    public static final String LIKELIHOOD_THRESHOLD = "rank_threshold";
     private static final String SIMILARITY_THRESHOLD = "sim_threshold";
     public static final String PEPTIDE_LENGTHS = "peptide_lengths";
 
@@ -139,7 +141,7 @@ public class NeoScorerConfig
 
         configBuilder.addPath(ISOFOX_DIR_CFG, false, "Directory for Isofox files (Transcript expresion, Neoepitope coverage)");
         configBuilder.addPath(COHORT_SAMPLE_TPM_FILE, false, "Cohort gene expression matrix");
-        configBuilder.addPath(COHORT_TPM_MEDIANS_FILE, false, "TPM medians per cancer type and pan-cancer");
+        configBuilder.addPath(COHORT_TPM_MEDIANS_FILE, false, COHORT_TPM_MEDIANS_FILE_DESC);
 
         configBuilder.addConfigItem(PEPTIDE_LENGTHS, false, "Peptide length min-max, separated by '-', eg 8-12");
 

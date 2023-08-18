@@ -8,8 +8,13 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
@@ -87,9 +92,6 @@ public class LilacConfig
     public static final String RESOURCE_DIR = "resource_dir";
     public static final String RESOURCE_DIR_DESC = "Path to resource files";
 
-    private static final String SAMPLE = "sample";
-    private static final String REFERENCE_BAM = "reference_bam";
-    private static final String TUMOR_BAM = "tumor_bam";
     private static final String RNA_BAM = "rna_bam";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
@@ -290,8 +292,8 @@ public class LilacConfig
     {
         configBuilder.addRequiredConfigItem(SAMPLE, "Name of sample");
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
-        configBuilder.addPath(REFERENCE_BAM, false,"Path to reference/normal BAM");
-        configBuilder.addPath(TUMOR_BAM, false,"Path to tumor BAM");
+        configBuilder.addPath(REFERENCE_BAM, false,REFERENCE_BAM_DESC);
+        configBuilder.addPath(TUMOR_BAM, false,TUMOR_BAM_DESC);
         configBuilder.addPath(RNA_BAM, false,"Analyse tumor BAM only");
         configBuilder.addPath(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
 

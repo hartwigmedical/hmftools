@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticSvFil
 import static com.hartwig.hmftools.common.purple.PurpleCommon.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.GeneCopyNumber.listToMap;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
@@ -106,7 +107,6 @@ public class PurpleApplication
     private PurpleApplication(final ConfigBuilder configBuilder) throws IOException
     {
         mPurpleVersion = new VersionInfo("purple.version");
-        PPL_LOGGER.info("Purple version: {}", mPurpleVersion.version());
 
         // load config
         mConfig = new PurpleConfig(mPurpleVersion.version(), configBuilder);
@@ -172,8 +172,7 @@ public class PurpleApplication
             System.exit(1);
         }
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        PPL_LOGGER.info("Purple complete, run time({}s)", format("%.1f", timeTakenMs/1000.0));
+        PPL_LOGGER.info("Purple complete, mins({})", runTimeMinsStr(startTimeMs));
         mExecutorService.shutdown();
     }
 
@@ -311,8 +310,6 @@ public class PurpleApplication
             }
 
             sampleData.SvCache.inferMissingVariant(copyNumbers);
-
-            final List<ObservedRegion> enrichedObservedRegions = updateRegionsWithCopyNumbers(fittedRegions, copyNumbers);
 
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
@@ -610,19 +607,13 @@ public class PurpleApplication
 
     public static void main(final String... args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder("Purple");
 
         PurpleConfig.addOptions(configBuilder);
 
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         PurpleApplication purpleApplication = new PurpleApplication(configBuilder);
         purpleApplication.run();

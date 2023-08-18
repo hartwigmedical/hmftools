@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.sage.append;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.appendHeader;
 
@@ -54,8 +56,6 @@ public class SageAppendApplication
     public SageAppendApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("sage.version");
-        SG_LOGGER.info("SAGE version: {}", version.version());
-
         mConfig = new SageAppendConfig(version.version(), configBuilder);
 
         if(!mConfig.Common.isValid())
@@ -95,7 +95,7 @@ public class SageAppendApplication
 
         SG_LOGGER.info("reading and validating file: {}", mConfig.InputVcf);
 
-        long startTime = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
 
         VcfFileReader vcfFileReader = new VcfFileReader(mConfig.InputVcf);
 
@@ -201,8 +201,7 @@ public class SageAppendApplication
 
         mRefGenome.close();
 
-        long timeTaken = System.currentTimeMillis() - startTime;
-        SG_LOGGER.info("completed in {} seconds", String.format("%.1f",timeTaken / 1000.0));
+        SG_LOGGER.info("SageAppend complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private boolean validateInputHeader(VCFHeader header)
@@ -275,16 +274,10 @@ public class SageAppendApplication
 
     public static void main(String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         SageAppendConfig.registerConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         SageAppendApplication application = new SageAppendApplication(configBuilder);
 

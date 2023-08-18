@@ -13,12 +13,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
-import com.hartwig.hmftools.common.amber.AmberMapping;
-import com.hartwig.hmftools.common.amber.AmberPatient;
-import com.hartwig.hmftools.common.amber.AmberSample;
+import com.hartwig.hmftools.patientdb.amber.AmberMapping;
+import com.hartwig.hmftools.patientdb.amber.AmberPatient;
+import com.hartwig.hmftools.patientdb.amber.AmberSample;
 import com.hartwig.hmftools.common.amber.ImmutableAmberAnonymous;
-import com.hartwig.hmftools.common.amber.ImmutableAmberPatient;
-import com.hartwig.hmftools.common.amber.ImmutableAmberSample;
+import com.hartwig.hmftools.patientdb.amber.ImmutableAmberPatient;
+import com.hartwig.hmftools.patientdb.amber.ImmutableAmberSample;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;

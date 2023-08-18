@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
@@ -495,7 +496,7 @@ public class PeptideProteomeSimilarity
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addEnsemblDir(configBuilder);
         configBuilder.addPath(PEPTIDES_FILE, true, "Peptides file");
         configBuilder.addPath(PROTEOME_RANKS_FILE, true, "Proteome ranks file");
@@ -504,13 +505,7 @@ public class PeptideProteomeSimilarity
         addThreadOptions(configBuilder);
         addOutputOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         PeptideProteomeSimilarity peptideProteomeSimilarity = new PeptideProteomeSimilarity(configBuilder);
         peptideProteomeSimilarity.run();

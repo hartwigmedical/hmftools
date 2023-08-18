@@ -118,6 +118,10 @@ public class RandomPeptideDistribution
         if((isAscending && score < distribution.get(0).Score) || (!isAscending && score > distribution.get(0).Score))
             return 0; // zero-th percentile if the score is better than any in the random distribution
 
+        int distSize = distribution.size();
+        if((isAscending && score > distribution.get(distSize - 1).Score) || (!isAscending && score < distribution.get(distSize - 1).Score))
+            return 1; // return the 100th percentile if outside the distribution
+
         for(int i = 0; i < distribution.size(); ++i)
         {
             ScoreDistributionData scoreData = distribution.get(i);

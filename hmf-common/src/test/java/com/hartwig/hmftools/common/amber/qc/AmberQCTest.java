@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.common.amber.qc;
 
-import static com.hartwig.hmftools.common.amber.qc.AmberQCStatus.FAIL;
-import static com.hartwig.hmftools.common.amber.qc.AmberQCStatus.PASS;
-import static com.hartwig.hmftools.common.amber.qc.AmberQCStatus.WARN;
+import static com.hartwig.hmftools.common.amber.AmberQCStatus.FAIL;
+import static com.hartwig.hmftools.common.amber.AmberQCStatus.PASS;
+import static com.hartwig.hmftools.common.amber.AmberQCStatus.WARN;
 
 import static org.junit.Assert.assertEquals;
+
+import com.hartwig.hmftools.common.amber.AmberQC;
+import com.hartwig.hmftools.common.amber.ImmutableAmberQC;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;

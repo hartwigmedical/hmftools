@@ -6,14 +6,13 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 
 import org.jetbrains.annotations.NotNull;
 
-public class SnpCheckFilter implements Predicate<BaseDepth>
+public class SnpCheckFilter implements Predicate<PositionEvidence>
 {
     private final Set<GenomePosition> mSnpLoci;
 
@@ -27,7 +26,7 @@ public class SnpCheckFilter implements Predicate<BaseDepth>
     }
 
     @Override
-    public boolean test(final BaseDepth baseDepth)
+    public boolean test(final PositionEvidence baseDepth)
     {
         return mSnpLoci.contains(GenomePositions.create(baseDepth));
     }

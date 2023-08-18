@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static com.hartwig.hmftools.amber.AmberUtils.depthAsSite;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -11,14 +13,12 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.amber.AmberSiteFactory;
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 import org.jetbrains.annotations.NotNull;
 
-public class BaseDepthIntersectFilter implements Predicate<BaseDepth>
+public class BaseDepthIntersectFilter implements Predicate<PositionEvidence>
 {
     private boolean mAdditional;
     private final Set<AmberSite> mIntersection;
@@ -32,7 +32,7 @@ public class BaseDepthIntersectFilter implements Predicate<BaseDepth>
     @NotNull
     public ListMultimap<Chromosome, AmberSite> sites()
     {
-        ListMultimap<Chromosome, AmberSite> result = ArrayListMultimap.create();
+        ListMultimap<Chromosome,AmberSite> result = ArrayListMultimap.create();
 
         for(AmberSite amberSite : mIntersection)
         {
@@ -48,9 +48,9 @@ public class BaseDepthIntersectFilter implements Predicate<BaseDepth>
         return result;
     }
 
-    public void additional(@NotNull final Collection<BaseDepth> depth)
+    public void additional(final Collection<PositionEvidence> positionEvidences)
     {
-        final Set<AmberSite> set = asSet(depth);
+        final Set<AmberSite> set = asSet(positionEvidences);
         if(mAdditional)
         {
             mIntersection.retainAll(set);
@@ -68,15 +68,14 @@ public class BaseDepthIntersectFilter implements Predicate<BaseDepth>
     }
 
     @Override
-    public boolean test(final BaseDepth baseDepth)
+    public boolean test(final PositionEvidence posEvidence)
     {
-        return !mAdditional || mIntersection.contains(AmberSiteFactory.asSite(baseDepth));
+        return !mAdditional || mIntersection.contains(depthAsSite(posEvidence));
     }
 
-    @NotNull
-    private static Set<AmberSite> asSet(@NotNull final Collection<BaseDepth> depth)
+    private static Set<AmberSite> asSet(final Collection<PositionEvidence> depth)
     {
-        return depth.stream().map(AmberSiteFactory::asSite).collect(Collectors.toSet());
+        return depth.stream().map(x -> depthAsSite(x)).collect(Collectors.toSet());
     }
 
 }

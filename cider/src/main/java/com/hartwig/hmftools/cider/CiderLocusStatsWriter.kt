@@ -78,7 +78,7 @@ object CiderLocusStatsWriter
         {
             when (c)
             {
-                Column.locus -> csvPrinter.print(locus)
+                Column.locus -> csvPrinter.print(locus.prettyPrint())
                 Column.readsUsed -> csvPrinter.print(numReadsUsed)
                 Column.readsTotal -> csvPrinter.print(readsTotal)
                 Column.downSampled -> csvPrinter.print(downSampled)

@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_GENE_EXP_SAMPLE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_DATA;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SNV_COUNTS;
+import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
 
@@ -214,14 +215,12 @@ public class AnonymiseFiles
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         AnonymiseConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
 
         AnonymiseFiles anonymiser = new AnonymiseFiles(configBuilder);
         anonymiser.run();

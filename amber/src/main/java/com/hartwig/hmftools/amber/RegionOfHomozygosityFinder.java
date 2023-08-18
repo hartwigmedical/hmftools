@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import com.google.common.collect.ListMultimap;
-import com.hartwig.hmftools.common.amber.BaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -90,10 +89,10 @@ public class RegionOfHomozygosityFinder
     }
 
     @NotNull
-    public List<RegionOfHomozygosity> findRegions(@NotNull final ListMultimap<Chromosome, BaseDepth> baseDepths)
+    public List<RegionOfHomozygosity> findRegions(@NotNull final ListMultimap<Chromosome, PositionEvidence> baseDepths)
     {
-        final Predicate<BaseDepth> depthFilter = new BaseDepthFilter(mMinDepthPercent, mMaxDepthPercent, baseDepths);
-        final ListMultimap<Chromosome, BaseDepth> filteredBaseDepths = filterEntries(baseDepths, depthFilter);
+        final Predicate<PositionEvidence> depthFilter = new BaseDepthFilter(mMinDepthPercent, mMaxDepthPercent, baseDepths);
+        final ListMultimap<Chromosome, PositionEvidence> filteredBaseDepths = filterEntries(baseDepths, depthFilter);
 
         var homozygousRegions = new ArrayList<RegionOfHomozygosity>();
 
@@ -328,21 +327,21 @@ public class RegionOfHomozygosityFinder
         return false;
     }
 
-    static Zygosity calcZygosity(BaseDepth baseDepth)
+    static Zygosity calcZygosity(PositionEvidence baseDepth)
     {
-        if (isAlleleHomozygous(baseDepth.readDepth(), baseDepth.refSupport()) || isAlleleHomozygous(baseDepth.readDepth(), baseDepth.altSupport()))
+        if (isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.RefSupport) || isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.AltSupport))
         {
             return Zygosity.HOMOZYGOUS;
         }
         return Zygosity.HETEROZYGOUS;
     }
 
-    static LocusZygosity toLocusZygosity(BaseDepth depth)
+    static LocusZygosity toLocusZygosity(PositionEvidence depth)
     {
         return new LocusZygosity(depth.position(), calcZygosity(depth));
     }
 
-    private static List<LocusZygosity> toLocusZygosityList(@NotNull final List<BaseDepth> bafs)
+    private static List<LocusZygosity> toLocusZygosityList(@NotNull final List<PositionEvidence> bafs)
     {
         var locusZygosityList = new ArrayList<LocusZygosity>();
 

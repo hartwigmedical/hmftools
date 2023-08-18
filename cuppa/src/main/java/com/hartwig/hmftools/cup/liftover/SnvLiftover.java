@@ -43,7 +43,7 @@ public class SnvLiftover
         }
         mThreads = parseThreads(configBuilder);
 
-        mMappingCache = new GenomeLiftoverCache(true);
+        mMappingCache = new GenomeLiftoverCache(true, true);
     }
 
     public void run()

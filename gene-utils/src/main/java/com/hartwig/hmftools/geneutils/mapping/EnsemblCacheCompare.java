@@ -2,17 +2,14 @@ package com.hartwig.hmftools.geneutils.mapping;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
-import static com.hartwig.hmftools.geneutils.common.CommonUtils.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -330,7 +327,7 @@ public class EnsemblCacheCompare
 
     public static void main(String[] args) throws ParseException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(ENSEMBL_DIR_REF, true, "Ensembl data cache dir for ref-genome v37");
         configBuilder.addPath(ENSEMBL_DIR_NEW, true, "Ensembl data cache dir for ref-genome v38");
@@ -338,14 +335,7 @@ public class EnsemblCacheCompare
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         EnsemblCacheCompare cacheCompare = new EnsemblCacheCompare(configBuilder);
         cacheCompare.run();

@@ -14,7 +14,6 @@
         <module>cider</module>
         <module>cobalt</module>
         <module>compar</module>
-        <module>ctdna</module>
         <module>cuppa</module>
         <module>fastq-tools</module>
         <module>gene-utils</module>
@@ -40,6 +39,7 @@
         <module>sv-tools</module>
         <module>teal</module>
         <module>virus-interpreter</module>
+        <module>wisp</module>
     </modules>
 
     <properties>
@@ -58,18 +58,17 @@
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
-        <amber.version>3.9.1</amber.version>
+        <amber.version>4.0</amber.version>
         <bam-tools.version>1.1</bam-tools.version>
-        <cider.version>0.9.0</cider.version>
+        <cider.version>0.11.0</cider.version>
         <cobalt.version>1.15.2</cobalt.version>
         <compar.version>1.1.1</compar.version>
-        <ctdna.version>1.0</ctdna.version>
         <cuppa.version>1.8.1</cuppa.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.1</gene-utils.version>
         <gripss.version>2.4</gripss.version>
         <health-checker.version>3.5</health-checker.version>
-        <hmf-id-generator.version>3.0</hmf-id-generator.version>
+        <hmf-id-generator.version>3.1</hmf-id-generator.version>
         <isofox.version>1.7.1</isofox.version>
         <lilac.version>1.5</lilac.version>
         <linx.version>1.24</linx.version>
@@ -77,16 +76,17 @@
         <neo.version>1.1</neo.version>
         <orange.version>2.7.0</orange.version>
         <orange-datamodel.version>1.2.0</orange-datamodel.version>
-        <paddle.version>1.0</paddle.version>
+        <paddle.version>1.1</paddle.version>
         <patient-db.version>5.33</patient-db.version>
         <pave.version>1.5</pave.version>
         <purple.version>3.9</purple.version>
         <sage.version>3.3</sage.version>
-        <sigs.version>1.2</sigs.version>
+        <sigs.version>1.3</sigs.version>
         <sv-prep.version>1.2.1</sv-prep.version>
         <sv-tools.version>1.0</sv-tools.version>
         <teal.version>1.0.1</teal.version>
         <virus-interpreter.version>1.3</virus-interpreter.version>
+        <wisp.version>1.0</wisp.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
         <immutables.version>2.9.3</immutables.version>

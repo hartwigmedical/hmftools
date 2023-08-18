@@ -6,6 +6,8 @@ import com.google.common.collect.Lists;
 
 public class PaveConstants
 {
+    public static final String APP_NAME = "Pave";
+
     public static final int GENE_UPSTREAM_DISTANCE = 1000;
     public static final int SPLICE_REGION_INTRON_RANGE = 8;
     public static final int SPLICE_REGION_EXON_RANGE = 3;

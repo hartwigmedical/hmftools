@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.utils.config;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.DECIMAL;
 import static com.hartwig.hmftools.common.utils.config.ConfigItemType.FLAG;
@@ -16,6 +17,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,11 +25,15 @@ import org.apache.logging.log4j.Logger;
 public class ConfigBuilder
 {
     private final String mConfigPrefix;
+    private final String mAppName;
     private final List<ConfigItem> mItems;
     private final Set<ErrorType> mErrors;
     private boolean mWarnOnRepeatedRegos;
 
     private static final String DEFAULT_CONFIG_PREFIX = "-";
+    private static final String PRINT_HELP = "-help";
+    private static final String PRINT_VERSION = "-version";
+
     private static final Logger LOGGER = LogManager.getLogger(ConfigBuilder.class);
 
     private enum ErrorType
@@ -40,11 +46,17 @@ public class ConfigBuilder
 
     public ConfigBuilder()
     {
-        this(DEFAULT_CONFIG_PREFIX);
+        this(DEFAULT_CONFIG_PREFIX, null);
     }
 
-    public ConfigBuilder(final String prefix)
+    public ConfigBuilder(final String appName)
     {
+        this(DEFAULT_CONFIG_PREFIX, appName);
+    }
+
+    public ConfigBuilder(final String prefix, final String appName)
+    {
+        mAppName = appName;
         mItems = Lists.newArrayList();
         mErrors = Sets.newHashSet();
         mConfigPrefix = prefix;
@@ -55,7 +67,7 @@ public class ConfigBuilder
 
     public void addConfigItem(final ConfigItem item)
     {
-        ConfigItem matched = mItems.stream().filter(x -> x.Name.equals(item.Name)).findFirst().orElse(null);
+        ConfigItem matched = getItem(item.Name, false);
 
         if(matched != null)
         {
@@ -135,11 +147,13 @@ public class ConfigBuilder
         addConfigItem(STRING, name, true, description, null);
     }
 
-    public ConfigItem getItem(final String name)
+    public ConfigItem getItem(final String name) { return getItem(name, true); }
+
+    public ConfigItem getItem(final String name, boolean logWarning)
     {
         ConfigItem item = mItems.stream().filter(x -> x.Name.equals(name)).findFirst().orElse(null);
 
-        if(item == null)
+        if(item == null && logWarning)
         {
             LOGGER.warn("invalid config item({}) requested", name);
         }
@@ -149,6 +163,8 @@ public class ConfigBuilder
 
     public String getValue(final String name) { return getItem(name).value(); }
     public boolean hasValue(final String name) { return getItem(name).hasValue(); }
+
+    public boolean isRegistered(final String name) { return getItem(name, false) != null; }
 
     public String getValue(final String name, final String defaultValue)
     {
@@ -224,12 +240,19 @@ public class ConfigBuilder
             logInvalidDetails();
             System.exit(1);
         }
+
+        setLogLevel(this);
+
+        logAppVersion();
     }
 
     public boolean parseCommandLine(final String[] args)
     {
         if(args == null)
             return false;
+
+        if(args.length == 1 && checkHelpAndVersion(args[0]))
+            return true;
 
         ConfigItem matchedItem = null;
 
@@ -252,7 +275,7 @@ public class ConfigBuilder
             else if(argument.startsWith(mConfigPrefix))
             {
                 String configName = argument.substring(mConfigPrefix.length());
-                matchedItem = mItems.stream().filter(x -> x.Name.equals(configName)).findFirst().orElse(null);
+                matchedItem = getItem(configName, false);
 
                 if(matchedItem == null)
                 {
@@ -291,7 +314,7 @@ public class ConfigBuilder
 
     public void logItems()
     {
-        LOGGER.info("{} registered config items:", mItems.size());
+        LOGGER.info("registered config items:");
 
         for(ConfigItem item : mItems)
         {
@@ -317,5 +340,40 @@ public class ConfigBuilder
     {
         mErrors.clear();
         mItems.forEach(x -> x.clearValue());
+    }
+
+    private void logAppVersion()
+    {
+        VersionInfo versionInfo = mAppName != null ? new VersionInfo(format("%s.version", mAppName.toLowerCase())) : null;
+
+        if(versionInfo != null)
+        {
+            LOGGER.info("{} version {}", mAppName, versionInfo.version());
+        }
+    }
+
+    private boolean checkHelpAndVersion(final String argument)
+    {
+        if(!argument.equals(PRINT_HELP) && !argument.equals(PRINT_VERSION))
+            return false;
+
+        logAppVersion();
+
+        if(argument.equals(PRINT_HELP))
+        {
+            logItems();
+            System.exit(0);
+        }
+        else if(argument.equals(PRINT_VERSION))
+        {
+            if(mAppName == null)
+            {
+                LOGGER.warn("application name or version not set in config builder");
+            }
+
+            System.exit(0);
+        }
+
+        return false;
     }
 }

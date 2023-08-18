@@ -17,7 +17,6 @@ import org.junit.Test;
 
 public class TumorContaminationModelTest
 {
-
     private static final double EPSILON = 1e-10;
 
     private static final String CONTAMINATION_HIGH = Resources.getResource("amber/contamination.high").getPath();

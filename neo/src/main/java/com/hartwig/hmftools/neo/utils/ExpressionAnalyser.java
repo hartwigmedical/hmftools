@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
@@ -306,7 +307,7 @@ public class ExpressionAnalyser
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         configBuilder.addPath(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
         configBuilder.addPath(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
         configBuilder.addPath(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
@@ -315,13 +316,7 @@ public class ExpressionAnalyser
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         ExpressionAnalyser expressionAnalyser = new ExpressionAnalyser(configBuilder);
         expressionAnalyser.run();

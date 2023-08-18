@@ -10,6 +10,8 @@ import com.hartwig.hmftools.lilac.read.Indel;
 
 public class LilacConstants
 {
+    public static final String APP_NAME = "Lilac";
+
     public static final int DEFAULT_MIN_BASE_QUAL = 30;
     public static final int DEFAULT_MIN_EVIDENCE = 2;
     public static final int DEFAULT_FRAGS_PER_ALLELE = 7;
