@@ -331,8 +331,11 @@ class CiderReadScreener(// collect the reads and sort by types
         samRecord: SAMRecord, mapped: GenomeRegion, igTcrConstantRegion: IgTcrConstantRegion
     ): VJReadCandidate?
     {
+        if (!igTcrConstantRegion.genomeLocation.isPrimaryAssembly)
+            return null
+
         val readLength = samRecord.readLength
-        val (_, _, chromosome, posStart, posEnd, strand) = igTcrConstantRegion.genomeLocation
+        val (chromosome, posStart, posEnd, strand, _) = igTcrConstantRegion.genomeLocation
 
         // see if the anchor location is mapped around here
         if (posStart - readLength < mapped.end() &&
