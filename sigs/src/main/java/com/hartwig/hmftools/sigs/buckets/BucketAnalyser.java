@@ -71,6 +71,7 @@ import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.sigs.common.CommonUtils;
 import com.hartwig.hmftools.sigs.nmf.NmfConfig;
 import com.hartwig.hmftools.sigs.sim.SimConfig;
 
@@ -185,7 +186,7 @@ public class BucketAnalyser
     public BucketAnalyser(GenericDataCollection collection, final CommandLine cmd)
     {
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = CommonUtils.parseOutputDir(cmd);
         mConfig = new BaConfig(cmd);
 
         // initialise sample counts and related totals
