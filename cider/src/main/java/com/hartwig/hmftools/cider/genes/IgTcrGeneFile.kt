@@ -73,8 +73,10 @@ object IgTcrGeneFile
                 val region = IgTcrRegion.valueOf(record[Column.region])
                 val functionality = IgTcrFunctionality.fromCode(record[Column.functionality])
                 val isPrimaryAssembly = record[Column.primaryAssembly].toBoolean()
-                val assemblyName = if (isPrimaryAssembly) record[Column.assemblyName].intern() else null
-                val anchorSequence = record[Column.anchorSequence]
+                val assemblyName = if (isPrimaryAssembly) null else record[Column.assemblyName].intern()
+                var anchorSequence: String? = record[Column.anchorSequence]
+                if (anchorSequence!!.isEmpty())
+                    anchorSequence = null
                 var chromosome = record[Column.chromosome].intern()
                 var genomicLocation: GenomicLocation? = null
                 var anchorLocation: GenomicLocation? = null

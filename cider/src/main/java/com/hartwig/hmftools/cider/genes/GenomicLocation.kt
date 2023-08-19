@@ -13,6 +13,7 @@ data class GenomicLocation(val chromosome: String,
     init
     {
         require(posStart <= posEnd)
+        require(altAssemblyName == null || altAssemblyName.isNotEmpty())
     }
 
     val isPrimaryAssembly: Boolean get() { return altAssemblyName == null }
