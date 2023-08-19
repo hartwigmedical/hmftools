@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.cohort.application;
 
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.orange.OrangeApplication.APP_NAME;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +15,7 @@ import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidParents;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
@@ -27,10 +28,6 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,12 +40,17 @@ public class CohortPercentileEvaluator
 
     private static final String OUTPUT_EVALUATION_TSV = "/data/experiments/orange/sample_sv_tmb_percentile_evaluations.tsv";
 
-    public static void main(String[] args) throws ParseException, IOException
+    public static void main(String[] args) throws IOException
     {
-        LOGGER.info("Running ORANGE Cohort Percentile Evaluator");
-        CommandLine cmd = new DefaultParser().parse(createOptions(), args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        DatabaseAccess database = DatabaseAccess.createDatabaseAccess(cmd);
+        DatabaseAccess.addDatabaseCmdLineArgs(configBuilder, true);
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        LOGGER.info("Running ORANGE Cohort Percentile Evaluator");
+
+        DatabaseAccess database = DatabaseAccess.createDatabaseAccess(configBuilder);
 
         LOGGER.info("Querying database");
         List<Sample> samples = SampleQuery.selectFromDatarequest(database);
@@ -69,14 +71,6 @@ public class CohortPercentileEvaluator
 
         LOGGER.info("Writing output evaluations to {}", OUTPUT_EVALUATION_TSV);
         Files.write(new File(OUTPUT_EVALUATION_TSV).toPath(), lines);
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-        addDatabaseCmdLineArgs(options);
-        return options;
     }
 
     @NotNull

@@ -13,13 +13,15 @@ import org.apache.logging.log4j.Logger;
 
 public class OrangeApplication
 {
+    public static final String APP_NAME = "Orange";
+
     public static final Logger LOGGER = LogManager.getLogger(OrangeApplication.class);
 
     public static final String VERSION = OrangeApplication.class.getPackage().getImplementationVersion();
 
     public static void main(String[] args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder("Orange");
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         OrangeConfig.registerConfig(configBuilder);
 

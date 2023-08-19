@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.cohort.application;
 
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
+import static com.hartwig.hmftools.orange.OrangeApplication.APP_NAME;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +14,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidParents;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapper;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortMapping;
@@ -21,10 +22,6 @@ import com.hartwig.hmftools.orange.cohort.mapping.CohortMappingFile;
 import com.hartwig.hmftools.orange.cohort.mapping.DoidCohortMapper;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,13 +33,17 @@ public class CohortMapperApplication
 
     private static final String OUTPUT_EVALUATION_TSV = "/data/experiments/orange/all_mapped_samples.tsv";
 
-    public static void main(String[] args) throws IOException, ParseException
+    public static void main(String[] args) throws IOException
     {
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+
+        DatabaseAccess.addDatabaseCmdLineArgs(configBuilder, true);
+
+        configBuilder.checkAndParseCommandLine(args);
+
         LOGGER.info("Running ORANGE Cohort Mapper");
 
-        CommandLine cmd = new DefaultParser().parse(createOptions(), args);
-
-        DatabaseAccess database = DatabaseAccess.createDatabaseAccess(cmd);
+        DatabaseAccess database = DatabaseAccess.createDatabaseAccess(configBuilder);
 
         LOGGER.info("Loading samples from database");
         List<Sample> samples = SampleQuery.selectFromClinical(database);
@@ -63,14 +64,6 @@ public class CohortMapperApplication
 
         LOGGER.info("Writing output evaluations to {}", OUTPUT_EVALUATION_TSV);
         Files.write(new File(OUTPUT_EVALUATION_TSV).toPath(), lines);
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-        addDatabaseCmdLineArgs(options);
-        return options;
     }
 
     @NotNull
