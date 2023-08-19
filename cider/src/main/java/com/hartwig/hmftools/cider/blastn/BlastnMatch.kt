@@ -16,7 +16,6 @@ data class BlastnMatch(
     val queryAlignEnd: Int,
     val subjectAlignStart: Int,
     val subjectAlignEnd: Int,
-    val queryFrame: Int,
     val subjectFrame: Strand,
     val expectedValue: Double,
     val bitScore: Double,

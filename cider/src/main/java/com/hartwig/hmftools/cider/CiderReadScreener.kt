@@ -331,7 +331,7 @@ class CiderReadScreener(// collect the reads and sort by types
         samRecord: SAMRecord, mapped: GenomeRegion, igTcrConstantDiversityRegion: IgTcrConstantDiversityRegion
     ): VJReadCandidate?
     {
-        if (!igTcrConstantDiversityRegion.genomeLocation.isPrimaryAssembly)
+        if (!igTcrConstantDiversityRegion.genomeLocation.inPrimaryAssembly)
             return null
 
         val readLength = samRecord.readLength

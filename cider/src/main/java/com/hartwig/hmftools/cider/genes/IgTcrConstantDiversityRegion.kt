@@ -7,7 +7,7 @@ data class IgTcrConstantDiversityRegion(val locus: IgTcrLocus, val genomeLocatio
 {
     init
     {
-        require(genomeLocation.isPrimaryAssembly)
+        require(genomeLocation.inPrimaryAssembly)
     }
 
     fun getCorrespondingVJ() : List<VJGeneType>

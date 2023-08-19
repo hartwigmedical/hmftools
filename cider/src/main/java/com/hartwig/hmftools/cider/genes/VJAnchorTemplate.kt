@@ -17,7 +17,7 @@ data class VJAnchorTemplate
     init
     {
         require(anchorSequence.isNotEmpty())
-        require(anchorLocation == null || anchorLocation.isPrimaryAssembly)
+        require(anchorLocation == null || anchorLocation.inPrimaryAssembly)
     }
 
     val vj: VJ get() { return type.vj }

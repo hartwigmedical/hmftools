@@ -20,7 +20,7 @@ object CiderGeneDataLoader
             if (geneData.geneLocation == null)
                 continue
 
-            if (!geneData.geneLocation.isPrimaryAssembly)
+            if (!geneData.geneLocation.inPrimaryAssembly)
                 continue
 
             // we have to fix the naming. It is actually constant + diversity
@@ -79,6 +79,6 @@ object CiderGeneDataLoader
     {
         if (genomicLocation == null)
             return null
-        return if (genomicLocation.isPrimaryAssembly) genomicLocation else null
+        return if (genomicLocation.inPrimaryAssembly) genomicLocation else null
     }
 }
