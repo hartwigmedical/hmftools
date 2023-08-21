@@ -187,7 +187,6 @@ public class NucleotideFragmentFactory
                 String.valueOf(codons.charAt(0)), String.valueOf(codons.charAt(1)), codons.substring(2));
     }
 
-    @Deprecated
     public Fragment createAlignmentFragments(final ReadRecord record, final String geneName, final byte geneStrand)
     {
         List<Fragment> fragments = record.alignmentsOnly().stream()

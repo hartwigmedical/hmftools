@@ -88,8 +88,6 @@ public class SomaticVariantAnnotation
     public final List<AlleleCoverage> assignAlleleCoverage(
             final SomaticVariant variant, final List<Fragment> fragments, final List<HlaSequenceLoci> winners)
     {
-        // List<Fragment> fragments = reader.readFromBam(variant);
-
         List<AlleleCoverage> coverages = Lists.newArrayList();
 
         if(fragments.isEmpty())

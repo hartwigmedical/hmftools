@@ -576,6 +576,7 @@ public class LilacApplication
             List<Fragment> variantFragments = mTumorBamReader.findVariantFragments(variant);
 
             // TEMP: compare to raw fragments to understand what should be included
+            /*
             List<Fragment> filteredRawFragments = filterVariantFragments(variant, rawFragments);
 
             LL_LOGGER.debug("variant({}) rawFrag({}) varFrags({})", variant, filteredRawFragments.size(), variantFragments.size());
@@ -603,7 +604,11 @@ public class LilacApplication
                 LL_LOGGER.debug("variant({}) varFrag({}) missed in raw", variant, varFrag);
             }
 
-            List<AlleleCoverage> variantCoverage = variantAnnotation.assignAlleleCoverage(variant, filteredRawFragments, winningSequences);
+            // List<AlleleCoverage> variantCoverage = variantAnnotation.assignAlleleCoverage(variant, filteredRawFragments, winningSequences);
+            */
+
+            List<AlleleCoverage> variantCoverage = variantAnnotation.assignAlleleCoverage(variant, variantFragments, winningSequences);
+
             List<HlaAllele> variantAlleles = variantCoverage.stream().map(x -> x.Allele).collect(Collectors.toList());
             LL_LOGGER.info("  {} -> {}}", variant, variantCoverage);
 

@@ -120,8 +120,6 @@ public class BamRecordReader implements BamReader
     {
         LL_LOGGER.debug("querying HLA gene({})", geneCodingRegions.GeneName);
 
-        // boolean reverseStrand = geneCodingRegions.Strand == NEG_STRAND;
-
         // slice for the whole coding region rather than per exon
         ChrBaseRegion sliceRegion = new ChrBaseRegion(geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
         List<SAMRecord> records = mBamSlicer.slice(mSamReader, sliceRegion);
@@ -152,29 +150,6 @@ public class BamRecordReader implements BamReader
 
         return readFragments;
     }
-
-    /*
-    private List<ReadRecord> query(boolean reverseStrand, final ChrBaseRegion region)
-    {
-        List<SAMRecord> records = mBamSlicer.slice(mSamReader, region);
-
-        final List<ReadRecord> codingRecords = Lists.newArrayList();
-
-        for(SAMRecord record : records)
-        {
-            if(bothEndsInRangeOfCodingTranscripts(record))
-            {
-                codingRecords.add(ReadRecord.create(reverseStrand, region, record, true, true));
-            }
-            else
-            {
-                ++mFilteredRecordCount;
-            }
-        }
-
-        return codingRecords;
-    }
-    */
 
     private Map<String,Fragment> createFragments(final String geneName, final byte geneStrand, final List<ReadRecord> codingRecords)
     {
@@ -261,7 +236,7 @@ public class BamRecordReader implements BamReader
         for(GeneCodingRegions geneCodingRegions : mGeneCodingRegions.values())
         {
             if(geneCodingRegions.withinCodingBounds(record.getAlignmentStart(), MAX_DISTANCE)
-            && geneCodingRegions.withinCodingBounds(record.getAlignmentStart(), MAX_DISTANCE))
+            && geneCodingRegions.withinCodingBounds(record.getMateAlignmentStart(), MAX_DISTANCE))
             {
                 return true;
             }
@@ -269,23 +244,6 @@ public class BamRecordReader implements BamReader
 
         return false;
     }
-
-    /*
-    private List<NamedBed> codingRegions(final String geneName, final TranscriptData transcript)
-    {
-        final List<NamedBed> regions = LociPosition.codingRegions(geneName, HLA_CHR, transcript);
-
-        if(transcript.Strand == POS_STRAND)
-            return regions;
-
-        final List<NamedBed> regionsReversed = Lists.newArrayList();
-
-        for(int i = regions.size() - 1; i >= 0; --i)
-            regionsReversed.add(regions.get(i));
-
-        return regionsReversed;
-    }
-    */
 
     // methods for checking somatic variant support in HLA regions
     public List<Fragment> findVariantFragments(final SomaticVariant variant)
@@ -296,7 +254,6 @@ public class BamRecordReader implements BamReader
         for(String geneName : HLA_GENES)
         {
             GeneCodingRegions geneCodingRegions = mGeneCodingRegions.get(geneName);
-            // boolean reverseStrand = geneCodingRegions.Strand == NEG_STRAND;
 
             for(BaseRegion codingRegion : geneCodingRegions.CodingRegions)
             {
@@ -323,7 +280,7 @@ public class BamRecordReader implements BamReader
                         .filter(x -> x != null)
                         .collect(Collectors.toList());
 
-                List<Fragment> mateFragments = queryMateFragments(geneName, geneCodingRegions.Strand, sliceRegion, codingRecords);
+                List<Fragment> mateFragments = queryMateFragments(geneCodingRegions, codingRecords);
                 readFragments.addAll(mateFragments);
 
                 List<Fragment> readGroupFragments = FragmentUtils.mergeFragmentsById(readFragments);
@@ -334,23 +291,26 @@ public class BamRecordReader implements BamReader
         return Lists.newArrayList();
     }
 
-    private List<Fragment> queryMateFragments(
-            final String geneName, final byte geneStrand, final ChrBaseRegion codingRegion, final List<ReadRecord> codingRecords)
+    private List<Fragment> queryMateFragments(GeneCodingRegions geneCodingRegions, final List<ReadRecord> codingRecords)
     {
         List<SAMRecord> records = codingRecords.stream().map(x -> x.getSamRecord()).collect(Collectors.toList());
         List<SAMRecord> mateRecords = mBamSlicer.queryMates(mSamReader, records);
 
-        BaseRegion baseCodingRegion = new BaseRegion(codingRegion.start(), codingRegion.end());
         List<Fragment> fragments = Lists.newArrayList();
 
         for(SAMRecord record : mateRecords)
         {
-            if(record.getAlignmentStart() > codingRegion.end() || record.getAlignmentEnd() < codingRegion.start())
+            // take any mate within a coding region of the same gene
+            BaseRegion matchedCodingRegion = geneCodingRegions.CodingRegions.stream()
+                    .filter(x -> positionsOverlap(x.start(), x.end(), record.getAlignmentStart(), record.getAlignmentEnd()))
+                    .findFirst().orElse(null);
+
+            if(matchedCodingRegion == null)
                 continue;
 
-            ReadRecord codingRecord = ReadRecord.create(baseCodingRegion, record, true, true);
+            ReadRecord codingRecord = ReadRecord.create(matchedCodingRegion, record, true, true);
 
-            Fragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, geneName, geneStrand);
+            Fragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
 
             if(fragment != null)
                 fragments.add(fragment);

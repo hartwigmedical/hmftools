@@ -3,6 +3,7 @@ package com.hartwig.hmftools.lilac.read;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
@@ -53,9 +54,12 @@ public class ReadRecord
 
     public String readInfo()
     {
-        return String.format("%s:%d-%d %s",
+        return format("%s:%d-%d %s",
                 mSamRecord.getContig(), mSamRecord.getStart(), mSamRecord.getEnd(), mSamRecord.getCigarString());
     }
+
+    public String toString() { return format("%s %s indels(%s) sc(%d/%d)",
+            Id, readInfo(), mIndels.size(), SoftClippedStart, SoftClippedEnd); }
 
     public List<Indel> getIndels() { return mIndels; }
 
