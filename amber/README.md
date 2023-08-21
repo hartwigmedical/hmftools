@@ -134,7 +134,10 @@ In tumor only mode, all provided sites are examined in the tumor with additional
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
 
 ### Contamination
+```
 TO DO
+```
+
 
 ### Regions of Homozygosity
 Amber outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
