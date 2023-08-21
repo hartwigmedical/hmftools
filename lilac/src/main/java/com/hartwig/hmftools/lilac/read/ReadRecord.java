@@ -4,6 +4,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.generateMappedCoords;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -11,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.CigarElement;
@@ -20,23 +23,22 @@ import htsjdk.samtools.SAMRecord;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class BamCodingRecord
+public class ReadRecord
 {
     public final String Id;
-    public final int SoftClippedStart;
+    public final int SoftClippedStart; // soft-clipped bases at start and end
     public final int SoftClippedEnd;
-    public final int PositionStart;
+    public final int PositionStart; // adjusted by soft-clipped bases
     public final int PositionEnd;
     public final int ReadStart;
     public final int ReadEnd;
-    public final boolean ReverseStrand;
 
     private final List<Indel> mIndels;
     private final SAMRecord mSamRecord;
 
-    public BamCodingRecord(
+    public ReadRecord(
             final String id, int softClippedStart, int softClippedEnd, final List<Indel> indels, int positionStart,
-            int positionEnd, int readStart, int readEnd, final SAMRecord record, boolean reverseStrand)
+            int positionEnd, int readStart, int readEnd, final SAMRecord record)
     {
         Id = id;
         SoftClippedStart = softClippedStart;
@@ -47,7 +49,6 @@ public class BamCodingRecord
         ReadStart = readStart;
         ReadEnd = readEnd;
         mSamRecord = record;
-        ReverseStrand = reverseStrand;
     }
 
     public String readInfo()
@@ -105,7 +106,7 @@ public class BamCodingRecord
         return reverseQuals;
     }
 
-    private final char[] forwardRead()
+    private char[] forwardRead()
     {
         int readLength = ReadEnd - ReadStart + 1;
         final char[] readBases = new char[readLength];
@@ -119,7 +120,7 @@ public class BamCodingRecord
         return readBases;
     }
 
-    private final int[] forwardQuality()
+    private int[] forwardQuality()
     {
         int readLength = ReadEnd - ReadStart + 1;
         final int[] readQuals = new int[readLength];
@@ -133,7 +134,7 @@ public class BamCodingRecord
         return readQuals;
     }
 
-    public final List<BamCodingRecord> alignmentsOnly()
+    public List<ReadRecord> alignmentsOnly()
     {
         final String chromosome = mSamRecord.getContig();
         final ChrBaseRegion outerRegion = new ChrBaseRegion(chromosome, PositionStart, PositionEnd);
@@ -141,18 +142,15 @@ public class BamCodingRecord
         return mSamRecord.getAlignmentBlocks().stream()
                 .map(x -> new ChrBaseRegion(chromosome, x.getReferenceStart(), x.getReferenceStart() + x.getLength()))
                 .filter(x -> outerRegion.overlaps(x))
-                .map(x -> new ChrBaseRegion(chromosome, max(outerRegion.start(), x.start()), min(outerRegion.end(), x.end())))
-                .map(x -> create(ReverseStrand, x, mSamRecord, false, false))
+                .map(x -> new BaseRegion(max(outerRegion.start(), x.start()), min(outerRegion.end(), x.end())))
+                .map(x -> create(x, mSamRecord, false, false))
                 .collect(Collectors.toList());
-
     }
 
-    public static BamCodingRecord create(
-            boolean reverseStrand, final ChrBaseRegion codingRegion, final SAMRecord record,
-            boolean includeSoftClips, boolean includeIndels)
+    public static ReadRecord create(final BaseRegion codingRegion, final SAMRecord record, boolean includeSoftClips, boolean includeIndels)
     {
-        int softClipStart = softClipStart(record);
-        int softClipEnd = softClipEnd(record);
+        int softClipStart = leftSoftClipLength(record);
+        int softClipEnd = rightSoftClipLength(record);
         int alignmentStart = record.getAlignmentStart();
         int alignmentEnd = record.getAlignmentEnd();
         int recordStart = alignmentStart - softClipStart;
@@ -186,7 +184,7 @@ public class BamCodingRecord
         positionEnd = record.getReferencePositionAtReadPosition(readIndexEnd + 1);
 
         // Add soft clip start
-        if (positionStart == alignmentStart && softClipStart > 0 && includeSoftClips)
+        if(positionStart == alignmentStart && softClipStart > 0 && includeSoftClips)
         {
             int earliestStart = max(codingRegion.start(), recordStart);
             readIndexStart = readIndexStart - positionStart + earliestStart;
@@ -194,7 +192,7 @@ public class BamCodingRecord
         }
 
         // Add soft clip end
-        if (positionEnd == alignmentEnd && softClipEnd > 0 && includeSoftClips)
+        if(positionEnd == alignmentEnd && softClipEnd > 0 && includeSoftClips)
         {
             int latestEnd = min(codingRegion.end(), recordEnd);
             readIndexEnd = readIndexEnd + latestEnd - positionEnd;
@@ -206,9 +204,9 @@ public class BamCodingRecord
 
         List<Indel> indels = includeIndels ? indels(positionStart, positionEnd, record) : Lists.newArrayList();
 
-        return new BamCodingRecord(
+        return new ReadRecord(
                 record.getReadName(), softClippedStart, softClippedEnd, indels,
-                positionStart, positionEnd, readIndexStart, readIndexEnd, record, reverseStrand);
+                positionStart, positionEnd, readIndexStart, readIndexEnd, record);
     }
 
     private static List<Indel> indels(int startPosition, int endPosition, final SAMRecord record)
@@ -244,18 +242,6 @@ public class BamCodingRecord
 
         CigarTraversal.traverseCigar(record, cigarHandler);
         return indels;
-    }
-
-    private static int softClipStart(final SAMRecord record)
-    {
-        return record.getCigar().getFirstCigarElement().getOperator() == CigarOperator.S ?
-                record.getCigar().getFirstCigarElement().getLength() : 0;
-    }
-
-    private static int softClipEnd(final SAMRecord record)
-    {
-        return record.getCigar().getLastCigarElement().getOperator() == CigarOperator.S ?
-                record.getCigar().getLastCigarElement().getLength() : 0;
     }
 
     public static char reverseCompliment(char base)

@@ -2,11 +2,9 @@ package com.hartwig.hmftools.lilac;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.read.Indel;
 
 public class LilacConstants
 {
@@ -106,7 +104,8 @@ public class LilacConstants
     // output file IDs
     public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
     public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
-    public static String LILAC_FILE_ALL_FRAGMENTS = "fragments.tsv";
+    public static String LILAC_FILE_FRAGMENTS = "fragments.tsv";
+    public static String LILAC_FILE_READS = "reads.tsv";
 
     public static String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
     public static String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";

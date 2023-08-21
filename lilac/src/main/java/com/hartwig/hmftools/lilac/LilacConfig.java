@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
@@ -127,7 +128,7 @@ public class LilacConfig
         {
             SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
-            OutputDir = SampleDataDir;
+            OutputDir = configBuilder.hasValue(OUTPUT_DIR) ? parseOutputDir(configBuilder) : SampleDataDir;
 
             String referenceId = Sample.substring(0, Sample.lastIndexOf('T')) + "R";
             ReferenceBam = SampleDataDir + referenceId + ".hla.bam";
@@ -322,6 +323,7 @@ public class LilacConfig
         configBuilder.addFlag(RUN_VALIDATION, "Run validation checks");
         configBuilder.addFlag(WRITE_ALL_FILES, "Write more detailed output files");
         configBuilder.addFlag(LOG_PERF_CALCS,"Log performance metrics");
+        ResultsWriter.registerConfig(configBuilder);
 
         addRefGenomeConfig(configBuilder, true);
         addOutputDir(configBuilder);
