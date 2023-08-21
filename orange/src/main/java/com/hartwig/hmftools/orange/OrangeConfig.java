@@ -353,10 +353,10 @@ public interface OrangeConfig
                 .knownFusionFile(configBuilder.getValue(KNOWN_FUSIONS_FILE))
                 .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
-                .tumorSampleWGSMetricsFile(getWgsMetricsFile(
+                .tumorSampleWGSMetricsFile(getMetricsFile(
                         configBuilder, TUMOR_SAMPLE_WGS_METRICS_FILE, tumorSampleId, pipelineSampleRootDir, METRICS_DIR))
-                .tumorSampleFlagstatFile(
-                        getFlagstatFile(configBuilder, TUMOR_SAMPLE_FLAGSTAT_FILE, tumorSampleId, pipelineSampleRootDir, FLAGSTAT_DIR))
+                .tumorSampleFlagstatFile(getMetricsFile(
+                        configBuilder, TUMOR_SAMPLE_FLAGSTAT_FILE, tumorSampleId, pipelineSampleRootDir, FLAGSTAT_DIR))
                 .purpleDataDirectory(getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PURPLE_DIR_CFG, PURPLE_DIR))
                 .purplePlotDirectory(getToolPlotsDirectory(configBuilder, pipelineSampleRootDir, PURPLE_PLOT_DIR_CFG, PURPLE_DIR))
                 .linxSomaticDataDirectory(getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_DIR_CFG, LINX_SOMATIC_DIR))
@@ -412,28 +412,26 @@ public interface OrangeConfig
             if(peachDir != null)
                 builder.peachGenotypeTsv(fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv"));
 
-            builder.refSampleWGSMetricsFile(getWgsMetricsFile(
+            builder.refSampleWGSMetricsFile(getMetricsFile(
                     configBuilder, REF_SAMPLE_WGS_METRICS_FILE, refSampleId, pipelineSampleRootDir, METRICS_DIR));
 
-            builder.refSampleFlagstatFile(getFlagstatFile(
+            builder.refSampleFlagstatFile(getMetricsFile(
                     configBuilder, REF_SAMPLE_FLAGSTAT_FILE, refSampleId, pipelineSampleRootDir, FLAGSTAT_DIR));
         }
 
         return builder.build();
     }
 
-    private static String getFlagstatFile(
+    private static String getMetricsFile(
             final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir, final String toolDir)
     {
-        String directory = getMetricsDirectory(configBuilder, configStr, sampleId, pipelineDir, toolDir);
-        return FlagstatFile.generateFilename(directory, sampleId);
-    }
+        if(configBuilder.hasValue(configStr))
+            return configBuilder.getValue(configStr);
 
-    private static String getWgsMetricsFile(
-            final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir, final String toolDir)
-    {
         String directory = getMetricsDirectory(configBuilder, configStr, sampleId, pipelineDir, toolDir);
-        return WGSMetricsFile.generateFilename(directory, sampleId);
+
+        return toolDir.equals(METRICS_DIR) ?
+                WGSMetricsFile.generateFilename(directory, sampleId) : FlagstatFile.generateFilename(directory, sampleId);
     }
 
     @Nullable
