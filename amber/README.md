@@ -3,7 +3,7 @@ AMBER is designed to generate a tumor BAF file for use in PURPLE from a provided
 
 When using paired reference/tumor data, AMBER is also able to: 
   - detect evidence of contamination in the tumor from homozygous sites in the reference; and
-  - facilitate sample matching by recording SNPs in the germline
+  - facilitate sample matching / patient deduplication by recording SNPs in the germline
   - identify long regions of homozygosty and consanguinity
 
 ## Installation
@@ -132,6 +132,9 @@ In tumor only mode, all provided sites are examined in the tumor with additional
  
 ### Segmentation
 The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
+
+### Contamination
+TO DO
 
 ### Regions of Homozygosity
 Amber outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
