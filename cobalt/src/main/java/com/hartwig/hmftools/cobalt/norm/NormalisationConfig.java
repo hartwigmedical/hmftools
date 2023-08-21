@@ -43,8 +43,9 @@ public class NormalisationConfig
 
     private final Map<String,String> mPanelToWgsSampleIdMappings; // if required, mapping from panel to WGS
 
+    public static final String TARGET_REGIONS_BED = "target_regions_bed";
+
     private static final String COBALT_WGS_DIR = "cobalt_wgs_dir";
-    private static final String TARGET_REGIONS_BED = "target_regions_bed";
     private static final String OUTPUT_FILE = "output_file";
     private static final String DETAILED_OUTPUT = "detailed_file";
 
