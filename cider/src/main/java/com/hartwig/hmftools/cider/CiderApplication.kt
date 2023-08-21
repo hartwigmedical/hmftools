@@ -160,7 +160,7 @@ class CiderApplication
         // first add all the VJ anchor locations
         for (anchorGenomeLoc: VJAnchorGenomeLocation in ciderGeneDatastore.getVjAnchorGeneLocations())
         {
-            require(anchorGenomeLoc.genomeLocation.isPrimaryAssembly)
+            require(anchorGenomeLoc.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
                 anchorGenomeLoc.chromosome,
                 anchorGenomeLoc.start - mParams.approxMaxFragmentLength,
@@ -170,7 +170,7 @@ class CiderApplication
         // then add all the constant / diversity region genome locations
         for (region: IgTcrConstantDiversityRegion in ciderGeneDatastore.getIgConstantDiversityRegions())
         {
-            require(region.genomeLocation.isPrimaryAssembly)
+            require(region.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
                 region.genomeLocation.chromosome,
                 region.genomeLocation.posStart - mParams.approxMaxFragmentLength,

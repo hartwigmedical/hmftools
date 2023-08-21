@@ -146,6 +146,9 @@ object BlastnRunner
 
             for (record in format.parse(reader))
             {
+                // query frame should always be positive
+                require(record[BlastColumns.qframe].toInt() == 1)
+
                 val qseqid = record[BlastColumns.qseqid].toInt()
 
                 val blastnMatch = BlastnMatch(
@@ -160,7 +163,6 @@ object BlastnRunner
                     queryAlignEnd = record[BlastColumns.qend].toInt(),
                     subjectAlignStart = record[BlastColumns.sstart].toInt(),
                     subjectAlignEnd = record[BlastColumns.send].toInt(),
-                    queryFrame = record[BlastColumns.qframe].toInt(),
                     subjectFrame = Strand.valueOf(record[BlastColumns.sframe].toInt()),
                     expectedValue = record[BlastColumns.evalue].toDouble(),
                     bitScore = record[BlastColumns.bitscore].toDouble(),

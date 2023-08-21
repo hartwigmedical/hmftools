@@ -139,7 +139,7 @@ object IgTcrGeneFile
                         Column.allele -> csvPrinter.print(gene.allele)
                         Column.region -> csvPrinter.print(gene.region)
                         Column.functionality -> csvPrinter.print(gene.functionality.toCode())
-                        Column.primaryAssembly -> csvPrinter.print(gene.geneLocation?.isPrimaryAssembly)
+                        Column.primaryAssembly -> csvPrinter.print(gene.geneLocation?.inPrimaryAssembly)
                         Column.assemblyName -> csvPrinter.print(gene.geneLocation?.altAssemblyName)
                         Column.chromosome -> csvPrinter.print(gene.geneLocation?.chromosome)
                         Column.posStart -> csvPrinter.print(gene.geneLocation?.posStart)
