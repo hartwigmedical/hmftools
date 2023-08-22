@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.window;
+package com.hartwig.hmftools.common.genome.region;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,7 +7,8 @@ import org.junit.Test;
 public class WindowTest {
 
     @Test
-    public void testWindowStart() {
+    public void testWindowStart()
+    {
         final Window victim = new Window(1000);
 
         assertEquals(1, victim.start(1));
@@ -23,7 +24,8 @@ public class WindowTest {
     }
 
     @Test
-    public void testWindowEnd() {
+    public void testWindowEnd()
+    {
         final Window victim = new Window(1000);
 
         assertEquals(1000, victim.end(1));

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.genome.window;
+package com.hartwig.hmftools.common.genome.region;
 
 public class Window {
 
