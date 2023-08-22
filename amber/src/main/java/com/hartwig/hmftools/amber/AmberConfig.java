@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.amber;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.amber.AmberConstants.*;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
@@ -53,7 +55,7 @@ public class AmberConfig
 
     public final int TumorOnlyMinSupport;
     public final double TumorOnlyMinVaf;
-    public final int TumorOnlyMinDepth;
+    public final int TumorMinDepth;
     public final int MinBaseQuality;
     public final int MinMappingQuality;
     public final double MinDepthPercent;
@@ -76,7 +78,7 @@ public class AmberConfig
 
     private static final String TUMOR_ONLY_MIN_SUPPORT = "tumor_only_min_support";
     private static final String TUMOR_ONLY_MIN_VAF = "tumor_only_min_vaf";
-    private static final String TUMOR_ONLY_MIN_DEPTH = "tumor_only_min_depth";
+    private static final String TUMOR_MIN_DEPTH = "tumor_min_depth";
     private static final String MIN_BASE_QUALITY = "min_base_quality";
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String MIN_DEPTH_PERC = "min_depth_percent";
@@ -108,7 +110,14 @@ public class AmberConfig
 
         TumorOnlyMinSupport = configBuilder.getInteger(TUMOR_ONLY_MIN_SUPPORT);
         TumorOnlyMinVaf = configBuilder.getDecimal(TUMOR_ONLY_MIN_VAF);
-        TumorOnlyMinDepth = configBuilder.getInteger(TUMOR_ONLY_MIN_DEPTH);
+
+        if(configBuilder.hasValue(TUMOR_MIN_DEPTH))
+            TumorMinDepth = configBuilder.getInteger(TUMOR_MIN_DEPTH);
+        else if(ReferenceIds.isEmpty())
+            TumorMinDepth = DEFAULT_TUMOR_ONLY_MIN_DEPTH;
+        else
+            TumorMinDepth = DEFAULT_TUMOR_MIN_DEPTH;
+
         MinBaseQuality = configBuilder.getInteger(MIN_BASE_QUALITY);
         MinMappingQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
         MinDepthPercent = configBuilder.getDecimal(MIN_DEPTH_PERC);
@@ -150,8 +159,8 @@ public class AmberConfig
 
         configBuilder.addDecimal(TUMOR_ONLY_MIN_VAF, "Min VAF in ref and alt in tumor only mode", DEFAULT_TUMOR_ONLY_MIN_VAF);
 
-        configBuilder.addInteger(
-                TUMOR_ONLY_MIN_DEPTH, "Min depth in tumor only mode", DEFAULT_TUMOR_ONLY_MIN_DEPTH);
+        configBuilder.addConfigItem(TUMOR_MIN_DEPTH,
+                format("Min tumor depth, default tumor/normal(%d) tumor-only(%d)", DEFAULT_TUMOR_MIN_DEPTH, DEFAULT_TUMOR_ONLY_MIN_DEPTH));
 
         configBuilder.addInteger(
                 MIN_BASE_QUALITY, "Minimum quality for a base to be considered", DEFAULT_MIN_BASE_QUALITY);

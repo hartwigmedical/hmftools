@@ -87,15 +87,15 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tum
 
 ### Optional Arguments
 
-| Argument               | Default | Description                                                                   |
-|------------------------|---------|-------------------------------------------------------------------------------|
-| threads                | 1       | Number of threads to use                                                      |
-| min_mapping_quality    | 1       | Minimum mapping quality for an alignment to be used                           |
-| min_base_quality       | 13      | Minimum quality for a base to be considered                                   |
-| tumor_only_min_vaf     | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
+| Argument          | Default | Description                                                                   |
+|-------------------|---------|-------------------------------------------------------------------------------|
+| threads           | 1       | Number of threads to use                                                      |
+| min_mapping_quality | 1       | Minimum mapping quality for an alignment to be used                           |
+| min_base_quality  | 13      | Minimum quality for a base to be considered                                   |
+| tumor_only_min_vaf | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
 | tumor_only_min_support | 2       | Min support in ref and alt in tumor only mode                                 |
-| tumor_only_min_depth   | 25      | Min depth in ref and alt in tumor only mode                                   |
-| ref_genome             | NA      | Path to the reference genome fasta file. Required only when using CRAM files. |
+| tumor_min_depth   | 8/25    | Min tumor depth, default = 25 for tumor/normal, 8 for tumor-only mode         |
+| ref_genome        | NA      | Path to the reference genome fasta file. Required only when using CRAM files. |
 
 ### Example Usage
 

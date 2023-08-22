@@ -204,7 +204,7 @@ public class AmberApplication implements AutoCloseable
 
         final List<TumorBAF> tumorBAFList = tumor.getBafs().values()
                 .stream()
-                .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorOnlyMinDepth)
+                .filter(x -> x.TumorEvidence.ReadDepth >= mConfig.TumorMinDepth)
                 .filter(x -> x.TumorEvidence.RefSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> x.TumorEvidence.AltSupport >= mConfig.TumorOnlyMinSupport)
                 .filter(x -> isFinite(x.refFrequency()) && Doubles.greaterOrEqual(x.refFrequency(), mConfig.TumorOnlyMinVaf))
