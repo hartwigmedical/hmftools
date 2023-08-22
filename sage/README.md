@@ -11,7 +11,7 @@ Key features include:
   - No cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#6-phasing) of somatic + somatic and somatic + germline variants over whole read length
   - Native MNV handling 
-  - Joint calling, including allowing both multiple tumor and reference samples to be analysed copncurrently
+  - Joint calling, including allowing both multiple tumor and reference samples to be analysed concurrently
   - Support for diverse calling scenarios including somatic tumor-normal, somatic tumor only, germline, etc.
   - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
 
