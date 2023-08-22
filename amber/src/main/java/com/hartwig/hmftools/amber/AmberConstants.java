@@ -36,4 +36,6 @@ public class AmberConstants
     public static final int CRAM_MIN_GAP_INCREMENT = 1000;
     public static final int BAM_MIN_GAP_INCREMENT = 200;
 
+    public static final int TARGET_REGION_SITE_BUFFER = 300;
+
 }

@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
@@ -45,6 +47,7 @@ public class AmberConfig
     public final List<String> ReferenceBams;
 
     public final String BafLociPath;
+    public final String TargetRegionsBed;
     public final RefGenomeVersion RefGenVersion;
     public final String RefGenomeFile;
 
@@ -98,6 +101,7 @@ public class AmberConfig
         }
 
         BafLociPath = configBuilder.getValue(LOCI_FILE);
+        TargetRegionsBed  = configBuilder.getValue(TARGET_REGIONS_BED);
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
@@ -136,6 +140,7 @@ public class AmberConfig
         configBuilder.addPath(REFERENCE_BAM, false, REFERENCE_BAM_DESC);
 
         configBuilder.addPath(LOCI_FILE, true, "Path to BAF loci vcf file");
+        configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
 
         addRefGenomeVersion(configBuilder);
         configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC + ", required when using CRAM files");
