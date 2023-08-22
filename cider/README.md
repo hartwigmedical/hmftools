@@ -190,7 +190,7 @@ Following briefly describe the annotation logic:
   allow TRA and TRD to match one another.
 5. Finally the V, D, J gene alignment information are combined and added as annotation into the output file.
 
-### Setting up BLASTN
+## Setting up BLASTN
 To set up BLASTN, do the following:
 1. Follow the instruction in https://www.ncbi.nlm.nih.gov/books/NBK1762/ to install BLAST+
 2. Set up the `human_genome` blast DB:
@@ -200,17 +200,17 @@ To set up BLASTN, do the following:
     ```
    Make sure the `BLASTDB` environment variable is defined.
 
-## Idenfitification of clonal rearrangements in WGS samples
-
-Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence and progression via liquid biopsy.   For WGS tumor saples, the number of fragments in a clonal sequence will depend on the depth of coverage as well as the purity and ploidy of a sample.    For a 100x tumor sample we recommend using a threshold of approximately 8-10 high quality read support to identify clonal sequences.  For lower depth samples this number may need to be scaled downwards somewhat.  In lower purity & higher ploidy tumor samples, clonal sequences may have less than 10 reads support, but lowering the threshold may risk identifying non clonal sequences as clonal.   
-
-### Ig/TCR gene reference data curation
+## Ig/TCR gene reference data curation
 To create reference data, following steps:
 1. queried from IMGT (https://www.imgt.org/genedb/) to get all sequences for species Homo Sapiens and (separately) for Molecular Component: IG 
 and TR. Then we select all query results choosing “F+ORF+in-frame P nucleotide sequences with IMGT gaps”.
 2. Use both blast and ensembl to determine the V38 genomic location of each gene.
 3. For V and J genes, find their anchor regions.
 4. The V38 genomic positions are converted to V37.
+
+## Idenfitification of clonal rearrangements in WGS samples
+
+Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence and progression via liquid biopsy.   For WGS tumor saples, the number of fragments in a clonal sequence will depend on the depth of coverage as well as the purity and ploidy of a sample.    For a 100x tumor sample we recommend using a threshold of approximately 8-10 high quality read support to identify clonal sequences.  For lower depth samples this number may need to be scaled downwards somewhat.  In lower purity & higher ploidy tumor samples, clonal sequences may have less than 10 reads support, but lowering the threshold may risk identifying non clonal sequences as clonal.   
 
 ## Known issues and future improvements
 
