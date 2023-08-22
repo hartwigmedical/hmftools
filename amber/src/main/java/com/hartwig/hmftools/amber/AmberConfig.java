@@ -120,8 +120,19 @@ public class AmberConfig
 
         MinBaseQuality = configBuilder.getInteger(MIN_BASE_QUALITY);
         MinMappingQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
-        MinDepthPercent = configBuilder.getDecimal(MIN_DEPTH_PERC);
-        MaxDepthPercent = configBuilder.getDecimal(MAX_DEPTH_PERC);
+
+        if(TargetRegionsBed == null)
+        {
+            MinDepthPercent = configBuilder.getDecimal(MIN_DEPTH_PERC);
+            MaxDepthPercent = configBuilder.getDecimal(MAX_DEPTH_PERC);
+        }
+        else
+        {
+            // disable in targeted mode
+            MinDepthPercent = 0;
+            MaxDepthPercent = 0;
+        }
+
         MinHetAfPercent = configBuilder.getDecimal(MIN_HIT_AT_PERC);
         MaxHetAfPercent = configBuilder.getDecimal(MAX_HIT_AT_PERC);
         PositionGap = configBuilder.getInteger(POSITION_GAP);

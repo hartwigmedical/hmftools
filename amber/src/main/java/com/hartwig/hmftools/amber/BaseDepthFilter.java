@@ -21,8 +21,15 @@ public class BaseDepthFilter implements Predicate<PositionEvidence>
         this(minDepthPercentage, maxDepthPercentage, evidence.values());
     }
 
-    public BaseDepthFilter(final double minDepthPercentage, final double maxDepthPercentage, final Collection<PositionEvidence> evidence)
+    public BaseDepthFilter(double minDepthPercentage, double maxDepthPercentage, final Collection<PositionEvidence> evidence)
     {
+        if(minDepthPercentage == 0 && maxDepthPercentage == 0)
+        {
+            mMaxDepth = 0;
+            mMinDepth = 0;
+            return;
+        }
+
         int medianDepth = medianDepth(evidence);
         mMinDepth = (int) Math.round(medianDepth * minDepthPercentage);
         mMaxDepth = (int) Math.round(medianDepth * maxDepthPercentage);
@@ -33,6 +40,9 @@ public class BaseDepthFilter implements Predicate<PositionEvidence>
     @Override
     public boolean test(final PositionEvidence bafEvidence)
     {
+        if(mMinDepth == 0 && mMaxDepth == 0)
+            return true;
+
         return bafEvidence.ReadDepth > 0 && bafEvidence.ReadDepth >= mMinDepth && bafEvidence.ReadDepth <= mMaxDepth;
     }
 
