@@ -6,6 +6,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_G
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.SampleDataFiles.GERMLINE_VARIANTS;
 import static com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency.COHORT_DEL_FREQ_FILE;
@@ -74,7 +76,6 @@ public class ReferenceData
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
 
-    public static final String TARGET_REGION_BED = "target_regions_bed";
     private static final String TARGET_REGIONS_RATIOS = "target_regions_ratios";
     private static final String TARGET_REGION_MSI_INDELS = "target_regions_msi_indels";
 
@@ -211,7 +212,7 @@ public class ReferenceData
         CohortGermlineDeletions = new GermlineDeletionFrequency(configBuilder.getValue(COHORT_DEL_FREQ_FILE));
 
         TargetRegions = new TargetRegionsData(
-                configBuilder.getValue(TARGET_REGION_BED),
+                configBuilder.getValue(TARGET_REGIONS_BED),
                 configBuilder.getValue(TARGET_REGIONS_RATIOS),
                 configBuilder.getValue(TARGET_REGION_MSI_INDELS));
     }
@@ -256,7 +257,7 @@ public class ReferenceData
         configBuilder.addConfigItem(GERMLINE_HOTSPOT, false, "Path to germline hotspot VCF", "");
         addGcProfilePath(configBuilder, false);
         configBuilder.addPath(COHORT_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
-        configBuilder.addPath(TARGET_REGION_BED, false, "Target regions BED file");
+        configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
         configBuilder.addPath(TARGET_REGIONS_RATIOS, false, "Path to target regions ratios file");
         configBuilder.addPath(TARGET_REGION_MSI_INDELS, false, "Path to target regions MSI INDELs file");
         EnsemblDataCache.addEnsemblDir(configBuilder, true);

@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
-import static java.lang.String.format;
-
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -10,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGION
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.ReferenceData.TARGET_REGION_BED;
 
 import java.io.File;
 import java.util.Collections;
@@ -110,7 +108,7 @@ public class PurpleConfig
         Charting = new ChartConfig(configBuilder, OutputDir);
         Fitting = new FittingConfig(configBuilder);
         SomaticFitting = new SomaticFitConfig(configBuilder);
-        TargetRegionsMode = configBuilder.hasValue(TARGET_REGION_BED);
+        TargetRegionsMode = configBuilder.hasValue(TARGET_REGIONS_BED);
         Threads = parseThreads(configBuilder);
 
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);

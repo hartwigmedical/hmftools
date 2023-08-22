@@ -4,13 +4,14 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
-import static com.hartwig.hmftools.cobalt.norm.NormalisationConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFile;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
 import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
@@ -108,7 +109,7 @@ public class TargetedRegionAnalyser
     {
         ConfigBuilder configBuilder = new ConfigBuilder("Cobalt");
 
-        configBuilder.addPath(TARGET_REGIONS_BED, true, "Target regions BED file");
+        configBuilder.addPath(TARGET_REGIONS_BED, true, TARGET_REGIONS_BED_DESC);
         configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC);
         addGcProfilePath(configBuilder, true);
         addOutputDir(configBuilder);

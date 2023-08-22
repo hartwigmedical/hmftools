@@ -32,6 +32,9 @@ public final class CommonConfig
     public static final String PERF_DEBUG = "perf_debug";
     public static final String PERF_DEBUG_DESC = "Detailed performance tracking and logging";
 
+    public static final String TARGET_REGIONS_BED = "target_regions_bed";
+    public static final String TARGET_REGIONS_BED_DESC = "Target regions BED file";
+
     public static final String SAMPLE_DATA_DIR_CFG = "sample_data_dir";
     public static final String SAMPLE_DATA_DIR_DESC = "Path to sample pipeline files";
 

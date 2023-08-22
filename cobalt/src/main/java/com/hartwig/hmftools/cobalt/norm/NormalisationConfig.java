@@ -9,10 +9,11 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.AMBER_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_COLUMN;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
@@ -42,8 +43,6 @@ public class NormalisationConfig
     public final RefGenomeVersion RefGenVersion;
 
     private final Map<String,String> mPanelToWgsSampleIdMappings; // if required, mapping from panel to WGS
-
-    public static final String TARGET_REGIONS_BED = "target_regions_bed";
 
     private static final String COBALT_WGS_DIR = "cobalt_wgs_dir";
     private static final String OUTPUT_FILE = "output_file";
@@ -128,7 +127,7 @@ public class NormalisationConfig
         configBuilder.addPath(COBALT_DIR_CFG, true, COBALT_DIR_DESC);
         configBuilder.addPath(COBALT_WGS_DIR, false, "Path to cobalt WGS files");
         configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        configBuilder.addPath(TARGET_REGIONS_BED, true, "Target regions BED file");
+        configBuilder.addPath(TARGET_REGIONS_BED, true, TARGET_REGIONS_BED_DESC);
         configBuilder.addRequiredConfigItem(OUTPUT_FILE, "Output normalisation file");
         configBuilder.addConfigItem(DETAILED_OUTPUT, "Detailed normalisation calcs file");
         addGcProfilePath(configBuilder, true);
