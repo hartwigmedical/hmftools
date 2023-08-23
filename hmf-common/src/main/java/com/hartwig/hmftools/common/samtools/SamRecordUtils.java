@@ -75,18 +75,19 @@ public final class SamRecordUtils
 
     public static byte orientation(final SAMRecord read) { return !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT; }
 
-    public static int getAvgBaseQuality(final SAMRecord record, int readPosition, int length)
+    /** @param readPosition 1-based position in the record */
+    public static int getAvgBaseQuality(final SAMRecord record, final int readPosition, final int length)
     {
         assert (readPosition > 0);
 
-        int score = 0;
-        final String baseQualities = record.getBaseQualityString();
-        for(int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++)
-        {
-            int baseScore = getBaseQuality(baseQualities.charAt(index));
-            score += baseScore;
-        }
-        return score / length;
+        final byte[] baseQualities = record.getBaseQualities();
+        final int startIndex = readPosition - 1;
+        final int endIndex = Math.min(startIndex + length, baseQualities.length);
+
+        int qualitySum = 0;
+        for(int i = startIndex; i < endIndex; i++)
+            qualitySum += baseQualities[i];
+        return qualitySum / length;
     }
 
     public static List<int[]> generateMappedCoords(final Cigar cigar, final int posStart)
