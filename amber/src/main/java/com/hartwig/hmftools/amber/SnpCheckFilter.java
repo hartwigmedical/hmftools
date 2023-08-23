@@ -10,13 +10,11 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 
-import org.jetbrains.annotations.NotNull;
-
 public class SnpCheckFilter implements Predicate<PositionEvidence>
 {
     private final Set<GenomePosition> mSnpLoci;
 
-    public SnpCheckFilter(@NotNull final Multimap<Chromosome, AmberSite> snpLoci)
+    public SnpCheckFilter(final Multimap<Chromosome, AmberSite> snpLoci)
     {
         mSnpLoci = snpLoci.values()
                 .stream()

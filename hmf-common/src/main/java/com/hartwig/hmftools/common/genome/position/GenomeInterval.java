@@ -2,12 +2,13 @@ package com.hartwig.hmftools.common.genome.position;
 
 import org.jetbrains.annotations.Nullable;
 
-public interface GenomeInterval extends GenomePosition {
-
+public interface GenomeInterval extends GenomePosition
+{
     @Nullable
     Integer startOffset();
 
-    default int startPosition() {
+    default int startPosition()
+    {
         Integer startOffset = startOffset();
         return startOffset == null ? position() : position() + startOffset;
     }
@@ -15,7 +16,8 @@ public interface GenomeInterval extends GenomePosition {
     @Nullable
     Integer endOffset();
 
-    default int endPosition() {
+    default int endPosition()
+    {
         Integer endOffset = endOffset();
         return endOffset == null ? position() : position() + endOffset;
     }

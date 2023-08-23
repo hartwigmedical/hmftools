@@ -57,14 +57,10 @@ public final class AmberSitesFile
                 continue;
 
             HumanChromosome chromosome = HumanChromosome.fromString(variant.getContig());
-            result.put(chromosome,
-                    ImmutableAmberSite.builder()
-                            .chromosome(variant.getContig())
-                            .position(variant.getStart())
-                            .ref(variant.getReference().getBaseString())
-                            .alt(variant.getAlternateAllele(0).getBaseString())
-                            .snpCheck(variant.hasAttribute(SNPCHECK))
-                            .build());
+
+            result.put(chromosome, new AmberSite(
+                    variant.getContig(), variant.getStart(), variant.getReference().getBaseString(),
+                    variant.getAlternateAllele(0).getBaseString(), variant.hasAttribute(SNPCHECK)));
         }
 
         LOGGER.info("loaded {} Amber germline sites from {}", result.size(), vcfFile);
@@ -123,14 +119,8 @@ public final class AmberSitesFile
 
             HumanChromosome chromosome = HumanChromosome.fromString(chrStr);
 
-            result.put(chromosome,
-                    ImmutableAmberSite.builder()
-                            .chromosome(chrStr)
-                            .position(Integer.parseInt(values[posIndex]))
-                            .ref(values[refIndex])
-                            .alt(values[altIndex])
-                            .snpCheck(Boolean.parseBoolean(values[infoIndex]))
-                            .build());
+            result.put(chromosome, new AmberSite(
+                    chrStr, Integer.parseInt(values[posIndex]), values[refIndex], values[altIndex], Boolean.parseBoolean(values[infoIndex])));
         }
 
         LOGGER.info("loaded {} Amber germline sites from {}", result.size(), filename);

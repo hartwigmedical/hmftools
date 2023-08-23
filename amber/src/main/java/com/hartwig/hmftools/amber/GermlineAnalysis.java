@@ -82,9 +82,10 @@ public class GermlineAnalysis
         mUniparentalDisomy = ConsanguinityAnalyser.findUniparentalDisomy(mRegionsOfHomozygosity);
     }
 
-    public ListMultimap<Chromosome, PositionEvidence> getSnpCheckedLoci() { return mSnpCheckedLoci; }
-    public ListMultimap<Chromosome, PositionEvidence> getHomozygousLoci() { return mHomozygousLoci; }
-    public ListMultimap<Chromosome, PositionEvidence> getHeterozygousLoci() { return mHeterozygousLoci; }
+    public ListMultimap<Chromosome,PositionEvidence> getSnpCheckedLoci() { return mSnpCheckedLoci; }
+    public ListMultimap<Chromosome,PositionEvidence> getHomozygousLoci() { return mHomozygousLoci; }
+    public ListMultimap<Chromosome,PositionEvidence> getHeterozygousLoci() { return mHeterozygousLoci; }
+
     public List<RegionOfHomozygosity> getRegionsOfHomozygosity() { return mRegionsOfHomozygosity; }
     public double getConsanguinityProportion() { return mConsanguinityProportion; }
 

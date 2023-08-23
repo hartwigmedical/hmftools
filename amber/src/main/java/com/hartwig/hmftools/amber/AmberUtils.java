@@ -11,7 +11,6 @@ import com.google.common.io.Files;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberSite;
 import com.hartwig.hmftools.common.amber.ImmutableAmberBAF;
-import com.hartwig.hmftools.common.amber.ImmutableAmberSite;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
@@ -28,7 +27,7 @@ public class AmberUtils
         List<GenomeRegion> genomeRegions = new ArrayList<>();
         java.io.InputStream bedStream = AmberUtils.class.getClassLoader().getResourceAsStream(resourcePath);
 
-        if (bedStream == null)
+        if(bedStream == null)
         {
             AMB_LOGGER.error("unable to find resource bed file: {}", resourcePath);
             throw new RuntimeException("unable to find resource bed file: " + resourcePath);
@@ -85,11 +84,6 @@ public class AmberUtils
 
     public static AmberSite depthAsSite(final PositionEvidence baseDepth)
     {
-        return ImmutableAmberSite.builder()
-                .from(baseDepth)
-                .snpCheck(false)
-                .ref(baseDepth.ref())
-                .alt(baseDepth.alt())
-                .build();
+        return new AmberSite(baseDepth.chromosome(), baseDepth.position(), baseDepth.ref(), baseDepth.alt(), false);
     }
 }

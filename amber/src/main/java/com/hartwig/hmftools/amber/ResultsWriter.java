@@ -72,20 +72,10 @@ public class ResultsWriter
 
     void persistSnpCheck(final ListMultimap<Chromosome, PositionEvidence> baseDepths)
     {
-        if (baseDepths.size() > 0)
+        if(baseDepths.size() > 0)
         {
             final String outputVcf = mConfig.OutputDir + mConfig.primaryReference() + ".amber.snp.vcf.gz";
             AMB_LOGGER.info("writing {} germline snp records to {}", baseDepths.size(), outputVcf);
-            VCFWriter.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
-        }
-    }
-
-    void persistPrimaryRefUnfiltered(final ListMultimap<Chromosome, PositionEvidence> baseDepths)
-    {
-        if (baseDepths.size() > 0)
-        {
-            final String outputVcf = mConfig.OutputDir + mConfig.primaryReference() + ".amber.unfiltered.vcf.gz";
-            AMB_LOGGER.info("writing {} germline unfiltered records to {}", baseDepths.size(), outputVcf);
             VCFWriter.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
         }
     }

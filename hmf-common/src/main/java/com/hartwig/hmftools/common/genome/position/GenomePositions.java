@@ -12,38 +12,49 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class GenomePositions {
+public final class GenomePositions
+{
 
-    private GenomePositions() {
+    private GenomePositions()
+    {
     }
 
     @NotNull
-    public static GenomePosition create(@NotNull final String chromosome, final int position) {
+    public static GenomePosition create(@NotNull final String chromosome, final int position)
+    {
         return ImmutableGenomePositionImpl.builder().chromosome(chromosome).position(position).build();
     }
 
     @NotNull
-    public static <T extends GenomePosition> GenomePosition create(@NotNull final T genomePosition) {
+    public static <T extends GenomePosition> GenomePosition create(@NotNull final T genomePosition)
+    {
         return ImmutableGenomePositionImpl.builder().chromosome(genomePosition.chromosome()).position(genomePosition.position()).build();
     }
 
     @NotNull
     public static <S, T extends GenomePosition> Multimap<S, T> union(@NotNull final Multimap<S, T> first,
-            @NotNull final Multimap<S, T> second) {
+            @NotNull final Multimap<S, T> second)
+    {
         final Multimap<S, T> union = ArrayListMultimap.create();
         final Set<S> keys = Sets.newHashSet();
         keys.addAll(first.keySet());
         keys.addAll(second.keySet());
 
-        for (S key : keys) {
+        for(S key : keys)
+        {
             final Collection<T> firstCollection = first.get(key);
             final Collection<T> secondCollection = second.get(key);
 
-            if (firstCollection == null) {
+            if(firstCollection == null)
+            {
                 union.putAll(key, secondCollection);
-            } else if (secondCollection == null) {
+            }
+            else if(secondCollection == null)
+            {
                 union.putAll(key, firstCollection);
-            } else {
+            }
+            else
+            {
                 union.putAll(key, union(firstCollection, secondCollection));
             }
         }
@@ -52,22 +63,29 @@ public final class GenomePositions {
     }
 
     @NotNull
-    public static <T extends GenomePosition> List<T> union(@NotNull final Collection<T> first, @NotNull final Collection<T> second) {
+    public static <T extends GenomePosition> List<T> union(@NotNull final Collection<T> first, @NotNull final Collection<T> second)
+    {
         final List<T> merged = Lists.newArrayList();
         final Iterator<T> firstIterator = first.iterator();
         final Iterator<T> secondIterator = second.iterator();
 
         T firstPosition = firstIterator.hasNext() ? firstIterator.next() : null;
         T secondPosition = secondIterator.hasNext() ? secondIterator.next() : null;
-        while (firstPosition != null || secondPosition != null) {
+        while(firstPosition != null || secondPosition != null)
+        {
 
-            if (firstPosition == null || (secondPosition != null && secondPosition.compareTo(firstPosition) < 0)) {
+            if(firstPosition == null || (secondPosition != null && secondPosition.compareTo(firstPosition) < 0))
+            {
                 merged.add(secondPosition);
                 secondPosition = secondIterator.hasNext() ? secondIterator.next() : null;
-            } else if (secondPosition == null || firstPosition.compareTo(secondPosition) < 0) {
+            }
+            else if(secondPosition == null || firstPosition.compareTo(secondPosition) < 0)
+            {
                 merged.add(firstPosition);
                 firstPosition = firstIterator.hasNext() ? firstIterator.next() : null;
-            } else {
+            }
+            else
+            {
                 merged.add(firstPosition);
                 firstPosition = firstIterator.hasNext() ? firstIterator.next() : null;
                 secondPosition = secondIterator.hasNext() ? secondIterator.next() : null;

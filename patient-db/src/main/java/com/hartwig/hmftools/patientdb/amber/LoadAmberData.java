@@ -8,13 +8,11 @@ import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -31,7 +29,6 @@ import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
 
 public class LoadAmberData
 {
@@ -71,9 +68,11 @@ public class LoadAmberData
 
         VcfFileReader fileReader = new VcfFileReader(amberSnpPath);
 
+        int refSiteCount = 0;
         for(VariantContext variant : fileReader.iterator())
         {
             SiteEvidence siteEvidence = SiteEvidence.fromVariantContext(variant);
+            ++refSiteCount;
 
             if(selector.select(siteEvidence).isPresent())
                 siteEvidenceList.add(siteEvidence);
@@ -85,6 +84,9 @@ public class LoadAmberData
                     tumorSample, snpCheckSites.size(), siteEvidenceList.size());
             System.exit(1);
         }
+
+        LOGGER.debug("sample reference sites({}) filter to snpCheckSites({})", refSiteCount, siteEvidenceList.size());
+
 
         AmberSample sample = amberSampleFactory.createSampleData(tumorSample, siteEvidenceList);
 

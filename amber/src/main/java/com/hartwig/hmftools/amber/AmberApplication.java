@@ -71,7 +71,7 @@ public class AmberApplication implements AutoCloseable
         {
             runTumorOnly();
         }
-        else if (mConfig.isGermlineOnly())
+        else if(mConfig.isGermlineOnly())
         {
             runGermlineOnly();
         }
