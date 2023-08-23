@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.*;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -23,8 +22,6 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class AmberBAFFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
@@ -34,17 +31,17 @@ public final class AmberBAFFile
 
     public static String generateAmberFilenameForWriting(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + AMBER_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION;
     }
 
     public static String generateAmberFilenameForReading(final String basePath, final String sample)
     {
-        String filename = basePath + File.separator + sample + AMBER_EXTENSION;
+        String filename = checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION;
 
         if(Files.exists(Paths.get(filename)))
             return filename;
 
-        return basePath + File.separator + sample + AMBER_EXTENSION_OLD;
+        return checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION_OLD;
     }
 
     private static final String CHROMOSOME = "chromosome";

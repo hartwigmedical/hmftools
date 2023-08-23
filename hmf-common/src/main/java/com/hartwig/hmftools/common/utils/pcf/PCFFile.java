@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.utils.pcf;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,13 +33,13 @@ public final class PCFFile
     @NotNull
     public static String generateRatioFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + RATIO_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + RATIO_EXTENSION;
     }
 
     @NotNull
     public static String generateBAFFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + BAF_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + BAF_EXTENSION;
     }
 
     @NotNull
