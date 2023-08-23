@@ -108,6 +108,14 @@ public enum HumanChromosome implements Chromosome
         return name;
     }
 
+    public static boolean isShortArm(final String chromosome)
+    {
+        return chromosome.equals("13") || chromosome.equals("14") || chromosome.equals("15")
+                || chromosome.equals("21") || chromosome.equals("22");
+    }
+
+    public boolean isShortArm() { return isShortArm(name); }
+
     private static boolean isNumeric(String str)
     {
         for(int i = 0; i < str.length(); i++)
