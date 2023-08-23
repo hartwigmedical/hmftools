@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
-import static htsjdk.samtools.CigarOperator.D;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -44,7 +42,7 @@ public final class SamRecordUtils
         return quality - PHRED_OFFSET;
     }
 
-    public static int getBaseQuality(final SAMRecord record, int readPosition)
+    public static int getBaseQuality(final SAMRecord record, final int readPosition)
     {
         return getAvgBaseQuality(record, readPosition, 1);
     }
@@ -91,7 +89,7 @@ public final class SamRecordUtils
         return score / length;
     }
 
-    public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
+    public static List<int[]> generateMappedCoords(final Cigar cigar, final int posStart)
     {
         final List<int[]> mappedCoords = Lists.newArrayList();
 
@@ -99,13 +97,13 @@ public final class SamRecordUtils
         int posOffset = 0;
         boolean continueRegion = false;
 
-        for(CigarElement element : cigar.getCigarElements())
+        for(final CigarElement element : cigar.getCigarElements())
         {
             if(element.getOperator() == CigarOperator.S)
             {
                 // nothing to skip
             }
-            else if(element.getOperator() == D)
+            else if(element.getOperator() == CigarOperator.D)
             {
                 posOffset += element.getLength();
                 continueRegion = true;
@@ -122,12 +120,12 @@ public final class SamRecordUtils
             }
             else if(element.getOperator() == CigarOperator.M)
             {
-                int readStartPos = posStart + posOffset;
-                int readEndPos = readStartPos + element.getLength() - 1;
+                final int readStartPos = posStart + posOffset;
+                final int readEndPos = readStartPos + element.getLength() - 1;
 
                 if(continueRegion && !mappedCoords.isEmpty())
                 {
-                    int[] lastRegion = mappedCoords.get(mappedCoords.size() - 1);
+                    final int[] lastRegion = mappedCoords.get(mappedCoords.size() - 1);
                     lastRegion[SE_END] = readEndPos;
                 }
                 else

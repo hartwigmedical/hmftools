@@ -5,18 +5,18 @@ import java.util.StringJoiner;
 
 public final class Strings
 {
-    public static String appendStr(final String dest, final String source, char delim)
+    public static String appendStr(final String dest, final String source, final char delim)
     {
         return dest.isEmpty() ? source : dest + delim + source;
     }
 
-    public static String appendStrList(final List<String> sourceList, char delim)
+    public static String appendStrList(final List<String> sourceList, final char delim)
     {
         if(sourceList.isEmpty())
             return "";
 
         final StringJoiner combinedStr = new StringJoiner(String.valueOf(delim));
-        sourceList.forEach(x -> combinedStr.add(x));
+        sourceList.forEach(combinedStr::add);
         return sourceList.toString();
     }
 
