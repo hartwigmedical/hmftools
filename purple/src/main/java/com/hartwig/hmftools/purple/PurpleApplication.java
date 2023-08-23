@@ -108,7 +108,6 @@ public class PurpleApplication
     {
         mPurpleVersion = new VersionInfo("purple.version");
 
-        // load config
         mConfig = new PurpleConfig(mPurpleVersion.version(), configBuilder);
 
         if(!mConfig.isValid())
@@ -130,14 +129,7 @@ public class PurpleApplication
 
         mGermlineVariants = new GermlineVariants(mConfig, mReferenceData, mPurpleVersion.version());
 
-        if(!mConfig.DriversOnly)
-        {
-            mSegmentation = new Segmentation(mReferenceData);
-        }
-        else
-        {
-            mSegmentation = null;
-        }
+        mSegmentation = !mConfig.DriversOnly ? new Segmentation(mReferenceData) : null;
     }
 
     public void run()
@@ -268,7 +260,7 @@ public class PurpleApplication
         Set<String> reportedGenes = Sets.newHashSet();
         SomaticStream somaticStream = null;
 
-        final RegionFitCalculator regionFitCalculator = createFittedRegionFactory(amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
+        RegionFitCalculator regionFitCalculator = createFittedRegionFactory(amberData.AverageTumorDepth, cobaltChromosomes, mConfig.Fitting);
 
         if(mConfig.runTumor())
         {
@@ -426,9 +418,7 @@ public class PurpleApplication
             final RegionFitCalculator regionFitCalculator, final List<StructuralVariant> structuralVariants)
             throws ExecutionException, InterruptedException
     {
-        final List<FittedPurity> fitCandidates = Lists.newArrayList();
-
-        final CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
+        CobaltChromosomes cobaltChromosomes = sampleData.Cobalt.CobaltChromosomes;
 
         List<SomaticVariant> fittingVariants = !mConfig.tumorOnlyMode() ?
                 SomaticPurityFitter.findFittingVariants(sampleData.SomaticCache.variants(), observedRegions) : Lists.newArrayList();
@@ -438,14 +428,14 @@ public class PurpleApplication
             PPL_LOGGER.info("somatic fitting variants({})", fittingVariants.size());
         }
 
-        final FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
+        FittedPurityFactory fittedPurityFactory = new FittedPurityFactory(
                 mConfig, mExecutorService, cobaltChromosomes, regionFitCalculator, observedRegions, fittingVariants);
 
         fittedPurityFactory.fitPurity();
 
-        fitCandidates.addAll(fittedPurityFactory.getFittedPurities());
+        List<FittedPurity> fitCandidates = Lists.newArrayList(fittedPurityFactory.getFittedPurities());
 
-        final BestFitFactory bestFitFactory = new BestFitFactory(
+        BestFitFactory bestFitFactory = new BestFitFactory(
                 mConfig,
                 sampleData.Amber.minSomaticTotalReadCount(),
                 sampleData.Amber.maxSomaticTotalReadCount(),

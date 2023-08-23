@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAP
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_FITTING_MAX_REPEATS;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_MAX_SNV_COUNT;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.SNV_HOTSPOT_VAF_PROBABILITY;
+import static com.hartwig.hmftools.purple.fitting.SomaticKernelDensityPeaks.findMatchedFittedPurity;
 
 import java.util.List;
 import java.util.Optional;
@@ -182,13 +183,13 @@ public class SomaticPurityFitter
         {
             PPL_LOGGER.info("looking for peak somatic allelic frequencies");
 
-            Optional<FittedPurity> kdFit = SomaticKernelDensityPeaks.fitPurity(
+            FittedPurity kdFit = SomaticKernelDensityPeaks.fitPurity(
                     allCandidates, variants, mKdMinSomatics, mKdMinPeak, mMinPurity, mMaxPurity);
 
-            if(kdFit.isPresent())
+            if(kdFit != null)
             {
-                somaticFitPurity = kdFit.get();
-                somaticPeakPurity = kdFit.get().purity();
+                somaticFitPurity = kdFit;
+                somaticPeakPurity = kdFit.purity();
                 PPL_LOGGER.info("peak somatic purity({})", formatPurity(somaticPeakPurity));
             }
         }
@@ -201,14 +202,10 @@ public class SomaticPurityFitter
 
         if(hotspotVaf > somaticPeakPurity)
         {
-            return ImmutableFittedPurity.builder()
-                    .score(1)
-                    .diploidProportion(1)
-                    .normFactor(1)
-                    .purity(hotspotVaf)
-                    .somaticPenalty(1)
-                    .ploidy(2)
-                    .build();
+            FittedPurity matchedFittedPurity = findMatchedFittedPurity(hotspotVaf, allCandidates, 0.005);
+
+            if(matchedFittedPurity != null)
+                return matchedFittedPurity;
         }
 
         return somaticFitPurity;
