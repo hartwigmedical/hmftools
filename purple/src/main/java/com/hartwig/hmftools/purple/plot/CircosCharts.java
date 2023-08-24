@@ -64,8 +64,8 @@ public class CircosCharts
     {
         mCurrentReferenceId = referenceId;
         mCurrentSampleId = sampleId;
-        mBaseCircosTumorSample = mConfig.CircosDirectory + File.separator + mCurrentSampleId;
-        mBaseCircosReferenceSample = mConfig.CircosDirectory + File.separator + mCurrentReferenceId;
+        mBaseCircosTumorSample = mConfig.CircosDirectory + mCurrentSampleId;
+        mBaseCircosReferenceSample = mConfig.CircosDirectory + mCurrentReferenceId;
 
         final List<VariantContextDecorator> somatics = somaticVariants.stream()
                 .filter(x -> HumanChromosome.contains(x.chromosome()))
@@ -79,7 +79,6 @@ public class CircosCharts
         writeBafs(Downsample.downsample(MAX_PLOT_POINTS, bafs));
     }
 
-    @NotNull
     public List<Future<Integer>> chartFutures()
     {
         final List<Future<Integer>> futures = Lists.newArrayList();
@@ -101,7 +100,6 @@ public class CircosCharts
         return execution.generateCircos(inputConfig, outputPath, outputFile, mConfig.CircosDirectory);
     }
 
-    @NotNull
     private String confFile(final String type)
     {
         return mBaseCircosTumorSample + "." + type + "." + "conf";
@@ -171,7 +169,7 @@ public class CircosCharts
     {
         Charset charset = StandardCharsets.UTF_8;
         final String content = readResource("/circos/" + inputName);
-        final String outputFilename = mConfig.CircosDirectory + File.separator + outputName;
+        final String outputFilename = mConfig.CircosDirectory + outputName;
         Files.write(new File(outputFilename).toPath(), content.getBytes(charset));
     }
 

@@ -203,14 +203,7 @@ public class FittedPurityFactory
     public static RegionFitCalculator createFittedRegionFactory(
             final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig)
     {
-        return new RegionFitCalculator(cobaltChromosomes,
-                averageTumorDepth,
-                fitScoreConfig.PloidyPenaltyFactor,
-                fitScoreConfig.PloidyPenaltyStandardDeviation,
-                fitScoreConfig.PloidyPenaltyMinStandardDeviationPerPloidy,
-                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneMultiplier,
-                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneAdditional,
-                fitScoreConfig.PloidyPenaltyBaselineDeviation);
+        return new RegionFitCalculator(cobaltChromosomes, fitScoreConfig, averageTumorDepth);
     }
 
     private static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes, final ObservedRegion region)

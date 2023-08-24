@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.plot;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 
@@ -25,14 +26,12 @@ public class RChartData
     private static final double COPY_NUMBER_BUCKET_SIZE = 1;
     private static final double VARIANT_COPY_NUMBER_BUCKET_SIZE = 0.05;
 
-    private static final String DELIMITER = "\t";
-
     private final Map<String, AtomicInteger> mSomaticHistogram = Maps.newHashMap();
     private final String mFilename;
 
-    public RChartData(String outputDirectory, String tumorSample)
+    public RChartData(final String outputDir, String tumorSample)
     {
-        mFilename = outputDirectory + File.separator + tumorSample + ".purple.somatic.hist.tsv";
+        mFilename = outputDir + tumorSample + ".purple.somatic.hist.tsv";
     }
 
     public void processVariant(final SomaticVariant variant)
@@ -55,7 +54,7 @@ public class RChartData
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("variantCopyNumberBucket")
                 .add("copyNumberBucket")
                 .add("count")
@@ -66,7 +65,7 @@ public class RChartData
     {
         String[] keys = entry.getKey().split(">");
 
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(format("%.2f", Integer.parseInt(keys[0]) * VARIANT_COPY_NUMBER_BUCKET_SIZE))
                 .add(format("%.0f", Integer.parseInt(keys[1]) * COPY_NUMBER_BUCKET_SIZE))
                 .add(String.valueOf(entry.getValue()))

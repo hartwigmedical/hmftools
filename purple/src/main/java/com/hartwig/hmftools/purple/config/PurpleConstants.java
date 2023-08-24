@@ -8,6 +8,7 @@ public class PurpleConstants
 
     // common
     public static final int WINDOW_SIZE = 1000;
+    public static final double BAF_PNT_5 = 0.5;
 
     // TMB calcs
     public static final double MB_PER_GENOME = 2859;

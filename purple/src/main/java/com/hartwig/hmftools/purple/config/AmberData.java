@@ -84,7 +84,7 @@ public class AmberData
 
         PatientGender = determineGender(refGenVersion, ChromosomeBafs);
 
-        PPL_LOGGER.info("average Amber tumor depth is {} reads implying an ambiguous BAF of {}",
+        PPL_LOGGER.info("Amber average tumor depth({}) ambiguous BAF({})",
                 AverageTumorDepth, String.format("%.3f", ExpectedBAF.expectedBAF(AverageTumorDepth)));
     }
 
