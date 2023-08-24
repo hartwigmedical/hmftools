@@ -42,6 +42,8 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency;
+import com.hartwig.hmftools.purple.region.GermlineStatusFactory;
+import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.util.Strings;
@@ -124,6 +126,8 @@ public class ReferenceData
         PPL_LOGGER.info("using ref genome: {}", RefGenVersion);
 
         RefGeCoordinates = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+
+        ObservedRegionFactory.setExcludedImmuneRegions(RefGenVersion);
 
         final Map<Chromosome, String> chromosomeNames =
                 lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));

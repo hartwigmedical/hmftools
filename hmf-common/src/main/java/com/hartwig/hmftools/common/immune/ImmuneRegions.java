@@ -16,12 +16,28 @@ public final class ImmuneRegions
     public static final ChrBaseRegion IGH_REGION_V38 = new ChrBaseRegion("chr14", 105586437, 106879844);
     public static final ChrBaseRegion IGL_REGION_V38 = new ChrBaseRegion("chr22", 22026076, 22922913);
 
+    public static final ChrBaseRegion TRB_REGION_V37 = new ChrBaseRegion("7", 141999017, 142510554);
+    public static final ChrBaseRegion TRG_REGION_V37 = new ChrBaseRegion("7", 38279181, 38407483);
+    public static final ChrBaseRegion TRAD_REGION_V37 = new ChrBaseRegion("14", 22090446, 23021099);
+
+    public static final ChrBaseRegion TRB_REGION_V38 = new ChrBaseRegion("chr7", 141698817, 142121394);
+    public static final ChrBaseRegion TRG_REGION_V38 = new ChrBaseRegion("chr7", 38318782, 38447083);
+    public static final ChrBaseRegion TRAD_REGION_V38 = new ChrBaseRegion("chr14", 22558723, 23490308);
+
     public static final List<ChrBaseRegion> IG_REGIONS_V37 = Lists.newArrayList(IGK_REGION_V37, IGH_REGION_V37, IGL_REGION_V37);
     public static final List<ChrBaseRegion> IG_REGIONS_V38 = Lists.newArrayList(IGK_REGION_V38, IGH_REGION_V38, IGL_REGION_V38);
+
+    public static final List<ChrBaseRegion> TR_REGIONS_V37 = Lists.newArrayList(TRB_REGION_V37, TRG_REGION_V37, TRAD_REGION_V37);
+    public static final List<ChrBaseRegion> TR_REGIONS_V38 = Lists.newArrayList(TRB_REGION_V38, TRG_REGION_V38, TRAD_REGION_V38);
 
     public static List<ChrBaseRegion> getIgRegions(final RefGenomeVersion refGenomeVersion)
     {
         return refGenomeVersion.is37() ? IG_REGIONS_V37 : IG_REGIONS_V38;
+    }
+
+    public static List<ChrBaseRegion> getTrRegions(final RefGenomeVersion refGenomeVersion)
+    {
+        return refGenomeVersion.is37() ? TR_REGIONS_V37 : TR_REGIONS_V38;
     }
 
     public static ChrBaseRegion getIgRegion(final String geneName, final RefGenomeVersion refGenomeVersion)

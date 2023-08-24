@@ -21,11 +21,14 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.genome.region.Window;
+import com.hartwig.hmftools.common.immune.ImmuneRegions;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.Doubles;
@@ -36,11 +39,19 @@ public class ObservedRegionFactory
     private final CobaltChromosomes mCobaltChromosomes;
     private final GermlineStatusFactory mStatusFactory;
 
+    private static List<ChrBaseRegion> EXCLUDED_IMMUNE_REGIONS = Lists.newArrayList();
+
     public ObservedRegionFactory(final int windowSize, final CobaltChromosomes cobaltChromosomes)
     {
         mWindowSize = windowSize;
         mCobaltChromosomes = cobaltChromosomes;
         mStatusFactory = new GermlineStatusFactory(cobaltChromosomes);
+    }
+
+    public static void setExcludedImmuneRegions(final RefGenomeVersion refGenomeVersion)
+    {
+        EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getIgRegions(refGenomeVersion));
+        EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getTrRegions(refGenomeVersion));
     }
 
     public List<ObservedRegion> formObservedRegions(
@@ -64,10 +75,10 @@ public class ObservedRegionFactory
             gcSelector.select(region, gc);
 
             double tumorRatio = cobalt.tumorMedianRatio();
-            // double tumorRatio = cobalt.tumorMeanRatio();
             double normalRatio = cobalt.referenceMeanRatio();
             int depthWindowCount = cobalt.tumorCount();
-            GermlineStatus germlineStatus = mStatusFactory.calcStatus(region.chromosome(), normalRatio, tumorRatio, depthWindowCount);
+
+            GermlineStatus germlineStatus = getGermlineStatus(region, normalRatio, tumorRatio, depthWindowCount);
 
             final ObservedRegion observedRegion = new ObservedRegion(
                     region.chromosome(), region.start(), region.end(), region.RatioSupport, region.Support, baf.count(), baf.medianBaf(),
@@ -85,6 +96,17 @@ public class ObservedRegionFactory
 
         extendMinSupport(observedRegions);
         return observedRegions;
+    }
+
+    private GermlineStatus getGermlineStatus(final PurpleSegment region, double tumorRatio, double normalRatio, int depthWindowCount)
+    {
+        if(EXCLUDED_IMMUNE_REGIONS.stream()
+                .anyMatch(x -> x.Chromosome.equals(region.Chromosome) && positionsWithin(region.start(), region.end(), x.start(), x.end())))
+        {
+            return GermlineStatus.EXCLUDED;
+        }
+
+        return mStatusFactory.calcStatus(region.chromosome(), normalRatio, tumorRatio, depthWindowCount);
     }
 
     public static void extendMinSupport(final List<ObservedRegion> observedRegions)
