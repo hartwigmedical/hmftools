@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
-import static com.hartwig.hmftools.sage.ReferenceData.loadBedFile;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.ArrayList;
@@ -210,7 +210,7 @@ public class BaseQualityRecalibration
         int taskId = 1;
 
         // form regions from 2MB per chromosome and additionally include the coding panel
-        Map<Chromosome,List<BaseRegion>> panelBed = !mPanelBedFile.isEmpty() ? loadBedFile(mPanelBedFile) : null;
+        Map<Chromosome,List<BaseRegion>> panelBed = !mPanelBedFile.isEmpty() ? loadBedFileChrMap(mPanelBedFile) : null;
 
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {

@@ -9,22 +9,22 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class CuppaInterpretation {
-
-    private CuppaInterpretation() {
-    }
-
+public final class CuppaInterpretation
+{
     @NotNull
-    public static CuppaPrediction best(@NotNull CuppaData cuppa) {
+    public static CuppaPrediction best(@NotNull CuppaData cuppa)
+    {
         CuppaPrediction best = rank(cuppa, 1);
-        if (best == null) {
-           throw new IllegalStateException("Could not determine best prediction from cuppa: " + cuppa);
+        if(best == null)
+        {
+            throw new IllegalStateException("Could not determine best prediction from cuppa: " + cuppa);
         }
         return best;
     }
 
     @Nullable
-    public static CuppaPrediction rank(@NotNull CuppaData cuppa, int rank) {
+    public static CuppaPrediction rank(@NotNull CuppaData cuppa, int rank)
+    {
         List<CuppaPrediction> predictions = Lists.newArrayList();
         predictions.addAll(cuppa.predictions());
         predictions.sort(new CuppaPredictionComparator());

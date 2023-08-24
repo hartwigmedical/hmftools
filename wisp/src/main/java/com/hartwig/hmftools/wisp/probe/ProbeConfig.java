@@ -11,9 +11,13 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_C
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_COLUMN;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -22,17 +26,23 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class ProbeConfig
 {
     public final List<String> SampleIds;
+    public final Map<String,List<String>> BatchSampleIds;
     public final String LinxDir;
     public final String LinxGermlineDir;
     public final String PurpleDir;
@@ -49,7 +59,6 @@ public class ProbeConfig
     public final int ProbeLength;
     public final int NonReportableSvCount;
     public final int SubclonalCount;
-    public final int SampleBatchCount;
     public final boolean WriteAll;
     public final boolean AllowMissing;
 
@@ -86,9 +95,12 @@ public class ProbeConfig
     public static final int MAX_INDEL_LENGTH = 32;
     public static final int MAX_POLY_A_T_BASES = 7;
 
+    public static final String NO_BATCH_ID = "NONE";
+
     public ProbeConfig(final ConfigBuilder configBuilder)
     {
         SampleIds = Lists.newArrayList();
+        BatchSampleIds = Maps.newHashMap();
 
         if(configBuilder.hasValue(SAMPLE))
         {
@@ -96,7 +108,7 @@ public class ProbeConfig
         }
         else
         {
-            SampleIds.addAll(loadSampleIdsFile(configBuilder));
+            loadSampleIdsFile(configBuilder.getValue(SAMPLE_ID_FILE));
         }
 
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
@@ -116,7 +128,6 @@ public class ProbeConfig
         ProbeLength = configBuilder.getInteger(PROBE_LENGTH);
         NonReportableSvCount = configBuilder.getInteger(NON_REPORTABLE_SV_COUNT);
         SubclonalCount = configBuilder.getInteger(SUBCLONAL_COUNT);
-        SampleBatchCount = configBuilder.getInteger(SAMPLE_BATCH_COUNT);
         VafMin = configBuilder.getDecimal(VAF_THRESHOLD);
         FragmentCountMin = configBuilder.getInteger(FRAG_COUNT_THRESHOLD);
         FragmentCountOtherMutationMin = configBuilder.getInteger(FRAG_COUNT_OTHER_MUT_THRESHOLD);
@@ -165,6 +176,55 @@ public class ProbeConfig
         return true;
     }
 
+    private void loadSampleIdsFile(final String filename)
+    {
+        try
+        {
+            List<String> lines = Files.readAllLines(new File(filename).toPath());
+            String header = lines.get(0);
+            lines.remove(0);
+
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
+
+            int idIndex = fieldsIndexMap.get(SAMPLE_ID_COLUMN);
+            Integer batchIndex = fieldsIndexMap.get("BatchId");
+
+            for(String line : lines)
+            {
+                String[] values = line.split(CSV_DELIM, -1);
+
+                String sampleId = values[idIndex];
+
+                String batchId = batchIndex != null ? values[batchIndex] : NO_BATCH_ID;
+
+                List<String> sampleIds = BatchSampleIds.get(batchId);
+
+                if(sampleIds == null)
+                {
+                    sampleIds = Lists.newArrayList();
+                    BatchSampleIds.put(batchId, sampleIds);
+                }
+
+                sampleIds.add(sampleId);
+
+                SampleIds.add(sampleId);
+            }
+
+            if(!BatchSampleIds.isEmpty())
+            {
+                CT_LOGGER.info("loaded {} samples in {} batches from file({})", SampleIds.size(), BatchSampleIds.size(), filename);
+            }
+            else
+            {
+                CT_LOGGER.info("loaded {} samples from file({})", SampleIds.size(), filename);
+            }
+        }
+        catch (IOException e)
+        {
+            CT_LOGGER.error("failed to read sample ID file({}): {}", filename, e.toString());
+        }
+    }
+
     public ProbeConfig(int probeLength, int probeCount, int nonReportableSvCount, double vafMin, int fragmentCountMin)
     {
         ProbeCount = probeCount;
@@ -175,6 +235,7 @@ public class ProbeConfig
         FragmentCountMin = fragmentCountMin;
         FragmentCountOtherMutationMin = DEFAULT_FRAG_COUNT_OHTER_MUTATION_MIN;
         SampleIds = Lists.newArrayList();
+        BatchSampleIds = Maps.newHashMap();
         PurpleDir = "";
         LinxDir = "";
         LinxGermlineDir = "";
@@ -185,7 +246,6 @@ public class ProbeConfig
         RefGenVersion = V37;
         WriteAll = false;
         AllowMissing = false;
-        SampleBatchCount = 1;
         Threads = 1;
     }
 

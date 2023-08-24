@@ -126,7 +126,8 @@ public class PurpleInterpreterTest
     @NotNull
     private static PurpleInterpreter createInterpreter(@NotNull EnsemblDataCache ensemblDataCache)
     {
-        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(new PaveAlgo(ensemblDataCache));
+        PaveAlgo pave = new PaveAlgo(ensemblDataCache, false);
+        PurpleVariantFactory purpleVariantFactory = new PurpleVariantFactory(pave);
         GermlineGainLossFactory germlineGainLossFactory = new GermlineGainLossFactory(ensemblDataCache);
 
         return new PurpleInterpreter(purpleVariantFactory,

@@ -204,7 +204,6 @@ public class GermlineDisruptions
                 }
             }
         }
-
     }
 
     private void checkSglMappings(final SvVarData var)
@@ -475,9 +474,12 @@ public class GermlineDisruptions
                 // add at most one driver record per gene
                 if(reportable && drivers.stream().noneMatch(x -> x.gene().equals(gene.GeneName)))
                 {
+                    DriverGene driverGene = mDriverGenes.stream()
+                            .filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
+
                     drivers.add(ImmutableDriverCatalog.builder()
                             .driver(driverType)
-                            .category(TSG)
+                            .category(driverGene.likelihoodType())
                             .gene(gene.GeneName)
                             .transcript(disruptionData.Transcript.TransName)
                             .isCanonical(disruptionData.Transcript.IsCanonical)

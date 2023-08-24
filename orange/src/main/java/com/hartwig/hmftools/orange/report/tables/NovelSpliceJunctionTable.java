@@ -13,15 +13,14 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class NovelSpliceJunctionTable {
-
-    private NovelSpliceJunctionTable() {
-    }
-
+public final class NovelSpliceJunctionTable
+{
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<NovelSpliceJunction> junctions,
-            @NotNull ReportResources reportResources) {
-        if (junctions.isEmpty()) {
+            @NotNull ReportResources reportResources)
+    {
+        if(junctions.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -33,14 +32,15 @@ public final class NovelSpliceJunctionTable {
                         cells.createHeader("Region S/E"), cells.createHeader("Frag Count"),
                         cells.createHeader("Cohort freq") });
 
-        for (NovelSpliceJunction junction : sort(junctions)) {
+        for(NovelSpliceJunction junction : sort(junctions))
+        {
             table.addCell(cells.createContent(junction.geneName()));
             table.addCell(cells.createContent(junction.chromosome()));
             table.addCell(cells.createContent(String.valueOf(junction.junctionStart())));
             table.addCell(cells.createContent(String.valueOf(junction.junctionEnd())));
             table.addCell(cells.createContent(junction.type().toString()));
-            table.addCell(cells.createContent(junction.depthStart() + "/"  + junction.depthEnd()));
-            table.addCell(cells.createContent(junction.regionStart() + "/"  + junction.regionEnd()));
+            table.addCell(cells.createContent(junction.depthStart() + "/" + junction.depthEnd()));
+            table.addCell(cells.createContent(junction.regionStart() + "/" + junction.regionEnd()));
             table.addCell(cells.createContent(String.valueOf(junction.fragmentCount())));
             table.addCell(cells.createContent(String.valueOf(junction.cohortFrequency())));
         }
@@ -49,14 +49,19 @@ public final class NovelSpliceJunctionTable {
     }
 
     @NotNull
-    private static List<NovelSpliceJunction> sort(@NotNull List<NovelSpliceJunction> junctions) {
-        return junctions.stream().sorted((junction1, junction2) -> {
+    private static List<NovelSpliceJunction> sort(@NotNull List<NovelSpliceJunction> junctions)
+    {
+        return junctions.stream().sorted((junction1, junction2) ->
+        {
             String locationUp1 = Chromosomes.zeroPrefixed(junction1.chromosome());
             String locationUp2 = Chromosomes.zeroPrefixed(junction2.chromosome());
 
-            if (locationUp1.equals(locationUp2)) {
+            if(locationUp1.equals(locationUp2))
+            {
                 return Integer.compare(junction1.junctionStart(), junction2.junctionStart());
-            } else {
+            }
+            else
+            {
                 return locationUp1.compareTo(locationUp2);
             }
         }).collect(Collectors.toList());

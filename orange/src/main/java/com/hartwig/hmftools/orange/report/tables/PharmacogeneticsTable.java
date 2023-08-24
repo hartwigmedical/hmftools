@@ -14,15 +14,14 @@ import com.itextpdf.layout.element.Table;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class PharmacogeneticsTable {
-
-    private PharmacogeneticsTable() {
-    }
-
+public final class PharmacogeneticsTable
+{
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull Set<PeachGenotype> genotypes,
-            @NotNull ReportResources reportResources) {
-        if (genotypes.isEmpty()) {
+            @NotNull ReportResources reportResources)
+    {
+        if(genotypes.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -32,7 +31,8 @@ public final class PharmacogeneticsTable {
                 new Cell[] { cells.createHeader("Gene"), cells.createHeader("Genotype"), cells.createHeader("Function"),
                         cells.createHeader("Linked drugs"), cells.createHeader("Source") });
 
-        for (PeachGenotype genotype : sort(genotypes)) {
+        for(PeachGenotype genotype : sort(genotypes))
+        {
             contentTable.addCell(cells.createContent(genotype.gene()));
             contentTable.addCell(cells.createContent(genotype.haplotype()));
             contentTable.addCell(cells.createContent(genotype.function()));
@@ -44,11 +44,16 @@ public final class PharmacogeneticsTable {
     }
 
     @NotNull
-    private static List<PeachGenotype> sort(@NotNull Set<PeachGenotype> genotypes) {
-        return genotypes.stream().sorted((genotype1, genotype2) -> {
-            if (genotype1.gene().equals(genotype2.gene())) {
+    private static List<PeachGenotype> sort(@NotNull Set<PeachGenotype> genotypes)
+    {
+        return genotypes.stream().sorted((genotype1, genotype2) ->
+        {
+            if(genotype1.gene().equals(genotype2.gene()))
+            {
                 return genotype1.haplotype().compareTo(genotype2.haplotype());
-            } else {
+            }
+            else
+            {
                 return genotype1.gene().compareTo(genotype2.gene());
             }
 
@@ -56,27 +61,36 @@ public final class PharmacogeneticsTable {
     }
 
     @NotNull
-    private static String sourceName(@NotNull String urlPrescriptionInfo) {
+    private static String sourceName(@NotNull String urlPrescriptionInfo)
+    {
         String url = extractUrl(urlPrescriptionInfo);
-        if (url.startsWith("https://www.pharmgkb.org")) {
+        if(url.startsWith("https://www.pharmgkb.org"))
+        {
             return "PHARMGKB";
-        } else {
+        }
+        else
+        {
             return Strings.EMPTY;
         }
     }
 
     @NotNull
-    private static String url(@NotNull String urlPrescriptionInfo) {
+    private static String url(@NotNull String urlPrescriptionInfo)
+    {
         String url = extractUrl(urlPrescriptionInfo);
-        if (url.startsWith("https://www.pharmgkb.org")) {
+        if(url.startsWith("https://www.pharmgkb.org"))
+        {
             return url;
-        } else {
+        }
+        else
+        {
             return Strings.EMPTY;
         }
     }
 
     @NotNull
-    private static String extractUrl(@NotNull String urlPrescriptionInfo) {
+    private static String extractUrl(@NotNull String urlPrescriptionInfo)
+    {
         return urlPrescriptionInfo.split(";")[0];
     }
 }

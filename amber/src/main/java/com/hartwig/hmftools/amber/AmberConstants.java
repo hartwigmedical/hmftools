@@ -9,7 +9,10 @@ public class AmberConstants
     public static final int DEFAULT_MIN_MAPPING_QUALITY = 1;
     public static final int DEFAULT_TUMOR_ONLY_MIN_SUPPORT = 2;
     public static final double DEFAULT_TUMOR_ONLY_MIN_VAF = 0.05;
+
     public static final int DEFAULT_TUMOR_ONLY_MIN_DEPTH = 25;
+    public static final int DEFAULT_TUMOR_MIN_DEPTH = 8;
+
     public static final double DEFAULT_MIN_DEPTH_PERCENTAGE = 0.5;
     public static final double DEFAULT_MAX_DEPTH_PERCENTAGE = 1.5;
     public static final double DEFAULT_MIN_HET_AF_PERCENTAGE = 0.4;
@@ -35,5 +38,7 @@ public class AmberConstants
 
     public static final int CRAM_MIN_GAP_INCREMENT = 1000;
     public static final int BAM_MIN_GAP_INCREMENT = 200;
+
+    public static final int TARGET_REGION_SITE_BUFFER = 300;
 
 }

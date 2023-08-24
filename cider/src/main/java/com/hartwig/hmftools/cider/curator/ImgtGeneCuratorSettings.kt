@@ -22,6 +22,11 @@ object ImgtGeneCuratorSettings
         "IGHV3-54" to GenomicLocation("chr14", 106601338, 106601641, Strand.REVERSE)
     )
 
+    // following genes liftover from v38 to v37 produce incorrect genomic locations
+    val liftOverBlacklist = setOf(
+        "IGKV1/OR1-1"
+    )
+
     fun getGenomicLocationOverrides(geneName: String): GenomicLocation?
     {
         return genomicLocationOverrides[geneName]

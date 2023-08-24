@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_BIN_W
 
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.PurpleVcfTags;
@@ -28,13 +29,14 @@ public class SomaticVariantEnrichment implements Callable
     private final List<SomaticVariant> mVariants;
 
     public SomaticVariantEnrichment(
-            final int taskId, final PurpleConfig config, final ReferenceData refData, final List<PeakModelData> peakModel)
+            final int taskId, final PurpleConfig config, final ReferenceData refData, final List<PeakModelData> peakModel,
+            final AtomicInteger kataegisId)
     {
         mConfig = config;
         mTaskId = taskId;
         mGenotypeEnrichment = new SomaticGenotypeEnrichment(mConfig.ReferenceId, mConfig.TumorId);
         mSubclonalLikelihoodEnrichment = new SubclonalLikelihoodEnrichment(CLONALITY_BIN_WIDTH, peakModel);
-        mKataegisEnrichment = new KataegisEnrichment();
+        mKataegisEnrichment = new KataegisEnrichment(kataegisId);
         mSomaticRefContextEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, null);
         mVariants = Lists.newArrayList();
     }

@@ -11,9 +11,6 @@ class GenomicLocationValidator(val refGenome: IndexedFastaSequenceFile)
     fun correctGenomicLocation(seq: String, genomicLocation: GenomicLocation, minBasesToCompare: Int, maxBasesToCompare: Int)
             : GenomicLocation
     {
-        if (genomicLocation.baseLength() == 31)
-            println()
-
         // get the ref sequence
         val refSeq = queryRefSequence(refGenome, genomicLocation)
         return correctGenomicLocation(seq, refSeq, genomicLocation, minBasesToCompare, maxBasesToCompare)
@@ -136,10 +133,10 @@ class GenomicLocationValidator(val refGenome: IndexedFastaSequenceFile)
             chromosome,
             genomicLocation.posStart.toLong(), genomicLocation.posEnd.toLong()
         ).baseString
-        if (genomicLocation.strand == Strand.FORWARD)
-            return forwardSeq
+        return if (genomicLocation.strand == Strand.FORWARD)
+            forwardSeq
         else
-            return reverseComplement(forwardSeq)
+            reverseComplement(forwardSeq)
     }
 
     companion object

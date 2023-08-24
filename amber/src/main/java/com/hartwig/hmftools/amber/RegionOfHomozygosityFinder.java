@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.collection.Multimaps.filterEntri
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -88,36 +89,29 @@ public class RegionOfHomozygosityFinder
                 AmberConstants.HOMOZYGOUS_REGION_WINDOW_SIZE, AmberConstants.HOMOZYGOUS_REGION_MAX_HET_IN_WINDOW);
     }
 
-    @NotNull
-    public List<RegionOfHomozygosity> findRegions(@NotNull final ListMultimap<Chromosome, PositionEvidence> baseDepths)
+    public List<RegionOfHomozygosity> findRegions(final ListMultimap<Chromosome, PositionEvidence> baseDepths)
     {
         final Predicate<PositionEvidence> depthFilter = new BaseDepthFilter(mMinDepthPercent, mMaxDepthPercent, baseDepths);
         final ListMultimap<Chromosome, PositionEvidence> filteredBaseDepths = filterEntries(baseDepths, depthFilter);
 
-        var homozygousRegions = new ArrayList<RegionOfHomozygosity>();
+        List<RegionOfHomozygosity> homozygousRegions = new ArrayList<RegionOfHomozygosity>();
 
         Set<Chromosome> chromosomeSet = baseDepths.keySet();
 
-        for (Chromosome chromosome : chromosomeSet)
+        for(Chromosome chromosome : chromosomeSet)
         {
-            // we don't want any X or Y
-            if (chromosome.isAllosome())
+            if(chromosome.isAllosome())
                 continue;
+            
             homozygousRegions.addAll(findRegionsForChromosome(chromosome, toLocusZygosityList(filteredBaseDepths.get(chromosome))));
         }
 
-        var comparator = Comparator.comparing(RegionOfHomozygosity::getChromosome,
-                        Comparator.comparingInt(c -> HumanChromosome.chromosomeRank(c.toString())))
-                .thenComparing(RegionOfHomozygosity::getStart)
-                .thenComparing(RegionOfHomozygosity::getEnd);
-
-        homozygousRegions.sort(comparator);
+        Collections.sort(homozygousRegions);
 
         return homozygousRegions;
     }
 
-    @NotNull
-    public List<RegionOfHomozygosity> findRegionsForChromosome(Chromosome chromosome, @NotNull List<LocusZygosity> bafSites)
+    public List<RegionOfHomozygosity> findRegionsForChromosome(Chromosome chromosome, final List<LocusZygosity> bafSites)
     {
         var homozygousRegions = new ArrayList<RegionOfHomozygosity>();
 
@@ -129,28 +123,28 @@ public class RegionOfHomozygosityFinder
 
         int numHetInWindow = 0;
 
-        for (int i = 0; i < bafSites.size(); ++i)
+        for(int i = 0; i < bafSites.size(); ++i)
         {
             LocusZygosity bafSite = bafSites.get(i);
             int position = bafSite.position;
             Zygosity zygosity = bafSite.zygosity;
 
-            if (rohStartIndex != -1)
+            if(rohStartIndex != -1)
             {
                 boolean crossedExcludedRegion = overlapWithExcludedRegions(chromosome.toString(),
                         rohEndIndex != -1 ? bafSites.get(rohEndIndex).position : position, position);
 
                 // first thing we need to check if the previous region is ending
-                if (zygosity == Zygosity.HETEROZYGOUS)
+                if(zygosity == Zygosity.HETEROZYGOUS)
                     ++numHetInWindow;
 
                 // say sliding window size is 3, and i = 4. we want to remove i = 4 - 3 = 1
                 assert (slidingWindowStartIndex >= i - mSiteWindowSize);
 
-                if (slidingWindowStartIndex <= i - mSiteWindowSize)
+                if(slidingWindowStartIndex <= i - mSiteWindowSize)
                 {
                     // one location has gone out of the sliding window
-                    if (bafSites.get(slidingWindowStartIndex).zygosity == Zygosity.HETEROZYGOUS)
+                    if(bafSites.get(slidingWindowStartIndex).zygosity == Zygosity.HETEROZYGOUS)
                     {
                         // if it is het, then we reduce the count
                         --numHetInWindow;
@@ -158,11 +152,11 @@ public class RegionOfHomozygosityFinder
                     ++slidingWindowStartIndex;
                 }
 
-                if (numHetInWindow > mMaxHetInWindow || crossedExcludedRegion)
+                if(numHetInWindow > mMaxHetInWindow || crossedExcludedRegion)
                 {
                     // this stretch of homozygosity ends
                     RegionOfHomozygosity region = createRegionIfPassFilter(bafSites, chromosome, rohStartIndex, rohEndIndex);
-                    if (region != null)
+                    if(region != null)
                     {
                         homozygousRegions.add(region);
                     }
@@ -171,9 +165,9 @@ public class RegionOfHomozygosityFinder
                 }
             }
 
-            if (zygosity == Zygosity.HOMOZYGOUS && !overlapWithExcludedRegions(chromosome.toString(), position, position))
+            if(zygosity == Zygosity.HOMOZYGOUS && !overlapWithExcludedRegions(chromosome.toString(), position, position))
             {
-                if (rohStartIndex != -1)
+                if(rohStartIndex != -1)
                 {
                     // we are continuing a region, so update the end
                     rohEndIndex = i;
@@ -193,7 +187,7 @@ public class RegionOfHomozygosityFinder
 
         // this stretch of homozygosity ends
         RegionOfHomozygosity region = createRegionIfPassFilter(bafSites, chromosome, rohStartIndex, rohEndIndex);
-        if (region != null)
+        if(region != null)
         {
             // this is a region
             homozygousRegions.add(region);
@@ -241,7 +235,7 @@ public class RegionOfHomozygosityFinder
                 break;
         }
 
-        for (Map.Entry<Chromosome, Integer> e : refCcoord.Centromeres.entrySet())
+        for(Map.Entry<Chromosome, Integer> e : refCcoord.Centromeres.entrySet())
         {
             excludedRegions.add(GenomeRegions.create(e.getKey().toString(), e.getValue() - HALF_CENTROMERE_SIZE,
                     e.getValue() + HALF_CENTROMERE_SIZE));
@@ -253,10 +247,10 @@ public class RegionOfHomozygosityFinder
     private boolean overlapWithExcludedRegions(String chromosome, int position1, int position2)
     {
         assert(position1 <= position2);
-        for (GenomeRegion genomeRegion: mExcludedRegions)
+        for(GenomeRegion genomeRegion: mExcludedRegions)
         {
             // we want to check if we overlap
-            if (genomeRegion.chromosome().equals(chromosome) &&
+            if(genomeRegion.chromosome().equals(chromosome) &&
                     position1 <= genomeRegion.end() + EXCLUDED_REGION_EXPAND_SIZE &&
                     position2 >= genomeRegion.start() - EXCLUDED_REGION_EXPAND_SIZE)
             {
@@ -272,7 +266,7 @@ public class RegionOfHomozygosityFinder
             @NotNull List<LocusZygosity> bafSites,
             Chromosome chromosome, int regionStartIndex, int regionEndIndex)
     {
-        if (regionStartIndex <= 0 || regionEndIndex <= 0)
+        if(regionStartIndex <= 0 || regionEndIndex <= 0)
             return null;
 
         int numHomozygous = 0;
@@ -280,7 +274,7 @@ public class RegionOfHomozygosityFinder
         int numUnclear = 0;
 
         // we want to count
-        for (int i = regionStartIndex; i <= regionEndIndex; ++i)
+        for(int i = regionStartIndex; i <= regionEndIndex; ++i)
         {
             Zygosity zygosity = bafSites.get(i).zygosity;
             switch (zygosity)
@@ -295,14 +289,14 @@ public class RegionOfHomozygosityFinder
         }
 
         int snpCount = numHomozygous + numHeterozygous + numUnclear;
-        if (snpCount < mMinSnpLociCount)
+        if(snpCount < mMinSnpLociCount)
         {
             return null;
         }
         int regionStart = bafSites.get(regionStartIndex).position;
         int regionEnd = bafSites.get(regionEndIndex).position;
 
-        if ((regionEnd - regionStart) >= mMinHomozygousRegionSize)
+        if((regionEnd - regionStart) >= mMinHomozygousRegionSize)
         {
             // this is a region
             return new RegionOfHomozygosity(chromosome, regionStart, regionEnd, numHomozygous, numHeterozygous, numUnclear);
@@ -312,13 +306,13 @@ public class RegionOfHomozygosityFinder
 
     // we use same definition as purple here.
     static boolean isAlleleHomozygous(int totalCount, int alleleCount) {
-        if (totalCount == alleleCount)
+        if(totalCount == alleleCount)
         {
             return true;
         }
 
         boolean isHighVaf = alleleCount > 0.75 * totalCount;
-        if (isHighVaf)
+        if(isHighVaf)
         {
             double p = new PoissonDistribution(totalCount / 2d).cumulativeProbability(totalCount - alleleCount);
             return p < 0.005;
@@ -329,7 +323,7 @@ public class RegionOfHomozygosityFinder
 
     static Zygosity calcZygosity(PositionEvidence baseDepth)
     {
-        if (isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.RefSupport) || isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.AltSupport))
+        if(isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.RefSupport) || isAlleleHomozygous(baseDepth.ReadDepth, baseDepth.AltSupport))
         {
             return Zygosity.HOMOZYGOUS;
         }
@@ -345,7 +339,7 @@ public class RegionOfHomozygosityFinder
     {
         var locusZygosityList = new ArrayList<LocusZygosity>();
 
-        for (var depth : bafs)
+        for(var depth : bafs)
         {
             locusZygosityList.add(toLocusZygosity(depth));
         }

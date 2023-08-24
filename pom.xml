@@ -60,7 +60,7 @@
 
         <amber.version>4.0</amber.version>
         <bam-tools.version>1.1</bam-tools.version>
-        <cider.version>1.0.0</cider.version>
+        <cider.version>1.0.1</cider.version>
         <cobalt.version>1.15.2</cobalt.version>
         <compar.version>1.1.1</compar.version>
         <cuppa.version>1.9</cuppa.version>
@@ -71,15 +71,15 @@
         <hmf-id-generator.version>3.1</hmf-id-generator.version>
         <isofox.version>1.7</isofox.version>
         <lilac.version>1.5</lilac.version>
-        <linx.version>1.24</linx.version>
+        <linx.version>1.25</linx.version>
         <mark-dups.version>1.0</mark-dups.version>
         <neo.version>1.1</neo.version>
-        <orange.version>2.6.0</orange.version>
-        <orange-datamodel.version>1.2.0</orange-datamodel.version>
+        <orange.version>2.7.0</orange.version>
+        <orange-datamodel.version>1.3.0</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
         <patient-db.version>5.33</patient-db.version>
         <pave.version>1.5</pave.version>
-        <purple.version>3.9</purple.version>
+        <purple.version>3.9.1</purple.version>
         <sage.version>3.3</sage.version>
         <sigs.version>1.3</sigs.version>
         <sv-prep.version>1.2.1</sv-prep.version>

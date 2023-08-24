@@ -11,15 +11,18 @@ import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 
 import org.junit.Test;
 
-public class CopyNumberInterpretationTest {
+public class CopyNumberInterpretationTest
+{
 
     @Test
-    public void canRenderDisplay() {
+    public void canRenderDisplay()
+    {
         assertEquals("full gain", display(CopyNumberInterpretation.FULL_GAIN));
     }
 
     @Test
-    public void canConvertCNADrivers() {
+    public void canConvertCNADrivers()
+    {
         DriverCatalog amp = DriverCatalogTestFactory.builder().driver(DriverType.AMP).build();
         assertEquals(CopyNumberInterpretation.FULL_GAIN, CopyNumberInterpretationUtil.fromCNADriver(amp));
 
@@ -33,8 +36,9 @@ public class CopyNumberInterpretationTest {
         assertEquals(CopyNumberInterpretation.PARTIAL_LOSS, CopyNumberInterpretationUtil.fromCNADriver(partialLoss));
     }
 
-    @Test (expected = IllegalStateException.class)
-    public void crashOnNonCNADriver() {
+    @Test(expected = IllegalStateException.class)
+    public void crashOnNonCNADriver()
+    {
         CopyNumberInterpretationUtil.fromCNADriver(DriverCatalogTestFactory.builder().driver(DriverType.GERMLINE_MUTATION).build());
     }
 }

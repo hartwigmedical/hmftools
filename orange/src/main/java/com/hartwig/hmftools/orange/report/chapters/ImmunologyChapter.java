@@ -13,38 +13,43 @@ import com.itextpdf.layout.property.UnitValue;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ImmunologyChapter implements ReportChapter {
-
+public class ImmunologyChapter implements ReportChapter
+{
     @NotNull
     private final OrangeRecord report;
     @NotNull
     private final ReportResources reportResources;
 
-    public ImmunologyChapter(@NotNull final OrangeRecord report, @NotNull final ReportResources reportResources) {
+    public ImmunologyChapter(@NotNull final OrangeRecord report, @NotNull final ReportResources reportResources)
+    {
         this.report = report;
         this.reportResources = reportResources;
     }
 
     @NotNull
     @Override
-    public String name() {
+    public String name()
+    {
         return "Immunology";
     }
 
     @NotNull
     @Override
-    public PageSize pageSize() {
+    public PageSize pageSize()
+    {
         return PageSize.A4;
     }
 
     @Override
-    public void render(@NotNull final Document document) {
+    public void render(@NotNull final Document document)
+    {
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addHLAData(document);
     }
 
-    private void addHLAData(@NotNull Document document) {
+    private void addHLAData(@NotNull Document document)
+    {
         Cells cells = new Cells(reportResources);
         Table qc = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
         qc.addCell(cells.createKey("QC Status:"));

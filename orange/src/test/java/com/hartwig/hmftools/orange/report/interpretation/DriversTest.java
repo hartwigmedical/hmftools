@@ -13,10 +13,12 @@ import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 
 import org.junit.Test;
 
-public class DriversTest {
+public class DriversTest
+{
 
     @Test
-    public void canSelectNonCanonicalMutationEntries() {
+    public void canSelectNonCanonicalMutationEntries()
+    {
         PurpleDriver canonicalMutation = PurpleDriverTestFactory.builder().driver(PurpleDriverType.MUTATION).isCanonical(true).build();
         PurpleDriver nonCanonicalMutation = PurpleDriverTestFactory.builder().driver(PurpleDriverType.MUTATION).isCanonical(false).build();
         PurpleDriver nonCanonicalAmp = PurpleDriverTestFactory.builder().driver(PurpleDriverType.AMP).isCanonical(false).build();
@@ -29,7 +31,8 @@ public class DriversTest {
     }
 
     @Test
-    public void canSelectCanonicalMutationEntryForGene() {
+    public void canSelectCanonicalMutationEntryForGene()
+    {
         PurpleDriver canonicalMatchLowDL = PurpleDriverTestFactory.builder()
                 .driver(PurpleDriverType.MUTATION)
                 .gene("gene 1")
@@ -52,10 +55,20 @@ public class DriversTest {
                 .build();
 
         PurpleDriver canonicalOtherDriver =
-                PurpleDriverTestFactory.builder().driver(PurpleDriverType.AMP).gene("gene 1").isCanonical(true).driverLikelihood(0.6).build();
+                PurpleDriverTestFactory.builder()
+                        .driver(PurpleDriverType.AMP)
+                        .gene("gene 1")
+                        .isCanonical(true)
+                        .driverLikelihood(0.6)
+                        .build();
 
         PurpleDriver canonicalOtherGene =
-                PurpleDriverTestFactory.builder().driver(PurpleDriverType.AMP).gene("gene 2").isCanonical(true).driverLikelihood(0.7).build();
+                PurpleDriverTestFactory.builder()
+                        .driver(PurpleDriverType.AMP)
+                        .gene("gene 2")
+                        .isCanonical(true)
+                        .driverLikelihood(0.7)
+                        .build();
 
         List<PurpleDriver> drivers =
                 Lists.newArrayList(canonicalMatchLowDL, canonicalMatchHighDL, nonCanonicalMatch, canonicalOtherDriver, canonicalOtherGene);

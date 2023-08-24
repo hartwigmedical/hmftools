@@ -10,7 +10,7 @@ import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
 import com.hartwig.hmftools.cider.blastn.BlastnAnnotation
 import com.hartwig.hmftools.cider.blastn.BlastnAnnotator
 import com.hartwig.hmftools.cider.blastn.BlastnStatus
-import com.hartwig.hmftools.cider.genes.IgTcrConstantRegion
+import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
 import com.hartwig.hmftools.cider.primer.*
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
@@ -70,7 +70,7 @@ class CiderApplication
 
         val ciderGeneDatastore: ICiderGeneDatastore = CiderGeneDatastore(
             CiderGeneDataLoader.loadAnchorTemplates(mParams.refGenomeVersion),
-            CiderGeneDataLoader.loadConstantRegionGenes(mParams.refGenomeVersion))
+            CiderGeneDataLoader.loadConstantDiversityRegions(mParams.refGenomeVersion))
 
         val candidateBlosumSearcher = AnchorBlosumSearcher(
             ciderGeneDatastore,
@@ -155,27 +155,28 @@ class CiderApplication
             readProcessor.asyncProcessSamRecord(samRecord)
         }
 
-        val genomeRegions = ArrayList<GenomeRegion>()
+        val genomeRegions = TreeSet<GenomeRegion>()
 
         // first add all the VJ anchor locations
         for (anchorGenomeLoc: VJAnchorGenomeLocation in ciderGeneDatastore.getVjAnchorGeneLocations())
         {
-            require(anchorGenomeLoc.start < anchorGenomeLoc.end)
+            require(anchorGenomeLoc.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
                 anchorGenomeLoc.chromosome,
                 anchorGenomeLoc.start - mParams.approxMaxFragmentLength,
                 anchorGenomeLoc.end + mParams.approxMaxFragmentLength))
         }
 
-        // then add all the constant region genome locations
-        for (constantRegion: IgTcrConstantRegion in ciderGeneDatastore.getIgConstantRegions())
+        // then add all the constant / diversity region genome locations
+        for (region: IgTcrConstantDiversityRegion in ciderGeneDatastore.getIgConstantDiversityRegions())
         {
-            require(constantRegion.genomeLocation.posStart < constantRegion.genomeLocation.posEnd)
+            require(region.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
-                constantRegion.genomeLocation.chromosome,
-                constantRegion.genomeLocation.posStart - mParams.approxMaxFragmentLength,
-                constantRegion.genomeLocation.posEnd + mParams.approxMaxFragmentLength))
+                region.genomeLocation.chromosome,
+                region.genomeLocation.posStart - mParams.approxMaxFragmentLength,
+                region.genomeLocation.posEnd + mParams.approxMaxFragmentLength))
         }
+
         processBam(mParams.bamPath, readerFactory, genomeRegions, asyncBamRecordHander, mParams.threadCount)
         sLogger.info("found {} VJ read records", readProcessor.allMatchedReads.size)
     }
@@ -320,12 +321,11 @@ class CiderApplication
             }
 
             // set all thread exception handler
-            Thread.setDefaultUncaughtExceptionHandler(
-                { t: Thread, e: Throwable ->
-                    sLogger.error("[{}]: uncaught exception: {}", t, e)
-                    e.printStackTrace(System.err)
-                    System.exit(1)
-                })
+            Thread.setDefaultUncaughtExceptionHandler { t: Thread, e: Throwable ->
+                sLogger.error("[{}]: uncaught exception: {}", t, e)
+                e.printStackTrace(System.err)
+                System.exit(1)
+            }
 
             System.exit(ciderApplication.run(args))
         }

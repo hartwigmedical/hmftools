@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +24,7 @@ import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
-import com.hartwig.hmftools.common.genome.window.Window;
+import com.hartwig.hmftools.common.genome.region.Window;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.purple.segment.PurpleSegment;
 import com.hartwig.hmftools.common.purple.SegmentSupport;

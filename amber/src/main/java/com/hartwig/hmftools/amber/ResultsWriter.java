@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class ResultsWriter
+public class ResultsWriter
 {
     private final AmberConfig mConfig;
 
@@ -27,12 +27,12 @@ class ResultsWriter
         mConfig = config;
     }
 
-    void persistVersionInfo(@NotNull final VersionInfo versionInfo) throws IOException
+    void persistVersionInfo(final VersionInfo versionInfo) throws IOException
     {
         versionInfo.write(mConfig.OutputDir);
     }
 
-    void persistBAF(@NotNull final List<AmberBAF> result) throws IOException, InterruptedException
+    void persistBAF(final List<AmberBAF> result) throws IOException, InterruptedException
     {
         final String filename = AmberBAFFile.generateAmberFilenameForWriting(mConfig.OutputDir, mConfig.getSampleId());
         AmberBAFFile.write(filename, result);
@@ -44,7 +44,7 @@ class ResultsWriter
         }
     }
 
-    void persistQC(@NotNull final List<TumorContamination> contaminationRecords,
+    void persistQC(final List<TumorContamination> contaminationRecords,
             double consanguinityProportion, @Nullable Chromosome uniparentalDisomy) throws IOException
     {
         final double contamination = new TumorContaminationModel().contamination(contaminationRecords);
@@ -58,7 +58,7 @@ class ResultsWriter
         AmberQCFile.write(qcFilename, qcStats);
     }
 
-    void persistContamination(@NotNull final List<TumorContamination> contaminationList) throws IOException
+    void persistContamination(final List<TumorContamination> contaminationList) throws IOException
     {
         Collections.sort(contaminationList);
 
@@ -70,9 +70,9 @@ class ResultsWriter
         TumorContaminationFile.write(filename, contaminationList);
     }
 
-    void persistSnpCheck(@NotNull final ListMultimap<Chromosome, PositionEvidence> baseDepths)
+    void persistSnpCheck(final ListMultimap<Chromosome, PositionEvidence> baseDepths)
     {
-        if (baseDepths.size() > 0)
+        if(baseDepths.size() > 0)
         {
             final String outputVcf = mConfig.OutputDir + mConfig.primaryReference() + ".amber.snp.vcf.gz";
             AMB_LOGGER.info("writing {} germline snp records to {}", baseDepths.size(), outputVcf);
@@ -80,17 +80,7 @@ class ResultsWriter
         }
     }
 
-    void persistPrimaryRefUnfiltered(@NotNull final ListMultimap<Chromosome, PositionEvidence> baseDepths)
-    {
-        if (baseDepths.size() > 0)
-        {
-            final String outputVcf = mConfig.OutputDir + mConfig.primaryReference() + ".amber.unfiltered.vcf.gz";
-            AMB_LOGGER.info("writing {} germline unfiltered records to {}", baseDepths.size(), outputVcf);
-            VCFWriter.writeBaseDepths(outputVcf, baseDepths.values(), mConfig.primaryReference());
-        }
-    }
-
-    void persistHomozygousRegions(@NotNull final List<RegionOfHomozygosity> regionOfHomozygosities) throws IOException
+    void persistHomozygousRegions(final List<RegionOfHomozygosity> regionOfHomozygosities) throws IOException
     {
         final String filename = RegionOfHomozygosityFile.generateFilename(mConfig.OutputDir, mConfig.primaryReference());
         RegionOfHomozygosityFile.write(filename, regionOfHomozygosities);

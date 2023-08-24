@@ -15,12 +15,13 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class LossOfHeterozygositySelector {
-
+final class LossOfHeterozygositySelector
+{
     static final Set<String> HRD_GENES = Sets.newHashSet();
     static final Set<String> MSI_GENES = Sets.newHashSet();
 
-    static {
+    static
+    {
         HRD_GENES.add("BRCA1");
         HRD_GENES.add("BRCA2");
         HRD_GENES.add("PALB2");
@@ -34,22 +35,29 @@ final class LossOfHeterozygositySelector {
         MSI_GENES.add("EPCAM");
     }
 
-    private LossOfHeterozygositySelector() {
+    private LossOfHeterozygositySelector()
+    {
     }
 
     @NotNull
     public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(@NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers,
             @Nullable List<GermlineDeletion> allGermlineDeletions, @NotNull MicrosatelliteStatus microsatelliteStatus,
-            @Nullable ChordStatus chordStatus) {
+            @Nullable ChordStatus chordStatus)
+    {
         List<GeneCopyNumber> suspectGeneCopyNumbersWithLOH = Lists.newArrayList();
-        for (GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers) {
+        for(GeneCopyNumber geneCopyNumber : allSomaticGeneCopyNumbers)
+        {
             boolean isRelevantHRD = HRD_GENES.contains(geneCopyNumber.geneName()) && chordStatus == ChordStatus.HR_DEFICIENT;
             boolean isRelevantMSI = MSI_GENES.contains(geneCopyNumber.geneName()) && microsatelliteStatus == MicrosatelliteStatus.MSI;
 
-            if (isRelevantHRD || isRelevantMSI) {
-                if (hasLOH(geneCopyNumber)) {
+            if(isRelevantHRD || isRelevantMSI)
+            {
+                if(hasLOH(geneCopyNumber))
+                {
                     suspectGeneCopyNumbersWithLOH.add(geneCopyNumber);
-                } else if (hasReportedGermlineHetDeletion(geneCopyNumber, allGermlineDeletions)) {
+                }
+                else if(hasReportedGermlineHetDeletion(geneCopyNumber, allGermlineDeletions))
+                {
                     suspectGeneCopyNumbersWithLOH.add(correctForGermlineImpact(geneCopyNumber));
                 }
             }
@@ -57,18 +65,22 @@ final class LossOfHeterozygositySelector {
         return suspectGeneCopyNumbersWithLOH;
     }
 
-    private static boolean hasLOH(@NotNull GeneCopyNumber geneCopyNumber) {
+    private static boolean hasLOH(@NotNull GeneCopyNumber geneCopyNumber)
+    {
         return geneCopyNumber.minMinorAlleleCopyNumber() < 0.5 && geneCopyNumber.minCopyNumber() > 0.5;
     }
 
     private static boolean hasReportedGermlineHetDeletion(@NotNull GeneCopyNumber geneCopyNumber,
-            @Nullable List<GermlineDeletion> allGermlineDeletions) {
-        if (allGermlineDeletions == null) {
+            @Nullable List<GermlineDeletion> allGermlineDeletions)
+    {
+        if(allGermlineDeletions == null)
+        {
             return false;
         }
 
         GermlineDeletion deletion = findByGene(allGermlineDeletions, geneCopyNumber.geneName());
-        if (deletion == null) {
+        if(deletion == null)
+        {
             return false;
         }
 
@@ -76,9 +88,12 @@ final class LossOfHeterozygositySelector {
     }
 
     @Nullable
-    private static GermlineDeletion findByGene(@NotNull List<GermlineDeletion> deletions, @NotNull String geneNameToFind) {
-        for (GermlineDeletion deletion : deletions) {
-            if (deletion.GeneName.equals(geneNameToFind)) {
+    private static GermlineDeletion findByGene(@NotNull List<GermlineDeletion> deletions, @NotNull String geneNameToFind)
+    {
+        for(GermlineDeletion deletion : deletions)
+        {
+            if(deletion.GeneName.equals(geneNameToFind))
+            {
                 return deletion;
             }
         }
@@ -86,7 +101,8 @@ final class LossOfHeterozygositySelector {
     }
 
     @NotNull
-    private static GeneCopyNumber correctForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber) {
+    private static GeneCopyNumber correctForGermlineImpact(@NotNull GeneCopyNumber geneCopyNumber)
+    {
         return ImmutableGeneCopyNumber.builder()
                 .from(geneCopyNumber)
                 .minCopyNumber(geneCopyNumber.minCopyNumber() - geneCopyNumber.minMinorAlleleCopyNumber())

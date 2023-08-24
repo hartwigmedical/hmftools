@@ -73,8 +73,10 @@ object IgTcrGeneFile
                 val region = IgTcrRegion.valueOf(record[Column.region])
                 val functionality = IgTcrFunctionality.fromCode(record[Column.functionality])
                 val isPrimaryAssembly = record[Column.primaryAssembly].toBoolean()
-                val assemblyName = if (isPrimaryAssembly) record[Column.assemblyName].intern() else null
-                val anchorSequence = record[Column.anchorSequence]
+                val assemblyName = if (isPrimaryAssembly) null else record[Column.assemblyName].intern()
+                var anchorSequence: String? = record[Column.anchorSequence]
+                if (anchorSequence!!.isEmpty())
+                    anchorSequence = null
                 var chromosome = record[Column.chromosome].intern()
                 var genomicLocation: GenomicLocation? = null
                 var anchorLocation: GenomicLocation? = null
@@ -137,7 +139,7 @@ object IgTcrGeneFile
                         Column.allele -> csvPrinter.print(gene.allele)
                         Column.region -> csvPrinter.print(gene.region)
                         Column.functionality -> csvPrinter.print(gene.functionality.toCode())
-                        Column.primaryAssembly -> csvPrinter.print(gene.geneLocation?.isPrimaryAssembly)
+                        Column.primaryAssembly -> csvPrinter.print(gene.geneLocation?.inPrimaryAssembly)
                         Column.assemblyName -> csvPrinter.print(gene.geneLocation?.altAssemblyName)
                         Column.chromosome -> csvPrinter.print(gene.geneLocation?.chromosome)
                         Column.posStart -> csvPrinter.print(gene.geneLocation?.posStart)

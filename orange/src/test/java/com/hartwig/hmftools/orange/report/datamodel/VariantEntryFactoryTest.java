@@ -21,12 +21,14 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class VariantEntryFactoryTest {
+public class VariantEntryFactoryTest
+{
 
     private static final double EPSILON = 1.0E-10;
 
     @Test
-    public void canCreateVariantEntries() {
+    public void canCreateVariantEntries()
+    {
         PurpleVariant driverVariant = TestPurpleVariantFactory.builder()
                 .reported(true)
                 .gene("gene 1")
@@ -88,9 +90,12 @@ public class VariantEntryFactoryTest {
 
     @NotNull
     private static VariantEntry findByGeneAndImpact(@NotNull List<VariantEntry> entries, @NotNull String geneToFind,
-            @NotNull String impactToFind) {
-        for (VariantEntry entry : entries) {
-            if (entry.gene().equals(geneToFind) && entry.impact().equals(impactToFind)) {
+            @NotNull String impactToFind)
+    {
+        for(VariantEntry entry : entries)
+        {
+            if(entry.gene().equals(geneToFind) && entry.impact().equals(impactToFind))
+            {
                 return entry;
             }
         }
@@ -99,7 +104,8 @@ public class VariantEntryFactoryTest {
     }
 
     @Test
-    public void canDetermineTranscriptImpact() {
+    public void canDetermineTranscriptImpact()
+    {
         assertEquals("p.G12C",
                 VariantEntryFactory.determineImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.123A>C")

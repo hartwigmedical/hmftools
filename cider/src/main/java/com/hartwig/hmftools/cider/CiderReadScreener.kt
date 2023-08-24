@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.VJReadCandidate.MatchMethod
 import com.hartwig.hmftools.cider.genes.GenomicLocation
-import com.hartwig.hmftools.cider.genes.IgTcrConstantRegion
+import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.Strand
@@ -116,7 +116,7 @@ class CiderReadScreener(// collect the reads and sort by types
         val rightSoftClip = CigarUtils.rightSoftClipLength(samRecord)
         if (leftSoftClip != 0 || rightSoftClip != 0)
         {
-            for (igTcrConstantRegion in mCiderGeneDatastore.getIgConstantRegions())
+            for (igTcrConstantRegion in mCiderGeneDatastore.getIgConstantDiversityRegions())
             {
                 // now try to match around location of constant regions
                 val readCandidate = tryMatchFromConstantRegion(samRecord, mapped, igTcrConstantRegion)
@@ -193,7 +193,7 @@ class CiderReadScreener(// collect the reads and sort by types
         require(!read.mateUnmappedFlag)
 
         var relevantAnchorLocation: VJAnchorGenomeLocation? = null
-        var relevantConstantRegion: IgTcrConstantRegion? = null
+        var relevantConstantRegion: IgTcrConstantDiversityRegion? = null
 
         // look through anchor locations and find ones that we can use
         for (anchorLocation: VJAnchorGenomeLocation in mCiderGeneDatastore.getVjAnchorGeneLocations())
@@ -208,7 +208,7 @@ class CiderReadScreener(// collect the reads and sort by types
         if (relevantAnchorLocation == null)
         {
             // try the constant region
-            for (constantRegion: IgTcrConstantRegion in mCiderGeneDatastore.getIgConstantRegions())
+            for (constantRegion: IgTcrConstantDiversityRegion in mCiderGeneDatastore.getIgConstantDiversityRegions())
             {
                 if (isUnamppedReadRelevantToConstantRegion(read, constantRegion.genomeLocation, mMaxFragmentLength))
                 {
@@ -235,7 +235,7 @@ class CiderReadScreener(// collect the reads and sort by types
         }
         else
         {
-            relevantConstantRegion!!.getCorrespondingJ() + relevantConstantRegion.getCorrespondingJ().flatMap { j -> j.pairedVjGeneTypes() }
+            relevantConstantRegion!!.getCorrespondingVJ()
         }
 
         if (vjGeneTypes.isEmpty())
@@ -328,14 +328,14 @@ class CiderReadScreener(// collect the reads and sort by types
     }
 
     fun tryMatchFromConstantRegion(
-        samRecord: SAMRecord, mapped: GenomeRegion, igTcrConstantRegion: IgTcrConstantRegion
+        samRecord: SAMRecord, mapped: GenomeRegion, igTcrConstantDiversityRegion: IgTcrConstantDiversityRegion
     ): VJReadCandidate?
     {
-        if (!igTcrConstantRegion.genomeLocation.isPrimaryAssembly)
+        if (!igTcrConstantDiversityRegion.genomeLocation.inPrimaryAssembly)
             return null
 
         val readLength = samRecord.readLength
-        val (chromosome, posStart, posEnd, strand, _) = igTcrConstantRegion.genomeLocation
+        val (chromosome, posStart, posEnd, strand, _) = igTcrConstantDiversityRegion.genomeLocation
 
         // see if the anchor location is mapped around here
         if (posStart - readLength < mapped.end() &&
@@ -360,7 +360,7 @@ class CiderReadScreener(// collect the reads and sort by types
                 // now try to find an anchor here
                 anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(
                     samRecord.readString,
-                    igTcrConstantRegion.getCorrespondingJ(),
+                    igTcrConstantDiversityRegion.getCorrespondingVJ(),
                     IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
                     0,
                     leftSoftClip)
@@ -375,12 +375,14 @@ class CiderReadScreener(// collect the reads and sort by types
 
                 anchorBlosumMatch =  mAnchorBlosumSearcher.searchForAnchor(
                     reverseCompSeq,
-                    igTcrConstantRegion.getCorrespondingJ(),
+                    igTcrConstantDiversityRegion.getCorrespondingVJ(),
                     IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
                     0, rightSoftClip)
             }
             if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
             {
+                sLogger.trace("read({}) matched from constant region({}) using blossom", samRecord, igTcrConstantDiversityRegion)
+
                 return addVjReadCandidate(
                     samRecord,
                     anchorBlosumMatch.templateGenes,

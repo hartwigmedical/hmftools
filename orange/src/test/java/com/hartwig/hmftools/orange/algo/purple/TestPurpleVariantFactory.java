@@ -11,13 +11,16 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class TestPurpleVariantFactory {
+public final class TestPurpleVariantFactory
+{
 
-    private TestPurpleVariantFactory() {
+    private TestPurpleVariantFactory()
+    {
     }
 
     @NotNull
-    public static ImmutablePurpleVariant.Builder builder() {
+    public static ImmutablePurpleVariant.Builder builder()
+    {
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.UNDEFINED)
                 .gene(Strings.EMPTY)
@@ -43,12 +46,14 @@ public final class TestPurpleVariantFactory {
     }
 
     @NotNull
-    public static ImmutablePurpleAllelicDepth.Builder depthBuilder() {
+    public static ImmutablePurpleAllelicDepth.Builder depthBuilder()
+    {
         return ImmutablePurpleAllelicDepth.builder().alleleReadCount(0).totalReadCount(0);
     }
 
     @NotNull
-    public static ImmutablePurpleTranscriptImpact.Builder impactBuilder() {
+    public static ImmutablePurpleTranscriptImpact.Builder impactBuilder()
+    {
         return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(Strings.EMPTY)
                 .hgvsCodingImpact(Strings.EMPTY)

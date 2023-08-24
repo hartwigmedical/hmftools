@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -177,6 +178,7 @@ public class SomaticStream
             mVcfWriter.writeHeader(header);
 
             boolean tumorOnly = mConfig.tumorOnlyMode();
+            AtomicInteger kateegisId = new AtomicInteger();
 
             if(mConfig.Threads > 1)
             {
@@ -184,7 +186,7 @@ public class SomaticStream
 
                 for(int i = 0; i < mConfig.Threads; ++i)
                 {
-                    enrichers.add(new SomaticVariantEnrichment(i, mConfig, mReferenceData, mPeakModel));
+                    enrichers.add(new SomaticVariantEnrichment(i, mConfig, mReferenceData, mPeakModel, kateegisId));
                 }
 
                 int taskIndex = 0;
@@ -209,7 +211,7 @@ public class SomaticStream
             }
             else
             {
-                SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(0, mConfig, mReferenceData, mPeakModel);
+                SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(0, mConfig, mReferenceData, mPeakModel, kateegisId);
                 mSomaticVariants.variants().forEach(x -> enricher.addVariant(x));
                 enricher.call();
             }

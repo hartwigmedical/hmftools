@@ -11,7 +11,7 @@ Key features include:
   - No cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#6-phasing) of somatic + somatic and somatic + germline variants over whole read length
   - Native MNV handling 
-  - Joint calling, including allowing both multiple tumor and reference samples to be analysed copncurrently
+  - Joint calling, including allowing both multiple tumor and reference samples to be analysed concurrently
   - Support for diverse calling scenarios including somatic tumor-normal, somatic tumor only, germline, etc.
   - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
 
@@ -79,6 +79,7 @@ load_bqr_files | NA    | Attempts to reload previously generated BQR files
 write_bqr_plot | NA    | Generate base-quality recalibration plots (requires R)
 bqr_sample_size | 2,000,000 | Sample size of each autosome
 bqr_max_alt_count | 3     | Max support of variant before it is considered likely to be real and not a sequencing error
+bqr_max_alt_percent | 0.05   | Max percentage of reads supporting a variant before it is considered likely to be real and not a sequencing error
 bqr_min_map_qual | 10    | Min mapping quality of bam record
 
 ## Optional Quality Arguments

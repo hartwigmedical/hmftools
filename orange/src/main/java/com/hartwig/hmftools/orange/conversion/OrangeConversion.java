@@ -31,13 +31,11 @@ import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class OrangeConversion {
-
-    private OrangeConversion() {
-    }
-
+public final class OrangeConversion
+{
     @NotNull
-    public static com.hartwig.hmftools.datamodel.flagstat.Flagstat convert(Flagstat flagstat) {
+    public static com.hartwig.hmftools.datamodel.flagstat.Flagstat convert(Flagstat flagstat)
+    {
         return ImmutableFlagstat.builder()
                 .uniqueReadCount(flagstat.uniqueReadCount())
                 .secondaryCount(flagstat.secondaryCount())
@@ -47,7 +45,8 @@ public final class OrangeConversion {
     }
 
     @NotNull
-    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(WGSMetrics wgsMetrics) {
+    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(WGSMetrics wgsMetrics)
+    {
         return ImmutableWGSMetrics.builder()
                 .meanCoverage(wgsMetrics.meanCoverage())
                 .sdCoverage(wgsMetrics.sdCoverage())
@@ -65,12 +64,14 @@ public final class OrangeConversion {
     }
 
     @NotNull
-    public static OrangeDoidNode convert(@NotNull DoidNode doidNode) {
+    public static OrangeDoidNode convert(@NotNull DoidNode doidNode)
+    {
         return ImmutableOrangeDoidNode.builder().doid(doidNode.doid()).doidTerm(doidNode.doidTerm()).build();
     }
 
     @NotNull
-    public static LilacRecord convert(LilacSummaryData lilacSummaryData) {
+    public static LilacRecord convert(LilacSummaryData lilacSummaryData)
+    {
         return ImmutableLilacRecord.builder()
                 .qc(lilacSummaryData.qc())
                 .alleles(() -> lilacSummaryData.alleles().stream().map(OrangeConversion::convert).iterator())
@@ -78,7 +79,8 @@ public final class OrangeConversion {
     }
 
     @NotNull
-    public static LilacAllele convert(com.hartwig.hmftools.common.hla.LilacAllele allele) {
+    public static LilacAllele convert(com.hartwig.hmftools.common.hla.LilacAllele allele)
+    {
         return ImmutableLilacAllele.builder()
                 .allele(allele.allele())
                 .tumorCopyNumber(allele.tumorCopyNumber())
@@ -94,7 +96,8 @@ public final class OrangeConversion {
     }
 
     @NotNull
-    public static VirusInterpreterData convert(com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData) {
+    public static VirusInterpreterData convert(com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData)
+    {
         return ImmutableVirusInterpreterData.builder()
                 .allViruses(ConversionUtil.mapToIterable(interpreterData.allViruses(), OrangeConversion::convert))
                 .reportableViruses(ConversionUtil.mapToIterable(interpreterData.reportableViruses(), OrangeConversion::convert))
@@ -103,7 +106,8 @@ public final class OrangeConversion {
 
     @NotNull
     @VisibleForTesting
-    static AnnotatedVirus convert(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus) {
+    static AnnotatedVirus convert(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
+    {
         return ImmutableAnnotatedVirus.builder()
                 .name(annotatedVirus.name())
                 .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
@@ -119,7 +123,8 @@ public final class OrangeConversion {
     }
 
     @NotNull
-    public static ChordRecord convert(ChordData chordData) {
+    public static ChordRecord convert(ChordData chordData)
+    {
         return ImmutableChordRecord.builder()
                 .brca1Value(chordData.BRCA1Value())
                 .brca2Value(chordData.BRCA2Value())
@@ -130,7 +135,8 @@ public final class OrangeConversion {
     }
 
     @NotNull
-    public static PeachGenotype convert(com.hartwig.hmftools.common.peach.PeachGenotype peachGenotype) {
+    public static PeachGenotype convert(com.hartwig.hmftools.common.peach.PeachGenotype peachGenotype)
+    {
         return ImmutablePeachGenotype.builder()
                 .gene(peachGenotype.gene())
                 .haplotype(peachGenotype.haplotype())
@@ -143,7 +149,8 @@ public final class OrangeConversion {
     }
 
     @NotNull
-    public static SignatureAllocation convert(com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation) {
+    public static SignatureAllocation convert(com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation)
+    {
         return ImmutableSignatureAllocation.builder()
                 .signature(signatureAllocation.signature())
                 .allocation(signatureAllocation.allocation())

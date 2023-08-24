@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.gripss.filters;
 
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
@@ -16,8 +18,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 public class TargetRegions
 {
     private final Map<String,List<NamedBed>> mTargetRegions;
-
-    private static final String TARGET_REGIONS_BED = "target_regions_bed";
 
     public TargetRegions(final ConfigBuilder configBuilder)
     {
@@ -72,6 +72,6 @@ public class TargetRegions
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(TARGET_REGIONS_BED, false, "Target regions BED file");
+        configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
     }
 }

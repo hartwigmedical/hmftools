@@ -13,9 +13,10 @@ data class GenomicLocation(val chromosome: String,
     init
     {
         require(posStart <= posEnd)
+        require(altAssemblyName == null || altAssemblyName.isNotEmpty())
     }
 
-    val isPrimaryAssembly: Boolean get() { return altAssemblyName == null }
+    val inPrimaryAssembly: Boolean get() { return altAssemblyName == null }
 
     fun baseLength(): Int
     {
@@ -31,6 +32,6 @@ data class GenomicLocation(val chromosome: String,
 
     override fun toString(): String
     {
-        return "${if (isPrimaryAssembly) "" else ("$altAssemblyName ") }${chromosome}:${posStart}-${posEnd}(${strand.asChar()})"
+        return "${if (inPrimaryAssembly) "" else ("$altAssemblyName ") }${chromosome}:${posStart}-${posEnd}(${strand.asChar()})"
     }
 }

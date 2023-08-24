@@ -78,7 +78,7 @@ public class FitAnalyser
 
     public FitAnalyser(final CommandLine cmd)
     {
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = CommonUtils.parseOutputDir(cmd);
         mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mCmdLineArgs = cmd;
         mFitMethods = Lists.newArrayList();

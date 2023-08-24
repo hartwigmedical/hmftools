@@ -1,14 +1,9 @@
 # AMBER
 AMBER is designed to generate a tumor BAF file for use in PURPLE from a provided VCF of likely heterozygous SNP sites.
 
-When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
-In tumor only mode, all provided sites are examined in the tumor with additional filtering then applied. 
- 
-The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
-
 When using paired reference/tumor data, AMBER is also able to: 
   - detect evidence of contamination in the tumor from homozygous sites in the reference; and
-  - facilitate sample matching by recording SNPs in the germline
+  - facilitate sample matching / patient deduplication by recording SNPs in the germline
   - identify long regions of homozygosty and consanguinity
 
 ## Installation
@@ -92,15 +87,15 @@ If no reference BAM is supplied, AMBER will be put into tumor only mode.  In tum
 
 ### Optional Arguments
 
-| Argument               | Default | Description                                                                   |
-|------------------------|---------|-------------------------------------------------------------------------------|
-| threads                | 1       | Number of threads to use                                                      |
-| min_mapping_quality    | 1       | Minimum mapping quality for an alignment to be used                           |
-| min_base_quality       | 13      | Minimum quality for a base to be considered                                   |
-| tumor_only_min_vaf     | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
+| Argument          | Default | Description                                                                   |
+|-------------------|---------|-------------------------------------------------------------------------------|
+| threads           | 1       | Number of threads to use                                                      |
+| min_mapping_quality | 1       | Minimum mapping quality for an alignment to be used                           |
+| min_base_quality  | 13      | Minimum quality for a base to be considered                                   |
+| tumor_only_min_vaf | 0.05    | Min VAF in ref and alt in tumor only mode                                     |
 | tumor_only_min_support | 2       | Min support in ref and alt in tumor only mode                                 |
-| tumor_only_min_depth   | 25      | Min depth in ref and alt in tumor only mode                                   |
-| ref_genome             | NA      | Path to the reference genome fasta file. Required only when using CRAM files. |
+| tumor_min_depth   | 8/25    | Min tumor depth, default = 25 for tumor/normal, 8 for tumor-only mode         |
+| ref_genome        | NA      | Path to the reference genome fasta file. Required only when using CRAM files. |
 
 ### Example Usage
 
@@ -129,7 +124,22 @@ When run in this mode the heterozygous baf points are taken as the intersection 
 No change is made to the SNPCheck or contamination output. These will be run on the first reference bam in the list. 
 
 
-## Regions of Homozygosity Algorithm
+## Algorithm 
+
+### Analysis and filtering of BAF points
+When using paired reference/tumor bams, AMBER confirms these sites as heterozygous in the reference sample bam then calculates the allelic frequency of corresponding sites in the tumor bam. 
+In tumor only mode, all provided sites are examined in the tumor with additional filtering then applied. 
+ 
+### Segmentation
+The Bioconductor copy number package is then used to generate pcf segments from the BAF file.
+
+### Contamination
+```
+TO DO
+```
+
+
+### Regions of Homozygosity
 Amber outputs a file which contains continuous regions of homozygous sites.  The sex chromosomes are excluded from consideration, as are the short arms of chr 13,14,15,21 & 22 as well as regions within 1M bases of centromeric gaps and large regions of heterochromatin (ie for chr 1,chr9, chr 16).
 
 For determination of the region each BAF site in the provided bed file is calculated as homozygous (alt or ref) or heterozygous according to the following criteria:
@@ -147,7 +157,7 @@ If multiple references are provided (for example donor & patient reference) then
 
 If only one chromosome is affected and the regions affected amount to more than 10Mb than mark that chromosome with UniparentalDisomy in the QC file.   Determine the ConsanguinityProportion as the sum of homozygous regions > 3MB divided by the size of the autosome genome (2.88bn bases).     Note that the expected value for consanguinityProportion for a child of direct siblings would be 0.25, dividing by a factor of 2 for each further level of removal in relationship.
 
-## Patient Matching
+### Patient Matching
 The REFERENCE.amber.snp.vcf.gz contains some 1000 SNP points that can be used to identify if a new sample belongs to an existing patient. 
 This is particularly important when doing cohort analysis as multiple samples from the same patient can skew results.
 

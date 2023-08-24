@@ -14,6 +14,12 @@ data class VJAnchorTemplate
     val anchorLocation: GenomicLocation?
 )
 {
+    init
+    {
+        require(anchorSequence.isNotEmpty())
+        require(anchorLocation == null || anchorLocation.inPrimaryAssembly)
+    }
+
     val vj: VJ get() { return type.vj }
     val anchorAminoAcidSequence: String = Codons.aminoAcidFromBases(anchorSequence)
     val chromosome: String? get() { return geneLocation?.chromosome }

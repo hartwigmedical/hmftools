@@ -47,36 +47,23 @@ java -Xmx16G -cp cider.jar com.hartwig.hmftools.cider.CiderApplication \
 | primer_mismatch_max        | 0       | Maximum number of mismatch bases for matching primer sequence                                           |
 
 ## Algorithm
-### Anchor sequences and coordinates 
-To create reference data, we have queried from IMGT (https://www.imgt.org/genedb/) to get all sequences for species Homo Sapiens and (separately) for Molecular Component: IG and TR.   Then we select all query results choosing “F+ORF+in-frame P nucleotide sequences with IMGT gaps”.    Following this, for all genes which exist in ensembl (separately for 37 and 38) we have deterimined reference genome anchor coordinates for each gene. 
 
-Specifically, for each V and each J component define a 30 anchor region and obtain the sequence and genome coordinates for all alleles:
+![Input CIDER_FLOWCHART](doc/cider_flowchart.svg)
 
-| Gene component | Anchor region ( from the human_IMGT+C.fa, must be at least 25 bases)                                                                                                                                                 | 
-|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| IGHV           | Base 283-312.                                                                                                                                                                                                        |  
-| IGHJ           | 30 base sequence starting with TGGGG (J-TRP)                                                                                                                                                                         | 
-| IGKV           | Base 283-312.                                                                                                                                                                                                        | 
-| IGKJ           | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33.                                                                                                                                                  |  
-| IGK-DEL        | Specific anchor coordinates (2:88832743-88832772 in hg38) rom the K Del region are checked so that we can detect IGK deletion type rearrangements                                                                    |
-| IGLV           | Base 283-312.                                                                                                                                                                                                        |  
-| IGLJ           | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33                                                                                                                                                   | 
-| TRAV           | Base 283-312.                                                                                                                                                                                                        |  
-| TRAJ           | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33 bases from the end of the fa sequence (​​note that TRAJ35,TRAJ33 & TRAJ55 will be excluded because they don’t appear to have the conserved J-PHE) | 
-| TRBV           | Base 283-312.                                                                                                                                                                                                        |  
-| TRBJ           | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33                                                                                                                                                   | 
-| TRDV           | Base 283-312                                                                                                                                                                                                         | 
-| TRDJ           | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33                                                                                                                                                   | 
-| TRGV           | Base 283-312                                                                                                                                                                                                         | 
-| TRGJ           | Sequence starting with “TTTG” or “TTCG” starting between 27 and 33                                                                                                                                                   |
+The CIDEr algorithm consist of the following steps:
+ 1. Extract reads.
+ 2. Assembly and collapse V + J breakends.
+ 3. CDR3 identification and support.
+ 4. Alignment, filtering and gene annotation
 
-The last 3 bases of the V anchor and the first 3 bases of the J anchor ,corresponding to the conserved C on the V side and W/F on the J side are used as the anchor coordinates. The D region is generally too short to find aligned reads and is ignored. 
+### Extract reads from BAM 
 
-### Bam Extraction 
+From the bam retrieve all reads and their mates which overlap the anchor coordinates. We also
+obtain reads that overlap the first base of each gene in the constant region with a J anchor blosum62 match in soft clipping region (10 AA), 
+along with any unmapped reads with read pairs mapped within 1kb upstream of V gene  or 1KB downstream of J gene or which map to a constant 
+region and have a blossum62 match to a J or V anchor (10AA) of the same gene locus.
 
-From the bam retrieve all reads and their mates which overlap the anchor coordinates. A V+J bam is created with the extracted reads. We also obtain reads that overlap the first base of each gene in the constant region with a J anchor blosum62 match in soft clipping region (10 AA), along with any unmapped reads with read pairs mapped within 1kb upstream of V gene  or 1KB downstream of J gene or which map to a constant region and have a blossum62 match to a J or V anchor (10AA) of the same gene locus . 
-
-### VDJ consensus candidate sequences 
+### Assembly and collapse V + J breakends
 
 Separately for V and J aligned / anchored reads, determine the 30 base anchor sequence + any candidate CDR3 sequence starting from the bases
 immediately following the conserved V-CYS r J-PHE/J-TRP location. Determine a minimal set of consensus sequences separately for each of the
@@ -88,7 +75,7 @@ to creating the candidate sequences. Afterwards, reads with more than 10% (confi
 If a sequence can be collapsed to multiple longer sequences, then greedily allocate it to the most supported sequence. The total base qual
 supporting each base is retained for later matching). 
 
-### Identify anchors and call CDR3 sequences  
+### CDR3 identification and support  
 
 For merged sequences, find a V and J anchor simply read out the CDR3 sequence between the V-CYS and J-PHE/J-TRP anchors.  
 
@@ -104,7 +91,7 @@ A sequence is collapsed into another sequence if it is identical at all bases wi
 
 Each V only anchored read is also checked for partial overlap with each J only anchored read. If they exactly match with more than 20 nucleotides of exact match (allowing for low quality bases) then they are also collapsed into a single sequence. 
 
-### Filter and output VDJ sequences 
+### Alignment, filtering and gene annotation 
 Each collapsed sequence is either marked as PASS or one or more of the following filters 
 - **PARTIAL** - Only has V or J
 - **NO_VDJ_ALIGNMENT** - Sequence is not aligned to any V/D/J gene
@@ -203,7 +190,7 @@ Following briefly describe the annotation logic:
   allow TRA and TRD to match one another.
 5. Finally the V, D, J gene alignment information are combined and added as annotation into the output file.
 
-### Setting up BLASTN
+## Setting up BLASTN
 To set up BLASTN, do the following:
 1. Follow the instruction in https://www.ncbi.nlm.nih.gov/books/NBK1762/ to install BLAST+
 2. Set up the `human_genome` blast DB:
@@ -213,6 +200,14 @@ To set up BLASTN, do the following:
     ```
    Make sure the `BLASTDB` environment variable is defined.
 
+## Ig/TCR gene reference data curation
+To create reference data, following steps:
+1. queried from IMGT (https://www.imgt.org/genedb/) to get all sequences for species Homo Sapiens and (separately) for Molecular Component: IG 
+and TR. Then we select all query results choosing “F+ORF+in-frame P nucleotide sequences with IMGT gaps”.
+2. Use both blast and ensembl to determine the V38 genomic location of each gene.
+3. For V and J genes, find their anchor regions.
+4. The V38 genomic positions are converted to V37.
+
 ## Idenfitification of clonal rearrangements in WGS samples
 
 Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence and progression via liquid biopsy.   For WGS tumor saples, the number of fragments in a clonal sequence will depend on the depth of coverage as well as the purity and ploidy of a sample.    For a 100x tumor sample we recommend using a threshold of approximately 8-10 high quality read support to identify clonal sequences.  For lower depth samples this number may need to be scaled downwards somewhat.  In lower purity & higher ploidy tumor samples, clonal sequences may have less than 10 reads support, but lowering the threshold may risk identifying non clonal sequences as clonal.   
@@ -220,7 +215,7 @@ Clonal IG/TCR rearrangements may be useful biomarkers to monitor tumor presence 
 ## Known issues and future improvements
 
 ### Bam extraction:
-- **Reads mapped to other locations** - We only use reads where the alignment overlaps a known V or J anchor sequence coordinate which means the program is fast. We could also look for more reads with sequences that precisely or partially match known anchors but which have not been mapped to the expected locations.    
+- **Reads mapped to other locations** - We only use reads where the alignment overlaps a known V/D/J/C gene coordinate which means the program is fast. We could also look for more reads with sequences that precisely or partially match known anchors but which have not been mapped to the expected locations.    
 - **Mate overlap** - Where fragment lengths are short the reads may overlap (particularly relevant for RNA). For each extracted read pair test for overlap by searching for an exact match for the innermost 10 bases of each read (allowing for differences if base quality < 25). If a match is found then check that the full overlapped region is identical (again allowing for base quality trimming). Create a consensus sequence for the 2 reads, using the highest base quality where the sequences differ.  
 - **Fragments with both reads unmapped reads** - these are not queried and extracted.
 - **Extrapolation of anchor location inside soft clipped part of read** - needs more thought.
@@ -251,6 +246,8 @@ Running with `-xmx32G`.
 "Max reads per gene" is the maximum number of reads we found in each of the IG/TCR gene segment, i.e. IGHV, TRBJ etc. 
 
 # Version History and Download Links
+- [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.1)
+  - Fix errors in the genomic locations of anchors.
 - [1.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.0)
   - Improve the curation and annotation of the Ig/TCR genes. Fix the classification of IGHD gene.
   - Fix bug in the locus stats
