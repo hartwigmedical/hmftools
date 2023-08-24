@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class PurpleCopyNumber implements GenomeRegion {
-
+public abstract class PurpleCopyNumber implements GenomeRegion
+{
     public abstract int bafCount();
 
     public abstract double averageActualBAF();
@@ -29,7 +29,8 @@ public abstract class PurpleCopyNumber implements GenomeRegion {
 
     public abstract double gcContent();
 
-    public double minorAlleleCopyNumber() {
+    public double minorAlleleCopyNumber()
+    {
         return Doubles.lessThan(averageActualBAF(), 0.50) ? 0 : Math.max(0, (1 - averageActualBAF()) * averageTumorCopyNumber());
     }
 

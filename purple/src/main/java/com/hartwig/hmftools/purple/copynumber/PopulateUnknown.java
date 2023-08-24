@@ -6,8 +6,6 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 
-import org.jetbrains.annotations.NotNull;
-
 public class PopulateUnknown
 {
     private final CobaltChromosomes mCobaltChromosomes;
@@ -17,7 +15,7 @@ public class PopulateUnknown
         mCobaltChromosomes = cobaltChromosomes;
     }
 
-    public List<CombinedRegion> populateUnknown(@NotNull final List<CombinedRegion> regions)
+    public List<CombinedRegion> populateUnknown(final List<CombinedRegion> regions)
     {
         for(int i = 0; i < regions.size(); i++)
         {
@@ -39,7 +37,6 @@ public class PopulateUnknown
                     }
                 }
             }
-
         }
 
         return regions;

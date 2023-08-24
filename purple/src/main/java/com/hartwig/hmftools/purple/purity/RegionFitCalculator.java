@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.purity;
 
+import static java.lang.Math.abs;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
@@ -95,16 +97,15 @@ public class RegionFitCalculator
 
     public static double calculateEventPenalty(double eventPenaltyFactor, double majorAllele, double minorAllele)
     {
-        double wholeGenomeDoublingDistance = 1 + (Math.abs(majorAllele - 2)) + (Math.abs(minorAllele - 2));
-        double singleEventDistance = (Math.abs(majorAllele - 1)) + (Math.abs(minorAllele - 1));
+        double wholeGenomeDoublingDistance = 1 + (abs(majorAllele - 2)) + (abs(minorAllele - 2));
+        double singleEventDistance = (abs(majorAllele - 1)) + (abs(minorAllele - 1));
 
         return 1 + eventPenaltyFactor * Math.min(singleEventDistance, wholeGenomeDoublingDistance);
     }
 
     private static final double MIN_CN_THRESHOLD = 0.1;
 
-    private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
-            final double observedBAF)
+    private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber, final double observedBAF)
     {
         if(!mCobaltChromosomes.contains(chromosome))
         {
@@ -124,15 +125,15 @@ public class RegionFitCalculator
 
     private double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber)
     {
-        final double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
-        final double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, mAmbiguousBaf)));
+        double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
+        double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, mAmbiguousBaf)));
 
         // Major Ploidy
-        final double minBAFMajorAllelePloidy = minBAF * impliedCopyNumber;
-        final double maxBAFMajorAllelePloidy = maxBAF * impliedCopyNumber;
+        double minBAFMajorAllelePloidy = minBAF * impliedCopyNumber;
+        double maxBAFMajorAllelePloidy = maxBAF * impliedCopyNumber;
 
         // Major Ploidy crosses whole number?
-        final double minBAFMajorAllelePloidyCeil = Math.ceil(minBAFMajorAllelePloidy);
+        double minBAFMajorAllelePloidyCeil = Math.ceil(minBAFMajorAllelePloidy);
         if(!Doubles.equal(Math.signum(minBAFMajorAllelePloidyCeil - minBAFMajorAllelePloidy),
                 Math.signum(minBAFMajorAllelePloidyCeil - maxBAFMajorAllelePloidy)))
         {
@@ -140,11 +141,11 @@ public class RegionFitCalculator
         }
 
         // Minor Ploidy
-        final double minBAFMinorAllelePloidy = impliedCopyNumber - minBAFMajorAllelePloidy;
-        final double maxBAFMinorAllelePloidy = impliedCopyNumber - maxBAFMajorAllelePloidy;
+        double minBAFMinorAllelePloidy = impliedCopyNumber - minBAFMajorAllelePloidy;
+        double maxBAFMinorAllelePloidy = impliedCopyNumber - maxBAFMajorAllelePloidy;
 
         // Minor Ploidy crosses whole number?
-        final double maxBAFMinorAllelePloidyCeil = Math.ceil(maxBAFMinorAllelePloidy);
+        double maxBAFMinorAllelePloidyCeil = Math.ceil(maxBAFMinorAllelePloidy);
         if(!Doubles.equal(Math.signum(maxBAFMinorAllelePloidyCeil - minBAFMinorAllelePloidy),
                 Math.signum(maxBAFMinorAllelePloidyCeil - maxBAFMinorAllelePloidy)))
         {
@@ -155,16 +156,14 @@ public class RegionFitCalculator
         double normFactor = purityAdjuster.normFactor();
 
         // Minimise
-        final double minBAFTotalDeviation =
-                mPloidyDeviation.majorAlleleDeviation(purity, normFactor, minBAFMajorAllelePloidy) + mPloidyDeviation.minorAlleleDeviation(
-                        purity,
-                        normFactor,
-                        minBAFMinorAllelePloidy);
-        final double maxBAFTotalDeviation =
-                mPloidyDeviation.majorAlleleDeviation(purity, normFactor, maxBAFMajorAllelePloidy) + mPloidyDeviation.minorAlleleDeviation(
-                        purity,
-                        normFactor,
-                        maxBAFMinorAllelePloidy);
+        double minBAFTotalDeviation =
+                mPloidyDeviation.majorAlleleDeviation(purity, normFactor, minBAFMajorAllelePloidy)
+                        + mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minBAFMinorAllelePloidy);
+
+        double maxBAFTotalDeviation =
+                mPloidyDeviation.majorAlleleDeviation(purity, normFactor, maxBAFMajorAllelePloidy)
+                        + mPloidyDeviation.minorAlleleDeviation(purity,normFactor, maxBAFMinorAllelePloidy);
+
         return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? 0.5 : mAmbiguousBaf;
     }
 }

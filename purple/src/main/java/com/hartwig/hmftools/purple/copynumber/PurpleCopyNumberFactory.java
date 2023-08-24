@@ -125,8 +125,10 @@ public class PurpleCopyNumberFactory
                 {
                     copyNumberStartPos = (firstRegion.minStart() + firstRegion.maxStart()) / 2;
 
-                    PurpleCopyNumber newPrevCopyNumber = ImmutablePurpleCopyNumber.builder().from(prevCopyNumber)
-                            .end(copyNumberStartPos - 1).build();
+                    PurpleCopyNumber newPrevCopyNumber = ImmutablePurpleCopyNumber.builder()
+                            .from(prevCopyNumber)
+                            .end(copyNumberStartPos - 1)
+                            .build();
 
                     copyNumbers.set(copyNumbers.size() - 1, newPrevCopyNumber);
                 }
