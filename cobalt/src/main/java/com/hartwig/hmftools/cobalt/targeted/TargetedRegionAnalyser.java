@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cobalt.targeted;
 
-import static java.lang.Math.round;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
@@ -14,13 +15,19 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIO
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.cobalt.norm.GcProfileCache;
@@ -28,6 +35,7 @@ import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.gc.GcCalcs;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class TargetedRegionAnalyser
@@ -36,6 +44,9 @@ public class TargetedRegionAnalyser
     private final GcProfileCache mGcProfileCache;
     private final RefGenomeSource mRefGenome;
     private final String mOutputDir;
+    private BufferedWriter mWriter;
+
+    private static final int PROBE_LENGTH = 120;
 
     public TargetedRegionAnalyser(final ConfigBuilder configBuilder)
     {
@@ -56,44 +67,129 @@ public class TargetedRegionAnalyser
         mRefGenome = loadRefGenome(refGenomeFile);
 
         mOutputDir = parseOutputDir(configBuilder);
+
+        mWriter = initialiseWriter();
     }
 
     public void run()
     {
         CB_LOGGER.info("running Cobalt targeted region GC analyser");
 
-        String outputFile = mOutputDir + "target_regions_gc_data.tsv";
+        Map<String,List<GCProfile>> chrGcProfileMap = mGcProfileCache.chrGcProfiles();
 
-        try
+        for(Map.Entry<String,List<GCProfile>> entry : chrGcProfileMap.entrySet())
         {
-            BufferedWriter writer = createBufferedWriter(outputFile, false);
+            String chromosome = entry.getKey();
+            List<GCProfile> gcProfiles = entry.getValue();
 
-            writer.write(format("Chromosome\tPosStart\tPosEnd\tBucketGc\tRegionGc\tBucketMappability"));
-            writer.newLine();
+            List<ChrBaseRegion> regions = mTargetRegions.stream().filter(x -> x.Chromosome.equals(chromosome)).collect(Collectors.toList());
 
-            for(ChrBaseRegion region : mTargetRegions)
+            if(regions.isEmpty())
+                continue;
+
+            int regionIndex = 0;
+            ChrBaseRegion currentRegion = regions.get(regionIndex);
+
+            for(GCProfile gcProfile : gcProfiles)
             {
-                int bucketStart = round(region.start() / 1000) * 1000 + 1;
-                GCProfile gcProfile = mGcProfileCache.findGcProfile(region.Chromosome, bucketStart);
-
-                if(gcProfile == null)
-                {
-                    CB_LOGGER.error("region({}) bucket({}) GC profile entry not found", region, bucketStart);
+                if(gcProfile.end() < currentRegion.start())
                     continue;
+
+                int regionBaseCount = 0;
+                String regionBaseSequence = "";
+                List<BaseRegion> overlappingRegions = Lists.newArrayList();
+                boolean regionOverlapsWindows = false;
+
+                while(currentRegion.start() <= gcProfile.end())
+                {
+                    int regionOverlapStart = max(currentRegion.start(), gcProfile.start());
+                    int regionOverlapEnd = min(currentRegion.end(), gcProfile.end());
+
+                    int overlapCount = regionOverlapEnd - regionOverlapStart + 1;
+
+                    if(overlapCount < PROBE_LENGTH)
+                    {
+                        if(currentRegion.baseLength() >= PROBE_LENGTH)
+                        {
+                            if(currentRegion.start() < gcProfile.start())
+                            {
+                                regionOverlapStart = regionOverlapEnd - PROBE_LENGTH + 1;
+                            }
+                            else
+                            {
+                                // region overlaps with next window
+                                regionOverlapEnd = regionOverlapStart + PROBE_LENGTH - 1;
+                            }
+                        }
+                        else
+                        {
+                            // expand from centre of region to the required probe length
+                            int requiredExtraFlankingBases = (PROBE_LENGTH - currentRegion.baseLength()) / 2;
+                            regionOverlapStart = currentRegion.start() - requiredExtraFlankingBases;
+                            regionOverlapEnd = currentRegion.end() + requiredExtraFlankingBases;
+                        }
+
+                        overlapCount = regionOverlapEnd - regionOverlapStart + 1;
+                    }
+
+                    if(regionOverlapStart > regionOverlapEnd)
+                    {
+                        CB_LOGGER.error("invalid overlap");
+                    }
+
+                    try
+                    {
+                        String overlapSequence = mRefGenome.getBaseString(chromosome, regionOverlapStart, regionOverlapEnd);
+                        regionBaseSequence += overlapSequence;
+                    }
+                    catch(Exception e)
+                    {
+                        CB_LOGGER.error("invalid ref sequence");
+                    }
+
+                    regionBaseCount += overlapCount;
+                    overlappingRegions.add(new BaseRegion(regionOverlapStart, regionOverlapEnd));
+
+                    regionOverlapsWindows = currentRegion.end() > gcProfile.end();
+
+                    ++regionIndex;
+
+                    if(regionIndex >= regions.size())
+                        break;
+
+                    currentRegion = regions.get(regionIndex);
                 }
 
-                String refSequence = mRefGenome.getBaseString(region.Chromosome, region.start(), region.end());
+                double regionGc = GcCalcs.calcGcPercent(regionBaseSequence);
 
-                double seqGcRatio = GcCalcs.calcGcPercent(refSequence);
+                writeGcWindowData(gcProfile, regionBaseCount, regionGc, overlappingRegions);
 
-                writer.write(format("%s\t%d\t%d\t%.3f\t%.3f\t%.2f",
-                        region.Chromosome, region.start(), region.end(), gcProfile.gcContent(),
-                        seqGcRatio, gcProfile.mappablePercentage()));
+                if(regionOverlapsWindows)
+                {
+                    --regionIndex;
+                    currentRegion = regions.get(regionIndex);
+                }
 
-                writer.newLine();
+                if(regionIndex >= regions.size())
+                    break;
             }
+        }
 
-            writer.close();
+        closeBufferedWriter(mWriter);
+
+        CB_LOGGER.info("Cobalt normalisation file generation complete");
+    }
+
+    private BufferedWriter initialiseWriter()
+    {
+        try
+        {
+            String outputFile = mOutputDir + "target_regions_gc_data.tsv";
+            BufferedWriter writer = createBufferedWriter(outputFile, false);
+
+            writer.write(format("Chromosome\tGcWindowStart\tGcWindowEnd\tWindowGc\tRegionBaseCount\tRegionGc\tRegionIntervals\tWindowMappability"));
+            writer.newLine();
+            return writer;
         }
         catch(IOException e)
         {
@@ -102,7 +198,38 @@ public class TargetedRegionAnalyser
             System.exit(1);
         }
 
-        CB_LOGGER.info("Cobalt normalisation file generation complete");
+        return null;
+    }
+
+    private void writeGcWindowData(final GCProfile gcProfile, int regionBaseCount, double regionGc, final List<BaseRegion> overlappingRegions)
+    {
+        if(mWriter == null)
+            return;
+
+        try
+        {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            sj.add(gcProfile.chromosome());
+            sj.add(String.valueOf(gcProfile.start()));
+            sj.add(String.valueOf(gcProfile.end()));
+            sj.add(String.valueOf(gcProfile.gcContent()));
+            sj.add(String.valueOf(regionBaseCount));
+            sj.add(String.valueOf(regionGc));
+
+            StringJoiner intervalsSj = new StringJoiner(ITEM_DELIM);
+            overlappingRegions.forEach(x -> intervalsSj.add(x.toString()));
+            sj.add(intervalsSj.toString());
+
+            sj.add(String.valueOf(gcProfile.mappablePercentage()));
+            mWriter.write(sj.toString());
+            mWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+            CB_LOGGER.error("failed to write target regions GC data", e.toString());
+            System.exit(1);
+        }
     }
 
     public static void main(final String[] args)

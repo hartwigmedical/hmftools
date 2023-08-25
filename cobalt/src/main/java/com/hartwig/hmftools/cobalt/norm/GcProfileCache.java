@@ -37,6 +37,8 @@ public class GcProfileCache
         }
     }
 
+    public Map<String,List<GCProfile>> chrGcProfiles() { return mChrGcProfiles; }
+
     public GCProfile findGcProfile(final String chromosome, final int position)
     {
         if(!mCurentChromosome.equals(chromosome))
