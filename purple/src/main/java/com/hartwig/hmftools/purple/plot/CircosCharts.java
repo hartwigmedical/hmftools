@@ -21,6 +21,7 @@ import com.hartwig.hmftools.common.circos.CircosINDELWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.circos.CircosSNPWriter;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -112,11 +113,17 @@ public class CircosCharts
 
     private void writeObservedRegions(final List<ObservedRegion> fittedRegions) throws IOException
     {
-        CircosFileWriter.writeRegions(mBaseCircosReferenceSample + ".ratio.circos",
-                fittedRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),
+        List<ObservedRegion> selectRegions = fittedRegions.stream()
+                .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID).collect(Collectors.toList());
+
+        CircosFileWriter.writeRegions(
+                mBaseCircosReferenceSample + ".ratio.circos",
+                selectRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),
                 ObservedRegion::unnormalisedObservedNormalRatio);
-        CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".ratio.circos",
-                fittedRegions.stream().filter(x -> Doubles.positive(x.observedTumorRatio())).collect(Collectors.toList()),
+
+        CircosFileWriter.writeRegions(
+                mBaseCircosTumorSample + ".ratio.circos",
+                selectRegions.stream().filter(x -> Doubles.positive(x.observedTumorRatio())).collect(Collectors.toList()),
                 ObservedRegion::observedTumorRatio);
     }
 
