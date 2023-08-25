@@ -20,18 +20,13 @@ public final class CircosSNPWriter
     private static final String GREY = "191,190,191";
     private static final String GREEN = "144,202,75";
 
-    private CircosSNPWriter()
-    {
-    }
-
-    public static void writePositions(@NotNull final String filePath, @NotNull Collection<VariantContextDecorator> values)
-            throws IOException
+    public static void writePositions(final String filePath, Collection<VariantContextDecorator> values) throws IOException
     {
         writeCircosFile(filePath, values, CircosSNPWriter::transformPosition);
     }
 
-    private static <T> void writeCircosFile(@NotNull final String filePath, @NotNull Collection<T> values,
-            @NotNull Function<T, String> toStringFunction) throws IOException
+    private static <T> void writeCircosFile(
+            final String filePath, Collection<T> values, Function<T, String> toStringFunction) throws IOException
     {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -39,20 +34,17 @@ public final class CircosSNPWriter
         Files.write(new File(filePath).toPath(), lines);
     }
 
-    @NotNull
     private static String header()
     {
         return "#chromosome\tstart\tend\tvalue";
     }
 
-    @NotNull
-    private static String transformPosition(@NotNull final VariantContextDecorator position)
+    private static String transformPosition(final VariantContextDecorator position)
     {
         return CircosFileWriter.transformPosition(position, CircosSNPWriter::color);
     }
 
-    @NotNull
-    private static String color(@NotNull final VariantContextDecorator variant)
+    private static String color(final VariantContextDecorator variant)
     {
         if(signature("C", "A", variant))
         {
@@ -82,15 +74,14 @@ public final class CircosSNPWriter
         return "purple";
     }
 
-    private static boolean signature(@NotNull final String ref, @NotNull final String alt,
-            @NotNull final VariantContextDecorator variant)
+    private static boolean signature(final String ref, final String alt,
+            final VariantContextDecorator variant)
     {
         return (variant.ref().equals(ref) && variant.alt().equals(alt)) || (variant.ref().equals(inverse(ref)) && variant.alt()
                 .equals(inverse(alt)));
     }
 
-    @NotNull
-    private static String inverse(@NotNull final String base)
+    private static String inverse(final String base)
     {
         if(base.equals("G"))
         {

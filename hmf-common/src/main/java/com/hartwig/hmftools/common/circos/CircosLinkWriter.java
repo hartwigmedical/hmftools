@@ -13,11 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CircosLinkWriter
 {
-    private CircosLinkWriter()
-    {
-    }
-
-    public static void writeVariants(@NotNull final String filePath, @NotNull Collection<StructuralVariant> values) throws IOException
+    public static void writeVariants(final String filePath, Collection<StructuralVariant> values) throws IOException
     {
         final Collection<String> lines = values.stream()
                 .filter(x -> x.end() != null)
@@ -27,7 +23,7 @@ public final class CircosLinkWriter
     }
 
     @NotNull
-    private static String toString(@NotNull final StructuralVariant variant)
+    private static String toString(final StructuralVariant variant)
     {
         String startChromosome = variant.chromosome(true);
         String endChromosome = variant.chromosome(false);
@@ -46,7 +42,7 @@ public final class CircosLinkWriter
     }
 
     @NotNull
-    private static String color(@NotNull final StructuralVariant variant)
+    private static String color(final StructuralVariant variant)
     {
         switch(variant.type())
         {
