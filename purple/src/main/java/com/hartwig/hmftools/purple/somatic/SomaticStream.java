@@ -376,6 +376,9 @@ public class SomaticStream
         if(mConfig.Charting.Disabled)
             return;
 
+        if(!HumanChromosome.contains(variant.chromosome()))
+            return;
+
         if(variant.type() == VariantType.INDEL)
         {
             mIndelCount++;

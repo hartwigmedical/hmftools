@@ -66,7 +66,8 @@ public class CircosCharts
         mCurrentReferenceId = referenceId;
         mCurrentSampleId = sampleId;
         mBaseCircosTumorSample = mConfig.CircosDirectory + mCurrentSampleId;
-        mBaseCircosReferenceSample = mConfig.CircosDirectory + mCurrentReferenceId;
+
+        mBaseCircosReferenceSample = mCurrentReferenceId != null ? mConfig.CircosDirectory + mCurrentReferenceId : "";
 
         final List<VariantContextDecorator> somatics = somaticVariants.stream()
                 .filter(x -> HumanChromosome.contains(x.chromosome()))
@@ -116,10 +117,13 @@ public class CircosCharts
         List<ObservedRegion> selectRegions = fittedRegions.stream()
                 .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID).collect(Collectors.toList());
 
-        CircosFileWriter.writeRegions(
-                mBaseCircosReferenceSample + ".ratio.circos",
-                selectRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),
-                ObservedRegion::unnormalisedObservedNormalRatio);
+        if(!mBaseCircosReferenceSample.isEmpty())
+        {
+            CircosFileWriter.writeRegions(
+                    mBaseCircosReferenceSample + ".ratio.circos",
+                    selectRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),
+                    ObservedRegion::unnormalisedObservedNormalRatio);
+        }
 
         CircosFileWriter.writeRegions(
                 mBaseCircosTumorSample + ".ratio.circos",
@@ -166,6 +170,10 @@ public class CircosCharts
         String content = readResource("/circos/" + type + ".template");
         content = content.replaceAll("SAMPLE", mCurrentSampleId);
         content = content.replaceAll("REFERENCE", mCurrentReferenceId != null ? mCurrentReferenceId : mCurrentSampleId);
+
+        // use the tumor colour for reference in tumor-only mode to keep those points the same
+        content = content.replaceAll("COBALT_REF_COLOUR", mCurrentReferenceId != null ? "green" : "cobalt");
+
         content = content.replaceAll("EXCLUDE", gender.equals(Gender.FEMALE) ? "hsY" : "hsZ");
         content = content.replaceAll("KARYOTYPE",
                 mIsHg38 ? "data/karyotype/karyotype.human.hg38.txt" : "data/karyotype/karyotype.human.hg19.txt");
@@ -189,17 +197,11 @@ public class CircosCharts
 
     private List<VariantContextDecorator> snp(final List<VariantContextDecorator> somaticVariants)
     {
-        return somaticVariants.stream()
-                .filter(x -> x.type() == VariantType.SNP)
-                .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
-                .collect(Collectors.toList());
+        return somaticVariants.stream().filter(x -> x.type() == VariantType.SNP).collect(Collectors.toList());
     }
 
     private List<VariantContextDecorator> indel(final List<VariantContextDecorator> somaticVariants)
     {
-        return somaticVariants.stream()
-                .filter(x -> x.type() == VariantType.INDEL)
-                .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
-                .collect(Collectors.toList());
+        return somaticVariants.stream().filter(x -> x.type() == VariantType.INDEL).collect(Collectors.toList());
     }
 }

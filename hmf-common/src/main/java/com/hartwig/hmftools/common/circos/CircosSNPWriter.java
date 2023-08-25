@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 
 import org.jetbrains.annotations.NotNull;
@@ -74,8 +75,7 @@ public final class CircosSNPWriter
         return "purple";
     }
 
-    private static boolean signature(final String ref, final String alt,
-            final VariantContextDecorator variant)
+    private static boolean signature(final String ref, final String alt, final VariantContextDecorator variant)
     {
         return (variant.ref().equals(ref) && variant.alt().equals(alt)) || (variant.ref().equals(inverse(ref)) && variant.alt()
                 .equals(inverse(alt)));
@@ -83,18 +83,6 @@ public final class CircosSNPWriter
 
     private static String inverse(final String base)
     {
-        if(base.equals("G"))
-        {
-            return "C";
-        }
-        if(base.equals("C"))
-        {
-            return "G";
-        }
-        if(base.equals("A"))
-        {
-            return "T";
-        }
-        return "A";
+        return Nucleotides.swapDnaBase(base);
     }
 }
