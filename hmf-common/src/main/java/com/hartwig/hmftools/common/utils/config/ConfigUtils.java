@@ -13,13 +13,10 @@ import java.util.Map;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.jetbrains.annotations.NotNull;
 
 public class ConfigUtils
 {
@@ -99,7 +96,7 @@ public class ConfigUtils
         catch (IOException e)
         {
             LOGGER.error("failed to read {} file({}): {}", idColumn, filename, e.toString());
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
