@@ -20,15 +20,11 @@ public abstract class LimsCohortModel {
 
     @Nullable
     public LimsCohortConfig queryCohortData(@Nullable String cohortString, @NotNull String sampleId) {
-        String effectiveCohortString = cohortString;
         if (cohortString == null || cohortString.isEmpty()) {
-            effectiveCohortString = resolveFromSampleId(sampleId);
-            if (effectiveCohortString != null) {
-                LOGGER.warn("No cohort string present in LIMS for sample '{}'. Cohort has been set to {}", sampleId, effectiveCohortString);
-            }
+            LOGGER.warn("No cohort string present in LIMS for sample '{}'.", sampleId);
         }
 
-        LimsCohortConfig cohortConfigData = limsCohortMap().get(effectiveCohortString);
+        LimsCohortConfig cohortConfigData = limsCohortMap().get(cohortString);
         if (cohortConfigData == null) {
             LOGGER.warn("Could not resolve cohort config for sample '{}' based on LIMS cohort '{}'", sampleId, cohortString);
             return null;
@@ -47,6 +43,7 @@ public abstract class LimsCohortModel {
 
     @Nullable
     private static String resolveFromSampleId(@NotNull String sampleId) {
+        LOGGER.info("In resolveFromSampleId for sample [{}]", sampleId);
         if (sampleId.startsWith("CPCT")) {
             return "CPCT";
         } else if (sampleId.startsWith("DRUP")) {

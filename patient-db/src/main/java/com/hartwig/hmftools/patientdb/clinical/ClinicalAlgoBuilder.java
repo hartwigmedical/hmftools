@@ -45,7 +45,7 @@ public final class ClinicalAlgoBuilder {
 
         EcrfModels ecrfModels = loadEcrfModels(config);
 
-        return new ClinicalAlgo(ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator);
+        return new ClinicalAlgo(ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, doidNodes);
     }
 
     @NotNull
