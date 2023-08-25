@@ -79,6 +79,7 @@ load_bqr_files | NA    | Attempts to reload previously generated BQR files
 write_bqr_plot | NA    | Generate base-quality recalibration plots (requires R)
 bqr_sample_size | 2,000,000 | Sample size of each autosome
 bqr_max_alt_count | 3     | Max support of variant before it is considered likely to be real and not a sequencing error
+bqr_max_alt_percent | 0.05   | Max percentage of reads supporting a variant before it is considered likely to be real and not a sequencing error
 bqr_min_map_qual | 10    | Min mapping quality of bam record
 
 ## Optional Quality Arguments
@@ -593,6 +594,7 @@ Phasing improvements
 - **Germline phased variants may not be deduped** - SAGE does not dedup filtered variants so this may cause confusion in phasing.   This can be an issue around microsatellites.
 
 # Version History and Download Links
+- [3.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.3)
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.5)
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.1)
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0)
