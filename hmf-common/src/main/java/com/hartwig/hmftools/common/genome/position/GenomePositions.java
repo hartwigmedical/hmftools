@@ -14,18 +14,11 @@ import org.jetbrains.annotations.NotNull;
 
 public final class GenomePositions
 {
-
-    private GenomePositions()
-    {
-    }
-
-    @NotNull
-    public static GenomePosition create(@NotNull final String chromosome, final int position)
+    public static GenomePosition create(final String chromosome, final int position)
     {
         return ImmutableGenomePositionImpl.builder().chromosome(chromosome).position(position).build();
     }
 
-    @NotNull
     public static <T extends GenomePosition> GenomePosition create(@NotNull final T genomePosition)
     {
         return ImmutableGenomePositionImpl.builder().chromosome(genomePosition.chromosome()).position(genomePosition.position()).build();
