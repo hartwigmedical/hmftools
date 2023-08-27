@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple;
+package com.hartwig.hmftools.purple.segment;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.WINDOW_SIZE;

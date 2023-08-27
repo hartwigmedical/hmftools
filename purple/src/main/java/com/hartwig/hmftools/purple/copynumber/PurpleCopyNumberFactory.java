@@ -57,8 +57,8 @@ public class PurpleCopyNumberFactory
     {
         mSomaticCopyNumbers.clear();
 
-        final ExtendDiploid extendDiploid =
-                new ExtendDiploid(new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
+        final ExtendDiploid extendDiploid = new ExtendDiploid(
+                new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
 
         final PopulateUnknown populateUnknownFactory = new PopulateUnknown(mCobaltChromosomes);
 

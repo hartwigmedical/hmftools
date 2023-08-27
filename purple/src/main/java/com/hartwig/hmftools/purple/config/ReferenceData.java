@@ -105,11 +105,11 @@ public class ReferenceData
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         PPL_LOGGER.info("using ref genome: {}", RefGenVersion);
 
-        ObservedRegionFactory.setExcludedImmuneRegions(RefGenVersion);
-
         ChromosomeLengths = Maps.newHashMap();
         Centromeres = Maps.newHashMap();
         setChromosomeCoords();
+
+        ObservedRegionFactory.setSpecificRegions(RefGenVersion, Centromeres);
 
         String somaticHotspotVcf = configBuilder.getValue(SOMATIC_HOTSPOT);
         String germlineHotspotVcf = configBuilder.getValue(GERMLINE_HOTSPOT);

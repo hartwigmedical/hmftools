@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.CENTROMERIC_WIDTH;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +20,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
+import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelectorFactory;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -40,6 +42,7 @@ public class ObservedRegionFactory
     private final GermlineStatusFactory mStatusFactory;
 
     private static List<ChrBaseRegion> EXCLUDED_IMMUNE_REGIONS = Lists.newArrayList();
+    private static List<ChrBaseRegion> CENTROMETRIC_REGIONS = Lists.newArrayList();
 
     public ObservedRegionFactory(final int windowSize, final CobaltChromosomes cobaltChromosomes)
     {
@@ -48,10 +51,19 @@ public class ObservedRegionFactory
         mStatusFactory = new GermlineStatusFactory(cobaltChromosomes);
     }
 
-    public static void setExcludedImmuneRegions(final RefGenomeVersion refGenomeVersion)
+    public static void setSpecificRegions(final RefGenomeVersion refGenomeVersion, final Map<Chromosome,GenomePosition> centromeres)
     {
         EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getIgRegions(refGenomeVersion));
         EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getTrRegions(refGenomeVersion));
+
+        int halfWidth = CENTROMERIC_WIDTH / 2;
+
+        for(GenomePosition centromere : centromeres.values())
+        {
+            int centromereStart = centromere.position() - halfWidth;
+            int centromereEnd = centromere.position() + halfWidth;
+            CENTROMETRIC_REGIONS.add(new ChrBaseRegion(centromere.chromosome(), centromereStart, centromereEnd));
+        }
     }
 
     public List<ObservedRegion> formObservedRegions(
@@ -104,6 +116,12 @@ public class ObservedRegionFactory
                 .anyMatch(x -> x.Chromosome.equals(region.Chromosome) && positionsWithin(region.start(), region.end(), x.start(), x.end())))
         {
             return GermlineStatus.EXCLUDED;
+        }
+
+        if(CENTROMETRIC_REGIONS.stream()
+                .anyMatch(x -> x.Chromosome.equals(region.Chromosome) && positionsWithin(region.start(), region.end(), x.start(), x.end())))
+        {
+            return GermlineStatus.CENTROMETIC;
         }
 
         return mStatusFactory.calcStatus(region.chromosome(), normalRatio, tumorRatio, depthWindowCount);

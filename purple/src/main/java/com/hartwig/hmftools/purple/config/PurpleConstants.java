@@ -27,6 +27,9 @@ public class PurpleConstants
     public static final double MAX_DIPLOID_COPY_NUMBER = 1.2;
     public static final double MIN_DIPLOID_COPY_NUMBER = 0.8;
 
+    // segmentation and regions
+    public static final int CENTROMERIC_WIDTH = 4_000_000;
+
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;

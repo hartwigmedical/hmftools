@@ -10,6 +10,7 @@ public enum GermlineStatus
     NOISE,
     DIPLOID,
     EXCLUDED,
+    CENTROMETIC,
     UNKNOWN;
 
     public static GermlineStatus fromString(@NotNull final String status)
