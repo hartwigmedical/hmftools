@@ -178,7 +178,7 @@ public class SomaticStream
             mVcfWriter.writeHeader(header);
 
             boolean tumorOnly = mConfig.tumorOnlyMode();
-            AtomicInteger kateegisId = new AtomicInteger();
+            AtomicInteger kataegisId = new AtomicInteger();
 
             if(mConfig.Threads > 1)
             {
@@ -186,7 +186,7 @@ public class SomaticStream
 
                 for(int i = 0; i < mConfig.Threads; ++i)
                 {
-                    enrichers.add(new SomaticVariantEnrichment(i, mConfig, mReferenceData, mPeakModel, kateegisId));
+                    enrichers.add(new SomaticVariantEnrichment(i, mConfig, mReferenceData, mPeakModel, kataegisId));
                 }
 
                 int taskIndex = 0;
@@ -211,7 +211,7 @@ public class SomaticStream
             }
             else
             {
-                SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(0, mConfig, mReferenceData, mPeakModel, kateegisId);
+                SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(0, mConfig, mReferenceData, mPeakModel, kataegisId);
                 mSomaticVariants.variants().forEach(x -> enricher.addVariant(x));
                 enricher.call();
             }
