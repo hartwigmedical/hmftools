@@ -5,72 +5,65 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.Gender;
 
-import org.jetbrains.annotations.NotNull;
-
 public enum HumanChromosome implements Chromosome
 {
-    _1(true, false),
-    _2(true, false),
-    _3(true, false),
-    _4(true, false),
-    _5(true, false),
-    _6(true, false),
-    _7(true, false),
-    _8(true, false),
-    _9(true, false),
-    _10(true, false),
-    _11(true, false),
-    _12(true, false),
-    _13(true, false),
-    _14(true, false),
-    _15(true, false),
-    _16(true, false),
-    _17(true, false),
-    _18(true, false),
-    _19(true, false),
-    _20(true, false),
-    _21(true, false),
-    _22(true, false),
-    _X(false, true),
-    _Y(false, true);
+    _1(true),
+    _2(true),
+    _3(true),
+    _4(true),
+    _5(true),
+    _6(true),
+    _7(true),
+    _8(true),
+    _9(true),
+    _10(true),
+    _11(true),
+    _12(true),
+    _13(true),
+    _14(true),
+    _15(true),
+    _16(true),
+    _17(true),
+    _18(true),
+    _19(true),
+    _20(true),
+    _21(true),
+    _22(true),
+    _X(false),
+    _Y(false);
 
-    private final boolean isAutosome;
-    private final boolean isAllosome;
-    private final String name;
+    private final boolean mIsAutosome;
+    private final String mName;
 
-    HumanChromosome(final boolean isAutosome, boolean isAllosome)
+    HumanChromosome(final boolean isAutosome)
     {
-        this.isAutosome = isAutosome;
-        this.isAllosome = isAllosome;
-        name = name().substring(1).intern();
+        mIsAutosome = isAutosome;
+        mName = name().substring(1).intern();
     }
 
     @Override
     public boolean isAutosome()
     {
-        return isAutosome;
+        return mIsAutosome;
     }
 
     @Override
     public boolean isAllosome()
     {
-        return isAllosome;
+        return !mIsAutosome;
     }
 
-    @NotNull
-    public static Chromosome valueOf(@NotNull final GenomePosition position)
+    public static Chromosome valueOf(final GenomePosition position)
     {
         return fromString(position.chromosome());
     }
 
-    @NotNull
-    public static Chromosome valueOf(@NotNull final GenomeRegion region)
+    public static Chromosome valueOf(final GenomeRegion region)
     {
         return fromString(region.chromosome());
     }
 
-    @NotNull
-    public static HumanChromosome fromString(@NotNull final String chromosome)
+    public static HumanChromosome fromString(final String chromosome)
     {
         if(chromosome.toLowerCase().startsWith("chr"))
         {
@@ -80,7 +73,7 @@ public enum HumanChromosome implements Chromosome
         return HumanChromosome.valueOf("_" + chromosome);
     }
 
-    public static boolean contains(@NotNull final String chromosome)
+    public static boolean contains(final String chromosome)
     {
         final String trimmedContig = RefGenomeFunctions.stripChrPrefix(chromosome);
         if(isNumeric(trimmedContig))
@@ -97,7 +90,7 @@ public enum HumanChromosome implements Chromosome
         return this.ordinal() + 1;
     }
 
-    public boolean isDiploid(@NotNull Gender gender)
+    public boolean isDiploid(final Gender gender)
     {
         return isAutosome() || (gender != Gender.MALE && this.equals(_X));
     }
@@ -105,7 +98,7 @@ public enum HumanChromosome implements Chromosome
     @Override
     public String toString()
     {
-        return name;
+        return mName;
     }
 
     public static boolean isShortArm(final String chromosome)
@@ -114,7 +107,7 @@ public enum HumanChromosome implements Chromosome
                 || chromosome.equals("21") || chromosome.equals("22");
     }
 
-    public boolean isShortArm() { return isShortArm(name); }
+    public boolean isShortArm() { return isShortArm(mName); }
 
     private static boolean isNumeric(String str)
     {

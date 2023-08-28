@@ -1,7 +1,11 @@
 package com.hartwig.hmftools.purple.tools;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
@@ -23,6 +27,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -125,22 +130,31 @@ public class SegmentAnalyser
             {
                 List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(samplePurpleDir, sampleId));
 
-                double maxRatio = fittedRegions.stream()
-                        .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID)
-                        .filter(x -> x.unnormalisedObservedNormalRatio() > 0)
-                        .mapToDouble(x -> x.observedNormalRatio() / x.unnormalisedObservedNormalRatio())
-                        .max().orElse(0);
-
-                double logThreshold = maxRatio >= 1.3 ? 0.9 * maxRatio : maxRatio;
+                double minRatio = 0;
+                double maxRatio = 0;
 
                 for(ObservedRegion region : fittedRegions)
                 {
-                    if(!checkGermlineStatus(region.germlineStatus()) || region.unnormalisedObservedNormalRatio() == 0)
+                    if(ignoreRegion(region, true))
                         continue;
 
                     double normalRatio = region.observedNormalRatio() / region.unnormalisedObservedNormalRatio();
 
-                    if(normalRatio >= logThreshold)
+                    maxRatio = max(maxRatio, normalRatio);
+                    minRatio = minRatio > 0 ? min(minRatio, normalRatio) : normalRatio;
+                }
+
+                double logMaxThreshold = maxRatio >= 1.3 ? 0.9 * maxRatio : maxRatio;
+                double logMinThreshold = minRatio <= 0.8 ? 1.1 * minRatio : 0;
+
+                for(ObservedRegion region : fittedRegions)
+                {
+                    if(ignoreRegion(region, false))
+                        continue;
+
+                    double normalRatio = region.observedNormalRatio() / region.unnormalisedObservedNormalRatio();
+
+                    if(normalRatio >= logMaxThreshold || normalRatio <= logMinThreshold)
                         writeSegmentData(sampleId, region);
                 }
             }
@@ -151,9 +165,23 @@ public class SegmentAnalyser
         }
     }
 
-    private static boolean checkGermlineStatus(final GermlineStatus status)
+    private static boolean ignoreRegion(final ObservedRegion region, boolean onlyDiploid)
     {
-        return status == GermlineStatus.DIPLOID || status == GermlineStatus.HET_DELETION || status == GermlineStatus.HOM_DELETION;
+        if(HumanChromosome.fromString(region.chromosome()).isAllosome())
+            return true;
+
+        if(onlyDiploid)
+        {
+            if(region.germlineStatus() != DIPLOID)
+                return true;
+        }
+        else
+        {
+            if(region.germlineStatus() != DIPLOID && region.germlineStatus() != HET_DELETION && region.germlineStatus() != HOM_DELETION)
+                return true;
+        }
+
+        return region.unnormalisedObservedNormalRatio() == 0;
     }
 
     private BufferedWriter initialiseWriter(final String outputDir)
