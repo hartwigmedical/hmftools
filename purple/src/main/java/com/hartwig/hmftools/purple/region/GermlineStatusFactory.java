@@ -28,7 +28,7 @@ public class GermlineStatusFactory
 
     public GermlineStatus calcStatus(final String contig, final double normalRatio, final double tumorRatio, int depthWindowCount)
     {
-        if(Doubles.isZero(normalRatio) || !mCobaltChromosomes.contains(contig) || depthWindowCount == 0)
+        if(Doubles.isZero(normalRatio) || !mCobaltChromosomes.hasChromosome(contig) || depthWindowCount == 0)
         {
             return UNKNOWN;
         }

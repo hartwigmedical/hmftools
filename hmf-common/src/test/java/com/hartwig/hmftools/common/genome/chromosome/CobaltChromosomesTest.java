@@ -36,20 +36,20 @@ public class CobaltChromosomesTest
 
         for(int i = 1; i <= 22; i++)
         {
-            assertTrue(male.contains(i + ""));
-            assertTrue(female.contains(i + ""));
+            assertTrue(male.hasChromosome(i + ""));
+            assertTrue(female.hasChromosome(i + ""));
 
             assertEquals(1, male.get(i + "").typicalRatio(), 0.01);
             assertEquals(1, female.get(i + "").typicalRatio(), 0.01);
         }
 
-        assertTrue(male.contains("X"));
-        assertTrue(female.contains("X"));
+        assertTrue(male.hasChromosome("X"));
+        assertTrue(female.hasChromosome("X"));
         assertEquals(0.5, male.get("X").typicalRatio(), 0.01);
         assertEquals(1, female.get("X").typicalRatio(), 0.01);
 
-        assertTrue(male.contains("Y"));
-        assertFalse(female.contains("Y"));
+        assertTrue(male.hasChromosome("Y"));
+        assertFalse(female.hasChromosome("Y"));
         assertEquals(0.5, male.get("Y").typicalRatio(), 0.01);
     }
 
@@ -68,7 +68,7 @@ public class CobaltChromosomesTest
         assertTrue(victimX.isDiploid());
 
         assertEquals(1, victim.get("X").actualRatio(), 0.01);
-        assertFalse(victim.contains("Y"));
+        assertFalse(victim.hasChromosome("Y"));
     }
 
     @Test

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.region;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._9;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -216,7 +215,7 @@ public class ObservedRegionFactory
         @Override
         public void accept(final AmberBAF baf)
         {
-            if(mCobaltChromosomes.contains(baf.chromosome()))
+            if(mCobaltChromosomes.hasChromosome(baf.chromosome()))
             {
                 CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(baf.chromosome());
                 if(cobaltChromosome.isNormal() && cobaltChromosome.isDiploid() && !Double.isNaN(baf.tumorModifiedBAF()))

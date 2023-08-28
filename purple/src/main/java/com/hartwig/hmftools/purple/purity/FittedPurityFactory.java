@@ -220,7 +220,7 @@ public class FittedPurityFactory
         if(Doubles.greaterThan(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT))
             return false;
 
-        if(!cobaltChromosomes.contains(region.chromosome()))
+        if(!cobaltChromosomes.hasChromosome(region.chromosome()))
             return false;
 
         CobaltChromosome chromosome = cobaltChromosomes.get(region.chromosome());

@@ -38,16 +38,14 @@ public class CobaltTestUtils
         return new CobaltChromosomes(ratios);
     }
 
-    @NotNull
-    public static MedianRatio create(@NotNull String contig, double ratio)
+    public static MedianRatio create(final String chromosome, double ratio)
     {
-        return create(contig, ratio, MIN_Y_COUNT);
+        return create(chromosome, ratio, MIN_Y_COUNT);
     }
 
-    @NotNull
-    public static MedianRatio create(@NotNull String contig, double ratio, int count)
+    public static MedianRatio create(final String chromosome, double ratio, int count)
     {
-        return ImmutableMedianRatio.builder().count(count).chromosome(contig).medianRatio(ratio).build();
+        return new MedianRatio(chromosome, ratio, count);
     }
 
 }

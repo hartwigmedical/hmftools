@@ -46,10 +46,10 @@ public final class MedianRatioFile
         {
             String[] values = line.split(TSV_DELIM, -1);
 
-            ratios.add(ImmutableMedianRatio.builder()
-                    .chromosome(values[fieldsIndexMap.get(CHROMOSOME)])
-                    .medianRatio(Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_RATIO)]))
-                    .count(Integer.parseInt(values[fieldsIndexMap.get(COUNT)])).build());
+            ratios.add(new MedianRatio(
+                    values[fieldsIndexMap.get(CHROMOSOME)],
+                    Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_RATIO)]),
+                    Integer.parseInt(values[fieldsIndexMap.get(COUNT)])));
         }
 
         return ratios;
@@ -78,9 +78,9 @@ public final class MedianRatioFile
 
     private static String toString(final MedianRatio position)
     {
-        return new StringJoiner(TSV_DELIM).add(position.chromosome())
-                .add(FORMAT.format(position.medianRatio()))
-                .add(String.valueOf(position.count()))
+        return new StringJoiner(TSV_DELIM).add(position.Chromosome)
+                .add(FORMAT.format(position.MedianRatio))
+                .add(String.valueOf(position.Count))
                 .toString();
     }
 }

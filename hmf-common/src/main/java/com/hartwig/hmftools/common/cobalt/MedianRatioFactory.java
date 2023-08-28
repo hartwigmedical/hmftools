@@ -42,11 +42,7 @@ public final class MedianRatioFactory
 
             double medianRatio = count > 0 ? Doubles.median(contigRatios) : 0;
 
-            results.add(ImmutableMedianRatio.builder()
-                    .chromosome(chromosomeStr)
-                    .medianRatio(medianRatio)
-                    .count(count)
-                    .build());
+            results.add(new MedianRatio(chromosomeStr, medianRatio, count));
         }
 
         return results;
@@ -72,14 +68,11 @@ public final class MedianRatioFactory
 
                     double medianRatio = count > 0 ? Doubles.median(contigRatios) : 0;
 
-                    results.add(ImmutableMedianRatio.builder()
-                            .chromosome(contig)
-                            .medianRatio(medianRatio)
-                            .count(count)
-                            .build());
+                    results.add(new MedianRatio(contig, medianRatio, count));
                 }
             }
         }
+
         return results;
     }
 }

@@ -11,10 +11,8 @@ import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._Y;
 
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -77,19 +75,19 @@ public class CobaltChromosomes
 
         for(MedianRatio medianRatio : medianRatios)
         {
-            HumanChromosome chromosome = HumanChromosome.fromString(medianRatio.chromosome());
+            HumanChromosome chromosome = HumanChromosome.fromString(medianRatio.Chromosome);
 
             if(chromosome.isAutosome())
             {
-                minAutosomeRatio = minAutosomeRatio == 0 ? medianRatio.medianRatio() : min(minAutosomeRatio, medianRatio.medianRatio());
+                minAutosomeRatio = minAutosomeRatio == 0 ? medianRatio.MedianRatio : min(minAutosomeRatio, medianRatio.MedianRatio);
             }
-            else if(chromosome == _Y && medianRatio.count() >= MIN_Y_COUNT)
+            else if(chromosome == _Y && medianRatio.Count >= MIN_Y_COUNT)
             {
-                yMedian = medianRatio.medianRatio();
+                yMedian = medianRatio.MedianRatio;
             }
             else if(chromosome == _X)
             {
-                xMedian = medianRatio.medianRatio();
+                xMedian = medianRatio.MedianRatio;
             }
         }
 
@@ -99,16 +97,16 @@ public class CobaltChromosomes
 
         for(MedianRatio medianRatio : medianRatios)
         {
-            HumanChromosome chromosome = HumanChromosome.fromString(medianRatio.chromosome());
+            HumanChromosome chromosome = HumanChromosome.fromString(medianRatio.Chromosome);
 
-            if(chromosome == _Y && medianRatio.count() < MIN_Y_COUNT)
+            if(chromosome == _Y && medianRatio.Count < MIN_Y_COUNT)
                 continue;
 
             GermlineAberration aberration = calcAberrations ?
-                    aberration(isFemale, chromosome, medianRatio.medianRatio(), minAutosomeRatio) : GermlineAberration.NONE;
+                    aberration(isFemale, chromosome, medianRatio.MedianRatio, minAutosomeRatio) : GermlineAberration.NONE;
 
             double typicalRatio = typicalRatio(isFemale, chromosome);
-            double actualRatio = actualRatio(aberration, typicalRatio, medianRatio.medianRatio());
+            double actualRatio = actualRatio(aberration, typicalRatio, medianRatio.MedianRatio);
 
             if(aberration != GermlineAberration.NONE)
             {
@@ -118,7 +116,7 @@ public class CobaltChromosomes
             if(Doubles.positive(typicalRatio))
             {
                 CobaltChromosome cobaltChromosome = ImmutableCobaltChromosome.builder()
-                        .contig(medianRatio.chromosome())
+                        .contig(medianRatio.Chromosome)
                         .typicalRatio(typicalRatio)
                         .actualRatio(actualRatio)
                         .isAllosome(chromosome.isAllosome())
@@ -126,7 +124,7 @@ public class CobaltChromosomes
                         .mosiac(aberration == GermlineAberration.MOSAIC_X)
                         .build();
 
-                mChromosomeMap.put(medianRatio.chromosome(), cobaltChromosome);
+                mChromosomeMap.put(medianRatio.Chromosome, cobaltChromosome);
             }
         }
 
@@ -137,13 +135,13 @@ public class CobaltChromosomes
     }
 
     public boolean hasGermlineAberrations() { return !noAberrations(); }
-
     public Set<GermlineAberration> germlineAberrations() { return mAberrations; }
 
     public Gender gender() { return mGender; }
 
     @NotNull
     public CobaltChromosome get(final String chromosome) { return mChromosomeMap.get(chromosome); }
+    public boolean hasChromosome(final String chromosome) { return mChromosomeMap.containsKey(chromosome); }
 
     public Collection<CobaltChromosome> chromosomes() { return mChromosomeMap.values(); }
 
@@ -231,26 +229,6 @@ public class CobaltChromosomes
             return chromosome == _Y ? 0d : 1d;
 
         return chromosome.isAllosome() ? 0.5 : 1d;
-    }
-
-    public boolean contains(final String chromosome)
-    {
-        return mChromosomeMap.containsKey(chromosome);
-    }
-
-    static boolean isAutosome(final String chromosome)
-    {
-        return !isChromosome(chromosome, "X") && !isChromosome(chromosome, "Y");
-    }
-
-    static boolean isChromosome(final String victim, final String contig)
-    {
-        return victim.equals(contig) || victim.equals("chr" + contig);
-    }
-
-    private double chromosomeRatio(final String chromosome, final Collection<MedianRatio> ratios)
-    {
-        return ratios.stream().filter(x -> isChromosome(x.chromosome(), chromosome)).mapToDouble(MedianRatio::medianRatio).findFirst().orElse(0);
     }
 
     private boolean noAberrations()

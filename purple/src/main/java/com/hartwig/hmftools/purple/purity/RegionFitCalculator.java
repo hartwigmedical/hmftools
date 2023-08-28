@@ -54,7 +54,7 @@ public class RegionFitCalculator
     @VisibleForTesting
     public static boolean isAllowedRegion(final CobaltChromosomes cobaltChromosomes, final GenomeRegion region)
     {
-        return cobaltChromosomes.contains(region.chromosome());
+        return cobaltChromosomes.hasChromosome(region.chromosome());
     }
 
     public ObservedRegion fitRegion(final double purity, final double normFactor, final ObservedRegion observedRegion)
@@ -111,7 +111,7 @@ public class RegionFitCalculator
 
     private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, double copyNumber, double observedBAF)
     {
-        if(!mCobaltChromosomes.contains(chromosome))
+        if(!mCobaltChromosomes.hasChromosome(chromosome))
             return 1;
 
         CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(chromosome);
