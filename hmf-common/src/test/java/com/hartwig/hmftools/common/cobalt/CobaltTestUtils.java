@@ -15,7 +15,7 @@ public class CobaltTestUtils
     public static CobaltChromosomes female()
     {
         List<MedianRatio> ratios = new ArrayList<>();
-        for(int i = 0; i < 22; i++)
+        for(int i = 1; i <= 22; i++)
         {
             ratios.add(create(String.valueOf(i), 1, 1));
         }
@@ -28,7 +28,7 @@ public class CobaltTestUtils
     public static CobaltChromosomes male()
     {
         List<MedianRatio> ratios = new ArrayList<>();
-        for(int i = 0; i < 22; i++)
+        for(int i = 1; i <= 22; i++)
         {
             ratios.add(create(String.valueOf(i), 1, 1));
         }

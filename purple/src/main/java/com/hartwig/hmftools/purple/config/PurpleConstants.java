@@ -29,6 +29,13 @@ public class PurpleConstants
 
     // segmentation and regions
     public static final int CENTROMERIC_WIDTH = 4_000_000;
+    public static final double GERMLINE_AMP_RATIO = 1.3;
+    public static final double GERMLINE_DEL_RATIO = 0.7;
+    public static final int GERMLINE_DEL_MIN_LENGTH = 5_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_1 = 30_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_9 = 135_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_17 = 75_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_19 = 10_000_000;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;

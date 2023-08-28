@@ -2,9 +2,18 @@ package com.hartwig.hmftools.purple.region;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome._9;
+import static com.hartwig.hmftools.common.purple.GermlineStatus.DIPLOID;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CENTROMERIC_WIDTH;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_AMP_DEL_EXCLUSION_CHR_1;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_AMP_DEL_EXCLUSION_CHR_17;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_AMP_DEL_EXCLUSION_CHR_19;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_AMP_DEL_EXCLUSION_CHR_9;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_AMP_RATIO;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_MIN_LENGTH;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_RATIO;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +28,7 @@ import com.hartwig.hmftools.common.cobalt.CobaltRatio;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.gc.GCProfile;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositionSelector;
@@ -44,6 +54,8 @@ public class ObservedRegionFactory
     private static List<ChrBaseRegion> EXCLUDED_IMMUNE_REGIONS = Lists.newArrayList();
     private static List<ChrBaseRegion> CENTROMETRIC_REGIONS = Lists.newArrayList();
 
+    private static List<ChrBaseRegion> GERMLINE_AMP_DEL_EXCLUSIONS = Lists.newArrayList();
+
     public ObservedRegionFactory(final int windowSize, final CobaltChromosomes cobaltChromosomes)
     {
         mWindowSize = windowSize;
@@ -51,7 +63,9 @@ public class ObservedRegionFactory
         mStatusFactory = new GermlineStatusFactory(cobaltChromosomes);
     }
 
-    public static void setSpecificRegions(final RefGenomeVersion refGenomeVersion, final Map<Chromosome,GenomePosition> centromeres)
+    public static void setSpecificRegions(
+            final RefGenomeVersion refGenomeVersion, final Map<Chromosome,GenomePosition> chrLengths,
+            final Map<Chromosome,GenomePosition> centromeres)
     {
         EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getIgRegions(refGenomeVersion));
         EXCLUDED_IMMUNE_REGIONS.addAll(ImmuneRegions.getTrRegions(refGenomeVersion));
@@ -64,11 +78,25 @@ public class ObservedRegionFactory
             int centromereEnd = centromere.position() + halfWidth;
             CENTROMETRIC_REGIONS.add(new ChrBaseRegion(centromere.chromosome(), centromereStart, centromereEnd));
         }
+
+        GERMLINE_AMP_DEL_EXCLUSIONS.add(new ChrBaseRegion(
+                refGenomeVersion.versionedChromosome("1"), 1, GERMLINE_AMP_DEL_EXCLUSION_CHR_1));
+
+        GERMLINE_AMP_DEL_EXCLUSIONS.add(new ChrBaseRegion(
+                refGenomeVersion.versionedChromosome("9"), GERMLINE_AMP_DEL_EXCLUSION_CHR_9,
+                chrLengths.get(HumanChromosome._9).position()));
+
+        GERMLINE_AMP_DEL_EXCLUSIONS.add(new ChrBaseRegion(
+                refGenomeVersion.versionedChromosome("17"), GERMLINE_AMP_DEL_EXCLUSION_CHR_17,
+                chrLengths.get(HumanChromosome._17).position()));
+
+        GERMLINE_AMP_DEL_EXCLUSIONS.add(new ChrBaseRegion(
+                refGenomeVersion.versionedChromosome("19"), 1, GERMLINE_AMP_DEL_EXCLUSION_CHR_19));
     }
 
     public List<ObservedRegion> formObservedRegions(
             final List<PurpleSegment> regions, final Multimap<Chromosome, AmberBAF> bafs,
-            final Map<Chromosome,List<CobaltRatio>> ratios, final Multimap<Chromosome, GCProfile> gcProfiles)
+            final Map<Chromosome,List<CobaltRatio>> ratios, final Multimap<Chromosome,GCProfile> gcProfiles)
     {
         final List<ObservedRegion> observedRegions = Lists.newArrayList();
 
@@ -92,9 +120,13 @@ public class ObservedRegionFactory
 
             GermlineStatus germlineStatus = getGermlineStatus(region, normalRatio, tumorRatio, depthWindowCount);
 
+            double adjustedNormRatio = normalRatio;
+            // double rawNormalRatio = cobalt.unnormalisedReferenceMeanRatio();
+            // double adjustedNormRatio = calculateNormalRatio(region, germlineStatus, rawNormalRatio, normalRatio);
+
             final ObservedRegion observedRegion = new ObservedRegion(
                     region.chromosome(), region.start(), region.end(), region.RatioSupport, region.Support, baf.count(), baf.medianBaf(),
-                    depthWindowCount, tumorRatio, normalRatio, cobalt.unnormalisedReferenceMeanRatio(), germlineStatus,
+                    depthWindowCount, tumorRatio, adjustedNormRatio, cobalt.unnormalisedReferenceMeanRatio(), germlineStatus,
                     region.SvCluster, gc.averageGCContent(), region.MinStart, region.MaxStart);
 
             if(observedRegion.start() > observedRegion.end()
@@ -110,7 +142,7 @@ public class ObservedRegionFactory
         return observedRegions;
     }
 
-    private GermlineStatus getGermlineStatus(final PurpleSegment region, double tumorRatio, double normalRatio, int depthWindowCount)
+    private GermlineStatus getGermlineStatus(final PurpleSegment region, double normalRatio, double tumorRatio, int depthWindowCount)
     {
         if(EXCLUDED_IMMUNE_REGIONS.stream()
                 .anyMatch(x -> x.Chromosome.equals(region.Chromosome) && positionsWithin(region.start(), region.end(), x.start(), x.end())))
@@ -127,17 +159,40 @@ public class ObservedRegionFactory
         return mStatusFactory.calcStatus(region.chromosome(), normalRatio, tumorRatio, depthWindowCount);
     }
 
+    private double calculateNormalRatio(
+            final PurpleSegment region, final GermlineStatus germlineStatus, double rawNormalRatio, double normalRatio)
+    {
+        if(germlineStatus != DIPLOID || region.bases() < GERMLINE_DEL_MIN_LENGTH)
+            return normalRatio;
+
+        if(GERMLINE_AMP_DEL_EXCLUSIONS.stream()
+                .anyMatch(x -> x.Chromosome.equals(region.Chromosome) && positionsWithin(region.start(), region.end(), x.start(), x.end())))
+        {
+            return normalRatio;
+        }
+
+        if(normalRatio <= 0)
+            return normalRatio;
+
+        double ratio = rawNormalRatio / normalRatio;
+
+        if(ratio < GERMLINE_DEL_RATIO || ratio > GERMLINE_AMP_RATIO)
+            return rawNormalRatio;
+        else
+            return normalRatio;
+    }
+
     public static void extendMinSupport(final List<ObservedRegion> observedRegions)
     {
         for(int i = 0; i < observedRegions.size(); i++)
         {
             final ObservedRegion target = observedRegions.get(i);
-            if(target.support() == SegmentSupport.NONE && target.germlineStatus() == GermlineStatus.DIPLOID)
+            if(target.support() == SegmentSupport.NONE && target.germlineStatus() == DIPLOID)
             {
                 for(int j = i - 1; j >= 0; j--)
                 {
                     final ObservedRegion prior = observedRegions.get(j);
-                    if(prior.germlineStatus() == GermlineStatus.DIPLOID)
+                    if(prior.germlineStatus() == DIPLOID)
                     {
                         break;
                     }

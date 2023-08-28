@@ -109,7 +109,7 @@ public class ReferenceData
         Centromeres = Maps.newHashMap();
         setChromosomeCoords();
 
-        ObservedRegionFactory.setSpecificRegions(RefGenVersion, Centromeres);
+        ObservedRegionFactory.setSpecificRegions(RefGenVersion, ChromosomeLengths, Centromeres);
 
         String somaticHotspotVcf = configBuilder.getValue(SOMATIC_HOTSPOT);
         String germlineHotspotVcf = configBuilder.getValue(GERMLINE_HOTSPOT);

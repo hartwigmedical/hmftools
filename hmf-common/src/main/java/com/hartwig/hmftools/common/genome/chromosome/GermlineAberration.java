@@ -4,9 +4,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
-
-public enum GermlineAberration {
+public enum GermlineAberration
+{
     NONE,
     MOSAIC_X,
     KLINEFELTER,
@@ -15,15 +14,16 @@ public enum GermlineAberration {
     TRISOMY_13,
     TRISOMY_15,
     TRISOMY_18,
-    TRISOMY_21;
+    TRISOMY_21,
+    TERTRASOMY_9;
 
-    @NotNull
-    public static String toString(@NotNull Set<GermlineAberration> aberrations) {
+    public static String toString(final Set<GermlineAberration> aberrations)
+    {
         return aberrations.stream().map(Enum::toString).collect(Collectors.joining(","));
     }
 
-    @NotNull
-    public static Set<GermlineAberration> fromString(@NotNull String line) {
+    public static Set<GermlineAberration> fromString(final String line)
+    {
         return Arrays.stream(line.split(",")).map(GermlineAberration::valueOf).collect(Collectors.toSet());
     }
 }

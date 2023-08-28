@@ -9,10 +9,11 @@ import com.hartwig.hmftools.common.purple.Gender;
 
 import org.junit.Test;
 
-public class HumanChromosomeTest {
-
+public class HumanChromosomeTest
+{
     @Test
-    public void testFromString() {
+    public void testFromString()
+    {
         assertEquals(HumanChromosome._1, HumanChromosome.fromString("1"));
         assertEquals(HumanChromosome._1, HumanChromosome.fromString("chr1"));
         assertEquals(HumanChromosome._1, HumanChromosome.fromString("CHR1"));
@@ -32,19 +33,22 @@ public class HumanChromosomeTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testUnknownChromosome() {
+    public void testUnknownChromosome()
+    {
         HumanChromosome.fromString("HLA-DRB1*14:54:01");
     }
 
     @Test
-    public void testContained() {
+    public void testContained()
+    {
         assertTrue(HumanChromosome.contains("1"));
         assertTrue(HumanChromosome.contains("chr1"));
         assertFalse(HumanChromosome.contains("HLA-DRB1*14:54:01"));
     }
 
     @Test
-    public void testSexChromosomes() {
+    public void testSexChromosomes()
+    {
         assertTrue(HumanChromosome._X.isAllosome());
         assertFalse(HumanChromosome._X.isAutosome());
 
@@ -53,7 +57,8 @@ public class HumanChromosomeTest {
     }
 
     @Test
-    public void testIsDiploid() {
+    public void testIsDiploid()
+    {
         assertTrue(HumanChromosome._X.isDiploid(Gender.FEMALE));
         assertFalse(HumanChromosome._X.isDiploid(Gender.MALE));
         assertFalse(HumanChromosome._Y.isDiploid(Gender.MALE));
