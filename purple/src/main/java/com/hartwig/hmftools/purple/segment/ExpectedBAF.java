@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.segment;
 
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BAF_PNT_5;
+
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
 public final class ExpectedBAF
@@ -19,7 +21,7 @@ public final class ExpectedBAF
 
         for(int i = minDepth; i < maxDepth; i++)
         {
-            final BinomialDistribution distribution = new BinomialDistribution(i, 0.5);
+            final BinomialDistribution distribution = new BinomialDistribution(i, BAF_PNT_5);
             double probability = 1d * distribution.inverseCumulativeProbability(percent) / i;
             totalProbability += probability;
         }

@@ -1,10 +1,19 @@
 package com.hartwig.hmftools.orange.report;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.orange.OrangeApplication;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;
@@ -16,8 +25,8 @@ import com.itextpdf.layout.Style;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ReportResources {
-
+public class ReportResources
+{
     static final String METADATA_TITLE = "HMF ORANGE Report v" + OrangeApplication.VERSION;
     static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
 
@@ -51,123 +60,149 @@ public class ReportResources {
     @NotNull
     private final PdfFont fontBold;
 
-    private ReportResources(@NotNull PdfFont fontRegular, @NotNull PdfFont fontBold) {
+    private ReportResources(@NotNull PdfFont fontRegular, @NotNull PdfFont fontBold)
+    {
         this.fontRegular = fontRegular;
         this.fontBold = fontBold;
     }
 
     @NotNull
-    public static ReportResources create() {
+    public static ReportResources create()
+    {
         return new ReportResources(createFontFromProgram(loadFontProgram(FONT_REGULAR_PATH)),
                 createFontFromProgram(loadFontProgram(FONT_BOLD_PATH)));
     }
 
     @NotNull
-    public static String formatSingleDigitDecimal(double num) {
+    public static String formatSingleDigitDecimal(double num)
+    {
         return formatDecimal(num, "0.0");
     }
 
     @NotNull
-    public static String formatTwoDigitDecimal(double num) {
+    public static String formatTwoDigitDecimal(double num)
+    {
         return formatDecimal(num, "0.00");
     }
 
     @NotNull
-    public static String formatPercentage(double num) {
+    public static String formatPercentage(double num)
+    {
         return formatPercentage(num, true);
     }
 
     @NotNull
-    public static String formatPercentage(double num, boolean multiplyBy100) {
+    public static String formatPercentage(double num, boolean multiplyBy100)
+    {
         return formatDecimal(multiplyBy100 ? num * 100 : num, "0'%'");
     }
 
     @NotNull
-    public static String formatPercentageOneDecimal(double num) {
+    public static String formatPercentageOneDecimal(double num)
+    {
         return formatDecimal(num * 100, "0.0'%'");
     }
 
     @NotNull
-    private static String formatDecimal(double num, @NotNull String format) {
+    private static String formatDecimal(double num, @NotNull String format)
+    {
         // To make sure every decimal format uses a dot as separator rather than a comma.
         return new DecimalFormat(format, DecimalFormatSymbols.getInstance(Locale.ENGLISH)).format(num);
     }
 
     @NotNull
-    public PdfFont fontBold() {
+    public PdfFont fontBold()
+    {
         return fontBold;
     }
 
     @NotNull
-    public Style chapterTitleStyle() {
+    public Style chapterTitleStyle()
+    {
         return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
     @NotNull
-    public Style tableTitleStyle() {
+    public Style tableTitleStyle()
+    {
         return new Style().setFont(fontBold).setFontSize(8).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
     @NotNull
-    public Style tableHeaderStyle() {
+    public Style tableHeaderStyle()
+    {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
     @NotNull
-    public Style tableContentStyle() {
+    public Style tableContentStyle()
+    {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
     @NotNull
-    public Style keyStyle() {
+    public Style keyStyle()
+    {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
     @NotNull
-    public Style valueStyle() {
+    public Style valueStyle()
+    {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
     @NotNull
-    public Style subTextStyle() {
+    public Style subTextStyle()
+    {
         return new Style().setFont(fontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_BLACK);
     }
 
     @NotNull
-    public Style pageNumberStyle() {
+    public Style pageNumberStyle()
+    {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_ORANGE);
     }
 
     @NotNull
-    public Style deemphasizedStyle() {
+    public Style deemphasizedStyle()
+    {
         return new Style().setFont(fontRegular).setFontSize(5).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
     @NotNull
-    public Style sidePanelLabelStyle() {
+    public Style sidePanelLabelStyle()
+    {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
     }
 
     @NotNull
-    public Style sidePanelValueStyle() {
+    public Style sidePanelValueStyle()
+    {
         return new Style().setFont(fontBold).setFontSize(10).setFontColor(ReportResources.PALETTE_WHITE);
     }
 
     @NotNull
-    public Style urlStyle() {
+    public Style urlStyle()
+    {
         return new Style().setFont(fontRegular).setFontSize(7).setFontColor(ReportResources.PALETTE_BLUE);
     }
 
     @NotNull
-    private static PdfFont createFontFromProgram(@NotNull FontProgram program) {
+    private static PdfFont createFontFromProgram(@NotNull FontProgram program)
+    {
         return PdfFontFactory.createFont(program, PdfEncodings.IDENTITY_H);
     }
 
     @NotNull
-    private static FontProgram loadFontProgram(@NotNull String resourcePath) {
-        try {
+    private static FontProgram loadFontProgram(@NotNull String resourcePath)
+    {
+        try
+        {
             return FontProgramFactory.createFont(resourcePath);
-        } catch (IOException exception) {
+        }
+        catch(IOException exception)
+        {
             // Should never happen, fonts are loaded from code
             throw new IllegalStateException(exception);
         }

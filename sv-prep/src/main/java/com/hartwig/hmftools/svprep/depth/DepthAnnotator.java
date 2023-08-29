@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPA
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE_DESC;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE_DESC;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
@@ -159,9 +160,7 @@ public class DepthAnnotator
         // write output VCF
         writeVcf(vcfHeader, depthTasks);
 
-        double timeTakeMins = (System.currentTimeMillis() - startTimeMs) / 60000.0;
-
-        SV_LOGGER.info("SvPrep depth annotation complete, mins({})", format("%.3f", timeTakeMins));
+        SV_LOGGER.info("SvPrep depth annotation complete, mins({})", runTimeMinsStr(startTimeMs));
 
         PerformanceCounter perfCounter = depthTasks.get(0).getPerfCounter();
         for(int i = 1; i < depthTasks.size(); ++i)

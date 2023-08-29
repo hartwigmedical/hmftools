@@ -81,8 +81,6 @@ public class AltSjClassifier implements CuppaClassifier
     private static final String LOG_CSS_VALUES = "alt_sj_log_css";
     private static final String WEIGHT_EXPONENT = "alt_sj_weight_exp";
 
-    private static final String READ_LENGTH_DELIM = "_";
-
     public AltSjClassifier(
             final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
@@ -243,11 +241,8 @@ public class AltSjClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, cohortData.CancerType, cancerCssTotals))
                 continue;
 
-            if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && cohortData.ReadLength != RNA_READ_LENGTH_NONE)
-            {
-                if(sample.rnaReadLength() != cohortData.ReadLength)
-                    continue;
-            }
+            if(!sample.hasRna())
+                continue;
 
             boolean matchesCancerType = sample.cancerType().equals(cohortData.CancerType);
 
@@ -348,35 +343,16 @@ public class AltSjClassifier implements CuppaClassifier
             int cancerSampleCount = 0;
             final String cancerType = mRefCancerTypes.get(r);
 
-            if(cancerType.contains(READ_LENGTH_DELIM))
+            // only count those samples with RNA
+            final List<SampleData> samples = mSampleDataCache.RefCancerSampleData.get(cancerType);
+
+            if(samples != null)
             {
-                // count up the samples matching the specified read length for this cancer cohort
-                final String[] cohortData = cancerType.split(READ_LENGTH_DELIM);
-                final String refCancerType = cohortData[0];
-                int cohortReadLength = Integer.parseInt(cohortData[1]);
-
-                for(SampleData sample : mSampleDataCache.RefCancerSampleData.get(refCancerType))
-                {
-                    if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && sample.rnaReadLength() == cohortReadLength)
-                        ++cancerSampleCount;
-                }
-
-                CUP_LOGGER.debug("alt-SJ cancerType({}) readLength({}) samples({})", refCancerType, cohortReadLength, cancerSampleCount);
-                mCancerDataMap.put(cancerType, new RnaCohortData(refCancerType, cohortReadLength, cancerSampleCount));
+                cancerSampleCount = (int)samples.stream().filter(x -> x.hasRna()).count();
             }
-            else
-            {
-                // only count those samples with RNA
-                final List<SampleData> samples = mSampleDataCache.RefCancerSampleData.get(cancerType);
 
-                if(samples != null)
-                {
-                    cancerSampleCount = (int)samples.stream().filter(x -> x.rnaReadLength() != RNA_READ_LENGTH_NONE).count();
-                }
-
-                CUP_LOGGER.debug("alt-SJ cancerType({}) no specific read length, samples({})", cancerType, cancerSampleCount);
-                mCancerDataMap.put(cancerType, new RnaCohortData(cancerType, RNA_READ_LENGTH_NONE, cancerSampleCount));
-            }
+            CUP_LOGGER.debug("alt-SJ cancerType({}) RNA samples({})", cancerType, cancerSampleCount);
+            mCancerDataMap.put(cancerType, new RnaCohortData(cancerType, cancerSampleCount));
 
             for(int bucketIndex = 0; bucketIndex < mRefCancerTypeMatrix.Cols; ++bucketIndex)
             {

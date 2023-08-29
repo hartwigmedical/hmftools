@@ -21,9 +21,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.lilac.LilacApplication;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.ReferenceData;
+import com.hartwig.hmftools.lilac.ResultsWriter;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -48,13 +50,20 @@ public class LilacAppTest
         WARN_LOW_COVERAGE_THRESHOLD = 500.0;
     }
 
+    private static LilacApplication createLilacApp()
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        ResultsWriter.registerConfig(configBuilder);
+        return new LilacApplication(new LilacConfig(SAMPLE_TEST), configBuilder);
+    }
+
     @Test
     public void basicApplicationTest()
     {
         disableLogging();
         disableCoverageThresholds();
 
-        LilacApplication lilac = new LilacApplication(new LilacConfig(SAMPLE_TEST));
+        LilacApplication lilac = createLilacApp();
 
         MockBamReader refBamReader = new MockBamReader();
         MockBamReader tumorBamReader = new MockBamReader();
@@ -121,7 +130,7 @@ public class LilacAppTest
     @Test
     public void knownStopLossTest()
     {
-        LilacApplication lilac = new LilacApplication(new LilacConfig(SAMPLE_TEST));
+        LilacApplication lilac = createLilacApp();
 
         disableCoverageThresholds();
 
@@ -200,7 +209,7 @@ public class LilacAppTest
         disableLogging();
         disableCoverageThresholds();
 
-        LilacApplication lilac = new LilacApplication(new LilacConfig(SAMPLE_TEST));
+        LilacApplication lilac = createLilacApp();
 
         MockBamReader refBamReader = new MockBamReader();
         MockBamReader tumorBamReader = new MockBamReader();

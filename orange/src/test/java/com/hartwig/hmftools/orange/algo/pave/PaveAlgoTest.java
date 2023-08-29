@@ -15,15 +15,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class PaveAlgoTest {
+public class PaveAlgoTest
+{
 
     private static final String MATCHING_GENE = "gene";
     private static final String MATCHING_TRANSCRIPT = "trans";
 
     @Test
-    public void canCreatePaveEntries() {
+    public void canCreatePaveEntries()
+    {
         // "gene", coding range: 300-800, reverse strand. exon1: 600-900, exon2: 450-550, exon3: 250:350
-        PaveAlgo pave = new PaveAlgo(TestEnsemblDataCacheFactory.loadTestCache());
+        PaveAlgo pave = new PaveAlgo(TestEnsemblDataCacheFactory.loadTestCache(), false);
 
         // Missing gene
         assertNull(pave.run("other gene", MATCHING_TRANSCRIPT, 0));
@@ -57,7 +59,8 @@ public class PaveAlgoTest {
     }
 
     @Test
-    public void canFindAffectedExon() {
+    public void canFindAffectedExon()
+    {
         ExonData exon1 = createExon(1, 30, 50);
         ExonData exon2 = createExon(2, 110, 150);
         ExonData exon3 = createExon(3, 180, 200);
@@ -78,7 +81,8 @@ public class PaveAlgoTest {
     }
 
     @Test
-    public void canFindAffectedCodonNegativeStrand() {
+    public void canFindAffectedCodonNegativeStrand()
+    {
         ExonData exon1 = createExon(3, 3, 5);
         ExonData exon2 = createExon(2, 11, 15);
         ExonData exon3 = createExon(1, 18, 20);
@@ -103,7 +107,8 @@ public class PaveAlgoTest {
     }
 
     @Test
-    public void canHandleNonCodingTranscripts() {
+    public void canHandleNonCodingTranscripts()
+    {
         ExonData exon1 = createExon(1, 3, 5);
         ExonData exon2 = createExon(2, 11, 15);
         ExonData exon3 = createExon(3, 18, 20);
@@ -114,13 +119,15 @@ public class PaveAlgoTest {
     }
 
     @NotNull
-    private static ExonData createExon(int rank, int start, int end) {
+    private static ExonData createExon(int rank, int start, int end)
+    {
         return new ExonData(-1, start, end, rank, -1, -1);
     }
 
     @NotNull
     private static TranscriptData createTranscript(@NotNull List<ExonData> exons, @Nullable Integer codingStart,
-            @Nullable Integer codingEnd, @NotNull Strand strand) {
+            @Nullable Integer codingEnd, @NotNull Strand strand)
+    {
         byte strandEnum = strand == Strand.FORWARD ? Strand.POS_STRAND : Strand.NEG_STRAND;
         TranscriptData transcript =
                 new TranscriptData(-1, Strings.EMPTY, Strings.EMPTY, false, strandEnum, -1, -1, codingStart, codingEnd, Strings.EMPTY);

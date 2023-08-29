@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.utils.r;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,14 +44,20 @@ public final class RExecutor
 
     public static int executeFromClasspath(final String rScriptName, final String... arguments) throws IOException, InterruptedException
     {
+        return executeFromClasspath(rScriptName, false, arguments);
+    }
+
+    public static int executeFromClasspath(final String rScriptName, final boolean writeErrorToFile, final String... arguments)
+            throws IOException, InterruptedException
+    {
         final File scriptFile = writeScriptFile(rScriptName);
 
-        final int returnCode = executeFromFile(rScriptName, scriptFile, arguments);
+        final int returnCode = executeFromFile(rScriptName, scriptFile, writeErrorToFile, arguments);
         htsjdk.samtools.util.IOUtil.deleteFiles(scriptFile);
         return returnCode;
     }
 
-    private static int executeFromFile(final String rScriptName, final File scriptFile, final String... arguments)
+    private static int executeFromFile(final String rScriptName, final File scriptFile, final boolean writeErrorToFile, final String... arguments)
             throws IOException, InterruptedException
     {
         final String[] command = new String[arguments.length + 2];
@@ -59,13 +66,30 @@ public final class RExecutor
         System.arraycopy(arguments, 0, command, 2, arguments.length);
 
         final File outputFile = File.createTempFile(rScriptName, ".out");
-        final File errorFile = File.createTempFile(rScriptName, ".error");
 
         LOGGER.info(String.format("Executing R script via command: %s", CollectionUtil.join(Arrays.asList(command), " ")));
-        int result = new ProcessBuilder(command).redirectError(errorFile).redirectOutput(outputFile).start().waitFor();
+        Process process = new ProcessBuilder(command).redirectOutput(outputFile).start();
+
+        int result = process.waitFor();
+
         if(result != 0)
         {
-            LOGGER.fatal("Error executing R script. Examine error file {} for details.", errorFile.toString());
+            if(writeErrorToFile)
+            {
+                File errorFile = File.createTempFile(rScriptName, ".error");
+
+                try(FileOutputStream errorFileStream = new FileOutputStream(errorFile))
+                {
+                    errorFileStream.write(process.getErrorStream().readAllBytes());
+                }
+
+                LOGGER.fatal("Error executing R script. Examine error file {} for details.", errorFile.toString());
+            }
+            else
+            {
+                System.err.print(new String(process.getErrorStream().readAllBytes()));
+                LOGGER.fatal("Error executing R script.");
+            }
         }
 
         return result;

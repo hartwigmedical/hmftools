@@ -14,7 +14,7 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class AlleleTolerance implements CopyNumberTolerance
+public class AlleleTolerance
 {
     @NotNull
     private final PurityAdjuster mPurityAdjuster;
@@ -24,7 +24,6 @@ public class AlleleTolerance implements CopyNumberTolerance
         mPurityAdjuster = purityAdjuster;
     }
 
-    @Override
     public boolean inTolerance(final ObservedRegion first, final ObservedRegion second)
     {
         double purityAdjustment = purityAdjustment(mPurityAdjuster);
@@ -102,5 +101,4 @@ public class AlleleTolerance implements CopyNumberTolerance
 
         return absCopyNumberDifference / Math.abs(Math.min(firstCopyNumber, secondCopyNumber));
     }
-
 }

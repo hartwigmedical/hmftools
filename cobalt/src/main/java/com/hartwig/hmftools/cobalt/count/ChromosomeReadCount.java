@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.hartwig.hmftools.cobalt.Chromosome;
-import com.hartwig.hmftools.common.genome.window.Window;
+import com.hartwig.hmftools.common.genome.region.Window;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;

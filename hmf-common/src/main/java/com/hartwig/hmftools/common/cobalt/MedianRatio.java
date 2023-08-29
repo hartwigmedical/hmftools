@@ -1,17 +1,15 @@
 package com.hartwig.hmftools.common.cobalt;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface MedianRatio
+public class MedianRatio
 {
-    @NotNull
-    String chromosome();
+    public final String Chromosome;
+    public final double MedianRatio;
+    public final int Count;
 
-    double medianRatio();
-
-    int count();
+    public MedianRatio(final String chromosome, final double medianRatio, final int count)
+    {
+        Chromosome = chromosome;
+        MedianRatio = medianRatio;
+        Count = count;
+    }
 }

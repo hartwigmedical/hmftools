@@ -9,22 +9,19 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.report.ReportResources;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class Expressions {
-
-    private static final Logger LOGGER = LogManager.getLogger(Expressions.class);
-
-    private Expressions() {
-    }
-
+public final class Expressions
+{
     @Nullable
-    public static GeneExpression findByGene(@NotNull List<GeneExpression> expressions, @NotNull String geneToFind) {
-        for (GeneExpression expression : expressions) {
-            if (expression.geneName().equals(geneToFind)) {
+    public static GeneExpression findByGene(@NotNull List<GeneExpression> expressions, @NotNull String geneToFind)
+    {
+        for(GeneExpression expression : expressions)
+        {
+            if(expression.geneName().equals(geneToFind))
+            {
                 return expression;
             }
         }
@@ -34,33 +31,40 @@ public final class Expressions {
     }
 
     @NotNull
-    public static String tpm(@NotNull GeneExpression expression) {
+    public static String tpm(@NotNull GeneExpression expression)
+    {
         return formatSingleDigitDecimal(expression.tpm());
     }
 
     @NotNull
-    public static String percentileType(@NotNull GeneExpression expression) {
+    public static String percentileType(@NotNull GeneExpression expression)
+    {
         return formatTwoDigitDecimal(expression.percentileCancer());
     }
 
     @NotNull
-    public static String foldChangeType(@NotNull GeneExpression expression) {
+    public static String foldChangeType(@NotNull GeneExpression expression)
+    {
         return toFoldChange(expression.tpm(), expression.medianTpmCancer());
     }
 
     @NotNull
-    public static String percentileDatabase(@NotNull GeneExpression expression) {
+    public static String percentileDatabase(@NotNull GeneExpression expression)
+    {
         return formatTwoDigitDecimal(expression.percentileCohort());
     }
 
     @NotNull
-    public static String foldChangeDatabase(@NotNull GeneExpression expression) {
+    public static String foldChangeDatabase(@NotNull GeneExpression expression)
+    {
         return toFoldChange(expression.tpm(), expression.medianTpmCohort());
     }
 
     @NotNull
-    private static String toFoldChange(double expression, double median) {
-        if (Doubles.lessOrEqual(median, 0)) {
+    private static String toFoldChange(double expression, double median)
+    {
+        if(Doubles.lessOrEqual(median, 0))
+        {
             return ReportResources.NOT_AVAILABLE;
         }
 

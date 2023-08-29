@@ -57,8 +57,8 @@ public class PurpleCopyNumberFactory
     {
         mSomaticCopyNumbers.clear();
 
-        final ExtendDiploid extendDiploid =
-                new ExtendDiploid(new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
+        final ExtendDiploid extendDiploid = new ExtendDiploid(
+                new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
 
         final PopulateUnknown populateUnknownFactory = new PopulateUnknown(mCobaltChromosomes);
 
@@ -125,8 +125,10 @@ public class PurpleCopyNumberFactory
                 {
                     copyNumberStartPos = (firstRegion.minStart() + firstRegion.maxStart()) / 2;
 
-                    PurpleCopyNumber newPrevCopyNumber = ImmutablePurpleCopyNumber.builder().from(prevCopyNumber)
-                            .end(copyNumberStartPos - 1).build();
+                    PurpleCopyNumber newPrevCopyNumber = ImmutablePurpleCopyNumber.builder()
+                            .from(prevCopyNumber)
+                            .end(copyNumberStartPos - 1)
+                            .build();
 
                     copyNumbers.set(copyNumbers.size() - 1, newPrevCopyNumber);
                 }

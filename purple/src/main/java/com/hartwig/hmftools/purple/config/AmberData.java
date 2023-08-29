@@ -11,7 +11,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.amber.AmberBAFFile;
-import com.hartwig.hmftools.common.amber.qc.AmberQCFile;
+import com.hartwig.hmftools.common.amber.AmberQCFile;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
@@ -84,7 +84,7 @@ public class AmberData
 
         PatientGender = determineGender(refGenVersion, ChromosomeBafs);
 
-        PPL_LOGGER.info("average Amber tumor depth is {} reads implying an ambiguous BAF of {}",
+        PPL_LOGGER.info("Amber average tumor depth({}) ambiguous BAF({})",
                 AverageTumorDepth, String.format("%.3f", ExpectedBAF.expectedBAF(AverageTumorDepth)));
     }
 

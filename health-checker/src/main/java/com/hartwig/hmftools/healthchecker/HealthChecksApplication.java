@@ -168,15 +168,10 @@ public class HealthChecksApplication
 
     public static void main(final String... args) throws IOException
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder("HealthChecker");
         registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-        setLogLevel(configBuilder);
-
-        final VersionInfo version = new VersionInfo("health-checker.version");
-        HC_LOGGER.info("Health-checker version: {}", version.version());
-
 
         HealthChecksApplication healthChecksApplication = new HealthChecksApplication(configBuilder);
         healthChecksApplication.run();

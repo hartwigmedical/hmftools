@@ -30,16 +30,18 @@ AMBER
 ```
 COBALT
 ```
--target_region Target Regions Normalisation file
+-target_region {targetRegionsNormalisation}
 -pcf_gamma 15
 ```
 SAGE
 ```
--hotspot_min_tumor_vaf 0.01
--hotspot_min_tumor_qual 150
+-hotspot_min_tumor_vaf 0.005
+-hotspot_min_tumor_qual 100
 -panel_min_tumor_qual 250
 -high_confidence_min_tumor_qual 350
 -low_confidence_min_tumor_qual 500
+-max_read_depth 100000
+-sync_fragments=True
 ```
 GRIPSS
 ```
@@ -55,14 +57,16 @@ PURPLE
 -target_regions_bed ${target_regions_definition}
 -target_regions_ratios ${target_regions_ratios}
 -target_regions_msi_indels ${target_regions_msi_indels}
+-ploidy_penalty_standard_derviation = 0.15
+-ploid_penalty_factor = 0.6
 ```
 
 ## Targeted specific methods
-### Cobalt depth coverage normalisation
+### Cobalt target regions normalisation file creation
 
-#### Steps to generated target regions Cobalt normalisation file
+A cobalt normalisation file for an arbitary panel can becreated using a set of training samples (recommended at least 20 samples) to learn the copy number biases in on-target regions.  The procedrue for doing this is as follows:
 
-1. Run Cobalt without a '-target_region' file in tumor-only mode on all applicable samples
+1. Run Cobalt on the training samples without in tumor-only mode WITHOUT a '-target_region' file specified
 
 2a. Run Amber on applicable samples in tumor-only mode
 - set '-tumor_only_min_depth 2' to ensure sufficient read coverage over heterozygous points
@@ -70,12 +74,14 @@ OR
 2b. Set Amber gender in for each applicable sample in sample ID file in step 3
 
 3. Run the Cobalt normalisation file builder command described below.  This performs the following steps
-- for each 1K region covering any target region, extract each sample's tumor read count and teh GC profile mappability and GC ratio bucket
+- for each 1K region covering any target region, extract each sample's tumor read count and the GC profile mappability and GC ratio bucket
 - calculate median and median read counts for each sample, and overall sample mean and median counts
 - normalise each sample's tumor read counts per region
 - calculate a median read count from all samples per GC ratio bucket  
 - write a relative enrichment for each region to the output file, with a min enrichment of 0.1
 - if no WGS is available for normalisation, the tumorGCRatio is assumed to be 1 for autosomes. The gender of each sample must be provided. Female samples are excluded from Y chromosome normalisation and males use a tumorGCRatio of 0.5 for the sex chromosomes
+
+The output of this process is a targetRegionsNormalisation file with the expected relative enrichment for each on target region.
 
 #### Arguments
 
@@ -104,7 +110,7 @@ java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder
 ```
 
 ### COBALT behaviour in targeted mode
-If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.   Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample and then by the relativeEnrichment for that depth window.
+If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.   Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment.   The GC bias is calculated using on target regions only.
 
 ### PURPLE MSI 
 
@@ -124,7 +130,7 @@ A custom model is used for TMB estimated in targeted mode. The main challenges o
 - !HOTSPOT
 - AF < 0.9
 
-Each variant included is classified as ‘somatic’ if AF is more than 0.08 away from the expected germline allele frequencies based on the minor and major allele copy numbers at that loci and the purity of the sample. Other variants are classified as ‘unclear’
+Each variant included is classified as ‘somatic’ if somatic likelihood = HIGH.    If somatic likelihood = MEDIUM, then the variant is marked as 'unclear'.
 
 The final somatic count estimate is set to = somatic + unclear^2 / ( CodingBases/170,000 + unclear).
 
@@ -132,10 +138,12 @@ This function is intended to reflect that when the number of unclear variants is
 
 Using this number we then estimate the mutational burden as follows
 ```
-TML = 0.74 * somatic Variant Estimate / CodingBases * RefGenomeCodingBases 
+TML = somatic Variant Estimate / CodingBases * RefGenomeCodingBases 
 TMB = 0.05 * TML + MSIIndelPerMb
 ```
-The constant 0.74 is the approximate proportion of coding variants expected to be missense, since TML is defined as count of missense variants in Hartwig’s platform. The 0.05 conversion from TML to TMB is the empirically observed relationship in the Hartwig database.
+The 0.05 conversion from TML to TMB is the empirically observed relationship in the Hartwig database.
+
+For driver likelihood calculations, we assume 20% of variants are biallelic for targeted sequencing samples.
 
 ### Other PURPLE differences in targeted mode
 

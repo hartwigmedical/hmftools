@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class ChromosomesTest {
+public class ChromosomesTest
+{
 
     @Test
-    public void canPrefixChromosomes() {
+    public void canPrefixChromosomes()
+    {
         assertEquals("05", Chromosomes.zeroPrefixed("5"));
         assertEquals("05p13.2", Chromosomes.zeroPrefixed("5p13.2"));
 

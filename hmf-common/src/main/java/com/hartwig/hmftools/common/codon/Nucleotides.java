@@ -13,6 +13,8 @@ public class Nucleotides
         return base;
     }
 
+    public static String swapDnaBase(final String base) { return String.valueOf(swapDnaBase(base.charAt(0))); }
+
     public static char complement(final char base)
     {
         return swapDnaBase(base);

@@ -102,6 +102,7 @@ public class FragmentUtils
                 try
                 {
                     frag1.addNucleotide(index1, locus2, frag2.getNucleotides().get(index2), frag2.getNucleotideQuality().get(index2));
+                    frag1.addReads(frag2);
                 }
                 catch(Exception e)
                 {
@@ -116,9 +117,15 @@ public class FragmentUtils
     public static Fragment copyNucleotideFragment(final Fragment fragment)
     {
         // ignores all state, just starts with original information
-        return new Fragment(
-                fragment.id(), fragment.readInfo(), fragment.readGene(), fragment.getGenes(),
+        Fragment newFragment = new Fragment(fragment.reads().get(0), fragment.readGene(), fragment.getGenes(),
                 fragment.getRawNucleotideLoci(), fragment.getRawNucleotideQuality(), fragment.getRawNucleotides());
+
+        for(int i = 1; i < fragment.reads().size(); ++i)
+        {
+            newFragment.addRead(fragment.reads().get(i));
+        }
+
+        return newFragment;
     }
 
     public static String formCodonAminoAcid(int locus, final List<Integer> nucleotideLoci, final List<String> nucleotides)
@@ -169,40 +176,5 @@ public class FragmentUtils
         }
 
         return true;
-    }
-
-    public static void writeFragmentData(final String fileName, final List<Fragment> fragments)
-    {
-        try
-        {
-            BufferedWriter writer = createBufferedWriter(fileName, false);
-
-            writer.write("Source\tReadId\tReadInfo\tGenes");
-            writer.write("\tNucLociStart\tNucLociEnd\tAcidLociStart\tAcidLociEnd\tScope");
-            writer.newLine();
-
-            for(Fragment fragment : fragments)
-            {
-                StringJoiner genesStr = new StringJoiner(ITEM_DELIM);
-                fragment.getGenes().forEach(x -> genesStr.add(x));
-
-                writer.write(String.format("REFERENCE\t%s\t%s\t%s",
-                        fragment.id(), fragment.readInfo(), genesStr));
-
-                writer.write(String.format("\t%d\t%d\t%d\t%d\t%s",
-                        fragment.minNucleotideLocus(), fragment.maxNucleotideLocus(),
-                        fragment.minAminoAcidLocus(), fragment.maxAminoAcidLocus(), fragment.scope()));
-
-                writer.newLine();
-            }
-
-            writer.close();
-        }
-        catch(IOException e)
-        {
-            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
-            return;
-        }
-
     }
 }

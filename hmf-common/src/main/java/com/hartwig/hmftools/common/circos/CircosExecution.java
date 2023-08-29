@@ -17,14 +17,15 @@ public class CircosExecution
 
     private final String executable;
 
-    public CircosExecution(@NotNull final String executable)
+    public CircosExecution(final String executable)
     {
         this.executable = executable;
     }
 
     @Nullable
-    public Integer generateCircos(@NotNull final String inputConfig, @NotNull final String outputPath, @NotNull final String outputFile,
-            @NotNull final String errorPath) throws IOException, InterruptedException
+    public Integer generateCircos(
+            final String inputConfig, final String outputPath, final String outputFile,
+            final String errorPath) throws IOException, InterruptedException
     {
         final File redirectErrorFile = new File(errorPath + File.separator + outputFile + ".error");
         final File redirectOutputFile = new File(errorPath + File.separator + outputFile + ".out");

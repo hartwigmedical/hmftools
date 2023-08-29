@@ -215,6 +215,9 @@ will mark any variant of tier = HOTSPOT as PON if it matches an entry with 5+ Sa
 ### GNOMAD Population Frequency
 We annotate the population frequency using gnomAD v3.1.2 for hg38 (merged with gnomAD v2.1.1 liftover for exome regions only) and v2.1.1 exome only for GRCH37. We filter the Gnomad file for variants with at least 1e-5 frequency for exome only and 5e-5 for genome. The VCF tag 'GND_FREQ' will report the frequency.
 
+### CLINVAR
+If a clinvar VCF is provided, PAVE also annotates the clinical signficance of each variant.
+
 ### PON settings used in the HMF pipeline
 
 A summary of the PON annotation and filtering currently used in the HMF pipeline is below:

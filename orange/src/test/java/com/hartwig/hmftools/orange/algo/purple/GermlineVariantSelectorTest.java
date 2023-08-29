@@ -12,15 +12,18 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
 import org.junit.Test;
 
-public class GermlineVariantSelectorTest {
+public class GermlineVariantSelectorTest
+{
 
     @Test
-    public void canHandleNullGermlineVariants() {
+    public void canHandleNullGermlineVariants()
+    {
         assertNull(GermlineVariantSelector.selectInterestingUnreportedVariants(null));
     }
 
     @Test
-    public void canSelectInterestingUnreportedVariants() {
+    public void canSelectInterestingUnreportedVariants()
+    {
         PurpleVariant reportedHotspot = TestPurpleVariantFactory.builder().reported(true).hotspot(Hotspot.HOTSPOT).build();
         PurpleVariant unreportedHotspot = TestPurpleVariantFactory.builder().reported(false).hotspot(Hotspot.HOTSPOT).build();
         PurpleVariant unreportedNearHotspot = TestPurpleVariantFactory.builder().reported(false).hotspot(Hotspot.NEAR_HOTSPOT).build();

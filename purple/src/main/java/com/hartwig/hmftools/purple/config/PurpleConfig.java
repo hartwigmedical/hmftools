@@ -1,7 +1,12 @@
 package com.hartwig.hmftools.purple.config;
 
-import static java.lang.String.format;
-
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PURPLE_DIR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -10,13 +15,11 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGION
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
-import static com.hartwig.hmftools.purple.config.ReferenceData.TARGET_REGION_BED;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -26,7 +29,6 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantTier;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 
 public class PurpleConfig
@@ -56,12 +58,7 @@ public class PurpleConfig
 
     private boolean mIsValid;
 
-    private static final String REF_SAMPLE = "reference";
-    private static final String TUMOR_SAMPLE = "tumor";
     public static final String SAMPLE_DIR = "sample_dir";
-    private static final String OUTPUT_DIRECTORY = "output_dir";
-    private static final String AMBER = "amber";
-    private static final String COBALT = "cobalt";
 
     public static String DRIVERS_ONLY = "drivers_only";
     public static String FILTER_SOMATICS_ON_GENE = "filter_somatics_on_gene";
@@ -74,8 +71,8 @@ public class PurpleConfig
 
         Version = version;
 
-        String tumorId = configBuilder.getValue(TUMOR_SAMPLE);
-        ReferenceId = configBuilder.getValue(REF_SAMPLE);
+        String tumorId = configBuilder.getValue(TUMOR);
+        ReferenceId = configBuilder.getValue(REFERENCE);
         TumorId = tumorId != null ? tumorId : ReferenceId;
 
         if(TumorId == null && ReferenceId == null)
@@ -83,7 +80,7 @@ public class PurpleConfig
             mIsValid = false;
         }
 
-        String outputDir = configBuilder.getValue(OUTPUT_DIRECTORY);
+        String outputDir = configBuilder.getValue(OUTPUT_DIR);
         String sampleDir = "";
 
         if(configBuilder.hasValue(SAMPLE_DIR))
@@ -110,7 +107,7 @@ public class PurpleConfig
         Charting = new ChartConfig(configBuilder, OutputDir);
         Fitting = new FittingConfig(configBuilder);
         SomaticFitting = new SomaticFitConfig(configBuilder);
-        TargetRegionsMode = configBuilder.hasValue(TARGET_REGION_BED);
+        TargetRegionsMode = configBuilder.hasValue(TARGET_REGIONS_BED);
         Threads = parseThreads(configBuilder);
 
         RunDrivers = DriverGenePanelConfig.isConfigured(configBuilder);
@@ -170,17 +167,13 @@ public class PurpleConfig
 
     public static void addOptions(final ConfigBuilder configBuilder)
     {
-        configBuilder.addConfigItem(
-                REF_SAMPLE, "Name of the reference sample. This should correspond to the value used in Amber and Cobalt");
+        configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
+        configBuilder.addConfigItem(TUMOR, TUMOR_DESC);
 
         configBuilder.addConfigItem(
-                TUMOR_SAMPLE,
-                "Name of the tumor sample. This should correspond to the value used in Amber and Cobalt");
-
-        configBuilder.addConfigItem(
-                OUTPUT_DIRECTORY, true,
-                "Path to the output directory. If <sample_dir> is set, then is sample_dir/output_dir/",
-                "");
+                OUTPUT_DIR, false,
+                "Path to the output directory. If <sample_dir> is set, then is sample_dir/output_dir/. Default 'purple'",
+                PURPLE_DIR);
 
         configBuilder.addFlag(DRIVERS_ONLY, "Only run the driver routine");
         configBuilder.addFlag(WRITE_ALL_SOMATICS, "Write all variants regardless of filters");
@@ -205,16 +198,5 @@ public class PurpleConfig
             return !SpecificChromosomes.contains(chromosome);
 
         return false;
-    }
-
-    private static String parameter(final CommandLine cmd, final String parameter, final StringJoiner missing)
-    {
-        final String value = cmd.getOptionValue(parameter);
-        if(value == null)
-        {
-            missing.add(parameter);
-            return "";
-        }
-        return value;
     }
 }

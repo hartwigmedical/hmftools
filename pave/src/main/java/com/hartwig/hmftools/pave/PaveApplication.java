@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.pave.PaveConfig.PON_ARTEFACTS_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILTERS;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_ARTEFACT_FILTER;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
@@ -58,9 +59,6 @@ public class PaveApplication
 
     public PaveApplication(final ConfigBuilder configBuilder)
     {
-        final VersionInfo version = new VersionInfo("pave.version");
-        PV_LOGGER.info("Pave version: {}", version.version());
-
         mConfig = new PaveConfig(configBuilder);
 
         mGeneDataCache = new GeneDataCache(
@@ -93,6 +91,7 @@ public class PaveApplication
 
         try
         {
+            final VersionInfo version = new VersionInfo("pave.version");
             version.write(mConfig.OutputDir);
         }
         catch(IOException e)
@@ -349,18 +348,12 @@ public class PaveApplication
     }
 
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         PaveConfig.addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         PaveApplication paveApplication = new PaveApplication(configBuilder);
         paveApplication.run();

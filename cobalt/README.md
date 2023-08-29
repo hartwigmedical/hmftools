@@ -84,8 +84,7 @@ java -jar -Xmx8G cobalt.jar \
 | output_dir    | Path to the output directory. This directory will be created if it does not already exist |
 | gc_profile    | Path to GC profile                                                                        |
 
-A compressed copy of the GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). 
-A 38 equivalent is also available. Please note the downloaded file must be un-compressed before use. 
+A compressed copy of the GC Profile file used by HMF (GC_profile.1000bp.37.cnp) is available to download from [HMF-Pipeline-Resources](https://resources.hartwigmedicalfoundation.nl). This file contains 5 columns for each 1kb window of the genome {chromosome,position,GC Proportion,Non N Proportion,Average Mappability}.  A 38 equivalent is also available. Please note the downloaded file must be un-compressed before use. 
 
 COBALT supports both BAM and CRAM file formats. If using CRAM, the ref_genome argument must be included.
 

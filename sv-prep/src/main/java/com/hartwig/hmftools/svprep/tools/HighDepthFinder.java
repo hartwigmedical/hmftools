@@ -73,7 +73,7 @@ public class HighDepthFinder
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,PosStart,PosEnd,BaseDepthMin,BaseDepthMax");
+            writer.write("Chromosome\tPosStart\tPosEnd\tBaseDepthMin\tBaseDepthMax");
             writer.newLine();
 
             return writer;
@@ -95,7 +95,7 @@ public class HighDepthFinder
         {
             for(HighDepthRegion region : regions)
             {
-                writer.write(format("%s,%d,%d,%d,%d",
+                writer.write(format("%s\t%d\t%d\t%d\t%d",
                         region.Chromosome, region.start(), region.end(), region.DepthMin, region.DepthMax));
                 writer.newLine();
             }

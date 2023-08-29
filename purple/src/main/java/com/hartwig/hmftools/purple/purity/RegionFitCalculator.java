@@ -1,5 +1,13 @@
 package com.hartwig.hmftools.purple.purity;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
+import static java.lang.Math.max;
+import static java.lang.Math.signum;
+
+import static com.hartwig.hmftools.purple.config.PurpleConstants.BAF_PNT_5;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
@@ -9,6 +17,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.purple.config.FittingConfig;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.region.PloidyDeviation;
 import com.hartwig.hmftools.purple.segment.ExpectedBAF;
@@ -21,20 +30,17 @@ public class RegionFitCalculator
     private final PloidyDeviation mPloidyDeviation;
     private final CobaltChromosomes mCobaltChromosomes;
 
-    public RegionFitCalculator(final CobaltChromosomes cobaltChromosomes, final int averageReadDepth, double ploidyPenaltyFactor,
-            double ploidyPenaltyStandardDeviation, double ploidyPenaltyMinStandardDeviationPerPloidy,
-            final double majorAlleleSubOnePenaltyMultiplier, final double majorAlleleSubOneAdditionalPenalty,
-            final double baselineDeviation)
+    public RegionFitCalculator(final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig, int averageReadDepth)
     {
         mCobaltChromosomes = cobaltChromosomes;
-        mPloidyPenaltyFactor = ploidyPenaltyFactor;
+        mPloidyPenaltyFactor = fitScoreConfig.PloidyPenaltyFactor;
 
         mPloidyDeviation = new PloidyDeviation(
-                ploidyPenaltyStandardDeviation, ploidyPenaltyMinStandardDeviationPerPloidy,
-                majorAlleleSubOnePenaltyMultiplier, majorAlleleSubOneAdditionalPenalty,
-                baselineDeviation);
-
-        // mPloidyDeviation.setUseCache();
+                fitScoreConfig.PloidyPenaltyStandardDeviation,
+                fitScoreConfig.PloidyPenaltyMinStandardDeviationPerPloidy,
+                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneMultiplier,
+                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneAdditional,
+                fitScoreConfig.PloidyPenaltyBaselineDeviation);
 
         mAmbiguousBaf = ExpectedBAF.expectedBAF(averageReadDepth);
     }
@@ -48,7 +54,7 @@ public class RegionFitCalculator
     @VisibleForTesting
     public static boolean isAllowedRegion(final CobaltChromosomes cobaltChromosomes, final GenomeRegion region)
     {
-        return cobaltChromosomes.contains(region.chromosome());
+        return cobaltChromosomes.hasChromosome(region.chromosome());
     }
 
     public ObservedRegion fitRegion(final double purity, final double normFactor, final ObservedRegion observedRegion)
@@ -95,34 +101,90 @@ public class RegionFitCalculator
 
     public static double calculateEventPenalty(double eventPenaltyFactor, double majorAllele, double minorAllele)
     {
-        double wholeGenomeDoublingDistance = 1 + (Math.abs(majorAllele - 2)) + (Math.abs(minorAllele - 2));
-        double singleEventDistance = (Math.abs(majorAllele - 1)) + (Math.abs(minorAllele - 1));
+        double wholeGenomeDoublingDistance = 1 + (abs(majorAllele - 2)) + (abs(minorAllele - 2));
+        double singleEventDistance = (abs(majorAllele - 1)) + (abs(minorAllele - 1));
 
         return 1 + eventPenaltyFactor * Math.min(singleEventDistance, wholeGenomeDoublingDistance);
     }
 
     private static final double MIN_CN_THRESHOLD = 0.1;
 
-    private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, final double copyNumber,
-            final double observedBAF)
+    private double impliedBaf(final PurityAdjuster purityAdjuster, final String chromosome, double copyNumber, double observedBAF)
     {
-        if(!mCobaltChromosomes.contains(chromosome))
-        {
+        if(!mCobaltChromosomes.hasChromosome(chromosome))
             return 1;
-        }
 
         CobaltChromosome cobaltChromosome = mCobaltChromosomes.get(chromosome);
-        if(!cobaltChromosome.isNormal() || !cobaltChromosome.isDiploid() || Doubles.lessOrEqual(copyNumber, MIN_CN_THRESHOLD))
-        {
-            return 1;
-        }
 
+        if(!cobaltChromosome.isNormal() || !cobaltChromosome.isDiploid() || Doubles.lessOrEqual(copyNumber, MIN_CN_THRESHOLD))
+            return 1;
+
+        if(Doubles.lessOrEqual(observedBAF, mAmbiguousBaf))
+            return bafToMinimiseDeviation(purityAdjuster, chromosome, copyNumber, observedBAF);
+        else
+            return purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, observedBAF);
+
+        /*
         return Doubles.lessOrEqual(observedBAF, mAmbiguousBaf)
-                ? bafToMinimiseDeviation(purityAdjuster, chromosome, copyNumber)
+                ? bafToMinimiseDeviation(purityAdjuster, chromosome, copyNumber, observedBAF)
                 : purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, observedBAF);
+        */
     }
 
-    private double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber)
+    @VisibleForTesting
+    public double bafToMinimiseDeviation(final PurityAdjuster purityAdjuster, final String chromosome, double copyNumber, double observedBAF)
+    {
+        double minBAF = max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, BAF_PNT_5)));
+        double maxBAF = max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, copyNumber, observedBAF)));
+
+        // calculate major and minor min/max copy number
+        double majorAlleleCnMin = minBAF * copyNumber;
+        double majorAlleleCnMax = maxBAF * copyNumber;
+        double minorAlleleCnMin = copyNumber - majorAlleleCnMin;
+        double minorAlleleCnMax = copyNumber - majorAlleleCnMax;
+
+        // test for whole number solutions
+        double minorAlleleCnMaxCeil = ceil(minorAlleleCnMax);
+
+        boolean minorDiffIntegers = !Doubles.equal(
+                signum(minorAlleleCnMaxCeil - minorAlleleCnMin), signum(minorAlleleCnMaxCeil - minorAlleleCnMax));
+
+        double majorAlleleCnMinCeil = ceil(majorAlleleCnMin);
+
+        boolean majorDiffIntegers = !Doubles.equal(
+                signum(majorAlleleCnMinCeil - majorAlleleCnMin), signum(majorAlleleCnMinCeil - majorAlleleCnMax));
+
+        if(minorDiffIntegers && majorDiffIntegers)
+        {
+            // select the solution which minimum difference between the major and minor CNs
+            if(abs(majorAlleleCnMin - minorAlleleCnMin) < abs(majorAlleleCnMax - minorAlleleCnMax))
+                return max(floor(majorAlleleCnMin) / copyNumber, BAF_PNT_5);
+            else
+                return majorAlleleCnMinCeil / copyNumber;
+        }
+        else if(majorDiffIntegers)
+        {
+            return majorAlleleCnMinCeil / copyNumber;
+        }
+        else if(minorDiffIntegers)
+        {
+            return 1 - minorAlleleCnMaxCeil / copyNumber;
+        }
+
+        double purity = purityAdjuster.purity();
+        double normFactor = purityAdjuster.normFactor();
+
+        // minimise
+        double minBAFTotalDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAlleleCnMin)
+                        + mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAlleleCnMin);
+
+        double maxBAFTotalDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAlleleCnMax)
+                        + mPloidyDeviation.minorAlleleDeviation(purity,normFactor, minorAlleleCnMax);
+
+        return Doubles.lessThan(minBAFTotalDeviation, maxBAFTotalDeviation) ? BAF_PNT_5 : observedBAF;
+    }
+
+    private double bafToMinimiseDeviationOld(final PurityAdjuster purityAdjuster, final String chromosome, double impliedCopyNumber)
     {
         final double minBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, 0.5)));
         final double maxBAF = Math.max(0, Math.min(1, purityAdjuster.purityAdjustedBAFSimple(chromosome, impliedCopyNumber, mAmbiguousBaf)));

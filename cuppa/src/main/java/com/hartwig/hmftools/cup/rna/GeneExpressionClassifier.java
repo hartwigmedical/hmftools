@@ -70,13 +70,11 @@ public class GeneExpressionClassifier implements CuppaClassifier
     private final boolean mRunPairwiseCss;
     private final boolean mRunCancerCss;
     private final double mCssExponent;
-    private final boolean mMatchReadLength;
 
     private static final String RNA_METHODS = "gene_exp_rna_methods";
     private static final String CSS_METHOD_PAIRWISE = "pairwise_css";
     private static final String CSS_METHOD_CANCER = "cancer_css";
     private static final String CSS_EXPONENT = "gene_exp_css_exp";
-    private static final String MATCH_READ_LENGTH = "gene_exp_match_read_length";
 
     public GeneExpressionClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
@@ -100,26 +98,16 @@ public class GeneExpressionClassifier implements CuppaClassifier
         mRunPairwiseCss = rnaMethods == null || rnaMethods.contains(CSS_METHOD_PAIRWISE);
         mRunCancerCss = rnaMethods != null && rnaMethods.contains(CSS_METHOD_CANCER);
         mCssExponent = configBuilder.getDecimal(CSS_EXPONENT);
-        mMatchReadLength = configBuilder.hasFlag(MATCH_READ_LENGTH);
     }
 
     public static void addCmdLineArgs(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(RNA_METHODS, false, "Types of RNA gene expression methods");
         configBuilder.addDecimal(CSS_EXPONENT, "Gene expression CSS exponent", GENE_EXP_DIFF_EXPONENT);
-        configBuilder.addFlag(MATCH_READ_LENGTH, "Gene expression pairwise only amongst matching read-length samples");
     }
 
     public CategoryType categoryType() { return GENE_EXP; }
     public void close() {}
-
-    private String formCancerType(final SampleData sample)
-    {
-        if(mMatchReadLength)
-            return format("%s_%d", sample.cancerType(), sample.rnaReadLength());
-        else
-            return sample.cancerType();
-    }
 
     @Override
     public boolean loadData()
@@ -201,7 +189,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
                 if(!mRefSampleGeneExpIndexMap.containsKey(refSample.Id))
                     continue;
 
-                final String cancerType = formCancerType(refSample);
+                final String cancerType = refSample.cancerType();
 
                 Integer sampleCount = mRefCancerSampleCounts.get(cancerType);
                 if(sampleCount == null)
@@ -267,7 +255,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
                 if(refSample.Id.equals(sample.Id))
                     continue;
 
-                if(mMatchReadLength && refSample.rnaReadLength() != sample.rnaReadLength())
+                if(!refSample.hasRna())
                     continue;
 
                 Integer refSampleIndex = mRefSampleGeneExpIndexMap.get(refSample.Id);
@@ -291,7 +279,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
                 double cssWeight = pow(mCssExponent, -100 * (1 - css));
 
-                int cancerSampleCount = mRefCancerSampleCounts.get(formCancerType(refSample));
+                int cancerSampleCount = mRefCancerSampleCounts.get(refSample.cancerType());
                 double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
 
                 totalWeightedCss += weightedCss;

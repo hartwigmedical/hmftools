@@ -295,6 +295,7 @@ Purple can be run in a limited mode on germline only output so that germline poi
   - somatic VCF tags are set to fixed values PURPLE_CN: 2, PURPLE_MACN: 1, PURPLE_AF: 0.5, PURPLE_VCN: 1, BIALLELIC: FALSE
   - All TMB fields are set to zero
   - No geneCopyNumber,somatic or sv output is produced
+  - A 'somatic likelihood' is calculated (see somatic enrichment section below)
 
 Example command:
 
@@ -566,9 +567,18 @@ if there are three or more mutations of that type, strand and context localised 
 
 For each point mutation we determined the clonality and biallelic status by comparing the estimated number of copies of the variant to the local copy number at the exact base of the variant.    The copy number of each variant is calculated by adjusting the observed VAF by the purity and then multiplying by the local copy number to work out the absolute number of chromatids that contain the variant. 
 
-We mark a mutation as biallelic (i.e. no wild type remaining) if Variant copy number > local copy number - 0.5. 
-The 0.5 tolerance is used to allow for the binomial distribution of VAF measurements for each variant. 
-For example, if the local copy number is 2 than any somatic variant with estimated variant copy number > 1.5 is marked as biallelic.
+To determine whether a mutation should be marked as biallelic (i.e. no wild type remaining), there are two cases. 
+
+If the local minor allele copy number is less than 0.5, then the mutation is marked as biallelic if Variant copy number > local copy number - 0.5.
+The 0.5 tolerance is used to allow for the binomial distribution of VAF measurements for each variant.
+For example, if the local copy number is 2 and the local minor allele copy number is 0, then any somatic variant with estimated variant copy number > 1.5 is marked as biallelic.
+
+If the local minor allele copy number is at least 0.5, then an additional check is done. 
+In this case a biallelic state is only possible if the minor allele copy number is measured incorrectly or the mutation has developed independently on both alleles.
+Such independent identical mutations are not very likely, so when the local minor allele copy number is at least 0.5 a mutation is marked biallelic if both:
+- Variant copy number > local copy number - 0.5.
+- The probability to see at least the observed number of reads with the mutation, assuming that the variant only exists on the major allele, is at most 0.5%.
+  - More precisely: `1 - Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN)], AlleleReadCount-1)<0.005`, where `Poisson` is the Poisson cumulative probability density function.
 
 For each variant we also determine a probability that it is subclonal. This is achieved via a two-step process. 
 
@@ -584,6 +594,14 @@ We apply an iterative algorithm to find peaks in the variant copy number distrib
 This process yields a set of variant copy number peaks, each with a copy number and a total density (i.e. count of variants). 
 To avoid overfitting small amounts of noise in the distribution, we filter out any peaks that account for less than 40% of the variants in the copy number bucket at the peak itself.   After this filtering we scale the fitted peaks by a constant so that the sum of fitted peaks = the total variant count of the sample.  We mark a peak as subclonal if the peak variant copy number < 0.85.   We also calculate the subclonal likelihood for each individual variant as the proportion of variants in that same copy number bucket fitted as belonging to a subclonal peak. 
 
+#### Somatic Likelihood (tumor only mode only)
+
+In tumor only mode, for each variant a set of expected somatic and germline VAF are calculated using the purity and the assumption that for somatic variants that the VCN = {minor allele, major allele or <=1} and that for germline variants the variant is either homozygous or if heterozygous shares the VCN of either the major or minor allele in the tumor.    The minimum distance to each of the expected germline and somatic vaf sets is calculated and annotated as VAF_DIS_MIN in the vcf.   The variant is assigned a likelihood of being somatic (SOM_LH={HIGH;MED;LOW}) based on the following logic: 
+```
+HIGH: abs(somatic_vaf_distance) - abs(germline_vaf_dist) < -0.05 OR IS HOTSPOT 
+LOW: abs(somatic_vaf_distance) - abs(germline_vaf_dist) > 0.08 
+MED: all other 
+```
 ### 11. Germline Enrichment
 If a germline VCF is supplied to PURPLE each variant is enriched with the following fields:
 

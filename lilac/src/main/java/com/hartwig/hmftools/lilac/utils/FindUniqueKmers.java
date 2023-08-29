@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR_DESC;
+import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_IDS;
 import static com.hartwig.hmftools.lilac.LilacConstants.GENE_Y;
 import static com.hartwig.hmftools.lilac.ReferenceData.AA_REF_FILE;
@@ -259,21 +260,15 @@ public class FindUniqueKmers
         LL_LOGGER.info("loaded {} sequences from file {}", mAminoAcidSequences.size(), aminoAcidFilename);
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         FindUniqueKmers findUniqueKmers = new FindUniqueKmers(configBuilder);
         findUniqueKmers.run();

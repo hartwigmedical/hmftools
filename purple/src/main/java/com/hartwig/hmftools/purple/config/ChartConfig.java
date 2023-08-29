@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
+import java.io.File;
+
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class ChartConfig
@@ -17,8 +19,8 @@ public class ChartConfig
     public ChartConfig(final ConfigBuilder configBuilder, final String outputDir)
     {
         Disabled = configBuilder.hasFlag(DISABLE);
-        PlotDirectory = outputDir + "plot";
-        CircosDirectory = outputDir + "circos";
+        PlotDirectory = outputDir + "plot" + File.separator;
+        CircosDirectory = outputDir + "circos" + File.separator;
         CircosBinary = configBuilder.getValue(CIRCOS);
     }
 

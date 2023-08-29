@@ -9,9 +9,9 @@ import static java.lang.Math.round;
 import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.createMatrixFromListData;
 import static com.hartwig.hmftools.common.utils.MatrixFile.writeMatrixData;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.getNewFile;
@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.GenericDataCollection;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.sigs.common.CommonUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -101,7 +102,7 @@ public class SampleSimulator
 
     public void initialise(final CommandLine cmd)
     {
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = CommonUtils.parseOutputDir(cmd);
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
         mConfig = new SimConfig(cmd);
 

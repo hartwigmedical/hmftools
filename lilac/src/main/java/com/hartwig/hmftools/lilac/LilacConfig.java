@@ -8,9 +8,15 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
@@ -55,7 +61,6 @@ public class LilacConfig
     public final RefGenomeVersion RefGenVersion;
     public final String SampleDataDir;
     public final String OutputDir;
-    public final boolean WriteAllFiles;
 
     public int MinBaseQual;
     private final int MinEvidence;
@@ -87,9 +92,6 @@ public class LilacConfig
     public static final String RESOURCE_DIR = "resource_dir";
     public static final String RESOURCE_DIR_DESC = "Path to resource files";
 
-    private static final String SAMPLE = "sample";
-    private static final String REFERENCE_BAM = "reference_bam";
-    private static final String TUMOR_BAM = "tumor_bam";
     private static final String RNA_BAM = "rna_bam";
 
     private static final String SOMATIC_VCF = "somatic_vcf";
@@ -111,7 +113,6 @@ public class LilacConfig
     private static final String DEBUG_PHASING = "debug_phasing";
     public static final String RUN_VALIDATION = "run_validation";
     public static final String MAX_ELIM_CANDIDATES = "max_elim_candidates";
-    public static final String WRITE_ALL_FILES = "write_all_files";
     public static final String FATAL_LOW_COVERAGE = "fatal_low_coverage";
     public static final String LOG_PERF_CALCS = "log_perf";
 
@@ -125,7 +126,7 @@ public class LilacConfig
         {
             SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
-            OutputDir = SampleDataDir;
+            OutputDir = configBuilder.hasValue(OUTPUT_DIR) ? parseOutputDir(configBuilder) : SampleDataDir;
 
             String referenceId = Sample.substring(0, Sample.lastIndexOf('T')) + "R";
             ReferenceBam = SampleDataDir + referenceId + ".hla.bam";
@@ -204,7 +205,6 @@ public class LilacConfig
 
         DebugPhasing = configBuilder.hasFlag(DEBUG_PHASING);
         RunValidation = configBuilder.hasFlag(RUN_VALIDATION);
-        WriteAllFiles = configBuilder.hasFlag(WRITE_ALL_FILES);
         LogPerfCalcs = configBuilder.hasFlag(LOG_PERF_CALCS);
 
         if(!checkCreateOutputDir(OutputDir))
@@ -282,7 +282,6 @@ public class LilacConfig
         Threads = 0;
         DebugPhasing = false;
         RunValidation = true;
-        WriteAllFiles = false;
         LogPerfCalcs = false;
     }
 
@@ -290,8 +289,8 @@ public class LilacConfig
     {
         configBuilder.addRequiredConfigItem(SAMPLE, "Name of sample");
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
-        configBuilder.addPath(REFERENCE_BAM, false,"Path to reference/normal BAM");
-        configBuilder.addPath(TUMOR_BAM, false,"Path to tumor BAM");
+        configBuilder.addPath(REFERENCE_BAM, false,REFERENCE_BAM_DESC);
+        configBuilder.addPath(TUMOR_BAM, false,TUMOR_BAM_DESC);
         configBuilder.addPath(RNA_BAM, false,"Analyse tumor BAM only");
         configBuilder.addPath(RESOURCE_DIR, true, RESOURCE_DIR_DESC);
 
@@ -318,8 +317,8 @@ public class LilacConfig
         configBuilder.addPath(SOMATIC_VCF, false,"Path to sample Purple somatic VCF");
         configBuilder.addFlag(DEBUG_PHASING, "More detailed logging of phasing");
         configBuilder.addFlag(RUN_VALIDATION, "Run validation checks");
-        configBuilder.addFlag(WRITE_ALL_FILES, "Write more detailed output files");
         configBuilder.addFlag(LOG_PERF_CALCS,"Log performance metrics");
+        ResultsWriter.registerConfig(configBuilder);
 
         addRefGenomeConfig(configBuilder, true);
         addOutputDir(configBuilder);

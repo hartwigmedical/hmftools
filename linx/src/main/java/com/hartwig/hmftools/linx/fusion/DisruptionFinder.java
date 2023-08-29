@@ -55,6 +55,7 @@ public class DisruptionFinder implements CohortFileInterface
 {
     private final EnsemblDataCache mGeneTransCache;
     private final Map<String,List<String>> mDisruptionGeneTranscripts;
+    private final List<DriverGene> mDriverGenes;
     private final VisSampleData mVisSampleData;
 
     private final List<SvDisruptionData> mDisruptions;
@@ -75,6 +76,7 @@ public class DisruptionFinder implements CohortFileInterface
 
         mIsGermline = config.IsGermline;
         mGermlineDisruptions = mIsGermline ? new GermlineDisruptions(config, geneTransCache) : null;
+        mDriverGenes = config.DriverGenes;
 
         mDisruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes, !mIsGermline, geneTransCache);
 
@@ -811,9 +813,11 @@ public class DisruptionFinder implements CohortFileInterface
                 continue;
             }
 
+            DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
+
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .driver(DriverType.DISRUPTION)
-                    .category(TSG)
+                    .category(driverGene != null ? driverGene.likelihoodType() : TSG)
                     .gene(disruptionData.Gene.GeneName)
                     .transcript(disruptionData.Transcript.TransName)
                     .isCanonical(disruptionData.Transcript.IsCanonical)

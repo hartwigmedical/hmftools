@@ -29,15 +29,14 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class DNAFusionTable {
-
-    private DNAFusionTable() {
-    }
-
+public final class DNAFusionTable
+{
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions, @Nullable IsofoxRecord isofox,
-            @NotNull ReportResources reportResources) {
-        if (fusions.isEmpty()) {
+            @NotNull ReportResources reportResources)
+    {
+        if(fusions.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -46,7 +45,8 @@ public final class DNAFusionTable {
                 new float[] { 1, 5 },
                 new Cell[] { cells.createHeader("Fusion"), cells.createHeader("Details") });
 
-        for (LinxFusion fusion : sortLinxFusions(fusions)) {
+        for(LinxFusion fusion : sortLinxFusions(fusions))
+        {
             table.addCell(cells.createContent(fusion.name()));
 
             Table details = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
@@ -62,7 +62,8 @@ public final class DNAFusionTable {
                                     cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)"))),
                             Maps.immutableEntry("Domains kept", cells.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-")),
                             Maps.immutableEntry("Domains lost", cells.createValue(!fusion.domainsLost().isEmpty() ? fusion.domainsLost() : "-")))
-                    .forEach(entry -> {
+                    .forEach(entry ->
+                    {
                         details.addCell(cells.createKey(entry.getKey()));
                         details.addCell(entry.getValue());
                     });
@@ -74,8 +75,10 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static String display(FusionPhasedType fusionPhasedType) {
-        switch (fusionPhasedType) {
+    private static String display(FusionPhasedType fusionPhasedType)
+    {
+        switch(fusionPhasedType)
+        {
             case INFRAME:
                 return "Inframe";
             case SKIPPED_EXONS:
@@ -87,8 +90,10 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static String display(FusionLikelihoodType fusionLikelihoodType) {
-        switch (fusionLikelihoodType) {
+    private static String display(FusionLikelihoodType fusionLikelihoodType)
+    {
+        switch(fusionLikelihoodType)
+        {
             case HIGH:
                 return "High";
             case LOW:
@@ -100,35 +105,46 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static String fiveEndString(@NotNull LinxFusion fusion) {
+    private static String fiveEndString(@NotNull LinxFusion fusion)
+    {
         return fusion.geneStart() + " " + fusion.geneContextStart() + " (" + fusion.geneTranscriptStart() + ")";
     }
 
     @NotNull
-    private static String threeStartString(@NotNull LinxFusion fusion) {
+    private static String threeStartString(@NotNull LinxFusion fusion)
+    {
         return fusion.geneEnd() + " " + fusion.geneContextEnd() + " (" + fusion.geneTranscriptEnd() + ")";
     }
 
     @NotNull
-    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells) {
-        if (isofox == null) {
+    private static IBlockElement rnaFragmentSupportTable(@Nullable IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells)
+    {
+        if(isofox == null)
+        {
             return new Paragraph(ReportResources.NOT_AVAILABLE);
         }
 
-        if (fusion.reportedType().equals(LinxFusionType.IG_KNOWN_PAIR) || fusion.reportedType().equals(LinxFusionType.IG_PROMISCUOUS)) {
+        if(fusion.reportedType().equals(LinxFusionType.IG_KNOWN_PAIR) || fusion.reportedType().equals(LinxFusionType.IG_PROMISCUOUS))
+        {
             return supportFromExpressionOfGeneEnd(isofox, fusion);
-        } else if (fusion.geneStart().equals(fusion.geneEnd())) {
+        }
+        else if(fusion.geneStart().equals(fusion.geneEnd()))
+        {
             return supportFromSpliceJunctions(isofox, fusion, cells);
-        } else {
+        }
+        else
+        {
             return supportFromRnaFusions(isofox, fusion, cells);
         }
     }
 
     @NotNull
-    private static IBlockElement supportFromExpressionOfGeneEnd(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion) {
+    private static IBlockElement supportFromExpressionOfGeneEnd(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion)
+    {
         GeneExpression geneEndExpression = Expressions.findByGene(isofox.allGeneExpressions(), fusion.geneEnd());
 
-        if (geneEndExpression == null) {
+        if(geneEndExpression == null)
+        {
             return new Paragraph("None");
         }
 
@@ -143,20 +159,25 @@ public final class DNAFusionTable {
 
     @NotNull
     private static IBlockElement supportFromSpliceJunctions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion,
-            @NotNull Cells cells) {
+            @NotNull Cells cells)
+    {
         List<NovelSpliceJunction> matches = Lists.newArrayList();
-        for (NovelSpliceJunction junction : isofox.allNovelSpliceJunctions()) {
-            if (junction.geneName().equals(fusion.geneStart()) && junction.geneName().equals(fusion.geneEnd())) {
+        for(NovelSpliceJunction junction : isofox.allNovelSpliceJunctions())
+        {
+            if(junction.geneName().equals(fusion.geneStart()) && junction.geneName().equals(fusion.geneEnd()))
+            {
                 matches.add(junction);
             }
         }
 
-        if (matches.isEmpty()) {
+        if(matches.isEmpty())
+        {
             return new Paragraph("None");
         }
 
         Table fragmentSupportTable = new Table(UnitValue.createPercentArray(new float[] { 1 }));
-        for (NovelSpliceJunction junction : max5(sortNovelSpliceJunctions(matches))) {
+        for(NovelSpliceJunction junction : max5(sortNovelSpliceJunctions(matches)))
+        {
             String position = junction.chromosome() + ":" + junction.junctionStart() + "-" + junction.junctionEnd();
             String fragments = junction.fragmentCount() + " fragments";
             String depth = junction.depthStart() + " / " + junction.depthEnd() + " depth";
@@ -167,27 +188,33 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static List<NovelSpliceJunction> sortNovelSpliceJunctions(@NotNull List<NovelSpliceJunction> novelSpliceJunctions) {
+    private static List<NovelSpliceJunction> sortNovelSpliceJunctions(@NotNull List<NovelSpliceJunction> novelSpliceJunctions)
+    {
         return novelSpliceJunctions.stream()
                 .sorted((junction1, junction2) -> Integer.compare(junction2.fragmentCount(), junction1.fragmentCount()))
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    private static IBlockElement supportFromRnaFusions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells) {
+    private static IBlockElement supportFromRnaFusions(@NotNull IsofoxRecord isofox, @NotNull LinxFusion fusion, @NotNull Cells cells)
+    {
         List<RnaFusion> matches = Lists.newArrayList();
-        for (RnaFusion rnaFusion : isofox.allFusions()) {
-            if (rnaFusion.name().equals(fusion.name())) {
+        for(RnaFusion rnaFusion : isofox.allFusions())
+        {
+            if(rnaFusion.name().equals(fusion.name()))
+            {
                 matches.add(rnaFusion);
             }
         }
 
-        if (matches.isEmpty()) {
+        if(matches.isEmpty())
+        {
             return new Paragraph("None");
         }
 
         Table fragmentSupportTable = new Table(UnitValue.createPercentArray(new float[] { 1 }));
-        for (RnaFusion rnaFusion : max5(sortRnaFusions(matches))) {
+        for(RnaFusion rnaFusion : max5(sortRnaFusions(matches)))
+        {
             String up = rnaFusion.chromosomeUp() + ":" + rnaFusion.positionUp();
             String down = rnaFusion.chromosomeDown() + ":" + rnaFusion.positionDown();
             String position = up + "-" + down;
@@ -205,8 +232,10 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static List<RnaFusion> sortRnaFusions(@NotNull List<RnaFusion> rnaFusions) {
-        return rnaFusions.stream().sorted((fusion1, fusion2) -> {
+    private static List<RnaFusion> sortRnaFusions(@NotNull List<RnaFusion> rnaFusions)
+    {
+        return rnaFusions.stream().sorted((fusion1, fusion2) ->
+        {
             int sumFragments1 = fusion1.splitFragments() + fusion1.realignedFrags() + fusion1.discordantFrags();
             int sumFragments2 = fusion2.splitFragments() + fusion2.realignedFrags() + fusion2.discordantFrags();
             return Integer.compare(sumFragments2, sumFragments1);
@@ -214,22 +243,31 @@ public final class DNAFusionTable {
     }
 
     @NotNull
-    private static List<LinxFusion> sortLinxFusions(@NotNull List<LinxFusion> fusions) {
-        return fusions.stream().sorted((fusion1, fusion2) -> {
-            if (fusion1.likelihood() == fusion2.likelihood()) {
-                if (fusion1.geneStart().equals(fusion2.geneStart())) {
+    private static List<LinxFusion> sortLinxFusions(@NotNull List<LinxFusion> fusions)
+    {
+        return fusions.stream().sorted((fusion1, fusion2) ->
+        {
+            if(fusion1.likelihood() == fusion2.likelihood())
+            {
+                if(fusion1.geneStart().equals(fusion2.geneStart()))
+                {
                     return fusion1.geneEnd().compareTo(fusion2.geneEnd());
-                } else {
+                }
+                else
+                {
                     return fusion1.geneStart().compareTo(fusion2.geneStart());
                 }
-            } else {
+            }
+            else
+            {
                 return fusion1.likelihood() == FusionLikelihoodType.HIGH ? -1 : 1;
             }
         }).collect(Collectors.toList());
     }
 
     @NotNull
-    private static <T> List<T> max5(@NotNull List<T> elements) {
+    private static <T> List<T> max5(@NotNull List<T> elements)
+    {
         return elements.subList(0, Math.min(5, elements.size()));
     }
 }

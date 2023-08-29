@@ -24,14 +24,14 @@ public class MockBamReader implements BamReader
         StopLossFragments = Maps.newHashMap();
     }
 
-    public List<Fragment> readFromBam() { return Fragments; }
+    public List<Fragment> findGeneFragments() { return Fragments; }
 
-    public List<Fragment> readFromBam(final SomaticVariant variant) { return VariantFragments; }
+    public List<Fragment> findVariantFragments(final SomaticVariant variant) { return VariantFragments; }
 
     // metrics
     public Map<Indel,List<Fragment>> getKnownStopLossFragments() { return StopLossFragments; }
     public Map<Indel,Integer> unmatchedPonIndels(int minCount) { return Maps.newHashMap(); }
     public Map<Indel,Integer> unmatchedIndels(int minCount) { return Maps.newHashMap(); }
-    public int alignmentFiltered() { return 0; }
+    public int filteredReadCount() { return 0; }
 
 }

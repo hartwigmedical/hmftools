@@ -8,8 +8,6 @@ import java.util.Random;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.amber.BaseDepth;
-import com.hartwig.hmftools.common.amber.ModifiableBaseDepth;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
@@ -19,11 +17,11 @@ import org.junit.Test;
 
 public class BaseDepthIntersectFilterTest
 {
-    private BaseDepth first;
-    private BaseDepth second;
-    private BaseDepth third;
+    private PositionEvidence first;
+    private PositionEvidence second;
+    private PositionEvidence third;
     private BaseDepthIntersectFilter victim;
-    private ListMultimap<Chromosome, BaseDepth> depth;
+    private ListMultimap<Chromosome, PositionEvidence> depth;
 
     @Before
     public void setup()
@@ -72,17 +70,13 @@ public class BaseDepthIntersectFilterTest
         assertFalse(victim.test(third));
     }
 
-    private BaseDepth createRandom(@NotNull final String chromosome, @NotNull final Random random)
+    private PositionEvidence createRandom(@NotNull final String chromosome, @NotNull final Random random)
     {
-        return ModifiableBaseDepth.create()
-                .setChromosome(chromosome)
-                .setPosition(random.nextInt())
-                .setRef(BaseDepth.Base.A)
-                .setAlt(BaseDepth.Base.T)
-                .setReadDepth(random.nextInt())
-                .setRefSupport(random.nextInt())
-                .setAltSupport(random.nextInt())
-                .setIndelCount(0);
+        PositionEvidence baseDepth = new PositionEvidence(chromosome, random.nextInt(), "A", "T");
+        baseDepth.ReadDepth = random.nextInt();
+        baseDepth.RefSupport = random.nextInt();
+        baseDepth.AltSupport = random.nextInt();
+        return baseDepth;
     }
 
 }

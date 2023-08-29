@@ -1,120 +1,210 @@
 package com.hartwig.hmftools.amber;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.amber.AmberConstants.*;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomes;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.beust.jcommander.Parameter;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter;
+import com.hartwig.hmftools.common.samtools.BamUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.samtools.ValidationStringency;
 
 public class AmberConfig
 {
-    public static final int DEFAULT_THREADS = 1;
+    public final String TumorId;
+    public final String TumorBam;
+    public final List<String> ReferenceIds;
+    public final List<String> ReferenceBams;
 
-    @Parameter(names = "-tumor", description = "Name of tumor sample")
-    public String TumorId;
+    public final String BafLociPath;
+    public final String TargetRegionsBed;
+    public final RefGenomeVersion RefGenVersion;
+    public final String RefGenomeFile;
 
-    @Parameter(names = "-tumor_bam", description = "Path to indexed tumor bam/cram file")
-    public String TumorBamPath;
+    public final int TumorOnlyMinSupport;
+    public final double TumorOnlyMinVaf;
+    public final int TumorMinDepth;
+    public final int MinBaseQuality;
+    public final int MinMappingQuality;
+    public final double MinDepthPercent;
+    public final double MaxDepthPercent;
+    public final double MinHetAfPercent;
+    public final double MaxHetAfPercent;
+    public final boolean WriteUnfilteredGermline;
+    public final int PositionGap;
 
-    @Parameter(names = "-reference", description = "Name of reference sample")
-    public List<String> ReferenceIds = new ArrayList<>();
+    public final String OutputDir;
+    public final ValidationStringency BamStringency;
+    public final int Threads;
 
-    @Parameter(names = "-reference_bam", description = "Path to reference bam/cram file")
-    public List<String> ReferenceBamPath = new ArrayList<>();
-
-    @Parameter(names = "-loci", required = true, description = "Path to BAF loci vcf file")
-    public String BafLociPath;
-
-    @Parameter(names = "-" + REF_GENOME,
-               description = "Path to the reference genome fasta file. Required only when using CRAM files.")
-    public String RefGenomePath;
-
-    @Parameter(names = "-output_dir",
-               required = true,
-               description = "Path to the output directory. "
-                       + "This directory will be created if it does not already exist.")
-    public String OutputDir;
-
-    @Parameter(names = "-tumor_only_min_support",
-               description = "Min support in ref and alt in tumor only mode")
-    public int TumorOnlyMinSupport = DEFAULT_TUMOR_ONLY_MIN_SUPPORT;
-
-    @Parameter(names = "-tumor_only_min_vaf",
-               description = "Min VAF in ref and alt in tumor only mode")
-    public double TumorOnlyMinVaf = DEFAULT_TUMOR_ONLY_MIN_VAF;
-
-    @Parameter(names = "-tumor_only_min_depth",
-               description = "Min depth in tumor only mode")
-    public int TumorOnlyMinDepth = DEFAULT_TUMOR_ONLY_MIN_DEPTH;
-
-    @Parameter(names = "-min_base_quality",
-               description = "Minimum quality for a base to be considered")
-    public int MinBaseQuality = DEFAULT_MIN_BASE_QUALITY;
-
-    @Parameter(names = "-min_mapping_quality",
-               description = "Minimum mapping quality for an alignment to be used")
-    public int MinMappingQuality = DEFAULT_MIN_MAPPING_QUALITY;
-
-    @Parameter(names = "-min_depth_percent",
-               description = "Min percentage of median depth")
-    public double MinDepthPercent = DEFAULT_MIN_DEPTH_PERCENTAGE;
-
-    @Parameter(names = "-max_depth_percent",
-               description = "Max percentage of median depth")
-    public double MaxDepthPercent = DEFAULT_MAX_DEPTH_PERCENTAGE;
-
-    @Parameter(names = "-min_het_af_percent",
-               description = "Min heterozygous AF%")
-    public double MinHetAfPercent = DEFAULT_MIN_HET_AF_PERCENTAGE;
-
-    @Parameter(names = "-max_het_af_percent",
-               description = "Max heterozygous AF%")
-    public double MaxHetAfPercent = DEFAULT_MAX_HET_AF_PERCENTAGE;
-
-    @Parameter(names = "-validation_stringency",
-               description = "SAM validation strategy")
-    public ValidationStringency Stringency = ValidationStringency.DEFAULT_STRINGENCY;
-
-    @Parameter(names = "-threads",
-               description = "Number of threads")
-    public int ThreadCount = DEFAULT_THREADS;
-
-    @Parameter(names = "-" + RefGenomeVersion.REF_GENOME_VERSION,
-               required = true,
-               description = RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC,
-               converter = RefGenomeVersionConverter.class)
-    public RefGenomeVersion refGenomeVersion;
+    public final List<String> SpecificChromosomes;
 
     public static final Logger AMB_LOGGER = LogManager.getLogger(AmberConfig.class);
+
+    private static final String SAMPLE_DELIM = ",";
+    private static final String LOCI_FILE = "loci";
+
+    private static final String TUMOR_ONLY_MIN_SUPPORT = "tumor_only_min_support";
+    private static final String TUMOR_ONLY_MIN_VAF = "tumor_only_min_vaf";
+    private static final String TUMOR_MIN_DEPTH = "tumor_min_depth";
+    private static final String MIN_BASE_QUALITY = "min_base_quality";
+    private static final String MIN_MAP_QUALITY = "min_map_quality";
+    private static final String MIN_DEPTH_PERC = "min_depth_percent";
+    private static final String MAX_DEPTH_PERC = "max_depth_percent";
+    private static final String MIN_HIT_AT_PERC = "min_het_af_percent";
+    private static final String MAX_HIT_AT_PERC = "max_het_af_percent";
+    private static final String WRITE_UNFILTERED_GERMLINE = "write_unfiltered_germline";
+    private static final String POSITION_GAP = "position_gap";
+
+    public AmberConfig(final ConfigBuilder configBuilder)
+    {
+        TumorId = configBuilder.getValue(TUMOR);
+        TumorBam = configBuilder.getValue(TUMOR_BAM);
+
+        ReferenceIds = Lists.newArrayList();
+        ReferenceBams = Lists.newArrayList();
+
+        if(configBuilder.hasValue(REFERENCE) && configBuilder.hasValue(REFERENCE_BAM))
+        {
+            ReferenceIds.addAll(Arrays.asList(configBuilder.getValue(REFERENCE).split(SAMPLE_DELIM)));
+            ReferenceBams.addAll(Arrays.asList(configBuilder.getValue(REFERENCE_BAM).split(SAMPLE_DELIM)));
+        }
+
+        BafLociPath = configBuilder.getValue(LOCI_FILE);
+        TargetRegionsBed  = configBuilder.getValue(TARGET_REGIONS_BED);
+
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
+        RefGenomeFile = configBuilder.getValue(REF_GENOME);
+
+        TumorOnlyMinSupport = configBuilder.getInteger(TUMOR_ONLY_MIN_SUPPORT);
+        TumorOnlyMinVaf = configBuilder.getDecimal(TUMOR_ONLY_MIN_VAF);
+
+        if(configBuilder.hasValue(TUMOR_MIN_DEPTH))
+            TumorMinDepth = configBuilder.getInteger(TUMOR_MIN_DEPTH);
+        else if(ReferenceIds.isEmpty())
+            TumorMinDepth = DEFAULT_TUMOR_ONLY_MIN_DEPTH;
+        else
+            TumorMinDepth = DEFAULT_TUMOR_MIN_DEPTH;
+
+        MinBaseQuality = configBuilder.getInteger(MIN_BASE_QUALITY);
+        MinMappingQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
+
+        if(TargetRegionsBed == null)
+        {
+            MinDepthPercent = configBuilder.getDecimal(MIN_DEPTH_PERC);
+            MaxDepthPercent = configBuilder.getDecimal(MAX_DEPTH_PERC);
+        }
+        else
+        {
+            // disable in targeted mode
+            MinDepthPercent = 0;
+            MaxDepthPercent = 0;
+        }
+
+        MinHetAfPercent = configBuilder.getDecimal(MIN_HIT_AT_PERC);
+        MaxHetAfPercent = configBuilder.getDecimal(MAX_HIT_AT_PERC);
+        PositionGap = configBuilder.getInteger(POSITION_GAP);
+
+        WriteUnfilteredGermline = configBuilder.hasFlag(WRITE_UNFILTERED_GERMLINE);
+
+        OutputDir = parseOutputDir(configBuilder);
+        Threads = parseThreads(configBuilder);
+        BamStringency = BamUtils.validationStringency(configBuilder);
+
+        SpecificChromosomes = loadSpecificChromsomes(configBuilder.getValue(SPECIFIC_CHROMOSOMES));
+
+        if(!SpecificChromosomes.isEmpty())
+        {
+            AMB_LOGGER.info("restricting to chromosomes: {}", configBuilder.getValue(SPECIFIC_CHROMOSOMES));
+        }
+    }
+
+    public static void registerConfig(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addConfigItem(TUMOR, TUMOR_DESC);
+        configBuilder.addPath(TUMOR_BAM, false, TUMOR_BAM_DESC);
+
+        configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
+        configBuilder.addPath(REFERENCE_BAM, false, REFERENCE_BAM_DESC);
+
+        configBuilder.addPath(LOCI_FILE, true, "Path to BAF loci vcf file");
+        configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
+
+        addRefGenomeVersion(configBuilder);
+        configBuilder.addPath(REF_GENOME, false, REF_GENOME_CFG_DESC + ", required when using CRAM files");
+
+        configBuilder.addInteger(
+                TUMOR_ONLY_MIN_SUPPORT, "Min support in ref and alt in tumor only mode", DEFAULT_TUMOR_ONLY_MIN_SUPPORT);
+
+        configBuilder.addDecimal(TUMOR_ONLY_MIN_VAF, "Min VAF in ref and alt in tumor only mode", DEFAULT_TUMOR_ONLY_MIN_VAF);
+
+        configBuilder.addConfigItem(TUMOR_MIN_DEPTH,
+                format("Min tumor depth, default tumor/normal(%d) tumor-only(%d)", DEFAULT_TUMOR_MIN_DEPTH, DEFAULT_TUMOR_ONLY_MIN_DEPTH));
+
+        configBuilder.addInteger(
+                MIN_BASE_QUALITY, "Minimum quality for a base to be considered", DEFAULT_MIN_BASE_QUALITY);
+
+        configBuilder.addInteger(
+                MIN_MAP_QUALITY, "Minimum mapping quality for an alignment to be used", DEFAULT_MIN_MAPPING_QUALITY);
+
+        configBuilder.addInteger(POSITION_GAP, "Gap between site for BAM reading", 0);
+
+        configBuilder.addDecimal(MIN_DEPTH_PERC, "Min percentage of median depth", DEFAULT_MIN_DEPTH_PERCENTAGE);
+        configBuilder.addDecimal(MAX_DEPTH_PERC, "Max percentage of median depth", DEFAULT_MAX_DEPTH_PERCENTAGE);
+        configBuilder.addDecimal(MIN_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MIN_HET_AF_PERCENTAGE);
+        configBuilder.addDecimal(MAX_HIT_AT_PERC, "Max heterozygous AF%", DEFAULT_MAX_HET_AF_PERCENTAGE);
+
+        configBuilder.addFlag(WRITE_UNFILTERED_GERMLINE, "Write all (unfiltered) germline points");
+
+        addOutputDir(configBuilder);
+        addThreadOptions(configBuilder);
+        addValidationStringencyOption(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        addSpecificChromosomesRegionsConfig(configBuilder);
+    }
 
     public String primaryReference()
     {
         return ReferenceIds.get(0);
     }
 
-    public List<String> allSamples()
-    {
-        List<String> samples = new ArrayList<>(ReferenceIds);
-        samples.add(TumorId);
-        return samples;
-    }
-
-    public boolean isTumorOnly() { return ReferenceBamPath.isEmpty() && TumorBamPath != null; }
-
+    public boolean isTumorOnly() { return ReferenceBams.isEmpty() && TumorBam != null; }
     public boolean isGermlineOnly()
     {
-        return !ReferenceBamPath.isEmpty() && TumorBamPath == null;
+        return !ReferenceBams.isEmpty() && TumorBam == null;
     }
 
     // use the tumor id if it is not null, otherwise primary reference Id
@@ -125,15 +215,15 @@ public class AmberConfig
 
     public boolean isValid()
     {
-        if(ReferenceIds.size() != ReferenceBamPath.size())
+        if(ReferenceIds.size() != ReferenceBams.size())
         {
             AMB_LOGGER.error("Each reference sample must have matching bam");
             return false;
         }
 
-        if ((TumorId == null) != (TumorBamPath == null))
+        if ((TumorId == null) != (TumorBam == null))
         {
-            AMB_LOGGER.error("Unmatched: TumorId: {} and TumorBamPath: {}", TumorId, TumorBamPath);
+            AMB_LOGGER.error("Unmatched: TumorId: {} and TumorBamPath: {}", TumorId, TumorBam);
             return false;
         }
 
@@ -145,15 +235,15 @@ public class AmberConfig
             return false;
         }
 
-        if(TumorBamPath != null && !new File(TumorBamPath).exists())
+        if(TumorBam != null && !new File(TumorBam).exists())
         {
-            AMB_LOGGER.error("Unable to locate tumor bam file {}", TumorBamPath);
+            AMB_LOGGER.error("Unable to locate tumor bam file {}", TumorBam);
             return false;
         }
 
         if(!isTumorOnly())
         {
-            for(String referenceBam : ReferenceBamPath)
+            for(String referenceBam : ReferenceBams)
             {
                 if(!new File(referenceBam).exists())
                 {

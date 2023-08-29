@@ -42,9 +42,9 @@ public class ExtendDiploid
 
     private final int mMinTumorCount;
     private final int mCentromereMinTumorCount;
-    private final CopyNumberTolerance mTolerance;
+    private final AlleleTolerance mTolerance;
 
-    public ExtendDiploid(final CopyNumberTolerance tolerance, final int minTumorCount, final int minTumorCountAtCentromere)
+    public ExtendDiploid(final AlleleTolerance tolerance, final int minTumorCount, final int minTumorCountAtCentromere)
     {
         mMinTumorCount = minTumorCount;
         mCentromereMinTumorCount = minTumorCountAtCentromere;

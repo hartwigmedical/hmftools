@@ -9,39 +9,45 @@ import java.nio.file.Paths;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class FileBasedPlotManager implements PlotManager {
-
-    private static final Logger LOGGER = LogManager.getLogger(FileBasedPlotManager.class);
-
+public class FileBasedPlotManager implements PlotManager
+{
     private static final String PLOT_DIRECTORY = "plot";
 
     @NotNull
     private final String outputDir;
 
-    public FileBasedPlotManager(@NotNull final String outputDir) {
+    public FileBasedPlotManager(@NotNull final String outputDir)
+    {
         this.outputDir = outputDir;
     }
 
     @Override
-    public void createPlotDirectory() throws IOException {
+    public void createPlotDirectory() throws IOException
+    {
         File plotDir = new File(plotDirectoryPath());
-        if (plotDir.exists()) {
+        if(plotDir.exists())
+        {
             File[] files = plotDir.listFiles();
-            if (files == null) {
+            if(files == null)
+            {
                 throw new IllegalStateException(String.format(
                         "Plot directory of [%s] is not a directory. Please check configured plot directory.",
                         plotDirectoryPath()));
-            } else if (files.length > 0) {
+            }
+            else if(files.length > 0)
+            {
                 LOGGER.warn("Plot directory already existed at path [{}], continuing, but output may be mixed with older files. "
                         + "It is recommended to start ORANGE with a clean output directory", plotDirectoryPath());
             }
-        } else {
-            if (!plotDir.mkdirs()) {
+        }
+        else
+        {
+            if(!plotDir.mkdirs())
+            {
                 throw new IOException("Unable to create plot directory: " + plotDir);
             }
 
@@ -51,14 +57,17 @@ public class FileBasedPlotManager implements PlotManager {
 
     @Nullable
     @Override
-    public String processPlotFile(@Nullable String sourcePlotPath) throws IOException {
-        if (sourcePlotPath == null) {
+    public String processPlotFile(@Nullable String sourcePlotPath) throws IOException
+    {
+        if(sourcePlotPath == null)
+        {
             return null;
         }
 
         String targetPath = checkAddDirSeparator(plotDirectoryPath()) + extractFileName(sourcePlotPath);
 
-        if (!Files.exists(Paths.get(targetPath))) {
+        if(!Files.exists(Paths.get(targetPath)))
+        {
             LOGGER.debug("Copying '{}' to '{}'", sourcePlotPath, targetPath);
             Files.copy(new File(sourcePlotPath).toPath(), new File(targetPath).toPath());
         }
@@ -67,22 +76,26 @@ public class FileBasedPlotManager implements PlotManager {
     }
 
     @NotNull
-    private String plotDirectoryPath() {
+    private String plotDirectoryPath()
+    {
         return outputDir + File.separator + PLOT_DIRECTORY;
     }
 
     @NotNull
     @VisibleForTesting
-    static String extractFileName(@NotNull String sourcePlotPath) {
+    static String extractFileName(@NotNull String sourcePlotPath)
+    {
         return sourcePlotPath.substring(sourcePlotPath.lastIndexOf(File.separator) + 1);
     }
 
     @NotNull
     @VisibleForTesting
-    static String relativePath(@NotNull String target, @NotNull String rootDir) {
+    static String relativePath(@NotNull String target, @NotNull String rootDir)
+    {
         String pathToRemove = rootDir.endsWith(File.separator) ? rootDir : rootDir + File.separator;
 
-        if (!target.contains(pathToRemove)) {
+        if(!target.contains(pathToRemove))
+        {
             throw new IllegalStateException("Cannot make relative path of '" + target + "' based on '" + rootDir + "'");
         }
 

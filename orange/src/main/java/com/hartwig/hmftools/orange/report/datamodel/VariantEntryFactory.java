@@ -18,22 +18,23 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class VariantEntryFactory {
-
-    private VariantEntryFactory() {
-    }
-
+public final class VariantEntryFactory
+{
     @NotNull
-    public static List<VariantEntry> create(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers) {
+    public static List<VariantEntry> create(@NotNull List<PurpleVariant> variants, @NotNull List<PurpleDriver> drivers)
+    {
         List<VariantEntry> entries = Lists.newArrayList();
-        for (PurpleVariant variant : variants) {
+        for(PurpleVariant variant : variants)
+        {
             PurpleDriver driver = Drivers.canonicalMutationEntryForGene(drivers, variant.gene());
             entries.add(toVariantEntry(variant, driver));
         }
 
-        for (PurpleDriver nonCanonicalDriver : Drivers.nonCanonicalMutationEntries(drivers)) {
+        for(PurpleDriver nonCanonicalDriver : Drivers.nonCanonicalMutationEntries(drivers))
+        {
             PurpleVariant nonCanonicalVariant = findReportedVariantForDriver(variants, nonCanonicalDriver);
-            if (nonCanonicalVariant != null) {
+            if(nonCanonicalVariant != null)
+            {
                 entries.add(toVariantEntry(nonCanonicalVariant, nonCanonicalDriver));
             }
         }
@@ -42,15 +43,20 @@ public final class VariantEntryFactory {
     }
 
     @NotNull
-    private static VariantEntry toVariantEntry(@NotNull PurpleVariant variant, @Nullable PurpleDriver driver) {
+    private static VariantEntry toVariantEntry(@NotNull PurpleVariant variant, @Nullable PurpleDriver driver)
+    {
         PurpleTranscriptImpact transcriptImpact;
 
-        if (driver != null) {
+        if(driver != null)
+        {
             transcriptImpact = findTranscriptImpact(variant, driver.transcript());
-            if (transcriptImpact == null) {
+            if(transcriptImpact == null)
+            {
                 throw new IllegalStateException("Could not find impact on transcript " + driver.transcript() + " for variant " + variant);
             }
-        } else {
+        }
+        else
+        {
             transcriptImpact = variant.canonicalImpact();
         }
 
@@ -73,10 +79,13 @@ public final class VariantEntryFactory {
     }
 
     @Nullable
-    private static PurpleVariant findReportedVariantForDriver(@NotNull List<PurpleVariant> variants, @NotNull PurpleDriver driver) {
+    private static PurpleVariant findReportedVariantForDriver(@NotNull List<PurpleVariant> variants, @NotNull PurpleDriver driver)
+    {
         List<PurpleVariant> reportedVariantsForGene = findReportedVariantsForGene(variants, driver.gene());
-        for (PurpleVariant variant : reportedVariantsForGene) {
-            if (findTranscriptImpact(variant, driver.transcript()) != null) {
+        for(PurpleVariant variant : reportedVariantsForGene)
+        {
+            if(findTranscriptImpact(variant, driver.transcript()) != null)
+            {
                 return variant;
             }
         }
@@ -85,10 +94,13 @@ public final class VariantEntryFactory {
     }
 
     @NotNull
-    private static List<PurpleVariant> findReportedVariantsForGene(@NotNull List<PurpleVariant> variants, @NotNull String geneToFind) {
+    private static List<PurpleVariant> findReportedVariantsForGene(@NotNull List<PurpleVariant> variants, @NotNull String geneToFind)
+    {
         List<PurpleVariant> reportedVariantsForGene = Lists.newArrayList();
-        for (PurpleVariant variant : variants) {
-            if (variant.reported() && variant.gene().equals(geneToFind)) {
+        for(PurpleVariant variant : variants)
+        {
+            if(variant.reported() && variant.gene().equals(geneToFind))
+            {
                 reportedVariantsForGene.add(variant);
             }
         }
@@ -97,13 +109,17 @@ public final class VariantEntryFactory {
 
     @NotNull
     @VisibleForTesting
-    static PurpleTranscriptImpact findTranscriptImpact(@NotNull PurpleVariant variant, @NotNull String transcriptToFind) {
-        if (variant.canonicalImpact().transcript().equals(transcriptToFind)) {
+    static PurpleTranscriptImpact findTranscriptImpact(@NotNull PurpleVariant variant, @NotNull String transcriptToFind)
+    {
+        if(variant.canonicalImpact().transcript().equals(transcriptToFind))
+        {
             return variant.canonicalImpact();
         }
 
-        for (PurpleTranscriptImpact otherImpact : variant.otherImpacts()) {
-            if (otherImpact.transcript().equals(transcriptToFind)) {
+        for(PurpleTranscriptImpact otherImpact : variant.otherImpacts())
+        {
+            if(otherImpact.transcript().equals(transcriptToFind))
+            {
                 return otherImpact;
             }
         }
@@ -113,24 +129,29 @@ public final class VariantEntryFactory {
 
     @NotNull
     @VisibleForTesting
-    static String determineImpact(@NotNull PurpleTranscriptImpact impact) {
+    static String determineImpact(@NotNull PurpleTranscriptImpact impact)
+    {
         String hgvsProteinImpact = impact.hgvsProteinImpact();
-        if (!hgvsProteinImpact.isEmpty() && !hgvsProteinImpact.equals("p.?")) {
+        if(!hgvsProteinImpact.isEmpty() && !hgvsProteinImpact.equals("p.?"))
+        {
             return AminoAcids.forceSingleLetterProteinAnnotation(hgvsProteinImpact);
         }
 
         String hgvsCodingImpact = impact.hgvsCodingImpact();
-        if (!hgvsCodingImpact.isEmpty()) {
+        if(!hgvsCodingImpact.isEmpty())
+        {
             return impact.codingEffect() == PurpleCodingEffect.SPLICE ? hgvsCodingImpact + " splice" : hgvsCodingImpact;
         }
 
         Set<PurpleVariantEffect> effects = impact.effects();
-        if (effects.contains(PurpleVariantEffect.UPSTREAM_GENE)) {
+        if(effects.contains(PurpleVariantEffect.UPSTREAM_GENE))
+        {
             return "upstream";
         }
 
         StringJoiner joiner = new StringJoiner(", ");
-        for (PurpleVariantEffect effect : effects) {
+        for(PurpleVariantEffect effect : effects)
+        {
             joiner.add(VariantEffect.valueOf(effect.name()).effect());
         }
         return joiner.toString();

@@ -2,11 +2,10 @@ package com.hartwig.hmftools.neo.utils;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.scorer.TpmCalculator.HIGH_PROBABILITY;
-import static com.hartwig.hmftools.neo.scorer.TpmCalculator.LOW_PROBABILITY;
+import static com.hartwig.hmftools.neo.score.TpmCalculator.HIGH_PROBABILITY;
+import static com.hartwig.hmftools.neo.score.TpmCalculator.LOW_PROBABILITY;
 
-import com.hartwig.hmftools.neo.scorer.TpmCalculator;
+import com.hartwig.hmftools.neo.score.TpmCalculator;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;

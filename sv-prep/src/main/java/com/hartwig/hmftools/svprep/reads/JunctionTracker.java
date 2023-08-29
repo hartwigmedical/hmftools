@@ -181,7 +181,7 @@ public class JunctionTracker
     {
         // gather groups with a read in another partition and not linked to a junction
         // to then pass to the combined cache
-        return mRemoteCandidateReadGroups.stream().filter(x -> x.junctionPositions() == null).collect(Collectors.toList());
+        return mRemoteCandidateReadGroups.stream().filter(x -> x.noRegisteredfJunctionPositions()).collect(Collectors.toList());
     }
 
     public int initialSupportingFrags() { return mInitialSupportingFrags; }
@@ -326,12 +326,13 @@ public class JunctionTracker
 
             if(!supportedJunctions.isEmpty())
             {
+                // check support from most important to least
                 for(Map.Entry<JunctionData,ReadType> entry : supportedJunctions.entrySet())
                 {
                     JunctionData junctionData = entry.getKey();
 
                     // group may already have a junction read, so skip if this is the case
-                    if(readGroup.hasJunctionPosition(junctionData.Position))
+                    if(readGroup.hasJunctionPosition(junctionData))
                         continue;
 
                     if(entry.getValue() == EXACT_SUPPORT)
@@ -339,7 +340,7 @@ public class JunctionTracker
                     else
                         junctionData.SupportingGroups.add(readGroup);
 
-                    readGroup.addJunctionPosition(junctionData.Position);
+                    readGroup.addJunctionPosition(junctionData);
                 }
             }
             else if(!mConfig.AppendMode)
@@ -437,7 +438,7 @@ public class JunctionTracker
             return;
 
         junctions.forEach(x -> x.JunctionGroups.add(readGroup));
-        junctions.forEach(x -> readGroup.addJunctionPosition(x.Position));
+        junctions.forEach(x -> readGroup.addJunctionPosition(x));
 
         for(RemoteJunction remoteJunction : remoteJunctions)
         {
@@ -491,12 +492,12 @@ public class JunctionTracker
         junctionStart.markInternalIndel();
         junctionStart.JunctionGroups.add(readGroup);
         junctionStart.addReadType(read, JUNCTION);
-        readGroup.addJunctionPosition(indelCoords[SE_START]);
+        readGroup.addJunctionPosition(junctionStart);
 
         junctionEnd.markInternalIndel();
         junctionEnd.JunctionGroups.add(readGroup);
-        junctionStart.addReadType(read, JUNCTION);
-        readGroup.addJunctionPosition(indelCoords[SE_END]);
+        junctionEnd.addReadType(read, JUNCTION);
+        readGroup.addJunctionPosition(junctionEnd);
     }
 
     private void checkIndelSupport(final ReadRecord read, final Map<JunctionData,ReadType> supportedJunctions)
@@ -680,7 +681,7 @@ public class JunctionTracker
         if(reachedFragmentCap(junctionData.supportingFragmentCount())) // to limit processing
             return;
 
-        if(readGroup.hasJunctionPosition(junctionData.Position))
+        if(readGroup.hasJunctionPosition(junctionData))
             return;
 
         ReadType readType = supportedJunctions.get(junctionData);
@@ -1038,9 +1039,9 @@ public class JunctionTracker
 
         for(JunctionData junctionData : mJunctions)
         {
-            junctionData.JunctionGroups.forEach(x -> x.addJunctionPosition(junctionData.Position));
-            junctionData.ExactSupportGroups.forEach(x -> x.addJunctionPosition(junctionData.Position));
-            junctionData.SupportingGroups.forEach(x -> x.addJunctionPosition(junctionData.Position));
+            junctionData.JunctionGroups.forEach(x -> x.addJunctionPosition(junctionData));
+            junctionData.ExactSupportGroups.forEach(x -> x.addJunctionPosition(junctionData));
+            junctionData.SupportingGroups.forEach(x -> x.addJunctionPosition(junctionData));
         }
 
         perfCounterStop(PerfCounters.JunctionFilter);

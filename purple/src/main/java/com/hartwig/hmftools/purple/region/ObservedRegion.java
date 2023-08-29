@@ -90,7 +90,8 @@ public class ObservedRegion implements GenomeRegion
                 other.refNormalisedCopyNumber(), other.tumorCopyNumber(), other.tumorBAF(), other.fittedTumorCopyNumber(), other.fittedBAF());
     }
 
-    public ObservedRegion(final String chromosome, final int posStart, final int posEnd, final boolean ratioSupport,
+    public ObservedRegion(
+            final String chromosome, final int posStart, final int posEnd, final boolean ratioSupport,
             final SegmentSupport support, final int bafCount, final double observedBAF, final int depthWindowCount,
             final double observedTumorRatio, final double observedNormalRatio, final double unnormalisedObservedNormalRatio,
             final GermlineStatus germlineStatus, final boolean svCluster, final double gcContent, final int minStart, final int maxStart)

@@ -12,10 +12,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class BreakendUtilTest {
+public class BreakendUtilTest
+{
 
     @Test
-    public void canCreatePairsPerSv() {
+    public void canCreatePairsPerSv()
+    {
         LinxBreakend breakend1 = LinxOrangeTestFactory.breakendBuilder().svId(1).build();
         LinxBreakend breakend2 = LinxOrangeTestFactory.breakendBuilder().svId(1).build();
         LinxBreakend breakend3 = LinxOrangeTestFactory.breakendBuilder().svId(2).build();
@@ -36,9 +38,12 @@ public class BreakendUtilTest {
     }
 
     @NotNull
-    private static Pair<LinxBreakend, LinxBreakend> findBySvId(@NotNull List<Pair<LinxBreakend, LinxBreakend>> pairs, int svIdToFind) {
-        for (Pair<LinxBreakend, LinxBreakend> pair : pairs) {
-            if (pair.getLeft().svId() == svIdToFind && pair.getRight().svId() == svIdToFind) {
+    private static Pair<LinxBreakend, LinxBreakend> findBySvId(@NotNull List<Pair<LinxBreakend, LinxBreakend>> pairs, int svIdToFind)
+    {
+        for(Pair<LinxBreakend, LinxBreakend> pair : pairs)
+        {
+            if(pair.getLeft().svId() == svIdToFind && pair.getRight().svId() == svIdToFind)
+            {
                 return pair;
             }
         }

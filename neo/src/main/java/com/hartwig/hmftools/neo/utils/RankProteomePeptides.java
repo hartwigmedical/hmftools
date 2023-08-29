@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
@@ -314,7 +315,7 @@ public class RankProteomePeptides
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         configBuilder.addPath(ALLELE_FILE, true, "Peptides to search for");
         configBuilder.addDecimal(RANK_CUTOFF, "Number of amino acid flanks to retrieve", 0.01);
         ScoreConfig.registerConfig(configBuilder);
@@ -323,13 +324,7 @@ public class RankProteomePeptides
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         RankProteomePeptides rankProteomePeptides = new RankProteomePeptides(configBuilder);
         rankProteomePeptides.run();

@@ -72,7 +72,7 @@ public class PurpleVariantFactoryTest
                 .localPhaseSets(List.of(1, 2, 3))
                 .build();
 
-        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache());
+        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache(), false);
         PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
 
         assertEquals(PurpleVariantType.INDEL, purpleVariant.type());

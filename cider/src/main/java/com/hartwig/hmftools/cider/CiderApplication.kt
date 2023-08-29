@@ -7,6 +7,10 @@ import com.beust.jcommander.UnixStyleUsageFormatter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hartwig.hmftools.cider.AsyncBamReader.processBam
 import com.hartwig.hmftools.cider.VDJSequenceTsvWriter.writeVDJSequences
+import com.hartwig.hmftools.cider.blastn.BlastnAnnotation
+import com.hartwig.hmftools.cider.blastn.BlastnAnnotator
+import com.hartwig.hmftools.cider.blastn.BlastnStatus
+import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
 import com.hartwig.hmftools.cider.primer.*
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
@@ -65,8 +69,8 @@ class CiderApplication
         val start = Instant.now()
 
         val ciderGeneDatastore: ICiderGeneDatastore = CiderGeneDatastore(
-            CiderGeneDataLoader.loadAnchorTemplateTsv(mParams.refGenomeVersion),
-            CiderGeneDataLoader.loadConstantRegionGenes(mParams.refGenomeVersion, mParams.ensemblDataDir))
+            CiderGeneDataLoader.loadAnchorTemplates(mParams.refGenomeVersion),
+            CiderGeneDataLoader.loadConstantDiversityRegions(mParams.refGenomeVersion))
 
         val candidateBlosumSearcher = AnchorBlosumSearcher(
             ciderGeneDatastore,
@@ -109,9 +113,30 @@ class CiderApplication
         }
 
         val vdjAnnotator = VdjAnnotator(vjReadLayoutAdaptor, vdjBuilderBlosumSearcher)
-        val vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, primerMatchList)
+        val blastnAnnotations: Collection<BlastnAnnotation>
 
-        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations, mParams.reportMatchRefSeq, true)
+        if (mParams.blast != null)
+        {
+            // we need to filter out VDJ sequences that already match reference. In this version we avoid running blastn on those
+            val filteredVdjs = vdjSequences.filter { vdj -> !vdjAnnotator.vdjMatchesRef(vdj) }
+
+            // perform a GC collection before running blastn. This is to reduce memory used by JVM
+            System.gc()
+
+            val blastnAnnotator = BlastnAnnotator()
+            blastnAnnotations = blastnAnnotator.runAnnotate(mParams.sampleId, mParams.blast!!, mParams.blastDb!!, filteredVdjs, mParams.outputDir, mParams.threadCount)
+        }
+        else
+        {
+            blastnAnnotations = emptyList()
+        }
+
+        var vdjAnnotations: List<VdjAnnotation> = vdjAnnotator.sortAndAnnotateVdjs(vdjSequences, blastnAnnotations, primerMatchList)
+
+        // apply hard filters
+        vdjAnnotations = vdjAnnotations.filter { vdjAnnotation -> passesHardFilters(vdjAnnotation) }
+
+        writeVDJSequences(mParams.outputDir, mParams.sampleId, vdjAnnotations)
 
         // write the stats per locus
         CiderLocusStatsWriter.writeLocusStats(mParams.outputDir, mParams.sampleId, layoutBuildResults, vdjAnnotations)
@@ -130,25 +155,28 @@ class CiderApplication
             readProcessor.asyncProcessSamRecord(samRecord)
         }
 
-        val genomeRegions = ArrayList<GenomeRegion>()
+        val genomeRegions = TreeSet<GenomeRegion>()
 
         // first add all the VJ anchor locations
         for (anchorGenomeLoc: VJAnchorGenomeLocation in ciderGeneDatastore.getVjAnchorGeneLocations())
         {
+            require(anchorGenomeLoc.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
                 anchorGenomeLoc.chromosome,
                 anchorGenomeLoc.start - mParams.approxMaxFragmentLength,
                 anchorGenomeLoc.end + mParams.approxMaxFragmentLength))
         }
 
-        // then add all the constant region genome locations
-        for (constantRegion: IgTcrConstantRegion in ciderGeneDatastore.getIgConstantRegions())
+        // then add all the constant / diversity region genome locations
+        for (region: IgTcrConstantDiversityRegion in ciderGeneDatastore.getIgConstantDiversityRegions())
         {
+            require(region.genomeLocation.inPrimaryAssembly)
             genomeRegions.add(GenomeRegions.create(
-                constantRegion.genomeLocation.chromosome,
-                constantRegion.genomeLocation.posStart - mParams.approxMaxFragmentLength,
-                constantRegion.genomeLocation.posEnd + mParams.approxMaxFragmentLength))
+                region.genomeLocation.chromosome,
+                region.genomeLocation.posStart - mParams.approxMaxFragmentLength,
+                region.genomeLocation.posEnd + mParams.approxMaxFragmentLength))
         }
+
         processBam(mParams.bamPath, readerFactory, genomeRegions, asyncBamRecordHander, mParams.threadCount)
         sLogger.info("found {} VJ read records", readProcessor.allMatchedReads.size)
     }
@@ -228,6 +256,35 @@ class CiderApplication
         }
     }
 
+    fun passesHardFilters(vdjAnnotation: VdjAnnotation) : Boolean
+    {
+        if (!mParams.reportMatchRefSeq && vdjAnnotation.filters.contains(VdjAnnotation.Filter.MATCHES_REF))
+        {
+            return false
+        }
+
+        // filter out sequences that are too short and only has V or J
+        if (vdjAnnotation.filters.contains(VdjAnnotation.Filter.MIN_LENGTH))
+        {
+            if (vdjAnnotation.blastnAnnotation == null)
+            {
+                // if blastn is not run, we use NO_V_ANCHOR / NO_J_ANCHOR
+                if (vdjAnnotation.filters.contains(VdjAnnotation.Filter.NO_V_ANCHOR) ||
+                    vdjAnnotation.filters.contains(VdjAnnotation.Filter.NO_J_ANCHOR))
+                {
+                    return false
+                }
+            }
+            else if (vdjAnnotation.blastnAnnotation!!.blastnStatus == BlastnStatus.V_ONLY ||
+                    vdjAnnotation.blastnAnnotation!!.blastnStatus == BlastnStatus.J_ONLY)
+            {
+                return false
+            }
+        }
+
+        return true
+    }
+
     companion object
     {
         val sLogger = LogManager.getLogger(CiderApplication::class.java)
@@ -264,12 +321,11 @@ class CiderApplication
             }
 
             // set all thread exception handler
-            Thread.setDefaultUncaughtExceptionHandler(
-                { t: Thread, e: Throwable ->
-                    sLogger.error("[{}]: uncaught exception: {}", t, e)
-                    e.printStackTrace(System.err)
-                    System.exit(1)
-                })
+            Thread.setDefaultUncaughtExceptionHandler { t: Thread, e: Throwable ->
+                sLogger.error("[{}]: uncaught exception: {}", t, e)
+                e.printStackTrace(System.err)
+                System.exit(1)
+            }
 
             System.exit(ciderApplication.run(args))
         }

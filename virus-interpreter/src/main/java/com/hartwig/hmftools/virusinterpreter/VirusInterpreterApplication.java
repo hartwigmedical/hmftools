@@ -31,15 +31,10 @@ public class VirusInterpreterApplication
 
     public static void main(String[] args) throws IOException
     {
-        final VersionInfo version = new VersionInfo("virus-interpreter.version");
-        VI_LOGGER.info("Running Virus Interpreter v{}", version.version());
-
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder("VirusInterpreter");
         registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
 
         VirusInterpreterConfig config = new VirusInterpreterConfig(configBuilder);
 

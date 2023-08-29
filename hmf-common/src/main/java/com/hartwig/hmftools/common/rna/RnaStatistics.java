@@ -47,7 +47,8 @@ public abstract class RnaStatistics
 
     public abstract String qcStatus();
 
-    private static final int LOW_COVERAGE_THRESHOLD = 2500000;
+    public static final int LOW_COVERAGE_THRESHOLD = 2500000;
+    public static final int LOW_COVERAGE_PANEL_THRESHOLD = 100000;
     private static final int SPLICE_GENE_THRESHOLD = 17000;
     private static final double HIGH_DUPLICATES_THRESHOLD = 0.9;
 
@@ -153,7 +154,12 @@ public abstract class RnaStatistics
 
     public static String calcQcStatus(long totalFragments, long duplicateFragments, int splicedGenes)
     {
-        if(totalFragments - duplicateFragments < LOW_COVERAGE_THRESHOLD)
+        return calcQcStatus(totalFragments, duplicateFragments, splicedGenes, LOW_COVERAGE_THRESHOLD);
+    }
+
+    public static String calcQcStatus(long totalFragments, long duplicateFragments, int splicedGenes, int lowCoverageThreshold)
+    {
+        if(totalFragments - duplicateFragments < lowCoverageThreshold)
             return QC_FAIL_LOW_COVERAGE;
 
         List<String> warnings = Lists.newArrayList();

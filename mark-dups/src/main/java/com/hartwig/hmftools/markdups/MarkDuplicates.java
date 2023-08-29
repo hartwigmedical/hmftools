@@ -3,6 +3,7 @@ package com.hartwig.hmftools.markdups;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
@@ -154,10 +155,7 @@ public class MarkDuplicates
             combinedPerfCounter.logStats();
         }
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        MD_LOGGER.info("Mark duplicates complete, mins({})", format("%.3f", timeTakeMins));
+        MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(@NotNull final String[] args)

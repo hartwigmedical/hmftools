@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.chord;
 
-import static com.hartwig.hmftools.compar.Category.CUPPA;
+import static com.hartwig.hmftools.compar.Category.CHORD;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA1;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA2;
@@ -34,7 +34,7 @@ public class ChordComparer implements ItemComparer
     }
 
     @Override
-    public Category category() { return CUPPA; }
+    public Category category() { return CHORD; }
 
     @Override
     public void registerThresholds(final DiffThresholds thresholds)

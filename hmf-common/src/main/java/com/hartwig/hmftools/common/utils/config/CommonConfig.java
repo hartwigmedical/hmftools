@@ -20,11 +20,20 @@ public final class CommonConfig
     public static final String REFERENCE = "reference";
     public static final String REFERENCE_DESC = "Reference ID";
 
+    public static final String TUMOR_BAM = "tumor_bam";
+    public static final String TUMOR_BAM_DESC = "Tumor BAM file";
+
+    public static final String REFERENCE_BAM = "reference_bam";
+    public static final String REFERENCE_BAM_DESC = "Reference BAM file";
+
     public static final String LOG_READ_IDS = "log_read_ids";
     public static final String LOG_READ_IDS_DESC = "Log specific read IDs, separated by ';'";
 
     public static final String PERF_DEBUG = "perf_debug";
     public static final String PERF_DEBUG_DESC = "Detailed performance tracking and logging";
+
+    public static final String TARGET_REGIONS_BED = "target_regions_bed";
+    public static final String TARGET_REGIONS_BED_DESC = "Target regions BED file";
 
     public static final String SAMPLE_DATA_DIR_CFG = "sample_data_dir";
     public static final String SAMPLE_DATA_DIR_DESC = "Path to sample pipeline files";

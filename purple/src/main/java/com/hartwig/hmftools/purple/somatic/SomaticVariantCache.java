@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
-import java.io.File;
 import java.util.List;
 
 import com.google.common.collect.ListMultimap;
@@ -10,14 +9,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
-import com.hartwig.hmftools.purple.somatic.SomaticVariant;
-import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantCache
@@ -55,12 +51,12 @@ public class SomaticVariantCache
 
         final HotspotEnrichment hotspotEnrichment = new HotspotEnrichment(somaticHotspots, true);
 
-        VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcf), false);
-        mVcfHeader = vcfReader.getHeader();
+        VcfFileReader vcfReader = new VcfFileReader(somaticVcf);
+        mVcfHeader = vcfReader.vcfHeader();
 
         boolean tumorOnly = mConfig.tumorOnlyMode();
 
-        for(VariantContext variantContext : vcfReader)
+        for(VariantContext variantContext : vcfReader.iterator())
         {
             SomaticVariant variant = new SomaticVariant(variantContext, mConfig.TumorId, mConfig.ReferenceId);
 

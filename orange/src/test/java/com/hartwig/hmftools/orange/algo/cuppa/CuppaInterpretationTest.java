@@ -14,10 +14,12 @@ import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CuppaInterpretationTest {
+public class CuppaInterpretationTest
+{
 
     @Test
-    public void canFindPredictionsByRank() {
+    public void canFindPredictionsByRank()
+    {
         CuppaPrediction cancerA = create("Cancer A", 0.3);
         CuppaPrediction cancerB = create("Cancer B", 0.4);
         CuppaPrediction cancerC = create("Cancer C", 0.1);
@@ -33,18 +35,21 @@ public class CuppaInterpretationTest {
         assertNull(CuppaInterpretation.rank(cuppa, 5));
     }
 
-    @Test (expected = IllegalStateException.class)
-    public void crashOnMissingPredictions() {
+    @Test(expected = IllegalStateException.class)
+    public void crashOnMissingPredictions()
+    {
         CuppaInterpretation.best(withPredictions(Lists.newArrayList()));
     }
 
     @NotNull
-    private static CuppaData withPredictions(@NotNull List<CuppaPrediction> predictions) {
+    private static CuppaData withPredictions(@NotNull List<CuppaPrediction> predictions)
+    {
         return ImmutableCuppaData.builder().from(TestCuppaFactory.createMinimalCuppaData()).predictions(predictions).build();
     }
 
     @NotNull
-    private static CuppaPrediction create(@NotNull String cancerType, double likelihood) {
+    private static CuppaPrediction create(@NotNull String cancerType, double likelihood)
+    {
         return ImmutableCuppaPrediction.builder().cancerType(cancerType).likelihood(likelihood).build();
     }
 }

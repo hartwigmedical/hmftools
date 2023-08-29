@@ -7,10 +7,6 @@ import org.jetbrains.annotations.Nullable;
 
 public final class VariantTranscriptImpactCleaner
 {
-    private VariantTranscriptImpactCleaner()
-    {
-    }
-
     /**
      * When VariantTranscriptImpacts are created from the VCF file, it sometimes (incorrectly) parses the square array brackets.
      * These parsed brackets are then included in the impacts fields and here we remove them.

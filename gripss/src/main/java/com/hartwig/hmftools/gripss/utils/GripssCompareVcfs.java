@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -56,6 +57,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.gripss.VariantBuilder;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
@@ -119,7 +121,8 @@ public class GripssCompareVcfs
         mOriginalSvData = Maps.newHashMap();
         mOriginalCoordsSvData = Maps.newHashMap();
 
-        mVariantBuilder = new VariantBuilder(null, new HotspotCache(configBuilder), new TargetRegions(null), false);
+        mVariantBuilder = new VariantBuilder(
+                null, new HotspotCache(configBuilder), new TargetRegions(configBuilder), false);
 
         mIgnorePonDiff = configBuilder.hasFlag(IGNORE_PON_DIFF);
         mKeyByCoords = configBuilder.hasFlag(KEY_BY_COORDS);
@@ -170,7 +173,6 @@ public class GripssCompareVcfs
         mVcfCheckFields.add(new VcfCompareField(VT_BSC, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(VT_BASRP, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(VT_BASSR, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-
     }
 
     public void run()
@@ -188,16 +190,17 @@ public class GripssCompareVcfs
 
         compareVariants(mNewVcf);
         closeBufferedWriter(mWriter);
+
+        GR_LOGGER.info("Gripss compare VCFs complete");
     }
 
     private void loadOriginalVariants(final String vcfFile)
     {
         mVariantBuilder.clearState();
 
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                vcfFile, new VCFCodec(), false);
+        VcfFileReader reader = new VcfFileReader(vcfFile);
 
-        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+        VCFHeader vcfHeader = reader.vcfHeader();
         GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mReferenceId, mSampleId);
 
         if(genotypeIds == null)
@@ -234,7 +237,7 @@ public class GripssCompareVcfs
                 }
             }
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             GR_LOGGER.error("error reading vcf({}): {}", vcfFile, e.toString());
         }
@@ -254,11 +257,10 @@ public class GripssCompareVcfs
 
         GR_LOGGER.info("loading new VCF({})", newVcfFile);
 
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                newVcfFile, new VCFCodec(), false);
+        VcfFileReader reader = new VcfFileReader(newVcfFile);
 
-        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, "", mSampleId);
+        VCFHeader vcfHeader = reader.vcfHeader();
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mReferenceId, mSampleId);
 
         if(genotypeIds == null)
             System.exit(1);
@@ -376,7 +378,7 @@ public class GripssCompareVcfs
 
             GR_LOGGER.info("loaded {} new SVs", newSvCount);
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             GR_LOGGER.error("error reading vcf({}): {}", newVcfFile, e.toString());
         }
@@ -611,21 +613,16 @@ public class GripssCompareVcfs
             DiffAbs = diffAbs;
             DiffPerc = diffPerc;
         }
+
+        public String toString() { return format("tag(%s) scope(%s) st(%s)", VcfTag, Scope, TypeScope); }
     }
 
     public static void main(@NotNull final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(REFERENCE, true, REFERENCE_DESC);
         configBuilder.addPath(ORIGINAL_VCF, true, "Optional, name of the reference sample");
         configBuilder.addPath(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
         configBuilder.addFlag(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");
@@ -634,12 +631,15 @@ public class GripssCompareVcfs
         configBuilder.addFlag(GRIDSS_ONLY, "Only compare fields written by Grids (ie no Gripss)");
         configBuilder.addFlag(REF_DEPTH_ONLY, "Only compare reference depth fields");
 
+        HotspotCache.addConfig(configBuilder);
+        TargetRegions.addConfig(configBuilder);
         addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+        setLogLevel(configBuilder);
 
         GripssCompareVcfs gripssCompare = new GripssCompareVcfs(configBuilder);
         gripssCompare.run();
-
-        GR_LOGGER.info("Gripss compare VCFs complete");
     }
 }
