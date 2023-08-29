@@ -1,8 +1,5 @@
 -- noinspection SqlNoDataSourceInspectionForFile
 
--- TODO Remove per 1st of jan 2023
-DROP TABLE IF EXISTS protect;
-
 DROP TABLE IF EXISTS patient;
 CREATE TABLE patient
 (   id int NOT NULL AUTO_INCREMENT,
