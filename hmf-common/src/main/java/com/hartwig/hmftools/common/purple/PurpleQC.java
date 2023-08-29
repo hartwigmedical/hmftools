@@ -45,6 +45,8 @@ public abstract class PurpleQC
     @NotNull
     public abstract Set<GermlineAberration> germlineAberrations();
 
+    public abstract double lohPercent();
+
     @Override
     public String toString()
     {
