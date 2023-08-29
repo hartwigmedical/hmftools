@@ -15,11 +15,10 @@ import com.hartwig.hmftools.common.purple.GermlineStatus;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class GermlineStatusFactoryTest
+public class GermlineStatusCalcsTest
 {
-
-    private final GermlineStatusFactory maleVictim = new GermlineStatusFactory(CobaltTestUtils.male());
-    private final GermlineStatusFactory femaleVictim = new GermlineStatusFactory(CobaltTestUtils.female());
+    private final GermlineStatusCalcs mMaleCalcs = new GermlineStatusCalcs(CobaltTestUtils.male());
+    private final GermlineStatusCalcs mFemaleCalcs = new GermlineStatusCalcs(CobaltTestUtils.female());
 
     @Test
     public void testAutosome()
@@ -77,23 +76,23 @@ public class GermlineStatusFactoryTest
         assertStatus("Y", 1.11, NOISE);
     }
 
-    private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expected)
+    private void assertStatus(final String chromosome, final double ratio, final GermlineStatus expected)
     {
-        assertEquals(expected, maleVictim.calcStatus(chromosome, ratio, 0.01, 1));
+        assertEquals(expected, mMaleCalcs.calcStatus(chromosome, ratio, 0.01, 1));
         if(chromosome.equals("Y"))
         {
-            assertEquals(UNKNOWN, femaleVictim.calcStatus(chromosome, ratio, 0.01, 1));
+            assertEquals(UNKNOWN, mFemaleCalcs.calcStatus(chromosome, ratio, 0.01, 1));
         }
         else
         {
-            assertEquals(expected, femaleVictim.calcStatus(chromosome, ratio, 0.01, 1));
+            assertEquals(expected, mFemaleCalcs.calcStatus(chromosome, ratio, 0.01, 1));
         }
     }
 
-    private void assertStatus(@NotNull final String chromosome, final double ratio, @NotNull final GermlineStatus expectedMale,
-            @NotNull final GermlineStatus expectedFemale)
+    private void assertStatus(
+            final String chromosome, final double ratio, final GermlineStatus expectedMale, final GermlineStatus expectedFemale)
     {
-        assertEquals(expectedMale, maleVictim.calcStatus(chromosome, ratio, 0.01, 1));
-        assertEquals(expectedFemale, femaleVictim.calcStatus(chromosome, ratio, 0.01, 1));
+        assertEquals(expectedMale, mMaleCalcs.calcStatus(chromosome, ratio, 0.01, 1));
+        assertEquals(expectedFemale, mFemaleCalcs.calcStatus(chromosome, ratio, 0.01, 1));
     }
 }

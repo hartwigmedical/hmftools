@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFi
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -28,7 +29,6 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -42,12 +42,24 @@ public class SegmentAnalyser
     private final String mPurpleDir;
     private final int mThreads;
 
+    private final AnalysisType mAnalysisType;
     private final BufferedWriter mWriter;
+
+    private enum AnalysisType
+    {
+        GERMLINE_AMP_DEL,
+        CHR_Y;
+    }
+
+    private static final String ANALYSIS_TYPE = "analysis_type";
 
     public SegmentAnalyser(final ConfigBuilder configBuilder)
     {
         mSampleIds = loadSampleIdsFile(configBuilder);
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
+
+        mAnalysisType = AnalysisType.valueOf(configBuilder.getValue(ANALYSIS_TYPE));
+
         mThreads = parseThreads(configBuilder);
 
         mWriter = initialiseWriter(parseOutputDir(configBuilder));
@@ -109,7 +121,22 @@ public class SegmentAnalyser
             {
                 String sampleId = mSampleIds.get(i);
 
-                processSample(sampleId);
+                String samplePurpleDir = convertWildcardSamplePath(mPurpleDir, sampleId);
+
+                try
+                {
+                    List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(samplePurpleDir, sampleId));
+
+                    if(mAnalysisType == AnalysisType.GERMLINE_AMP_DEL)
+                        findGermlineAmpDels(sampleId, fittedRegions);
+                    else if(mAnalysisType == AnalysisType.CHR_Y)
+                        logChromosomeY(sampleId, fittedRegions);
+                }
+                catch(IOException e)
+                {
+                    PPL_LOGGER.error("sample({}) failed to load Purple segment file form {}: {}", sampleId, samplePurpleDir, e.toString());
+                }
+
 
                 if(i > 0 && (i % 100) == 0)
                 {
@@ -122,45 +149,43 @@ public class SegmentAnalyser
             return (long)0;
         }
 
-        private void processSample(final String sampleId)
+        private void findGermlineAmpDels(final String sampleId, final List<ObservedRegion> fittedRegions)
         {
-            String samplePurpleDir = convertWildcardSamplePath(mPurpleDir, sampleId);
+            double minRatio = 0;
+            double maxRatio = 0;
 
-            try
+            for(ObservedRegion region : fittedRegions)
             {
-                List<ObservedRegion> fittedRegions = SegmentFile.read(SegmentFile.generateFilename(samplePurpleDir, sampleId));
+                if(ignoreRegion(region, true))
+                    continue;
 
-                double minRatio = 0;
-                double maxRatio = 0;
+                double normalRatio = region.observedNormalRatio() / region.unnormalisedObservedNormalRatio();
 
-                for(ObservedRegion region : fittedRegions)
-                {
-                    if(ignoreRegion(region, true))
-                        continue;
-
-                    double normalRatio = region.observedNormalRatio() / region.unnormalisedObservedNormalRatio();
-
-                    maxRatio = max(maxRatio, normalRatio);
-                    minRatio = minRatio > 0 ? min(minRatio, normalRatio) : normalRatio;
-                }
-
-                double logMaxThreshold = maxRatio >= 1.3 ? 0.9 * maxRatio : maxRatio;
-                double logMinThreshold = minRatio <= 0.8 ? 1.1 * minRatio : 0;
-
-                for(ObservedRegion region : fittedRegions)
-                {
-                    if(ignoreRegion(region, false))
-                        continue;
-
-                    double normalRatio = region.observedNormalRatio() / region.unnormalisedObservedNormalRatio();
-
-                    if(normalRatio >= logMaxThreshold || normalRatio <= logMinThreshold)
-                        writeSegmentData(sampleId, region);
-                }
+                maxRatio = max(maxRatio, normalRatio);
+                minRatio = minRatio > 0 ? min(minRatio, normalRatio) : normalRatio;
             }
-            catch(IOException e)
+
+            double logMaxThreshold = maxRatio >= 1.3 ? 0.9 * maxRatio : maxRatio;
+            double logMinThreshold = minRatio <= 0.8 ? 1.1 * minRatio : 0;
+
+            for(ObservedRegion region : fittedRegions)
             {
-                PPL_LOGGER.error("sample({}) failed to load Purple segment file form {}: {}", sampleId, samplePurpleDir, e.toString());
+                if(ignoreRegion(region, false))
+                    continue;
+
+                double normalRatio = region.observedNormalRatio() / region.unnormalisedObservedNormalRatio();
+
+                if(normalRatio >= logMaxThreshold || normalRatio <= logMinThreshold)
+                    writeSegmentData(sampleId, region);
+            }
+        }
+
+        private void logChromosomeY(final String sampleId, final List<ObservedRegion> fittedRegions)
+        {
+            for(ObservedRegion region : fittedRegions)
+            {
+                if(HumanChromosome.fromString(region.chromosome()) == HumanChromosome._Y)
+                    writeSegmentData(sampleId, region);
             }
         }
     }
@@ -184,11 +209,29 @@ public class SegmentAnalyser
         return region.unnormalisedObservedNormalRatio() == 0;
     }
 
+    private String fileType()
+    {
+        switch(mAnalysisType)
+        {
+            case GERMLINE_AMP_DEL: return "germline_amp_del";
+            case CHR_Y: return "chr_y";
+        }
+
+        return "";
+    }
+
     private BufferedWriter initialiseWriter(final String outputDir)
     {
         try
         {
-            String fileName = outputDir + "purple_segment_analysis.csv";
+            String fileName = outputDir + "purple_segment_analysis";
+
+            String fileType = fileType();
+
+            if(!fileType.isEmpty())
+                fileName += "." + fileType;
+
+            fileName += TSV_EXTENSION;
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
@@ -232,6 +275,7 @@ public class SegmentAnalyser
         addSampleIdFile(configBuilder, true);
 
         configBuilder.addPath(PURPLE_DIR_CFG, true, "Directory pattern for sample purple directory");
+        configBuilder.addConfigItem(ANALYSIS_TYPE, true, "Analysis type: ..");
 
         addLoggingOptions(configBuilder);
         addOutputOptions(configBuilder);

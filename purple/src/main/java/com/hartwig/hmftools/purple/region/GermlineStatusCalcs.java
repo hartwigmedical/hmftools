@@ -12,7 +12,7 @@ import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 
-public class GermlineStatusFactory
+public class GermlineStatusCalcs
 {
     private static final double GERMLINE_HOM_DELETION_THRESHOLD = 0.1;
     private static final double GERMLINE_HET_DELETION_THRESHOLD = 0.85;
@@ -21,7 +21,7 @@ public class GermlineStatusFactory
 
     private final CobaltChromosomes mCobaltChromosomes;
 
-    public GermlineStatusFactory(final CobaltChromosomes cobaltChromosomes)
+    public GermlineStatusCalcs(final CobaltChromosomes cobaltChromosomes)
     {
         mCobaltChromosomes = cobaltChromosomes;
     }
