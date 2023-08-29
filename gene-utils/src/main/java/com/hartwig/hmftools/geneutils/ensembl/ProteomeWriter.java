@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.common;
+package com.hartwig.hmftools.geneutils.ensembl;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -21,9 +21,11 @@ import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
@@ -46,6 +48,7 @@ public class ProteomeWriter
     private final boolean mCanonicalOnly;
 
     private static final String CANONICAL_ONLY = "canonical_only";
+    private static final String GENE_IDS = "gene_ids";
 
     private BufferedWriter mWriter;
 
@@ -56,6 +59,13 @@ public class ProteomeWriter
         mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
         mEnsemblDataCache = new EnsemblDataCache(configBuilder);
         mEnsemblDataCache.setRequiredData(true, false, false, mCanonicalOnly);
+
+        if(configBuilder.hasValue(GENE_IDS))
+        {
+            List<String> specificGeneIds = Lists.newArrayList();
+            Arrays.stream(configBuilder.getValue(GENE_IDS).split(",", -1)).forEach(x -> specificGeneIds.add(x));
+            mEnsemblDataCache.setRestrictedGeneIdList(specificGeneIds);
+        }
 
         mRefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
@@ -132,15 +142,12 @@ public class ProteomeWriter
                 {
                     inCoding = true;
 
-                    if(exon.Start == transData.CodingStart)
-                    {
-                        int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
+                    int startPhase = calcExonicCodingPhase(exon, transData.CodingStart, transData.CodingEnd, transData.Strand, exon.Start);
 
-                        if(startPhase == PHASE_2)
-                            exonCodingStart += 2;
-                        else if(startPhase == PHASE_0)
-                            exonCodingStart += 1;
-                    }
+                    if(startPhase == PHASE_2)
+                        exonCodingStart += 2;
+                    else if(startPhase == PHASE_0)
+                        exonCodingStart += 1;
                 }
 
                 codingBases.append(mRefGenome.getBaseString(chromosome, exonCodingStart, exonCodingEnd));
@@ -168,15 +175,12 @@ public class ProteomeWriter
                 {
                     inCoding = true;
 
-                    if(exon.End == transData.CodingEnd)
-                    {
-                        int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
+                    int startPhase = calcExonicCodingPhase(exon, transData.CodingStart, transData.CodingEnd, transData.Strand, exon.Start);
 
-                        if(startPhase == PHASE_2)
-                            exonCodingStart -= 2;
-                        else if(startPhase == PHASE_0)
-                            exonCodingStart -= 1;
-                    }
+                    if(startPhase == PHASE_2)
+                        exonCodingStart -= 2;
+                    else if(startPhase == PHASE_0)
+                        exonCodingStart -= 1;
                 }
 
                 codingBases = mRefGenome.getBaseString(chromosome, exonCodingStart, exonCodingEnd) + codingBases;
@@ -228,6 +232,7 @@ public class ProteomeWriter
         addOutputDir(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
         configBuilder.addFlag(CANONICAL_ONLY, "Only write canonical proteome");
+        configBuilder.addConfigItem(GENE_IDS, "Specific gene IDs only");
 
         configBuilder.checkAndParseCommandLine(args);
 

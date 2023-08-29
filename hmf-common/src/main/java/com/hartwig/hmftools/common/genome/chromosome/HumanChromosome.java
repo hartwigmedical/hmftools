@@ -48,10 +48,7 @@ public enum HumanChromosome implements Chromosome
     }
 
     @Override
-    public boolean isAllosome()
-    {
-        return !mIsAutosome;
-    }
+    public boolean isAllosome() { return !mIsAutosome; }
 
     public static Chromosome valueOf(final GenomePosition position)
     {
