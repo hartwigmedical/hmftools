@@ -11,6 +11,8 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingStartPositionAdjustment;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindScorer.INVALID_CALC;
@@ -84,16 +86,7 @@ public class MissenseCalcs
                 if(!inCoding)
                 {
                     inCoding = true;
-
-                    if(exon.Start == transData.CodingStart)
-                    {
-                        int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
-
-                        if(startPhase == PHASE_2)
-                            exonCodingStart += 2;
-                        else if(startPhase == PHASE_0)
-                            exonCodingStart += 1;
-                    }
+                    exonCodingStart += calcCodingStartPositionAdjustment(transData, exon);
                 }
 
                 for(int pos = exonCodingStart; pos <= exonCodingEnd; ++pos)
@@ -125,16 +118,7 @@ public class MissenseCalcs
                 if(!inCoding)
                 {
                     inCoding = true;
-
-                    if(exon.End == transData.CodingEnd)
-                    {
-                        int startPhase = exon.PhaseStart == PHASE_NONE ? PHASE_0 : exon.PhaseStart;
-
-                        if(startPhase == PHASE_2)
-                            exonCodingStart -= 2;
-                        else if(startPhase == PHASE_0)
-                            exonCodingStart -= 1;
-                    }
+                    exonCodingEnd += calcCodingStartPositionAdjustment(transData, exon);
                 }
 
                 codingBases = mRefGenome.getBaseString(geneData.Chromosome, exonCodingStart, exonCodingEnd) + codingBases;
@@ -249,8 +233,18 @@ public class MissenseCalcs
                 else
                 {
                     int codonBaseIndex = (codonIndex + pepIndex) * 3;
-                    String codon = codingBases.substring(codonBaseIndex, codonBaseIndex + 3);
-                    String aminoAcid = AminoAcids.findAminoAcidForCodon(codon);
+
+                    String aminoAcid = null;
+                    if(codonBaseIndex + 3 <= codingBases.length())
+                    {
+                        String codon = codingBases.substring(codonBaseIndex, codonBaseIndex + 3);
+                        aminoAcid = AminoAcids.findAminoAcidForCodon(codon);
+                    }
+                    else
+                    {
+                        NE_LOGGER.warn("gene({}) codon request({}-{}) overruns coding bases length({})",
+                                basePeptideData.GeneName, codonBaseIndex, codonBaseIndex + 3, codingBases.length());
+                    }
 
                     if(aminoAcid == null)
                     {

@@ -98,6 +98,27 @@ public class TranscriptUtils
         return codingBases;
     }
 
+    public static int calcCodingStartPositionAdjustment(final TranscriptData transData, final ExonData exon)
+    {
+        if(transData.nonCoding())
+            return 0;
+
+        int exonPosition = transData.Strand == POS_STRAND ? exon.Start : exon.End;
+
+        if(!positionWithin(exonPosition, transData.CodingStart, transData.CodingEnd))
+            return 0;
+
+        // finds the phased coding adjustment for from the first coding base
+        int startPhase = calcExonicCodingPhase(exon, transData.CodingStart, transData.CodingEnd, transData.Strand, exonPosition);
+
+        if(startPhase == PHASE_2)
+            return transData.Strand == POS_STRAND ? 2 : -2;
+        else if(startPhase == PHASE_0)
+            return transData.Strand == POS_STRAND ? 1 : -1;
+        else
+            return 0; // already on the codon start
+    }
+
     public static CodingBaseData calcCodingBases(final TranscriptData transData, int position)
     {
         // intronic phase can read from the preceding exon end phase (regardless of whether coding has begun

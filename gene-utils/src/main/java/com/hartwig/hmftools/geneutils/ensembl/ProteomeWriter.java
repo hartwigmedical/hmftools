@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingStartPositionAdjustment;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcExonicCodingPhase;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
@@ -141,13 +142,7 @@ public class ProteomeWriter
                 if(!inCoding)
                 {
                     inCoding = true;
-
-                    int startPhase = calcExonicCodingPhase(exon, transData.CodingStart, transData.CodingEnd, transData.Strand, exon.Start);
-
-                    if(startPhase == PHASE_2)
-                        exonCodingStart += 2;
-                    else if(startPhase == PHASE_0)
-                        exonCodingStart += 1;
+                    exonCodingStart += calcCodingStartPositionAdjustment(transData, exon);
                 }
 
                 codingBases.append(mRefGenome.getBaseString(chromosome, exonCodingStart, exonCodingEnd));
@@ -174,13 +169,7 @@ public class ProteomeWriter
                 if(!inCoding)
                 {
                     inCoding = true;
-
-                    int startPhase = calcExonicCodingPhase(exon, transData.CodingStart, transData.CodingEnd, transData.Strand, exon.Start);
-
-                    if(startPhase == PHASE_2)
-                        exonCodingStart -= 2;
-                    else if(startPhase == PHASE_0)
-                        exonCodingStart -= 1;
+                    exonCodingEnd += calcCodingStartPositionAdjustment(transData, exon);
                 }
 
                 codingBases = mRefGenome.getBaseString(chromosome, exonCodingStart, exonCodingEnd) + codingBases;
