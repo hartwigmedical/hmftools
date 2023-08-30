@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.genome.refgenome;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.CHR_PREFIX;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -7,8 +9,6 @@ import htsjdk.samtools.SamReader;
 
 public final class RefGenomeFunctions
 {
-    private static final String CHR_PREFIX = "chr";
-
     public static final Logger LOGGER = LogManager.getLogger(RefGenomeFunctions.class);
 
     private RefGenomeFunctions() {}

@@ -15,8 +15,7 @@ abstract class ExtendRegion
         this.mMethod = method;
     }
 
-    @NotNull
-    public List<CombinedRegion> extend(@NotNull final List<CombinedRegion> regions)
+    public List<CombinedRegion> extend(final List<CombinedRegion> regions)
     {
         for(int i = 0; i < regions.size(); i++)
         {
@@ -33,7 +32,7 @@ abstract class ExtendRegion
 
     protected abstract void extend(final CombinedRegion target, final CombinedRegion neighbour);
 
-    private void extendRight(int startIndex, @NotNull final List<CombinedRegion> regions)
+    private void extendRight(int startIndex, final List<CombinedRegion> regions)
     {
         assert (startIndex < regions.size());
         final CombinedRegion target = regions.get(startIndex);
@@ -65,7 +64,7 @@ abstract class ExtendRegion
         }
     }
 
-    private int extendLeft(int startIndex, @NotNull final List<CombinedRegion> regions)
+    private int extendLeft(int startIndex, final List<CombinedRegion> regions)
     {
         assert (startIndex < regions.size());
         final CombinedRegion target = regions.get(startIndex);

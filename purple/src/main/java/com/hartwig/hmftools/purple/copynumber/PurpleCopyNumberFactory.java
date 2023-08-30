@@ -32,7 +32,7 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 
 public class PurpleCopyNumberFactory
 {
-    private final List<PurpleCopyNumber> mSomaticCopyNumbers = Lists.newArrayList();
+    private final List<PurpleCopyNumber> mSomaticCopyNumbers;
 
     private final double mPloidy;
     private final int mAverageReadDepth;
@@ -51,48 +51,48 @@ public class PurpleCopyNumberFactory
         mAverageReadDepth = averageReadDepth;
         mPloidy = ploidy;
         mCobaltChromosomes = cobaltChromosomes;
+        mSomaticCopyNumbers = Lists.newArrayList();
     }
 
     public void buildCopyNumbers(final List<ObservedRegion> fittedRegions, final List<StructuralVariant> structuralVariants)
     {
         mSomaticCopyNumbers.clear();
 
-        final ExtendDiploid extendDiploid = new ExtendDiploid(
-                new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
+        ExtendDiploid extendDiploid = new ExtendDiploid(new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
 
-        final PopulateUnknown populateUnknownFactory = new PopulateUnknown(mCobaltChromosomes);
+        PopulateUnknown populateUnknownFactory = new PopulateUnknown(mCobaltChromosomes);
 
-        final ListMultimap<Chromosome, CombinedRegion> diploidExtension = ArrayListMultimap.create();
+        ListMultimap<Chromosome, CombinedRegion> diploidExtension = ArrayListMultimap.create();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            final List<ObservedRegion> chromosomeFittedRegions =
-                    fittedRegions.stream().filter(matchesChromosome(chromosome)).collect(toList());
+            List<ObservedRegion> chromosomeFittedRegions = fittedRegions.stream()
+                    .filter(x -> chromosome.matches(x.chromosome())).collect(toList());
 
-            final List<CombinedRegion> diploidExtended = extendDiploid.extendDiploid(chromosomeFittedRegions);
-            final List<CombinedRegion> nonDiploidExtended = ExtendNonDiploid.nonDiploid(diploidExtended);
+            List<CombinedRegion> diploidExtended = extendDiploid.extendDiploid(chromosomeFittedRegions);
+            List<CombinedRegion> nonDiploidExtended = ExtendNonDiploid.nonDiploid(diploidExtended);
 
             diploidExtension.putAll(chromosome, nonDiploidExtended);
         }
 
-        final StructuralVariantImplied svImpliedFactory = new StructuralVariantImplied(mAverageReadDepth, mPloidy, mPurityAdjuster);
-        final ListMultimap<Chromosome, CombinedRegion> allSVImplied =
-                svImpliedFactory.svImpliedCopyNumber(structuralVariants, diploidExtension);
+        StructuralVariantImplied svImpliedFactory = new StructuralVariantImplied(mAverageReadDepth, mPloidy, mPurityAdjuster);
 
-        for(final HumanChromosome chromosome : HumanChromosome.values())
+        ListMultimap<Chromosome, CombinedRegion> allSVImplied = svImpliedFactory.svImpliedCopyNumber(structuralVariants, diploidExtension);
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            final ExtendDiploidBAF extendDiploidBAF = new ExtendDiploidBAF(simpleVariants(chromosome, structuralVariants));
+            ExtendDiploidBAF extendDiploidBAF = new ExtendDiploidBAF(simpleVariants(chromosome, structuralVariants));
 
-            final List<CombinedRegion> svImplied = allSVImplied.get(chromosome);
-            final List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied);
-            final List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
-            final List<CombinedRegion> somatics = extendDiploidBAF.extendBAF(populateUnknown);
+            List<CombinedRegion> svImplied = allSVImplied.get(chromosome);
+            List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied);
+            List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
+            List<CombinedRegion> somatics = extendDiploidBAF.extendBAF(populateUnknown);
 
             mSomaticCopyNumbers.addAll(toCopyNumber(somatics));
         }
     }
 
-    private List<StructuralVariant> simpleVariants(HumanChromosome chromosome, final List<StructuralVariant> structuralVariants)
+    private List<StructuralVariant> simpleVariants(final HumanChromosome chromosome, final List<StructuralVariant> structuralVariants)
     {
         return structuralVariants.stream().filter(x ->
         {
@@ -163,11 +163,6 @@ public class PurpleCopyNumberFactory
                 .build();
     }
 
-    private static <T extends GenomeRegion> Predicate<T> matchesChromosome(final Chromosome chromosome)
-    {
-        return t -> HumanChromosome.fromString(t.chromosome()).equals(chromosome);
-    }
-
     public static boolean validateCopyNumbers(final List<PurpleCopyNumber> copyNumbers)
     {
         boolean isValid = true;
@@ -203,6 +198,8 @@ public class PurpleCopyNumberFactory
         return isValid;
     }
 
+    private static final HumanChromosome CDKN2A_CHR = HumanChromosome.fromString(CDKN2A_DELETION_REGION.Chromosome);
+
     public static double calculateDeletedDepthWindows(final List<PurpleCopyNumber> copyNumbers)
     {
         int totalDepthWindows = 0;
@@ -213,9 +210,9 @@ public class PurpleCopyNumberFactory
         {
             totalDepthWindows += copyNumber.depthWindowCount();
 
-            String chromosome = RefGenomeFunctions.stripChrPrefix(copyNumber.chromosome());
+            HumanChromosome chromosome = HumanChromosome.fromString(copyNumber.chromosome());
 
-            if(chromosome.equals("Y"))
+            if(chromosome == HumanChromosome._Y)
                 continue;
 
             if(copyNumber.averageTumorCopyNumber() >= 0.5)
@@ -223,14 +220,12 @@ public class PurpleCopyNumberFactory
 
             int deletedWindows = copyNumber.depthWindowCount();
 
-            if(CDKN2A_DELETION_REGION.chromosome().equals(chromosome))
+            if(chromosome == CDKN2A_CHR
+            && positionsOverlap(copyNumber.start(), copyNumber.end(), CDKN2A_DELETION_REGION.start(), CDKN2A_DELETION_REGION.end()))
             {
-                if(positionsOverlap(copyNumber.start(), copyNumber.end(), CDKN2A_DELETION_REGION.start(), CDKN2A_DELETION_REGION.end()))
-                {
-                    int baseOverlap = min(copyNumber.end(), CDKN2A_DELETION_REGION.end()) - max(copyNumber.start(), CDKN2A_DELETION_REGION.start());
-                    double nonGeneDeletedFraction = (copyNumber.length() - baseOverlap) / (double)copyNumber.length();
-                    deletedWindows = (int)round(nonGeneDeletedFraction * deletedWindows);
-                }
+                int baseOverlap = min(copyNumber.end(), CDKN2A_DELETION_REGION.end()) - max(copyNumber.start(), CDKN2A_DELETION_REGION.start());
+                double nonGeneDeletedFraction = (copyNumber.length() - baseOverlap) / (double)copyNumber.length();
+                deletedWindows = (int)round(nonGeneDeletedFraction * deletedWindows);
             }
 
             deletedDepthWindows += deletedWindows;

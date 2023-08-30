@@ -41,6 +41,9 @@ public enum HumanChromosome implements Chromosome
         mName = name().substring(1).intern();
     }
 
+    public static final String CHR_PREFIX = "chr";
+    public static final String ENUM_PREFIX = "_";
+
     @Override
     public boolean isAutosome()
     {
@@ -49,6 +52,8 @@ public enum HumanChromosome implements Chromosome
 
     @Override
     public boolean isAllosome() { return !mIsAutosome; }
+
+    public boolean matches(final String chromosome) { return fromString(chromosome) == this; }
 
     public static Chromosome valueOf(final GenomePosition position)
     {
@@ -62,12 +67,10 @@ public enum HumanChromosome implements Chromosome
 
     public static HumanChromosome fromString(final String chromosome)
     {
-        if(chromosome.toLowerCase().startsWith("chr"))
-        {
-            return HumanChromosome.valueOf("_" + chromosome.substring(3));
-        }
+        if(chromosome.toLowerCase().startsWith(CHR_PREFIX))
+            return HumanChromosome.valueOf(ENUM_PREFIX + chromosome.substring(3));
 
-        return HumanChromosome.valueOf("_" + chromosome);
+        return HumanChromosome.valueOf(ENUM_PREFIX + chromosome);
     }
 
     public static boolean contains(final String chromosome)
@@ -151,5 +154,4 @@ public enum HumanChromosome implements Chromosome
             }
         }
     }
-
 }
