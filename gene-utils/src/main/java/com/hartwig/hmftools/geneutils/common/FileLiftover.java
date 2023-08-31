@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.targetregion;
+package com.hartwig.hmftools.geneutils.common;
 
 import static java.lang.String.format;
 
