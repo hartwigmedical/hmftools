@@ -19,4 +19,8 @@ public final class CommonFields
     public static final String FLD_TRANS_ID = "TransId";
     public static final String FLD_TRANS_NAME = "TransName";
 
+    // variants
+    public static final String FLD_REF = "Ref";
+    public static final String FLD_ALT = "Alt";
+
 }

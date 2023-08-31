@@ -13,7 +13,8 @@ public class AmberSite implements GenomePosition
     public final int Position;
     public final String Ref;
     public final String Alt;
-    public final boolean SnpCheck;
+
+    private boolean mSnpCheck;
 
     public AmberSite(final String chromosome, final int position, final String ref, final String alt, final boolean snpCheck)
     {
@@ -21,7 +22,7 @@ public class AmberSite implements GenomePosition
         Position = position;
         Ref = ref;
         Alt = alt;
-        SnpCheck = snpCheck;
+        mSnpCheck = snpCheck;
     }
 
     @Override
@@ -33,9 +34,10 @@ public class AmberSite implements GenomePosition
     // convenience
     public String ref() { return Ref; }
     public String alt() { return Alt; }
-    public boolean snpCheck() { return SnpCheck; };
+    public boolean snpCheck() { return mSnpCheck; };
+    public void setSnpCheck(boolean value) { mSnpCheck = value; };
 
-    public String toString() { return format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, SnpCheck ? "snpcheck" : ""); }
+    public String toString() { return format("%s:%d %s>%s %s", Chromosome, Position, Ref, Alt, mSnpCheck ? "snpcheck" : ""); }
 
     @Override
     public boolean equals(@Nullable Object another)
@@ -43,16 +45,15 @@ public class AmberSite implements GenomePosition
         if(this == another)
             return true;
 
-        return another instanceof AmberSite && equalTo((AmberSite) another);
+        return another instanceof AmberSite && matches((AmberSite) another);
     }
 
-    private boolean equalTo(final AmberSite another)
+    public boolean matches(final AmberSite another)
     {
         return Chromosome.equals(another.Chromosome)
                 && Position == another.Position
                 && Ref.equals(another.Ref)
-                && Alt.equals(another.Alt)
-                && SnpCheck == another.SnpCheck;
+                && Alt.equals(another.Alt);
     }
 
     @Override
@@ -63,7 +64,7 @@ public class AmberSite implements GenomePosition
         h += (h << 5) + Position;
         h += (h << 5) + Ref.hashCode();
         h += (h << 5) + Alt.hashCode();
-        h += (h << 5) + Booleans.hashCode(SnpCheck);
+        h += (h << 5) + Booleans.hashCode(mSnpCheck);
         return h;
     }
 }

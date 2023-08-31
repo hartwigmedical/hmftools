@@ -51,7 +51,7 @@ public class LoadAmberData
         String amberSnpPath = configBuilder.getValue(AMBER_SNP_VCF);
         String snpCheckSitesVcf = configBuilder.getValue(SNPCHECK_VCF);
 
-        final ListMultimap<Chromosome, AmberSite> snpCheckSites = AmberSitesFile.sites(snpCheckSitesVcf);
+        final ListMultimap<Chromosome,AmberSite> snpCheckSites = AmberSitesFile.loadVcf(snpCheckSitesVcf);
 
         LOGGER.info("loaded {} SnpCheck sites from {}", snpCheckSites.size(), snpCheckSitesVcf);
 

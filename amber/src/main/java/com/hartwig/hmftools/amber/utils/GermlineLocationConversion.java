@@ -99,7 +99,7 @@ public class GermlineLocationConversion
 
             BufferedWriter writer = createBufferedWriter(mOutputFile);
 
-            writer.write(AmberSitesFile.header());
+            writer.write(format("%s\tGnomadFreq\tMappability\tGcRatio", AmberSitesFile.header()));
             writer.newLine();
 
             int unmappedPositions = 0;

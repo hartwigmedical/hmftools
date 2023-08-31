@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.amber;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
@@ -39,7 +43,7 @@ public final class AmberSitesFile
             return loadFile(filename);
     }
 
-    private static ListMultimap<Chromosome, AmberSite> loadVcf(final String vcfFile) throws IOException
+    public static ListMultimap<Chromosome, AmberSite> loadVcf(final String vcfFile) throws IOException
     {
         final ListMultimap<Chromosome, AmberSite> result = ArrayListMultimap.create();
 
@@ -63,18 +67,10 @@ public final class AmberSitesFile
                     variant.getAlternateAllele(0).getBaseString(), variant.hasAttribute(SNPCHECK)));
         }
 
-        LOGGER.info("loaded {} Amber germline sites from {}", result.size(), vcfFile);
         return result;
     }
 
-    public static final String FLD_CHROMOSOME = "Chromosome";
-    public static final String FLD_POSITION = "Position";
-    public static final String FLD_REF = "Ref";
-    public static final String FLD_ALT = "Alt";
     public static final String FLD_SNP_CHECK = "SnpCheck";
-    public static final String FLD_GNOMAD = "GnomadFreq";
-    public static final String FLD_MAPPABILITY = "Mappability";
-    public static final String FLD_GC_RATIO = "GcRatio";
 
     public static String header()
     {
@@ -84,9 +80,6 @@ public final class AmberSitesFile
         sj.add(FLD_REF);
         sj.add(FLD_ALT);
         sj.add(FLD_SNP_CHECK);
-        sj.add(FLD_GNOMAD);
-        sj.add(FLD_MAPPABILITY);
-        sj.add(FLD_GC_RATIO);
         return sj.toString();
     }
 
