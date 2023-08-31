@@ -4,9 +4,7 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 
-import org.jetbrains.annotations.NotNull;
-
-abstract class ExtendRegion
+public abstract class ExtendRegion
 {
     private final CopyNumberMethod mMethod;
 
@@ -42,7 +40,7 @@ abstract class ExtendRegion
         {
             final CombinedRegion neighbour = regions.get(targetIndex);
 
-            if(Extend.doNotExtend(target, neighbour.region()))
+            if(ExtendUtils.doNotExtend(target, neighbour.region()))
             {
                 break;
             }
@@ -73,7 +71,7 @@ abstract class ExtendRegion
         while(targetIndex >= 0)
         {
             final CombinedRegion neighbour = regions.get(targetIndex);
-            if(Extend.doNotExtend(target, neighbour.region()))
+            if(ExtendUtils.doNotExtend(target, neighbour.region()))
             {
                 break;
             }

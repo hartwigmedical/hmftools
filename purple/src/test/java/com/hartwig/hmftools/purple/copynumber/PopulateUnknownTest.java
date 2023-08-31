@@ -14,7 +14,6 @@ import org.junit.Test;
 
 public class PopulateUnknownTest
 {
-
     @Test
     public void testJoinUnknownRegions()
     {
@@ -26,8 +25,7 @@ public class PopulateUnknownTest
         final CombinedRegion region4 = ExtendLongArmTest.createCombinedRegion(3001, 4000, 0, 0, SegmentSupport.NONE);
         region4.setTumorCopyNumber(CopyNumberMethod.BAF_WEIGHTED, 2);
 
-        final PopulateUnknown victim = new PopulateUnknown(female);
-        List<CombinedRegion> result = victim.populateUnknown(Lists.newArrayList(region1, region2, region3, region4));
+        List<CombinedRegion> result = ExtendUtils.populateUnknown(Lists.newArrayList(region1, region2, region3, region4), female);
         assertEquals(2, result.size());
     }
 }

@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CDKN2A_DELETION_REGION;
+import static com.hartwig.hmftools.purple.copynumber.ExtendUtils.populateUnknown;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -60,8 +61,6 @@ public class PurpleCopyNumberFactory
 
         ExtendDiploid extendDiploid = new ExtendDiploid(new AlleleTolerance(mPurityAdjuster), mMinTumorRatioCount, mMinTumorRatioCountAtCentromere);
 
-        PopulateUnknown populateUnknownFactory = new PopulateUnknown(mCobaltChromosomes);
-
         ListMultimap<Chromosome, CombinedRegion> diploidExtension = ArrayListMultimap.create();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -85,7 +84,7 @@ public class PurpleCopyNumberFactory
 
             List<CombinedRegion> svImplied = allSVImplied.get(chromosome);
             List<CombinedRegion> longArmExtended = ExtendLongArm.extendLongArm(svImplied);
-            List<CombinedRegion> populateUnknown = populateUnknownFactory.populateUnknown(longArmExtended);
+            List<CombinedRegion> populateUnknown = populateUnknown(longArmExtended, mCobaltChromosomes);
             List<CombinedRegion> somatics = extendDiploidBAF.extendBAF(populateUnknown);
 
             mSomaticCopyNumbers.addAll(toCopyNumber(somatics));

@@ -9,7 +9,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 
-final class ExtendLongArm
+public final class ExtendLongArm
 {
     private static final Set<HumanChromosome> FORCE_CHROMOSOMES = Sets.newHashSet();
     private static final Set<HumanChromosome> ELIGIBLE_CHROMOSOMES = Sets.newHashSet();
@@ -21,7 +21,7 @@ final class ExtendLongArm
         ELIGIBLE_CHROMOSOMES.add(HumanChromosome._Y);
     }
 
-    static List<CombinedRegion> extendLongArm(final List<CombinedRegion> regions)
+    public static List<CombinedRegion> extendLongArm(final List<CombinedRegion> regions)
     {
         final int centromereIndex = findCentromere(regions);
         if(centromereIndex > 0)

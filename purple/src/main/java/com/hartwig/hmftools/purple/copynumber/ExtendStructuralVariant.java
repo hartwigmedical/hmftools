@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ExtendStructuralVariant extends ExtendRegion
 {
-    public static List<CombinedRegion> extendStructuralVariants(@NotNull final List<CombinedRegion> regions)
+    public static List<CombinedRegion> extendStructuralVariants(final List<CombinedRegion> regions)
     {
         return new ExtendStructuralVariant().extend(regions);
     }
