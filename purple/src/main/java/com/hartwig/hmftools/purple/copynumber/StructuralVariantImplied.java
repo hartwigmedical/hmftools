@@ -25,15 +25,15 @@ public class StructuralVariantImplied
 {
     private final StructuralVariantLegPloidyFactory<CombinedRegion> mSvPloidyFactory;
 
-    StructuralVariantImplied(int averageReadDepth, double averageCopyNumber, final PurityAdjuster purityAdjuster)
+    public StructuralVariantImplied(int averageReadDepth, double averageCopyNumber, final PurityAdjuster purityAdjuster)
     {
-        this.mSvPloidyFactory = new StructuralVariantLegPloidyFactory<>(averageReadDepth,
+        mSvPloidyFactory = new StructuralVariantLegPloidyFactory<>(averageReadDepth,
                 averageCopyNumber,
                 purityAdjuster,
                 x -> x.isProcessed() ? x.tumorCopyNumber() : 0);
     }
 
-    ListMultimap<Chromosome, CombinedRegion> svImpliedCopyNumber(
+    public ListMultimap<Chromosome, CombinedRegion> svImpliedCopyNumber(
             final List<StructuralVariant> structuralVariants, final ListMultimap<Chromosome, CombinedRegion> copyNumbers)
     {
         long previousMissingCopyNumbers = copyNumbers.size();

@@ -26,8 +26,13 @@ public final class ExtendLongArm
         final int centromereIndex = findCentromere(regions);
         if(centromereIndex > 0)
         {
-            final double copyNumber = regions.get(centromereIndex).tumorCopyNumber();
-            extendLeft(copyNumber, centromereIndex - 1, regions);
+            CombinedRegion centromere = regions.get(centromereIndex);
+
+            if(centromere.copyNumberMethod() != CopyNumberMethod.UNKNOWN)
+            {
+                double copyNumber = regions.get(centromereIndex).tumorCopyNumber();
+                extendLeft(copyNumber, centromereIndex - 1, regions);
+            }
         }
 
         return regions;
