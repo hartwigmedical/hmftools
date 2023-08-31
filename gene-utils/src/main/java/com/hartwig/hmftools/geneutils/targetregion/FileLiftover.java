@@ -95,7 +95,7 @@ public class FileLiftover
 
                         if(newPosition == UNMAPPED_POSITION)
                         {
-                            GU_LOGGER.debug("unmapped location({}:{})", chromosome, origPosition);
+                            GU_LOGGER.debug("skipped writing unmapped location({}:{})", chromosome, origPosition);
                             continue;
                         }
 
