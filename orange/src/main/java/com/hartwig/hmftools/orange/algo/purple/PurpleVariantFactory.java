@@ -7,12 +7,14 @@ import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 import com.hartwig.hmftools.datamodel.purple.Hotspot;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
+import com.hartwig.hmftools.orange.algo.pave.PaveEntry;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
@@ -42,8 +44,9 @@ public class PurpleVariantFactory
     @NotNull
     public PurpleVariant fromPurpleVariantContext(@NotNull PurpleVariantContext context)
     {
-        var purpleVariantTranscriptImpacts = context.otherImpacts().stream().map(PurpleConversion::convert).collect(Collectors.toList());
-        var rnaDepth = context.rnaDepth() != null ? PurpleConversion.convert(context.rnaDepth()) : null;
+        List<PurpleTranscriptImpact> purpleVariantTranscriptImpacts =
+                context.otherImpacts().stream().map(PurpleConversion::convert).collect(Collectors.toList());
+        PurpleAllelicDepth rnaDepth = context.rnaDepth() != null ? PurpleConversion.convert(context.rnaDepth()) : null;
 
         return ImmutablePurpleVariant.builder()
                 .type(PurpleVariantType.valueOf(context.type().name()))
@@ -74,7 +77,7 @@ public class PurpleVariantFactory
     @NotNull
     private PurpleTranscriptImpact extractCanonicalImpact(PurpleVariantContext purpleContext)
     {
-        var paveEntry = paveAlgo.run(purpleContext.gene(), purpleContext.canonicalTranscript(), purpleContext.position());
+        PaveEntry paveEntry = paveAlgo.run(purpleContext.gene(), purpleContext.canonicalTranscript(), purpleContext.position());
         List<VariantEffect> variantEffects = VariantEffect.effectsToList(purpleContext.canonicalEffect());
         List<PurpleVariantEffect> purpleVariantEffects = ConversionUtil.mapToList(variantEffects, PurpleConversion::convert);
         return ImmutablePurpleTranscriptImpact.builder()

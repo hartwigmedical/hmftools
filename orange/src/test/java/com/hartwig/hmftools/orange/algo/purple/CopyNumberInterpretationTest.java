@@ -13,7 +13,6 @@ import org.junit.Test;
 
 public class CopyNumberInterpretationTest
 {
-
     @Test
     public void canRenderDisplay()
     {

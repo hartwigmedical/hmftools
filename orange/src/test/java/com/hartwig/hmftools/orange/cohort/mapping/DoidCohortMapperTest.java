@@ -20,7 +20,6 @@ import org.junit.Test;
 
 public class DoidCohortMapperTest
 {
-
     @Test
     public void canMatchDoidsToCancerType()
     {

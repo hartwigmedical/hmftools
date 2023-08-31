@@ -12,11 +12,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TestCuppaFactory
 {
-
-    private TestCuppaFactory()
-    {
-    }
-
     @NotNull
     public static CuppaData createMinimalCuppaData()
     {

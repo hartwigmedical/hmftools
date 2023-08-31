@@ -19,7 +19,6 @@ import org.junit.Test;
 
 public class BreakendSelectorTest
 {
-
     @Test
     public void canSelectInterestingUnreportedBreakends()
     {

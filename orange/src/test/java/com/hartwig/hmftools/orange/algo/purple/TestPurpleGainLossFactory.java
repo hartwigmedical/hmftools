@@ -9,11 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TestPurpleGainLossFactory
 {
-
-    private TestPurpleGainLossFactory()
-    {
-    }
-
     @NotNull
     public static PurpleGainLoss createGainLoss(@NotNull String gene, @NotNull CopyNumberInterpretation interpretation)
     {

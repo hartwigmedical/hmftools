@@ -18,7 +18,6 @@ import org.junit.Test;
 
 public class CohortPercentilesModelTest
 {
-
     private static final String CANCER_TYPE = "type";
     private static final PercentileType PERCENTILE_TYPE = PercentileType.SV_TMB;
 
@@ -57,6 +56,7 @@ public class CohortPercentilesModelTest
 
     }
 
+    @NotNull
     private static Multimap<PercentileType, CohortPercentiles> createPercentileMap(@NotNull List<Double> percentiles)
     {
         Multimap<PercentileType, CohortPercentiles> percentileMap = ArrayListMultimap.create();

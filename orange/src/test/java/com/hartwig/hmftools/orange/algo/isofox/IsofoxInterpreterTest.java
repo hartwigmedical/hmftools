@@ -12,7 +12,6 @@ import org.junit.Test;
 
 public class IsofoxInterpreterTest
 {
-
     @Test
     public void canInterpretMinimalIsofoxData()
     {

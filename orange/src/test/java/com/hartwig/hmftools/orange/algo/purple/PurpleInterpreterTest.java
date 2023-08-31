@@ -30,7 +30,6 @@ import org.junit.Test;
 
 public class PurpleInterpreterTest
 {
-
     private static final String TEST_GENE = "gene";
 
     @Test

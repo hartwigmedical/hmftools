@@ -14,7 +14,6 @@ import org.junit.Test;
 
 public class BreakendUtilTest
 {
-
     @Test
     public void canCreatePairsPerSv()
     {

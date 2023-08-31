@@ -13,7 +13,6 @@ import org.junit.Test;
 
 public class CuppaPredictionComparatorTest
 {
-
     @Test
     public void canSortCuppaPredictions()
     {

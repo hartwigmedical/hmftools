@@ -37,7 +37,6 @@ import org.junit.Test;
 
 public class GermlineConversionTest
 {
-
     private static final double EPSILON = 1.0E-10;
 
     @Test

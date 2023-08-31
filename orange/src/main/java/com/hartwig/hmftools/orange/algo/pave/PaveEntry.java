@@ -13,5 +13,4 @@ public abstract class PaveEntry
 
     @Nullable
     public abstract Integer affectedExon();
-
 }

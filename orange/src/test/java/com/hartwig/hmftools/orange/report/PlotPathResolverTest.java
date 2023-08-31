@@ -6,7 +6,6 @@ import org.junit.Test;
 
 public class PlotPathResolverTest
 {
-
     @Test
     public void canResolvePlotPaths()
     {

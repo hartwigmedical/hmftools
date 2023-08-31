@@ -13,7 +13,6 @@ import org.junit.Test;
 
 public class ReportWriterTest
 {
-
     @Test
     public void canGenerateTestReportForPanelFromTestResources() throws IOException
     {

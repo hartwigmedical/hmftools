@@ -18,11 +18,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TestPurpleInterpretationFactory
 {
-
-    private TestPurpleInterpretationFactory()
-    {
-    }
-
     @NotNull
     public static PurpleRecord createMinimalTestPurpleData()
     {

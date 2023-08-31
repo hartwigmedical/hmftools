@@ -17,8 +17,8 @@ import org.jetbrains.annotations.NotNull;
 public final class HomozygousDisruptionTable
 {
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<HomozygousDisruption> homozygousDisruptions, @NotNull
-    ReportResources reportResources)
+    public static Table build(@NotNull String title, float width, @NotNull List<HomozygousDisruption> homozygousDisruptions,
+            @NotNull ReportResources reportResources)
     {
         if(homozygousDisruptions.isEmpty())
         {

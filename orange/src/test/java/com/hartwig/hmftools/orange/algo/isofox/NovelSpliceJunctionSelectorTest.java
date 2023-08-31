@@ -20,7 +20,6 @@ import org.junit.Test;
 
 public class NovelSpliceJunctionSelectorTest
 {
-
     @Test
     public void canSelectSkippedExons()
     {
@@ -71,5 +70,4 @@ public class NovelSpliceJunctionSelectorTest
                 .cohortFrequency(cohortFrequency)
                 .build();
     }
-
 }

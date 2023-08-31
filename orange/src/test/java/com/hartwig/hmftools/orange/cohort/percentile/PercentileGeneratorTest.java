@@ -17,7 +17,6 @@ import org.junit.Test;
 
 public class PercentileGeneratorTest
 {
-
     private static final double EPSILON = 1.0E-10;
 
     @Test

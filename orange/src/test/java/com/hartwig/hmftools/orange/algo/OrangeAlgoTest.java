@@ -9,11 +9,11 @@ import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class OrangeAlgoTest
 {
-
     @Test
     public void canRunReportFromTestDirPanel() throws IOException
     {
@@ -63,7 +63,8 @@ public class OrangeAlgoTest
         assertNotNull(algo.run(config));
     }
 
-    private static OrangeAlgo createOrangeAlgo(final OrangeConfig config) throws IOException
+    @NotNull
+    private static OrangeAlgo createOrangeAlgo(@NotNull OrangeConfig config) throws IOException
     {
         OrangeAlgo algo = OrangeAlgo.fromConfig(config);
         algo.setSuppressGeneWarnings();

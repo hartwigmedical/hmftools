@@ -17,7 +17,6 @@ import org.junit.Test;
 
 public class SomaticVariantSelectorTest
 {
-
     @Test
     public void canSelectUnreportedNearHotspots()
     {

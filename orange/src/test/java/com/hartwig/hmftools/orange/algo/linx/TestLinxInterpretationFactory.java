@@ -7,11 +7,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TestLinxInterpretationFactory
 {
-
-    private TestLinxInterpretationFactory()
-    {
-    }
-
     @NotNull
     public static LinxRecord createMinimalTestLinxData()
     {

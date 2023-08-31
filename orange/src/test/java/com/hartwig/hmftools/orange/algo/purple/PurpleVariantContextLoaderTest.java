@@ -29,7 +29,7 @@ public class PurpleVariantContextLoaderTest
 
         assertEquals(1, variants.size());
 
-        var variant = variants.get(0);
+        PurpleVariantContext variant = variants.get(0);
 
         assertEquals(String.valueOf(4), variant.chromosome());
         assertEquals(57181855, variant.position());
@@ -51,7 +51,7 @@ public class PurpleVariantContextLoaderTest
         assertEquals(2, otherImpacts.size());
 
         // Test if the extra transcripts are loaded properly,
-        var expectedTranscriptImpacts = List.of(
+        List<VariantTranscriptImpact> expectedTranscriptImpacts = List.of(
                 new VariantTranscriptImpact(
                         "ENSG00000109265",
                         "CRACD",

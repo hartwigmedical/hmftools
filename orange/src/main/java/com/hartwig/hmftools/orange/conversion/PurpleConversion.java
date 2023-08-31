@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import java.util.List;
+
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
@@ -144,9 +146,9 @@ public final class PurpleConversion
     @NotNull
     public static PurpleTranscriptImpact convert(VariantTranscriptImpact impact)
     {
-        var effectsList = VariantEffect.effectsToList(impact.Effects);
-        var purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
-        var purpleCodingEffect = convert(CodingEffectDeterminer.determineCodingEffect(effectsList));
+        List<VariantEffect> effectsList = VariantEffect.effectsToList(impact.Effects);
+        List<PurpleVariantEffect> purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
+        PurpleCodingEffect purpleCodingEffect = convert(CodingEffectDeterminer.determineCodingEffect(effectsList));
 
         return ImmutablePurpleTranscriptImpact.builder()
                 .transcript(impact.Transcript)
@@ -157,5 +159,4 @@ public final class PurpleConversion
                 .spliceRegion(impact.SpliceRegion)
                 .build();
     }
-
 }

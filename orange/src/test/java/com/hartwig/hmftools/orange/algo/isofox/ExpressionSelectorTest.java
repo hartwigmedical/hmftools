@@ -17,7 +17,6 @@ import org.junit.Test;
 
 public class ExpressionSelectorTest
 {
-
     @Test
     public void shouldSelectHighExpressionGenes()
     {

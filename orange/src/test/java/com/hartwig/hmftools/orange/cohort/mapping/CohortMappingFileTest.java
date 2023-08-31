@@ -12,7 +12,6 @@ import org.junit.Test;
 
 public class CohortMappingFileTest
 {
-
     private static final String EXAMPLE_MAPPING_TSV = Resources.getResource("cohort/mapping/example_cohort_mapping.tsv").getPath();
 
     @Test
@@ -43,5 +42,4 @@ public class CohortMappingFileTest
 
         throw new IllegalStateException("Could not find mapping for cancer type: " + cancerType);
     }
-
 }

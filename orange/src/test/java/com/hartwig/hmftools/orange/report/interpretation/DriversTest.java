@@ -15,7 +15,6 @@ import org.junit.Test;
 
 public class DriversTest
 {
-
     @Test
     public void canSelectNonCanonicalMutationEntries()
     {
@@ -76,5 +75,4 @@ public class DriversTest
         assertEquals(canonicalMatchHighDL, Drivers.canonicalMutationEntryForGene(drivers, "gene 1"));
         assertNull(Drivers.canonicalMutationEntryForGene(drivers, "gene 2"));
     }
-
 }

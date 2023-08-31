@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.report.tables;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 
@@ -14,17 +15,12 @@ import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 public final class SignatureAllocationTable
 {
     static final String MISALLOC_SIGNATURE = "MISALLOC";
-
-    private SignatureAllocationTable()
-    {
-    }
 
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<SignatureAllocation> signatureAllocations,

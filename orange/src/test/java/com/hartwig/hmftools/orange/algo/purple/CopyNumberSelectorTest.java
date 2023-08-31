@@ -19,7 +19,6 @@ import org.junit.Test;
 
 public class CopyNumberSelectorTest
 {
-
     @Test
     public void canSelectNearReportableGains()
     {

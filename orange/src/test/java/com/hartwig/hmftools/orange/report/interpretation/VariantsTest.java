@@ -17,7 +17,6 @@ import org.junit.Test;
 
 public class VariantsTest
 {
-
     @Test
     public void canSortVariantEntries()
     {

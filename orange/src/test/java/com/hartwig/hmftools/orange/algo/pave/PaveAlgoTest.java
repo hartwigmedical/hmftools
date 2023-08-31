@@ -17,7 +17,6 @@ import org.junit.Test;
 
 public class PaveAlgoTest
 {
-
     private static final String MATCHING_GENE = "gene";
     private static final String MATCHING_TRANSCRIPT = "trans";
 
