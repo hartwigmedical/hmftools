@@ -62,8 +62,7 @@ public class LoadClinicalData {
         LOGGER.info("Running clinical patient db algo on {} patients", samplesPerPatient.size());
         List<Patient> patients = algo.interpret(samplesPerPatient, lims, config.consentConfigTsv());
 
-//        TODO: Remove writing of ptum info altogether once DEV-3502 work is done
-//        LOGGER.info("No longer writing primary tumor data");
+        LOGGER.info("Writing primary tumor data to output file");
         PrimaryTumorDataWriter.write(config, samplesPerPatient, patients);
 
         if (config.doLoadClinicalData()) {

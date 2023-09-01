@@ -7,16 +7,15 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Map;
 
-public class LamaPatientReader {
+public class LimsPatientReader {
 
     private static final String DOID_STRING_DELIMITER = ",";
 
     @NotNull
     private final List<DoidNode> doidNodes;
 
-    public LamaPatientReader(List<DoidNode> doidNodes) {
+    public LimsPatientReader(List<DoidNode> doidNodes) {
         this.doidNodes = doidNodes;
     }
 
@@ -25,9 +24,9 @@ public class LamaPatientReader {
         List<String> doids = Lists.newArrayList(chosenSample.limsTumorDoids().split(DOID_STRING_DELIMITER));
 
         CuratedPrimaryTumor curatedPrimaryTumor = ImmutableCuratedPrimaryTumor.builder()
-                .location("LAMA_" + chosenSample.limsTumorLocation())
-                .type("LAMA_" + chosenSample.limsTumorType())
-                .extraDetails("LAMA_" + chosenSample.limsTumorExtra())
+                .location(chosenSample.limsTumorLocation())
+                .type(chosenSample.limsTumorType())
+                .extraDetails(chosenSample.limsTumorExtra())
                 .doidNodes(resolveDoidNodes(doidNodes, doids))
                 .isOverridden(false)
                 .build();

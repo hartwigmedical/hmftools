@@ -75,6 +75,7 @@ CREATE TABLE preTreatmentDrug
 DROP TABLE IF EXISTS sample;
 CREATE TABLE sample
 (   sampleId varchar(255) NOT NULL,
+    cohortId varchar(255) NOT NULL,
     patientId int NOT NULL,
     setName varchar(255) NOT NULL,
     arrivalDate DATE NOT NULL,

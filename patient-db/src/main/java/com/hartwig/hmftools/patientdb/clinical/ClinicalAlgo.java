@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.patientdb.clinical;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,11 +17,10 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.SampleData;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
 import com.hartwig.hmftools.patientdb.clinical.lims.Lims;
-import com.hartwig.hmftools.patientdb.clinical.readers.LamaPatientReader;
+import com.hartwig.hmftools.patientdb.clinical.readers.LimsPatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.ColoPatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.CorePatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.EcrfPatientReader;
-import com.hartwig.hmftools.patientdb.clinical.readers.WidePatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.cpct.CpctPatientReader;
 import com.hartwig.hmftools.patientdb.clinical.readers.cpct.CpctUtil;
 import com.hartwig.hmftools.patientdb.clinical.readers.drup.DrupPatientReader;
@@ -33,10 +31,11 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static java.lang.String.join;
+
 public class ClinicalAlgo {
 
     private static final Logger LOGGER = LogManager.getLogger(ClinicalAlgo.class);
-    private final static List<String> ECRF_COHORT_ID_PREFIXES = new ArrayList<>(List.of("CPCT", "DRUP", "WIDE"));
     @NotNull
     private final EcrfModels ecrfModels;
     @NotNull
@@ -98,16 +97,12 @@ public class ClinicalAlgo {
         List<Patient> drupPatients = readEcrfPatients(drupPatientReader, drupEcrfModel.patients(), samplesPerPatient, consentConfigMap);
         LOGGER.info(" Finished curation of {} DRUP patients", drupPatients.size());
 
-        LOGGER.info("Interpreting and curating data for WIDE patients");
-        List<Patient> widePatients = readWidePatients(samplesPerPatient, consentConfigMap);
-        LOGGER.info(" Finished curation of {} WIDE patients", widePatients.size());
-
         List<Patient> mergedPatients = Lists.newArrayList();
+        mergedPatients.addAll(readColoPatients(lims));
         mergedPatients.addAll(limsPatients);
         mergedPatients.addAll(cpctPatients);
         mergedPatients.addAll(drupPatients);
-        mergedPatients.addAll(widePatients);
-        mergedPatients.addAll(readColoPatients(lims));
+
         return mergedPatients;
     }
 
@@ -126,33 +121,11 @@ public class ClinicalAlgo {
     }
 
     @NotNull
-    private List<Patient> readWidePatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
-            @NotNull Map<String, ConsentConfig> consentConfigMap) {
-        List<Patient> patients = Lists.newArrayList();
-
-        WidePatientReader widePatientReader = new WidePatientReader(ecrfModels.wideModel(), primaryTumorCurator, treatmentCurator);
-        for (Map.Entry<String, List<SampleData>> entry : samplesPerPatient.entrySet()) {
-            List<SampleData> tumorSamples = tumorSamplesOnly(entry.getValue());
-            if (!tumorSamples.isEmpty() && tumorSamples.get(0).cohortId().equals("WIDE")) {
-                String patientId = entry.getKey();
-                // We assume every sample for a single patient has the same primary tumor.
-                String primaryTumor = tumorSamples.get(0).limsPrimaryTumor();
-                patients.add(widePatientReader.read(patientId,
-                        primaryTumor,
-                        sequencedSamplesOnly(tumorSamples),
-                        consentConfigMap,
-                        tumorSamples.get(0).cohortId()));
-            }
-        }
-        return patients;
-    }
-
-    @NotNull
     private List<Patient> readLimsPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
             Map<String, ConsentConfig> consentConfigMap, List<DoidNode> doidNodes) {
         List<Patient> patients = Lists.newArrayList();
         CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
-        LamaPatientReader lamaPatientReader = new LamaPatientReader(doidNodes);
+        LimsPatientReader limsPatientReader = new LimsPatientReader(doidNodes);
 
         for (Map.Entry<String, List<SampleData>> entry : samplesPerPatient.entrySet()) {
             List<SampleData> tumorSamples = tumorSamplesOnly(entry.getValue());
@@ -161,46 +134,46 @@ public class ClinicalAlgo {
 
                 // We assume every sample for a single patient has the same primary tumor.
                 SampleData chosenSample = tumorSamples.get(0);
-                String logSampleInfo = chosenSample.sampleId() + ", " + chosenSample.sampleBarcode();
+                String logInfo = join("|", chosenSample.sampleBarcode(), chosenSample.sampleId(),
+                        chosenSample.cohortId());
 
-                if (!hasAllRequiredFields(chosenSample)){
-                    LOGGER.warn("Skipping sample due to missing cohort info [{}]", logSampleInfo);
-                    continue;
-                }
-
-                if (hasTumorCurationFromLama(chosenSample)){
-                    LOGGER.info("Processing LIMS sample with curation in LAMA [{}]", logSampleInfo);
-                    patients.add(lamaPatientReader.read(patientId, chosenSample, sequencedSamplesOnly(tumorSamples)));
-                }
-                else if (hasPrimaryTumorStringFromLama(chosenSample) && !isStudySampleToCurateFromECRF(chosenSample)){
-                    LOGGER.info("Processing LIMS sample without curation but with ptum in LAMA [{}]", logSampleInfo);
+                if (!hasAllRequiredFields(chosenSample)) {
+                    LOGGER.warn("Not processing sample from LIMS/LAMA due to required fields missing [{}]", logInfo);
+                } else if (hasLamaBasedCuration(chosenSample)) {
+                    LOGGER.info("Processing sample from LIMS/LAMA sample with curation from LAMA [{}]", logInfo);
+                    patients.add(limsPatientReader.read(patientId, chosenSample, sequencedSamplesOnly(tumorSamples)));
+                } else if (isCuratedFromEcrfSource(chosenSample)) {
+                    LOGGER.info("Not processing sample from LIMS/LAMA because has ECRF cohort [{}]", logInfo);
+                } else if (hasPrimaryTumorStringForCuration(chosenSample)) {
+                    logInfo = join("|", logInfo, "ptum:" + chosenSample.limsPrimaryTumor());
+                    LOGGER.info("Processing sample from LIMS/LAMA without curation but with ptum string [{}]", logInfo);
                     patients.add(corePatientReader.read(patientId,
                             chosenSample.limsPrimaryTumor(),
                             sequencedSamplesOnly(tumorSamples),
                             consentConfigMap,
-                            tumorSamples.get(0).cohortId()));
-                }else {
-                    LOGGER.info("Ignoring LIMS sample in non-ecrf processing step [{}]", logSampleInfo);
+                            chosenSample.cohortId()));
+                } else {
+                    LOGGER.warn("Not processing from LIMS/LAMA because no tumor information present [{}]", logInfo);
                 }
             }
         }
-
         return patients;
     }
 
-    private boolean isStudySampleToCurateFromECRF(SampleData sample) {
-        return ECRF_COHORT_ID_PREFIXES.contains(sample.cohortId().substring(0,3));
+    private boolean isCuratedFromEcrfSource(SampleData sample) {
+        String cohortStart = sample.cohortId().substring(0, 4);
+        return List.of("CPCT", "DRUP").contains(cohortStart);
     }
 
     private boolean hasAllRequiredFields(SampleData sample) {
         return !Objects.requireNonNull(sample.cohortId()).isEmpty();
     }
 
-    private boolean hasTumorCurationFromLama(SampleData sample) {
+    private boolean hasLamaBasedCuration(SampleData sample) {
         return sample.limsTumorLocation() != null && !Objects.requireNonNull(sample.limsTumorLocation()).isEmpty();
     }
 
-    private boolean hasPrimaryTumorStringFromLama(SampleData sample) {
+    private boolean hasPrimaryTumorStringForCuration(SampleData sample) {
         return sample.limsPrimaryTumor() != null && !Objects.requireNonNull(sample.limsPrimaryTumor()).isEmpty();
     }
 
