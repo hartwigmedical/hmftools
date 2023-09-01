@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -61,7 +62,12 @@ public class GenerateProbes
 
             BufferedWriter writer = createBufferedWriter(outputFile);
 
-            writer.write(header + delim + "Probe");
+            StringJoiner sj = new StringJoiner(delim);
+            sj.add(header);
+            sj.add("Probe");
+            sj.add("ProbeStart");
+            sj.add("ProbeEnd");
+            writer.write(sj.toString());
             writer.newLine();
 
             int probeLengthLeft = probeLength / 2;
@@ -78,7 +84,12 @@ public class GenerateProbes
 
                 String probeSequence = refGenome.getBaseString(chromosome, probeStart, probeEnd);
 
-                writer.write(line + delim + probeSequence);
+                sj = new StringJoiner(delim);
+                sj.add(line);
+                sj.add(probeSequence);
+                sj.add(String.valueOf(probeStart));
+                sj.add(String.valueOf(probeEnd));
+                writer.write(sj.toString());
                 writer.newLine();
             }
 
