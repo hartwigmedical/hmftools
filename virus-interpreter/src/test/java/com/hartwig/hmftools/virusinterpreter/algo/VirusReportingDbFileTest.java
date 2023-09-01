@@ -9,7 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.virus.VirusConstants;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.junit.Test;
@@ -26,25 +26,25 @@ public class VirusReportingDbFileTest
         assertEquals(3, virusReportingDbModel.count());
 
         assertTrue(virusReportingDbModel.hasInterpretation(1));
-        assertEquals(VirusConstants.MCV, virusReportingDbModel.interpretVirusSpecies(1));
+        assertEquals(VirusType.MCV, virusReportingDbModel.interpretVirusSpecies(1));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(1));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(1));
         assertEquals(virusReportingDbModel.virusLikelihoodType(1), VirusLikelihoodType.LOW);
 
         assertTrue(virusReportingDbModel.hasInterpretation(2));
-        assertEquals(VirusConstants.MCV, virusReportingDbModel.interpretVirusSpecies(2));
+        assertEquals(VirusType.MCV, virusReportingDbModel.interpretVirusSpecies(2));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(2));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(2));
         assertEquals(virusReportingDbModel.virusLikelihoodType(2), VirusLikelihoodType.HIGH);
 
         assertTrue(virusReportingDbModel.hasInterpretation(3));
-        assertEquals(VirusConstants.MCV, virusReportingDbModel.interpretVirusSpecies(3));
+        assertEquals(VirusType.MCV, virusReportingDbModel.interpretVirusSpecies(3));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(3));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(3));
         assertEquals(virusReportingDbModel.virusLikelihoodType(3), VirusLikelihoodType.HIGH);
 
         assertFalse(virusReportingDbModel.hasInterpretation(4));
-        assertNotEquals(VirusConstants.HPV, virusReportingDbModel.interpretVirusSpecies(2));
+        assertNotEquals(VirusType.HPV, virusReportingDbModel.interpretVirusSpecies(2));
         assertNull(virusReportingDbModel.interpretVirusSpecies(5));
     }
 

@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.sigs.SignatureTestFactory;
-import com.hartwig.hmftools.common.virus.VirusConstants;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
@@ -52,7 +52,7 @@ public class OrangeConversionTest
     @Test
     public void convertsEachVirusConstantProperly()
     {
-        for(final VirusConstants value : VirusConstants.values())
+        for(final VirusType value : VirusType.values())
         {
             VirusInterpretation.valueOf(value.name());
         }

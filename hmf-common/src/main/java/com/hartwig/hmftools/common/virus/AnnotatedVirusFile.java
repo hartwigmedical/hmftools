@@ -88,7 +88,7 @@ public final class AnnotatedVirusFile
                     .integrations(Integer.parseInt(values[fieldsIndexMap.get("integrations")]))
                     .interpretation(values[fieldsIndexMap.get("interpretation")].equals("null")
                             ? null
-                            : VirusConstants.fromVirusName(values[fieldsIndexMap.get("interpretation")]))
+                            : VirusType.fromVirusName(values[fieldsIndexMap.get("interpretation")]))
                     .percentageCovered(percentageCoveredIndex != null ? Double.parseDouble(values[percentageCoveredIndex]) : 0)
                     .meanCoverage(meanCoverageIndex != null ? Double.parseDouble(values[meanCoverageIndex]) : 0)
                     .expectedClonalCoverage(expectedClonalCoverage)

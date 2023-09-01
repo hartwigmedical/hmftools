@@ -21,7 +21,7 @@ public abstract class AnnotatedVirus
     public abstract int integrations();
 
     @Nullable
-    public abstract VirusConstants interpretation();
+    public abstract VirusType interpretation();
 
     public abstract double percentageCovered();
 

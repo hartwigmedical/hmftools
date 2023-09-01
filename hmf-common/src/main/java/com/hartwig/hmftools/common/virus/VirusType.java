@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.virus;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum VirusConstants
+public enum VirusType
 {
     MCV("MCV"),
     EBV("EBV"),
@@ -13,15 +13,15 @@ public enum VirusConstants
     @NotNull
     private final String virusName;
 
-    VirusConstants(@NotNull final String virusName)
+    VirusType(@NotNull final String virusName)
     {
         this.virusName = virusName;
     }
 
     @NotNull
-    public static VirusConstants fromVirusName(@NotNull String virusName)
+    public static VirusType fromVirusName(@NotNull String virusName)
     {
-        for(final VirusConstants value : VirusConstants.values())
+        for(final VirusType value : VirusType.values())
         {
             if(value.toString().equals(virusName))
             {
