@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatTwoDigitD
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -30,6 +29,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
@@ -379,8 +379,15 @@ public class FrontPageChapter implements ReportChapter
         Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
         for(AnnotatedVirus virus : virusInterpreter.reportableViruses())
         {
-            String interpretation = virus.interpretation();
-            viruses.add(Objects.requireNonNullElseGet(interpretation, virus::name));
+            VirusInterpretation interpretation = virus.interpretation();
+            if(interpretation != null)
+            {
+                viruses.add(interpretation.name());
+            }
+            else
+            {
+                viruses.add(virus.name());
+            }
         }
 
         return virusInterpreter.reportableViruses().size() + " (" + concat(viruses) + ")";

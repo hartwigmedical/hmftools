@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentag
 import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDigitDecimal;
 
 import java.util.List;
-import java.util.Objects;
 
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
@@ -39,7 +38,7 @@ public final class ViralPresenceTable
         {
             table.addCell(cells.createContent(virus.name()));
             table.addCell(cells.createContent(virus.qcStatus().toString()));
-            table.addCell(cells.createContent(Objects.requireNonNullElse(virus.interpretation(), Strings.EMPTY)));
+            table.addCell(cells.createContent(virus.interpretation() != null ? virus.interpretation().name() : Strings.EMPTY));
             table.addCell(cells.createContent(String.valueOf(virus.integrations())));
             table.addCell(cells.createContent(formatPercentage(virus.percentageCovered(), false)));
             table.addCell(cells.createContent(formatSingleDigitDecimal(virus.meanCoverage())));

@@ -19,7 +19,7 @@ public interface AnnotatedVirus {
     int integrations();
 
     @Nullable
-    String interpretation();
+    VirusInterpretation interpretation();
 
     double percentageCovered();
 
