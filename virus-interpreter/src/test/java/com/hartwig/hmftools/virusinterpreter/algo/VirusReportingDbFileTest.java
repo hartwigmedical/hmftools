@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.junit.Test;
@@ -16,6 +17,7 @@ import org.junit.Test;
 public class VirusReportingDbFileTest
 {
     private static final String VIRUS_REPORTING_DB_TSV = Resources.getResource("virus_interpreter/virus_reporting_db.tsv").getPath();
+    private static final String REAL_VIRUS_REPORTING_DB_TSV = Resources.getResource("virus_interpreter/real_virus_reporting_db.tsv").getPath();
 
     @Test
     public void canReadVirusReportingDbTsv() throws IOException
@@ -24,25 +26,32 @@ public class VirusReportingDbFileTest
         assertEquals(3, virusReportingDbModel.count());
 
         assertTrue(virusReportingDbModel.hasInterpretation(1));
-        assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(1));
+        assertEquals(VirusConstants.MCV, virusReportingDbModel.interpretVirusSpecies(1));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(1));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(1));
         assertEquals(virusReportingDbModel.virusLikelihoodType(1), VirusLikelihoodType.LOW);
 
         assertTrue(virusReportingDbModel.hasInterpretation(2));
-        assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(2));
+        assertEquals(VirusConstants.MCV, virusReportingDbModel.interpretVirusSpecies(2));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(2));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(2));
         assertEquals(virusReportingDbModel.virusLikelihoodType(2), VirusLikelihoodType.HIGH);
 
         assertTrue(virusReportingDbModel.hasInterpretation(3));
-        assertEquals("MCV", virusReportingDbModel.interpretVirusSpecies(3));
+        assertEquals(VirusConstants.MCV, virusReportingDbModel.interpretVirusSpecies(3));
         assertEquals(Integer.valueOf(90), virusReportingDbModel.nonIntegratedMinimalCoverage(3));
         assertNull(virusReportingDbModel.integratedMinimalCoverage(3));
         assertEquals(virusReportingDbModel.virusLikelihoodType(3), VirusLikelihoodType.HIGH);
 
         assertFalse(virusReportingDbModel.hasInterpretation(4));
-        assertNotEquals("HPV", virusReportingDbModel.interpretVirusSpecies(2));
+        assertNotEquals(VirusConstants.HPV, virusReportingDbModel.interpretVirusSpecies(2));
         assertNull(virusReportingDbModel.interpretVirusSpecies(5));
+    }
+
+    @Test
+    public void canReadRealVirusReportingDbTsv() throws IOException
+    {
+        VirusReportingDbModel virusReportingDbModel = VirusReportingDbFile.buildFromTsv(REAL_VIRUS_REPORTING_DB_TSV);
+        assertEquals(14, virusReportingDbModel.count());
     }
 }

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public final class VirusReportingDbFile
             if(parts.length == 6)
             {
                 int speciesTaxid = Integer.parseInt(parts[0].trim());
-                virusReportingDbBuilder.virusInterpretation(parts[1].trim())
+                virusReportingDbBuilder.virusInterpretation(VirusConstants.fromVirusName(parts[1].trim()))
                         .integratedMinimalCoverage(parts[2].trim().isEmpty() ? null : Integer.parseInt(parts[2].trim()))
                         .nonIntegratedMinimalCoverage(parts[3].trim().isEmpty() ? null : Integer.parseInt(parts[3].trim()))
                         .virusDriverLikelihoodType(VirusLikelihoodType.valueOf(parts[4]));
