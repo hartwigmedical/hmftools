@@ -300,8 +300,7 @@ public class FeatureDataLoader
         {
             final String sampleId = record.getValue(VIRUSANNOTATION.SAMPLEID);
 
-            String interpretation = record.getValue(VIRUSANNOTATION.INTERPRETATION) != null ?
-                    record.getValue(VIRUSANNOTATION.INTERPRETATION) : Strings.EMPTY;
+            String interpretation = record.getValue(VIRUSANNOTATION.INTERPRETATION);
 
             AnnotatedVirus annotatedVirus = ImmutableAnnotatedVirus.builder()
                         .taxid(record.getValue(VIRUSANNOTATION.TAXID))
