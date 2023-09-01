@@ -21,25 +21,18 @@ public enum VirusConstants
     @NotNull
     public static VirusConstants fromVirusName(@NotNull String virusName)
     {
-        switch(virusName)
+        for(final VirusConstants value : VirusConstants.values())
         {
-            case "MCV":
-                return MCV;
-            case "EBV":
-                return EBV;
-            case "HPV":
-                return HPV;
-            case "HBV":
-                return HBV;
-            case "HHV-8":
-                return HHV8;
-            default:
-                throw new IllegalStateException("Cannot resolve virus name: " + virusName);
+            if(value.toString().equals(virusName))
+            {
+                return value;
+            }
         }
+        throw new IllegalStateException("Cannot resolve virus name: " + virusName);
     }
 
-    @NotNull
-    public String getVirusName()
+    @Override
+    public String toString()
     {
         return virusName;
     }
