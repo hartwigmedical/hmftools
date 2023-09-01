@@ -36,7 +36,7 @@ public class RefGenomeSource implements RefGenomeInterface
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
     }
 
-    public static void addRefGenomeConfig(final ConfigBuilder configBuilder, boolean required)
+    public static void addRefGenomeConfig(final ConfigBuilder configBuilder, final boolean required)
     {
         if(required)
             configBuilder.addRequiredConfigItem(REF_GENOME_VERSION, REF_GENOME_VERSION_CFG_DESC);
@@ -52,7 +52,7 @@ public class RefGenomeSource implements RefGenomeInterface
     }
 
     @Override
-    public String getBaseString(final String chromosome, int posStart, int posEnd)
+    public String getBaseString(final String chromosome, final int posStart, final int posEnd)
     {
         return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBaseString();
     }
@@ -60,7 +60,7 @@ public class RefGenomeSource implements RefGenomeInterface
     @Override
     public String getBaseString(final String chromosome, final List<int[]> baseRanges)
     {
-        StringBuilder refBases = new StringBuilder();
+        final StringBuilder refBases = new StringBuilder();
         baseRanges.forEach(x -> refBases.append(mRefGenome.getSubsequenceAt(chromosome, x[0], x[1]).getBaseString()));
         return refBases.toString();
     }
@@ -72,7 +72,7 @@ public class RefGenomeSource implements RefGenomeInterface
     }
 
     @Override
-    public byte[] getBases(final String chromosome, int posStart, int posEnd)
+    public byte[] getBases(final String chromosome, final int posStart, final int posEnd)
     {
         return mRefGenome.getSubsequenceAt(chromosome, posStart, posEnd).getBases();
     }
@@ -85,10 +85,10 @@ public class RefGenomeSource implements RefGenomeInterface
         try
         {
             LOGGER.debug("loading indexed fasta reference file");
-            IndexedFastaSequenceFile refFastaSeqFile = new IndexedFastaSequenceFile(new File(filename));
+            final IndexedFastaSequenceFile refFastaSeqFile = new IndexedFastaSequenceFile(new File(filename));
             return new RefGenomeSource(refFastaSeqFile);
         }
-        catch (IOException e)
+        catch (final IOException e)
         {
             LOGGER.error("Reference file loading failed: {}", e.toString());
             return null;
