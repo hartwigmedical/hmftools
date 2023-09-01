@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.google.common.collect.Iterables;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
+import com.hartwig.hmftools.common.virus.VirusType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
@@ -48,13 +49,14 @@ public class VirusInterpreterDAO {
 
     private static void addVirusAnnotation(@NotNull Timestamp timestamp, @NotNull InsertValuesStep12 inserter, @NotNull String sample,
             @NotNull AnnotatedVirus annotatedVirus) {
+        VirusType interpretation = annotatedVirus.interpretation();
         inserter.values(timestamp,
                 sample,
                 annotatedVirus.taxid(),
                 annotatedVirus.name(),
                 annotatedVirus.qcStatus(),
                 annotatedVirus.integrations(),
-                String.valueOf(annotatedVirus.interpretation()),
+                interpretation == null ? null : interpretation.toString(),
                 annotatedVirus.percentageCovered(),
                 annotatedVirus.meanCoverage(),
                 annotatedVirus.expectedClonalCoverage(),
