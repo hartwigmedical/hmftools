@@ -24,6 +24,11 @@ public final class VirusTestFactory {
     }
 
     @NotNull
+    public static VirusInterpreterData createHHVInterpretationData() {
+        return createWithVirus(annotatedVirusBuilder().interpretation("HHV-8").build());
+    }
+
+    @NotNull
     public static ImmutableVirusBreakend.Builder virusBreakendBuilder() {
         return ImmutableVirusBreakend.builder()
                 .taxidGenus(0)

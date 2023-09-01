@@ -42,6 +42,7 @@ public class OrangeConversionTest {
         assertTrue(OrangeConversion.convert(VirusTestFactory.createEmptyData()).allViruses().isEmpty());
         assertEqualsValue(VirusTestFactory.createMinimalData(), OrangeConversion.convert(VirusTestFactory.createMinimalData()));
         assertEqualsValue(VirusTestFactory.createProperData(), OrangeConversion.convert(VirusTestFactory.createProperData()));
+        assertEqualsValue(VirusTestFactory.createHHVInterpretationData(), OrangeConversion.convert(VirusTestFactory.createHHVInterpretationData()));
     }
 
     private static void assertEqualsValue(com.hartwig.hmftools.common.virus.VirusInterpreterData input, VirusInterpreterData converted) {
