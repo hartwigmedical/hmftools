@@ -49,7 +49,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
@@ -349,7 +348,7 @@ public class OrangeJsonTest {
         AnnotatedVirus virus1 = findVirusByName(virusInterpreter.allViruses(), "Human papillomavirus 16");
         assertTrue(virus1.reported());
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus1.qcStatus());
-        assertEquals(VirusInterpretation.HPV, virus1.interpretation());
+        assertEquals("HPV", virus1.interpretation());
         assertEquals(1, virus1.integrations());
         assertEquals(VirusLikelihoodType.HIGH, virus1.virusDriverLikelihoodType());
         assertEquals(0.9, virus1.percentageCovered(), EPSILON);

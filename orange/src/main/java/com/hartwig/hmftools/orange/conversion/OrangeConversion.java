@@ -25,7 +25,6 @@ import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
@@ -112,8 +111,7 @@ public final class OrangeConversion
                 .name(annotatedVirus.name())
                 .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
                 .integrations(annotatedVirus.integrations())
-                .interpretation(
-                        annotatedVirus.interpretation() != null ? VirusInterpretation.valueOf(annotatedVirus.interpretation()) : null)
+                .interpretation(annotatedVirus.interpretation())
                 .percentageCovered(annotatedVirus.percentageCovered())
                 .reported(annotatedVirus.reported())
                 .meanCoverage(annotatedVirus.meanCoverage())

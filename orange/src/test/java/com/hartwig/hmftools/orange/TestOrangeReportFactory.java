@@ -44,7 +44,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.orange.algo.cuppa.TestCuppaFactory;
@@ -305,7 +304,7 @@ public final class TestOrangeReportFactory
                 .name("virus A")
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
                 .integrations(3)
-                .interpretation(VirusInterpretation.HPV)
+                .interpretation("HPV")
                 .percentageCovered(87D)
                 .meanCoverage(42D)
                 .expectedClonalCoverage(3D)
