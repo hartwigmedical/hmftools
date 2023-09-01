@@ -47,7 +47,7 @@ public class VirusInterpreterAlgo
                     .name(taxonomyDb.lookupName(taxid))
                     .qcStatus(virusBreakend.qcStatus())
                     .integrations(virusBreakend.integrations())
-                    .interpretation(interpretation != null ? interpretation.toString() : null)
+                    .interpretation(interpretation)
                     .percentageCovered(virusBreakend.coverage())
                     .meanCoverage(virusBreakend.meanDepth())
                     .expectedClonalCoverage(hasAcceptablePurpleQuality(purityContext.qc().status())

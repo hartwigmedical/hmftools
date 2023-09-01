@@ -37,4 +37,10 @@ public enum VirusConstants
                 throw new IllegalStateException("Cannot resolve virus name: " + virusName);
         }
     }
+
+    @NotNull
+    public String getVirusName()
+    {
+        return virusName;
+    }
 }
