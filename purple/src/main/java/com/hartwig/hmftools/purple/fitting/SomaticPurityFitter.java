@@ -110,10 +110,12 @@ public class SomaticPurityFitter
                 continue;
             }
 
+            /*
             if(PPL_LOGGER.isTraceEnabled())
             {
                 PPL_LOGGER.trace("variant({}) germlineStatus({}) used for fitting", variant.toString(), germlineStatus);
             }
+            */
 
             fittingVariants.add(variant);
         }

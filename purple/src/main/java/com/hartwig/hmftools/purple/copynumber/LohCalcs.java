@@ -108,8 +108,11 @@ public final class LohCalcs
 
                 if(segmentLength >= minLohLength)
                 {
+                    /*
                     PPL_LOGGER.trace("LOH segment({}:{}-{}) length({})",
                             copyNumber.chromosome(), lohSegmentStart, copyNumber.end(), segmentLength);
+                    */
+
                     ++lohCount;
                     lohBaseCount += segmentLength;
                 }

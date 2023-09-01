@@ -65,11 +65,11 @@ public class ExtendDiploid
             final CombinedRegion highestConfidence = regions.get(highestConfidenceIndex);
             highestConfidence.setCopyNumberMethod(CopyNumberMethod.BAF_WEIGHTED);
 
-            PPL_LOGGER.trace("selected region {}", toString(highestConfidence.region()));
+            //PPL_LOGGER.trace("selected region {}", toString(highestConfidence.region()));
             extendRight(regions, highestConfidenceIndex);
             extendLeft(regions, highestConfidenceIndex);
 
-            PPL_LOGGER.trace("completed region {}", toString(highestConfidence.region()));
+            //PPL_LOGGER.trace("completed region {}", toString(highestConfidence.region()));
             highestConfidenceIndex = nextIndex(regions);
         }
 

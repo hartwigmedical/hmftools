@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.purple.purity;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.common.utils.Doubles.positiveOrZero;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -189,6 +192,12 @@ public class FittedPurityFactory
 
                 somaticPenaltyTotal += mSomaticPenaltyWeight * variantPenalty;
             }
+
+            /*
+            PPL_LOGGER.trace(format("region(%s:%d-%d) fit(purity=%.2f norm=%.4f) somaticPenTotal(%.4f) devPen(%.4f) eventPen(%.4f) avgPloidy(%.4f)",
+                    region.chromosome(), region.start(), region.end(),
+                    purity, normFactor, somaticPenaltyTotal, deviationPenalty, eventPenalty, averagePloidy));
+            */
         }
 
         double somaticPenalty = mSomaticPenaltyWeight > 0 && somaticVariantCount > 0 ? somaticPenaltyTotal / somaticVariantCount : 0;

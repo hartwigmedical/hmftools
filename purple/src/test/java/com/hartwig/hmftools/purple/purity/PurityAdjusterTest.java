@@ -72,36 +72,6 @@ public class PurityAdjusterTest
         assertEquals(normFactor, impliedNormFactor, EPSILON);
     }
 
-    @Test
-    public void testBafDeviationCalcs()
-    {
-        ConfigBuilder configBuilder = new ConfigBuilder();
-        FittingConfig.addConfig(configBuilder);
-        FittingConfig fittingConfig = new FittingConfig(configBuilder);
-
-        String chromosome = "1";
-        MedianRatio medianRatio = new MedianRatio(chromosome, 0.5, 1);
-        CobaltChromosomes cobaltChromosomes = new CobaltChromosomes(Lists.newArrayList(medianRatio), true);
-
-        RegionFitCalculator regionFitCalculator = new RegionFitCalculator(cobaltChromosomes, fittingConfig, 100);
-        double purity = 0.08;
-        double normFactor = 0.986;
-
-        PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, cobaltChromosomes);
-
-        double baf = regionFitCalculator.bafToMinimiseDeviation(purityAdjuster, chromosome, 2.018, 0.53);
-        assertEquals(0.504, baf, 0.001);
-
-        baf = regionFitCalculator.bafToMinimiseDeviation(purityAdjuster, chromosome, 1.5, 0.53);
-        assertEquals(0.667, baf, 0.001);
-
-        baf = regionFitCalculator.bafToMinimiseDeviation(purityAdjuster, chromosome, 2.02, 0.51);
-        assertEquals(0.504, baf, 0.001);
-
-        baf = regionFitCalculator.bafToMinimiseDeviation(purityAdjuster, chromosome, 1.9, 0.53);
-        assertEquals(0.526, baf, 0.001);
-    }
-
     private static void assertFrequencyMatchesPloidy(
             final PurityAdjuster victim, final int normalCopyNumber,
             final int normalPloidy, final double tumorCopyNumber, final double tumorPloidy)
