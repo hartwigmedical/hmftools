@@ -114,7 +114,7 @@ public final class OrangeConversion
                 .name(annotatedVirus.name())
                 .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
                 .integrations(annotatedVirus.integrations())
-                .interpretation(interpretation != null ? VirusInterpretation.valueOf(interpretation.toString()) : null)
+                .interpretation(interpretation != null ? VirusInterpretation.valueOf(interpretation.name()) : null)
                 .percentageCovered(annotatedVirus.percentageCovered())
                 .reported(annotatedVirus.reported())
                 .meanCoverage(annotatedVirus.meanCoverage())

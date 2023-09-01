@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.StringJoiner;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -120,12 +119,11 @@ public final class AnnotatedVirusFile
     @NotNull
     private static String toString(@NotNull AnnotatedVirus annotatedVirus)
     {
-        VirusConstants interpretation = annotatedVirus.interpretation();
         return new StringJoiner(TSV_DELIM).add(String.valueOf(annotatedVirus.taxid()))
                 .add(annotatedVirus.name())
                 .add(annotatedVirus.qcStatus().toString())
                 .add(String.valueOf(annotatedVirus.integrations()))
-                .add(interpretation == null ? "null" : interpretation.getVirusName())
+                .add(String.valueOf(annotatedVirus.interpretation()))
                 .add(String.valueOf(annotatedVirus.percentageCovered()))
                 .add(String.valueOf(annotatedVirus.meanCoverage()))
                 .add(String.valueOf(annotatedVirus.expectedClonalCoverage()))
