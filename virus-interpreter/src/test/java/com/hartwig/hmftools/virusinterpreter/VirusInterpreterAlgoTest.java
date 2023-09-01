@@ -74,22 +74,22 @@ public class VirusInterpreterAlgoTest
         AnnotatedVirus reportedVirus1 = reportedVirus.get(0);
         assertEquals(name, reportedVirus1.name());
         assertEquals(2, reportedVirus1.integrations());
-        assertEquals("EBV", reportedVirus1.interpretation());
+        assertEquals(VirusConstants.EBV, reportedVirus1.interpretation());
 
         AnnotatedVirus reportedVirus2 = reportedVirus.get(1);
         assertEquals(name, reportedVirus2.name());
         assertEquals(0, reportedVirus2.integrations());
-        assertEquals("EBV", reportedVirus2.interpretation());
+        assertEquals(VirusConstants.EBV, reportedVirus2.interpretation());
 
         AnnotatedVirus reportedVirus3 = reportedVirus.get(2);
         assertEquals(name, reportedVirus3.name());
         assertEquals(0, reportedVirus3.integrations());
-        assertEquals("EBV", reportedVirus3.interpretation());
+        assertEquals(VirusConstants.EBV, reportedVirus3.interpretation());
 
         AnnotatedVirus reportedVirus4 = reportedVirus.get(3);
         assertEquals(name, reportedVirus4.name());
         assertEquals(0, reportedVirus4.integrations());
-        assertEquals("EBV", reportedVirus4.interpretation());
+        assertEquals(VirusConstants.EBV, reportedVirus4.interpretation());
 
         assertEquals(Integer.valueOf(90), algo.determineMinimalCoverageVirus(0, 1));
         assertNull(algo.determineMinimalCoverageVirus(1, 1));

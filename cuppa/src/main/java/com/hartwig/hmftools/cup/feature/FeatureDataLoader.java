@@ -52,6 +52,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
@@ -306,7 +307,7 @@ public class FeatureDataLoader
                         .taxid(record.getValue(VIRUSANNOTATION.TAXID))
                         .name(record.getValue(VIRUSANNOTATION.VIRUSNAME))
                         .qcStatus(VirusBreakendQCStatus.valueOf(record.getValue(VIRUSANNOTATION.QCSTATUS)))
-                        .interpretation(interpretation)
+                        .interpretation(VirusConstants.fromVirusName(interpretation))
                         .reported(record.getValue(VIRUSANNOTATION.REPORTED) == 1)
                         .integrations(record.getValue(VIRUSANNOTATION.INTEGRATIONS))
                         .percentageCovered(record.getValue(VIRUSANNOTATION.PERCENTAGECOVERED))
