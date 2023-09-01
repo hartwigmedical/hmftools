@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReportingDb;
@@ -125,21 +126,21 @@ public class VirusInterpreterAlgoTest
     private static VirusInterpreterAlgo createTestAlgo(@NotNull String name)
     {
         VirusReportingDb virusReporting1 = ImmutableVirusReportingDb.builder()
-                .virusInterpretation("EBV")
+                .virusInterpretation(VirusConstants.EBV)
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(90)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
         VirusReportingDb virusReporting2 = ImmutableVirusReportingDb.builder()
-                .virusInterpretation("EBV")
+                .virusInterpretation(VirusConstants.EBV)
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
         VirusReportingDb virusReporting3 = ImmutableVirusReportingDb.builder()
-                .virusInterpretation("EBV")
+                .virusInterpretation(VirusConstants.EBV)
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)

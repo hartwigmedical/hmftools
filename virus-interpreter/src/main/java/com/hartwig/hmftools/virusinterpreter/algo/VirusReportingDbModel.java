@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.virusinterpreter.VirusInterpreterApplication.
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +20,7 @@ public class VirusReportingDbModel
     }
 
     @Nullable
-    public String interpretVirusSpecies(int speciesTaxid)
+    public VirusConstants interpretVirusSpecies(int speciesTaxid)
     {
         boolean speciesHasInterpretation = hasInterpretation(speciesTaxid);
         if(!speciesHasInterpretation)

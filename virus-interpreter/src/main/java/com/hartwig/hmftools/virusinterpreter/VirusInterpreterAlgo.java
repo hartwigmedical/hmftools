@@ -11,6 +11,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusConstants;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
@@ -37,7 +38,7 @@ public class VirusInterpreterAlgo
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
         for(VirusBreakend virusBreakend : virusBreakends)
         {
-            String interpretation = virusReportingDbModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
+            VirusConstants interpretation = virusReportingDbModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
 
             int taxid = virusBreakend.referenceTaxid();
             boolean reported = report(virusBreakend, coveragesAnalysis.ExpectedClonalCoverage, purityContext.qc().status());
@@ -46,7 +47,7 @@ public class VirusInterpreterAlgo
                     .name(taxonomyDb.lookupName(taxid))
                     .qcStatus(virusBreakend.qcStatus())
                     .integrations(virusBreakend.integrations())
-                    .interpretation(interpretation)
+                    .interpretation(interpretation != null ? interpretation.toString() : null)
                     .percentageCovered(virusBreakend.coverage())
                     .meanCoverage(virusBreakend.meanDepth())
                     .expectedClonalCoverage(hasAcceptablePurpleQuality(purityContext.qc().status())
