@@ -23,7 +23,6 @@ import org.junit.Test;
 
 public class VariantEntryFactoryTest
 {
-
     private static final double EPSILON = 1.0E-10;
 
     @Test

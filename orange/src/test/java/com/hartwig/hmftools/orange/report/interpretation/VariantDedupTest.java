@@ -14,7 +14,6 @@ import org.junit.Test;
 
 public class VariantDedupTest
 {
-
     @Test
     public void canDedupVariants()
     {

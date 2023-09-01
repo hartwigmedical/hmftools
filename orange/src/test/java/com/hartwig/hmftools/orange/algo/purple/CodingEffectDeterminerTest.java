@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -15,8 +14,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void testEmptyEffectListReturnsNoneCodingEffect()
     {
-        var emptyVariantEffectList = new ArrayList<VariantEffect>();
-        //act
+        List<VariantEffect> emptyVariantEffectList = List.of();
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(emptyVariantEffectList);
 
         assertEquals(CodingEffect.NONE, actualCodingEffect);
@@ -25,8 +24,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void testNonsenseOrFrameshiftDetermination()
     {
-        var variantEffects = List.of(VariantEffect.START_LOST);
-        // act
+        List<VariantEffect> variantEffects = List.of(VariantEffect.START_LOST);
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, actualCodingEffect);
@@ -35,8 +34,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void testSpliceCodingEffectDetermination()
     {
-        var variantEffects = List.of(VariantEffect.SPLICE_DONOR);
-        //act
+        List<VariantEffect> variantEffects = List.of(VariantEffect.SPLICE_DONOR);
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.SPLICE, actualCodingEffect);
@@ -45,8 +44,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void testMissenseEffectDetermination()
     {
-        var variantEffects = List.of(VariantEffect.MISSENSE);
-        //act
+        List<VariantEffect> variantEffects = List.of(VariantEffect.MISSENSE);
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.MISSENSE, actualCodingEffect);
@@ -55,8 +54,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void testSynonymousEffectDetermination()
     {
-        var variantEffects = List.of(VariantEffect.SYNONYMOUS);
-        //act
+        List<VariantEffect> variantEffects = List.of(VariantEffect.SYNONYMOUS);
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.SYNONYMOUS, actualCodingEffect);
@@ -65,8 +64,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void testOtherEffectDetermination()
     {
-        var variantEffects = List.of(VariantEffect.INTRONIC);
-        //act
+        List<VariantEffect> variantEffects = List.of(VariantEffect.INTRONIC);
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.NONE, actualCodingEffect);
@@ -75,8 +74,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void nonsenseOrFrameshiftTakesPrecedenceOverSplice()
     {
-        var variantEffects = List.of(VariantEffect.START_LOST, VariantEffect.SPLICE_DONOR);
-        //act
+        List<VariantEffect> variantEffects = List.of(VariantEffect.START_LOST, VariantEffect.SPLICE_DONOR);
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.NONSENSE_OR_FRAMESHIFT, actualCodingEffect);
@@ -85,8 +84,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void spliceTakesPrecedenceOverMissense()
     {
-        var variantEffects = List.of(VariantEffect.MISSENSE, VariantEffect.SPLICE_DONOR);
-        //act
+        List<VariantEffect> variantEffects = List.of(VariantEffect.MISSENSE, VariantEffect.SPLICE_DONOR);
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.SPLICE, actualCodingEffect);
@@ -95,8 +94,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void missenseTakesPrecedenceOverSynonymous()
     {
-        var variantEffects = List.of(VariantEffect.MISSENSE, VariantEffect.SYNONYMOUS);
-        //act
+        List<VariantEffect> variantEffects = List.of(VariantEffect.MISSENSE, VariantEffect.SYNONYMOUS);
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.MISSENSE, actualCodingEffect);
@@ -105,8 +104,8 @@ public class CodingEffectDeterminerTest
     @Test
     public void synonymousTakesPrecedenceOverNone()
     {
-        var variantEffects = List.of(VariantEffect.INTRONIC, VariantEffect.SYNONYMOUS);
-        //act
+        List<VariantEffect> variantEffects = List.of(VariantEffect.INTRONIC, VariantEffect.SYNONYMOUS);
+
         CodingEffect actualCodingEffect = CodingEffectDeterminer.determineCodingEffect(variantEffects);
 
         assertEquals(CodingEffect.SYNONYMOUS, actualCodingEffect);

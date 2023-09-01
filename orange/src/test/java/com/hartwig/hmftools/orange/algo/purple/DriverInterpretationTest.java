@@ -6,7 +6,6 @@ import org.junit.Test;
 
 public class DriverInterpretationTest
 {
-
     @Test
     public void canInterpretDriverLikelihood()
     {
@@ -14,5 +13,4 @@ public class DriverInterpretationTest
         assertEquals(DriverInterpretation.MEDIUM, DriverInterpretation.interpret(0.5));
         assertEquals(DriverInterpretation.LOW, DriverInterpretation.interpret(0.1));
     }
-
 }

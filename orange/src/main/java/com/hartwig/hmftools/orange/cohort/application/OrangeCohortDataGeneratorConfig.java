@@ -10,7 +10,6 @@ import java.io.IOException;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.ParseException;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +40,7 @@ public interface OrangeCohortDataGeneratorConfig
     String outputDirectory();
 
     @NotNull
-    static OrangeCohortDataGeneratorConfig createConfig(final ConfigBuilder configBuilder) throws ParseException, IOException
+    static OrangeCohortDataGeneratorConfig createConfig(final ConfigBuilder configBuilder) throws IOException
     {
         String outputDir = parseOutputDir(configBuilder);
 

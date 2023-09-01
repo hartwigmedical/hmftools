@@ -19,7 +19,6 @@ import org.junit.Test;
 
 public class RNAFusionSelectorTest
 {
-
     @Test
     public void canSelectNovelKnownFusions()
     {

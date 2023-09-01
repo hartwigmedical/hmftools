@@ -7,8 +7,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
-import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -17,7 +17,6 @@ import org.junit.Test;
 
 public class BreakendEntryFactoryTest
 {
-
     private static final double EPSILON = 1.0E-10;
 
     @Test

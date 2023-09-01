@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.pave;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,7 +13,6 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,11 +23,6 @@ public class PaveAlgo
     @NotNull
     private final EnsemblDataCache ensemblDataCache;
     private final boolean expectGenesExist;
-
-    public PaveAlgo(@NotNull final EnsemblDataCache ensemblDataCache)
-    {
-        this(ensemblDataCache, true);
-    }
 
     public PaveAlgo(@NotNull final EnsemblDataCache ensemblDataCache, final boolean expectGenesExist)
     {

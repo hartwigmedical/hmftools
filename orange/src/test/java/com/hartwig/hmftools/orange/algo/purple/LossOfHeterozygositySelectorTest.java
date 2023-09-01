@@ -19,7 +19,6 @@ import org.junit.Test;
 
 public class LossOfHeterozygositySelectorTest
 {
-
     private static final double EPSILON = 1.0E-10;
 
     @Test

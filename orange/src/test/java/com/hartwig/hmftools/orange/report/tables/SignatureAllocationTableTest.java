@@ -13,7 +13,6 @@ import org.junit.Test;
 
 public class SignatureAllocationTableTest
 {
-
     @Test
     public void canSortSignatureAllocations()
     {

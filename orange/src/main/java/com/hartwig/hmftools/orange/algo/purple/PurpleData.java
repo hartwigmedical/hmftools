@@ -55,5 +55,4 @@ public interface PurpleData
 
     @Nullable
     List<GermlineDeletion> reportableGermlineDeletions();
-
 }

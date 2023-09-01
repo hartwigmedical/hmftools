@@ -9,9 +9,8 @@ import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
 import org.jetbrains.annotations.NotNull;
 
-public class LinxOrangeTestFactory
+public final class LinxOrangeTestFactory
 {
-
     @NotNull
     public static ImmutableLinxSvAnnotation.Builder svAnnotationBuilder()
     {

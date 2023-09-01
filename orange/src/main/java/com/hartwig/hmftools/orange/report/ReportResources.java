@@ -1,19 +1,10 @@
 package com.hartwig.hmftools.orange.report;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.orange.OrangeApplication;
 import com.itextpdf.io.font.FontProgram;
 import com.itextpdf.io.font.FontProgramFactory;

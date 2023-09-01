@@ -5,14 +5,16 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-public class MolecularTissueOriginReportingFactoryTest  {
-
+public class MolecularTissueOriginReportingFactoryTest
+{
     private static final double EPSILON = 1.0E-10;
 
     @Test
-    public void canCreateCuppaReportingKnown() {
+    public void canCreateCuppaReportingKnown()
+    {
         CuppaPrediction prediction = ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0.90).build();
-        MolecularTissueOriginReporting reporting = MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
+        MolecularTissueOriginReporting reporting =
+                MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
         assertEquals("Melanoma", reporting.bestCancerType());
         assertEquals(0.90, reporting.bestLikelihood(), EPSILON);
         assertEquals("Melanoma", reporting.interpretCancerType());
@@ -20,9 +22,11 @@ public class MolecularTissueOriginReportingFactoryTest  {
     }
 
     @Test
-    public void canCreateCuppaReportingKnownUterus() {
+    public void canCreateCuppaReportingKnownUterus()
+    {
         CuppaPrediction prediction = ImmutableCuppaPrediction.builder().cancerType("Uterus: Endometrium").likelihood(0.90).build();
-        MolecularTissueOriginReporting reporting = MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
+        MolecularTissueOriginReporting reporting =
+                MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
         assertEquals("Endometrium", reporting.bestCancerType());
         assertEquals(0.90, reporting.bestLikelihood(), EPSILON);
         assertEquals("Endometrium", reporting.interpretCancerType());
@@ -30,9 +34,12 @@ public class MolecularTissueOriginReportingFactoryTest  {
     }
 
     @Test
-    public void canCreateCuppaReportingKnownColon() {
-        CuppaPrediction prediction = ImmutableCuppaPrediction.builder().cancerType("Colorectum/Appendix/SmallIntestine").likelihood(0.90).build();
-        MolecularTissueOriginReporting reporting = MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
+    public void canCreateCuppaReportingKnownColon()
+    {
+        CuppaPrediction prediction =
+                ImmutableCuppaPrediction.builder().cancerType("Colorectum/Appendix/SmallIntestine").likelihood(0.90).build();
+        MolecularTissueOriginReporting reporting =
+                MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
         assertEquals("Lower GI tract", reporting.bestCancerType());
         assertEquals(0.90, reporting.bestLikelihood(), EPSILON);
         assertEquals("Lower GI tract", reporting.interpretCancerType());
@@ -40,9 +47,11 @@ public class MolecularTissueOriginReportingFactoryTest  {
     }
 
     @Test
-    public void canCreateCuppaReportingInconclusiveWithLikelihood() {
+    public void canCreateCuppaReportingInconclusiveWithLikelihood()
+    {
         CuppaPrediction prediction = ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0.60).build();
-        MolecularTissueOriginReporting reporting = MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
+        MolecularTissueOriginReporting reporting =
+                MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
         assertEquals("Melanoma", reporting.bestCancerType());
         assertEquals(0.60, reporting.bestLikelihood(), EPSILON);
         assertEquals("results inconclusive", reporting.interpretCancerType());
@@ -50,9 +59,11 @@ public class MolecularTissueOriginReportingFactoryTest  {
     }
 
     @Test
-    public void canCreateCuppaReportingInconclusiveWithoutLikelihood() {
+    public void canCreateCuppaReportingInconclusiveWithoutLikelihood()
+    {
         CuppaPrediction prediction = ImmutableCuppaPrediction.builder().cancerType("Melanoma").likelihood(0.40).build();
-        MolecularTissueOriginReporting reporting = MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
+        MolecularTissueOriginReporting reporting =
+                MolecularTissueOriginReportingFactory.createMolecularTissueOriginReportingData(prediction);
         assertEquals("Melanoma", reporting.bestCancerType());
         assertEquals(0.40, reporting.bestLikelihood(), EPSILON);
         assertEquals("results inconclusive", reporting.interpretCancerType());

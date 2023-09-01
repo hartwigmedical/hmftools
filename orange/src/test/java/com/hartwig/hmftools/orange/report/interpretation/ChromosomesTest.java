@@ -6,7 +6,6 @@ import org.junit.Test;
 
 public class ChromosomesTest
 {
-
     @Test
     public void canPrefixChromosomes()
     {

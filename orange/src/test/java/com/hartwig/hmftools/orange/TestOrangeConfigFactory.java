@@ -8,8 +8,8 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class TestOrangeConfigFactory {
-
+public final class TestOrangeConfigFactory
+{
     private static final String MELANOMA_DOID = "8923";
 
     private static final String REFERENCE_SAMPLE_ID = "ref_sample";
@@ -53,11 +53,13 @@ public final class TestOrangeConfigFactory {
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
     private static final String SIGS_ALLOCATION_TSV = RUN_DIRECTORY + "/sigs/tumor_sample.sig.allocation.tsv";
 
-    private TestOrangeConfigFactory() {
+    private TestOrangeConfigFactory()
+    {
     }
 
     @NotNull
-    public static OrangeConfig createPanelConfig() {
+    public static OrangeConfig createPanelConfig()
+    {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
@@ -87,7 +89,8 @@ public final class TestOrangeConfigFactory {
     }
 
     @NotNull
-    public static OrangeConfig createWGSConfigTumorOnly() {
+    public static OrangeConfig createWGSConfigTumorOnly()
+    {
         return ImmutableOrangeConfig.builder()
                 .from(createPanelConfig())
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
@@ -100,7 +103,8 @@ public final class TestOrangeConfigFactory {
     }
 
     @NotNull
-    public static OrangeConfig createWGSConfigTumorNormal() {
+    public static OrangeConfig createWGSConfigTumorNormal()
+    {
         return ImmutableOrangeConfig.builder()
                 .from(createWGSConfigTumorOnly())
                 .referenceSampleId(REFERENCE_SAMPLE_ID)
@@ -115,7 +119,8 @@ public final class TestOrangeConfigFactory {
     }
 
     @NotNull
-    public static OrangeConfig createWGTSConfigTumorNormal() {
+    public static OrangeConfig createWGTSConfigTumorNormal()
+    {
         // We use tumor_sample as rnaSampleId since we have no real ISOFOX test data for our test_run
         return ImmutableOrangeConfig.builder()
                 .from(createWGSConfigTumorNormal())

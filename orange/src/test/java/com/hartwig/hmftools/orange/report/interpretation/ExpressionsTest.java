@@ -16,7 +16,6 @@ import org.junit.Test;
 
 public class ExpressionsTest
 {
-
     @Test
     public void canCalcFoldChange()
     {

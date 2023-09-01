@@ -68,8 +68,4 @@ public final class CohortConstants
             DOID_COMBINATION_MAP.put(combination, COHORT_STOMACH);
         }
     }
-
-    private CohortConstants()
-    {
-    }
 }

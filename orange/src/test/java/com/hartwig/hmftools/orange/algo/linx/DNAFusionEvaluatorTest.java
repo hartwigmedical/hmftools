@@ -12,7 +12,6 @@ import org.junit.Test;
 
 public class DNAFusionEvaluatorTest
 {
-
     @Test
     public void canDetermineIfFusionIsPresent()
     {

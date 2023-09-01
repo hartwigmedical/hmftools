@@ -11,7 +11,6 @@ import org.junit.Test;
 
 public class LinxInterpreterTest
 {
-
     @Test
     public void canInterpretMinimalLinxData()
     {

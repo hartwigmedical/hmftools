@@ -210,7 +210,10 @@ investigate potential causes for QC failure.
 
 ### Version History and Download Links
 
-- Upcoming
+- [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
+    - Supports panel tumor-only mode:
+        - Omits Cuppa, Chord, Sigs and VirusBreakends
+        - Omits Germline annotations
     - DOID cohort mapper throws exception instead of warn in case of invalid DOID combinations
     - Various DOID combinations are added to resolve to Esophagus or Stomach cohorts when combined with Gastroesophageal cancer DOIDs
     - A bug has been fixed with respect to using transcripts from the ensembl data cache that are not ensembl transcripts.

@@ -21,7 +21,6 @@ import org.junit.Test;
 
 public class GermlineGainLossFactoryTest
 {
-
     private static final String TEST_GENE = "gene";
     private static final double EPSILON = 1.0E-2;
 

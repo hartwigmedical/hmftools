@@ -8,12 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TestEnsemblDataCacheFactory
 {
-
     private static final String ENSEMBL_DATA_CACHE_PATH = Resources.getResource("ensembl").getPath();
-
-    private TestEnsemblDataCacheFactory()
-    {
-    }
 
     @NotNull
     public static EnsemblDataCache createDummyCache()

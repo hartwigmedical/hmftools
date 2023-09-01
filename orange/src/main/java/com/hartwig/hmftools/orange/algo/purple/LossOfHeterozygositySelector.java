@@ -35,10 +35,6 @@ final class LossOfHeterozygositySelector
         MSI_GENES.add("EPCAM");
     }
 
-    private LossOfHeterozygositySelector()
-    {
-    }
-
     @NotNull
     public static List<GeneCopyNumber> selectHRDOrMSIGenesWithLOH(@NotNull List<GeneCopyNumber> allSomaticGeneCopyNumbers,
             @Nullable List<GermlineDeletion> allGermlineDeletions, @NotNull MicrosatelliteStatus microsatelliteStatus,

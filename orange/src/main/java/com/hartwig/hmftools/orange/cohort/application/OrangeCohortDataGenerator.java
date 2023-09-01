@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.orange.cohort.application;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.APP_NAME;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.cohort.application.OrangeCohortDataGeneratorConfig.createConfig;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -21,17 +25,11 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.PercentileGenerator;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.ParseException;
-
-import static com.hartwig.hmftools.orange.OrangeApplication.APP_NAME;
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.cohort.application.OrangeCohortDataGeneratorConfig.createConfig;
-
 import org.jetbrains.annotations.NotNull;
 
 public class OrangeCohortDataGenerator
 {
-    public static void main(String[] args) throws IOException, ParseException
+    public static void main(String[] args) throws IOException
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 

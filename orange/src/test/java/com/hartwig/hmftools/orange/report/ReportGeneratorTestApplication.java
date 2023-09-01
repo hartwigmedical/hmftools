@@ -36,7 +36,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class ReportGeneratorTestApplication
 {
-
     private static final Logger LOGGER = LogManager.getLogger(ReportGeneratorTestApplication.class);
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";

@@ -20,7 +20,6 @@ import org.junit.Test;
 
 public class DNAFusionSelectorTest
 {
-
     @Test
     public void canSelectFusionsWithReportedType()
     {

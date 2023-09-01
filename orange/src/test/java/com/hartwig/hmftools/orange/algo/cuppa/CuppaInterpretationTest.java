@@ -16,7 +16,6 @@ import org.junit.Test;
 
 public class CuppaInterpretationTest
 {
-
     @Test
     public void canFindPredictionsByRank()
     {

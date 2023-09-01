@@ -14,14 +14,14 @@ public final class ConversionUtil
     @NotNull
     public static <T, R> Iterable<R> mapToIterable(@Nullable Collection<T> collection, Function<T, R> mapper)
     {
-        Collection<T> nonNull = Objects.requireNonNullElseGet(collection, List::<T>of);
+        Collection<T> nonNull = Objects.requireNonNullElseGet(collection, List::of);
         return () -> nonNull.stream().map(mapper).iterator();
     }
 
     @NotNull
     public static <T, R> List<R> mapToList(@Nullable Collection<T> collection, Function<T, R> mapper)
     {
-        Collection<T> nonNull = Objects.requireNonNullElseGet(collection, List::<T>of);
+        Collection<T> nonNull = Objects.requireNonNullElseGet(collection, List::of);
         return nonNull.stream().map(mapper).collect(Collectors.toList());
     }
 }
