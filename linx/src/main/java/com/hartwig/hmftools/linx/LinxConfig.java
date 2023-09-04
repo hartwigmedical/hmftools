@@ -68,6 +68,7 @@ public class LinxConfig
 
     public final boolean RunFusions;
     public final boolean RunDrivers;
+    public final boolean FailOnMissing;
 
     public final int Threads;
 
@@ -80,6 +81,7 @@ public class LinxConfig
     private static final String CLUSTER_BASE_DISTANCE = "proximity_distance";
     private static final String CHAINING_SV_LIMIT = "chaining_sv_limit";
     private static final String ANNOTATION_EXTENSIONS = "annotations";
+    private static final String FAIL_ON_MISSING_SAMPLE = "fail_on_missing";
 
     public static final String GERMLINE = "germline";
 
@@ -141,7 +143,6 @@ public class LinxConfig
 
         SvVcfFile = svVcfFile;
 
-
         RunFusions = configBuilder.hasValue(KNOWN_FUSIONS_FILE);
 
         Output = new LinxOutput(configBuilder, isSingleSample() && !IsGermline);
@@ -158,6 +159,7 @@ public class LinxConfig
 
         DriverGenes = loadDriverGenes(configBuilder);
         RunDrivers = !DriverGenes.isEmpty();
+        FailOnMissing = configBuilder.hasFlag(FAIL_ON_MISSING_SAMPLE);
 
         LogVerbose = configBuilder.hasFlag(LOG_VERBOSE);
         Threads = parseThreads(configBuilder);
@@ -245,6 +247,7 @@ public class LinxConfig
         RestrictedGeneIds = Lists.newArrayList();
         RunDrivers = true;
         RunFusions = true;
+        FailOnMissing = false;
         Threads = 0;
     }
 
@@ -268,6 +271,7 @@ public class LinxConfig
         configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
 
         LinxOutput.addConfig(configBuilder);
+        configBuilder.addFlag(FAIL_ON_MISSING_SAMPLE, "Failing all processing in batch mode if any sample is missing");
         configBuilder.addFlag(LOG_VERBOSE, "Log extra detail");
         addOutputDir(configBuilder);
         addThreadOptions(configBuilder);

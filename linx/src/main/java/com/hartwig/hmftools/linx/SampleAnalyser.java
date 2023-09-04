@@ -185,8 +185,12 @@ public class SampleAnalyser implements Callable
             catch(Exception e)
             {
                 LNX_LOGGER.error("sample({}) processing failed: {}", mSampleIds.get(i), e.toString());
-                e.printStackTrace();
-                System.exit(1);
+
+                if(mConfig.FailOnMissing || mConfig.isSingleSample())
+                {
+                    e.printStackTrace();
+                    System.exit(1);
+                }
             }
 
             if(i > 10 && (i % 10) == 0)
