@@ -158,7 +158,7 @@ public class GripssApplication
 
         vcfFileReader.iterator().forEach(x -> processVariant(x, genotypeIds));
 
-        GR_LOGGER.info("read VCF: breakends({}) unmatched({}) complete({}) hardFiltered({})",
+        GR_LOGGER.info("read VCF: processedBreakends({}) unmatched({}) complete({}) hardFiltered({})",
                 mProcessedVariants, mVariantBuilder.incompleteSVs(), mSvDataCache.getSvList().size(), mVariantBuilder.hardFilteredCount());
 
         GR_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
