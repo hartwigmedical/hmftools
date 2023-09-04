@@ -258,10 +258,8 @@ public class FusionReportability
     {
         final BreakendTransData downTrans = fusion.downstreamTrans();
 
-        long requiredKeptButLost =
-                PROTEINS_REQUIRED_KEPT.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
-        long requiredLostButKept =
-                PROTEINS_REQUIRED_LOST.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
+        long requiredKeptButLost = PROTEINS_REQUIRED_KEPT.stream().filter(f -> downTrans.getProteinFeaturesLost().contains(f)).count();
+        long requiredLostButKept = PROTEINS_REQUIRED_LOST.stream().filter(f -> downTrans.getProteinFeaturesKept().contains(f)).count();
 
         return requiredKeptButLost == 0 && requiredLostButKept == 0;
     }

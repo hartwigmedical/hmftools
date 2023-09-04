@@ -596,6 +596,13 @@ public class FusionFinder
         if(downTrans.nonCoding())
             return;
 
+        if(fusion.knownType() == IG_KNOWN_PAIR || fusion.knownType() == IG_PROMISCUOUS)
+        {
+            // ignore proteins lost for downstream transcripts since the IG region functions as a promotor
+            if(downTrans.postCoding())
+                return;
+        }
+
         final List<TranscriptProteinData> transProteinData = mGeneTransCache.getTranscriptProteinDataMap().get(downTrans.transId());
 
         if(transProteinData == null || transProteinData.isEmpty())
@@ -633,7 +640,6 @@ public class FusionFinder
 
             processedFeatures.add(feature);
         }
-
     }
 
     private static boolean proteinFeaturePreserved(
