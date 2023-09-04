@@ -654,7 +654,7 @@ public class FusionFinder
             if(isDownstream)
             {
                 // coding must start before the start of the feature for it to be preserved
-                int featureCodingBaseStart = featureStart * 3;
+                int featureCodingBaseStart = featureStart * 3 - 2; // adjusted for start of codon
                 int svCodingBaseStart = transcript.CodingBases;
                 featurePreserved = (featureCodingBaseStart >= svCodingBaseStart);
             }
