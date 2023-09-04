@@ -112,8 +112,6 @@ public class SampleComparisonTask implements Callable
                     refVariant.Chromosome, refVariant.Position, refVariant.Ref, refVariant.Alt);
 
             variant.setVariantDetails(refVariant.LocalPhaseSet, refVariant.Microhomology, refVariant.RepeatSequence, refVariant.RepeatCount);
-            variant.setSampleId(sampleId);
-            variant.setRefData(refVariant);
 
             try
             {
@@ -121,7 +119,7 @@ public class SampleComparisonTask implements Callable
 
                 findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
-                processPhasedVariants(variant.localPhaseSet());
+                processPhasedVariants(variant.localPhaseSet(), sampleId);
 
                 if(!variant.hasLocalPhaseSet())
                     processVariant(sampleId, variant, refVariant);
@@ -133,7 +131,7 @@ public class SampleComparisonTask implements Callable
             }
         }
 
-        processPhasedVariants(NO_LOCAL_PHASE_SET);
+        processPhasedVariants(NO_LOCAL_PHASE_SET, sampleId);
         mImpactClassifier.phasedVariants().clear();
 
         mPerfCounters.get(PC_PROCESS).stop();
@@ -141,12 +139,20 @@ public class SampleComparisonTask implements Callable
         PV_LOGGER.debug("{}: sample({}) processed {} variants", mTaskId, sampleId, refVariants.size());
     }
 
-    private void processPhasedVariants(int currentLocalPhaseSet)
+    private void processPhasedVariants(int currentLocalPhaseSet, final String sampleId)
     {
         List<VariantData> variants = mImpactClassifier.processPhasedVariants(currentLocalPhaseSet);
 
+        List<RefVariantData> refVariants = mSampleVariantsCache.get(sampleId);
+
         if(variants != null)
-            variants.forEach(x -> processVariant(x.sampleId(), x, x.refData()));
+        {
+            for(VariantData variant : variants)
+            {
+                RefVariantData refVariant = refVariants.stream().filter(x -> x.matches(variant)).findFirst().orElse(null);
+                processVariant(sampleId, variant, refVariant);
+            }
+        }
     }
 
     private void processVariant(final String sampleId, final VariantData variant, final RefVariantData refVariant)

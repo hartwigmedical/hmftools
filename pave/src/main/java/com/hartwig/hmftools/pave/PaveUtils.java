@@ -94,7 +94,6 @@ public final class PaveUtils
                 newRef.substring(0, 1) + variant.Alt.substring(1) : newRef.substring(0, 1);
 
         VariantData raVariant = new VariantData(variant.Chromosome, newPosition, newRef, newAlt);
-        raVariant.setRefData(raVariant.refData());
         raVariant.setContext(variant.context());
 
         // due to complexity, skip trying to phase realigned variants

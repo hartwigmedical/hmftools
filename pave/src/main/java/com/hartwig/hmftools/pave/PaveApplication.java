@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelCon
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_ARTEFACTS_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
@@ -34,7 +33,6 @@ import com.hartwig.hmftools.pave.annotation.Mappability;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 import com.hartwig.hmftools.pave.annotation.Reportability;
 
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -346,7 +344,6 @@ public class PaveApplication
                 version.version(), mGnomadAnnotation.hasData(), mPon.isEnabled(), mMappability.hasData(),
                 mClinvar.hasData(), mBlacklistings.hasData(), mConfig.SetReportable);
     }
-
 
     public static void main(@NotNull final String[] args)
     {

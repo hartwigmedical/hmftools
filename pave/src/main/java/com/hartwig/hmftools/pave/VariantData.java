@@ -68,8 +68,6 @@ public class VariantData
 
     // associated data
     private VariantContext mVariantContext;
-    private String mSampleId;
-    private RefVariantData mRefVariantData;
 
     private boolean mReportable;
 
@@ -220,12 +218,6 @@ public class VariantData
 
     public VariantContext context() { return mVariantContext; }
     public void setContext(final VariantContext context) { mVariantContext = context; }
-
-    public String sampleId() { return mSampleId; }
-    public void setSampleId(final String sampleId) { mSampleId = sampleId; }
-
-    public RefVariantData refData() { return mRefVariantData; }
-    public void setRefData(final RefVariantData refData) { mRefVariantData = refData; }
 
     public boolean reported() { return mReportable; }
     public void markReported() { mReportable = true; }
