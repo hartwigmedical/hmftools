@@ -8,8 +8,10 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.PURITYR
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
@@ -20,6 +22,7 @@ import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.FittedPurityScore;
 import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
@@ -76,7 +79,10 @@ class PurityDAO {
 
         RunMode runMode = runModeStr != null && !runModeStr.isEmpty() ? RunMode.valueOf(runModeStr) : RunMode.TUMOR_GERMLINE;
 
+        Set<PurpleQCStatus> status = PurpleQCStatus.fromString(result.getValue(PURITY.QCSTATUS));
+
         PurpleQC purpleQC = ImmutablePurpleQC.builder()
+                .status(status)
                 .copyNumberSegments(result.getValue(PURITY.COPYNUMBERSEGMENTS))
                 .unsupportedCopyNumberSegments(result.getValue(PURITY.UNSUPPORTEDCOPYNUMBERSEGMENTS))
                 .purity(actualPurity)
