@@ -6,9 +6,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import org.apache.logging.log4j.util.BiConsumer;
 
@@ -23,6 +27,10 @@ import org.apache.logging.log4j.util.BiConsumer;
  */
 public class DelimFileWriter
 {
+    // by default, use 4 decimal places for doubles
+    private static final NumberFormat sDefaultNumberFormat = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
+    private static final String sNullIndicator = "";
+
     String mDelim = TSV_DELIM;
 
     public DelimFileWriter()
@@ -88,7 +96,12 @@ public class DelimFileWriter
             {
                 Row row = new Row(columnIndexMap, i); // i is the number of columns
                 mapper.accept(obj, row);
-                writer.write(String.join(mDelim, row.mValues));
+                StringJoiner joiner = new StringJoiner(mDelim);
+                for(String e : row.mValues)
+                {
+                    joiner.add(e != null ? e : sNullIndicator);
+                }
+                writer.write(joiner.toString());
                 writer.write('\n');
             }
         }
@@ -121,9 +134,26 @@ public class DelimFileWriter
         {
             set(key, Integer.toString(value));
         }
+
+        // store bool as 1 and 0
+        public void set(String key, boolean value)
+        {
+            set(key, value ? 1 : 0);
+        }
+
+        public void set(String key, char value)
+        {
+            set(key, String.valueOf(value));
+        }
+
+        public void set(String key, byte value)
+        {
+            set(key, Byte.toString(value));
+        }
+
         public void set(String key, double value)
         {
-            set(key, Double.toString(value));
+            set(key, value, sDefaultNumberFormat);
         }
 
         //
@@ -146,6 +176,18 @@ public class DelimFileWriter
             set(key.name(), value);
         }
         public void set(Enum<?> key, int value)
+        {
+            set(key.name(), value);
+        }
+        public void set(Enum<?> key, boolean value)
+        {
+            set(key.name(), value);
+        }
+        public void set(Enum<?> key, char value)
+        {
+            set(key.name(), value);
+        }
+        public void set(Enum<?> key, byte value)
         {
             set(key.name(), value);
         }
