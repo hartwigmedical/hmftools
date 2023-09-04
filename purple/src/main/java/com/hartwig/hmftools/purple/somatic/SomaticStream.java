@@ -95,7 +95,7 @@ public class SomaticStream
         mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);
         mDrivers = new SomaticVariantDrivers(mGenePanel);
         mSomaticVariants = somaticVariants;
-        mRChartData = new RChartData(config.OutputDir, config.TumorId);
+        mRChartData = new RChartData(config, config.TumorId);
 
         mReportedGenes = Sets.newHashSet();
         mDownsampledVariants = Lists.newArrayList();

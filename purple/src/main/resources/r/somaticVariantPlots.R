@@ -1,37 +1,17 @@
-library(VariantAnnotation)
 library(ggplot2)
 library(dplyr)
 theme_set(theme_bw())
 
 #sample = "COLO829v003T"
-#purpleDir <- "~/hmf/analysis/COLO829T/purple"
-#plotDir   <- "~/hmf/analysis/COLO829T/purple/plot"
+#purpleDir = "~/data/samples/COLO829T/purple"
+#plotDir = paste0(purpleDir,"/plot")
 
 # Parse the arguments
 args <- commandArgs(trailing=T)
 sample <- args[1]
 purpleDir <- args[2]
-plotDir   <- args[3]
+plotDir <- args[3]
 
-vcf_data_frame<- function(vcf) {
-  vcf.rowRanges = rowRanges(vcf)
-  vcf.info = info(vcf)
-  vcf.alt = CharacterList(alt(vcf))
-  vcf.alt[elementNROWS(vcf.alt) > 1L ] <- lapply(vcf.alt[elementNROWS(vcf.alt) > 1L ], paste0, collapse=",")
-  
-  vcf.df = data.frame(
-    chromosome = seqnames(vcf), 
-    pos = start(vcf), 
-    ref = as.character(ref(vcf)), 
-    alt = as.character(vcf.alt),  
-    filter = as.character(vcf.rowRanges$FILTER), 
-    minorAllelePloidy = vcf.info$PURPLE_MACN,
-    ploidy = vcf.info$PURPLE_VCN,
-    copyNumber = vcf.info$PURPLE_CN,
-    kataegis = vcf.info$KT, stringsAsFactors = F)
-  
-  return (vcf.df)
-}
 
 standard_mutation <- function(types) {
   types = gsub("G>T", "C>A", types)
@@ -94,8 +74,6 @@ clonality_plot <- function(somaticBuckets, clonalityModel) {
   return(pFinal)
 }
 
-maxRainfallSNVs=100000
-
 rainfall_plot <- function(somaticVariants) {
   
   strandColours = c("#6bd692", "#7e6bd6")
@@ -105,25 +83,19 @@ rainfall_plot <- function(somaticVariants) {
   singleSubstitutionColours = setNames(singleSubstitutionColours, c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G"))
   
   snps = somaticVariants %>% 
-    filter(filter == 'PASS', nchar(ref) == 1, nchar(alt) == 1) %>% 
     mutate(
-      mutation = paste(ref, alt, sep = ">"), 
       mutation = standard_mutation(mutation),
-      prevPos = lag(pos), 
-      nextPos = lead(pos),
+      prevPos = lag(position), 
+      nextPos = lead(position),
       prevPos = ifelse(is.na(prevPos), 0, prevPos),
       nextPos = ifelse(is.na(nextPos), 0, nextPos),
-      prevDis = abs(pos - prevPos),
-      nextDis = abs(nextPos - pos),
+      prevDis = abs(position - prevPos),
+      nextDis = abs(nextPos - position),
       distanceToNeighbour = pmin(prevDis, nextDis),
       rank = row_number())
-
-  if(nrow(snps) > maxRainfallSNVs) {
-    snps = head(snps,maxRainfallSNVs)
-  }
   
   kataegis = snps %>% mutate(ymin = min(distanceToNeighbour), ymax = max(distanceToNeighbour)) %>% 
-    filter(!is.na(kataegis)) %>% 
+    filter(!is.na(kataegis)&kataegis!='') %>% 
     group_by(kataegis, ymin, ymax) %>%
     summarise(xmin = min(rank), xmax = max(rank)) %>%
     mutate(strand = ifelse(substring(kataegis, 1, 3) == "FWD", "Forward", "Reverse"))
@@ -176,7 +148,6 @@ clonalityModel = read.table(paste0(purpleDir, "/", sample, ".purple.somatic.clon
 clonalityModelPlot = clonality_plot(somaticBuckets, clonalityModel)
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.clonality.png"), clonalityModelPlot, units = "in", height = 6, width = 8, scale = 1)
 
-vcf = readVcf(paste0(purpleDir, "/", sample, ".purple.somatic.vcf.gz"))
-somaticVariants = vcf_data_frame(vcf)
-rainfallPlot = rainfall_plot(somaticVariants)
+somaticData = read.csv(paste0(plotDir,'/',sample,".somatic_data.tsv"),sep='\t')
+rainfallPlot = rainfall_plot(somaticData)
 ggsave(filename = paste0(plotDir, "/", sample, ".somatic.rainfall.png"), rainfallPlot, units = "in", height = 4, width = 8, scale = 1)

@@ -73,6 +73,9 @@ public class Charts
                 PPL_LOGGER.warn("error generating charts");
             }
         }
+
+        // clean up any temporary files
+        RChartData.cleanupFiles(mConfig, sampleId);
     }
 
     private void createDirectory(final String dir) throws IOException
