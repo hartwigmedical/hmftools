@@ -493,16 +493,40 @@ public class FusionFinder
 
         final BreakendTransData upTrans = generateIgTranscript(igGene, kfData);
 
-        if(!candidateTranscripts.isEmpty())
+        // add new candidates only if no matching IG fusion has already been created
+        // this is done since multiple upstream genes in the IG region can be processed, but all creating identical IG fusions
+        for(final BreakendTransData downTrans : candidateTranscripts)
         {
-            for(final BreakendTransData downTrans : candidateTranscripts)
-            {
-                GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
-                fusion.setId(nextFusionId());
-                fusion.setKnownType(knownType);
-                potentialFusions.add(fusion);
-            }
+            if(hasMatchingIgFusion(potentialFusions, knownType, upTrans, downTrans))
+                continue;
+
+            GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
+            fusion.setId(nextFusionId());
+            fusion.setKnownType(knownType);
+            potentialFusions.add(fusion);
         }
+    }
+
+    private static boolean hasMatchingIgFusion(
+            final List<GeneFusion> potentialFusions, final KnownFusionType knownType,
+            final BreakendTransData upTrans, final BreakendTransData downTrans)
+    {
+        for(GeneFusion fusion : potentialFusions)
+        {
+            if(fusion.knownType() != knownType)
+                continue;
+
+            if(fusion.svId(true) != upTrans.gene().id() || fusion.svId(false) != downTrans.gene().id())
+                continue;
+
+            if(!fusion.upstreamTrans().TransData.TransName.equals(upTrans.TransData.TransName))
+                continue;
+
+            if(fusion.downstreamTrans() == downTrans) // straight comparison since not internally generated per fusion
+                return true;
+        }
+
+        return false;
     }
 
     private BreakendTransData generateIgTranscript(final BreakendGeneData gene, final KnownFusionData knownFusionData)
