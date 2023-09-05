@@ -83,6 +83,10 @@ public final class HgvsProtein
             {
                 hgvs += HGVS_STOP_GAINED;
             }
+            else if(hgvs.endsWith(HGVS_FRAMESHIFT))
+            {
+                hgvs = hgvs.substring(0, hgvs.length() - HGVS_FRAMESHIFT.length()) + HGVS_STOP_GAINED;
+            }
         }
 
         return hgvs;
