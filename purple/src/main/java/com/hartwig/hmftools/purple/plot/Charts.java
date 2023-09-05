@@ -71,6 +71,7 @@ public class Charts
             if(result != 0)
             {
                 PPL_LOGGER.warn("error generating charts");
+                throw new Exception("charting failed");
             }
         }
     }
