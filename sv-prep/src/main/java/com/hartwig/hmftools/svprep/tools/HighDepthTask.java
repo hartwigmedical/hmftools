@@ -95,7 +95,6 @@ public class HighDepthTask implements Callable
             if((processed % 100) == 0)
             {
                 SV_LOGGER.info("chr({}) processed {} partitions", mChromosome, processed);
-                System.gc();
             }
         }
 

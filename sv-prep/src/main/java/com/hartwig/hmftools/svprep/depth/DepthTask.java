@@ -157,7 +157,6 @@ public class DepthTask implements Callable
             {
                 // SV_LOGGER.debug("chr({}) read-group cache count({}) exceeds threshold", mChromosome, mCacheRecordCounter);
                 mCacheRecordCounter = 0;
-                System.gc();
             }
         }
 
@@ -200,7 +199,6 @@ public class DepthTask implements Callable
 
         SV_LOGGER.info("chr({}) complete for {} variants, total reads({})", mChromosome, processed, mTotalReadCount);
         mReadGroups.clear();
-        System.gc();
 
         return (long)0;
     }

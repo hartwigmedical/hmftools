@@ -67,18 +67,13 @@ public class PartitionThread extends Thread
                         partition.TaskId, partition.Region, mConfig, mSamReader, mBamSlicer,
                         mSpanningReadCache, mExistingJunctionCache, mWriter, mCombinedStats);
 
-                boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
-
-                if(logAndGc)
+                if(partition.TaskId > 0 && (partition.TaskId % 10) == 0)
                 {
                     SV_LOGGER.debug("chromosome({}) processing partition({}), remaining({})",
                             mChromosome, partition.TaskId, mPartitions.size());
                 }
 
                 slicer.run();
-
-                if(logAndGc)
-                    System.gc();
             }
             catch(NoSuchElementException e)
             {

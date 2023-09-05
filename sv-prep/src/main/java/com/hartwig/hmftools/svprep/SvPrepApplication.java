@@ -67,8 +67,6 @@ public class SvPrepApplication
                     combinedStats.PerfCounters.get(i).merge(chromosomeTask.combinedStats().PerfCounters.get((i)));
                 }
             }
-
-            System.gc();
         }
 
         if(mConfig.UseCacheBam)

@@ -138,9 +138,6 @@ public class PartitionSlicer
 
         ++mStats.TotalReads;
 
-        if(mStats.TotalReads > 0 && (mStats.TotalReads % 1_000_000) == 0)
-            System.gc();
-
         if(mFilterRegion != null)
         {
             if(positionsOverlap(readStart, readStart + mConfig.ReadLength, mFilterRegion.start(), mFilterRegion.end()))
