@@ -20,7 +20,12 @@ public final class VirusTestFactory {
 
     @NotNull
     public static VirusInterpreterData createProperData() {
-        return createWithVirus(annotatedVirusBuilder().interpretation("MCV").expectedClonalCoverage(1.0).build());
+        return createWithVirus(annotatedVirusBuilder().interpretation(VirusType.MCV).expectedClonalCoverage(1.0).build());
+    }
+
+    @NotNull
+    public static VirusInterpreterData createHHVInterpretationData() {
+        return createWithVirus(annotatedVirusBuilder().interpretation(VirusType.HHV8).build());
     }
 
     @NotNull

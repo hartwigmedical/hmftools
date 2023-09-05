@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.virusinterpreter.algo;
 
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.immutables.value.Value;
@@ -13,7 +14,7 @@ public abstract class VirusReportingDb
 {
 
     @NotNull
-    public abstract String virusInterpretation();
+    public abstract VirusType virusInterpretation();
 
     @Nullable
     public abstract Integer integratedMinimalCoverage();
