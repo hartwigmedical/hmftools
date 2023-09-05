@@ -13,8 +13,10 @@ import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.sigs.SignatureTestFactory;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 
 import org.junit.Test;
@@ -44,6 +46,16 @@ public class OrangeConversionTest
         assertTrue(OrangeConversion.convert(VirusTestFactory.createEmptyData()).allViruses().isEmpty());
         assertEqualsValue(VirusTestFactory.createMinimalData(), OrangeConversion.convert(VirusTestFactory.createMinimalData()));
         assertEqualsValue(VirusTestFactory.createProperData(), OrangeConversion.convert(VirusTestFactory.createProperData()));
+        assertEqualsValue(VirusTestFactory.createHHVInterpretationData(), OrangeConversion.convert(VirusTestFactory.createHHVInterpretationData()));
+    }
+
+    @Test
+    public void convertsEachVirusConstantProperly()
+    {
+        for(final VirusType value : VirusType.values())
+        {
+            VirusInterpretation.valueOf(value.name());
+        }
     }
 
     private static void assertEqualsValue(com.hartwig.hmftools.common.virus.VirusInterpreterData input, VirusInterpreterData converted)

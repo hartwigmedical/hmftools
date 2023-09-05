@@ -6,6 +6,7 @@ import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.common.flagstat.Flagstat;
 import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import com.hartwig.hmftools.common.metrics.WGSMetrics;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.chord.ImmutableChordRecord;
@@ -108,12 +109,12 @@ public final class OrangeConversion
     @VisibleForTesting
     static AnnotatedVirus convert(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
     {
+        VirusType interpretation = annotatedVirus.interpretation();
         return ImmutableAnnotatedVirus.builder()
                 .name(annotatedVirus.name())
                 .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
                 .integrations(annotatedVirus.integrations())
-                .interpretation(
-                        annotatedVirus.interpretation() != null ? VirusInterpretation.valueOf(annotatedVirus.interpretation()) : null)
+                .interpretation(interpretation != null ? VirusInterpretation.valueOf(interpretation.name()) : null)
                 .percentageCovered(annotatedVirus.percentageCovered())
                 .reported(annotatedVirus.reported())
                 .meanCoverage(annotatedVirus.meanCoverage())
