@@ -63,7 +63,7 @@ public class ImpactClassifier
             transImpact.setProteinContext(proteinContext);
         }
 
-        checPrePostCodingImpact(variant, transImpact); // was previously a return but need to check for other effects
+        checkPrePostCodingImpact(variant, transImpact); // was previously a return but need to check for other effects
 
         boolean inSpliceRegion = false;
 
@@ -134,7 +134,7 @@ public class ImpactClassifier
         return transImpact;
     }
 
-    private boolean checPrePostCodingImpact(final VariantData variant, final VariantTransImpact transImpact)
+    private boolean checkPrePostCodingImpact(final VariantData variant, final VariantTransImpact transImpact)
     {
         final TranscriptData transData = transImpact.TransData;
 
@@ -304,9 +304,14 @@ public class ImpactClassifier
             if(nonRaHasSplice && !raHasSplice)
                 useRealigned = true;
         }
-        else
+        else if(raTransImpact.topRank() != transImpact.topRank())
         {
             useRealigned = raTransImpact.topRank() < transImpact.topRank();
+        }
+        else if(raTransImpact.proteinContext() != null && transImpact.proteinContext() != null
+        && raTransImpact.proteinContext().IsDuplication != transImpact.proteinContext().IsDuplication)
+        {
+            useRealigned = raTransImpact.proteinContext().IsDuplication;
         }
 
         if(useRealigned)
