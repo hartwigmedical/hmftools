@@ -18,7 +18,6 @@ import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
-import static com.hartwig.hmftools.isofox.common.PerformanceTracking.logMemory;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.calcTpmFactors;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
@@ -152,8 +151,6 @@ public class Isofox
                 mResultsWriter.close();
                 return true;
             }
-
-            logMemory(mConfig, "CalcFragLengths");
         }
 
         final List<ChromosomeTaskExecutor> chrTasks = Lists.newArrayList();
@@ -191,14 +188,10 @@ public class Isofox
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.totalReadCount()).sum();
         ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
-        logMemory(mConfig, "BamReading");
-
         if(!mConfig.runFusionsOnly())
         {
-            // post processing for summary stats and gene expression data
+            // post-processing for summary stats and gene expression data
             processBamFragments(chrTasks, callableList);
-
-            logMemory(mConfig, "Transcripts");
         }
 
         if(mConfig.runFunction(FUSIONS))
@@ -209,8 +202,6 @@ public class Isofox
             ISF_LOGGER.info("overall chimeric stats: {} inv={}", chimericStats, chimericStats.Inversions);
 
             mFusionTaskManager.close();
-
-            logMemory(mConfig, "Fusions");
         }
 
         final List<PerformanceCounter[]> perfCounters = chrTasks.stream().map(x -> x.getPerfCounters()).collect(Collectors.toList());

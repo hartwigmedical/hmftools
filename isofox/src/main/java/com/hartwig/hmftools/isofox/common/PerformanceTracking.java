@@ -84,28 +84,4 @@ public class PerformanceTracking
         }
         */
     }
-
-    private static final long MEGABYTE = 1024L * 1024L;
-
-    public static int calcCurrentMemoryUsage()
-    {
-        Runtime runtime = Runtime.getRuntime();
-        long memory = runtime.totalMemory() - runtime.freeMemory();
-        return round(memory / MEGABYTE);
-    }
-
-    public static void logMemory(final IsofoxConfig config, final String stage)
-    {
-        if(!config.RunPerfChecks)
-        {
-            System.gc();
-            return;
-        }
-
-        int memBefore = calcCurrentMemoryUsage();
-        System.gc();
-        int memAfter = calcCurrentMemoryUsage();
-        ISF_LOGGER.info("stage({}) memory({} -> {})", stage, memBefore, memAfter);
-    }
-
 }

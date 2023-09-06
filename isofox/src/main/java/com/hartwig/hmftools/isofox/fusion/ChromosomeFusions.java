@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
@@ -83,7 +82,6 @@ public class ChromosomeFusions
         if(highCount)
         {
             mFusionFinder.clearState(false);
-            System.gc();
         }
 
         mPerfCounter.pause();

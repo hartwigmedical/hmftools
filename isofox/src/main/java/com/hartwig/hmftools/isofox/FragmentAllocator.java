@@ -308,7 +308,6 @@ public class FragmentAllocator
         {
             mNextGeneCountLog += GENE_LOG_COUNT;
             ISF_LOGGER.info("chr({}) genes({}) bamRecordCount({})", mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
-            System.gc(); // attempting to reduce allocation to discarded SAMRecords and ReadRecords
         }
 
         if(reachedGeneReadLimit())
@@ -789,7 +788,6 @@ public class FragmentAllocator
             mNextGeneCountLog += GENE_LOG_COUNT;
             ISF_LOGGER.info("chr({}) genes({}) enriched bamRecordCount({})",
                     mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
-            System.gc();
         }
 
         if(reachedGeneReadLimit())

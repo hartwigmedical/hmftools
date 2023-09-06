@@ -52,9 +52,6 @@ public class ExpectedCountsGenerator
 
     private final BufferedWriter mExpRateWriter;
 
-    public static final int FL_LENGTH = 0;
-    public static final int FL_FREQUENCY = 1;
-
     public ExpectedCountsGenerator(final RefDataConfig config, final RefDataWriter resultsWriter)
     {
         mConfig = config;

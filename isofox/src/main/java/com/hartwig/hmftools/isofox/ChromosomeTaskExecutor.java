@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_GC_ADJ
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_READS;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_TOTAL;
-import static com.hartwig.hmftools.isofox.common.PerformanceTracking.logMemory;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.getChromosomeLength;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -250,8 +249,6 @@ public class ChromosomeTaskExecutor implements Callable
         {
             ISF_LOGGER.info("chr({}) processing complete", mChromosome);
         }
-
-        logMemory(mConfig, String.format("chr(%s)-Complete", mChromosome));
     }
 
     public static int findNextOverlappingGenes(
