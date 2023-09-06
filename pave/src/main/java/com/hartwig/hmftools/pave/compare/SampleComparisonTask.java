@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.pave.compare;
 
-import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
+import static com.hartwig.hmftools.pave.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasHgvsCodingDiff;

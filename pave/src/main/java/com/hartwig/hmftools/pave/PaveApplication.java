@@ -17,11 +17,16 @@ import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -40,6 +45,10 @@ import htsjdk.variant.variantcontext.VariantContext;
 public class PaveApplication
 {
     private final PaveConfig mConfig;
+
+    private final ReferenceData mReferenceData;
+
+    /*
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
     private final GeneDataCache mGeneDataCache;
@@ -51,6 +60,7 @@ public class PaveApplication
     private final ClinvarAnnotation mClinvar;
     private final Blacklistings mBlacklistings;
     private Reportability mReportability;
+     */
 
     private VcfWriter mVcfWriter;
     private final TranscriptWriter mTranscriptWriter;
@@ -59,6 +69,9 @@ public class PaveApplication
     {
         mConfig = new PaveConfig(configBuilder);
 
+        mReferenceData = new ReferenceData(mConfig, configBuilder);
+
+        /*
         mGeneDataCache = new GeneDataCache(
                 configBuilder.getValue(ENSEMBL_DATA_DIR), mConfig.RefGenVersion,
                 configBuilder.getValue(DRIVER_GENE_PANEL_OPTION), true);
@@ -81,9 +94,9 @@ public class PaveApplication
         mImpactClassifier = new ImpactClassifier(refGenome);
 
         mReportability = null;
+        */
 
-        mVcfWriter = null;
-        initialiseVcfWriter();
+        mVcfWriter = initialiseVcfWriter();
 
         mTranscriptWriter = new TranscriptWriter(mConfig);
 
@@ -106,12 +119,13 @@ public class PaveApplication
             System.exit(1);
         }
 
-        if(!mGeneDataCache.loadCache(mConfig.OnlyCanonical, false))
+        if(!mReferenceData.isValid())
         {
-            PV_LOGGER.error("gene data cache loading failed, exiting");
+            PV_LOGGER.error("invalid reference data, exiting");
             System.exit(1);
         }
 
+        /*
         mReportability = new Reportability(mGeneDataCache.getDriverPanel());
 
         if((mPon.isEnabled() && !mPon.hasValidData()) || (mPonArtefacts.isEnabled() && !mPonArtefacts.hasValidData()))
@@ -143,13 +157,38 @@ public class PaveApplication
             PV_LOGGER.error("invalid Gnomad data, exiting");
             System.exit(1);
         }
+        */
 
-        processVcfFile(mConfig.SampleId);
+        // processVcfFile(mConfig.SampleId);
+        List<ChromosomeTask> chromosomeTasks = Lists.newArrayList();
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+
+            if(!mConfig.SpecificRegions.isEmpty() && mConfig.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chrStr)))
+            {
+                mVcfWriter.onChromosomeComplete(chromosome);
+                continue;
+            }
+
+            ChromosomeTask chromosomeTask = new ChromosomeTask(chromosome, mConfig, mReferenceData, mVcfWriter, mTranscriptWriter);
+
+            chromosomeTasks.add(chromosomeTask);
+        }
+
+        PV_LOGGER.info("sample({}) processing VCF file({})", mConfig.SampleId, mConfig.VcfFile);
+
+        final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
+        TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         mTranscriptWriter.close();
+        mVcfWriter.close();
 
         PV_LOGGER.info("sample({}) annotation complete", mConfig.SampleId);
     }
+
+    /*
 
     private void processVcfFile(final String sampleId)
     {
@@ -186,7 +225,7 @@ public class PaveApplication
 
         PV_LOGGER.info("sample({}) processed {} variants", sampleId, variantCount);
 
-        mVcfWriter.close();
+        // mVcfWriter.close();
     }
 
     private void processVariant(final VariantContext variantContext)
@@ -266,58 +305,11 @@ public class PaveApplication
         if(mPonArtefacts.getPonData(variant) != null)
             variant.addFilter(PON_ARTEFACT_FILTER);
     }
+    */
 
-    public static void findVariantImpacts(
-            final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache)
+
+    private VcfWriter initialiseVcfWriter()
     {
-        boolean processed = false;
-
-        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition);
-
-        if(!geneCandidates.isEmpty())
-        {
-            // analyse against each of the genes and their transcripts
-            for(GeneData geneData : geneCandidates)
-            {
-                List<TranscriptData> transDataList =
-                        geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
-
-                // non-coding transcripts are skipped for now
-                if(transDataList.isEmpty())
-                    continue;
-
-                for(TranscriptData transData : transDataList)
-                {
-                    VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
-                    processed = true;
-
-                    // check right-alignment if the variant has microhomology
-                    if(variant.realignedVariant() != null)
-                    {
-                        VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
-
-                        if(raTransImpact != null)
-                        {
-                            variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
-                            transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
-                        }
-                    }
-
-                    if(transImpact != null)
-                        variant.addImpact(geneData.GeneName, transImpact);
-                }
-            }
-        }
-
-        // ensure all phased variants are cached
-        if(!processed && variant.hasLocalPhaseSet())
-            impactClassifier.phasedVariants().checkAddVariant(variant);
-    }
-
-    private void initialiseVcfWriter()
-    {
-        final VersionInfo version = new VersionInfo("pave.version");
-
         // append 'pave' to the input vcf file name if not specified
         String outputVcfFilename;
 
@@ -338,11 +330,11 @@ public class PaveApplication
 
         PV_LOGGER.info("writing VCF file({})", outputVcfFilename);
 
-        mVcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
+        VcfWriter vcfWriter = new VcfWriter(outputVcfFilename, mConfig.VcfFile);
 
-        mVcfWriter.writeHeader(
-                version.version(), mGnomadAnnotation.hasData(), mPon.isEnabled(), mMappability.hasData(),
-                mClinvar.hasData(), mBlacklistings.hasData(), mConfig.SetReportable);
+        vcfWriter.writeHeader(mReferenceData, mConfig.SetReportable);
+
+        return vcfWriter;
     }
 
     public static void main(@NotNull final String[] args)

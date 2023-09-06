@@ -96,10 +96,7 @@ public enum HumanChromosome implements Chromosome
     }
 
     @Override
-    public String toString()
-    {
-        return mName;
-    }
+    public String toString() { return mName; }
 
     public static boolean isShortArm(final String chromosome)
     {

@@ -9,14 +9,11 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_2;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createEnsemblGeneData;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INTRONIC;
@@ -24,7 +21,7 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SPLICE_AC
 import static com.hartwig.hmftools.pave.ImpactTestUtils.createMockGenome;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidCodon;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidsCodons;
-import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
+import static com.hartwig.hmftools.pave.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
@@ -36,7 +33,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
 import org.junit.Test;
 

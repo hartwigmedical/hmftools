@@ -2,6 +2,8 @@ package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
@@ -45,6 +47,7 @@ public class PaveConfig
     public final boolean WritePassOnly;
     public final boolean SetReportable;
     public final List<ChrBaseRegion> SpecificRegions;
+    public final int Threads;
 
     private static final String VCF_FILE = "vcf_file";
     private static final String OUTPUT_VCF_FILE = "output_vcf_file";
@@ -78,6 +81,7 @@ public class PaveConfig
         ReadPassOnly = configBuilder.hasFlag(READ_PASS_ONLY);
         WritePassOnly = configBuilder.hasFlag(WRITE_PASS_ONLY);
         SetReportable = configBuilder.hasFlag(SET_REPORTABLE);
+        Threads = parseThreads(configBuilder);
 
         SpecificRegions = Lists.newArrayList();
 
@@ -133,6 +137,7 @@ public class PaveConfig
         Mappability.addConfig(configBuilder);
         ClinvarAnnotation.addConfig(configBuilder);
         Blacklistings.addConfig(configBuilder);
+        addThreadOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
 
         addOutputDir(configBuilder);

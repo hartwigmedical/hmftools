@@ -3,11 +3,61 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
 
+import java.util.List;
+
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 public final class PaveUtils
 {
+    public static void findVariantImpacts(
+            final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache)
+    {
+        boolean processed = false;
+
+        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition);
+
+        if(!geneCandidates.isEmpty())
+        {
+            // analyse against each of the genes and their transcripts
+            for(GeneData geneData : geneCandidates)
+            {
+                List<TranscriptData> transDataList =
+                        geneDataCache.findTranscripts(geneData.GeneId, variant.Position, variant.EndPosition);
+
+                // non-coding transcripts are skipped for now
+                if(transDataList.isEmpty())
+                    continue;
+
+                for(TranscriptData transData : transDataList)
+                {
+                    VariantTransImpact transImpact = impactClassifier.classifyVariant(variant, transData);
+                    processed = true;
+
+                    // check right-alignment if the variant has microhomology
+                    if(variant.realignedVariant() != null)
+                    {
+                        VariantTransImpact raTransImpact = impactClassifier.classifyVariant(variant.realignedVariant(), transData);
+
+                        if(raTransImpact != null)
+                        {
+                            variant.realignedVariant().addImpact(geneData.GeneName, raTransImpact);
+                            transImpact = ImpactClassifier.selectAlignedImpacts(transImpact, raTransImpact);
+                        }
+                    }
+
+                    if(transImpact != null)
+                        variant.addImpact(geneData.GeneName, transImpact);
+                }
+            }
+        }
+
+        // ensure all phased variants are cached
+        if(!processed && variant.hasLocalPhaseSet())
+            impactClassifier.phasedVariants().checkAddVariant(variant);
+    }
+
     public static boolean withinTransRange(final TranscriptData transData, int posStart, int posEnd)
     {
         if(transData.posStrand())

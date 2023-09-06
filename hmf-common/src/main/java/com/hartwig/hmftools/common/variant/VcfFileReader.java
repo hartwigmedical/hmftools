@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -122,15 +123,25 @@ public class VcfFileReader
 
     public List<VariantContext> findVariants(final String chromosome, final int lowerBound, final int upperBound)
     {
+        CloseableTribbleIterator<VariantContext> iterator = regionIterator(chromosome, lowerBound, upperBound);
+        return iterator != null ? iterator.stream().collect(Collectors.toList()) : Collections.emptyList();
+    }
+
+    public CloseableTribbleIterator<VariantContext> regionIterator(final ChrBaseRegion region)
+    {
+        return regionIterator(region.Chromosome, region.start(), region.end());
+    }
+
+    public CloseableTribbleIterator<VariantContext> regionIterator(final String chromosome, final int lowerBound, final int upperBound)
+    {
         try
         {
-            return mReader.query(chromosome, lowerBound, upperBound).stream().collect(Collectors.toList());
+            return mReader.query(chromosome, lowerBound, upperBound);
         }
         catch(Exception e)
         {
-            LOGGER.error("failed to read variant from file({}): {}", mFilename, e.toString());
-            return Collections.emptyList();
+            LOGGER.error("failed to read variants from file({}): {}", mFilename, e.toString());
+            return null;
         }
     }
-
 }
