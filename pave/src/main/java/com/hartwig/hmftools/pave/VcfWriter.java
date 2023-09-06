@@ -74,7 +74,7 @@ public class VcfWriter
         VariantTranscriptImpact.writeHeader(newHeader);
         VariantImpactSerialiser.writeHeader(newHeader);
 
-        if(referenceData.StandardPon.isEnabled())
+        if(referenceData.StandardPon.isEnabled() || referenceData.ArtefactsPon.isEnabled())
         {
             PonAnnotation.addHeader(newHeader);
         }
@@ -185,28 +185,34 @@ public class VcfWriter
 
     private void writePendingVariants()
     {
+        boolean exitOnNext = false;
+
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             if(!mCompleteChromosomes.contains(chromosome))
             {
+                // move to the next chromosome to allow writing of current or pending variants
                 mCurrentChromosome = chromosome;
-                break;
+                exitOnNext = true;
             }
 
             List<VariantContext> pendingVariants = mChrPendingVariants.get(chromosome);
 
-            if(pendingVariants == null)
-                continue;
-
-            if(!pendingVariants.isEmpty())
+            if(pendingVariants != null)
             {
-                PV_LOGGER.debug("chr({}) writing {} pending variants", chromosome, pendingVariants.size());
+                if(!pendingVariants.isEmpty())
+                {
+                    PV_LOGGER.debug("chr({}) writing {} pending variants", chromosome, pendingVariants.size());
 
-                pendingVariants.forEach(x -> mWriter.add(x));
-                pendingVariants.clear();
+                    pendingVariants.forEach(x -> mWriter.add(x));
+                    pendingVariants.clear();
+                }
+
+                mChrPendingVariants.remove(chromosome);
             }
 
-            mChrPendingVariants.remove(chromosome);
+            if(exitOnNext)
+                break;
         }
     }
 

@@ -17,6 +17,10 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
+import com.hartwig.hmftools.pave.annotation.GnomadChrCache;
+import com.hartwig.hmftools.pave.annotation.MappabilityChrCache;
+import com.hartwig.hmftools.pave.annotation.PonChrCache;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -32,6 +36,14 @@ public class ChromosomeTask implements Callable
     private final ImpactClassifier mImpactClassifier;
     private final VariantImpactBuilder mImpactBuilder;
 
+    // local chromosome annotation caches
+    private GnomadChrCache mGnomadCache;
+    private ClinvarChrCache mClinvarCache;
+    private MappabilityChrCache mMappability;
+    private PonChrCache mStandardPon;
+    private PonChrCache mArtefactsPon;
+    private final GeneCacheIndexing mGeneCacheIndexing;
+
     public ChromosomeTask(
             final HumanChromosome chromosome, final PaveConfig config, final ReferenceData referenceData,
             final VcfWriter vcfWriter, final TranscriptWriter transcriptWriter)
@@ -45,13 +57,18 @@ public class ChromosomeTask implements Callable
 
         mImpactBuilder = new VariantImpactBuilder(mReferenceData.GeneDataCache);
         mImpactClassifier = new ImpactClassifier(mReferenceData.RefGenome);
+
+        mGnomadCache = null;
+        mClinvarCache = null;
+        mMappability = null;
+        mStandardPon = null;
+        mArtefactsPon = null;
+        mGeneCacheIndexing = mReferenceData.GeneDataCache.createIndexing(mChromosomeStr);
     }
 
     @Override
     public Long call()
     {
-        // PV_LOGGER.info("sample({}) reading VCF file({})", sampleId, mConfig.VcfFile);
-
         int variantCount = 0;
 
         VcfFileReader vcfFileReader = new VcfFileReader(mConfig.VcfFile, true);
@@ -62,8 +79,16 @@ public class ChromosomeTask implements Callable
             System.exit(1);
         }
 
+        mGnomadCache = mReferenceData.Gnomad.getChromosomeCache(mChromosomeStr);
+        mClinvarCache = mReferenceData.Clinvar.getChromosomeCache(mChromosomeStr);
+        mMappability = mReferenceData.VariantMappability.getChromosomeCache(mChromosomeStr);
+        mStandardPon = mReferenceData.StandardPon.getChromosomeCache(mChromosomeStr);
+        mArtefactsPon = mReferenceData.ArtefactsPon.getChromosomeCache(mChromosomeStr);
+
         RefGenomeCoordinates coordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
         ChrBaseRegion chrRegion = new ChrBaseRegion(mChromosomeStr, 1, coordinates.Lengths.get(mChromosome));
+
+        PV_LOGGER.debug("chr({}) starting variant annotation", mChromosome);
 
         for(VariantContext variantContext : vcfFileReader.regionIterator(chrRegion))
         {
@@ -76,7 +101,7 @@ public class ChromosomeTask implements Callable
             processVariant(variantContext);
             ++variantCount;
 
-            if(variantCount > 0 && (variantCount % 10000) == 0)
+            if(variantCount > 0 && (variantCount % 100000) == 0)
             {
                 PV_LOGGER.debug("chr({}) processed {} variants", mChromosome, variantCount);
             }
@@ -84,7 +109,13 @@ public class ChromosomeTask implements Callable
 
         processPhasedVariants(NO_LOCAL_PHASE_SET);
 
-        PV_LOGGER.info("chr({}) completed processing {} variants", mChromosome, variantCount);
+        PV_LOGGER.info("chr({}) complete for {} variants", mChromosome, variantCount);
+
+        mReferenceData.Gnomad.onChromosomeComplete(mChromosomeStr);
+        mReferenceData.Clinvar.onChromosomeComplete(mChromosomeStr);
+        mReferenceData.VariantMappability.onChromosomeComplete(mChromosomeStr);
+        mReferenceData.StandardPon.onChromosomeComplete(mChromosomeStr);
+        mReferenceData.ArtefactsPon.onChromosomeComplete(mChromosomeStr);
 
         mVcfWriter.onChromosomeComplete(mChromosome);
 
@@ -108,7 +139,7 @@ public class ChromosomeTask implements Callable
         {
             variant.setRealignedVariant(createRightAlignedVariant(variant, mImpactClassifier.refGenome()));
 
-            findVariantImpacts(variant, mImpactClassifier, mReferenceData.GeneDataCache);
+            findVariantImpacts(variant, mImpactClassifier, mReferenceData.GeneDataCache, mGeneCacheIndexing);
 
             processPhasedVariants(variant.localPhaseSet());
 
@@ -136,7 +167,7 @@ public class ChromosomeTask implements Callable
         // can be null if no impacts exist for any transcript
         VariantImpact variantImpact = mImpactBuilder.createVariantImpact(variant);
 
-        ponAnnotateAndFilter(variant);
+        annotateAndFilter(variant);
 
         if(mConfig.SetReportable)
             mReferenceData.ReportableClassifier.setReportability(variant, variantImpact);
@@ -157,16 +188,23 @@ public class ChromosomeTask implements Callable
         }
     }
 
-    private void ponAnnotateAndFilter(final VariantData variant)
+    private void annotateAndFilter(final VariantData variant)
     {
-        mReferenceData.Gnomad.annotateVariant(variant);
-        mReferenceData.VariantMappability.annotateVariant(variant);
-        mReferenceData.Clinvar.annotateVariant(variant);
+        if(mGnomadCache != null)
+            mReferenceData.Gnomad.annotateVariant(variant, mGnomadCache);
+
+        if(mMappability != null)
+            mMappability.annotateVariant(variant);
+
+        if(mClinvarCache != null)
+            mClinvarCache.annotateVariant(variant);
+
         mReferenceData.BlacklistedVariants.annotateVariant(variant);
 
-        mReferenceData.StandardPon.annotateVariant(variant);
+        if(mStandardPon != null)
+            mReferenceData.StandardPon.annotateVariant(variant, mStandardPon);
 
-        if(mReferenceData.PonArtefacts.getPonData(variant) != null)
+        if(mArtefactsPon != null && mArtefactsPon.getPonData(variant) != null)
             variant.addFilter(PON_ARTEFACT_FILTER);
     }
 }

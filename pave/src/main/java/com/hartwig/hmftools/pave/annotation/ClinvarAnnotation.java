@@ -4,16 +4,12 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
 
-import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.pave.VariantData;
-
-import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeader;
@@ -22,7 +18,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class ClinvarAnnotation
 {
-    private final Map<String,List<ClinvarEntry>> mChrEntries;
+    private final Map<String,ClinvarChrCache> mChrCacheMap;
     private boolean mHasValidData;
 
     private static final String CLINVAR_VCF = "clinvar_vcf";
@@ -35,7 +31,7 @@ public class ClinvarAnnotation
 
     public ClinvarAnnotation(final ConfigBuilder configBuilder)
     {
-        mChrEntries = Maps.newHashMap();
+        mChrCacheMap = Maps.newHashMap();
         mHasValidData = true;
 
         if(configBuilder.hasValue(CLINVAR_VCF))
@@ -44,10 +40,27 @@ public class ClinvarAnnotation
         }
     }
 
-    public boolean hasData() { return !mChrEntries.isEmpty(); }
+    public boolean hasData() { return !mChrCacheMap.isEmpty(); }
     public boolean hasValidData() { return mHasValidData; }
 
-    public void annotateVariant(final VariantData variant)
+    public synchronized ClinvarChrCache getChromosomeCache(final String chromosome)
+    {
+        return mChrCacheMap.get(RefGenomeFunctions.stripChrPrefix(chromosome));
+    }
+
+    public synchronized void onChromosomeComplete(final String chromosome)
+    {
+        ClinvarChrCache chrCache = mChrCacheMap.get(chromosome);
+
+        if(chrCache != null)
+        {
+            chrCache.clear();
+            mChrCacheMap.remove(chromosome);
+        }
+    }
+
+    /*
+    public void annotateVariant(final VariantData variant, final ClinvarChrCache chrCache)
     {
         // Clinvar entries for both v37 and v38 do not have the chromosome prefix
         String chromosome = RefGenomeFunctions.stripChrPrefix(variant.Chromosome);
@@ -70,6 +83,7 @@ public class ClinvarAnnotation
             }
         }
     }
+    */
 
     public static void addHeader(final VCFHeader header)
     {
@@ -97,6 +111,9 @@ public class ClinvarAnnotation
 
         try
         {
+            ClinvarChrCache currentCache = null;
+            int entryCount = 0;
+
             for(VariantContext context : vcfFileReader.iterator())
             {
                 if(context.getAlleles().size() < 2)
@@ -104,12 +121,10 @@ public class ClinvarAnnotation
 
                 String chromosome = RefGenomeFunctions.stripChrPrefix(context.getContig());
 
-                List<ClinvarEntry> entries = mChrEntries.get(chromosome);
-
-                if(entries == null)
+                if(currentCache == null || !currentCache.Chromosome.equals(chromosome))
                 {
-                    entries = Lists.newArrayList();
-                    mChrEntries.put(chromosome, entries);
+                    currentCache = new ClinvarChrCache(chromosome);
+                    mChrCacheMap.put(chromosome, currentCache);
                 }
 
                 int position = context.getStart();
@@ -122,11 +137,11 @@ public class ClinvarAnnotation
                 if(significance.isEmpty() && conflict.isEmpty())
                     continue;
 
-                entries.add(new ClinvarEntry(position, ref, alt, stripBrackets(significance), stripBrackets(conflict)));
+                currentCache.addEntry(position, ref, alt, significance, conflict);
+                ++entryCount;
             }
 
-            PV_LOGGER.info("loaded {} Clinvar entries from file({})",
-                    mChrEntries.values().stream().mapToInt(x -> x.size()).sum(), filename);
+            PV_LOGGER.info("loaded {} Clinvar entries from file({})", entryCount, filename);
         }
         catch(Exception e)
         {
@@ -135,34 +150,5 @@ public class ClinvarAnnotation
         }
     }
 
-    private static String stripBrackets(final String clinvarStr)
-    {
-        return clinvarStr.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll(" ", "");
-    }
 
-    private class ClinvarEntry
-    {
-        public final int Position;
-        public final String Ref;
-        public final String Alt;
-        public final String Significance;
-        public final String Conflict;
-
-        public ClinvarEntry(final int position, final String ref, final String alt, final String significance, final String conflict)
-        {
-            Position = position;
-            Ref = ref;
-            Alt = alt;
-            Significance = significance;
-            Conflict = conflict;
-        }
-
-        public boolean matches(final VariantData variant)
-        {
-            return variant.Position == Position && variant.Ref.equals(Ref) && variant.Alt.equals(Alt);
-        }
-
-        public String toString() { return String.format("%d %s>%s details(%s - %s)",
-                Position, Ref, Alt, Significance, Conflict); }
-    }
 }

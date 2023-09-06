@@ -23,7 +23,7 @@ public class ReferenceData
     public final GeneDataCache GeneDataCache;
     public final GnomadAnnotation Gnomad;
     public final PonAnnotation StandardPon;
-    public final PonAnnotation PonArtefacts;
+    public final PonAnnotation ArtefactsPon;
     public final Mappability VariantMappability;
     public final ClinvarAnnotation Clinvar;
     public final Blacklistings BlacklistedVariants;
@@ -46,10 +46,10 @@ public class ReferenceData
 
         Gnomad = new GnomadAnnotation(configBuilder);
 
-        StandardPon = new PonAnnotation(configBuilder.getValue(PON_FILE), true);
+        StandardPon = new PonAnnotation(configBuilder.getValue(PON_FILE));
         StandardPon.loadFilters(configBuilder.getValue(PON_FILTERS));
 
-        PonArtefacts = new PonAnnotation(configBuilder.getValue(PON_ARTEFACTS_FILE), false);
+        ArtefactsPon = new PonAnnotation(configBuilder.getValue(PON_ARTEFACTS_FILE));
 
         VariantMappability = new Mappability(configBuilder);
         Clinvar = new ClinvarAnnotation(configBuilder);
@@ -66,7 +66,7 @@ public class ReferenceData
             return false;
         }
 
-        if(PonArtefacts.isEnabled() && !PonArtefacts.hasValidData())
+        if(ArtefactsPon.isEnabled() && !ArtefactsPon.hasValidData())
         {
             PV_LOGGER.error("invalid PON artefacts");
             return false;

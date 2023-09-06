@@ -9,14 +9,23 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
+import org.jetbrains.annotations.Nullable;
+
 public final class PaveUtils
 {
     public static void findVariantImpacts(
             final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache)
     {
+        findVariantImpacts(variant, impactClassifier, geneDataCache, null);
+    }
+
+    public static void findVariantImpacts(
+            final VariantData variant, final ImpactClassifier impactClassifier, final GeneDataCache geneDataCache,
+            @Nullable final GeneCacheIndexing cacheIndexing)
+    {
         boolean processed = false;
 
-        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition);
+        List<GeneData> geneCandidates = geneDataCache.findGenes(variant.Chromosome, variant.Position, variant.EndPosition, cacheIndexing);
 
         if(!geneCandidates.isEmpty())
         {

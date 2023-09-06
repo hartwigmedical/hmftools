@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -16,7 +17,6 @@ import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
-import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_DELIM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -70,7 +70,7 @@ public class PonBuilder
 
         mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
-        mExistingPon = new PonAnnotation(configBuilder.getValue(PON_FILE), true);
+        mExistingPon = new PonAnnotation(configBuilder.getValue(PON_FILE));
 
         mChrVariantsMap = Maps.newHashMap();
 
@@ -175,7 +175,7 @@ public class PonBuilder
 
             BufferedWriter writer = createBufferedWriter(fileName);
 
-            StringJoiner sj = new StringJoiner(PON_DELIM);
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add("Chromosome");
             sj.add("Position");
             sj.add("Ref");
@@ -201,7 +201,7 @@ public class PonBuilder
                     if(mExistingPon.hasEntry(variant.Chromosome, variant.Position, variant.Ref, variant.Alt))
                         continue;
 
-                    sj = new StringJoiner(PON_DELIM);
+                    sj = new StringJoiner(TSV_DELIM);
                     sj.add(variant.Chromosome);
                     sj.add(String.valueOf(variant.Position));
                     sj.add(variant.Ref);
