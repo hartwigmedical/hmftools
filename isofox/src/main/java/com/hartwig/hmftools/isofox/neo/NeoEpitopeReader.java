@@ -143,7 +143,7 @@ public class NeoEpitopeReader
             initialiseGeneData(mCurrentNeoData.Source.GeneIds[fs]);
 
             final ChrBaseRegion readRegion = new ChrBaseRegion(mCurrentNeoData.Chromosomes[fs], mCurrentNeoData.Source.CodingBasePositions[fs]);
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, readRegion, this::processSamRecord);
         }
 
         mReadGroups.values().forEach(x -> processFragmentReads(x));

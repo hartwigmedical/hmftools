@@ -169,7 +169,7 @@ public class BaseQualityRegionCounter implements CigarHandler
 
         try
         {
-            slicer.slice(mBamReader, Lists.newArrayList(mRegion), this::processRecord);
+            slicer.slice(mBamReader, mRegion, this::processRecord);
         }
         catch(Exception e)
         {

@@ -133,7 +133,7 @@ public class LineClusterData
         if(MatchedClusters.isEmpty())
             return mPrimaryRegion.Region;
 
-        ChrBaseRegion combinedRegion = new ChrBaseRegion(mPrimaryRegion.Region.Chromosome, mPrimaryRegion.Region.Positions);
+        ChrBaseRegion combinedRegion = mPrimaryRegion.Region.clone();
 
         for(LineClusterData otherCluster : MatchedClusters)
         {

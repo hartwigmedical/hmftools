@@ -117,7 +117,7 @@ public class HighDepthTask implements Callable
 
         mPerfCounter.start();
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(mCurrentPartition), this::processSamRecord);
+        mBamSlicer.slice(mSamReader, mCurrentPartition, this::processSamRecord);
 
         findHighDepthRegions();
 

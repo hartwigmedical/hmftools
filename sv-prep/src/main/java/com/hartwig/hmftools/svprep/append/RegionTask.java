@@ -80,7 +80,7 @@ public class RegionTask implements Callable
     {
         SV_LOGGER.debug("slicing region({}) for {} breakends", mRegion, mBreakends.size());
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processRead);
+        mBamSlicer.slice(mSamReader, mRegion, this::processRead);
 
         mBreakendTracker.assignFragments();
 

@@ -220,7 +220,7 @@ public class FragmentSizeDistribution
             ChrBaseRegion region = !mConfig.SpecificRegions.isEmpty() ?
                 mConfig.SpecificRegions.get(0) : new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
 
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(region), this::processBamRead);
+            mBamSlicer.slice(mSamReader, region, this::processBamRead);
 
             return (long)0;
         }

@@ -224,12 +224,12 @@ public class FragmentAllocator
             mExcludedRegion = mConfig.Filters.ExcludedRegion;
             final ChrBaseRegion preRegion = new ChrBaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
             final ChrBaseRegion postRegion = new ChrBaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(preRegion), this::processSamRecord);
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(postRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, preRegion, this::processSamRecord);
+            mBamSlicer.slice(mSamReader, postRegion, this::processSamRecord);
         }
         else
         {
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(geneRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, geneRegion, this::processSamRecord);
         }
 
         if(mEnrichedGeneFragments > 0)

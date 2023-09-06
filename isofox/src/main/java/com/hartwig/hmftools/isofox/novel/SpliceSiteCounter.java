@@ -71,10 +71,10 @@ public class SpliceSiteCounter
 
                 for(int se = SE_START; se <= SE_END; ++se)
                 {
-                    if(junctionLower < region.Region.Positions[se] && junctionUpper > region.Region.Positions[se])
+                    if(junctionLower < region.Region.position(se) && junctionUpper > region.Region.position(se))
                     {
                         isTraversed = true;
-                        traversedSites.add(region.Region.Positions[se]);
+                        traversedSites.add(region.Region.position(se));
                     }
                 }
 
