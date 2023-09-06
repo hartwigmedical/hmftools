@@ -13,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 
 class ExtendNonDiploid extends ExtendRegion
 {
-    @NotNull
     static List<CombinedRegion> nonDiploid(final List<CombinedRegion> regions)
     {
         return new ExtendNonDiploid().extend(regions);
@@ -24,9 +23,8 @@ class ExtendNonDiploid extends ExtendRegion
         super(CopyNumberMethod.NON_DIPLOID);
     }
 
-    @NotNull
     @Override
-    public List<CombinedRegion> extend(@NotNull final List<CombinedRegion> regions)
+    public List<CombinedRegion> extend(final List<CombinedRegion> regions)
     {
         for(int i = 0; i < regions.size(); i++)
         {
@@ -40,20 +38,20 @@ class ExtendNonDiploid extends ExtendRegion
         return super.extend(regions);
     }
 
-    static boolean isEligible(@NotNull final ObservedRegion region, @Nullable final ObservedRegion neighbour)
+    static boolean isEligible(final ObservedRegion region, @Nullable final ObservedRegion neighbour)
     {
         return Doubles.greaterThan(region.observedTumorRatio(), region.observedNormalRatio()) && !region.germlineStatus()
                 .equals(GermlineStatus.DIPLOID) && !region.germlineStatus().equals(GermlineStatus.NOISE) && region.depthWindowCount() > 0
                 && !isBoundByCentromere(region, neighbour) && isBoundBySV(region, neighbour);
     }
 
-    private static boolean isBoundByCentromere(@NotNull final ObservedRegion region, @Nullable final ObservedRegion neighbour)
+    private static boolean isBoundByCentromere(final ObservedRegion region, @Nullable final ObservedRegion neighbour)
     {
         return region.support().equals(SegmentSupport.CENTROMERE) || (neighbour != null && neighbour.support()
                 .equals(SegmentSupport.CENTROMERE));
     }
 
-    private static boolean isBoundBySV(@NotNull final ObservedRegion region, @Nullable final ObservedRegion neighbour)
+    private static boolean isBoundBySV(final ObservedRegion region, @Nullable final ObservedRegion neighbour)
     {
         return region.support().isSV() || (neighbour != null && neighbour.support().isSV());
     }

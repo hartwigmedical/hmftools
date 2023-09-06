@@ -13,18 +13,13 @@ import org.jetbrains.annotations.NotNull;
 
 public final class CircosINDELWriter
 {
-    private CircosINDELWriter()
-    {
-    }
-
-    public static void writePositions(@NotNull final String filePath, @NotNull Collection<VariantContextDecorator> values)
+    public static void writePositions(final String filePath, Collection<VariantContextDecorator> values)
             throws IOException
     {
         writeCircosFile(filePath, values, CircosINDELWriter::transformPosition);
     }
 
-    private static <T> void writeCircosFile(@NotNull final String filePath, @NotNull Collection<T> values,
-            @NotNull Function<T, String> toStringFunction) throws IOException
+    private static <T> void writeCircosFile(final String filePath, Collection<T> values, Function<T, String> toStringFunction) throws IOException
     {
         final Collection<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -32,20 +27,17 @@ public final class CircosINDELWriter
         Files.write(new File(filePath).toPath(), lines);
     }
 
-    @NotNull
     private static String header()
     {
         return "#chromosome\tstart\tend\tvalue";
     }
 
-    @NotNull
-    private static String transformPosition(@NotNull final VariantContextDecorator position)
+    private static String transformPosition(final VariantContextDecorator position)
     {
         return CircosFileWriter.transformPosition(position, CircosINDELWriter::color);
     }
 
-    @NotNull
-    private static String color(@NotNull final VariantContextDecorator variant)
+    private static String color(final VariantContextDecorator variant)
     {
         if(variant.alt().length() > variant.ref().length())
         {

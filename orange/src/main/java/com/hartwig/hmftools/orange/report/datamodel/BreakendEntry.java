@@ -8,8 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class BreakendEntry {
-
+public abstract class BreakendEntry
+{
     @NotNull
     public abstract String location();
 

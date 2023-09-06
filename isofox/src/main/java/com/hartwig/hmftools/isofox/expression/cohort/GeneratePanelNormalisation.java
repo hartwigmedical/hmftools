@@ -3,8 +3,8 @@ package com.hartwig.hmftools.isofox.expression.cohort;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;

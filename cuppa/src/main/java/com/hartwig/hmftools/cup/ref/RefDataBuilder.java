@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.classifierEnabled;
+import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 
 import java.util.List;
 
@@ -94,11 +95,10 @@ public class RefDataBuilder
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         RefDataConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-        setLogLevel(configBuilder);
 
         RefDataBuilder refDataBuilder = new RefDataBuilder(configBuilder);
         refDataBuilder.run();

@@ -7,13 +7,13 @@ import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getBucketInde
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getChromosomeFromIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFromIndex;
 import static com.hartwig.hmftools.common.sigs.PositionFrequencies.initialisePositionCache;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.common.utils.MatrixFile.writeMatrixData;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.formOutputFilename;
@@ -32,6 +32,7 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.sigs.common.CommonUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -75,7 +76,7 @@ public class PositionFreqBuilder
         mBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE));
         mNewBucketSize = cmd.hasOption(CONVERT_POSITION_BUCKET_SIZE) ? Integer.parseInt(cmd.getOptionValue(CONVERT_POSITION_BUCKET_SIZE)) : 0;
         mPositionCacheSize = 0;
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = CommonUtils.parseOutputDir(cmd);
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
 
         mSamplePosCountsFile = cmd.getOptionValue(POSITION_DATA_FILE);

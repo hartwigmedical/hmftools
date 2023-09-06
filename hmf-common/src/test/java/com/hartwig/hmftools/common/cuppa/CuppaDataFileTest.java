@@ -9,12 +9,14 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class CuppaDataFileTest {
+public class CuppaDataFileTest
+{
 
     private static final String CUPPA_DATA_CSV = Resources.getResource("cuppa/sample.cup.data.csv").getPath();
 
     @Test
-    public void canLoadTestFile() throws IOException {
+    public void canLoadTestFile() throws IOException
+    {
         List<CuppaDataFile> entries = CuppaDataFile.read(CUPPA_DATA_CSV);
         assertEquals(29, entries.size());
     }

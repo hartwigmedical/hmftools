@@ -4,15 +4,14 @@ import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
 
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
@@ -20,19 +19,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_PAIRWISE;
-import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
-import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.ALT_SJ_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.common.cuppa.ResultType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.SampleData.RNA_READ_LENGTH_NONE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
-import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.loadSampleAltSjMatrixData;
@@ -80,8 +73,6 @@ public class AltSjClassifier implements CuppaClassifier
 
     private static final String LOG_CSS_VALUES = "alt_sj_log_css";
     private static final String WEIGHT_EXPONENT = "alt_sj_weight_exp";
-
-    private static final String READ_LENGTH_DELIM = "_";
 
     public AltSjClassifier(
             final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
@@ -243,11 +234,8 @@ public class AltSjClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, cohortData.CancerType, cancerCssTotals))
                 continue;
 
-            if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && cohortData.ReadLength != RNA_READ_LENGTH_NONE)
-            {
-                if(sample.rnaReadLength() != cohortData.ReadLength)
-                    continue;
-            }
+            if(!sample.hasRna())
+                continue;
 
             boolean matchesCancerType = sample.cancerType().equals(cohortData.CancerType);
 
@@ -348,35 +336,16 @@ public class AltSjClassifier implements CuppaClassifier
             int cancerSampleCount = 0;
             final String cancerType = mRefCancerTypes.get(r);
 
-            if(cancerType.contains(READ_LENGTH_DELIM))
+            // only count those samples with RNA
+            final List<SampleData> samples = mSampleDataCache.RefCancerSampleData.get(cancerType);
+
+            if(samples != null)
             {
-                // count up the samples matching the specified read length for this cancer cohort
-                final String[] cohortData = cancerType.split(READ_LENGTH_DELIM);
-                final String refCancerType = cohortData[0];
-                int cohortReadLength = Integer.parseInt(cohortData[1]);
-
-                for(SampleData sample : mSampleDataCache.RefCancerSampleData.get(refCancerType))
-                {
-                    if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && sample.rnaReadLength() == cohortReadLength)
-                        ++cancerSampleCount;
-                }
-
-                CUP_LOGGER.debug("alt-SJ cancerType({}) readLength({}) samples({})", refCancerType, cohortReadLength, cancerSampleCount);
-                mCancerDataMap.put(cancerType, new RnaCohortData(refCancerType, cohortReadLength, cancerSampleCount));
+                cancerSampleCount = (int)samples.stream().filter(x -> x.hasRna()).count();
             }
-            else
-            {
-                // only count those samples with RNA
-                final List<SampleData> samples = mSampleDataCache.RefCancerSampleData.get(cancerType);
 
-                if(samples != null)
-                {
-                    cancerSampleCount = (int)samples.stream().filter(x -> x.rnaReadLength() != RNA_READ_LENGTH_NONE).count();
-                }
-
-                CUP_LOGGER.debug("alt-SJ cancerType({}) no specific read length, samples({})", cancerType, cancerSampleCount);
-                mCancerDataMap.put(cancerType, new RnaCohortData(cancerType, RNA_READ_LENGTH_NONE, cancerSampleCount));
-            }
+            CUP_LOGGER.debug("alt-SJ cancerType({}) RNA samples({})", cancerType, cancerSampleCount);
+            mCancerDataMap.put(cancerType, new RnaCohortData(cancerType, cancerSampleCount));
 
             for(int bucketIndex = 0; bucketIndex < mRefCancerTypeMatrix.Cols; ++bucketIndex)
             {

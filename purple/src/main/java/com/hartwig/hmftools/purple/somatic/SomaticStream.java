@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -94,7 +95,7 @@ public class SomaticStream
         mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);
         mDrivers = new SomaticVariantDrivers(mGenePanel);
         mSomaticVariants = somaticVariants;
-        mRChartData = new RChartData(config.OutputDir, config.TumorId);
+        mRChartData = new RChartData(config, config.TumorId);
 
         mReportedGenes = Sets.newHashSet();
         mDownsampledVariants = Lists.newArrayList();
@@ -177,6 +178,7 @@ public class SomaticStream
             mVcfWriter.writeHeader(header);
 
             boolean tumorOnly = mConfig.tumorOnlyMode();
+            AtomicInteger kataegisId = new AtomicInteger();
 
             if(mConfig.Threads > 1)
             {
@@ -184,7 +186,7 @@ public class SomaticStream
 
                 for(int i = 0; i < mConfig.Threads; ++i)
                 {
-                    enrichers.add(new SomaticVariantEnrichment(i, mConfig, mReferenceData, mPeakModel));
+                    enrichers.add(new SomaticVariantEnrichment(i, mConfig, mReferenceData, mPeakModel, kataegisId));
                 }
 
                 int taskIndex = 0;
@@ -209,7 +211,7 @@ public class SomaticStream
             }
             else
             {
-                SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(0, mConfig, mReferenceData, mPeakModel);
+                SomaticVariantEnrichment enricher = new SomaticVariantEnrichment(0, mConfig, mReferenceData, mPeakModel, kataegisId);
                 mSomaticVariants.variants().forEach(x -> enricher.addVariant(x));
                 enricher.call();
             }
@@ -372,6 +374,9 @@ public class SomaticStream
     private void checkChartDownsampling(final SomaticVariant variant)
     {
         if(mConfig.Charting.Disabled)
+            return;
+
+        if(!HumanChromosome.contains(variant.chromosome()))
             return;
 
         if(variant.type() == VariantType.INDEL)

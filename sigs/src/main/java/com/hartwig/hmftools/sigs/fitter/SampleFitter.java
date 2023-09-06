@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.sigs.fitter;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.sigs.DataUtils.round;
 import static com.hartwig.hmftools.common.sigs.DataUtils.sizeToStr;
 import static com.hartwig.hmftools.common.sigs.SigResiduals.SIG_MISALLOCATED;
@@ -14,11 +12,8 @@ import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
-import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_COUNTS_FILE;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_IDS;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIGNATURES_FILE;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
@@ -38,21 +33,15 @@ import com.hartwig.hmftools.common.sigs.SigResiduals;
 import com.hartwig.hmftools.common.sigs.SignatureAllocation;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.sigs.LeastSquaresFit;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.Matrix;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.sigs.common.CommonUtils;
 import com.hartwig.hmftools.sigs.loaders.PositionFreqBuilder;
 import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.sigs.loaders.SigSnvLoader;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 
 public class SampleFitter
@@ -73,10 +62,8 @@ public class SampleFitter
     private final boolean mFitToTotal;
     private final boolean mWritePosFreqCoords;
 
-    private final DatabaseAccess mDbAccess;
     private final String mVcfFile;
     private final SigSnvLoader mSnvLoader;
-    private boolean mUploadToDb;
     private BufferedWriter mFitWriter;
 
     private final double mMinFit;
@@ -94,32 +81,29 @@ public class SampleFitter
     private static final String FIT_TO_TOTAL = "fit_to_total";
     private static final String WRITE_POS_COORDS = "write_pos_freq_coords";
 
-    public SampleFitter(final CommandLine cmd)
+    public SampleFitter(final ConfigBuilder configBuilder)
     {
-        mSnvCountsFile = cmd.getOptionValue(SAMPLE_COUNTS_FILE);
-        mSignaturesFile = cmd.getOptionValue(SIGNATURES_FILE);
-        mSampleIdsConfig = cmd.getOptionValue(SAMPLE_IDS);
+        mSnvCountsFile = configBuilder.getValue(SAMPLE_COUNTS_FILE);
+        mSignaturesFile = configBuilder.getValue(SIGNATURES_FILE);
+        mSampleIdsConfig = configBuilder.getValue(SAMPLE_IDS);
         mSampleIdList = Lists.newArrayList();
         mSignatureNames = Lists.newArrayList();
 
         mSampleCountsMatrix = null;
         mSignatures = null;
 
-        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_FILE_ID);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_FILE_ID);
         mFitWriter = null;
-        mDbAccess = createDatabaseAccess(cmd);
-        mVcfFile = cmd.getOptionValue(SOMATIC_VCF_FILE);
-        mUploadToDb = cmd.hasOption(UPLOAD_TO_DB);
-        mFitToTotal = Boolean.parseBoolean(cmd.getOptionValue(FIT_TO_TOTAL, "true"));
-        mWritePosFreqCoords = cmd.hasOption(WRITE_POS_COORDS);
+        mVcfFile = configBuilder.getValue(SOMATIC_VCF_FILE);
+        mFitToTotal = true; // configBuilder.hasFlag(FIT_TO_TOTAL);
+        mWritePosFreqCoords = configBuilder.hasFlag(WRITE_POS_COORDS);
 
-        mPositionBucketSize = Integer.parseInt(cmd.getOptionValue(POSITION_BUCKET_SIZE, "0"));
-
-        mMinFit = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC, String.valueOf(DEFAULT_MIN_ALLOCATION)));;
-        mMinFitPerc = Double.parseDouble(cmd.getOptionValue(MIN_ALLOC_PERC, String.valueOf(DEFAULT_MIN_ALLOCATION_PERC)));;
+        mPositionBucketSize = configBuilder.getInteger(POSITION_BUCKET_SIZE);
+        mMinFit = configBuilder.getDecimal(MIN_ALLOC);
+        mMinFitPerc = configBuilder.getDecimal(MIN_ALLOC_PERC);
 
         mSnvLoader = new SigSnvLoader(null);
 
@@ -169,12 +153,6 @@ public class SampleFitter
             }
             else
             {
-                if(mDbAccess == null)
-                {
-                    SIG_LOGGER.error("missing DB connection when no sample counts file configured");
-                    return false;
-                }
-
                 // load from file or delimitered list
                 if(mSampleIdsConfig.contains(".csv"))
                 {
@@ -240,7 +218,7 @@ public class SampleFitter
 
         mSnvLoader.setSampleIds(Lists.newArrayList(sampleId));
 
-        mSnvLoader.loadData(mDbAccess, mVcfFile, false);
+        // mSnvLoader.loadData(mDbAccess, mVcfFile, false);
 
         if(mSampleIdList.size() == 1)
         {
@@ -313,12 +291,6 @@ public class SampleFitter
     private void writeSampleSigResults(final String sampleId, final List<SignatureAllocation> sigAllocations)
     {
         writeSigAllocations(sampleId, sigAllocations);
-
-        if(mDbAccess != null && mUploadToDb)
-        {
-            SIG_LOGGER.debug("sample({}) writing {} allocations to database", sampleId, sigAllocations.size());
-            mDbAccess.writeSignatures(sampleId, sigAllocations);
-        }
     }
 
     private void initialiseOutputFiles()
@@ -369,25 +341,25 @@ public class SampleFitter
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        Options options = new Options();
-        CommonUtils.addCmdLineArgs(options);
-        addDatabaseCmdLineArgs(options);
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(POSITION_BUCKET_SIZE, true, "Position bucket size");
-        options.addOption(MAX_SAMPLE_COUNT, true, "Max sample SNV count for position frequencies, default = 20K");
-        options.addOption(UPLOAD_TO_DB, false, "Upload results to database if present");
-        options.addOption(SOMATIC_VCF_FILE, true, "Somatic variant VCF file");
-        options.addOption(MIN_ALLOC_PERC, true, "Min signature allocation as percentage (default=0.5%)");
-        options.addOption(MIN_ALLOC, true, "Min signature allocation (default=1)");
-        options.addOption(WRITE_POS_COORDS, false, "Include coordinates with pos-frequency counts");
+        ConfigBuilder configBuilder = new ConfigBuilder("Sigs");
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        CommonUtils.registerConfig(configBuilder);
+        addRefGenomeVersion(configBuilder);
 
-        if (cmd.hasOption(LOG_DEBUG))
-            Configurator.setRootLevel(Level.DEBUG);
+        configBuilder.addInteger(POSITION_BUCKET_SIZE, "Position bucket size", 0);
 
-        SampleFitter sampleFitter = new SampleFitter(cmd);
+        configBuilder.addInteger(
+                MAX_SAMPLE_COUNT, "Max sample SNV count for position frequencies",
+                PositionFrequencies.DEFAULT_POS_FREQ_MAX_SAMPLE_COUNT);
+
+        configBuilder.addPath(SOMATIC_VCF_FILE, true, "Somatic variant VCF file");
+        configBuilder.addDecimal(MIN_ALLOC_PERC, "Min signature allocation as percentage", DEFAULT_MIN_ALLOCATION_PERC);
+        configBuilder.addDecimal(MIN_ALLOC, "Min signature allocation", DEFAULT_MIN_ALLOCATION);
+        configBuilder.addFlag(WRITE_POS_COORDS, "Include coordinates with pos-frequency counts");
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        SampleFitter sampleFitter = new SampleFitter(configBuilder);
         sampleFitter.run();
     }
 }

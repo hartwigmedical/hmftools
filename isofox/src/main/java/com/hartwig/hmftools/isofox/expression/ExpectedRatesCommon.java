@@ -31,7 +31,9 @@ public final class ExpectedRatesCommon
     {
         List<FragmentSize> fragmentSizes = Lists.newArrayList();
 
-        if(configBuilder.hasValue(ER_FRAGMENT_LENGTHS))
+        String fragLengthsStr = configBuilder.getValue(ER_FRAGMENT_LENGTHS);
+
+        if(fragLengthsStr != null)
         {
             String[] fragLengths = configBuilder.getValue(ER_FRAGMENT_LENGTHS).split(ITEM_DELIM);
 

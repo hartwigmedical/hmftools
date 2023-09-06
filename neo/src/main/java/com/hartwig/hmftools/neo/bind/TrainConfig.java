@@ -1,11 +1,14 @@
 package com.hartwig.hmftools.neo.bind;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
@@ -17,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -157,8 +161,24 @@ public class TrainConfig
         {
             try
             {
-                requiredAlleles.addAll(Files.readAllLines(Paths.get(filename)).stream()
-                        .filter(x -> !x.equals("Allele")).collect(Collectors.toList()));
+                List<String> lines = Files.readAllLines(Paths.get(filename));
+                String header = lines.get(0);
+                lines.remove(0);
+
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
+                int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
+
+                for(String line : lines)
+                {
+                    if(line.startsWith("#"))
+                        continue;
+
+                    String[] values = line.split(CSV_DELIM, -1);
+                    String allele = values[alleleIndex];
+
+                    // convert from Lilac naming convention if required
+                    requiredAlleles.add(allele);
+                }
 
                 NE_LOGGER.info("loaded {} required output alleles from file({})", requiredAlleles.size(), filename);
             }

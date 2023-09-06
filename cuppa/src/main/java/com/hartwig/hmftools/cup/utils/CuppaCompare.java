@@ -16,6 +16,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
+import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST_TRIPLE_NEGATIVE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
@@ -426,7 +427,7 @@ public class CuppaCompare
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addConfigItem(CLASSIFERS, "Classifiers to compare");
         configBuilder.addPath(FILE_ORIG, true, "Original Cuppa results file");
@@ -439,8 +440,6 @@ public class CuppaCompare
         addOutputOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
 
         CuppaCompare cuppaCompare = new CuppaCompare(configBuilder);
         cuppaCompare.run();

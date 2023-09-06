@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR_BAM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
@@ -33,8 +35,6 @@ public class SageCallConfig
 
     private final String mResourceDir;
 
-    private static final String TUMOR = "tumor";
-    private static final String TUMOR_BAM = "tumor_bam";
     private static final String COVERAGE_BED = "coverage_bed";
     private static final String RESOURCE_DIR = "resource_dir";
     private static final String HIGH_CONFIDENCE_BED = "high_confidence_bed";

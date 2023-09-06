@@ -2,7 +2,7 @@ package com.hartwig.hmftools.common.isofox;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.geneutils.targetregion;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.enforceChrPrefix;
@@ -13,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.targetregion.RegionData.validate;
 import static com.hartwig.hmftools.geneutils.targetregion.RegionType.CODING;
@@ -32,6 +34,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -256,7 +259,7 @@ public class GenerateTargetRegionsBed
     {
         try
         {
-            final BufferedWriter writer = createBufferedWriter(mOutputFile, false);
+            List<String> outputLines = Lists.newArrayList();
 
             for(HumanChromosome chromosome : HumanChromosome.values())
             {
@@ -273,13 +276,12 @@ public class GenerateTargetRegionsBed
                 for(RegionData region : regions)
                 {
                     // BED file positions require a +1 offset
-                    writer.write(String.format("%s\t%d\t%d\t%s",
+                    outputLines.add(format("%s\t%d\t%d\t%s",
                             chrStr, region.start() - 1, region.end(), region.idName()));
-                    writer.newLine();
                 }
             }
 
-            writer.close();
+            NamedBedFile.write(mOutputFile, outputLines);
         }
         catch(IOException e)
         {
@@ -289,10 +291,10 @@ public class GenerateTargetRegionsBed
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(SOURCE_DIR, true, "Path to all input and output files");
-        configBuilder.addPath(CODING_GENE_FILE, true, "Panel definition BED");
+        configBuilder.addPrefixedPath(CODING_GENE_FILE, true, "Panel definition BED", SOURCE_DIR);
         configBuilder.addPath(SPECIFIC_REGIONS_FILE, false,"Additional regions beyond panel definition BED");
         configBuilder.addPath(TRANS_TSL_FILE, false, "Ensembl valid TSL transcript IDs");
         configBuilder.addFlag(INCLUDE_UTR, "Include UTR in bed regions");
@@ -302,9 +304,6 @@ public class GenerateTargetRegionsBed
         addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
-        CommonUtils.logVersion();
 
         GenerateTargetRegionsBed generateTargetRegionsBed = new GenerateTargetRegionsBed(configBuilder);
         generateTargetRegionsBed.run();

@@ -4,9 +4,13 @@ import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.cobalt.MedianRatio;
+import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
 import com.hartwig.hmftools.common.purple.Gender;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.purple.config.FittingConfig;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class PurityAdjusterTest
@@ -68,7 +72,8 @@ public class PurityAdjusterTest
         assertEquals(normFactor, impliedNormFactor, EPSILON);
     }
 
-    private static void assertFrequencyMatchesPloidy(@NotNull final PurityAdjuster victim, final int normalCopyNumber,
+    private static void assertFrequencyMatchesPloidy(
+            final PurityAdjuster victim, final int normalCopyNumber,
             final int normalPloidy, final double tumorCopyNumber, final double tumorPloidy)
     {
         double expectedFrequency = victim.expectedFrequency(normalCopyNumber, normalPloidy, tumorCopyNumber, tumorPloidy);

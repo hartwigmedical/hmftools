@@ -44,8 +44,6 @@ public class FlankScores
         mHasData = false;
     }
 
-    public final double[][] getPosWeights() { return mPosWeights; }
-
     public boolean hasData() { return mHasData; }
 
     public double calcScore(final String upFlank, final String downFlank)

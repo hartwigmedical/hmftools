@@ -3,8 +3,10 @@ package com.hartwig.hmftools.bamtools.metrics;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.PartitionTask.partitionChromosome;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 
 import java.util.ArrayList;
@@ -97,27 +99,15 @@ public class BamMetrics
             combinedStats.perfCounter().logStats();
         }
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        BT_LOGGER.info("BamMetrics complete, mins({})", format("%.3f", timeTakeMins));
+        BT_LOGGER.info("BamMetrics complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(@NotNull final String[] args)
     {
-        final VersionInfo version = new VersionInfo("bam-tools.version");
-        BT_LOGGER.info("BamTools version: {}", version.version());
-
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         MetricsConfig.addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         BamMetrics bamMetrtics = new BamMetrics(configBuilder);
         bamMetrtics.run();

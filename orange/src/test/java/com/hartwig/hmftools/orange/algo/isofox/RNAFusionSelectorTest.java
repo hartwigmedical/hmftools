@@ -17,10 +17,11 @@ import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class RNAFusionSelectorTest {
-
+public class RNAFusionSelectorTest
+{
     @Test
-    public void canSelectNovelKnownFusions() {
+    public void canSelectNovelKnownFusions()
+    {
         RnaFusion match = IsofoxTestFactory.rnaFusionBuilder().name("A_B").build();
         RnaFusion hasLinxFusionAlready = IsofoxTestFactory.rnaFusionBuilder().name("C_D").build();
         RnaFusion noKnownFusion = IsofoxTestFactory.rnaFusionBuilder().name("E_F").build();
@@ -38,7 +39,8 @@ public class RNAFusionSelectorTest {
     }
 
     @Test
-    public void canSelectNovelPromiscuousFusions() {
+    public void canSelectNovelPromiscuousFusions()
+    {
         RnaFusion match =
                 IsofoxTestFactory.rnaFusionBuilder().name("A_B").svType(StructuralVariantType.BND).positionUp(1).positionDown(2).build();
 
@@ -63,7 +65,8 @@ public class RNAFusionSelectorTest {
     }
 
     @Test
-    public void canExtractGeneUpDownFromRNAFusion() {
+    public void canExtractGeneUpDownFromRNAFusion()
+    {
         RnaFusion proper = IsofoxTestFactory.rnaFusionBuilder().name("X_Y").build();
         assertEquals("X", RNAFusionSelector.geneUp(proper));
         assertEquals("Y", RNAFusionSelector.geneDown(proper));

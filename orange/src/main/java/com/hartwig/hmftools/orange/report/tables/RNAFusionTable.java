@@ -13,15 +13,14 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class RNAFusionTable {
-
-    private RNAFusionTable() {
-    }
-
+public final class RNAFusionTable
+{
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<RnaFusion> fusions,
-            @NotNull ReportResources reportResources) {
-        if (fusions.isEmpty()) {
+            @NotNull ReportResources reportResources)
+    {
+        if(fusions.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -32,7 +31,8 @@ public final class RNAFusionTable {
                         cells.createHeader("SV Type"), cells.createHeader("Junction U/D"), cells.createHeader("Depth U/D"),
                         cells.createHeader("Frags (spl./re./disc.)"), cells.createHeader("Cohort freq") });
 
-        for (RnaFusion fusion : sort(fusions)) {
+        for(RnaFusion fusion : sort(fusions))
+        {
             table.addCell(cells.createContent(fusion.name()));
             table.addCell(cells.createContent(fusion.chromosomeUp() + ":" + fusion.positionUp()));
             table.addCell(cells.createContent(fusion.chromosomeDown() + ":" + fusion.positionDown()));
@@ -47,14 +47,19 @@ public final class RNAFusionTable {
     }
 
     @NotNull
-    private static List<RnaFusion> sort(@NotNull List<RnaFusion> fusions) {
-        return fusions.stream().sorted((fusion1, fusion2) -> {
+    private static List<RnaFusion> sort(@NotNull List<RnaFusion> fusions)
+    {
+        return fusions.stream().sorted((fusion1, fusion2) ->
+        {
             String locationUp1 = Chromosomes.zeroPrefixed(fusion1.chromosomeUp());
             String locationUp2 = Chromosomes.zeroPrefixed(fusion2.chromosomeUp());
 
-            if (locationUp1.equals(locationUp2)) {
+            if(locationUp1.equals(locationUp2))
+            {
                 return Integer.compare(fusion1.positionUp(), fusion2.positionUp());
-            } else {
+            }
+            else
+            {
                 return locationUp1.compareTo(locationUp2);
             }
         }).collect(Collectors.toList());

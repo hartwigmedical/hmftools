@@ -21,12 +21,13 @@ import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 
 import org.junit.Test;
 
-public class OrangeConversionTest {
-
+public class OrangeConversionTest
+{
     private static final double EPSILON = 0.01;
 
     @Test
-    public void shouldConvertTestVersionsOfAllDatamodels() {
+    public void shouldConvertTestVersionsOfAllDatamodels()
+    {
         assertNotNull(OrangeConversion.convert(FlagstatTestFactory.createMinimalTestFlagstat()));
         assertNotNull(OrangeConversion.convert(WGSMetricsTestFactory.createMinimalTestWGSMetrics()));
         assertNotNull(OrangeConversion.convert(DoidTestFactory.createTestDoidNode()));
@@ -40,7 +41,8 @@ public class OrangeConversionTest {
     }
 
     @Test
-    public void shouldConvertAnnotatedVirus() {
+    public void shouldConvertAnnotatedVirus()
+    {
         assertTrue(OrangeConversion.convert(VirusTestFactory.createEmptyData()).allViruses().isEmpty());
         assertEqualsValue(VirusTestFactory.createMinimalData(), OrangeConversion.convert(VirusTestFactory.createMinimalData()));
         assertEqualsValue(VirusTestFactory.createProperData(), OrangeConversion.convert(VirusTestFactory.createProperData()));
@@ -48,25 +50,31 @@ public class OrangeConversionTest {
     }
 
     @Test
-    public void convertsEachVirusConstantProperly() {
-        for(final VirusType value : VirusType.values()) {
+    public void convertsEachVirusConstantProperly()
+    {
+        for(final VirusType value : VirusType.values())
+        {
             VirusInterpretation.valueOf(value.name());
         }
     }
 
-    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.VirusInterpreterData input, VirusInterpreterData converted) {
+    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.VirusInterpreterData input, VirusInterpreterData converted)
+    {
         assertEqualsValue(input.allViruses(), converted.allViruses());
         assertEqualsValue(input.reportableViruses(), converted.reportableViruses());
     }
 
-    private static void assertEqualsValue(List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input, List<AnnotatedVirus> converted) {
+    private static void assertEqualsValue(List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input, List<AnnotatedVirus> converted)
+    {
         assertEquals(converted.size(), input.size());
-        for (int i = 0; i < input.size(); i++) {
+        for(int i = 0; i < input.size(); i++)
+        {
             assertEqualsValue(input.get(i), converted.get(i));
         }
     }
 
-    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.AnnotatedVirus input, AnnotatedVirus converted) {
+    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.AnnotatedVirus input, AnnotatedVirus converted)
+    {
         assertEquals(input.name(), converted.name());
         assertEquals(input.qcStatus().name(), converted.qcStatus().name());
         assertEquals(input.integrations(), converted.integrations());

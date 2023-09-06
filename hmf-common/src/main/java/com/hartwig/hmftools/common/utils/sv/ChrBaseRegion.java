@@ -248,7 +248,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
     private static void loadSpecificChromsomesOrRegions(
             @Nullable final String specificRegionsStr, @Nullable final String specificChromosomesStr,
-            final List<String> chromosomes, final List<ChrBaseRegion> regions, final Logger logger)  throws ParseException
+            final List<String> chromosomes, final List<ChrBaseRegion> regions, final Logger logger) throws ParseException
     {
         if(specificRegionsStr != null && !specificRegionsStr.isEmpty())
         {

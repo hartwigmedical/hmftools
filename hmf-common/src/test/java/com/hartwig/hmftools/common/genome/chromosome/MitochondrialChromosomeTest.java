@@ -6,16 +6,18 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class MitochondrialChromosomeTest {
-
+public class MitochondrialChromosomeTest
+{
     @Test
-    public void testFromString() {
+    public void testFromString()
+    {
         assertEquals(MitochondrialChromosome.MT, MitochondrialChromosome.fromString("MT"));
         assertEquals(MitochondrialChromosome.MT, MitochondrialChromosome.fromString("chrM"));
     }
 
     @Test
-    public void testContains() {
+    public void testContains()
+    {
         assertTrue(MitochondrialChromosome.contains("MT"));
         assertTrue(MitochondrialChromosome.contains("chrM"));
 

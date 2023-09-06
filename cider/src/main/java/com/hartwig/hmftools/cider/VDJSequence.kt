@@ -144,16 +144,17 @@ class VDJSequence(
         return length - (jAnchor?.anchorBoundary ?: 0)
     }
 
-    val vAnchorSequence: String get()
+    val vAnchorSequence: String? get()
     {
-        return sequence.take(vAnchorBoundary ?: 0)
+        return if (vAnchor == null) null else sequence.take(vAnchorBoundary!!)
     }
 
-    val jAnchorSequence: String get()
+    val jAnchorSequence: String? get()
     {
-        return if (jAnchor == null) String() else sequence.substring(jAnchorBoundary!!)
+        return if (jAnchor == null) null else sequence.substring(jAnchorBoundary!!)
     }
 
+    /*
     val vAnchorAA: String get()
     {
         val vAnchorSeq = vAnchorSequence
@@ -165,7 +166,7 @@ class VDJSequence(
     val jAnchorAA: String get()
     {
         return Codons.aminoAcidFromBases(jAnchorSequence)
-    }
+    }*/
 
     // does not include the C and W
     val cdr3SequenceShort: String get()

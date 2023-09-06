@@ -2,6 +2,7 @@ package com.hartwig.hmftools.svprep.append;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
@@ -89,9 +90,7 @@ public class SvAppend
         VcfWriter vcfWriter = new VcfWriter(mConfig);
         vcfWriter.writeBreakends(mChrBreakendMap);
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-
-        SV_LOGGER.info("SV Append complete, mins({})", format("%.3f", timeTakenMs / 60000.0));
+        SV_LOGGER.info("SV Append complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private boolean loadBreakends()

@@ -58,7 +58,8 @@ public class DriverGeneAnnotator implements CohortFileInterface
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private final VisSampleData mVisSampleData;
 
-    public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache, final LinxConfig config,
+    public DriverGeneAnnotator(
+            final DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache, final LinxConfig config,
             final CnDataLoader cnDataLoader, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
         mDbAccess = dbAccess;
@@ -69,7 +70,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
         mCohortDataWriter = cohortDataWriter;
 
-        mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache);
+        mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache, config.DriverGenes);
         mAmpDrivers = new AmplificationDrivers(mDataCache);
 
         Map<String,List<String>> disruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes, true, geneTransCache);

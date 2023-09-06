@@ -6,10 +6,11 @@ import com.hartwig.hmftools.orange.TestOrangeReportFactory;
 
 import org.junit.Test;
 
-public class ReportLimiterTest {
-
+public class ReportLimiterTest
+{
     @Test
-    public void canLimitAllListsToOne() {
+    public void canLimitAllListsToOne()
+    {
         assertNotNull(ReportLimiter.limitAllListsToMaxOne(TestOrangeReportFactory.createMinimalTestReport()));
 
         assertNotNull(ReportLimiter.limitAllListsToMaxOne(TestOrangeReportFactory.createProperTestReport()));

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
-public enum CopyNumberMethod {
+public enum CopyNumberMethod
+{
     UNKNOWN,
     BAF_WEIGHTED,
     STRUCTURAL_VARIANT,

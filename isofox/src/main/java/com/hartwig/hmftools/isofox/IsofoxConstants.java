@@ -10,6 +10,8 @@ import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 public class IsofoxConstants
 {
+    public static final String APP_NAME = "Isofox";
+
     public static final int DEFAULT_MAX_FRAGMENT_SIZE = 550;
 
     // min number of fragments to sample when calculating fragment length distribution for calculation of expected fragment counts

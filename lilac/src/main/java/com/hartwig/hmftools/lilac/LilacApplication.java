@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.lilac;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.MemoryCalcs.calcMemoryUsage;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
+import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.A_EXON_BOUNDARIES;
 import static com.hartwig.hmftools.lilac.LilacConstants.BASE_QUAL_PERCENTILE;
 import static com.hartwig.hmftools.lilac.LilacConstants.B_EXON_BOUNDARIES;
@@ -15,7 +16,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
-import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_ALL_FRAGMENTS;
+import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_AA;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_FRAGS;
@@ -24,6 +25,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_SOMATIC_VCF;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.evidence.Candidates.addPhasedCandidates;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory.calculateGeneCoverage;
+import static com.hartwig.hmftools.lilac.read.BamRecordReader.filterVariantFragments;
 import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLociSequences;
 import static com.hartwig.hmftools.lilac.evidence.NucleotideFiltering.calcNucleotideHeterogygousLoci;
 import static com.hartwig.hmftools.lilac.coverage.HlaComplex.findDuplicates;
@@ -33,10 +35,10 @@ import static com.hartwig.hmftools.lilac.variant.SomaticCodingCount.addVariant;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.lilac.coverage.HlaYCoverage;
 import com.hartwig.hmftools.lilac.evidence.Candidates;
@@ -119,7 +121,10 @@ public class LilacApplication
     private LilacQC mSummaryMetrics;
     private SolutionSummary mSolutionSummary;
 
-    public LilacApplication(final LilacConfig config)
+    private final ResultsWriter mResultsWriter;
+
+
+    public LilacApplication(final LilacConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mRefData = new ReferenceData(mConfig.ResourceDir, mConfig);
@@ -147,6 +152,8 @@ public class LilacApplication
         mTumorCoverage = null;
         mTumorCopyNumber = Lists.newArrayList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         mRnaCoverage = null;
+
+        mResultsWriter = new ResultsWriter(mConfig, configBuilder);
     }
 
     public void setBamReaders(final BamReader refBamReader, final BamReader tumorBamReader)
@@ -161,10 +168,12 @@ public class LilacApplication
     public SolutionSummary getSolutionSummary() { return mSolutionSummary; }
     public List<ComplexCoverage> getRankedComplexes() { return mRankedComplexes; }
 
-    public boolean run()
+    public void run()
     {
-        final VersionInfo version = new VersionInfo("lilac.version");
-        LL_LOGGER.info("Lilac version({}), key parameters:", version.version());
+        // final VersionInfo version = new VersionInfo("lilac.version");
+        long startTimeMs = System.currentTimeMillis();
+
+        LL_LOGGER.info("key parameters:");
         mConfig.logParams();
 
         HlaContextFactory hlaContextFactory = new HlaContextFactory(A_EXON_BOUNDARIES, B_EXON_BOUNDARIES, C_EXON_BOUNDARIES);
@@ -192,7 +201,7 @@ public class LilacApplication
         if(mTumorBamReader == null)
             mTumorBamReader = new BamRecordReader(mConfig.TumorBam, mConfig.RefGenome, mRefData.HlaTranscriptData, mNucleotideFragFactory);
 
-        mRefNucleotideFrags.addAll(mNucleotideGeneEnrichment.enrich(mRefBamReader.readFromBam()));
+        mRefNucleotideFrags.addAll(mNucleotideGeneEnrichment.enrich(mRefBamReader.findGeneFragments()));
 
         int medianBaseQuality = mNucleotideFragFactory.calculatePercentileBaseQuality(mRefNucleotideFrags, BASE_QUAL_PERCENTILE);
 
@@ -205,8 +214,8 @@ public class LilacApplication
         final Map<String,int[]> geneBaseDepth = calculateGeneCoverage(mRefNucleotideFrags);
         if(!hasSufficientGeneDepth(geneBaseDepth))
         {
-            writeFailedSampleFileOutputs(geneBaseDepth, medianBaseQuality);
-            return false;
+            mResultsWriter.writeFailedSampleFileOutputs(geneBaseDepth, medianBaseQuality);
+            return;
         }
 
         allValid &= validateFragments(mRefNucleotideFrags);
@@ -301,7 +310,7 @@ public class LilacApplication
 
         List<HlaAllele> missingExpected = mConfig.ActualAlleles.stream().filter(x -> !candidateAlleles.contains(x)).collect(Collectors.toList());
 
-        if (!missingExpected.isEmpty())
+        if(!missingExpected.isEmpty())
         {
             LL_LOGGER.info("  including {} known actual alleles as candidates: {}",
                     missingExpected.size(), HlaAllele.toString(missingExpected));
@@ -478,8 +487,8 @@ public class LilacApplication
         if(!allValid)
         {
             LL_LOGGER.error("failed validation");
-            writeFailedSampleFileOutputs(geneBaseDepth, medianBaseQuality);
-            return false;
+            mResultsWriter.writeFailedSampleFileOutputs(geneBaseDepth, medianBaseQuality);
+            return;
         }
 
         // create various QC and other metrics
@@ -508,7 +517,11 @@ public class LilacApplication
 
         mSolutionSummary = SolutionSummary.create(winningRefCoverage, mTumorCoverage, mTumorCopyNumber, mSomaticCodingCounts, mRnaCoverage);
 
-        return true;
+        writeFileOutputs();
+
+        mResultsWriter.close();
+
+        LL_LOGGER.info("Lilac complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public void extractTumorResults(
@@ -521,9 +534,12 @@ public class LilacApplication
             return;
         }
 
-        List<Fragment> tumorNucleotideFrags = mNucleotideGeneEnrichment.enrich(mTumorBamReader.readFromBam());
+        List<Fragment> rawFragments = mTumorBamReader.findGeneFragments();
+        List<Fragment> tumorNucleotideFrags = mNucleotideGeneEnrichment.enrich(rawFragments);
 
         List<Fragment> tumorFragments = mAminoAcidPipeline.calcComparisonCoverageFragments(tumorNucleotideFrags);
+
+        mResultsWriter.writeFragments("TUMOR", tumorFragments);
 
         LL_LOGGER.info("calculating tumor coverage from frags({} highQual={})", tumorNucleotideFrags.size(), tumorFragments.size());
 
@@ -555,31 +571,51 @@ public class LilacApplication
 
         LL_LOGGER.info("calculating somatic variant allele coverage");
 
-        boolean hasVcfData = mSomaticVariants.stream().anyMatch(x -> x.Context != null);
-        LilacVCF lilacVCF = null;
-
-        if(hasVcfData)
-        {
-            final VersionInfo version = new VersionInfo("lilac.version");
-            lilacVCF = new LilacVCF(
-                    mConfig.formFileId(LILAC_FILE_SOMATIC_VCF),
-                    mConfig.SomaticVariantsFile).writeHeader(version.version());
-        }
-
         for(SomaticVariant variant : mSomaticVariants)
         {
-            List<AlleleCoverage> variantCoverage = variantAnnotation.assignAlleleCoverage(variant, mTumorBamReader, winningSequences);
+            List<Fragment> variantFragments = mTumorBamReader.findVariantFragments(variant);
+
+            // TEMP: compare to raw fragments to understand what should be included
+            /*
+            List<Fragment> filteredRawFragments = filterVariantFragments(variant, rawFragments);
+
+            LL_LOGGER.debug("variant({}) rawFrag({}) varFrags({})", variant, filteredRawFragments.size(), variantFragments.size());
+
+            Set<String> matchedIds = Sets.newHashSet();
+            for(Fragment rawFrag : filteredRawFragments)
+            {
+                Fragment varFrag = variantFragments.stream().filter(x -> x.id().equals(rawFrag.id())).findFirst().orElse(null);
+
+                if(varFrag != null)
+                {
+                    matchedIds.add(varFrag.id());
+                }
+                else
+                {
+                    LL_LOGGER.debug("variant({}) rawFrag({}) filtered", variant, rawFrag);
+                }
+            }
+
+            for(Fragment varFrag : variantFragments)
+            {
+                if(matchedIds.contains(varFrag.id()))
+                    continue;
+
+                LL_LOGGER.debug("variant({}) varFrag({}) missed in raw", variant, varFrag);
+            }
+
+            // List<AlleleCoverage> variantCoverage = variantAnnotation.assignAlleleCoverage(variant, filteredRawFragments, winningSequences);
+            */
+
+            List<AlleleCoverage> variantCoverage = variantAnnotation.assignAlleleCoverage(variant, variantFragments, winningSequences);
+
             List<HlaAllele> variantAlleles = variantCoverage.stream().map(x -> x.Allele).collect(Collectors.toList());
             LL_LOGGER.info("  {} -> {}}", variant, variantCoverage);
 
-            if(lilacVCF != null && variant.Context != null)
-                lilacVCF.writeVariant(variant.Context, variantAlleles);
+            mResultsWriter.writeVariant(variant.Context, variantAlleles);
 
             addVariant(mSomaticCodingCounts, variant, variantAlleles);
         }
-
-        if(lilacVCF != null)
-            lilacVCF.close();
     }
 
     public void extractRnaCoverage(
@@ -593,9 +629,11 @@ public class LilacApplication
 
         BamRecordReader rnaBamReader = new BamRecordReader(mConfig.RnaBam, mConfig.RefGenome, mRefData.HlaTranscriptData, mNucleotideFragFactory);
 
-        List<Fragment> rnaNucleotideFrags = mNucleotideGeneEnrichment.enrich(rnaBamReader.readFromBam());
+        List<Fragment> rnaNucleotideFrags = mNucleotideGeneEnrichment.enrich(rnaBamReader.findGeneFragments());
 
         List<Fragment> rnaFragments = mAminoAcidPipeline.calcComparisonCoverageFragments(rnaNucleotideFrags);
+
+        mResultsWriter.writeFragments("RNA", rnaFragments);
 
         LL_LOGGER.info("calculating RNA coverage from frags({} highQual={})", rnaNucleotideFrags.size(), rnaFragments.size());
 
@@ -611,53 +649,15 @@ public class LilacApplication
 
     public void writeFileOutputs()
     {
-        if(mConfig.OutputDir.isEmpty())
-            return;
-
         mSummaryMetrics.log(mConfig.Sample);
 
         LL_LOGGER.info("writing output to {}", mConfig.OutputDir);
 
-        mSolutionSummary.write(LilacAllele.generateFilenameForWriting(mConfig.OutputDir, mConfig.Sample));
-        mSummaryMetrics.writefile(LilacQcData.generateFilenameForWriting(mConfig.OutputDir, mConfig.Sample));
+        mResultsWriter.writeMainOutputs(mSummaryMetrics, mSolutionSummary, mRankedComplexes);
 
-        HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), mRankedComplexes);
+        mResultsWriter.writeDetailedOutputs(mRefAminoAcidCounts, mRefNucleotideCounts, mAminoAcidPipeline, mHlaYCoverage);
 
-        if(mConfig.WriteAllFiles)
-        {
-            HlaComplexFile.writeFragmentAssignment(mConfig.formFileId(LILAC_FILE_CANDIDATE_FRAGS), mRankedComplexes, mRefFragAlleles);
-            mRefAminoAcidCounts.writeVertically(mConfig.formFileId(LILAC_FILE_CANDIDATE_AA));
-            mRefNucleotideCounts.writeVertically(mConfig.formFileId(LILAC_FILE_CANDIDATE_NUC));
-            mAminoAcidPipeline.writeCounts(mConfig);
-            FragmentUtils.writeFragmentData(mConfig.formFileId(LILAC_FILE_ALL_FRAGMENTS), mRefNucleotideFrags);
-            mHlaYCoverage.writeAlleleCounts(mConfig.Sample);
-        }
-    }
-
-    public void writeFailedSampleFileOutputs(final Map<String,int[]> geneBaseDepth, int medianBaseQuality)
-    {
-        if(mConfig.OutputDir.isEmpty())
-            return;
-
-        LL_LOGGER.info("writing failed-sample output to {}", mConfig.OutputDir);
-
-        HaplotypeQC haplotypeQC = new HaplotypeQC(0, 0, 0, Lists.newArrayList());
-
-        AminoAcidQC aminoAcidQC = new AminoAcidQC(0, 0);
-
-        BamQC bamQC = new BamQC(0, 0, 0, geneBaseDepth);
-
-        CoverageQC coverageQC = new CoverageQC(
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-
-        mSummaryMetrics = new LilacQC(
-                0, "", 0, null,
-                aminoAcidQC, bamQC, coverageQC, haplotypeQC, new SomaticVariantQC(0, 0));
-
-        mSolutionSummary = new SolutionSummary(null, mTumorCoverage, mTumorCopyNumber, mSomaticCodingCounts, mRnaCoverage);
-
-        mSolutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
-        mSummaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        mResultsWriter.writeReferenceFragments(mRankedComplexes, mRefNucleotideFrags, mRefFragAlleles);
     }
 
     private boolean validateFragments(final List<Fragment> fragments)
@@ -724,31 +724,14 @@ public class LilacApplication
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         LilacConfig.addConfig(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(configBuilder);
-
-        LilacApplication lilac = new LilacApplication(new LilacConfig(configBuilder));
-
-        long startTime = System.currentTimeMillis();
-
-        if(lilac.run())
-        {
-            lilac.writeFileOutputs();
-        }
-
-        long endTime = System.currentTimeMillis();
-        double runTime = (endTime - startTime) / 1000.0;
-
-        LL_LOGGER.info("Lilac complete, run time({}s)", String.format("%.2f", runTime));
+        LilacApplication lilac = new LilacApplication(new LilacConfig(configBuilder), configBuilder);
+        lilac.run();
     }
 }

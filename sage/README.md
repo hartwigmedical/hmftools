@@ -11,7 +11,7 @@ Key features include:
   - No cutoff for homopolymer repeat length for improved INDEL handling 
   - [Phasing](#6-phasing) of somatic + somatic and somatic + germline variants over whole read length
   - Native MNV handling 
-  - Joint calling, including allowing both multiple tumor and reference samples to be analysed copncurrently
+  - Joint calling, including allowing both multiple tumor and reference samples to be analysed concurrently
   - Support for diverse calling scenarios including somatic tumor-normal, somatic tumor only, germline, etc.
   - An internal [alt specific base quality recalibration](#1-alt-specific-base-quality-recalibration) method
 
@@ -79,6 +79,7 @@ load_bqr_files | NA    | Attempts to reload previously generated BQR files
 write_bqr_plot | NA    | Generate base-quality recalibration plots (requires R)
 bqr_sample_size | 2,000,000 | Sample size of each autosome
 bqr_max_alt_count | 3     | Max support of variant before it is considered likely to be real and not a sequencing error
+bqr_max_alt_percent | 0.05   | Max percentage of reads supporting a variant before it is considered likely to be real and not a sequencing error
 bqr_min_map_qual | 10    | Min mapping quality of bam record
 
 ## Optional Quality Arguments
@@ -386,7 +387,7 @@ We also modify the map quality taking into account the number of events, soft cl
 readEvents = NM tag from BAM record adjusted so that INDELs and (candidate) MNVs count as only 1 event
 distanceFromReferencePenalty =  (readEvents - 1) * `map_qual_read_events_penalty (8)`^ 
 softClipPenalty =  if(hasSoftClip,(max(1,soft clip bases /12),0)  * `map_qual_read_events_penalty (8)`^    
-improperPairPenalty = `mapQualityImproperPaidPenalty (15)`  if proper pair flag not set else 0  
+improperPairPenalty = `mapQualityImproperPairPenalty (15)`  if proper pair flag not set else 0  
 modifiedMapQuality^ = MAPQ - `mapQualityFixedPenalty (15)`  - improperPairPenalty - distanceFromReferencePenalty - softClipPenalty 
 </pre>
 
@@ -467,7 +468,7 @@ min_germline_depth_allosome|0|0|6 | 6 | Normal `RC_CNT[6]`
 max_germline_vaf<sup>3</sup>|10%|4%|4% | 4% | Normal`RC_CNT[0+1+2+3+4]` / `RC_CNT[6]`
 max_germline_rel_raw_base_qual|50%|4%|4% | 4% | Normal `RABQ[1]` / Tumor `RABQ[1]` 
 strandBias|0.0005 |0.0005|0.0005 |0.0005| SBLikelihood<sup>4</sup>
-minAvgBaseQual|0|22|22|22|ABQ
+minAvgBaseQual|18|28|28|28|ABQ
 
 1. These min_tumor_qual cutoffs should be set lower for lower depth samples.  For example for 30x tumor coverage, we recommend (Hotspot=40;Panel=60;HC=100;LC=150).   For targeted data with higher depth please see recommendations [here](https://github.com/hartwigmedical/hmftools/blob/master/README_TARGETED.md).
 
@@ -526,7 +527,7 @@ After deduplication any uninformative or duplicate phase sets are further remove
 If there are any cases where the exact same variant is still duplicated (ie. same chromosome, position,ref,alt) but with different read core contexts, then the lower quality variant is hard filtered with the LPS information merged.
 
 ## 8. Gene Panel Coverage
-To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each tumor sample. 
+To provide confidence that there is sufficient depth in the gene panel a count of depth of each base in the gene panel is calculated and written to file for each tumor sample.  Note that only reads with MapQ > 10 are included in the coverage calculations.
 
 The file shows the number of bases with 0 to 30 reads and then buckets reads in intervals of 10 up to 100+.
 
@@ -593,6 +594,7 @@ Phasing improvements
 - **Germline phased variants may not be deduped** - SAGE does not dedup filtered variants so this may cause confusion in phasing.   This can be an issue around microsatellites.
 
 # Version History and Download Links
+- [3.3](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.3)
 - [3.2](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.2.5)
 - [3.1](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.1)
 - [3.0](https://github.com/hartwigmedical/hmftools/releases/tag/sage-v3.0)

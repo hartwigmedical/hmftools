@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.utils.pcf;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +18,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.genome.window.Window;
+import com.hartwig.hmftools.common.genome.region.Window;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -31,13 +33,13 @@ public final class PCFFile
     @NotNull
     public static String generateRatioFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + RATIO_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + RATIO_EXTENSION;
     }
 
     @NotNull
     public static String generateBAFFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + BAF_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + BAF_EXTENSION;
     }
 
     @NotNull

@@ -9,42 +9,44 @@ import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Sample;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.Record;
 import org.jooq.Result;
 
-public final class SampleQuery {
-
-    private static final Logger LOGGER = LogManager.getLogger(SampleQuery.class);
+public final class SampleQuery
+{
     private static final String DOID_SEPARATOR = ",";
 
-    private SampleQuery() {
-    }
-
     @NotNull
-    public static List<Sample> selectFromDatarequest(@NotNull DatabaseAccess database) {
+    public static List<Sample> selectFromDatarequest(@NotNull DatabaseAccess database)
+    {
         return select(database, "datarequest");
     }
 
     @NotNull
-    public static List<Sample> selectFromClinical(@NotNull DatabaseAccess database) {
+    public static List<Sample> selectFromClinical(@NotNull DatabaseAccess database)
+    {
         return select(database, "clinical");
     }
 
     @NotNull
-    private static List<Sample> select(@NotNull DatabaseAccess database, @NotNull String table) {
+    private static List<Sample> select(@NotNull DatabaseAccess database, @NotNull String table)
+    {
         List<Sample> samples = Lists.newArrayList();
 
         Result<Record> result = database.context().resultQuery("select sampleId, doids from " + table).fetch();
-        for (Record record : result) {
+        for(Record record : result)
+        {
             String sampleId = (String) record.getValue(0);
             String doidString = (String) record.getValue(1);
-            if (doidString == null) {
+            if(doidString == null)
+            {
                 LOGGER.debug(" Skipping sample {} because doids are unknown", sampleId);
-            } else {
+            }
+            else
+            {
                 samples.add(ImmutableSample.builder().sampleId(sampleId).doids(toDoids(doidString)).build());
             }
         }
@@ -53,8 +55,10 @@ public final class SampleQuery {
     }
 
     @NotNull
-    private static Set<String> toDoids(@Nullable String doidString) {
-        if (doidString.isEmpty()) {
+    private static Set<String> toDoids(@Nullable String doidString)
+    {
+        if(doidString.isEmpty())
+        {
             return Sets.newHashSet();
         }
 

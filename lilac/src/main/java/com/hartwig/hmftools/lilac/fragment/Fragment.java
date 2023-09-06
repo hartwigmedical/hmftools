@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.lilac.fragment.FragmentScope.UNSET;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.validateLociBases;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.lilac.read.ReadRecord;
 
 import java.util.List;
 import java.util.Set;
@@ -15,9 +16,7 @@ import java.util.stream.Collectors;
 
 public class Fragment
 {
-    private final String mId; // BAM read Id
-    private final String mReadInfo; // BAM read chr, start, end, gene, cigar
-
+    private final List<ReadRecord> mReads;
     private final String mReadGene; // mapped gene
     private final Set<String> mGenes;
     private final List<Integer> mNucleotideLoci;
@@ -36,11 +35,10 @@ public class Fragment
     private FragmentScope mScope;
 
     public Fragment(
-            final String id, final String readInfo, final String readGene, final Set<String> genes, final List<Integer> nucleotideLoci,
+            final ReadRecord readRecord, final String readGene, final Set<String> genes, final List<Integer> nucleotideLoci,
             final List<Integer> qualities, final List<String> nucleotides)
     {
-        mId = id;
-        mReadInfo = readInfo;
+        mReads = Lists.newArrayList(readRecord);
 
         mGenes = genes;
         mReadGene = readGene;
@@ -69,8 +67,24 @@ public class Fragment
         mAminoAcids.addAll(aminoAcids);
     }
 
-    public String id() { return mId; }
-    public String readInfo() { return mReadInfo; }
+    public String id() { return mReads.get(0).Id; }
+
+    public List<ReadRecord> reads() { return mReads; }
+
+    public void addReads(final Fragment other)
+    {
+        other.reads().forEach(x -> addRead(x));
+    }
+
+    public void addRead(final ReadRecord read)
+    {
+        if(mReads.stream().anyMatch(x -> x.getSamRecord().getFlags() == read.getSamRecord().getFlags()))
+            return;
+
+        mReads.add(read);
+    }
+
+    public String readInfo() { return mReads.get(0).readInfo(); }
     public Set<String> getGenes() { return mGenes; }
     public String readGene() { return mReadGene; }
     public boolean containsGene(final String gene) { return mGenes.stream().anyMatch(x -> x.equals(gene)); }
@@ -89,7 +103,7 @@ public class Fragment
             {
                 if(scope != HLA_Y)
                 {
-                    LL_LOGGER.debug("frag({}: {}) overriding existing scope: {} -> {}", mId, mReadInfo, mScope, scope);
+                    LL_LOGGER.debug("frag({}: {}) overriding existing scope: {} -> {}", id(), readInfo(), mScope, scope);
                 }
 
                 mScope = scope;
@@ -328,11 +342,11 @@ public class Fragment
         if(mAminoAcidConversionCount == 0)
         {
             return String.format("%s genes(%s) read(%s) nucRange(%d -> %d) qf(%s)",
-                    mId, mGenes, readInfo(), minNucleotideLocus(), maxNucleotideLocus(), mIsQualFiltered);
+                    id(), mGenes, readInfo(), minNucleotideLocus(), maxNucleotideLocus(), mIsQualFiltered);
         }
 
         return String.format("%s genes(%s) read(%s) nucRange(%d -> %d) qf(%s) aaRange(%d -> %d)",
-                mId, mGenes, readInfo(), minNucleotideLocus(), maxNucleotideLocus(), mIsQualFiltered,
+                id(), mGenes, readInfo(), minNucleotideLocus(), maxNucleotideLocus(), mIsQualFiltered,
                 minAminoAcidLocus(), maxAminoAcidLocus());
     }
 
@@ -340,47 +354,47 @@ public class Fragment
     {
         if(mGenes.isEmpty() || mGenes.size() > 3)
         {
-            LL_LOGGER.warn("{} {} has no genes", mId, mReadInfo);
+            LL_LOGGER.warn("{} {} has no genes", id(), readInfo());
             return false;
         }
 
         // check loci are ordered and consistent with qualities and bases
         if(mNucleotides.isEmpty() || mRawNucleotides.isEmpty())
         {
-            LL_LOGGER.warn("{} {} has no bases", mId, mReadInfo);
+            LL_LOGGER.warn("{} {} has no bases", id(), readInfo());
             return false;
         }
 
         if(mNucleotides.size() != mNucleotideQuality.size())
         {
             LL_LOGGER.warn("{} {} inconsistent bases loci({}) quals({})",
-                    mId, mReadInfo, mNucleotides.size(), mNucleotideQuality.size());
+                    id(), readInfo(), mNucleotides.size(), mNucleotideQuality.size());
             return false;
         }
 
-        if(!validateLociBases(mId, mNucleotideLoci, mNucleotides))
+        if(!validateLociBases(id(), mNucleotideLoci, mNucleotides))
             return false;
 
-        if(!validateLociBases(mId, mRawNucleotideLoci, mRawNucleotides))
+        if(!validateLociBases(id(), mRawNucleotideLoci, mRawNucleotides))
             return false;
 
         if(mAminoAcidConversionCount > 0)
         {
-            if(!validateLociBases(mId, mAminoAcidLoci, mAminoAcids))
+            if(!validateLociBases(id(), mAminoAcidLoci, mAminoAcids))
                 return false;
 
             for(int i = 0; i < mAminoAcidLoci.size(); ++i)
             {
                 if(mAminoAcids.get(i).isEmpty())
                 {
-                    LL_LOGGER.warn("{} {} empty amino-acid, index({})", mId, mReadInfo, i);
+                    LL_LOGGER.warn("{} {} empty amino-acid, index({})", id(), readInfo(), i);
                     return false;
                 }
             }
 
             if(mAminoAcidConversionCount > 1)
             {
-                LL_LOGGER.warn("{} {} amino-acid conversion repeated({})", mId, mReadInfo, mAminoAcidConversionCount);
+                LL_LOGGER.warn("{} {} amino-acid conversion repeated({})", id(), readInfo(), mAminoAcidConversionCount);
                 return false;
             }
         }

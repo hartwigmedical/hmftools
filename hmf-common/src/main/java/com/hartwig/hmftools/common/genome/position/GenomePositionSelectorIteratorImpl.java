@@ -12,8 +12,8 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-class GenomePositionSelectorIteratorImpl<P extends GenomePosition> implements GenomePositionSelector<P> {
-
+class GenomePositionSelectorIteratorImpl<P extends GenomePosition> implements GenomePositionSelector<P>
+{
     @NotNull
     private final Iterator<P> positions;
     @Nullable
@@ -21,19 +21,23 @@ class GenomePositionSelectorIteratorImpl<P extends GenomePosition> implements Ge
     @Nullable
     private P next;
 
-    GenomePositionSelectorIteratorImpl(@NotNull Collection<P> positions) {
+    GenomePositionSelectorIteratorImpl(@NotNull Collection<P> positions)
+    {
         this.positions = positions.iterator();
         next = this.positions.hasNext() ? this.positions.next() : null;
     }
 
     @Override
     @NotNull
-    public Optional<P> select(@NotNull final GenomePosition position) {
-        while (next != null && next.compareTo(position) < 0) {
+    public Optional<P> select(@NotNull final GenomePosition position)
+    {
+        while(next != null && next.compareTo(position) < 0)
+        {
             next = positions.hasNext() ? this.positions.next() : null;
         }
 
-        if (next != null && next.compareTo(position) == 0) {
+        if(next != null && next.compareTo(position) == 0)
+        {
             return Optional.of(next);
         }
 
@@ -41,17 +45,21 @@ class GenomePositionSelectorIteratorImpl<P extends GenomePosition> implements Ge
     }
 
     @Override
-    public void select(final GenomeRegion region, final Consumer<P> handler) {
-        if (lastRegion != null && region.compareTo(lastRegion) < 0) {
+    public void select(final GenomeRegion region, final Consumer<P> handler)
+    {
+        if(lastRegion != null && region.compareTo(lastRegion) < 0)
+        {
             throw new IllegalArgumentException("Selector only goes forward, never backwards!");
         }
         lastRegion = region;
 
-        while (next != null && compare(next, region) < 0) {
+        while(next != null && compare(next, region) < 0)
+        {
             next = positions.hasNext() ? this.positions.next() : null;
         }
 
-        while (next != null && compare(next, region) == 0) {
+        while(next != null && compare(next, region) == 0)
+        {
             handler.accept(next);
             next = positions.hasNext() ? this.positions.next() : null;
         }

@@ -152,7 +152,7 @@ public final class DiscordantGroups
             for(ReadGroup readGroup : readGroups)
             {
                 junctionData.SupportingGroups.add(readGroup);
-                readGroup.addJunctionPosition(junctionData.Position);
+                readGroup.addJunctionPosition(junctionData);
 
                 readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));
                 // readGroup.reads().forEach(x -> junctionData.addReadType(x, ReadType.SUPPORT)); // no need

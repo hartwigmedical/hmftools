@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.cup.common;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 
@@ -13,6 +12,8 @@ import com.hartwig.hmftools.cup.feature.KnownMutation;
 
 public class CupConstants
 {
+    public static final String APP_NAME = "Cuppa";
+
     // somatics
     public static final double SNV_96_CSS_THRESHOLD = 0.01;
     public static final double SNV_96_CSS_DIFF_EXPONENT = 10;

@@ -14,15 +14,14 @@ import com.itextpdf.layout.element.Table;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class HomozygousDisruptionTable {
-
-    private HomozygousDisruptionTable() {
-    }
-
+public final class HomozygousDisruptionTable
+{
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<HomozygousDisruption> homozygousDisruptions, @NotNull
-            ReportResources reportResources) {
-        if (homozygousDisruptions.isEmpty()) {
+    public static Table build(@NotNull String title, float width, @NotNull List<HomozygousDisruption> homozygousDisruptions,
+            @NotNull ReportResources reportResources)
+    {
+        if(homozygousDisruptions.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -31,7 +30,8 @@ public final class HomozygousDisruptionTable {
                 new float[] { 1, 1, 4 },
                 new Cell[] { cells.createHeader("Location"), cells.createHeader("Gene"), cells.createHeader(Strings.EMPTY) });
 
-        for (HomozygousDisruption homozygousDisruption : sort(homozygousDisruptions)) {
+        for(HomozygousDisruption homozygousDisruption : sort(homozygousDisruptions))
+        {
             table.addCell(cells.createContent(homozygousDisruption.chromosome() + homozygousDisruption.chromosomeBand()));
             table.addCell(cells.createContent(gene(homozygousDisruption)));
             table.addCell(cells.createContent(Strings.EMPTY));
@@ -41,23 +41,30 @@ public final class HomozygousDisruptionTable {
     }
 
     @NotNull
-    private static List<HomozygousDisruption> sort(@NotNull List<HomozygousDisruption> homozygousDisruptions) {
-        return homozygousDisruptions.stream().sorted((disruption1, disruption2) -> {
+    private static List<HomozygousDisruption> sort(@NotNull List<HomozygousDisruption> homozygousDisruptions)
+    {
+        return homozygousDisruptions.stream().sorted((disruption1, disruption2) ->
+        {
             String location1 = Chromosomes.zeroPrefixed(disruption1.chromosome() + disruption1.chromosomeBand());
             String location2 = Chromosomes.zeroPrefixed(disruption2.chromosome() + disruption2.chromosomeBand());
 
-            if (location1.equals(location2)) {
+            if(location1.equals(location2))
+            {
                 return disruption1.gene().compareTo(disruption2.gene());
-            } else {
+            }
+            else
+            {
                 return location1.compareTo(location2);
             }
         }).collect(Collectors.toList());
     }
 
     @NotNull
-    private static String gene(@NotNull HomozygousDisruption homozygousDisruption) {
+    private static String gene(@NotNull HomozygousDisruption homozygousDisruption)
+    {
         String addon = Strings.EMPTY;
-        if (!homozygousDisruption.isCanonical()) {
+        if(!homozygousDisruption.isCanonical())
+        {
             addon = " (alt)";
         }
         return homozygousDisruption.gene() + addon;

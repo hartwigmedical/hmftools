@@ -17,14 +17,14 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class HLAAlleleTable {
-
-    private HLAAlleleTable() {
-    }
-
+public final class HLAAlleleTable
+{
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<LilacAllele> alleles, @NotNull ReportResources reportResources) {
-        if (alleles.isEmpty()) {
+    public static Table build(@NotNull String title, float width, @NotNull List<LilacAllele> alleles,
+            @NotNull ReportResources reportResources)
+    {
+        if(alleles.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -34,7 +34,8 @@ public final class HLAAlleleTable {
                 new Cell[] { cells.createHeader("Allele"), cells.createHeader("Ref Frags"), cells.createHeader("Tumor Frags"),
                         cells.createHeader("RNA Frags"), cells.createHeader("Tumor CN"), cells.createHeader("Somatic #mutations") });
 
-        for (LilacAllele allele : sort(alleles)) {
+        for(LilacAllele allele : sort(alleles))
+        {
             table.addCell(cells.createContent(allele.allele()));
             table.addCell(cells.createContent(String.valueOf(allele.refFragments())));
             table.addCell(cells.createContent(String.valueOf(allele.tumorFragments())));
@@ -47,32 +48,39 @@ public final class HLAAlleleTable {
     }
 
     @NotNull
-    private static List<LilacAllele> sort(@NotNull List<LilacAllele> alleles) {
+    private static List<LilacAllele> sort(@NotNull List<LilacAllele> alleles)
+    {
         return alleles.stream()
                 .sorted(Comparator.comparing(LilacAllele::allele).thenComparingInt(LilacAllele::refFragments))
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    private static String mutationString(@NotNull LilacAllele allele) {
+    private static String mutationString(@NotNull LilacAllele allele)
+    {
         StringJoiner joiner = new StringJoiner(", ");
-        if (Doubles.positive(allele.somaticMissense())) {
+        if(Doubles.positive(allele.somaticMissense()))
+        {
             joiner.add(formatSingleDigitDecimal(allele.somaticMissense()) + " missense");
         }
 
-        if (Doubles.positive(allele.somaticNonsenseOrFrameshift())) {
+        if(Doubles.positive(allele.somaticNonsenseOrFrameshift()))
+        {
             joiner.add(formatSingleDigitDecimal(allele.somaticNonsenseOrFrameshift()) + " nonsense or frameshift");
         }
 
-        if (Doubles.positive(allele.somaticSplice())) {
+        if(Doubles.positive(allele.somaticSplice()))
+        {
             joiner.add(formatSingleDigitDecimal(allele.somaticSplice()) + " splice");
         }
 
-        if (Doubles.positive(allele.somaticSynonymous())) {
+        if(Doubles.positive(allele.somaticSynonymous()))
+        {
             joiner.add(formatSingleDigitDecimal(allele.somaticSynonymous()) + " synonymous");
         }
 
-        if (Doubles.positive(allele.somaticInframeIndel())) {
+        if(Doubles.positive(allele.somaticInframeIndel()))
+        {
             joiner.add(formatSingleDigitDecimal(allele.somaticInframeIndel()) + " inframe indel");
         }
 

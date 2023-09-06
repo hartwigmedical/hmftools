@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.utils;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -163,7 +164,7 @@ public class PerformanceCounter
         if(mIntervalCount == 0)
             return;
 
-        LOGGER.info(String.format("PerfStat(%s) intervals(%d) total(%.3f avg=%.3f max=%.3f)",
+        LOGGER.info(format("PerfStat(%s) intervals(%d) total(%.3f avg=%.3f max=%.3f)",
                 mName, getIntervalCount(), getTotalTime(), getAvgTime(), getMaxTime()));
     }
 
@@ -180,7 +181,7 @@ public class PerformanceCounter
             return;
         }
 
-        LOGGER.info(String.format("PerfStat(%s) intervals(%d) total(%.3f avg=%.3f med=%.3f max=%.3f)",
+        LOGGER.info(format("PerfStat(%s) intervals(%d) total(%.3f avg=%.3f med=%.3f max=%.3f)",
                 mName, getIntervalCount(), getTotalTime(), getAvgTime(), getMedianTime(), getMaxTime()));
 
         // median call above will have sorted the times
@@ -189,7 +190,7 @@ public class PerformanceCounter
         int maxTimes = topN > 0 ? min(mNamedTimes.size(), topN) : mNamedTimes.size();
         for(int i = 0; i < maxTimes; ++i)
         {
-            LOGGER.info(String.format("PerfStats(%s) interval(%s) time(%.3f)", mName, mNamedTimes.get(i).Name, mNamedTimes.get(i).Time));
+            LOGGER.info(format("PerfStats(%s) interval(%s) time(%.3f)", mName, mNamedTimes.get(i).Name, mNamedTimes.get(i).Time));
         }
     }
 
@@ -232,5 +233,17 @@ public class PerformanceCounter
     public static double nanosToSeconds(long nanoStartTime, long nanosEndTime)
     {
         return (nanosEndTime - nanoStartTime) / NANOS_IN_SECOND;
+    }
+
+    public static double calcRunTimeMins(final long startTimeMs)
+    {
+        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
+        return timeTakenMs / 60000.0;
+    }
+
+    public static String runTimeMinsStr(final long startTimeMs)
+    {
+        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
+        return format("%.3f", timeTakenMs / 60000.0);
     }
 }

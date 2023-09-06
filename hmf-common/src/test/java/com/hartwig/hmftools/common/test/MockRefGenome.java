@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;

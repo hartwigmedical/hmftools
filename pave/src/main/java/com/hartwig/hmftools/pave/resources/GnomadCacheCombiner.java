@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -211,20 +212,14 @@ public class GnomadCacheCombiner
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(GNOMAD_DIR_1, true, "Gnomad VCF input file");
         configBuilder.addPath(GNOMAD_DIR_2, true, "Gnomad VCF input file");
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         GnomadCacheCombiner gnomadCacheBuilder = new GnomadCacheCombiner(configBuilder);
         gnomadCacheBuilder.run();

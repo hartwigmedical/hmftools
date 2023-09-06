@@ -8,13 +8,13 @@ import com.hartwig.hmftools.lilac.variant.SomaticVariant;
 
 public interface BamReader
 {
-    List<Fragment> readFromBam();
+    List<Fragment> findGeneFragments();
 
-    List<Fragment> readFromBam(final SomaticVariant variant);
+    List<Fragment> findVariantFragments(final SomaticVariant variant);
 
     // metrics
     Map<Indel,List<Fragment>> getKnownStopLossFragments();
     Map<Indel,Integer> unmatchedPonIndels(int minCount);
     Map<Indel,Integer> unmatchedIndels(int minCount);
-    int alignmentFiltered();
+    int filteredReadCount();
 }

@@ -11,25 +11,29 @@ import com.hartwig.hmftools.orange.algo.OrangeAlgo;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ReportWriterTest {
-
+public class ReportWriterTest
+{
     @Test
-    public void canGenerateTestReportForPanelFromTestResources() throws IOException {
+    public void canGenerateTestReportForPanelFromTestResources() throws IOException
+    {
         run(TestOrangeConfigFactory.createPanelConfig());
     }
 
     @Test
-    public void canGenerateTestReportForWGSTumorOnlyFromTestResources() throws IOException {
+    public void canGenerateTestReportForWGSTumorOnlyFromTestResources() throws IOException
+    {
         run(TestOrangeConfigFactory.createWGSConfigTumorOnly());
     }
 
     @Test
-    public void canGenerateTestReportForWGSTumorNormalFromTestResources() throws IOException {
+    public void canGenerateTestReportForWGSTumorNormalFromTestResources() throws IOException
+    {
         run(TestOrangeConfigFactory.createWGSConfigTumorNormal());
     }
 
     @Test
-    public void canGenerateTestReportFromMinimalTestData() throws IOException {
+    public void canGenerateTestReportFromMinimalTestData() throws IOException
+    {
         OrangeRecord report = TestOrangeReportFactory.createMinimalTestReport();
 
         ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
@@ -38,7 +42,8 @@ public class ReportWriterTest {
     }
 
     @Test
-    public void canGenerateTestReportFromProperTestData() throws IOException {
+    public void canGenerateTestReportFromProperTestData() throws IOException
+    {
         OrangeRecord report = TestOrangeReportFactory.createProperTestReport();
 
         ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
@@ -46,8 +51,11 @@ public class ReportWriterTest {
         writer.write(report);
     }
 
-    private static void run(@NotNull OrangeConfig config) throws IOException {
-        OrangeRecord report = OrangeAlgo.fromConfig(config).run(config);
+    private static void run(@NotNull OrangeConfig config) throws IOException
+    {
+        OrangeAlgo algo = OrangeAlgo.fromConfig(config);
+        algo.setSuppressGeneWarnings();
+        OrangeRecord report = algo.run(config);
 
         ReportWriter writer = ReportWriterFactory.createInMemoryWriter();
 

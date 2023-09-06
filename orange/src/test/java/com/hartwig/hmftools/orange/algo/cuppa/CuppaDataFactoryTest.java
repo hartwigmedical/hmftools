@@ -26,23 +26,25 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CuppaDataFactoryTest {
-
+public class CuppaDataFactoryTest
+{
     private static final String CUPPA_TEST_CSV = Resources.getResource("test_run/cuppa/tumor_sample.cup.data.csv").getPath();
 
     private static final double EPSILON = 1.0E-10;
 
     @Test
-    public void canCreateCorrectDataForTestRun() throws IOException {
+    public void canCreateCorrectDataForTestRun() throws IOException
+    {
         CuppaData cuppaData = CuppaDataFactory.create(CuppaDataFile.read(CUPPA_TEST_CSV));
 
         assertEquals(36, cuppaData.predictions().size());
         Map<String, CuppaPrediction> actualPredictionsByCancerType =
                 cuppaData.predictions().stream().collect(Collectors.toMap(CuppaPrediction::cancerType, entry -> entry));
 
-        for (CuppaPrediction expected : List.of(prediction("Melanoma", 0.996, 0.979, 0.990, 0.972),
-                prediction("Pancreas", 0.00013, 6.75e-28, 6.05e-05, 1.76e-05),
-                prediction("Lung: Non-small Cell", 0.00013, 4.83e-28, 2.89e-05, 0.00503))) {
+        for(CuppaPrediction expected : List.of(prediction("Melanoma", 0.996, 0.979, 0.990, 0.972),
+                prediction("Pancreas", 0.00013, 6.75e-28, 6.05e-05, 1.8e-05),
+                prediction("Lung: Non-small Cell", 0.00013, 4.83e-28, 2.91e-05, 0.00518)))
+        {
             CuppaPrediction actual = actualPredictionsByCancerType.get(expected.cancerType());
             assertNotNull(actual);
             List<Function<CuppaPrediction, Double>> functionsToVerify = List.of(CuppaPrediction::likelihood,
@@ -51,7 +53,8 @@ public class CuppaDataFactoryTest {
                     CuppaPrediction::featureClassifier,
                     CuppaPrediction::altSjCohortClassifier,
                     CuppaPrediction::expressionPairwiseClassifier);
-            for (Function<CuppaPrediction, Double> function : functionsToVerify) {
+            for(Function<CuppaPrediction, Double> function : functionsToVerify)
+            {
                 assertCuppaPredictionField(expected, actual, function);
             }
         }
@@ -63,7 +66,8 @@ public class CuppaDataFactoryTest {
     }
 
     @Test
-    public void respectOrderingOfCombinedDataTypes() {
+    public void respectOrderingOfCombinedDataTypes()
+    {
         CuppaDataFile rna = create(DataTypes.DATA_TYPE_RNA_COMBINED, "rna");
         CuppaDataFile dna = create(DataTypes.DATA_TYPE_DNA_COMBINED, "dna");
         CuppaDataFile overall = create(DataTypes.DATA_TYPE_COMBINED, "overall");
@@ -79,13 +83,15 @@ public class CuppaDataFactoryTest {
     }
 
     @Test
-    public void doNotCrashOnMissingEntries() {
+    public void doNotCrashOnMissingEntries()
+    {
         assertNotNull(CuppaDataFactory.create(Lists.newArrayList()));
     }
 
     @NotNull
     private static ImmutableCuppaPrediction prediction(@NotNull String cancerType, double likelihood, double snvPairwiseClassifier,
-            double genomicPositionClassifier, double featureClassifier) {
+            double genomicPositionClassifier, double featureClassifier)
+    {
         return ImmutableCuppaPrediction.builder()
                 .cancerType(cancerType)
                 .likelihood(likelihood)
@@ -96,19 +102,24 @@ public class CuppaDataFactoryTest {
     }
 
     private static void assertCuppaPredictionField(@NotNull CuppaPrediction expected, @NotNull CuppaPrediction actual,
-            @NotNull Function<CuppaPrediction, Double> function) {
+            @NotNull Function<CuppaPrediction, Double> function)
+    {
         Double expectedValue = function.apply(expected);
         Double actualValue = function.apply(actual);
-        if (expectedValue == null) {
+        if(expectedValue == null)
+        {
             assertNull(actualValue);
-        } else {
+        }
+        else
+        {
             assertNotNull(actualValue);
             assertEquals(expectedValue, actualValue, EPSILON);
         }
     }
 
     @NotNull
-    private static CuppaDataFile create(@NotNull String dataType, @NotNull String refCancerType) {
+    private static CuppaDataFile create(@NotNull String dataType, @NotNull String refCancerType)
+    {
         Map<String, Double> cancerTypeValues = Maps.newHashMap();
         cancerTypeValues.put(refCancerType, 0D);
 

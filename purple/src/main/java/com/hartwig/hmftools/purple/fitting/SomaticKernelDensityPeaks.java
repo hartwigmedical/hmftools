@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
@@ -16,18 +17,20 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
+import org.jetbrains.annotations.Nullable;
+
 final class SomaticKernelDensityPeaks
 {
     private static final double KERNEL_BANDWIDTH = 0.03;
 
-    public static Optional<FittedPurity> fitPurity(
+    public static @Nullable FittedPurity fitPurity(
             final List<FittedPurity> allCandidates, final List<SomaticVariant> variants,
             int minVariants, double minPeak, double minPurity, double maxPurity)
     {
         if(variants.size() < minVariants)
         {
             PPL_LOGGER.info("somatic variants count({}) too low for somatic fit", variants.size());
-            return Optional.empty();
+            return null;
         }
 
         final List<SomaticPeak> peaks = SomaticKernelDensityPeaks.findSomaticPeaks(variants);
@@ -42,17 +45,18 @@ final class SomaticKernelDensityPeaks
             {
                 if(peak.Count >= minPeak)
                 {
-                    Optional<FittedPurity> diploid = diploid(impliedPurity, allCandidates);
-                    if(diploid.isPresent())
+                    FittedPurity matchedFittedPurity = findMatchedFittedPurity(impliedPurity, allCandidates, 0.001);
+                    if(matchedFittedPurity != null)
                     {
                         PPL_LOGGER.debug("somatic implied purity({})", impliedPurity);
-                        return diploid;
+                        return matchedFittedPurity;
                     }
                     else
                     {
                         PPL_LOGGER.warn("unable to find diploid solution for implied purity: {}", impliedPurity);
                     }
                 }
+
                 maxPeak = Math.max(maxPeak, peak.Count);
             }
         }
@@ -66,11 +70,11 @@ final class SomaticKernelDensityPeaks
                 double impliedPurity = peak.AlleleFrequency * 2;
                 if(peak.Count == maxPeak)
                 {
-                    Optional<FittedPurity> diploid = diploid(impliedPurity, allCandidates);
-                    if(diploid.isPresent())
+                    FittedPurity matchedFittedPurity = findMatchedFittedPurity(impliedPurity, allCandidates, 0.001);
+                    if(matchedFittedPurity != null)
                     {
                         PPL_LOGGER.debug("somatic implied purity({})", impliedPurity);
-                        return diploid;
+                        return matchedFittedPurity;
                     }
                     else
                     {
@@ -81,7 +85,7 @@ final class SomaticKernelDensityPeaks
         }
 
         PPL_LOGGER.debug("unable to determine somatic implied purity.");
-        return Optional.empty();
+        return null;
     }
 
     private static boolean inPurityRange(double impliedPurity, double minPurity, double maxPurity)
@@ -89,9 +93,9 @@ final class SomaticKernelDensityPeaks
         return Doubles.greaterOrEqual(impliedPurity, minPurity) && Doubles.lessOrEqual(impliedPurity, maxPurity);
     }
 
-    private static Optional<FittedPurity> diploid(double purity, List<FittedPurity> diploidCandidates)
+    protected static FittedPurity findMatchedFittedPurity(double purity, final List<FittedPurity> allCandidates, final double epsilon)
     {
-        return diploidCandidates.stream().filter(x -> Doubles.equal(x.purity(), purity)).findFirst();
+        return allCandidates.stream().filter(x -> abs(x.purity() - purity) < epsilon).findFirst().orElse(null);
     }
 
     public static List<SomaticPeak> findSomaticPeaks(final List<SomaticVariant> variants)

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.purple.segment;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public final class SegmentFile
 
     public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
     public static void write(final String filePath, Collection<ObservedRegion> fittedRegions) throws IOException

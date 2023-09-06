@@ -6,13 +6,11 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class TestVariantEntryFactory {
-
-    private TestVariantEntryFactory() {
-    }
-
+public final class TestVariantEntryFactory
+{
     @NotNull
-    public static ImmutableVariantEntry.Builder builder() {
+    public static ImmutableVariantEntry.Builder builder()
+    {
         return ImmutableVariantEntry.builder()
                 .gene(Strings.EMPTY)
                 .isCanonical(false)

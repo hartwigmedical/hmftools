@@ -25,32 +25,36 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RNAFindingsChapter implements ReportChapter {
-
+public class RNAFindingsChapter implements ReportChapter
+{
     @NotNull
     private final OrangeRecord report;
     @NotNull
     private final ReportResources reportResources;
 
-    public RNAFindingsChapter(@NotNull final OrangeRecord report, @NotNull final ReportResources reportResources) {
+    public RNAFindingsChapter(@NotNull final OrangeRecord report, @NotNull final ReportResources reportResources)
+    {
         this.report = report;
         this.reportResources = reportResources;
     }
 
     @NotNull
     @Override
-    public String name() {
+    public String name()
+    {
         return "RNA Findings";
     }
 
     @NotNull
     @Override
-    public PageSize pageSize() {
+    public PageSize pageSize()
+    {
         return PageSize.A4;
     }
 
     @Override
-    public void render(@NotNull final Document document) {
+    public void render(@NotNull final Document document)
+    {
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addKeyQC(document);
@@ -59,14 +63,16 @@ public class RNAFindingsChapter implements ReportChapter {
         addNovelSpliceJunctionTables(document);
     }
 
-    private void addKeyQC(@NotNull Document document) {
+    private void addKeyQC(@NotNull Document document)
+    {
         Cells cells = new Cells(reportResources);
         Table table = Tables.createContent(contentWidth(),
                 new float[] { 1, 1, 1, 1 },
                 new Cell[] { cells.createHeader("QC"), cells.createHeader("Total Fragments"), cells.createHeader("Non-Duplicate Fragments"),
                         cells.createHeader("Duplicate rate") });
 
-        if (report.isofox() != null) {
+        if(report.isofox() != null)
+        {
             table.addCell(cells.createContent(report.isofox().summary().qcStatus()));
             table.addCell(cells.createContent(String.valueOf(report.isofox().summary().totalFragments())));
 
@@ -75,14 +81,17 @@ public class RNAFindingsChapter implements ReportChapter {
 
             double duplicateRate = report.isofox().summary().duplicateFragments() / (double) report.isofox().summary().totalFragments();
             table.addCell(cells.createContent(formatPercentage(duplicateRate)));
-        } else {
+        }
+        else
+        {
             table.addCell(cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
         }
 
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
-    private void addExpressionTables(@NotNull Document document) {
+    private void addExpressionTables(@NotNull Document document)
+    {
         IsofoxRecord isofox = report.isofox();
         List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
 
@@ -97,7 +106,8 @@ public class RNAFindingsChapter implements ReportChapter {
                 reportResources));
     }
 
-    private void addRNAFusionTables(@NotNull Document document) {
+    private void addRNAFusionTables(@NotNull Document document)
+    {
         IsofoxRecord isofox = report.isofox();
 
         List<RnaFusion> reportableNovelKnownFusions = isofox != null ? isofox.reportableNovelKnownFusions() : Lists.newArrayList();
@@ -109,7 +119,8 @@ public class RNAFindingsChapter implements ReportChapter {
         document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
     }
 
-    private void addNovelSpliceJunctionTables(@NotNull Document document) {
+    private void addNovelSpliceJunctionTables(@NotNull Document document)
+    {
         IsofoxRecord isofox = report.isofox();
 
         List<NovelSpliceJunction> reportableSkippedExons = isofox != null ? isofox.reportableSkippedExons() : Lists.newArrayList();

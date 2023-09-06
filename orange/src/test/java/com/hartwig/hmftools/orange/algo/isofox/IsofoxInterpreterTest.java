@@ -10,16 +10,18 @@ import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class IsofoxInterpreterTest {
-
+public class IsofoxInterpreterTest
+{
     @Test
-    public void canInterpretMinimalIsofoxData() {
+    public void canInterpretMinimalIsofoxData()
+    {
         IsofoxInterpreter interpreter = createTestInterpreter();
         assertNotNull(interpreter.interpret(IsofoxTestFactory.createMinimalIsofoxTestData()));
     }
 
     @NotNull
-    private static IsofoxInterpreter createTestInterpreter() {
+    private static IsofoxInterpreter createTestInterpreter()
+    {
         return new IsofoxInterpreter(Lists.newArrayList(),
                 new KnownFusionCache(),
                 TestLinxInterpretationFactory.createMinimalTestLinxData());

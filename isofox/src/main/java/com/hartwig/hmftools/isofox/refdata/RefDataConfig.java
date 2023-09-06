@@ -65,7 +65,20 @@ public class RefDataConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        RefGenome = GenerateGcRatios ? loadRefGenome(configBuilder.getValue(REF_GENOME)) : null;
+        if(GenerateGcRatios)
+        {
+            RefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
+
+            if(RefGenome == null)
+            {
+                ISF_LOGGER.error("ref genome required for GC ratio generation");
+                System.exit(1);
+            }
+        }
+        else
+        {
+            RefGenome = null;
+        }
 
         EnrichedGeneIds = Lists.newArrayList();
         IsofoxConstants.populateEnrichedGeneIds(EnrichedGeneIds, RefGenVersion);

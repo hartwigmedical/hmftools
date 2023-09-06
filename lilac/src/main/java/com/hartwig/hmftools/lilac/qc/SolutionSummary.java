@@ -38,29 +38,6 @@ public class SolutionSummary
         RnaCoverage = rnaCoverage;
     }
 
-    public final void write(final String fileName)
-    {
-        try
-        {
-            List<LilacAllele> alleles = Lists.newArrayList();
-
-            if(ReferenceCoverage != null)
-            {
-                for(int i = 0; i < 6; ++i)
-                {
-                    alleles.add(buildAlleleData(i));
-                }
-            }
-
-            LilacAllele.write(fileName, alleles);
-        }
-        catch(IOException e)
-        {
-            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
-            return;
-        }
-    }
-
     private LilacAllele buildAlleleData(int index)
     {
         AlleleCoverage ref = ReferenceCoverage.getAlleleCoverage().get(index);
@@ -105,6 +82,29 @@ public class SolutionSummary
         Collections.sort(sortedCodingCount, new SomaticCodingCountSorter());
 
         return new SolutionSummary(referenceCoverage, tumorCoverage, tumorCopyNumber, sortedCodingCount, rnaCoverage);
+    }
+
+    public final void write(final String fileName)
+    {
+        try
+        {
+            List<LilacAllele> alleles = Lists.newArrayList();
+
+            if(ReferenceCoverage != null)
+            {
+                for(int i = 0; i < 6; ++i)
+                {
+                    alleles.add(buildAlleleData(i));
+                }
+            }
+
+            LilacAllele.write(fileName, alleles);
+        }
+        catch(IOException e)
+        {
+            LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
+            return;
+        }
     }
 
     private static class SomaticCodingCountSorter implements Comparator<SomaticCodingCount>

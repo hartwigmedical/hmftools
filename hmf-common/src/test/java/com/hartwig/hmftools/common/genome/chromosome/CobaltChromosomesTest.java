@@ -23,36 +23,39 @@ import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.junit.Test;
 
-public class CobaltChromosomesTest {
-
+public class CobaltChromosomesTest
+{
     @Test
-    public void testDefault() {
+    public void testDefault()
+    {
         final CobaltChromosomes male = male();
         final CobaltChromosomes female = female();
 
         assertEquals(Gender.MALE, male.gender());
         assertEquals(Gender.FEMALE, female.gender());
 
-        for (int i = 0; i < 22; i++) {
-            assertTrue(male.contains(i + ""));
-            assertTrue(female.contains(i + ""));
+        for(int i = 1; i <= 22; i++)
+        {
+            assertTrue(male.hasChromosome(i + ""));
+            assertTrue(female.hasChromosome(i + ""));
 
             assertEquals(1, male.get(i + "").typicalRatio(), 0.01);
             assertEquals(1, female.get(i + "").typicalRatio(), 0.01);
         }
 
-        assertTrue(male.contains("X"));
-        assertTrue(female.contains("X"));
+        assertTrue(male.hasChromosome("X"));
+        assertTrue(female.hasChromosome("X"));
         assertEquals(0.5, male.get("X").typicalRatio(), 0.01);
         assertEquals(1, female.get("X").typicalRatio(), 0.01);
 
-        assertTrue(male.contains("Y"));
-        assertFalse(female.contains("Y"));
+        assertTrue(male.hasChromosome("Y"));
+        assertFalse(female.hasChromosome("Y"));
         assertEquals(0.5, male.get("Y").typicalRatio(), 0.01);
     }
 
     @Test
-    public void testFemale() {
+    public void testFemale()
+    {
         MedianRatio chrX = create("X", 1, MIN_Y_COUNT);
         MedianRatio chrY = create("Y", 0.05, 100);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
@@ -65,11 +68,12 @@ public class CobaltChromosomesTest {
         assertTrue(victimX.isDiploid());
 
         assertEquals(1, victim.get("X").actualRatio(), 0.01);
-        assertFalse(victim.contains("Y"));
+        assertFalse(victim.hasChromosome("Y"));
     }
 
     @Test
-    public void testMale() {
+    public void testMale()
+    {
         MedianRatio chrX = create("X", 0.5, MIN_Y_COUNT);
         MedianRatio chrY = create("Y", Y_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
@@ -86,7 +90,8 @@ public class CobaltChromosomesTest {
     }
 
     @Test
-    public void testKlinefelter() {
+    public void testKlinefelter()
+    {
         MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_Y_COUNT);
         MedianRatio chrY = create("Y", Y_CUTOFF, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
@@ -100,7 +105,8 @@ public class CobaltChromosomesTest {
     }
 
     @Test
-    public void testFemaleEvenWithSmallYCount() {
+    public void testFemaleEvenWithSmallYCount()
+    {
         MedianRatio chrX = create("X", 1, MIN_Y_COUNT);
         MedianRatio chrY = create("Y", Y_CUTOFF, MIN_Y_COUNT - 1);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
@@ -110,7 +116,8 @@ public class CobaltChromosomesTest {
     }
 
     @Test
-    public void testFemaleEvenWithSmallYMedian() {
+    public void testFemaleEvenWithSmallYMedian()
+    {
         MedianRatio chrX = create("X", 1, MIN_Y_COUNT);
         MedianRatio chrY = create("Y", Y_CUTOFF - Y_CUTOFF / 10d, MIN_Y_COUNT);
         List<MedianRatio> chromosomes = ImmutableList.of(chrX, chrY);
@@ -120,7 +127,8 @@ public class CobaltChromosomesTest {
     }
 
     @Test
-    public void testMosiacX() {
+    public void testMosiacX()
+    {
         assertTrue(Doubles.lessThan(TWO_X_CUTOFF, MOSIAC_X_CUTOFF));
         MedianRatio chr1 = create("1", 1, MIN_Y_COUNT);
         MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_Y_COUNT);
@@ -135,7 +143,8 @@ public class CobaltChromosomesTest {
     }
 
     @Test
-    public void testGCBiasNotMosiacX() {
+    public void testGCBiasNotMosiacX()
+    {
         assertTrue(Doubles.lessThan(TWO_X_CUTOFF, MOSIAC_X_CUTOFF));
         MedianRatio chr1 = create("1", TWO_X_CUTOFF, MIN_Y_COUNT);
         MedianRatio chrX = create("X", TWO_X_CUTOFF, MIN_Y_COUNT);
@@ -146,7 +155,8 @@ public class CobaltChromosomesTest {
     }
 
     @Test
-    public void testXYY() {
+    public void testXYY()
+    {
         MedianRatio chr1 = create("1", 1);
         MedianRatio chrX = create("X", 0.5);
         MedianRatio chrY = create("Y", TWO_Y_CUTOFF, MIN_Y_COUNT);
@@ -162,7 +172,8 @@ public class CobaltChromosomesTest {
     }
 
     @Test
-    public void testTrisomy() {
+    public void testTrisomy()
+    {
         MedianRatio chr1 = create("1", TRISOMY_CUTOFF);
         MedianRatio chrX = create("X", TRISOMY_CUTOFF);
         MedianRatio chr13 = create("13", TRISOMY_CUTOFF);

@@ -64,12 +64,7 @@ object CiderLocusStatsWriter
 
         val downSampled = locusLayoutBuildResults.any { o -> o.downSampled }
 
-        val locusVdjAnnotations = vdjAnnotations.filter { vdjAnnotation ->
-            locus == (if (vdjAnnotation.vdj.vAnchor != null)
-                vdjAnnotation.vdj.vAnchor.geneType.locus
-            else
-                vdjAnnotation.vdj.vAnchor?.geneType?.locus)
-        }
+        val locusVdjAnnotations = vdjAnnotations.filter { vdjAnnotation -> locus == vdjAnnotation.locus }
 
         val numSequences = locusVdjAnnotations.size
         val numPassSequences = locusVdjAnnotations.count { vdjAnnotation -> vdjAnnotation.passesFilter }
@@ -78,7 +73,7 @@ object CiderLocusStatsWriter
         {
             when (c)
             {
-                Column.locus -> csvPrinter.print(locus)
+                Column.locus -> csvPrinter.print(locus.prettyPrint())
                 Column.readsUsed -> csvPrinter.print(numReadsUsed)
                 Column.readsTotal -> csvPrinter.print(readsTotal)
                 Column.downSampled -> csvPrinter.print(downSampled)

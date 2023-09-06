@@ -8,7 +8,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.read.ReadRecord;
 import com.hartwig.hmftools.lilac.seq.HlaSequence;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
@@ -46,10 +48,17 @@ public class LilacTestUtils
         return HlaSequenceLoci.create(sequences.Allele, sequences.getRawSequence(), sequences.getRawSequence());
     }
 
+    public static ReadRecord createReadRecord(final String id)
+    {
+        SAMRecord record = buildSamRecord(100, "151M", "", "");
+        record.setReadName(id);
+        return ReadRecord.create(new BaseRegion(0, 1), record, true, true);
+    }
+
     public static Fragment createFragment(final String id)
     {
         return new Fragment(
-                id, "", "", Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
+                createReadRecord(id), "", Sets.newHashSet(), Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList());
     }
 
     public static Fragment createFragment(final String id, final String gene, final String sequence, int locusStart, int locusEnd)
@@ -58,7 +67,7 @@ public class LilacTestUtils
         List<String> sequences = buildTargetSequences(sequence, loci);
         List<Integer> qualities = loci.stream().map(x -> DEFAULT_MIN_BASE_QUAL).collect(Collectors.toList());
 
-        return new Fragment(id, "", gene, Sets.newHashSet(gene), loci, qualities, sequences);
+        return new Fragment(createReadRecord(id), gene, Sets.newHashSet(gene), loci, qualities, sequences);
     }
 
     public static String buildTargetSequence(final String sequence, final List<Integer> indices)

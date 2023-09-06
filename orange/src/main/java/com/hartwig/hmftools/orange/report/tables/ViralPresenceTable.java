@@ -16,15 +16,14 @@ import com.itextpdf.layout.element.Table;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class ViralPresenceTable {
-
-    private ViralPresenceTable() {
-    }
-
+public final class ViralPresenceTable
+{
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<AnnotatedVirus> viruses,
-            @NotNull ReportResources reportResources) {
-        if (viruses.isEmpty()) {
+            @NotNull ReportResources reportResources)
+    {
+        if(viruses.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -35,7 +34,8 @@ public final class ViralPresenceTable {
                         cells.createHeader("Int"), cells.createHeader("% Covered"), cells.createHeader("Mean Cov"),
                         cells.createHeader("Exp Clon Cov"), cells.createHeader("Driver") });
 
-        for (AnnotatedVirus virus : viruses) {
+        for(AnnotatedVirus virus : viruses)
+        {
             table.addCell(cells.createContent(virus.name()));
             table.addCell(cells.createContent(virus.qcStatus().toString()));
             table.addCell(cells.createContent(virus.interpretation() != null ? virus.interpretation().name() : Strings.EMPTY));
@@ -49,8 +49,10 @@ public final class ViralPresenceTable {
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    private static String display(VirusLikelihoodType virusLikelihoodType) {
-        switch (virusLikelihoodType) {
+    private static String display(VirusLikelihoodType virusLikelihoodType)
+    {
+        switch(virusLikelihoodType)
+        {
             case HIGH:
                 return "High";
             case LOW:
@@ -62,7 +64,8 @@ public final class ViralPresenceTable {
     }
 
     @NotNull
-    private static String expectedClonalCoverageField(@NotNull AnnotatedVirus virus) {
+    private static String expectedClonalCoverageField(@NotNull AnnotatedVirus virus)
+    {
         Double expectedClonalCoverage = virus.expectedClonalCoverage();
         return expectedClonalCoverage != null ? formatSingleDigitDecimal(expectedClonalCoverage) : Strings.EMPTY;
     }

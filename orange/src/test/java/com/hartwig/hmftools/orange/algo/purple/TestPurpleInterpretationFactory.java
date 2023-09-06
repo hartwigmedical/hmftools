@@ -16,25 +16,25 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class TestPurpleInterpretationFactory {
-
-    private TestPurpleInterpretationFactory() {
-    }
-
+public final class TestPurpleInterpretationFactory
+{
     @NotNull
-    public static PurpleRecord createMinimalTestPurpleData() {
+    public static PurpleRecord createMinimalTestPurpleData()
+    {
         return builder().build();
     }
 
     @NotNull
-    public static ImmutablePurpleRecord.Builder builder() {
+    public static ImmutablePurpleRecord.Builder builder()
+    {
         return ImmutablePurpleRecord.builder()
                 .fit(createMinimalTestFitData())
                 .characteristics(createMinimalTestCharacteristicsData());
     }
 
     @NotNull
-    public static PurpleFit createMinimalTestFitData() {
+    public static PurpleFit createMinimalTestFitData()
+    {
         return ImmutablePurpleFit.builder()
                 .qc(qcPass())
                 .fittedPurityMethod(PurpleFittedPurityMethod.NORMAL)
@@ -50,7 +50,8 @@ public final class TestPurpleInterpretationFactory {
     }
 
     @NotNull
-    private static PurpleQC qcPass() {
+    private static PurpleQC qcPass()
+    {
         return ImmutablePurpleQC.builder()
                 .addStatus(PurpleQCStatus.PASS)
                 .addGermlineAberrations(PurpleGermlineAberration.NONE)
@@ -62,7 +63,8 @@ public final class TestPurpleInterpretationFactory {
     }
 
     @NotNull
-    private static PurpleCharacteristics createMinimalTestCharacteristicsData() {
+    private static PurpleCharacteristics createMinimalTestCharacteristicsData()
+    {
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(false)
                 .microsatelliteIndelsPerMb(0D)

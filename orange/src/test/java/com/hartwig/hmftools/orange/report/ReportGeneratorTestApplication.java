@@ -34,8 +34,8 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ReportGeneratorTestApplication {
-
+public class ReportGeneratorTestApplication
+{
     private static final Logger LOGGER = LogManager.getLogger(ReportGeneratorTestApplication.class);
 
     private static final String REPORT_BASE_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
@@ -43,16 +43,20 @@ public class ReportGeneratorTestApplication {
     private static final boolean USE_MOCK_DATA_FOR_REPORT = false;
     private static final boolean REMOVE_UNREPORTED_VARIANTS = false;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException
+    {
         Configurator.setRootLevel(Level.DEBUG);
 
         OrangeConfig config = buildConfig();
 
         ReportWriter writer = ReportWriterFactory.createToDiskWriter(config);
 
-        if (!new File(REPORT_BASE_DIR).isDirectory()) {
+        if(!new File(REPORT_BASE_DIR).isDirectory())
+        {
             LOGGER.warn("{} is not a directory. Can't write to disk", REPORT_BASE_DIR);
-        } else {
+        }
+        else
+        {
             LOGGER.info("Deleting plot dir");
             deleteDir(new File(REPORT_BASE_DIR + File.separator + "plot"));
             writer.write(buildReport(config));
@@ -60,8 +64,10 @@ public class ReportGeneratorTestApplication {
     }
 
     @NotNull
-    private static OrangeRecord buildReport(@NotNull OrangeConfig config) throws IOException {
-        if (USE_MOCK_DATA_FOR_REPORT) {
+    private static OrangeRecord buildReport(@NotNull OrangeConfig config) throws IOException
+    {
+        if(USE_MOCK_DATA_FOR_REPORT)
+        {
             return TestOrangeReportFactory.createProperTestReport();
         }
 
@@ -70,9 +76,12 @@ public class ReportGeneratorTestApplication {
         OrangeRecord withPercentiles = overwriteCohortPercentiles(report);
 
         OrangeRecord filtered;
-        if (REMOVE_UNREPORTED_VARIANTS) {
+        if(REMOVE_UNREPORTED_VARIANTS)
+        {
             filtered = removeUnreported(withPercentiles);
-        } else {
+        }
+        else
+        {
             filtered = withPercentiles;
         }
 
@@ -82,7 +91,8 @@ public class ReportGeneratorTestApplication {
     }
 
     @NotNull
-    private static OrangeRecord overwriteCohortPercentiles(@NotNull OrangeRecord report) {
+    private static OrangeRecord overwriteCohortPercentiles(@NotNull OrangeRecord report)
+    {
         // Need to overwrite percentiles since test code doesn't have access to real production cohort percentile files.
         Map<PercentileType, Evaluation> evaluations = Maps.newHashMap();
         evaluations.put(PercentileType.SV_TMB,
@@ -92,7 +102,8 @@ public class ReportGeneratorTestApplication {
     }
 
     @NotNull
-    private static OrangeConfig buildConfig() {
+    private static OrangeConfig buildConfig()
+    {
         return ImmutableOrangeConfig.builder()
                 .from(TestOrangeConfigFactory.createWGSConfigTumorNormal())
                 .outputDir(REPORT_BASE_DIR)
@@ -100,7 +111,8 @@ public class ReportGeneratorTestApplication {
     }
 
     @NotNull
-    private static OrangeRecord removeUnreported(@NotNull OrangeRecord report) {
+    private static OrangeRecord removeUnreported(@NotNull OrangeRecord report)
+    {
         ImmutableOrangeRecord.Builder builder = ImmutableOrangeRecord.builder()
                 .from(report)
                 .purple(ImmutablePurpleRecord.builder()
@@ -130,7 +142,8 @@ public class ReportGeneratorTestApplication {
                         .allGermlineBreakends(report.linx().reportableGermlineBreakends())
                         .build());
 
-        if (report.isofox() != null) {
+        if(report.isofox() != null)
+        {
             builder.isofox(ImmutableIsofoxRecord.builder()
                     .from(report.isofox())
                     .allGeneExpressions(Lists.newArrayList())
@@ -144,18 +157,24 @@ public class ReportGeneratorTestApplication {
 
     @NotNull
     private static List<PurpleGeneCopyNumber> retainReportableCopyNumbers(@NotNull List<PurpleGeneCopyNumber> geneCopyNumbers,
-            @NotNull List<PurpleDriver> drivers) {
+            @NotNull List<PurpleDriver> drivers)
+    {
         List<String> copyNumberDriverGenes = Lists.newArrayList();
-        for (PurpleDriver driver : drivers) {
-            if (driver.driver() == PurpleDriverType.AMP || driver.driver() == PurpleDriverType.PARTIAL_AMP || driver.driver() == PurpleDriverType.DEL
-                    || driver.driver() == PurpleDriverType.GERMLINE_DELETION) {
+        for(PurpleDriver driver : drivers)
+        {
+            if(driver.driver() == PurpleDriverType.AMP || driver.driver() == PurpleDriverType.PARTIAL_AMP
+                    || driver.driver() == PurpleDriverType.DEL
+                    || driver.driver() == PurpleDriverType.GERMLINE_DELETION)
+            {
                 copyNumberDriverGenes.add(driver.gene());
             }
         }
 
         List<PurpleGeneCopyNumber> reportable = Lists.newArrayList();
-        for (PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers) {
-            if (copyNumberDriverGenes.contains(geneCopyNumber.geneName())) {
+        for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
+        {
+            if(copyNumberDriverGenes.contains(geneCopyNumber.geneName()))
+            {
                 reportable.add(geneCopyNumber);
             }
         }
@@ -164,34 +183,45 @@ public class ReportGeneratorTestApplication {
 
     @Nullable
     private static List<LinxSvAnnotation> retainReportableStructuralVariants(@Nullable List<LinxSvAnnotation> structuralVariants,
-            @Nullable List<LinxBreakend> reportableBreakends) {
-        if (structuralVariants == null || reportableBreakends == null) {
+            @Nullable List<LinxBreakend> reportableBreakends)
+    {
+        if(structuralVariants == null || reportableBreakends == null)
+        {
             return null;
         }
 
         List<LinxSvAnnotation> reportable = Lists.newArrayList();
-        for (LinxSvAnnotation structuralVariant : structuralVariants) {
-            if (isReportableSv(structuralVariant, reportableBreakends)) {
+        for(LinxSvAnnotation structuralVariant : structuralVariants)
+        {
+            if(isReportableSv(structuralVariant, reportableBreakends))
+            {
                 reportable.add(structuralVariant);
             }
         }
         return reportable;
     }
 
-    private static boolean isReportableSv(@NotNull LinxSvAnnotation structuralVariant, @NotNull List<LinxBreakend> reportableBreakends) {
-        for (LinxBreakend breakend : reportableBreakends) {
-            if (breakend.svId() == structuralVariant.svId()) {
+    private static boolean isReportableSv(@NotNull LinxSvAnnotation structuralVariant, @NotNull List<LinxBreakend> reportableBreakends)
+    {
+        for(LinxBreakend breakend : reportableBreakends)
+        {
+            if(breakend.svId() == structuralVariant.svId())
+            {
                 return true;
             }
         }
         return false;
     }
 
-    private static void deleteDir(@NotNull File file) {
+    private static void deleteDir(@NotNull File file)
+    {
         File[] contents = file.listFiles();
-        if (contents != null) {
-            for (File content : contents) {
-                if (!Files.isSymbolicLink(content.toPath())) {
+        if(contents != null)
+        {
+            for(File content : contents)
+            {
+                if(!Files.isSymbolicLink(content.toPath()))
+                {
                     deleteDir(content);
                 }
             }

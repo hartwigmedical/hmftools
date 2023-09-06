@@ -43,7 +43,7 @@ public class Indel
         if(this == other)
             return true;
 
-        if (!(other instanceof Indel))
+        if(!(other instanceof Indel))
             return false;
 
         return hashCode() == other.hashCode();

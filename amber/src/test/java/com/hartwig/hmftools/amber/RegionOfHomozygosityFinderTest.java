@@ -48,8 +48,8 @@ public class RegionOfHomozygosityFinderTest
         var regions = finder.findRegionsForChromosome(HumanChromosome._1, bafSites);
 
         assertEquals(regions.size(), 1);
-        assertEquals(regions.get(0).getStart(), 13);
-        assertEquals(regions.get(0).getEnd(), 219);
+        assertEquals(regions.get(0).Start, 13);
+        assertEquals(regions.get(0).End, 219);
 
         // now two regions
         bafSites.addAll(Arrays.asList(
@@ -67,10 +67,10 @@ public class RegionOfHomozygosityFinderTest
         regions = finder.findRegionsForChromosome(HumanChromosome._1, bafSites);
 
         assertEquals(regions.size(), 2);
-        assertEquals(regions.get(0).getStart(), 13);
-        assertEquals(regions.get(0).getEnd(), 219);
-        assertEquals(regions.get(1).getStart(), 250);
-        assertEquals(regions.get(1).getEnd(), 470);
+        assertEquals(regions.get(0).Start, 13);
+        assertEquals(regions.get(0).End, 219);
+        assertEquals(regions.get(1).Start, 250);
+        assertEquals(regions.get(1).End, 470);
 
     }
 
@@ -105,8 +105,8 @@ public class RegionOfHomozygosityFinderTest
         var regions = finder.findRegionsForChromosome(HumanChromosome._1, bafSites);
 
         assertEquals(regions.size(), 1);
-        assertEquals(regions.get(0).getStart(), 13);
-        assertEquals(regions.get(0).getEnd(), 219);
+        assertEquals(regions.get(0).Start, 13);
+        assertEquals(regions.get(0).End, 219);
 
         // now two regions
         bafSites.addAll(Arrays.asList(
@@ -127,10 +127,10 @@ public class RegionOfHomozygosityFinderTest
         regions = finder.findRegionsForChromosome(HumanChromosome._1, bafSites);
 
         assertEquals(regions.size(), 2);
-        assertEquals(regions.get(0).getStart(), 13);
-        assertEquals(regions.get(0).getEnd(), 219);
-        assertEquals(regions.get(1).getStart(), 250);
-        assertEquals(regions.get(1).getEnd(), 470);
+        assertEquals(regions.get(0).Start, 13);
+        assertEquals(regions.get(0).End, 219);
+        assertEquals(regions.get(1).Start, 250);
+        assertEquals(regions.get(1).End, 470);
 
         // next test there are too many het sites
         bafSites = new ArrayList<>(Arrays.asList(

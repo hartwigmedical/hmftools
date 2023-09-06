@@ -59,16 +59,14 @@ import com.hartwig.hmftools.orange.conversion.OrangeConversion;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class TestOrangeReportFactory {
-
+public final class TestOrangeReportFactory
+{
     private static final String TEST_SAMPLE = "TEST";
     private static final String DUMMY_IMAGE = Resources.getResource("test_images/white.png").getPath();
 
-    private TestOrangeReportFactory() {
-    }
-
     @NotNull
-    public static ImmutableOrangeRecord.Builder builder() {
+    public static ImmutableOrangeRecord.Builder builder()
+    {
         return ImmutableOrangeRecord.builder()
                 .sampleId(TEST_SAMPLE)
                 .experimentDate(LocalDate.of(2021, 11, 19))
@@ -85,12 +83,14 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    public static OrangeRecord createMinimalTestReport() {
+    public static OrangeRecord createMinimalTestReport()
+    {
         return builder().build();
     }
 
     @NotNull
-    public static OrangeRecord createProperTestReport() {
+    public static OrangeRecord createProperTestReport()
+    {
         return builder().experimentType(ExperimentType.WHOLE_GENOME)
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
                 .platinumVersion("v5.32")
@@ -107,7 +107,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static OrangeSample createMinimalOrangeSample() {
+    private static OrangeSample createMinimalOrangeSample()
+    {
         return ImmutableOrangeSample.builder()
                 .metrics(OrangeConversion.convert(WGSMetricsTestFactory.createMinimalTestWGSMetrics()))
                 .flagstat(OrangeConversion.convert(FlagstatTestFactory.createMinimalTestFlagstat()))
@@ -115,7 +116,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static OrangePlots createMinimalOrangePlots() {
+    private static OrangePlots createMinimalOrangePlots()
+    {
         return ImmutableOrangePlots.builder()
                 .sageTumorBQRPlot(DUMMY_IMAGE)
                 .purpleInputPlot(DUMMY_IMAGE)
@@ -128,14 +130,16 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static Map<String, Double> createTestGermlineMVLHPerGene() {
+    private static Map<String, Double> createTestGermlineMVLHPerGene()
+    {
         Map<String, Double> germlineMVLHPerGene = Maps.newHashMap();
         germlineMVLHPerGene.put("gene", 0.01);
         return germlineMVLHPerGene;
     }
 
     @NotNull
-    private static PurpleRecord createTestPurpleData() {
+    private static PurpleRecord createTestPurpleData()
+    {
         return ImmutablePurpleRecord.builder()
                 .from(TestPurpleInterpretationFactory.createMinimalTestPurpleData())
                 .addReportableSomaticVariants(TestPurpleVariantFactory.builder()
@@ -163,7 +167,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static LinxRecord createTestLinxData() {
+    private static LinxRecord createTestLinxData()
+    {
         LinxFusion fusion = LinxConversion.convert(LinxTestFactory.createMinimalTestFusion());
         return ImmutableLinxRecord.builder()
                 .from(TestLinxInterpretationFactory.createMinimalTestLinxData())
@@ -182,7 +187,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static LilacRecord createTestLilacData() {
+    private static LilacRecord createTestLilacData()
+    {
         List<LilacAllele> alleles = Lists.newArrayList();
         alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder().allele("Allele 1").build()));
         alleles.add(OrangeConversion.convert(LilacTestFactory.alleleBuilder().allele("Allele 2").somaticInframeIndel(1D).build()));
@@ -191,7 +197,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static IsofoxRecord createTestIsofoxData() {
+    private static IsofoxRecord createTestIsofoxData()
+    {
         IsofoxRnaStatistics statistics =
                 OrangeIsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
 
@@ -290,7 +297,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static VirusInterpreterData createTestVirusInterpreterData() {
+    private static VirusInterpreterData createTestVirusInterpreterData()
+    {
         List<AnnotatedVirus> reportableViruses = Lists.newArrayList();
 
         reportableViruses.add(com.hartwig.hmftools.datamodel.virus.ImmutableAnnotatedVirus.builder()
@@ -309,7 +317,8 @@ public final class TestOrangeReportFactory {
     }
 
     @NotNull
-    private static Set<PeachGenotype> createTestPeachData() {
+    private static Set<PeachGenotype> createTestPeachData()
+    {
         return Set.of(OrangeConversion.convert(PeachTestFactory.builder().gene("DPYD").haplotype("haplotype").build()));
     }
 }
