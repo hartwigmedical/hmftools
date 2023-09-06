@@ -37,8 +37,6 @@ public class ClinvarChrCache
 
     public void annotateVariant(final VariantData variant)
     {
-        // Clinvar entries for both v37 and v38 do not have the chromosome prefix
-
         if(mEntries.isEmpty() || mEntries.get(mEntries.size() - 1).Position < variant.Position)
             return;
 
@@ -65,9 +63,9 @@ public class ClinvarChrCache
 
                 if(!entry.Conflict.isEmpty())
                     variant.context().getCommonInfo().putAttribute(CLNSIGCONF, entry.Conflict);
-            }
 
-            return;
+                return;
+            }
         }
     }
 

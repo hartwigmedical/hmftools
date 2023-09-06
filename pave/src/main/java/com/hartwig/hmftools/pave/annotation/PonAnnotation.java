@@ -191,8 +191,11 @@ public class PonAnnotation
 
                 if(currentCache == null || !currentCache.Chromosome.equals(chromosome))
                 {
-                    if(currentCache != null)
+                    if(currentCache != null && !currentCache.isComplete())
+                    {
+                        PV_LOGGER.debug("chr({}) has {} PON entries", currentCache.Chromosome, currentCache.entryCount());
                         currentCache.setComplete();
+                    }
 
                     currentCache = mChrCacheMap.get(chromosome);
 
@@ -227,15 +230,7 @@ public class PonAnnotation
                     break;
             }
 
-            if(foundRequested)
-            {
-                PonChrCache requestedCache = mChrCacheMap.get(requestedChromosome);
-                PV_LOGGER.debug("loaded {} PON entries for chromosome({})", requestedCache.entryCount(), requestedChromosome);
-            }
-            else
-            {
-                PV_LOGGER.info("pon file({}) loaded {} entries", mPonFilename, itemCount);
-            }
+            // PV_LOGGER.info("pon file({}) loaded {} entries", mPonFilename, itemCount);
 
             if(line == null)
                 mFileReader = null;
