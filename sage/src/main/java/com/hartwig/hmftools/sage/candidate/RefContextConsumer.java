@@ -99,6 +99,7 @@ public class RefContextConsumer
 
         int scAdjustedMapQual = (int)round(adjustedMapQual - scEvents * mConfig.Quality.ReadEventsPenalty);
         boolean readExceedsScAdjustedQuality = scAdjustedMapQual > 0;
+        boolean ignoreScAdapter = scEvents > 0 && ignoreSoftClipAdapter(record);
 
         final List<AltRead> altReads = Lists.newArrayList();
         final IndexedBases refBases = mRefGenome.alignment();
@@ -157,7 +158,7 @@ public class RefContextConsumer
             @Override
             public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
             {
-                if(ignoreSoftClipAdapter(record))
+                if(ignoreScAdapter)
                     return;
 
                 AltRead altRead = processSoftClip(
@@ -170,7 +171,7 @@ public class RefContextConsumer
             @Override
             public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
             {
-                if(ignoreSoftClipAdapter(record))
+                if(ignoreScAdapter)
                     return;
 
                 AltRead altRead = processSoftClip(

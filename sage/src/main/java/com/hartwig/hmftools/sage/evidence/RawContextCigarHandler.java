@@ -225,15 +225,22 @@ public class RawContextCigarHandler implements CigarHandler
 
     public static boolean exceedsSoftClipLowBaseQual(final byte[] baseQualities, int startIndex, int scLength)
     {
+        if(scLength < MAX_SOFT_CLIP_LOW_QUAL_COUNT)
+            return false;
+
+        double requiredHighQual = MIN_SOFT_CLIP_HIGH_QUAL_PERC * scLength;
         int aboveQual = 0;
+
         for(int i = startIndex; i < startIndex + scLength; ++i)
         {
             if(baseQualities[i] >= MIN_SOFT_CLIP_MIN_BASE_QUAL)
+            {
                 ++aboveQual;
-        }
 
-        if(aboveQual / (double)scLength >= MIN_SOFT_CLIP_HIGH_QUAL_PERC)
-            return false;
+                if(aboveQual >= requiredHighQual)
+                    return false;
+            }
+        }
 
         int lowQualCount = scLength - aboveQual;
         return lowQualCount >= MAX_SOFT_CLIP_LOW_QUAL_COUNT;

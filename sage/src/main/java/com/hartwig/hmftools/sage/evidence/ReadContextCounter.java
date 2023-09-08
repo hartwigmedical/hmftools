@@ -62,15 +62,14 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextCounter implements VariantHotspot
 {
-    public final VariantTier Tier;
-    public final int MaxCoverage;
-
     private final int mId;
+    private final VariantTier mTier;
 
     private final VariantHotspot mVariant;
     private final ReadContext mReadContext;
     private final int mMinNumberOfEvents;
     private final boolean mIsMnv;
+    private final int mMaxCoverage;
 
     private final int[] mQualities;
     private final int[] mCounts;
@@ -105,8 +104,8 @@ public class ReadContextCounter implements VariantHotspot
     {
         mId = id;
 
-        Tier = tier;
-        MaxCoverage = maxCoverage;
+        mTier = tier;
+        mMaxCoverage = maxCoverage;
         mMinNumberOfEvents = minNumberOfEvents;
 
         mReadContext = readContext;
@@ -143,6 +142,7 @@ public class ReadContextCounter implements VariantHotspot
     public int id() { return mId; }
     public VariantHotspot variant() { return mVariant; }
     public ReadContext readContext() { return mReadContext; }
+    public VariantTier tier() { return mTier; }
 
     @Override
     public String chromosome() { return mVariant.chromosome(); }
@@ -215,7 +215,7 @@ public class ReadContextCounter implements VariantHotspot
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
 
-    private boolean exceedsMaxCoverage() { return mCounts[RC_TOTAL] >= MaxCoverage; }
+    public boolean exceedsMaxCoverage() { return mCounts[RC_TOTAL] >= mMaxCoverage; }
 
     public String toString()
     {
@@ -234,7 +234,7 @@ public class ReadContextCounter implements VariantHotspot
         if(exceedsMaxCoverage())
             return UNRELATED;
 
-        if(!Tier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL)
+        if(!mTier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL)
             return UNRELATED;
 
         RawContext rawContext = RawContext.create(mVariant, record);

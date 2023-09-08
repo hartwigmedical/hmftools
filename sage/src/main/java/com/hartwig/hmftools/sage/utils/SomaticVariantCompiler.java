@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.purple.tools;
+package com.hartwig.hmftools.sage.utils;
 
 import static java.lang.String.format;
 
@@ -6,8 +6,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
@@ -15,7 +13,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.BufferedWriter;
 import java.util.Arrays;
@@ -24,7 +22,6 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -75,7 +72,7 @@ public class SomaticVariantCompiler
 
     public void run()
     {
-        PPL_LOGGER.info("compiling somatic variants for {} samples", mSampleIds.size());
+        SG_LOGGER.info("compiling somatic variants for {} samples", mSampleIds.size());
 
         try
         {
@@ -106,12 +103,12 @@ public class SomaticVariantCompiler
         }
         catch(Exception e)
         {
-            PPL_LOGGER.error("failed to write variant output file: {}", e.toString());
+            SG_LOGGER.error("failed to write variant output file: {}", e.toString());
             e.printStackTrace();
             System.exit(1);
         }
 
-        PPL_LOGGER.info("compilation complete");
+        SG_LOGGER.info("compilation complete");
     }
 
     private void processSampleVariants(final String sampleId, final BufferedWriter writer) throws Exception
@@ -182,7 +179,7 @@ public class SomaticVariantCompiler
             ++variantCount;
         }
 
-        PPL_LOGGER.debug("sample({}) loaded {} variants", sampleId, variantCount);
+        SG_LOGGER.debug("sample({}) loaded {} variants", sampleId, variantCount);
     }
 
     public static void main(final String[] args)

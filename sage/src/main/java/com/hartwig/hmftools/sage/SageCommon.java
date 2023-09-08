@@ -13,14 +13,6 @@ public class SageCommon
 
     public static final Logger SG_LOGGER = LogManager.getLogger(SageCommon.class);
 
-    public static int calcMemoryUsage(boolean runGc)
-    {
-        if(runGc)
-            System.gc();
-
-        return MemoryCalcs.calcMemoryUsage();
-    }
-
     public static void logMemoryUsage(final double perfWarnTime, final String stage, int memory)
     {
         if(perfWarnTime == 0)

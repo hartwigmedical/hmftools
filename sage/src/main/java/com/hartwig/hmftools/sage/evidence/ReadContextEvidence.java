@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 
@@ -46,6 +47,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     private VariantPhaser mVariantPhaser;
     private final FragmentSync mFragmentSync;
     private String mCurrentSample;
+    private List<ReadContextCounter> mSelectedReadCounters; // persisted array to avoid re-creation on every read
 
     public ReadContextEvidence(
             final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
@@ -62,6 +64,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mLastCandidateIndex = 0;
         mVariantPhaser = null;
         mCurrentSample = null;
+        mSelectedReadCounters = null;
     }
 
     public List<ReadContextCounter> collectEvidence(
@@ -73,6 +76,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         if(candidates.isEmpty())
             return mReadCounters;
 
+        mSelectedReadCounters = Lists.newArrayListWithCapacity(mReadCounters.size());
 
         List<Candidate> deleteCandidates = candidates.stream().filter(x -> x.variant().isDelete()).collect(Collectors.toList());
 
@@ -110,6 +114,8 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, Lists.newArrayList(sliceRegion), false);
         samSlicer.slice(this::processReadRecord);
 
+        // SG_LOGGER.debug("variant-reads({}) phasing checks({})", mVariantReadChecks, mPhasingChecks);
+
         return mReadCounters;
     }
 
@@ -123,11 +129,13 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     @Override
     public void processReadRecord(final SAMRecord record, boolean checkSync)
     {
-        if(checkSync && mSageConfig.SyncFragments)
+        if(mSageConfig.SyncFragments && checkSync)
         {
             if(mFragmentSync.handleOverlappingReads(record))
                 return;
         }
+
+        mSelectedReadCounters.clear();
 
         // find any candidate potentially interested in this record
         int readStart = record.getAlignmentStart();
@@ -135,16 +143,13 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         if(record.getCigar().getFirstCigarElement().getOperator() == S)
         {
-            readStart -= record.getCigar().getFirstCigarElement().getLength();;
+            readStart -= record.getCigar().getFirstCigarElement().getLength();
         }
 
         if(record.getCigar().getLastCigarElement().getOperator() == S)
         {
             readEnd += record.getCigar().getLastCigarElement().getLength();
         }
-
-        // first look back from the last-used index
-        List<ReadContextCounter> readCounters = Lists.newArrayList();
 
         // first check previous candidates starting with the current
         int nextIndex = mLastCandidateIndex + 1;
@@ -154,10 +159,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             ReadContextCounter readCounter = mReadCounters.get(prevIndex);
 
-            if(positionWithin(readCounter.position(), readStart, readEnd))
+            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.exceedsMaxCoverage())
             {
                 mLastCandidateIndex = prevIndex;
-                readCounters.add(0, readCounter);
+                mSelectedReadCounters.add(0, readCounter);
                 readStart -= readCounter.maxCandidateDeleteLength();
                 readEnd += readCounter.maxCandidateDeleteLength();
             }
@@ -174,9 +179,9 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             ReadContextCounter readCounter = mReadCounters.get(nextIndex);
 
-            if(positionWithin(readCounter.position(), readStart, readEnd))
+            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.exceedsMaxCoverage())
             {
-                readCounters.add(readCounter);
+                mSelectedReadCounters.add(readCounter);
             }
             else if(readCounter.position() < readStart)
             {
@@ -190,7 +195,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
             ++nextIndex;
         }
 
-        if(readCounters.isEmpty())
+        if(mSelectedReadCounters.isEmpty())
             return;
 
         List<ReadContextCounter> posPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
@@ -198,7 +203,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         int numberOfEvents = NumberEvents.calc(record, mRefSequence);
 
-        for(ReadContextCounter readCounter : readCounters)
+        for(ReadContextCounter readCounter : mSelectedReadCounters)
         {
             ReadMatchType matchType = readCounter.processRead(
                     record, mSageConfig, mQualityCalculator, numberOfEvents, mSageConfig.LogEvidenceReads ? mCurrentSample : null);
@@ -213,6 +218,8 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         }
 
         if(mVariantPhaser != null)
+        {
             mVariantPhaser.registeredPhasedVariants(posPhasedCounters, negPhasedCounters);
+        }
     }
 }

@@ -224,7 +224,6 @@ public class PhasedVariantGroup
                 if(counter.position() <= readCounter.position())
                 {
                     ++index;
-                    continue;
                 }
                 else
                 {
