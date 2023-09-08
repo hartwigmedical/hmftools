@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import htsjdk.variant.vcf.VCFHeader;
@@ -147,7 +148,7 @@ public class Mappability
                     {
                         foundRequested = chromosome.equals(requestedChromosome);
                     }
-                    else
+                    else if(HumanChromosome.chromosomeRank(chromosome) > HumanChromosome.chromosomeRank(requestedChromosome))
                     {
                         exitOnNew = true;
                     }

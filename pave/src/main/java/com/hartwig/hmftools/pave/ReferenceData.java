@@ -46,10 +46,10 @@ public class ReferenceData
 
         Gnomad = new GnomadAnnotation(configBuilder);
 
-        StandardPon = new PonAnnotation(configBuilder.getValue(PON_FILE));
+        StandardPon = new PonAnnotation(configBuilder.getValue(PON_FILE), true);
         StandardPon.loadFilters(configBuilder.getValue(PON_FILTERS));
 
-        ArtefactsPon = new PonAnnotation(configBuilder.getValue(PON_ARTEFACTS_FILE));
+        ArtefactsPon = new PonAnnotation(configBuilder.getValue(PON_ARTEFACTS_FILE), false);
 
         VariantMappability = new Mappability(configBuilder);
         Clinvar = new ClinvarAnnotation(configBuilder);
@@ -97,5 +97,17 @@ public class ReferenceData
         }
 
         return true;
+    }
+
+    public void initialiseChromosomeData(final String chromosome)
+    {
+        if(Gnomad.hasData())
+            Gnomad.getChromosomeCache(chromosome);
+
+        if(VariantMappability.hasData())
+            VariantMappability.getChromosomeCache(chromosome);
+
+        if(StandardPon.isEnabled())
+            StandardPon.getChromosomeCache(chromosome);
     }
 }

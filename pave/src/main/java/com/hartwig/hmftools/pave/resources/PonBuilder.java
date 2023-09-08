@@ -70,7 +70,7 @@ public class PonBuilder
 
         mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
-        mExistingPon = new PonAnnotation(configBuilder.getValue(PON_FILE));
+        mExistingPon = new PonAnnotation(configBuilder.getValue(PON_FILE), false);
 
         mChrVariantsMap = Maps.newHashMap();
 

@@ -12,8 +12,11 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.pave.VariantData;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
@@ -35,7 +38,7 @@ public class PonAnnotation
     public static final String PON_FILTER = "PON";
     public static final String PON_ARTEFACT_FILTER = "PONArtefact";
 
-    public PonAnnotation(final String filename)
+    public PonAnnotation(final String filename, boolean loadOnDemand)
     {
         mPonFilename = filename;
         mFileReader = null;
@@ -45,7 +48,7 @@ public class PonAnnotation
 
         if(filename != null && !filename.isEmpty())
         {
-            initialiseFile(filename);
+            initialiseFile(filename, loadOnDemand);
         }
 
         mPonFilters = Maps.newHashMap();
@@ -133,7 +136,7 @@ public class PonAnnotation
         return chrCache != null ? chrCache.hasEntry(position, ref, alt) : false;
     }
 
-    private void initialiseFile(final String filename)
+    private void initialiseFile(final String filename, boolean loadOnDemand)
     {
         if(filename == null)
             return;
@@ -159,6 +162,10 @@ public class PonAnnotation
             }
 
             mHasValidData = true;
+
+            if(!loadOnDemand)
+                loadPonEntries(null);
+
         }
         catch(IOException e)
         {
@@ -167,7 +174,7 @@ public class PonAnnotation
         }
     }
 
-    private void loadPonEntries(final String requestedChromosome)
+    private void loadPonEntries(@Nullable final String requestedChromosome)
     {
         if(mFileReader == null)
             return;
@@ -175,9 +182,8 @@ public class PonAnnotation
         try
         {
             String line = null;
-            PonChrCache currentCache = mChrCacheMap.get(requestedChromosome);
+            PonChrCache currentCache = requestedChromosome != null ? mChrCacheMap.get(requestedChromosome) : null;
             boolean foundRequested = currentCache != null;
-
             int itemCount = 0;
 
             while((line = mFileReader.readLine()) != null)
@@ -193,7 +199,7 @@ public class PonAnnotation
                 {
                     if(currentCache != null && !currentCache.isComplete())
                     {
-                        PV_LOGGER.debug("chr({}) has {} PON entries", currentCache.Chromosome, currentCache.entryCount());
+                        PV_LOGGER.debug("chr({}) loaded {} PON entries", currentCache.Chromosome, currentCache.entryCount());
                         currentCache.setComplete();
                     }
 
@@ -205,13 +211,16 @@ public class PonAnnotation
                         mChrCacheMap.put(chromosome, currentCache);
                     }
 
-                    if(!foundRequested)
+                    if(requestedChromosome != null)
                     {
-                        foundRequested = chromosome.equals(requestedChromosome);
-                    }
-                    else
-                    {
-                        exitOnNew = true;
+                        if(!foundRequested)
+                        {
+                            foundRequested = chromosome.equals(requestedChromosome);
+                        }
+                        else if(HumanChromosome.chromosomeRank(chromosome) > HumanChromosome.chromosomeRank(requestedChromosome))
+                        {
+                            exitOnNew = true;
+                        }
                     }
                 }
 
@@ -230,7 +239,10 @@ public class PonAnnotation
                     break;
             }
 
-            // PV_LOGGER.info("pon file({}) loaded {} entries", mPonFilename, itemCount);
+            if(requestedChromosome == null)
+            {
+                PV_LOGGER.info("pon file({}) loaded {} entries", mPonFilename, itemCount);
+            }
 
             if(line == null)
                 mFileReader = null;

@@ -59,32 +59,6 @@ public class ClinvarAnnotation
         }
     }
 
-    /*
-    public void annotateVariant(final VariantData variant, final ClinvarChrCache chrCache)
-    {
-        // Clinvar entries for both v37 and v38 do not have the chromosome prefix
-        String chromosome = RefGenomeFunctions.stripChrPrefix(variant.Chromosome);
-
-        List<ClinvarEntry> entries = mChrEntries.get(chromosome);
-
-        if(entries == null)
-            return;
-
-        for(ClinvarEntry entry : entries)
-        {
-            if(entry.matches(variant))
-            {
-                variant.context().getCommonInfo().putAttribute(CLNSIG, entry.Significance);
-
-                if(!entry.Conflict.isEmpty())
-                    variant.context().getCommonInfo().putAttribute(CLNSIGCONF, entry.Conflict);
-
-                return;
-            }
-        }
-    }
-    */
-
     public static void addHeader(final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(CLNSIG, UNBOUNDED, VCFHeaderLineType.String, CLNSIG_DESC));
@@ -149,6 +123,4 @@ public class ClinvarAnnotation
             mHasValidData = false;
         }
     }
-
-
 }

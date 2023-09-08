@@ -100,7 +100,9 @@ public class PaveConfig
         }
         else
         {
-            OutputDir = checkAddDirSeparator(Paths.get(VcfFile).getParent().toString());
+            String vcfFile = OutputVcfFile != null ? OutputVcfFile : VcfFile;
+            String vcfDir = Paths.get(vcfFile).getParent().toString();
+            OutputDir = !vcfDir.isEmpty() ? checkAddDirSeparator(vcfDir) : "./";
         }
     }
 

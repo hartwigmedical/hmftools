@@ -74,6 +74,12 @@ public class PaveApplication
             ChromosomeTask chromosomeTask = new ChromosomeTask(chromosome, mConfig, mReferenceData, mVcfWriter, mTranscriptWriter);
 
             chromosomeTasks.add(chromosomeTask);
+
+            // initialise the reference data for the set of chromosomes which will be processed immediately to avoid data locking
+            if(mConfig.Threads > 1 && chromosomeTasks.size() <= mConfig.Threads)
+            {
+                mReferenceData.initialiseChromosomeData(chrStr);
+            }
         }
 
         PV_LOGGER.info("sample({}) processing VCF file({})", mConfig.SampleId, mConfig.VcfFile);
