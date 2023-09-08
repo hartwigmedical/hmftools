@@ -2,16 +2,19 @@ package com.hartwig.hmftools.purple.tools;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedWriter;
@@ -20,9 +23,11 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
@@ -35,20 +40,37 @@ public class SomaticVariantCompiler
     private final List<String> mCommonFields;
     private final List<String> mGenotypeFields;
     private final String mOutputFile;
-    private final String mPurpleDir;
+    private final String mVcfFilename;
+    private final List<ChrBaseRegion> mSpecificRegions;
 
     private static final String OUTPUT_FILE = "output_file";
     private static final String COMMON_FIELDS = "common_fields";
     private static final String GENOTYPE_FIELDS = "genotype_fields";
+    private static final String VCF_FILENAME = "vcf_filename";
 
     public SomaticVariantCompiler(final ConfigBuilder configBuilder)
     {
-        mSampleIds = loadSampleIdsFile(configBuilder.getValue(SAMPLE_ID_FILE));
+        if(configBuilder.hasValue(SAMPLE_ID_FILE))
+            mSampleIds = loadSampleIdsFile(configBuilder.getValue(SAMPLE_ID_FILE));
+        else
+            mSampleIds = Lists.newArrayList(configBuilder.getValue(SAMPLE));
+
         mOutputFile = configBuilder.getValue(OUTPUT_FILE);
-        mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
+        mVcfFilename = configBuilder.getValue(VCF_FILENAME);
 
         mCommonFields = Arrays.stream(configBuilder.getValue(COMMON_FIELDS).split(",", -1)).collect(Collectors.toList());
         mGenotypeFields = Arrays.stream(configBuilder.getValue(GENOTYPE_FIELDS).split(",", -1)).collect(Collectors.toList());
+
+        mSpecificRegions = Lists.newArrayList();
+
+        try
+        {
+            mSpecificRegions.addAll(loadSpecificRegions(configBuilder));
+        }
+        catch(Exception e)
+        {
+            System.exit(1);
+        }
     }
 
     public void run()
@@ -94,21 +116,25 @@ public class SomaticVariantCompiler
 
     private void processSampleVariants(final String sampleId, final BufferedWriter writer) throws Exception
     {
-        String purpleDir = mPurpleDir.replaceAll("\\*", sampleId);
-        String purpleVcf = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
+        String vcfFilename = convertWildcardSamplePath(mVcfFilename, sampleId);
+        // String purpleVcf = PurpleCommon.purpleSomaticVcfFile(purpleDir, sampleId);
 
-        VcfFileReader vcfFileReader = new VcfFileReader(purpleVcf);
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFilename);
 
         if(!vcfFileReader.fileValid())
-        {
             return;
-        }
 
         int variantCount = 0;
 
         for(VariantContext variantContext : vcfFileReader.iterator())
         {
             VariantContextDecorator variant = new VariantContextDecorator(variantContext);
+
+            if(!mSpecificRegions.isEmpty())
+            {
+                if(mSpecificRegions.stream().noneMatch(x -> x.containsPosition(variant.chromosome(), variant.position())))
+                    continue;
+            }
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
@@ -162,20 +188,16 @@ public class SomaticVariantCompiler
     public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        addSampleIdFile(configBuilder, true);
-        configBuilder.addPath(OUTPUT_FILE, true, "Output filename");
+        addSampleIdFile(configBuilder, false);
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
         configBuilder.addConfigItem(COMMON_FIELDS, false, "Required VCF fields separated by ','");
         configBuilder.addConfigItem(GENOTYPE_FIELDS, false, "Required VCF genotype fields separated by ','");
-        configBuilder.addConfigItem(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addConfigItem(VCF_FILENAME, true, "VCF filename, allows for wildcards '*'");
+        addSpecificChromosomesRegionsConfig(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         SomaticVariantCompiler somaticVariantCompiler = new SomaticVariantCompiler(configBuilder);
         somaticVariantCompiler.run();

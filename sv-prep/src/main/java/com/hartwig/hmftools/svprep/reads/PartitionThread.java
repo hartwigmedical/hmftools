@@ -80,7 +80,7 @@ public class PartitionThread extends Thread
                 SV_LOGGER.trace("all tasks complete");
                 break;
             }
-            catch(Exception e)
+            catch(Throwable e)
             {
                 SV_LOGGER.error("thread execution error: {}", e.toString());
                 e.printStackTrace();
