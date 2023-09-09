@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -101,8 +102,8 @@ public class PaveConfig
         else
         {
             String vcfFile = OutputVcfFile != null ? OutputVcfFile : VcfFile;
-            String vcfDir = Paths.get(vcfFile).getParent().toString();
-            OutputDir = !vcfDir.isEmpty() ? checkAddDirSeparator(vcfDir) : "./";
+            Path vcfDir = Paths.get(vcfFile).getParent();
+            OutputDir = vcfDir != null ? checkAddDirSeparator(vcfDir.toString()) : "./";
         }
     }
 

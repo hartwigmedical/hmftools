@@ -41,6 +41,7 @@ public class ClinvarChrCache
             return;
 
         int position = variant.Position;
+        int firstPosMatchIndex = -1;
 
         for(; mCurrentIndex < mEntries.size(); ++mCurrentIndex)
         {
@@ -50,12 +51,10 @@ public class ClinvarChrCache
                 continue;
 
             if(entry.Position > position)
-            {
-                if(mCurrentIndex > 0)
-                    --mCurrentIndex;
+                break;
 
-                return;
-            }
+            if(firstPosMatchIndex == -1)
+                firstPosMatchIndex = mCurrentIndex;
 
             if(entry.matches(variant))
             {
@@ -64,9 +63,15 @@ public class ClinvarChrCache
                 if(!entry.Conflict.isEmpty())
                     variant.context().getCommonInfo().putAttribute(CLNSIGCONF, entry.Conflict);
 
-                return;
+                break;
             }
         }
+
+        // move the index back to the prior position or the first at this position
+        if(firstPosMatchIndex >= 0)
+            mCurrentIndex = firstPosMatchIndex;
+        else if(mCurrentIndex > 0)
+            --mCurrentIndex;
     }
 
     private class ClinvarEntry
