@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChro
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_PARTITION_SLICES;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
@@ -109,7 +110,6 @@ public class SageConfig
         {
             ReferenceIds.addAll(Arrays.asList(configBuilder.getValue(REFERENCE).split(SAMPLE_DELIM)));
         }
-
 
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG, ""));
 
@@ -251,7 +251,7 @@ public class SageConfig
         configBuilder.addInteger(EXPECTED_READ_LENGTH, "Expected read length", DEFAULT_READ_LENGTH);
         configBuilder.addFlag(INCLUDE_MT, "Call MT variants");
         configBuilder.addInteger(SLICE_SIZE, "Slice size", DEFAULT_SLICE_SIZE);
-        configBuilder.addInteger(MAX_PARTITION_SLICES, "Max slices per partition", 1);
+        configBuilder.addInteger(MAX_PARTITION_SLICES, "Max slices per partition", DEFAULT_MAX_PARTITION_SLICES);
 
         configBuilder.addInteger(MAX_READ_DEPTH, "Max depth to look for evidence", DEFAULT_MAX_READ_DEPTH);
         configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
