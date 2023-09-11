@@ -24,7 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.RefStringCache;
+import com.hartwig.hmftools.common.utils.StringCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.pave.VariantData;
 
@@ -42,7 +42,7 @@ public class GnomadAnnotation implements Callable
     private boolean mHasValidData;
     private final boolean mEnabled;
     private final String mGnomadFilename;
-    private final RefStringCache mStringCache;
+    private final StringCache mStringCache;
 
     public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
@@ -57,7 +57,7 @@ public class GnomadAnnotation implements Callable
         mChrCacheMap = Maps.newHashMap();
         mChromosomeFiles = Maps.newHashMap();
         mHasValidData = true;
-        mStringCache = new RefStringCache();
+        mStringCache = new StringCache();
 
         mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
@@ -82,7 +82,8 @@ public class GnomadAnnotation implements Callable
         mPonFilterThreshold = configBuilder.getDecimal(GNOMAD_PON_FILTER);
     }
 
-    public boolean hasData() { return !mChrCacheMap.isEmpty() || !mChromosomeFiles.isEmpty(); }
+    public boolean enabled() { return mGnomadFilename != null || !mChromosomeFiles.isEmpty(); }
+    public boolean hasData() { return !mChrCacheMap.isEmpty(); }
     public boolean hasValidData() { return mHasValidData; }
 
     public void annotateVariant(final VariantData variant, final GnomadChrCache chrCache)

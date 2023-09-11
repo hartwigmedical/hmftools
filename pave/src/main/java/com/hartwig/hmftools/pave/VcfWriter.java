@@ -75,27 +75,27 @@ public class VcfWriter
         VariantTranscriptImpact.writeHeader(newHeader);
         VariantImpactSerialiser.writeHeader(newHeader);
 
-        if(referenceData.StandardPon.isEnabled() || referenceData.ArtefactsPon.isEnabled())
+        if(referenceData.StandardPon.enabled() || referenceData.ArtefactsPon.enabled())
         {
             PonAnnotation.addHeader(newHeader);
         }
 
-        if(referenceData.Gnomad.hasData())
+        if(referenceData.Gnomad.enabled())
         {
             GnomadAnnotation.addHeader(newHeader);
         }
 
-        if(referenceData.VariantMappability.hasData()   )
+        if(referenceData.VariantMappability.enabled()   )
         {
             Mappability.addHeader(newHeader);
         }
 
-        if(referenceData.Clinvar.hasData())
+        if(referenceData.Clinvar.enabled())
         {
             ClinvarAnnotation.addHeader(newHeader);
         }
 
-        if(referenceData.BlacklistedVariants.hasData())
+        if(referenceData.BlacklistedVariants.enabled())
         {
             Blacklistings.addHeader(newHeader);
         }

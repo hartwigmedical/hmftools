@@ -12,7 +12,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
-import com.hartwig.hmftools.common.utils.RefStringCache;
+import com.hartwig.hmftools.common.utils.StringCache;
 
 import org.junit.Test;
 
@@ -29,7 +29,7 @@ public class ResourcesTest
         VariantData var2 = createVariant(CHR_1, 100, "A", "C");
         VariantData var3 = createVariant(CHR_1, 100, "A", "T");
 
-        RefStringCache strCache = new RefStringCache();
+        StringCache strCache = new StringCache();
         ClinvarChrCache clinvarCache = new ClinvarChrCache(CHR_1, strCache);
 
         String matchedSig = "pathogenic";

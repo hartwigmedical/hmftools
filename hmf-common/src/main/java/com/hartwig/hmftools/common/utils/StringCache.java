@@ -5,20 +5,22 @@ import static java.lang.String.format;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RefStringCache
+// a class for reusing commonly allocated strings to save on memory
+// an alternative to String.intern() since allows the cache to be cleared
+public class StringCache
 {
     private final Map<String,String> mMap;
     private final int mMaxCacheSize;
 
     private static final int DEFAULT_MAX_CACHE = 100_000;
 
-    public RefStringCache(int maxCacheSize)
+    public StringCache(int maxCacheSize)
     {
         mMap = new HashMap<>();
         mMaxCacheSize = maxCacheSize;
     }
 
-    public RefStringCache()
+    public StringCache()
     {
         this(DEFAULT_MAX_CACHE);
     }

@@ -52,6 +52,7 @@ public class Blacklistings
         }
     }
 
+    public boolean enabled() { return hasData(); }
     public boolean hasData() { return !mBedRegions.isEmpty() || !mVcfEntries.isEmpty(); }
     public boolean hasValidData() { return mHasValidData; }
 

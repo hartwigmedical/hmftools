@@ -83,7 +83,7 @@ public class PaveApplication
             chromosomeTasks.add(chromosomeTask);
 
             // initialise the reference data for the set of chromosomes which will be processed immediately to avoid data locking
-            if(chromosomeTasks.size() <= max(mConfig.Threads, 1))
+            if(initialRefChromosomes.size() < max(mConfig.Threads, 1))
                 initialRefChromosomes.add(chrStr);
         }
 

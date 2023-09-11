@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -19,12 +18,6 @@ import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.PaveConfig;
-import com.hartwig.hmftools.pave.annotation.Blacklistings;
-import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
-import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
-import com.hartwig.hmftools.pave.annotation.Mappability;
-import com.hartwig.hmftools.pave.annotation.PonAnnotation;
-import com.hartwig.hmftools.pave.annotation.Reportability;
 
 public class ReferenceData
 {
@@ -68,13 +61,13 @@ public class ReferenceData
 
     public boolean isValid()
     {
-        if(StandardPon.isEnabled() && !StandardPon.hasValidData())
+        if(StandardPon.enabled() && !StandardPon.hasValidData())
         {
             PV_LOGGER.error("invalid PON");
             return false;
         }
 
-        if(ArtefactsPon.isEnabled() && !ArtefactsPon.hasValidData())
+        if(ArtefactsPon.enabled() && !ArtefactsPon.hasValidData())
         {
             PV_LOGGER.error("invalid PON artefacts");
             return false;
@@ -115,7 +108,7 @@ public class ReferenceData
         if(VariantMappability.hasData())
             VariantMappability.getChromosomeCache(chromosome);
 
-        if(StandardPon.isEnabled())
+        if(StandardPon.enabled())
             StandardPon.getChromosomeCache(chromosome);
     }
 
@@ -123,25 +116,25 @@ public class ReferenceData
     {
         final List<Callable> callableList = Lists.newArrayList();
 
-        if(Gnomad.hasData())
+        if(Gnomad.enabled())
         {
             Gnomad.registerInitialChromosomes(chromosomes);
             callableList.add(Gnomad);
         }
 
-        if(VariantMappability.hasData())
+        if(VariantMappability.enabled())
         {
             VariantMappability.registerInitialChromosomes(chromosomes);
             callableList.add(VariantMappability);
         }
 
-        if(StandardPon.isEnabled())
+        if(StandardPon.enabled())
         {
             StandardPon.registerInitialChromosomes(chromosomes);
             callableList.add(StandardPon);
         }
 
-        if(Clinvar.hasData())
+        if(Clinvar.enabled())
         {
             callableList.add(Clinvar);
         }

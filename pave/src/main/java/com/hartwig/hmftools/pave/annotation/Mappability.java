@@ -44,7 +44,8 @@ public class Mappability implements Callable
         }
     }
 
-    public boolean hasData() { return mFileReader != null; }
+    public boolean enabled() { return mFileReader != null; }
+    public boolean hasData() { return !mChrCacheMap.isEmpty(); }
     public boolean hasValidData() { return mHasValidData; }
 
     public synchronized MappabilityChrCache getChromosomeCache(final String chromosome)

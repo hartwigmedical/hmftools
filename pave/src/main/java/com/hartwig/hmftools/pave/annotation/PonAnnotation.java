@@ -16,7 +16,7 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.RefStringCache;
+import com.hartwig.hmftools.common.utils.StringCache;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.pave.VariantData;
 
@@ -36,7 +36,7 @@ public class PonAnnotation implements Callable
 
     private final Map<VariantTier,PonFilters> mPonFilters;
     private final Map<String,PonChrCache> mChrCacheMap;
-    private final RefStringCache mStringCache;
+    private final StringCache mStringCache;
 
     public static final String PON_COUNT = "PON_COUNT";
     public static final String PON_MAX = "PON_MAX";
@@ -50,7 +50,7 @@ public class PonAnnotation implements Callable
         mColumnCount = -1;
         mHasValidData = true;
         mChrCacheMap = Maps.newHashMap();
-        mStringCache = new RefStringCache();
+        mStringCache = new StringCache();
 
         if(filename != null && !filename.isEmpty())
         {
@@ -60,9 +60,8 @@ public class PonAnnotation implements Callable
         mPonFilters = Maps.newHashMap();
     }
 
+    public boolean enabled() { return mPonFilename != null; }
     public boolean hasValidData() { return mHasValidData; }
-
-    public boolean isEnabled() { return mPonFilename != null; }
 
     public boolean loadFilters(final String filtersConfig)
     {

@@ -10,7 +10,7 @@ import java.util.concurrent.Callable;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
-import com.hartwig.hmftools.common.utils.RefStringCache;
+import com.hartwig.hmftools.common.utils.StringCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
@@ -22,7 +22,7 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class ClinvarAnnotation implements Callable
 {
     private final Map<String,ClinvarChrCache> mChrCacheMap;
-    private final RefStringCache mStringCache;
+    private final StringCache mStringCache;
     private boolean mHasValidData;
     private final String mFilename;
 
@@ -37,13 +37,14 @@ public class ClinvarAnnotation implements Callable
     public ClinvarAnnotation(final ConfigBuilder configBuilder)
     {
         mChrCacheMap = Maps.newHashMap();
-        mStringCache = new RefStringCache();
+        mStringCache = new StringCache();
 
         mHasValidData = true;
         mFilename = configBuilder.getValue(CLINVAR_VCF);
     }
 
-    public boolean hasData() { return mFilename != null; }
+    public boolean enabled() { return mFilename != null; }
+    public boolean hasData() { return !mChrCacheMap.isEmpty(); }
     public boolean hasValidData() { return mHasValidData; }
 
     public synchronized ClinvarChrCache getChromosomeCache(final String chromosome)

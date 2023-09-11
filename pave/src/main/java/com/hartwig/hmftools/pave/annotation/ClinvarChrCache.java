@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.pave.annotation.ClinvarAnnotation.CLNSIGCONF;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.RefStringCache;
+import com.hartwig.hmftools.common.utils.StringCache;
 import com.hartwig.hmftools.pave.VariantData;
 
 public class ClinvarChrCache
@@ -15,9 +15,9 @@ public class ClinvarChrCache
 
     private int mCurrentIndex;
     private final List<ClinvarEntry> mEntries;
-    private final RefStringCache mStringCache;
+    private final StringCache mStringCache;
 
-    public ClinvarChrCache(final String chromosome, final RefStringCache stringCache)
+    public ClinvarChrCache(final String chromosome, final StringCache stringCache)
     {
         Chromosome = chromosome;
         mCurrentIndex = 0;
