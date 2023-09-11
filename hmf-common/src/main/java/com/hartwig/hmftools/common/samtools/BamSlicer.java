@@ -78,7 +78,7 @@ public class BamSlicer
 
     public List<SAMRecord> slice(final SamReader samReader, final ChrBaseRegion region)
     {
-        return slice(samReader, createIntervals(Lists.newArrayList(region), samReader.getFileHeader()));
+        return slice(samReader, createIntervals(List.of(region), samReader.getFileHeader()));
     }
 
     public List<SAMRecord> slice(final SamReader samReader, final QueryInterval[] queryIntervals)

@@ -97,7 +97,7 @@ public class PartitionSlicer
         perfCounterStart(PerfCounters.Total);
         perfCounterStart(PerfCounters.Slice);
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
+        mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
 
         perfCounterStop(PerfCounters.Slice);
 

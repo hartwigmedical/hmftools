@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -27,43 +28,59 @@ import org.jetbrains.annotations.Nullable;
 public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 {
     public final String Chromosome;
-    public int[] Positions;
+    private int mStart;
+    private int mEnd;
 
     public ChrBaseRegion(final String chromosome, final int[] positions)
     {
         Chromosome = chromosome;
-        Positions = positions;
+        mStart = positions[SE_START];
+        mEnd = positions[SE_END];
     }
 
     public ChrBaseRegion(final String chromosome, final int posStart, final int posEnd)
     {
         Chromosome = chromosome;
-        Positions = new int[] { posStart, posEnd };
+        mStart = posStart;
+        mEnd = posEnd;
     }
 
     public static ChrBaseRegion from(final GenomeRegion region) { return new ChrBaseRegion(region.chromosome(), region.start(), region.end()); }
     public GenomeRegion genomeRegion() { return GenomeRegions.create(chromosome(), start(), end()); }
 
-    public int start() { return Positions[SE_START]; }
-    public int end() { return Positions[SE_END]; }
-    public String chromosome() { return Chromosome; }
+    public int start() { return mStart; }
+    public int end() { return mEnd; }
 
-    public void setPosition(int position, int index) { Positions[index] = position; }
-    public void setStart(int pos) { setPosition(pos, SE_START); }
-    public void setEnd(int pos) { setPosition(pos, SE_END); }
+    public int position(int which)
+    {
+        if(which == SE_START)
+        {
+            return mStart;
+        }
+        else if(which == SE_END)
+        {
+            return mEnd;
+        }
+        throw new NoSuchElementException();
+    }
+
+    public String chromosome() { return Chromosome; }
+    
+    public void setStart(int pos) { mStart = pos; }
+    public void setEnd(int pos) { mEnd = pos; }
 
     public int baseLength() { return length() + 1; }
-    public int length() { return Positions[SE_END] - Positions[SE_START]; }
+    public int length() { return mEnd - mStart; }
 
     public boolean isValid() { return HumanChromosome.contains(Chromosome) && hasValidPositions(); }
-    public boolean hasValidPositions() { return Positions[SE_START] > 0 & Positions[SE_END] >= Positions[SE_START]; }
+    public boolean hasValidPositions() { return mStart > 0 & mEnd >= mStart; }
 
     public boolean overlaps(final ChrBaseRegion other)
     {
         if(!Chromosome.equals(other.Chromosome))
             return false;
 
-        return positionsOverlap(Positions[SE_START], Positions[SE_END], other.Positions[SE_START], other.Positions[SE_END]);
+        return positionsOverlap(mStart, mEnd, other.mStart, other.mEnd);
     }
 
     public boolean containsPosition(int position) { return positionWithin(position, start(), end()); }
@@ -78,15 +95,16 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         return Chromosome.equals(other.Chromosome) && start() == other.start() && end() == other.end();
     }
 
-    public String toString() { return String.format("%s:%d-%d", Chromosome, Positions[SE_START], Positions[SE_END]); }
+    public String toString() { return String.format("%s:%d-%d", Chromosome, mStart, mEnd); }
 
     @Override
-    public Object clone()
+    public ChrBaseRegion clone()
     {
         try
         {
             ChrBaseRegion br = (ChrBaseRegion) super.clone();
-            br.Positions = Positions.clone();
+            br.mStart = mStart;
+            br.mEnd = mEnd;
             return br;
         }
         catch (CloneNotSupportedException e)
@@ -108,6 +126,15 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         // cast and compare state
         ChrBaseRegion other = (ChrBaseRegion) obj;
         return matches(other);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = 31 + Chromosome.hashCode();
+        result = 31 * result + mStart;
+        result = 31 * result + mEnd;
+        return result;
     }
 
     @Override
@@ -186,7 +213,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
                 throw new ParseException(String.format("invalid specific region: %s", regionStr));
             }
 
-            String chromosome = items[0];
+            String chromosome = items[0].intern();
             int posStart;
             int posEnd;
 

@@ -240,7 +240,7 @@ public class DepthTask implements Callable
             readCount = mTotalReadCount;
 
             SV_LOGGER.trace("sample({}) slice for {} variants", mConfig.Samples.get(i), mSliceRegionState.variantCount());
-            mBamSlicer.slice(samReader, Lists.newArrayList(region), this::processRead);
+            mBamSlicer.slice(samReader, region, this::processRead);
 
             times.add((System.nanoTime() - startTime)/NANOS_IN_SECOND);
             readCounts.add(mTotalReadCount - readCount);
