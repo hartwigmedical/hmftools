@@ -6,14 +6,18 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_FULL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,6 +26,11 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 
 public class TestUtils
 {
+    public static final SageConfig TEST_CONFIG = new SageConfig();
+    private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
+    private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
+    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_BASES);
+
     public static SageVariant createVariant(int position, final String ref, final String alt)
     {
         String readBases = buildReadContextBases(alt);
@@ -44,8 +53,9 @@ public class TestUtils
 
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
-        ReadContextCounter readCounter =  new ReadContextCounter(0, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1);
+        ReadContextCounter readCounter = new ReadContextCounter(
+                0, variant, readContext, VariantTier.LOW_CONFIDENCE, 100, 1,
+                TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         List<ReadContextCounter> tumorCounters = Lists.newArrayList(readCounter);
 
@@ -116,8 +126,9 @@ public class TestUtils
         IndexedBases indexBases = new IndexedBases(position, index, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
-        return new ReadContextCounter(0, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1);
+        return new ReadContextCounter(
+                0, variant, readContext, VariantTier.LOW_CONFIDENCE,
+                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, null);
     }
 
     public static ReadContext createReadContext(

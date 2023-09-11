@@ -4,6 +4,8 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_FULL;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_PARTIAL;
+import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
@@ -38,17 +40,10 @@ public class ReadContextCounterTest
     private static final String SAMPLE = "sample";
     private static final int MAX_COVERAGE = 1000;
     private static final VariantTier TIER = VariantTier.PANEL;
-    private static final SageConfig CONFIG = new SageConfig();
-    private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
-
-    // convert to using MockRefGenome
-    private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
-
-    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(CONFIG.Quality, RECALIBRATION, REF_BASES);
 
     private static void processRead(final ReadContextCounter rcCounter, final SAMRecord record)
     {
-        rcCounter.processRead(record, CONFIG, QUALITY_CALCULATOR,1, null);
+        rcCounter.processRead(record, 1);
     }
 
     @Test
@@ -57,8 +52,8 @@ public class ReadContextCounterTest
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
 
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0,
+                        TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
         processRead(victim, record);
@@ -72,8 +67,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
         processRead(victim, record);
@@ -87,8 +82,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 2, "CAT", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(555, "2S1M", "CAT", "#####");
         processRead(victim, record);
@@ -102,8 +97,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 2,"CAT", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         String quals = buildQualString(new int[] {37, 37, 37});
 
@@ -130,8 +125,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
         final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "FFFFFFFF");
         processRead(victim, record);
@@ -145,8 +140,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
         processRead(victim, record);
@@ -160,8 +155,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
         processRead(victim, record);
@@ -177,8 +172,8 @@ public class ReadContextCounterTest
 
         final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
 
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "FFFFFFFF");
         processRead(victim, record);

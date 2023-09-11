@@ -67,6 +67,10 @@ public class ReadContextCounter implements VariantHotspot
 
     private final VariantHotspot mVariant;
     private final ReadContext mReadContext;
+    private final SageConfig mConfig;
+    private final QualityCalculator mQualityCalculator;
+    private final String mSample;
+
     private final int mMinNumberOfEvents;
     private final boolean mIsMnv;
     private final int mMaxCoverage;
@@ -100,13 +104,17 @@ public class ReadContextCounter implements VariantHotspot
 
     public ReadContextCounter(
             final int id, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
-            final int maxCoverage, final int minNumberOfEvents)
+            final int maxCoverage, final int minNumberOfEvents, final SageConfig config, final QualityCalculator qualityCalculator,
+            final String sampleId)
     {
         mId = id;
 
         mTier = tier;
         mMaxCoverage = maxCoverage;
         mMinNumberOfEvents = minNumberOfEvents;
+        mSample = sampleId;
+        mQualityCalculator = qualityCalculator;
+        mConfig = config;
 
         mReadContext = readContext;
         mVariant = variant;
@@ -228,8 +236,18 @@ public class ReadContextCounter implements VariantHotspot
         return format("%s:%d %s>%s", mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
     }
 
-    public ReadMatchType processRead(
-            final SAMRecord record, final SageConfig sageConfig, final QualityCalculator qualityCalc, int numberOfEvents, final String sampleId)
+    private enum MatchType
+    {
+        NONE,
+        FULL,
+        PARTIAL,
+        CORE,
+        REALIGNED,
+        CORE_PARTIAL,REF,
+        ALT;
+    }
+
+    public ReadMatchType processRead(final SAMRecord record, int numberOfEvents)
     {
         if(exceedsMaxCoverage())
             return UNRELATED;
@@ -247,7 +265,7 @@ public class ReadContextCounter implements VariantHotspot
                         rawContext.DepthSupport, rawContext.AltSupport, rawContext.RefSupport);
             }
 
-            // search for a core match within soft-clipped bases, checking if a promixmate DEL may explain the soft-clipping
+            // search for a core match within soft-clipped bases, checking if a proixmate DEL may explain the soft-clipping
             rawContext = createRawContextFromCoreMatch(record);
 
             if(rawContext.ReadIndex < 0)
@@ -273,8 +291,6 @@ public class ReadContextCounter implements VariantHotspot
             return UNRELATED;
         }
 
-        final QualityConfig qualityConfig = sageConfig.Quality;
-
         double adjustedNumOfEvents = numberOfEvents;
 
         if(mIsMnv)
@@ -288,7 +304,9 @@ public class ReadContextCounter implements VariantHotspot
 
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
-        double quality = qualityCalc.calculateQualityScore(this, readIndex, record, adjustedNumOfEvents);
+        double quality = mQualityCalculator.calculateQualityScore(this, readIndex, record, adjustedNumOfEvents);
+
+        MatchType matchType = MatchType.NONE;
 
         // Check if FULL, PARTIAL, OR CORE
         if(!baseDeleted)
@@ -312,28 +330,31 @@ public class ReadContextCounter implements VariantHotspot
                     case FULL:
                         mCounts[RC_FULL]++;
                         mQualities[RC_FULL] += quality;
+                        matchType = MatchType.FULL;
                         break;
 
                     case PARTIAL:
                         mCounts[RC_PARTIAL]++;
                         mQualities[RC_PARTIAL] += quality;
+                        matchType = MatchType.PARTIAL;
                         break;
 
                     case CORE:
                         ++mCounts[RC_CORE];
                         mQualities[RC_CORE] += quality;
+                        matchType = MatchType.CORE;
                         break;
                 }
 
                 ++mCounts[RC_TOTAL];
                 mQualities[RC_TOTAL] += quality;
 
-                double rawBaseQuality = qualityCalc.rawBaseQuality(this, readIndex, record);
+                double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readIndex, record);
                 mSupportAltBaseQualityTotal += rawBaseQuality;
 
                 registerRawSupport(rawContext);
 
-                logReadEvidence(sampleId, record, match.toString(), readIndex);
+                logReadEvidence(record, matchType, readIndex);
 
                 /*
                 if(SG_LOGGER.isTraceEnabled() && sampleId != null)
@@ -344,7 +365,7 @@ public class ReadContextCounter implements VariantHotspot
 
                 countStrandedness(record);
 
-                if(sageConfig.TrackUMIs)
+                if(mConfig.TrackUMIs)
                     countUmiType(record, false);
 
                 checkImproperCount(record);
@@ -360,8 +381,6 @@ public class ReadContextCounter implements VariantHotspot
         boolean canRealign = abs(mVariant.indelLength()) >= REALIGN_READ_MIN_INDEL_LENGTH || readHasIndelInCore(record);
         RealignedContext realignment = canRealign ? checkRealignment(record) : RealignedContext.NONE;
 
-        String matchStr = "NONE";
-
         if(realignment.Type == EXACT)
         {
             mCounts[RC_REALIGNED]++;
@@ -370,18 +389,18 @@ public class ReadContextCounter implements VariantHotspot
             mCounts[RC_TOTAL]++;
             mQualities[RC_TOTAL] += quality;
 
-            logReadEvidence(sampleId, record, "REALIGNED", readIndex);
+            logReadEvidence(record, MatchType.REALIGNED, readIndex);
             rawContext.updateSupport(false, rawContext.AltSupport);
             registerRawSupport(rawContext);
 
-            if(sageConfig.TrackUMIs)
+            if(mConfig.TrackUMIs)
                 countUmiType(record, false);
 
             return SUPPORT;
         }
         else if(realignment.Type == CORE_PARTIAL)
         {
-            matchStr = "CORE_PARTIAL";
+            matchType = MatchType.CORE_PARTIAL;
             rawContext.updateSupport(false, false);
         }
 
@@ -396,7 +415,7 @@ public class ReadContextCounter implements VariantHotspot
                 return UNRELATED;
         }
 
-        ReadMatchType matchType = UNRELATED;
+        ReadMatchType readMatchType = UNRELATED;
 
         mCounts[RC_TOTAL]++;
         mQualities[RC_TOTAL] += quality;
@@ -405,9 +424,9 @@ public class ReadContextCounter implements VariantHotspot
         {
             mCounts[RC_REF]++;
             mQualities[RC_REF] += quality;
-            matchType = NO_SUPPORT;
+            readMatchType = NO_SUPPORT;
 
-            if(sageConfig.TrackUMIs)
+            if(mConfig.TrackUMIs)
                 countUmiType(record, true);
         }
         else if(rawContext.AltSupport)
@@ -420,7 +439,7 @@ public class ReadContextCounter implements VariantHotspot
         // add to jitter penalty as a function of the number of repeats found
         if(jitterRealign.Type == LENGTHENED || jitterRealign.Type == SHORTENED)
         {
-            mJitterPenalty += jitterPenalty(qualityConfig, jitterRealign.RepeatCount);
+            mJitterPenalty += jitterPenalty(mConfig.Quality, jitterRealign.RepeatCount);
 
             if(jitterRealign.Type == LENGTHENED)
                 mLengthened++;
@@ -428,16 +447,17 @@ public class ReadContextCounter implements VariantHotspot
                 mShortened++;
         }
 
-        /*
-        if(rawContext.RefSupport)
-            matchStr = "REF";
-        else if(rawContext.AltSupport)
-            matchStr = "ALT";
+        if(mConfig.LogEvidenceReads)
+        {
+            if(rawContext.RefSupport)
+                matchType = MatchType.REF;
+            else if(rawContext.AltSupport)
+                matchType = MatchType.ALT;
 
-        logReadEvidence(sampleId, record, matchStr, readIndex);
-        */
+            logReadEvidence(record, matchType, readIndex);
+        }
 
-        return matchType;
+        return readMatchType;
     }
 
     private void registerRawSupport(final RawContext rawContext)
@@ -454,14 +474,14 @@ public class ReadContextCounter implements VariantHotspot
         }
     }
 
-    private void logReadEvidence(final String sampleId, final SAMRecord record, final String matchType, int readIndex)
+    private void logReadEvidence(final SAMRecord record, final MatchType matchType, int readIndex)
     {
-        if(sampleId == null || !SG_LOGGER.isTraceEnabled())
+        if(!mConfig.LogEvidenceReads || !SG_LOGGER.isTraceEnabled())
             return;
 
             // Variant,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex
         SG_LOGGER.trace("READ_EV,{},{},{},{},{},{},{},{},{},{},{},{},{}",
-                sampleId, chromosome(), position(), ref(), alt(),
+                mSample, chromosome(), position(), ref(), alt(),
                 matchType, record.getReadName(), record.getAlignmentStart(), record.getCigarString(),
                 mReadContext.indexedBases().LeftCoreIndex, mReadContext.indexedBases().Index,
                 mReadContext.indexedBases().RightCoreIndex, readIndex);

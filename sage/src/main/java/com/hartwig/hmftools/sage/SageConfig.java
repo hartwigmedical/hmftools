@@ -62,6 +62,7 @@ public class SageConfig
     public final int MaxReadDepthPanel;
     public final int ReadContextFlankSize;
     public final int ExpectedReadLength;
+    public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
 
     public final String Version;
@@ -90,6 +91,7 @@ public class SageConfig
     private static final String EXPECTED_READ_LENGTH = "read_length";
     private static final String SYNC_FRAGMENTS = "sync_fragments";
     private static final String TRACK_UMIS = "track_umis";
+    private static final String MAX_PARTITION_SLICES = "max_partition_slices";
 
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
     private static final String LOG_LPS_DATA = "log_lps_data";
@@ -145,6 +147,7 @@ public class SageConfig
         MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
         ExpectedReadLength = configBuilder.getInteger(EXPECTED_READ_LENGTH);
+        MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = configBuilder.hasFlag(SYNC_FRAGMENTS);
 
         Filter = new FilterConfig(configBuilder);
@@ -248,6 +251,7 @@ public class SageConfig
         configBuilder.addInteger(EXPECTED_READ_LENGTH, "Expected read length", DEFAULT_READ_LENGTH);
         configBuilder.addFlag(INCLUDE_MT, "Call MT variants");
         configBuilder.addInteger(SLICE_SIZE, "Slice size", DEFAULT_SLICE_SIZE);
+        configBuilder.addInteger(MAX_PARTITION_SLICES, "Max slices per partition", 1);
 
         configBuilder.addInteger(MAX_READ_DEPTH, "Max depth to look for evidence", DEFAULT_MAX_READ_DEPTH);
         configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
@@ -286,6 +290,7 @@ public class SageConfig
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
         ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
         ExpectedReadLength = DEFAULT_READ_LENGTH;
+        MaxPartitionSlices = 1;
         RefGenomeFile = "refGenome";
         OutputFile = "out.vcf";
         Version = "1.0";

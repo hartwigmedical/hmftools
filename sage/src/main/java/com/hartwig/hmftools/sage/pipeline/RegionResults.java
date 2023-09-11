@@ -12,6 +12,7 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.evidence.EvidenceStats;
 import com.hartwig.hmftools.sage.evidence.FragmentSyncType;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
@@ -23,6 +24,7 @@ public class RegionResults
     private int mMaxMemoryUsage;
     private final List<PerformanceCounter> mPerfCounters;
     private final int[] mSyncCounts;
+    private final EvidenceStats mEvidenceStats;
 
     public RegionResults(final VcfWriter vcfWriter)
     {
@@ -32,6 +34,7 @@ public class RegionResults
         mMaxMemoryUsage = 0;
         mPerfCounters = Lists.newArrayList();
         mSyncCounts = new int[FragmentSyncType.values().length];
+        mEvidenceStats = new EvidenceStats();
     }
 
     public synchronized void addFinalVariants(final int taskId, final List<SageVariant> variants)
@@ -72,6 +75,11 @@ public class RegionResults
         Arrays.stream(FragmentSyncType.values()).forEach(x -> mSyncCounts[x.ordinal()] += counts[x.ordinal()]);
     }
 
+    public synchronized void addEvidenceStats(final EvidenceStats stats)
+    {
+        mEvidenceStats.merge(stats);
+    }
+
     public int totalReads() { return mTotalReads; }
     public int totalVariants() { return mTotaVariants; }
     public int maxMemoryUsage() { return mMaxMemoryUsage; }
@@ -80,6 +88,7 @@ public class RegionResults
     {
         mPerfCounters.forEach(x -> x.logStats());
     }
+    public EvidenceStats evidenceStats() { return mEvidenceStats; }
 
     public void logSynCounts()
     {

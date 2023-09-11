@@ -9,6 +9,7 @@ public class SageConstants
     public static final int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     public static final int DEFAULT_SLICE_SIZE = 100_000;
 
+    public static final int DEFAULT_READ_LENGTH = 151;
     public static final int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
     public static final int MIN_CORE_DISTANCE = 2;
 
@@ -31,7 +32,6 @@ public class SageConstants
     public static final int SC_INSERT_MIN_SC_LENGTH = 12;
     public static final int SC_INSERT_MIN_LENGTH = 5;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
-    public static final int DEFAULT_READ_LENGTH = 151;
 
     public static final int MIN_SOFT_CLIP_MIN_BASE_QUAL = 25;
     public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;

@@ -197,5 +197,6 @@ public class RegionTask
 
         mResults.addMaxMemory(MemoryCalcs.calcMemoryUsage());
         mResults.addSynCounts(mEvidenceStage.getSyncCounts());
+        mResults.addEvidenceStats(mEvidenceStage.getEvidenceStats());
     }
 }

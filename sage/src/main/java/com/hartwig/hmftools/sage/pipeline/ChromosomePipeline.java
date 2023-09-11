@@ -141,6 +141,7 @@ public class ChromosomePipeline implements AutoCloseable
         {
             mRegionResults.logPerfCounters();
             SG_LOGGER.debug("chromosome({}) max memory({})", mChromosome, mRegionResults.maxMemoryUsage());
+            SG_LOGGER.debug("chromosome({}) evidence stats: {}", mChromosome, mRegionResults.evidenceStats().toString());
         }
 
         if(mConfig.Common.SyncFragments)
