@@ -8,8 +8,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -18,7 +21,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class Mappability
+public class Mappability implements Callable
 {
     private BufferedReader mFileReader;
     private final Map<String,MappabilityChrCache> mChrCacheMap;
@@ -66,6 +69,21 @@ public class Mappability
         }
     }
 
+    private final List<String> mInitialChromosomes = Lists.newArrayList();
+
+    public void registerInitialChromosomes(final List<String> chromosomes) { mInitialChromosomes.addAll(chromosomes); }
+
+    @Override
+    public Long call()
+    {
+        for(String chromosome : mInitialChromosomes)
+        {
+            loadEntries(chromosome);
+        }
+
+        return (long)0;
+    }
+
     public static void addHeader(final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(MAPPABILITY, 1, VCFHeaderLineType.Float, MAPPABILITY_DESC));
@@ -92,7 +110,7 @@ public class Mappability
             mFileReader = createBufferedReader(filename);
 
             if(mFileReader != null)
-                PV_LOGGER.info("loaded mappability file({})", filename);
+                PV_LOGGER.debug("loading mappability file({})", filename);
         }
         catch(IOException e)
         {
@@ -104,9 +122,7 @@ public class Mappability
     private void loadEntries(final String requestedChromosome)
     {
         if(mFileReader == null)
-        {
             return;
-        }
 
         try
         {
@@ -134,7 +150,10 @@ public class Mappability
                 if(currentCache == null || !currentCache.Chromosome.equals(chromosome))
                 {
                     if(currentCache != null)
+                    {
+                        PV_LOGGER.debug("chr({}) loaded {} mappability entries", currentCache.Chromosome, currentCache.entryCount());
                         currentCache.setComplete();
+                    }
 
                     currentCache = mChrCacheMap.get(chromosome);
 

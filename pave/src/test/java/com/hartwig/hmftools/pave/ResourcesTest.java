@@ -12,13 +12,11 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
+import com.hartwig.hmftools.common.utils.RefStringCache;
 
 import org.junit.Test;
 
 import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypeBuilder;
-import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
@@ -31,7 +29,8 @@ public class ResourcesTest
         VariantData var2 = createVariant(CHR_1, 100, "A", "C");
         VariantData var3 = createVariant(CHR_1, 100, "A", "T");
 
-        ClinvarChrCache clinvarCache = new ClinvarChrCache(CHR_1);
+        RefStringCache strCache = new RefStringCache();
+        ClinvarChrCache clinvarCache = new ClinvarChrCache(CHR_1, strCache);
 
         String matchedSig = "pathogenic";
         String conflictStr = "conflict";

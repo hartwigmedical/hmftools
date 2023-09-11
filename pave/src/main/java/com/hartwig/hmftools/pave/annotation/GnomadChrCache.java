@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.RefStringCache;
 import com.hartwig.hmftools.pave.VariantData;
 
 public class GnomadChrCache
@@ -14,11 +15,13 @@ public class GnomadChrCache
     public final String Chromosome;
 
     private final Map<Integer,List<GnomadVariant>> mFrequencies;
+    private final RefStringCache mStringCache;
 
-    public GnomadChrCache(final String chromosome)
+    public GnomadChrCache(final String chromosome, final RefStringCache stringCache)
     {
         Chromosome = chromosome;
         mFrequencies = Maps.newHashMap();
+        mStringCache = stringCache;
     }
 
     public void addEntry(final int position, final String ref, final String alt, final double frequency)
@@ -31,10 +34,11 @@ public class GnomadChrCache
             mFrequencies.put(position, posList);
         }
 
-        posList.add(new GnomadVariant(ref, alt, frequency));
+        posList.add(new GnomadVariant(mStringCache.intern(ref), mStringCache.intern(alt), frequency));
     }
 
     public void clear() { mFrequencies.clear(); }
+    public int entryCount() { return mFrequencies.size(); }
 
     public String toString() { return format("chr(%s) entries(%d)", Chromosome, mFrequencies.size()); }
 

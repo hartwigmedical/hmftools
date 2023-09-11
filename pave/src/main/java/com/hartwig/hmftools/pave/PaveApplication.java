@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.pave;
 
+import static java.lang.Math.max;
+
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 
@@ -13,6 +16,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.pave.annotation.ReferenceData;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -59,7 +63,10 @@ public class PaveApplication
             System.exit(1);
         }
 
+        long startTimeMs = System.currentTimeMillis();
+
         List<ChromosomeTask> chromosomeTasks = Lists.newArrayList();
+        List<String> initialRefChromosomes = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -76,11 +83,12 @@ public class PaveApplication
             chromosomeTasks.add(chromosomeTask);
 
             // initialise the reference data for the set of chromosomes which will be processed immediately to avoid data locking
-            if(mConfig.Threads > 1 && chromosomeTasks.size() <= mConfig.Threads)
-            {
-                mReferenceData.initialiseChromosomeData(chrStr);
-            }
+            if(chromosomeTasks.size() <= max(mConfig.Threads, 1))
+                initialRefChromosomes.add(chrStr);
         }
+
+        // PV_LOGGER.debug("initialising reference data");
+        mReferenceData.initialiseChromosomeData(initialRefChromosomes, mConfig.Threads);
 
         PV_LOGGER.info("sample({}) processing VCF file({})", mConfig.SampleId, mConfig.VcfFile);
 
@@ -90,7 +98,7 @@ public class PaveApplication
         mTranscriptWriter.close();
         mVcfWriter.close();
 
-        PV_LOGGER.info("sample({}) annotation complete", mConfig.SampleId);
+        PV_LOGGER.info("Pave complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private VcfWriter initialiseVcfWriter()

@@ -9,10 +9,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.RefStringCache;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.pave.VariantData;
 
@@ -23,7 +27,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class PonAnnotation
+public class PonAnnotation implements Callable
 {
     private final String mPonFilename;
     private BufferedReader mFileReader;
@@ -32,6 +36,7 @@ public class PonAnnotation
 
     private final Map<VariantTier,PonFilters> mPonFilters;
     private final Map<String,PonChrCache> mChrCacheMap;
+    private final RefStringCache mStringCache;
 
     public static final String PON_COUNT = "PON_COUNT";
     public static final String PON_MAX = "PON_MAX";
@@ -45,6 +50,7 @@ public class PonAnnotation
         mColumnCount = -1;
         mHasValidData = true;
         mChrCacheMap = Maps.newHashMap();
+        mStringCache = new RefStringCache();
 
         if(filename != null && !filename.isEmpty())
         {
@@ -109,6 +115,25 @@ public class PonAnnotation
             chrCache.clear();
             mChrCacheMap.remove(chromosome);
         }
+    }
+
+
+    private final List<String> mInitialChromosomes = Lists.newArrayList();
+
+    public void registerInitialChromosomes(final List<String> chromosomes)
+    {
+        mInitialChromosomes.addAll(chromosomes);
+    }
+
+    @Override
+    public Long call()
+    {
+        for(String chromosome : mInitialChromosomes)
+        {
+            loadPonEntries(chromosome);
+        }
+
+        return (long)0;
     }
 
     public void annotateVariant(final VariantData variant, final PonChrCache chrCache)
@@ -199,7 +224,9 @@ public class PonAnnotation
                 {
                     if(currentCache != null && !currentCache.isComplete())
                     {
-                        PV_LOGGER.debug("chr({}) loaded {} PON entries", currentCache.Chromosome, currentCache.entryCount());
+                        PV_LOGGER.debug("chr({}) loaded {} PON entries, strCache({})",
+                                currentCache.Chromosome, currentCache.entryCount(), mStringCache.size());
+
                         currentCache.setComplete();
                     }
 
@@ -207,7 +234,7 @@ public class PonAnnotation
 
                     if(currentCache == null)
                     {
-                        currentCache = new PonChrCache(chromosome);
+                        currentCache = new PonChrCache(chromosome, mStringCache);
                         mChrCacheMap.put(chromosome, currentCache);
                     }
 

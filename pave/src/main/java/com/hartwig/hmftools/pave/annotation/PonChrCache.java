@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.RefStringCache;
 import com.hartwig.hmftools.pave.VariantData;
 
 public class PonChrCache
@@ -14,12 +15,14 @@ public class PonChrCache
     public final String Chromosome;
 
     private final Map<Integer,List<PonVariantData>> mPositionMap;
+    private final RefStringCache mStringCache;
     private boolean mComplete;
 
-    public PonChrCache(final String chromosome)
+    public PonChrCache(final String chromosome, final RefStringCache stringCache)
     {
         Chromosome = chromosome;
         mPositionMap = Maps.newHashMap();
+        mStringCache = stringCache;
         mComplete = false;
     }
 
@@ -34,15 +37,13 @@ public class PonChrCache
             mPositionMap.put(position, posList);
         }
 
-        posList.add(new PonVariantData(ref, alt, samples, maxSampleReads, totalSampleReads));
+        posList.add(new PonVariantData(mStringCache.intern(ref), mStringCache.intern(alt), samples, maxSampleReads, totalSampleReads));
     }
 
     public boolean isComplete() { return mComplete; }
     public void setComplete() { mComplete = true; }
     public void clear() { mPositionMap.clear(); }
     public int entryCount() { return mPositionMap.values().stream().mapToInt(x -> x.size()).sum(); }
-
-    public String toString() { return format("chr(%s) entries(%d)", Chromosome, mPositionMap.size()); }
 
     public PonVariantData getPonData(final VariantData variant)
     {
@@ -63,4 +64,7 @@ public class PonChrCache
 
         return posList.stream().filter(x -> x.matches(ref, alt)).findFirst().orElse(null);
     }
+
+    public String cacheDetailsStr() { return format("chr(%s) entries(%d) strCache(%d)", Chromosome, entryCount(), mStringCache.size()); }
+
 }

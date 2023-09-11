@@ -5,9 +5,12 @@ import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static htsjdk.variant.vcf.VCFHeaderLineCount.UNBOUNDED;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.utils.RefStringCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 
@@ -16,10 +19,12 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class ClinvarAnnotation
+public class ClinvarAnnotation implements Callable
 {
     private final Map<String,ClinvarChrCache> mChrCacheMap;
+    private final RefStringCache mStringCache;
     private boolean mHasValidData;
+    private final String mFilename;
 
     private static final String CLINVAR_VCF = "clinvar_vcf";
 
@@ -32,15 +37,13 @@ public class ClinvarAnnotation
     public ClinvarAnnotation(final ConfigBuilder configBuilder)
     {
         mChrCacheMap = Maps.newHashMap();
-        mHasValidData = true;
+        mStringCache = new RefStringCache();
 
-        if(configBuilder.hasValue(CLINVAR_VCF))
-        {
-            loadEntries(configBuilder.getValue(CLINVAR_VCF));
-        }
+        mHasValidData = true;
+        mFilename = configBuilder.getValue(CLINVAR_VCF);
     }
 
-    public boolean hasData() { return !mChrCacheMap.isEmpty(); }
+    public boolean hasData() { return mFilename != null; }
     public boolean hasValidData() { return mHasValidData; }
 
     public synchronized ClinvarChrCache getChromosomeCache(final String chromosome)
@@ -57,6 +60,17 @@ public class ClinvarAnnotation
             chrCache.clear();
             mChrCacheMap.remove(chromosome);
         }
+    }
+
+    @Override
+    public Long call()
+    {
+        if(mFilename != null)
+        {
+            loadEntries(mFilename);
+        }
+
+        return (long)0;
     }
 
     public static void addHeader(final VCFHeader header)
@@ -83,6 +97,8 @@ public class ClinvarAnnotation
             return;
         }
 
+        PV_LOGGER.debug("loading Clinvar data from file({})", filename);
+
         try
         {
             ClinvarChrCache currentCache = null;
@@ -93,11 +109,14 @@ public class ClinvarAnnotation
                 if(context.getAlleles().size() < 2)
                     continue;
 
+                if(!HumanChromosome.contains(context.getContig()))
+                    continue;
+
                 String chromosome = RefGenomeFunctions.stripChrPrefix(context.getContig());
 
                 if(currentCache == null || !currentCache.Chromosome.equals(chromosome))
                 {
-                    currentCache = new ClinvarChrCache(chromosome);
+                    currentCache = new ClinvarChrCache(chromosome, mStringCache);
                     mChrCacheMap.put(chromosome, currentCache);
                 }
 
@@ -115,7 +134,7 @@ public class ClinvarAnnotation
                 ++entryCount;
             }
 
-            PV_LOGGER.info("loaded {} Clinvar entries from file({})", entryCount, filename);
+            PV_LOGGER.info("loaded {} Clinvar entries from file({}), strCache({})", entryCount, filename, mStringCache.size());
         }
         catch(Exception e)
         {

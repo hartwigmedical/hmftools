@@ -32,6 +32,7 @@ public class MappabilityChrCache
     public boolean isComplete() { return mComplete; }
     public void setComplete() { mComplete = true; }
     public void clear() { mEntries.clear(); }
+    public int entryCount() { return mEntries.size(); }
 
     public void annotateVariant(final VariantData variant)
     {

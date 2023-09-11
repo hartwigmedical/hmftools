@@ -16,23 +16,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.RefStringCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.pave.VariantData;
-
-import org.apache.logging.log4j.Level;
 
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class GnomadAnnotation
+public class GnomadAnnotation implements Callable
 {
     private final Map<String,GnomadChrCache> mChrCacheMap;
     private final RefGenomeVersion mRefGenomeVersion;
@@ -40,6 +41,8 @@ public class GnomadAnnotation
     private final double mPonFilterThreshold;
     private boolean mHasValidData;
     private final boolean mEnabled;
+    private final String mGnomadFilename;
+    private final RefStringCache mStringCache;
 
     public static final String GNOMAD_FREQUENCY_FILE = "gnomad_freq_file";
     public static final String GNOMAD_FREQUENCY_DIR = "gnomad_freq_dir";
@@ -54,22 +57,25 @@ public class GnomadAnnotation
         mChrCacheMap = Maps.newHashMap();
         mChromosomeFiles = Maps.newHashMap();
         mHasValidData = true;
+        mStringCache = new RefStringCache();
 
         mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
         if(configBuilder.hasValue(GNOMAD_FREQUENCY_FILE))
         {
             mEnabled = true;
-            loadChromosomeEntries(configBuilder.getValue(GNOMAD_FREQUENCY_FILE), null);
+            mGnomadFilename = configBuilder.getValue(GNOMAD_FREQUENCY_FILE);
         }
         else if(configBuilder.hasValue(GNOMAD_FREQUENCY_DIR))
         {
             mEnabled = true;
+            mGnomadFilename = null;
             String gnomadDir = configBuilder.getValue(GNOMAD_FREQUENCY_DIR);
             loadAllFrequencyFiles(gnomadDir);
         }
         else
         {
+            mGnomadFilename = null;
             mEnabled = false;
         }
 
@@ -130,6 +136,28 @@ public class GnomadAnnotation
         }
     }
 
+    private final List<String> mInitialChromosomes = Lists.newArrayList();
+
+    public void registerInitialChromosomes(final List<String> chromosomes) { mInitialChromosomes.addAll(chromosomes); }
+
+    @Override
+    public Long call()
+    {
+        if(mGnomadFilename != null)
+        {
+            loadChromosomeEntries(mGnomadFilename, null);
+        }
+        else if(!mChromosomeFiles.isEmpty())
+        {
+            for(String chromosome : mInitialChromosomes)
+            {
+                getChromosomeCache(chromosome);
+            }
+        }
+
+        return (long)0;
+    }
+
     private void loadChromosomeEntries(final String filename, final String fileChromosome)
     {
         // if file chromosome is supplied then it is not read from the input file
@@ -165,7 +193,7 @@ public class GnomadAnnotation
                 if(!chromosome.equals(currentChr))
                 {
                     currentChr = chromosome;
-                    currentChrCache = new GnomadChrCache(chromosome);
+                    currentChrCache = new GnomadChrCache(chromosome, mStringCache);
                     mChrCacheMap.put(chromosome, currentChrCache);
                 }
 
@@ -174,8 +202,16 @@ public class GnomadAnnotation
                 ++itemCount;
             }
 
-            Level logLevel = mChromosomeFiles.isEmpty() ? Level.INFO : Level.DEBUG;
-            PV_LOGGER.log(logLevel, "loaded {} gnomad frequency records from file({})", itemCount, filename);
+            if(mChromosomeFiles.isEmpty())
+            {
+                PV_LOGGER.info("loaded {} Gnomad frequency records from file({}), strCache({})",
+                        itemCount, filename, mStringCache.size());
+            }
+            else if(currentChrCache != null)
+            {
+                PV_LOGGER.debug("chr({}) loaded {} Gnomad frequency records, strCache({})",
+                        currentChrCache.Chromosome, currentChrCache.entryCount(), mStringCache.size());
+            }
         }
         catch(IOException e)
         {
@@ -235,5 +271,10 @@ public class GnomadAnnotation
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(GNOMAD_FREQ, 1, VCFHeaderLineType.Float, GNOMAD_FREQ_DESC));
         header.addMetaDataLine(new VCFFilterHeaderLine(PON_GNOMAD_FILTER, "Filter Gnomad PON"));
+    }
+
+    public void loadCacheSize()
+    {
+
     }
 }

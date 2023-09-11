@@ -23,6 +23,7 @@ import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
 import com.hartwig.hmftools.pave.annotation.Mappability;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
+import com.hartwig.hmftools.pave.annotation.ReferenceData;
 import com.hartwig.hmftools.pave.annotation.Reportability;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -218,6 +219,7 @@ public class VcfWriter
 
     public void close()
     {
+        writePendingVariants();
         mWriter.close();
     }
 }

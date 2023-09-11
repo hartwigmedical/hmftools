@@ -21,6 +21,7 @@ import com.hartwig.hmftools.pave.annotation.ClinvarChrCache;
 import com.hartwig.hmftools.pave.annotation.GnomadChrCache;
 import com.hartwig.hmftools.pave.annotation.MappabilityChrCache;
 import com.hartwig.hmftools.pave.annotation.PonChrCache;
+import com.hartwig.hmftools.pave.annotation.ReferenceData;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
