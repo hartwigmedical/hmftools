@@ -46,6 +46,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.SomaticPurityFitter;
 import com.hartwig.hmftools.purple.gene.GeneCopyNumberBuilder;
+import com.hartwig.hmftools.purple.plot.RChartData;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleQC;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
@@ -149,8 +150,6 @@ public class PurpleApplication
 
                 if(sampleData == null)
                     System.exit(1);
-
-                PPL_LOGGER.debug("post-data-loading memory({}mb)", calcMemoryUsage());
 
                 performFit(sampleData);
             }
@@ -304,9 +303,6 @@ public class PurpleApplication
             geneCopyNumbers.addAll(GeneCopyNumberBuilder.createGeneCopyNumbers(
                     mReferenceData.RefGenVersion, mReferenceData.GeneTransCache, copyNumbers));
 
-            PPL_LOGGER.debug("post-fit memory({}mb)", calcMemoryUsage());
-            System.gc();
-
             final List<PeakModelData> somaticPeaks = Lists.newArrayList();
 
             PPL_LOGGER.info("modelling somatic peaks");
@@ -326,8 +322,6 @@ public class PurpleApplication
             somaticStream = new SomaticStream(mConfig, mReferenceData, somaticCache, somaticPeaks);
 
             somaticStream.processAndWrite(purityAdjuster);
-            PPL_LOGGER.debug("post-enrichment memory({}mb)", calcMemoryUsage());
-            System.gc();
 
             sampleData.SvCache.write(purityAdjuster, copyNumbers, mConfig.tumorOnlyMode());
 
@@ -396,6 +390,9 @@ public class PurpleApplication
                         referenceId, tumorId, !sampleDataFiles.SomaticVcfFile.isEmpty(),
                         gender, copyNumbers, somaticStream.downsampledVariants(), sampleData.SvCache.variants(),
                         fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
+
+                // clean up any temporary files
+                RChartData.cleanupFiles(mConfig, tumorId);
             }
             catch(Exception e)
             {

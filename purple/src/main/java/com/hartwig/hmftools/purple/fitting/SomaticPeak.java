@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.purple.fitting;
 
-public class SomaticPeak {
+import static java.lang.String.format;
+
+public class SomaticPeak
+{
 
     public final double AlleleFrequency;
     public final int Count;
@@ -9,5 +12,10 @@ public class SomaticPeak {
     {
         AlleleFrequency = alleleFrequency;
         Count = count;
+    }
+
+    public String toString()
+    {
+        return format("vaf(%.3f) count(%d)", AlleleFrequency, Count);
     }
 }

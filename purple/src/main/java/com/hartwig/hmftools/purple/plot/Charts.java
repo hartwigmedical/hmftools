@@ -74,9 +74,6 @@ public class Charts
                 throw new Exception("charting failed");
             }
         }
-
-        // clean up any temporary files
-        RChartData.cleanupFiles(mConfig, sampleId);
     }
 
     private void createDirectory(final String dir) throws IOException
