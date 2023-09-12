@@ -161,7 +161,7 @@ public class SageConfig
 
         if(LogEvidenceReads)
         {
-            SG_LOGGER.trace("READ_EV,SampleId,Chromosome,Position,Ref,Alt,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex");
+            SG_LOGGER.trace("READ_EV,SampleId,Chromosome,Position,Ref,Alt,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex,Quality");
         }
 
         PerfWarnTime = configBuilder.getDecimal(PERF_WARN_TIME);
