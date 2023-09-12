@@ -9,11 +9,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.StringCache;
@@ -27,7 +25,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class PonAnnotation implements Callable
+public class PonAnnotation extends AnnotationData implements Callable
 {
     private final String mPonFilename;
     private BufferedReader mFileReader;
@@ -60,7 +58,13 @@ public class PonAnnotation implements Callable
         mPonFilters = Maps.newHashMap();
     }
 
+    @Override
+    public String type() { return "PON"; }
+
+    @Override
     public boolean enabled() { return mPonFilename != null; }
+
+    @Override
     public boolean hasValidData() { return mHasValidData; }
 
     public boolean loadFilters(final String filtersConfig)
@@ -105,6 +109,7 @@ public class PonAnnotation implements Callable
         return mChrCacheMap.get(chromosome);
     }
 
+    @Override
     public synchronized void onChromosomeComplete(final String chromosome)
     {
         PonChrCache chrCache = mChrCacheMap.get(chromosome);
@@ -114,14 +119,6 @@ public class PonAnnotation implements Callable
             chrCache.clear();
             mChrCacheMap.remove(chromosome);
         }
-    }
-
-
-    private final List<String> mInitialChromosomes = Lists.newArrayList();
-
-    public void registerInitialChromosomes(final List<String> chromosomes)
-    {
-        mInitialChromosomes.addAll(chromosomes);
     }
 
     @Override

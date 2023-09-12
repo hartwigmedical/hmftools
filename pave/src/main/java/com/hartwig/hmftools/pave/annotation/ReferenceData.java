@@ -28,6 +28,9 @@ public class ReferenceData
     public final Mappability VariantMappability;
     public final ClinvarAnnotation Clinvar;
     public final Blacklistings BlacklistedVariants;
+
+    public final List<AnnotationData> Annotators;
+
     public final RefGenomeInterface RefGenome;
     public final Reportability ReportableClassifier;
 
@@ -45,100 +48,70 @@ public class ReferenceData
 
         ReportableClassifier = new Reportability(GeneDataCache.getDriverPanel());
 
+        Annotators = Lists.newArrayList();
+
         Gnomad = new GnomadAnnotation(configBuilder);
+        Annotators.add(Gnomad);
 
         StandardPon = new PonAnnotation(configBuilder.getValue(PON_FILE), true);
         StandardPon.loadFilters(configBuilder.getValue(PON_FILTERS));
+        Annotators.add(StandardPon);
 
         ArtefactsPon = new PonAnnotation(configBuilder.getValue(PON_ARTEFACTS_FILE), false);
+        Annotators.add(ArtefactsPon);
 
         VariantMappability = new Mappability(configBuilder);
+        Annotators.add(VariantMappability);
+
         Clinvar = new ClinvarAnnotation(configBuilder);
+        Annotators.add(Clinvar);
+
         BlacklistedVariants = new Blacklistings(configBuilder);
+        Annotators.add(BlacklistedVariants);
 
         RefGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
     }
 
     public boolean isValid()
     {
-        if(StandardPon.enabled() && !StandardPon.hasValidData())
+        boolean allValid = true;
+
+        for(AnnotationData annotationData : Annotators)
         {
-            PV_LOGGER.error("invalid PON");
-            return false;
+            if(annotationData.enabled() && !annotationData.hasValidData())
+            {
+                allValid = false;
+                PV_LOGGER.error("invalid {} annotation data", annotationData.type());
+
+            }
         }
 
-        if(ArtefactsPon.enabled() && !ArtefactsPon.hasValidData())
-        {
-            PV_LOGGER.error("invalid PON artefacts");
-            return false;
-        }
-
-        if(!VariantMappability.hasValidData())
-        {
-            PV_LOGGER.error("invalid mappability data");
-            return false;
-        }
-
-        if(!Clinvar.hasValidData())
-        {
-            PV_LOGGER.error("invalid Clinvar data");
-            return false;
-        }
-
-        if(!BlacklistedVariants.hasValidData())
-        {
-            PV_LOGGER.error("invalid blacklistings data");
-            return false;
-        }
-
-        if(!Gnomad.hasValidData())
-        {
-            PV_LOGGER.error("invalid Gnomad data");
-            return false;
-        }
-
-        return true;
-    }
-
-    public void initialiseChromosomeData(final String chromosome)
-    {
-        if(Gnomad.hasData())
-            Gnomad.getChromosomeCache(chromosome);
-
-        if(VariantMappability.hasData())
-            VariantMappability.getChromosomeCache(chromosome);
-
-        if(StandardPon.enabled())
-            StandardPon.getChromosomeCache(chromosome);
+        return allValid;
     }
 
     public void initialiseChromosomeData(final List<String> chromosomes, int threads)
     {
         final List<Callable> callableList = Lists.newArrayList();
 
-        if(Gnomad.enabled())
+        for(AnnotationData annotationData : Annotators)
         {
-            Gnomad.registerInitialChromosomes(chromosomes);
-            callableList.add(Gnomad);
-        }
+            if(annotationData.enabled())
+            {
+                annotationData.registerInitialChromosomes(chromosomes);
 
-        if(VariantMappability.enabled())
-        {
-            VariantMappability.registerInitialChromosomes(chromosomes);
-            callableList.add(VariantMappability);
-        }
-
-        if(StandardPon.enabled())
-        {
-            StandardPon.registerInitialChromosomes(chromosomes);
-            callableList.add(StandardPon);
-        }
-
-        if(Clinvar.enabled())
-        {
-            callableList.add(Clinvar);
+                if(annotationData instanceof Callable)
+                    callableList.add((Callable)annotationData);
+            }
         }
 
         TaskExecutor.executeTasks(callableList, threads);
+    }
+
+    public void onChromosomeComplete(final String chromosome)
+    {
+        for(AnnotationData annotationData : Annotators)
+        {
+            annotationData.onChromosomeComplete(chromosome);
+        }
     }
 }

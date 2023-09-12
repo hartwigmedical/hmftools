@@ -112,11 +112,7 @@ public class ChromosomeTask implements Callable
 
         PV_LOGGER.info("chr({}) complete for {} variants", mChromosome, variantCount);
 
-        mReferenceData.Gnomad.onChromosomeComplete(mChromosomeStr);
-        mReferenceData.Clinvar.onChromosomeComplete(mChromosomeStr);
-        mReferenceData.VariantMappability.onChromosomeComplete(mChromosomeStr);
-        mReferenceData.StandardPon.onChromosomeComplete(mChromosomeStr);
-        mReferenceData.ArtefactsPon.onChromosomeComplete(mChromosomeStr);
+        mReferenceData.onChromosomeComplete(mChromosomeStr);
 
         mVcfWriter.onChromosomeComplete(mChromosome);
 

@@ -19,7 +19,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class ClinvarAnnotation implements Callable
+public class ClinvarAnnotation extends AnnotationData implements Callable
 {
     private final Map<String,ClinvarChrCache> mChrCacheMap;
     private final StringCache mStringCache;
@@ -43,8 +43,13 @@ public class ClinvarAnnotation implements Callable
         mFilename = configBuilder.getValue(CLINVAR_VCF);
     }
 
+    @Override
+    public String type() { return "Clinvar"; }
+
+    @Override
     public boolean enabled() { return mFilename != null; }
-    public boolean hasData() { return !mChrCacheMap.isEmpty(); }
+
+    @Override
     public boolean hasValidData() { return mHasValidData; }
 
     public synchronized ClinvarChrCache getChromosomeCache(final String chromosome)
@@ -52,6 +57,7 @@ public class ClinvarAnnotation implements Callable
         return mChrCacheMap.get(RefGenomeFunctions.stripChrPrefix(chromosome));
     }
 
+    @Override
     public synchronized void onChromosomeComplete(final String chromosome)
     {
         ClinvarChrCache chrCache = mChrCacheMap.get(chromosome);

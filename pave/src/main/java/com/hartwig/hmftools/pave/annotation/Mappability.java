@@ -8,11 +8,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -21,7 +19,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class Mappability implements Callable
+public class Mappability extends AnnotationData implements Callable
 {
     private BufferedReader mFileReader;
     private final Map<String,MappabilityChrCache> mChrCacheMap;
@@ -44,8 +42,13 @@ public class Mappability implements Callable
         }
     }
 
+    @Override
+    public String type() { return "Mappability"; }
+
+    @Override
     public boolean enabled() { return mFileReader != null; }
-    public boolean hasData() { return !mChrCacheMap.isEmpty(); }
+
+    @Override
     public boolean hasValidData() { return mHasValidData; }
 
     public synchronized MappabilityChrCache getChromosomeCache(final String chromosome)
@@ -59,6 +62,7 @@ public class Mappability implements Callable
         return mChrCacheMap.get(chromosome);
     }
 
+    @Override
     public synchronized void onChromosomeComplete(final String chromosome)
     {
         MappabilityChrCache chrCache = mChrCacheMap.get(chromosome);
@@ -69,10 +73,6 @@ public class Mappability implements Callable
             mChrCacheMap.remove(chromosome);
         }
     }
-
-    private final List<String> mInitialChromosomes = Lists.newArrayList();
-
-    public void registerInitialChromosomes(final List<String> chromosomes) { mInitialChromosomes.addAll(chromosomes); }
 
     @Override
     public Long call()

@@ -20,7 +20,6 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -33,7 +32,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class GnomadAnnotation implements Callable
+public class GnomadAnnotation extends AnnotationData implements Callable
 {
     private final Map<String,GnomadChrCache> mChrCacheMap;
     private final RefGenomeVersion mRefGenomeVersion;
@@ -82,8 +81,13 @@ public class GnomadAnnotation implements Callable
         mPonFilterThreshold = configBuilder.getDecimal(GNOMAD_PON_FILTER);
     }
 
+    @Override
+    public String type() { return "Gnomad frequency"; }
+
+    @Override
     public boolean enabled() { return mGnomadFilename != null || !mChromosomeFiles.isEmpty(); }
-    public boolean hasData() { return !mChrCacheMap.isEmpty(); }
+
+    @Override
     public boolean hasValidData() { return mHasValidData; }
 
     public void annotateVariant(final VariantData variant, final GnomadChrCache chrCache)
@@ -126,6 +130,7 @@ public class GnomadAnnotation implements Callable
         return mChrCacheMap.get(chromosome);
     }
 
+    @Override
     public synchronized void onChromosomeComplete(final String chromosome)
     {
         GnomadChrCache chrCache = mChrCacheMap.get(chromosome);
@@ -136,10 +141,6 @@ public class GnomadAnnotation implements Callable
             mChrCacheMap.remove(chromosome);
         }
     }
-
-    private final List<String> mInitialChromosomes = Lists.newArrayList();
-
-    public void registerInitialChromosomes(final List<String> chromosomes) { mInitialChromosomes.addAll(chromosomes); }
 
     @Override
     public Long call()
