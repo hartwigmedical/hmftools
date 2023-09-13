@@ -81,7 +81,7 @@ For merged sequences, find a V and J anchor simply read out the CDR3 sequence be
 
 For each V anchored only consensus sequence we search for candidate anchor sequences. To do this we compare each complete 10 amino acid kmer downstream of the V-CYS sequence to the set of known 10 amino acid J anchor sequences by summing the log likelihoods from the BLOSUM62 substitution matrix. Truncated partial anchor sequences of 1 or more amino acids are also checked for the final 1-9 amino acids of the consensus sequence. A similarity score is calculated for each anchor sequence as follows: 
 
-Similarity Score = 3 * Amino Acid length -6 - SUM[Self BLOSUM62 - Anchor BLOSUM62]] 
+$$ similarity Score = 3 \times amino Acid length -6 - \sum_{aminoAcid}{BLOSUM62(refAA_{i}, refAA_{i})} + \sum_{aminoAcid}{BLOSUM62(refAA_{i}, queryAA_{i})} $$
 
 If the max similarity score to any anchor sequence is greater than 0 we deem it to be a CDR3 sequence. If 2 candidate anchors share the same score, then rank first by inframe and then by whichever CDR3 sequence is closest to 13 amino acids in length. For each J anchored only read/fragment we similarly search for candidate V-CYS anchor sequences in the consensus sequence 
 
