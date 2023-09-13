@@ -2,13 +2,17 @@ package com.hartwig.hmftools.bamtools.compare;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandOptions;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 
 import java.util.List;
 
@@ -56,7 +60,7 @@ public class CompareConfig
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        BT_LOGGER.info("refGenome({}), bam({})", RefGenVersion, RefBamFile);
+        BT_LOGGER.info("refBam({}) newBam({})", RefBamFile, NewBamFile);
         BT_LOGGER.info("output file({})", OutputFile);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
@@ -64,8 +68,15 @@ public class CompareConfig
         SpecificChromosomes = Lists.newArrayList();
         SpecificRegions = Lists.newArrayList();
 
-        if(!loadSpecificRegionsConfig(configBuilder, SpecificChromosomes, SpecificRegions))
+        try
+        {
+            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, BT_LOGGER);
+        }
+        catch(Exception e)
+        {
+            BT_LOGGER.error("failed to load specific regions: {}", e.toString());
             System.exit(1);
+        }
 
         Threads = parseThreads(configBuilder);
 
@@ -74,13 +85,16 @@ public class CompareConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        addCommonCommandOptions(configBuilder);
-
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
 
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
         configBuilder.addRequiredConfigItem(REF_BAM_FILE, "Ref BAM file");
         configBuilder.addRequiredConfigItem(NEW_BAM_FILE,"New BAM file");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
+
+        addRefGenomeConfig(configBuilder, true);;
+        addSpecificChromosomesRegionsConfig(configBuilder);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
     }
 }

@@ -50,17 +50,12 @@ public class PartitionThread extends Thread
 
                 PartitionReader reader = new PartitionReader(partition.Region, mConfig, mRefSamReader, mNewSamReader, mReadWriter);
 
-                boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
-
-                if(logAndGc)
+                if(partition.TaskId > 0 && (partition.TaskId % 100) == 0)
                 {
                     BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
                 }
 
                 reader.run();
-
-                if(logAndGc)
-                    System.gc();
             }
             catch(NoSuchElementException e)
             {

@@ -37,8 +37,6 @@ public final class CommonUtils
 
     public static final String BAM_FILE_TYPE = "bam";
 
-    public static final String BT_DELIM = ",";
-
     public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 
     public static void addCommonCommandOptions(final ConfigBuilder configBuilder)
@@ -57,7 +55,7 @@ public final class CommonUtils
     public static boolean loadSpecificRegionsConfig(
             final ConfigBuilder configBuilder, final List<String> specificChromosomes, final List<ChrBaseRegion> specificRegions)
     {
-        if(configBuilder.hasValue(REGIONS_BED_FILE))
+        if(configBuilder.isRegistered(REGIONS_BED_FILE) && configBuilder.hasValue(REGIONS_BED_FILE))
         {
             return BedFileReader.loadBedFile(configBuilder.getValue(REGIONS_BED_FILE), specificRegions);
         }
