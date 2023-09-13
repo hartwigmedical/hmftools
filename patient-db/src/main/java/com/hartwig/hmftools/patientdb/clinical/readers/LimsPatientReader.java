@@ -7,6 +7,7 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class LimsPatientReader {
 
@@ -15,19 +16,22 @@ public class LimsPatientReader {
     @NotNull
     private final List<DoidNode> doidNodes;
 
-    public LimsPatientReader(List<DoidNode> doidNodes) {
+    public LimsPatientReader(@NotNull List<DoidNode> doidNodes) {
         this.doidNodes = doidNodes;
     }
 
     @NotNull
     public Patient read(@NotNull String patientIdentifier, @NotNull SampleData chosenSample, @NotNull List<SampleData> sequencedSamples) {
-        List<String> doids = Lists.newArrayList(chosenSample.limsTumorDoids().split(DOID_STRING_DELIMITER));
+        List<DoidNode> resolvedDoidNodes = Lists.newArrayList();
+        if (chosenSample.limsTumorDoids() != null){
+            resolvedDoidNodes = resolveDoidNodes(doidNodes, List.of(chosenSample.limsTumorDoids().split(DOID_STRING_DELIMITER)));
+        }
 
         CuratedPrimaryTumor curatedPrimaryTumor = ImmutableCuratedPrimaryTumor.builder()
                 .location(chosenSample.limsTumorLocation())
                 .type(chosenSample.limsTumorType())
                 .extraDetails(chosenSample.limsTumorExtra())
-                .doidNodes(resolveDoidNodes(doidNodes, doids))
+                .doidNodes(resolvedDoidNodes)
                 .isOverridden(false)
                 .build();
 
@@ -77,14 +81,6 @@ public class LimsPatientReader {
 
     @NotNull
     static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidsToResolve) {
-        List<DoidNode> resolvedDoidNodes = Lists.newArrayList();
-        for (String doid : doidsToResolve) {
-            for (DoidNode doidNode : doidNodes) {
-                if (doidNode.doid().equals(doid)) {
-                    resolvedDoidNodes.add(doidNode);
-                }
-            }
-        }
-        return resolvedDoidNodes;
+        return doidNodes.stream().filter(doidNode -> doidsToResolve.contains(doidNode.doid())).collect(Collectors.toList());
     }
 }

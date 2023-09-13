@@ -13,4 +13,4 @@ ALTER TABLE purity
     DROP COLUMN version;
 
 ALTER TABLE sample
-    ADD COLUMN cohortId varchar(255) NULL after sampleId
+    ADD COLUMN cohortId varchar(255) NOT NULL after sampleId

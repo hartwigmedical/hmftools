@@ -48,7 +48,7 @@ public class ClinicalAlgo {
     private final List<DoidNode> doidNodes;
 
     ClinicalAlgo(@NotNull final EcrfModels ecrfModels, @NotNull final PrimaryTumorCurator primaryTumorCurator,
-            @NotNull final BiopsySiteCurator biopsySiteCurator, @NotNull final TreatmentCurator treatmentCurator, List<DoidNode> doidNodes) {
+            @NotNull final BiopsySiteCurator biopsySiteCurator, @NotNull final TreatmentCurator treatmentCurator, @NotNull List<DoidNode> doidNodes) {
         this.ecrfModels = ecrfModels;
         this.primaryTumorCurator = primaryTumorCurator;
         this.biopsySiteCurator = biopsySiteCurator;
@@ -122,7 +122,7 @@ public class ClinicalAlgo {
 
     @NotNull
     private List<Patient> readLimsPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
-            Map<String, ConsentConfig> consentConfigMap, List<DoidNode> doidNodes) {
+                                           @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull List<DoidNode> doidNodes) {
         List<Patient> patients = Lists.newArrayList();
         CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
         LimsPatientReader limsPatientReader = new LimsPatientReader(doidNodes);

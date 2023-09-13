@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb.clinical.lims;
 
-import java.lang.reflect.Array;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

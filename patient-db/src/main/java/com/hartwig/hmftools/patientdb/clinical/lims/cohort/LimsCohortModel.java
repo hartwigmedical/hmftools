@@ -23,12 +23,11 @@ public abstract class LimsCohortModel {
         if (cohortString == null || cohortString.isEmpty()) {
             LOGGER.warn("No cohort string present in LIMS for sample '{}'.", sampleId);
             return null;
-        }else{
-            LimsCohortConfig cohortConfigData = limsCohortMap().get(cohortString);
-            if (cohortConfigData == null) {
-                LOGGER.warn("Could not resolve cohort config for sample '{}' based on LIMS cohort '{}'", sampleId, cohortString);
-            }
-            return cohortConfigData;
         }
+        LimsCohortConfig cohortConfigData = limsCohortMap().get(cohortString);
+        if (cohortConfigData == null) {
+            LOGGER.warn("Could not resolve cohort config for sample '{}' based on LIMS cohort '{}'", sampleId, cohortString);
+        }
+        return cohortConfigData;
     }
 }
