@@ -392,7 +392,7 @@ public class PurpleApplication
                         fittedRegions, Lists.newArrayList(amberData.ChromosomeBafs.values()));
 
                 // clean up any temporary files
-                RChartData.cleanupFiles(mConfig, tumorId);
+                // RChartData.cleanupFiles(mConfig, tumorId);
             }
             catch(Exception e)
             {

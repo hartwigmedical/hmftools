@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChr
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import com.hartwig.hmftools.common.purple.RunMode;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantTier;
+import com.hartwig.hmftools.purple.plot.CircosCharts;
 
 import org.apache.commons.cli.ParseException;
 
@@ -93,18 +95,22 @@ public class PurpleConfig
             OutputDir = checkAddDirSeparator(outputDir);
         }
 
-        final File outputPath = new File(OutputDir);
-        if(!outputPath.exists() && !outputPath.mkdirs())
-        {
-            mIsValid = false;
-            PPL_LOGGER.error("unable to write directory " + OutputDir);
-        }
+        mIsValid &= createDirectory(OutputDir);
 
         PPL_LOGGER.info("output directory: {}", OutputDir);
 
         SampleFiles = new SampleDataFiles(configBuilder, TumorId);
 
         Charting = new ChartConfig(configBuilder, OutputDir);
+
+        if(!Charting.Disabled)
+        {
+            if(Charting.CircosBinary != null)
+                mIsValid &= createDirectory(Charting.CircosDirectory);
+
+            mIsValid &= createDirectory(Charting.PlotDirectory);
+        }
+
         Fitting = new FittingConfig(configBuilder);
         SomaticFitting = new SomaticFitConfig(configBuilder);
         TargetRegionsMode = configBuilder.hasValue(TARGET_REGIONS_BED);
@@ -198,5 +204,17 @@ public class PurpleConfig
             return !SpecificChromosomes.contains(chromosome);
 
         return false;
+    }
+
+    private boolean createDirectory(final String dir)
+    {
+        final File output = new File(dir);
+        if(!output.exists() && !output.mkdirs())
+        {
+            PPL_LOGGER.error("unable to create chart directory " + dir);
+            return false;
+        }
+
+        return true;
     }
 }

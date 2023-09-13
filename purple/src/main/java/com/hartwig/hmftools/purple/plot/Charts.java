@@ -2,7 +2,6 @@ package com.hartwig.hmftools.purple.plot;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -27,20 +26,8 @@ public class Charts
     public Charts(final PurpleConfig config, final ExecutorService executorService, boolean isHg38) throws IOException
     {
         mRCharts = new RCharts(config, executorService);
-
         mConfig = config;
-
-        createDirectory(config.Charting.PlotDirectory);
-
-        if(config.Charting.CircosBinary != null)
-        {
-            createDirectory(config.Charting.CircosDirectory);
-            mCircosCharts = new CircosCharts(config, executorService, isHg38);
-        }
-        else
-        {
-            mCircosCharts = null;
-        }
+        mCircosCharts = config.Charting.CircosBinary != null ? new CircosCharts(config, executorService, isHg38) : null;
     }
 
     public void write(
@@ -73,15 +60,6 @@ public class Charts
                 PPL_LOGGER.warn("error generating charts");
                 throw new Exception("charting failed");
             }
-        }
-    }
-
-    private void createDirectory(final String dir) throws IOException
-    {
-        final File output = new File(dir);
-        if(!output.exists() && !output.mkdirs())
-        {
-            throw new IOException("Unable to create chart directory " + dir);
         }
     }
 }
