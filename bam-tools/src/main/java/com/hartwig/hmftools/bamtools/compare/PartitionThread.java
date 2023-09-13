@@ -21,6 +21,7 @@ public class PartitionThread extends Thread
     private final SamReader mNewSamReader;
     private final ReadWriter mReadWriter;
     private final Queue<PartitionTask> mPartitions;
+    private final Statistics mStats;
 
     public PartitionThread(
             final CompareConfig config, final Queue<PartitionTask> partitions, final ReadWriter readWriter)
@@ -37,8 +38,12 @@ public class PartitionThread extends Thread
                 .validationStringency(ValidationStringency.SILENT)
                 .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.NewBamFile));
 
+        mStats = new Statistics();
+
         start();
     }
+
+    public Statistics stats() { return mStats; }
 
     public void run()
     {
@@ -56,6 +61,7 @@ public class PartitionThread extends Thread
                 }
 
                 reader.run();
+                mStats.merge(reader.stats());
             }
             catch(NoSuchElementException e)
             {

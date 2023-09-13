@@ -66,11 +66,14 @@ public class BamCompare
             partitions.add(new PartitionTask(allRegions.get(i), taskId++));
         }
 
+        List<PartitionThread> partitionTasks = Lists.newArrayList();
         List<Thread> workers = new ArrayList<>();
 
         for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mConfig, partitions, readWriter));
+            PartitionThread partitionThread = new PartitionThread(mConfig, partitions, readWriter);
+            partitionTasks.add(partitionThread);
+            workers.add(partitionThread);
         }
 
         for(Thread worker : workers)
@@ -86,7 +89,13 @@ public class BamCompare
             }
         }
 
+        Statistics combinedStats = new Statistics();
+        partitionTasks.forEach(x -> combinedStats.merge(x.stats()));
+
         readWriter.close();
+
+        BT_LOGGER.info("summary: reads(ref={} new={}) diffs({})",
+                combinedStats.RefReadCount, combinedStats.NewReadCount, combinedStats.DiffCount);
 
         BT_LOGGER.info("BamCompare complete, mins({})", runTimeMinsStr(startTimeMs));
     }

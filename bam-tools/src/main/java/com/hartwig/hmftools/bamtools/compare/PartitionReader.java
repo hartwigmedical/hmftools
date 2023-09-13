@@ -35,9 +35,7 @@ public class PartitionReader
     private final ReadWriter mReadWriter;
     private boolean mLogReadIds;
 
-    private int mRefReadCount;
-    private int mNewReadCount;
-    private int mDiffCount;
+    private final Statistics mStats;
 
     public PartitionReader(
             final ChrBaseRegion region, final CompareConfig config, final SamReader refSamReader, final SamReader newSamReader,
@@ -55,11 +53,11 @@ public class PartitionReader
         mRefReads = Queues.newArrayDeque();
         mCurrentRefPosReads = null;
 
-        mRefReadCount = 0;
-        mNewReadCount = 0;
-        mDiffCount = 0;
+        mStats = new Statistics();
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
+
+    public Statistics stats() { return mStats; }
 
     public void run()
     {
@@ -74,11 +72,11 @@ public class PartitionReader
             // write remaining records
             List<SAMRecord> refReads = mRefReads.remove();
             refReads.forEach(x -> mReadWriter.writeComparison(x, REF_ONLY, null));
-            mDiffCount += refReads.size();
+            mStats.DiffCount += refReads.size();
         }
 
         BT_LOGGER.debug("region({}) complete: refReads({}) newReads({}) diff({})",
-                mRegion, mRefReadCount, mNewReadCount, mDiffCount);
+                mRegion, mStats.RefReadCount, mStats.NewReadCount, mStats.DiffCount);
     }
 
     private void processRefRecord(final SAMRecord refRead)
@@ -94,7 +92,7 @@ public class PartitionReader
         if(excludeRead(refRead))
             return;
 
-        ++mRefReadCount;
+        ++mStats.RefReadCount;
 
         if(mCurrentRefPosReads == null || mCurrentRefPosReads.get(0).getAlignmentStart() != refRead.getAlignmentStart())
         {
@@ -120,12 +118,12 @@ public class PartitionReader
         if(excludeRead(newRead))
             return;
 
-        ++mNewReadCount;
+        ++mStats.NewReadCount;
 
         if(mRefReads.isEmpty())
         {
             mReadWriter.writeComparison(newRead, NEW_ONLY, null);
-            ++mDiffCount;
+            ++mStats.DiffCount;
             return;
         }
 
@@ -144,7 +142,7 @@ public class PartitionReader
                     break;
 
                 refReads.forEach(x -> mReadWriter.writeComparison(x, REF_ONLY, null));
-                mDiffCount += refReads.size();
+                mStats.DiffCount += refReads.size();
                 mRefReads.remove();
             }
         }
@@ -153,7 +151,7 @@ public class PartitionReader
         if(newRead.getAlignmentStart() < refPosStart)
         {
             mReadWriter.writeComparison(newRead, NEW_ONLY, null);
-            ++mDiffCount;
+            ++mStats.DiffCount;
             return;
         }
 
@@ -178,7 +176,7 @@ public class PartitionReader
 
         // no match
         mReadWriter.writeComparison(newRead, NEW_ONLY, null);
-        ++mDiffCount;
+        ++mStats.DiffCount;
     }
 
     private static final List<String> KEY_ATTRIBUTES = List.of(SUPPLEMENTARY_ATTRIBUTE, MATE_CIGAR_ATTRIBUTE);
@@ -211,6 +209,11 @@ public class PartitionReader
             diffs.add(format("cigar(%s/%s)", read1.getCigarString(), read2.getCigarString()));
         }
 
+        if(read1.getFlags() != read2.getFlags())
+        {
+            diffs.add(format("flags(%d/%d)", read1.getFlags(), read2.getFlags()));
+        }
+
         // check key attributes:
         for(String attribute : KEY_ATTRIBUTES)
         {
@@ -224,7 +227,7 @@ public class PartitionReader
             {
                 if(!readAttr1.equals(readAttr2))
                 {
-                    diffs.add(format("attrib_%s(%s/%s)", readAttr1, readAttr2));
+                    diffs.add(format("attrib_%s(%s/%s)", attribute, readAttr1, readAttr2));
                 }
             }
             else if(readAttr1 == null && readAttr2 != null)
@@ -240,6 +243,7 @@ public class PartitionReader
         if(diffs.isEmpty())
             return;
 
+        ++mStats.DiffCount;
         mReadWriter.writeComparison(read1, VALUE, diffs);
     }
 
