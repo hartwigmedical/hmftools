@@ -14,18 +14,12 @@ import static org.junit.Assert.assertEquals;
 
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
-import java.util.Collections;
-
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
-import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -37,7 +31,6 @@ import junit.framework.TestCase;
 
 public class ReadContextCounterTest
 {
-    private static final String SAMPLE = "sample";
     private static final int MAX_COVERAGE = 1000;
     private static final VariantTier TIER = VariantTier.PANEL;
 
