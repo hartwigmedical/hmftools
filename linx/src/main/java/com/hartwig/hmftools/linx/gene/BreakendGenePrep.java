@@ -64,7 +64,7 @@ public final class BreakendGenePrep
                 if(be == SE_END && var.isSglBreakend())
                 {
                     // special case of looking for mappings to locations containing genes so hotspot fusions can be found
-                    for(final SglMapping mapping : var.getSglMappings())
+                    for(SglMapping mapping : var.getSglMappings())
                     {
                         int preGeneDistance = getPreGeneDistance(
                                 mapping.Chromosome, mapping.Position, defaultPreGeneDistance, specificPreGeneDistance, specificPreGeneRanges);
