@@ -3,6 +3,7 @@ package com.hartwig.hmftools.isofox;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
@@ -290,7 +291,7 @@ public class FragmentAllocator
         if(record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment())
             return;
 
-        if(!record.getMateUnmappedFlag() && !record.getFirstOfPairFlag())
+        if(!firstInPair(record))
             return;
 
         mCurrentGenes.addCount(TOTAL, 1);
