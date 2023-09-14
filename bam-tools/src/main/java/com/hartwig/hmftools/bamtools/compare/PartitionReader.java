@@ -232,11 +232,11 @@ public class PartitionReader
             }
             else if(readAttr1 == null && readAttr2 != null)
             {
-                diffs.add(format("attrib_%s(missing/%s)", readAttr2));
+                diffs.add(format("attrib_%s(missing/%s)", attribute, readAttr2));
             }
             else if(readAttr1 != null && readAttr2 == null)
             {
-                diffs.add(format("attrib_%s(%s/missing)", readAttr1));
+                diffs.add(format("attrib_%s(%s/missing)", attribute, readAttr1));
             }
         }
 
