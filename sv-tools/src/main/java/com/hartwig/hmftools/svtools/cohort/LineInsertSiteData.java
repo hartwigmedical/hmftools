@@ -6,11 +6,11 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import java.util.Map;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class LineInsertSiteData
 {

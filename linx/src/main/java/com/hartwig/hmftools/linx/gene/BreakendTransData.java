@@ -12,7 +12,7 @@ import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UNKNOWN;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
 import java.util.Map;
 

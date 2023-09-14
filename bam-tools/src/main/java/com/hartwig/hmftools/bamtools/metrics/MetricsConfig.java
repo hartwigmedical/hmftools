@@ -36,7 +36,7 @@ import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class MetricsConfig
 {

@@ -14,8 +14,8 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;

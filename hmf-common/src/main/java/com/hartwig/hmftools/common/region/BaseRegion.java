@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.common.utils.sv;
+package com.hartwig.hmftools.common.region;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;

@@ -11,8 +11,8 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFi
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadSpecificRegions;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.io.BufferedWriter;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 

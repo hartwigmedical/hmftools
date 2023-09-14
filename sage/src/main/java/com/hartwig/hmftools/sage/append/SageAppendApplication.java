@@ -1,8 +1,7 @@
 package com.hartwig.hmftools.sage.append;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.appendHeader;
@@ -23,12 +22,11 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;

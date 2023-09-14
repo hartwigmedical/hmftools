@@ -2,7 +2,7 @@ package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +15,7 @@ import com.hartwig.hmftools.bamtools.common.ReadGroup;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;

@@ -23,9 +23,9 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomes;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadSpecificChromsomes;
 
 import java.io.File;
 import java.util.Arrays;

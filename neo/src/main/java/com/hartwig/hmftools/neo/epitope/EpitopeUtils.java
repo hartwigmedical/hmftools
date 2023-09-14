@@ -26,7 +26,7 @@ import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.convertDnaCodonToAminoAcid;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;

@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 
 import org.junit.Test;

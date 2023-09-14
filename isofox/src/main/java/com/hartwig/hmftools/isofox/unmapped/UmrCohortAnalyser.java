@@ -36,7 +36,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 public class UmrCohortAnalyser

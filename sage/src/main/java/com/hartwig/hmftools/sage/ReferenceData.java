@@ -2,12 +2,9 @@ package com.hartwig.hmftools.sage;
 
 import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -26,7 +23,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.QueryInterval;

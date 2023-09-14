@@ -16,7 +16,7 @@ import java.util.Queue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;

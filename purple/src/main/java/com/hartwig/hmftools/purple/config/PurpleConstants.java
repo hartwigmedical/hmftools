@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class PurpleConstants
 {

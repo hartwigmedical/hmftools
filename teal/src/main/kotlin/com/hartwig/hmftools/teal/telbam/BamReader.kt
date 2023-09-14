@@ -3,7 +3,7 @@ package com.hartwig.hmftools.teal.telbam
 import com.hartwig.hmftools.teal.TealUtils.openSamReader
 import com.hartwig.hmftools.teal.TealUtils.hasTelomericContent
 import java.lang.Runnable
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 import htsjdk.samtools.SamReader
 import htsjdk.samtools.SAMRecord
 import org.apache.logging.log4j.LogManager

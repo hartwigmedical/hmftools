@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.pave.VariantData;
 
 import org.apache.commons.compress.utils.Lists;

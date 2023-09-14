@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class UnmappedRead
 {

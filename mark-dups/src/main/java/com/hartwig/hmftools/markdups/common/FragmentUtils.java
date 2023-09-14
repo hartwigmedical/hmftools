@@ -3,7 +3,7 @@ package com.hartwig.hmftools.markdups.common;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.formCoordinate;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.formKey;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
@@ -15,10 +15,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.markdups.common.Fragment;
-import com.hartwig.hmftools.markdups.common.FragmentCoordinates;
-import com.hartwig.hmftools.markdups.common.FragmentStatus;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 

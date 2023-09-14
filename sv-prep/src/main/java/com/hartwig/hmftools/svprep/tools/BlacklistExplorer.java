@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPA
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
@@ -35,7 +34,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 
 import org.jetbrains.annotations.NotNull;

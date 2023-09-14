@@ -31,7 +31,7 @@ import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;

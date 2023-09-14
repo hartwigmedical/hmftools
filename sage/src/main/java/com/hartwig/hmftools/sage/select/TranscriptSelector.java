@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.sage.select;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
 import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
-
-import org.jetbrains.annotations.NotNull;
 
 @NotThreadSafe
 public class TranscriptSelector

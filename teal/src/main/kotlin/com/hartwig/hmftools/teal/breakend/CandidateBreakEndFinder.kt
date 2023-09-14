@@ -4,7 +4,7 @@ import com.hartwig.hmftools.common.genome.chromosome.ContigComparator
 import com.hartwig.hmftools.common.samtools.CigarUtils
 import htsjdk.samtools.SAMRecord
 import com.hartwig.hmftools.common.region.ExcludedRegions
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 import com.hartwig.hmftools.teal.ReadGroup
 import com.hartwig.hmftools.teal.TealUtils
 import com.hartwig.hmftools.teal.util.TelomereMatcher

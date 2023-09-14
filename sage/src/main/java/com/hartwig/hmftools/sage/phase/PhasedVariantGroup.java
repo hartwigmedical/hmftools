@@ -3,7 +3,7 @@ package com.hartwig.hmftools.sage.phase;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
 import java.util.Comparator;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
 import org.apache.commons.compress.utils.Lists;

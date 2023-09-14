@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.utils.sv;
 import java.util.Collections;
 import java.util.List;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
 public final class SvCommonUtils
 {
     public static final byte POS_ORIENT = 1;

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.gripss.filters;
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.io.IOException;

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
 
 import java.util.List;

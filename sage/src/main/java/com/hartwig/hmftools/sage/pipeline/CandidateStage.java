@@ -6,13 +6,12 @@ import static com.hartwig.hmftools.sage.pipeline.ChromosomePartition.getPanelReg
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;

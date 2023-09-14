@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.pave.annotation.Mappability.MAPPABILITY;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.pave.VariantData;
 
 public class MappabilityChrCache

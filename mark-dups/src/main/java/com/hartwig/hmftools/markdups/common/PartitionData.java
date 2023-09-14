@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.RecordWriter;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;

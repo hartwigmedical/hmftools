@@ -48,7 +48,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
