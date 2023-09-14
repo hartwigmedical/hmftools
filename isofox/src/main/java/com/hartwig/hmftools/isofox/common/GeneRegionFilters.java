@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.common;
 
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.GENE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadGeneIdsFile;
@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.isofox.IsofoxConstants.ENRICHED_GENE_BUFFER;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;

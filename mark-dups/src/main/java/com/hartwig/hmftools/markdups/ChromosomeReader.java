@@ -21,7 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.sv.ExcludedRegions;
+import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.sv.BaseRegion;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
@@ -85,10 +85,12 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mConsensusReads = new ConsensusReads(config.RefGenome);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
-        if(!mConfig.SpecificRegions.isEmpty())
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
         {
             // NOTE: doesn't currently handle multiple regions on the same chromosome
-            ChrBaseRegion firstRegion = mConfig.SpecificRegions.stream().filter(x -> x.Chromosome.equals(mRegion.Chromosome)).findFirst().orElse(mRegion);
+            ChrBaseRegion firstRegion = mConfig.SpecificChrRegions.Regions.stream()
+                    .filter(x -> x.Chromosome.equals(mRegion.Chromosome)).findFirst().orElse(mRegion);
+
             int partitionStart = (firstRegion.start() / mConfig.PartitionSize) * mConfig.PartitionSize;
             mCurrentPartition = new BaseRegion(partitionStart, partitionStart + mConfig.PartitionSize - 1);
         }
@@ -125,9 +127,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     {
         perfCounterStart();
 
-        if(!mConfig.SpecificRegions.isEmpty())
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
         {
-            for(ChrBaseRegion region : mConfig.SpecificRegions)
+            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
             {
                 if(!region.Chromosome.equals(mRegion.Chromosome))
                     continue;
@@ -190,8 +192,11 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
     private void processSamRecord(final SAMRecord read)
     {
-        if(readOutsideSpecifiedRegions(read, mConfig.SpecificRegions, mConfig.SpecificChromosomes, mConfig.SpecificRegionsFilterType))
+        if(readOutsideSpecifiedRegions(
+                read, mConfig.SpecificChrRegions.Regions, mConfig.SpecificChrRegions.Chromosomes, mConfig.SpecificRegionsFilterType))
+        {
             return;
+        }
 
         ++mStats.TotalReads;
         ++mPartitionRecordCount;

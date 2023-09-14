@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.APP_NAME;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
 
@@ -61,7 +62,7 @@ public class MarkDuplicates
         {
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
             ChrBaseRegion chrBaseRegion = new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome));
@@ -160,25 +161,12 @@ public class MarkDuplicates
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         MarkDuplicates markDuplicates = new MarkDuplicates(configBuilder);
         markDuplicates.run();
-    }
-
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("mark-dups.version");
-        MD_LOGGER.info("MarkDups version: {}", version.version());
     }
 }

@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.svprep.reads;
 
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
-import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 

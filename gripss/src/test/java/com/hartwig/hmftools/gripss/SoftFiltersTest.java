@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 
 import htsjdk.samtools.CigarOperator;

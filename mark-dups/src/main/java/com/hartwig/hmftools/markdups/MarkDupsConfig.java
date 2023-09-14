@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.markdups;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
@@ -25,18 +27,22 @@ import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMO
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
+import static com.hartwig.hmftools.markdups.ReadOutput.NONE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
@@ -75,9 +81,8 @@ public class MarkDupsConfig
     public final int Threads;
 
     // debug
-    public final List<String> SpecificChromosomes;
+    public final SpecificRegions SpecificChrRegions;
     public final List<String> LogReadIds;
-    public final List<ChrBaseRegion> SpecificRegions;
     public final FilterReadsType SpecificRegionsFilterType;
     public final ReadOutput LogReadType;
     public final boolean PerfDebug;
@@ -87,6 +92,7 @@ public class MarkDupsConfig
     private boolean mIsValid;
 
     public static final Logger MD_LOGGER = LogManager.getLogger(MarkDupsConfig.class);
+    public static final String APP_NAME = "MarkDups";
 
     // config strings
     private  static final String BAM_FILE = "bam_file";
@@ -144,27 +150,19 @@ public class MarkDupsConfig
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
         MD_LOGGER.info("duplicate logic: {}", duplicateLogic);
 
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
 
-        try
-        {
-            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, MD_LOGGER);
-            Collections.sort(SpecificRegions);
-        }
-        catch(ParseException e)
-        {
-            MD_LOGGER.error("invalid specific regions({}) chromosomes({}) config",
-                    configBuilder.getValue(SPECIFIC_REGIONS, ""), configBuilder.getValue(SPECIFIC_CHROMOSOMES, ""));
+        if(SpecificChrRegions != null)
+            SpecificChrRegions.log();
+        else
             mIsValid = false;
-        }
 
-        SpecificRegionsFilterType = !SpecificChromosomes.isEmpty() || !SpecificRegions.isEmpty() ?
+        SpecificRegionsFilterType = SpecificChrRegions.hasFilters() ?
                 FilterReadsType.valueOf(configBuilder.getValue(SPECIFIC_REGION_FILTER_TYPE, FilterReadsType.READ.toString())) :
                 FilterReadsType.NONE;
 
-        WriteBam = configBuilder.hasFlag(WRITE_BAM) || !configBuilder.hasFlag(READ_OUTPUTS);
-        LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, ReadOutput.NONE.toString()));
+        LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
+        WriteBam = configBuilder.hasFlag(WRITE_BAM) || LogReadType == NONE;
 
         LogReadIds = parseLogReadIds(configBuilder);
         Threads = parseThreads(configBuilder);
@@ -213,7 +211,7 @@ public class MarkDupsConfig
         return filename;
     }
 
-    public boolean runReadChecks() { return RunChecks && (!SpecificChromosomes.isEmpty() || !SpecificRegions.isEmpty()); }
+    public boolean runReadChecks() { return RunChecks && SpecificChrRegions.hasFilters(); }
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
@@ -222,9 +220,9 @@ public class MarkDupsConfig
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
         configBuilder.addInteger(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
+
         configBuilder.addConfigItem(
-                READ_OUTPUTS, false,"Write reads: NONE (default), 'MISMATCHES', 'DUPLICATES', 'ALL'",
-                ReadOutput.NONE.toString());
+                READ_OUTPUTS, false, format("Write reads: %s", ReadOutput.valuesStr()), NONE.toString());
 
         configBuilder.addFlag(WRITE_BAM, "Write BAM, default is true if not writing other read TSV output");
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
@@ -265,12 +263,11 @@ public class MarkDupsConfig
         NoMateCigar = false;
         IdGenerator = new GroupIdGenerator();
 
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
 
         WriteBam = false;
-        LogReadType = ReadOutput.NONE;
+        LogReadType = NONE;
 
         LogReadIds = Lists.newArrayList();
         Threads = 0;
