@@ -216,7 +216,7 @@ public class BaseQualityRecalibration
         {
             final String chromosome = sequenceRecord.getSequenceName();
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosome))
                 continue;
 
             if(!HumanChromosome.contains(chromosome) || !HumanChromosome.fromString(chromosome).isAutosome())

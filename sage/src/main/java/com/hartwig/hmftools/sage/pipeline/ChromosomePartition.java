@@ -23,9 +23,11 @@ public class ChromosomePartition
 
     public List<ChrBaseRegion> partition(final String chromosome)
     {
-        if(!mConfig.SpecificRegions.isEmpty())
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
         {
-            List<ChrBaseRegion> chrRegions = mConfig.SpecificRegions.stream().filter(x -> x.Chromosome.equals(chromosome)).collect(Collectors.toList());
+            List<ChrBaseRegion> chrRegions = mConfig.SpecificChrRegions.Regions.stream()
+                    .filter(x -> x.Chromosome.equals(chromosome)).collect(Collectors.toList());
+
             return partitionRegions(chrRegions);
         }
 

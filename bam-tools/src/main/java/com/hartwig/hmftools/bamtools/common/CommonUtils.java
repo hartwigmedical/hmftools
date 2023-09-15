@@ -1,13 +1,13 @@
 package com.hartwig.hmftools.bamtools.common;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -62,7 +62,7 @@ public final class CommonUtils
         {
             try
             {
-                loadSpecificChromsomesOrRegions(configBuilder, specificChromosomes, specificRegions, BT_LOGGER);
+                loadSpecificChromsomesOrRegions(configBuilder, specificChromosomes, specificRegions);
             }
             catch(Exception e)
             {

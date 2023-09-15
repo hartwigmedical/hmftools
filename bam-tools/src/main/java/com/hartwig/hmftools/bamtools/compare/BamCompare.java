@@ -42,10 +42,11 @@ public class BamCompare
         {
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
-            allRegions.addAll(partitionChromosome(chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificRegions, mConfig.PartitionSize));
+            allRegions.addAll(partitionChromosome(
+                    chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize));
         }
 
         ReadWriter readWriter = new ReadWriter(mConfig);

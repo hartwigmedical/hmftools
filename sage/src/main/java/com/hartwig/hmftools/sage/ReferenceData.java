@@ -84,10 +84,7 @@ public class ReferenceData
         {
             String chromosome = entry.getKey();
 
-            if(!mConfig.Common.SpecificChromosomes.isEmpty() && !mConfig.Common.SpecificChromosomes.contains(chromosome))
-                continue;
-
-            if(!mConfig.Common.SpecificRegions.isEmpty() && mConfig.Common.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chromosome)))
+            if(mConfig.Common.SpecificChrRegions.excludeChromosome(chromosome))
                 continue;
 
             List<GeneData> geneDataList = entry.getValue();
@@ -97,11 +94,8 @@ public class ReferenceData
 
             for(GeneData geneData : geneDataList)
             {
-                if(!mConfig.Common.SpecificRegions.isEmpty() && mConfig.Common.SpecificRegions.stream()
-                        .noneMatch(x -> positionsOverlap(x.start(), x.end(), geneData.GeneStart, geneData.GeneEnd)))
-                {
+                if(mConfig.Common.SpecificChrRegions.excludeRegion(geneData.GeneStart, geneData.GeneEnd))
                     continue;
-                }
 
                 transDataList.add(GeneDataCache.getCanonicalTranscriptData(geneData.GeneId));
             }

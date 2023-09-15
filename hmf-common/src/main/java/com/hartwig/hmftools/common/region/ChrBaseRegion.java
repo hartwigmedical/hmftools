@@ -162,29 +162,7 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         return rank1 < rank2 ? -1 : 1;
     }
 
-    // config loading to filter on specific regions
-    public static final String SPECIFIC_REGIONS = "specific_regions";
-    public static final String SPECIFIC_REGIONS_DESC =
-            "Restrict to regions(s) separated by ';' in format Chr:PosStart:PosEnd or Chr:PosStart-PosEnd";
-
-    public static final String SPECIFIC_CHROMOSOMES = "specific_chr";
-    public static final String SPECIFIC_CHROMOSOMES_DESC = "Restrict to chromosome(s) separated by ';'";
-
-    public static final String SUB_ITEM_DELIM = ":";
-    public static final String POS_ITEM_DELIM = "-";
-
-    public static void addSpecificChromosomesRegionsConfig(final ConfigBuilder configBuilder)
-    {
-        configBuilder.addConfigItem(SPECIFIC_CHROMOSOMES, SPECIFIC_CHROMOSOMES_DESC);
-        configBuilder.addConfigItem(SPECIFIC_REGIONS, SPECIFIC_REGIONS_DESC);
-    }
-
-    public static void addSpecificChromosomesRegionsConfig(final Options options)
-    {
-        options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
-        options.addOption(SPECIFIC_REGIONS, true, SPECIFIC_REGIONS_DESC);
-    }
-
+    /*
     public static List<ChrBaseRegion> loadSpecificRegions(final CommandLine cmd) throws ParseException
     {
         return loadSpecificRegions(cmd.getOptionValue(SPECIFIC_REGIONS));
@@ -295,5 +273,6 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             chromosomes.addAll(loadSpecificChromsomes(specificChromosomesStr));
         }
     }
+    */
 }
 

@@ -170,7 +170,7 @@ public class ChromosomeTaskExecutor implements Callable
         int nextLogCount = 100;
         int lastGeneCollectionEndPosition = 1;
 
-        boolean genesFiltered = !mConfig.Filters.RestrictedGeneIds.isEmpty() || !mConfig.Filters.SpecificRegions.isEmpty();
+        boolean genesFiltered = !mConfig.Filters.RestrictedGeneIds.isEmpty() || mConfig.Filters.SpecificChrRegions.hasFilters();
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {

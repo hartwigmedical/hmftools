@@ -56,7 +56,7 @@ public class FragmentSizeDistribution
             String chromosome = String.valueOf(i);
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome);
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
             ChromosomeTask chrTask = new ChromosomeTask(chromosomeStr);
@@ -217,8 +217,8 @@ public class FragmentSizeDistribution
         public Long call()
         {
             // slice a fixed region from each chromosome
-            ChrBaseRegion region = !mConfig.SpecificRegions.isEmpty() ?
-                mConfig.SpecificRegions.get(0) : new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
+            ChrBaseRegion region = !mConfig.SpecificChrRegions.Regions.isEmpty() ?
+                mConfig.SpecificChrRegions.Regions.get(0) : new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
 
             mBamSlicer.slice(mSamReader, region, this::processBamRead);
 

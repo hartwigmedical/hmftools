@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.common.region;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 
 import java.util.Arrays;
@@ -50,6 +51,21 @@ public class SpecificRegions
         return Regions.isEmpty() || Regions.stream().anyMatch(x -> x.overlaps(region));
     }
 
+    public boolean includePosition(final String chromosome, final int position)
+    {
+        return Regions.isEmpty() || Regions.stream().anyMatch(x -> x.containsPosition(chromosome, position));
+    }
+
+    public boolean excludePosition(final String chromosome, final int position) { return !includePosition(chromosome, position); }
+
+    public boolean includeRegion(final int posStart, final int posEnd)
+    {
+        // assumes chromosomes match
+        return Regions.isEmpty() || Regions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), posStart, posEnd));
+    }
+
+    public boolean excludeRegion(final int posStart, final int posEnd) { return !includeRegion(posStart, posEnd); }
+
     public void log()
     {
         if(!Regions.isEmpty())
@@ -87,6 +103,7 @@ public class SpecificRegions
         try
         {
             loadSpecificChromsomesOrRegions(regionsStr, chromosomesStr, specificRegions.Chromosomes, specificRegions.Regions);
+            specificRegions.log();
         }
         catch(Exception e)
         {
@@ -98,12 +115,19 @@ public class SpecificRegions
     }
 
     public static void loadSpecificChromsomesOrRegions(
+            final ConfigBuilder configBuilder, final List<String> chromosomes, final List<ChrBaseRegion> regions) throws ParseException
+    {
+        loadSpecificChromsomesOrRegions(
+                configBuilder.getValue(SPECIFIC_REGIONS), configBuilder.getValue(SPECIFIC_CHROMOSOMES), chromosomes, regions);
+    }
+
+    public static void loadSpecificChromsomesOrRegions(
             @Nullable final String specificRegionsStr, @Nullable final String specificChromosomesStr,
             final List<String> chromosomes, final List<ChrBaseRegion> regions) throws ParseException
     {
         if(specificRegionsStr != null && !specificRegionsStr.isEmpty())
         {
-            regions.addAll(loadSpecificRegions(specificRegionsStr, regions));
+            loadSpecificRegions(specificRegionsStr, regions);
 
             Collections.sort(regions);
 
@@ -127,10 +151,35 @@ public class SpecificRegions
         }
     }
 
-    public static List<ChrBaseRegion> loadSpecificRegions(final String specificRegionsStr, final List<ChrBaseRegion> regions) throws ParseException
+    public static List<String> loadSpecificChromsomes(final ConfigBuilder configBuilder)
+    {
+        return loadSpecificChromsomes(configBuilder.getValue(SPECIFIC_CHROMOSOMES));
+    }
+
+    public static List<String> loadSpecificChromsomes(final String specificChromosomesStr)
+    {
+        if(specificChromosomesStr == null || specificChromosomesStr.isEmpty())
+            return Collections.emptyList();
+
+        return Arrays.stream(specificChromosomesStr.split(ITEM_DELIM)).collect(Collectors.toList());
+    }
+
+    public static List<ChrBaseRegion> loadSpecificRegions(final ConfigBuilder configBuilder) throws ParseException
+    {
+        return loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS));
+    }
+
+    public static List<ChrBaseRegion> loadSpecificRegions(final String specificRegionsStr) throws ParseException
+    {
+        List<ChrBaseRegion> regions = Lists.newArrayList();
+        loadSpecificRegions(specificRegionsStr, regions);
+        return regions;
+    }
+
+    public static void loadSpecificRegions(final String specificRegionsStr, final List<ChrBaseRegion> regions) throws ParseException
     {
         if(specificRegionsStr == null || specificRegionsStr.isEmpty())
-            return regions;
+            return;
 
         // expected format: chromosome:positionStart-positionEnd, separated by ';'
         final List<String> regionStrs = Arrays.stream(specificRegionsStr.split(ITEM_DELIM, -1)).collect(Collectors.toList());
@@ -166,7 +215,5 @@ public class SpecificRegions
 
             regions.add(region);
         }
-
-        return regions;
     }
 }

@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.amber.AmberConstants.*;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_CHROMOSOMES;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificChromsomes;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -23,9 +26,6 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkCreateOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadSpecificChromsomes;
 
 import java.io.File;
 import java.util.Arrays;
@@ -143,7 +143,7 @@ public class AmberConfig
         Threads = parseThreads(configBuilder);
         BamStringency = BamUtils.validationStringency(configBuilder);
 
-        SpecificChromosomes = loadSpecificChromsomes(configBuilder.getValue(SPECIFIC_CHROMOSOMES));
+        SpecificChromosomes = loadSpecificChromsomes(configBuilder);
 
         if(!SpecificChromosomes.isEmpty())
         {

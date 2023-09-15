@@ -18,8 +18,6 @@ public class SageAppendConfig
 
         InputVcf = configBuilder.getValue(INPUT_VCF);
         FilterToGenes = configBuilder.hasFlag(FILTER_TO_GENES);
-
-
     }
 
     public boolean isValid()

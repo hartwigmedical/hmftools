@@ -107,11 +107,11 @@ public class ChromosomeTask
 
     private List<ChrBaseRegion> partition(final String chromosome)
     {
-        if(!mConfig.SpecificRegions.isEmpty())
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
         {
             List<ChrBaseRegion> partitions = Lists.newArrayList();
 
-            for(ChrBaseRegion region : mConfig.SpecificRegions)
+            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
             {
                 if(region.Chromosome.equals(chromosome))
                 {

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PURPLE_DIR;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
@@ -10,10 +11,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.SPECIFIC_REGIONS;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.File;
@@ -25,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.purple.RunMode;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -53,8 +51,7 @@ public class PurpleConfig
     // debug only
     public final boolean FilterSomaticsOnGene;
     public final boolean WriteAllSomatics;
-    public final List<String> SpecificChromosomes;
-    public final List<ChrBaseRegion> SpecificRegions;
+    public final SpecificRegions SpecificChrRegions;
 
     private boolean mIsValid;
 
@@ -138,20 +135,10 @@ public class PurpleConfig
             }
         }
 
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
 
-        try
-        {
-            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, PPL_LOGGER);
-            Collections.sort(SpecificRegions);
-        }
-        catch(ParseException e)
-        {
-            PPL_LOGGER.error("invalid specific regions({}) chromosomes({}) config",
-                    configBuilder.getValue(SPECIFIC_REGIONS), configBuilder.getValue(SPECIFIC_CHROMOSOMES));
+        if(SpecificChrRegions == null)
             mIsValid = false;
-        }
     }
 
     public boolean isValid() { return mIsValid; }
@@ -195,13 +182,10 @@ public class PurpleConfig
 
     public boolean excludeOnSpecificRegion(final String chromosome, final int position)
     {
-        if(!SpecificRegions.isEmpty())
-            return SpecificRegions.stream().noneMatch(x -> x.containsPosition(chromosome, position));
+        if(!SpecificChrRegions.Regions.isEmpty())
+            return SpecificChrRegions.includePosition(chromosome, position);
 
-        if(!SpecificChromosomes.isEmpty())
-            return !SpecificChromosomes.contains(chromosome);
-
-        return false;
+        return SpecificChrRegions.includeChromosome(chromosome);
     }
 
     private boolean createDirectory(final String dir)

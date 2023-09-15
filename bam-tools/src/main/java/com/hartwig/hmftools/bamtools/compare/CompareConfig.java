@@ -4,21 +4,20 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class CompareConfig
 {
@@ -34,8 +33,7 @@ public class CompareConfig
     public final List<String> LogReadIds;
 
     // debug
-    public final List<String> SpecificChromosomes;
-    public final List<ChrBaseRegion> SpecificRegions;
+    public final SpecificRegions SpecificChrRegions;
 
     private static final String OUTPUT_FILE = "output_file";
     private static final String REF_BAM_FILE = "ref_bam_file";
@@ -64,18 +62,10 @@ public class CompareConfig
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
 
-        try
-        {
-            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, BT_LOGGER);
-        }
-        catch(Exception e)
-        {
-            BT_LOGGER.error("failed to load specific regions: {}", e.toString());
+        if(SpecificChrRegions == null)
             System.exit(1);
-        }
 
         Threads = parseThreads(configBuilder);
 

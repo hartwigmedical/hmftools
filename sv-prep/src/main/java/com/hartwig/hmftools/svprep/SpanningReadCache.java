@@ -98,7 +98,7 @@ public class SpanningReadCache
 
             List<String> unprocessedPartitions = readGroup.remotePartitions().stream()
                     .filter(x -> !mProcessedPartitions.contains(x))
-                    .filter(x -> mConfig.SpecificChromosomes.isEmpty() || !ignoreChromosome(chrFromChrPartition(x)))
+                    .filter(x -> mConfig.SpecificChrRegions.Chromosomes.isEmpty() || !ignoreChromosome(chrFromChrPartition(x)))
                     .collect(Collectors.toList());
 
             if(readGroup.conditionalOnRemoteReads())
@@ -309,11 +309,11 @@ public class SpanningReadCache
 
     private boolean ignoreChromosome(final String chrPartition)
     {
-        if(mConfig.SpecificChromosomes.isEmpty())
+        if(mConfig.SpecificChrRegions.Chromosomes.isEmpty())
             return false;
 
         String chromosome = chrFromChrPartition(chrPartition);
-        return !mConfig.SpecificChromosomes.contains(chromosome);
+        return !mConfig.SpecificChrRegions.Chromosomes.contains(chromosome);
     }
 
     public synchronized void logStats()

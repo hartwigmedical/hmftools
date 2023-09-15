@@ -322,21 +322,21 @@ public class Isofox
 
     private Map<String,List<GeneData>> getChromosomeGeneLists()
     {
-        if(mConfig.Filters.SpecificRegions.isEmpty() && mConfig.Filters.SpecificChromosomes.isEmpty())
+        if(!mConfig.Filters.SpecificChrRegions.hasFilters())
             return mGeneTransCache.getChrGeneDataMap();
 
         final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
 
-        if(mConfig.Filters.SpecificRegions.isEmpty())
+        if(mConfig.Filters.SpecificChrRegions.Regions.isEmpty())
         {
             mGeneTransCache.getChrGeneDataMap().entrySet().stream()
-                    .filter(x -> mConfig.Filters.SpecificChromosomes.contains(x.getKey()))
+                    .filter(x -> mConfig.Filters.SpecificChrRegions.includeChromosome(x.getKey()))
                     .filter(x -> !x.getValue().isEmpty())
                     .forEach(x -> chrGeneMap.put(x.getKey(), x.getValue()));
         }
         else
         {
-            for(final ChrBaseRegion region : mConfig.Filters.SpecificRegions)
+            for(ChrBaseRegion region : mConfig.Filters.SpecificChrRegions.Regions)
             {
                 List<GeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(region.Chromosome);
 

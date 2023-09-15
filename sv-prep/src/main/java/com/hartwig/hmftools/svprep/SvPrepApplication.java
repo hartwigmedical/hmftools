@@ -47,7 +47,7 @@ public class SvPrepApplication
         {
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
             SV_LOGGER.info("processing chromosome({})", chromosomeStr);
