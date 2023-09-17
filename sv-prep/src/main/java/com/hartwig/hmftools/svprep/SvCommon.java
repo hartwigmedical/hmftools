@@ -13,17 +13,6 @@ public class SvCommon
 
     private static final long MEGABYTE = 1024L * 1024L;
 
-    public static int calcMemoryUsage(boolean runGc)
-    {
-        Runtime runtime = Runtime.getRuntime();
-
-        if(runGc)
-            runtime.gc();
-
-        long memory = runtime.totalMemory() - runtime.freeMemory();
-        return round(memory / MEGABYTE);
-    }
-
     public static BamSlicer createBamSlicer()
     {
         BamSlicer bamSlicer = new BamSlicer(0, false, true, false);

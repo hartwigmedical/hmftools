@@ -86,13 +86,15 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
     @Override
     public boolean equals(Object obj)
     {
-        // same instance
-        if (obj == this) { return true; }
-        // null
-        if (obj == null) { return false; }
-        // type
-        if (!getClass().equals(obj.getClass())) { return false; }
-        // cast and compare state
+        if(obj == this)
+            return true;
+
+        if(obj == null)
+            return false;
+
+        if(!getClass().equals(obj.getClass()))
+            return false;
+
         BaseRegion other = (BaseRegion) obj;
         return matches(other);
     }
@@ -108,11 +110,11 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
     @Override
     public int compareTo(@NotNull final BaseRegion other)
     {
-        if (start() < other.start())
+        if(start() < other.start())
         {
             return -1;
         }
-        else if (start() == other.start())
+        else if(start() == other.start())
         {
             return 0;
         }

@@ -98,6 +98,13 @@ public class PerformanceCounter
         }
     }
 
+    public void startPaused()
+    {
+        mIsRunning = true;
+        mIsPaused = true;
+        mPausedTime = 0;
+    }
+
     public void pause()
     {
         if(!mIsRunning)
