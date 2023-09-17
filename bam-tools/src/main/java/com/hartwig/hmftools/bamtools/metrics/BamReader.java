@@ -91,9 +91,6 @@ public class BamReader
 
         ++mTotalReads;
 
-        if(mTotalReads > 0 && (mTotalReads % 1_000_000) == 0)
-            System.gc();
-
         if(mFilterRegion != null)
         {
             if(positionsOverlap(readStart, readStart + read.getReadBases().length, mFilterRegion.start(), mFilterRegion.end()))

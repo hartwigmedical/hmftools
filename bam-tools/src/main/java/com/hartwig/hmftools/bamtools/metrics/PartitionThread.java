@@ -51,17 +51,12 @@ public class PartitionThread extends Thread
 
                 BamReader slicer = new BamReader(partition.Region, mConfig, mSamReader, mBamSlicer, mCombinedStats);
 
-                boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
-
-                if(logAndGc)
+                if(partition.TaskId > 0 && (partition.TaskId % 10) == 0)
                 {
                     BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
                 }
 
                 slicer.run();
-
-                if(logAndGc)
-                    System.gc();
             }
             catch(NoSuchElementException e)
             {
