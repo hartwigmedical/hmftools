@@ -182,10 +182,13 @@ public class PurpleConfig
 
     public boolean excludeOnSpecificRegion(final String chromosome, final int position)
     {
-        if(!SpecificChrRegions.Regions.isEmpty())
-            return SpecificChrRegions.includePosition(chromosome, position);
+        if(!SpecificChrRegions.hasFilters())
+            return false;
 
-        return SpecificChrRegions.includeChromosome(chromosome);
+        if(!SpecificChrRegions.Regions.isEmpty())
+            return SpecificChrRegions.excludePosition(chromosome, position);
+
+        return SpecificChrRegions.excludeChromosome(chromosome);
     }
 
     private boolean createDirectory(final String dir)

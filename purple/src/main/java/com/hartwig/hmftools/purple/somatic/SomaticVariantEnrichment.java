@@ -63,9 +63,6 @@ public class SomaticVariantEnrichment implements Callable
             if(varCount > 0 && (varCount % flushCount) == 0)
             {
                 PPL_LOGGER.debug("{}: enriched {} somatic variants", mTaskId, varCount);
-
-                //if((varCount % gcCount) == 0)
-                //    System.gc();
             }
         }
 
