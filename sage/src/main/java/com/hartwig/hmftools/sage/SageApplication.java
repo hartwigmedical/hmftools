@@ -77,7 +77,6 @@ public class SageApplication implements AutoCloseable
 
         int initMemory = MemoryCalcs.calcMemoryUsage();
         logMemoryUsage(mConfig.Common.PerfWarnTime, "BQR", initMemory);
-        System.gc();
 
         int maxTaskMemory = 0;
 
@@ -94,7 +93,6 @@ public class SageApplication implements AutoCloseable
 
             pipeline.process();
             maxTaskMemory = max(pipeline.maxMemoryUsage(), maxTaskMemory);
-            System.gc();
         }
 
         coverage.writeFiles(mConfig.Common.OutputFile);
