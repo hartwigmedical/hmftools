@@ -63,7 +63,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final boolean mLogReadIds;
     private int mPartitionRecordCount;
     private final Statistics mStats;
-    private final PerformanceCounter mPerfCounter;
+    private final PerformanceCounter mPcTotal;
+    private final PerformanceCounter mPcAcceptPositions;
+    private final PerformanceCounter mPcPendingIncompletes;
 
     public ChromosomeReader(
             final ChrBaseRegion region, final MarkDupsConfig config, final RecordWriter recordWriter,
@@ -110,10 +112,17 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mStats = mDuplicateGroupBuilder.statistics();
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
-        mPerfCounter = new PerformanceCounter("Slice");
+        mPcTotal = new PerformanceCounter("Total");
+        mPcAcceptPositions = new PerformanceCounter("AcceptPositions");
+        mPcPendingIncompletes = new PerformanceCounter("PendingIncompletes");
     }
 
-    public PerformanceCounter perfCounter() { return mPerfCounter; }
+    // public PerformanceCounter perfCounter() { return mPcTotal; }
+    public List<PerformanceCounter> perfCounters()
+    {
+        return List.of(mPcTotal, mPcAcceptPositions, mPcPendingIncompletes);
+    }
+
     public Statistics statistics() { return mStats; }
 
     @Override
@@ -125,7 +134,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
     public void run()
     {
-        perfCounterStart();
+        perfCountersStart();
 
         if(!mConfig.SpecificChrRegions.Regions.isEmpty())
         {
@@ -157,7 +166,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         processPendingIncompletes();
 
-        mPerfCounter.stop();
+        perfCountersStop();
 
         MD_LOGGER.debug("partition({}:{}) complete, reads({})", mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount);
 
@@ -184,10 +193,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
             setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
 
-            perfCounterStart();
+            perfCountersStart();
         }
-
-        System.gc();
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -304,6 +311,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                     mRegion.Chromosome, mCurrentPartition, mPendingIncompleteReads.values().stream().mapToInt(x -> x.size()).sum());
         }
 
+        mPcPendingIncompletes.resume();
+
         for(Map.Entry<String,List<SAMRecord>> entry : mPendingIncompleteReads.entrySet())
         {
             String basePartition = entry.getKey();
@@ -321,6 +330,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
 
         mPendingIncompleteReads.clear();
+
+        mPcPendingIncompletes.pause();
     }
 
     private void processDuplicateGroup(final DuplicateGroup duplicateGroup)
@@ -335,6 +346,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         if(positionFragments.isEmpty())
             return;
 
+        mPcAcceptPositions.resume();
         List<Fragment> resolvedFragments = Lists.newArrayList();
         List<CandidateDuplicates> candidateDuplicatesList = Lists.newArrayList();
         List<List<Fragment>> positionDuplicateGroups = Lists.newArrayList();
@@ -393,6 +405,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
             mStats.LocalComplete += (int)resolvedFragments.stream().filter(x -> x.allReadsPresent()).count();
         }
+
+        mPcAcceptPositions.pause();
     }
 
     @VisibleForTesting
@@ -409,12 +423,22 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         }
     }
 
-    private void perfCounterStart()
+    private void perfCountersStart()
     {
         if(mConfig.PerfDebug)
-            mPerfCounter.start(format("%s:%s", mRegion.Chromosome, mCurrentPartition));
+            mPcTotal.start(format("%s:%s", mRegion.Chromosome, mCurrentPartition));
         else
-            mPerfCounter.start();
+            mPcTotal.start();
+
+        mPcAcceptPositions.startPaused();
+        mPcPendingIncompletes.startPaused();
+    }
+
+    private void perfCountersStop()
+    {
+        mPcTotal.stop();
+        mPcAcceptPositions.stop();
+        mPcPendingIncompletes.stop();
     }
 
     @VisibleForTesting

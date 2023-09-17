@@ -26,9 +26,9 @@ public class Statistics
     public long UmiGroups;
 
     // technical metrics
-    public long LocalComplete;
-    public long Incomplete;
-    public long InterPartition;
+    public long LocalComplete; // fragments where all reads are in the same partition
+    public long Incomplete; // count of mates and secondaries where lower coord reads wasn't cached
+    public long InterPartition; // reads where base partition (lower of mate or supplementary's primary) isn't the current partition
     public long MissingMateCigar;
 
     public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;

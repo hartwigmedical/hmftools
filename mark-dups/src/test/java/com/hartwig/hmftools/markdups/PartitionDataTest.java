@@ -89,7 +89,7 @@ public class PartitionDataTest
 
         assertFalse(partitionData.fragmentStatusMap().containsKey(read.id()));
 
-        partitionData.clear();
+        partitionData.clearState();
 
         // test 2: mate then resolved then supp
         testFragments = createBasicFragments();

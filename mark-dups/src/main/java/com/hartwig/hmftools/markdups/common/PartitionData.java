@@ -560,23 +560,6 @@ public class PartitionData
         }
     }
 
-    public void clear()
-    {
-        try
-        {
-            acquireLock();
-
-            mFragmentStatus.clear();
-            mIncompleteFragments.clear();
-            mCandidateDuplicatesMap.clear();
-            mDuplicateGroupMap.clear();
-        }
-        finally
-        {
-            mLock.unlock();
-        }
-    }
-
     private void acquireLock()
     {
         if(!mPerfChecks)
@@ -618,5 +601,14 @@ public class PartitionData
     public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
     {
         processPrimaryFragments(resolvedFragments, candidateDuplicatesList, Collections.EMPTY_LIST);
+    }
+
+    @VisibleForTesting
+    public void clearState()
+    {
+        mFragmentStatus.clear();
+        mIncompleteFragments.clear();
+        mCandidateDuplicatesMap.clear();
+        mDuplicateGroupMap.clear();
     }
 }

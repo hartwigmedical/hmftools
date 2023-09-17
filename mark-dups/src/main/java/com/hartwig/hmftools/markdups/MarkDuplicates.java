@@ -68,7 +68,7 @@ public class MarkDuplicates
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 
-        int maxLogFragments = (mConfig.RunChecks || mConfig.PerfDebug) ? 100 : 0;
+        int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
         int totalUnwrittenFragments = 0;
         ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
         consensusReads.setDebugOptions(mConfig.RunChecks);
@@ -117,16 +117,29 @@ public class MarkDuplicates
             }
         }
 
-        PerformanceCounter combinedPerfCounter = chromosomeReaders.get(0).perfCounter();
+        List<PerformanceCounter> combinedPerfCounters = chromosomeReaders.get(0).perfCounters();
 
         for(int i = 1; i < chromosomeReaders.size(); ++i)
         {
-            combinedPerfCounter.merge(chromosomeReaders.get(i).perfCounter());
+            List<PerformanceCounter> chrPerfCounters = chromosomeReaders.get(i).perfCounters();
+
+            for(int j = 0; j < chrPerfCounters.size(); ++j)
+            {
+                combinedPerfCounters.get(j).merge(chrPerfCounters.get(j));
+            }
         }
 
         if(mConfig.PerfDebug)
         {
-            combinedPerfCounter.logIntervalStats(10);
+            for(int j = 0; j < combinedPerfCounters.size(); ++j)
+            {
+                PerformanceCounter perfCounter = combinedPerfCounters.get(j);
+
+                if(j == 0)
+                    perfCounter.logIntervalStats(10);
+                else
+                    perfCounter.logStats();
+            }
 
             List<Double> partitionLockTimes = Lists.newArrayList();
             partitionDataStore.partitions().forEach(x -> partitionLockTimes.add(x.totalLockTime()));
@@ -146,7 +159,7 @@ public class MarkDuplicates
         }
         else
         {
-            combinedPerfCounter.logStats();
+            combinedPerfCounters.forEach(x -> x.logStats());
         }
 
         MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));

@@ -78,6 +78,7 @@ public class MarkDupsConfig
     public final ReadOutput LogReadType;
     public final boolean PerfDebug;
     public final boolean RunChecks;
+    public final boolean LogFinalCache;
     public final boolean WriteStats;
 
     private boolean mIsValid;
@@ -95,6 +96,7 @@ public class MarkDupsConfig
     private static final String WRITE_BAM = "write_bam";
 
     private static final String RUN_CHECKS = "run_checks";
+    private static final String LOG_FINAL_CACHE = "log_final_cache";
     private static final String WRITE_STATS = "write_stats";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
 
@@ -159,6 +161,7 @@ public class MarkDupsConfig
         WriteStats = configBuilder.hasFlag(WRITE_STATS);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
         RunChecks = configBuilder.hasFlag(RUN_CHECKS);
+        LogFinalCache = configBuilder.hasFlag(LOG_FINAL_CACHE);
 
         if(RunChecks)
         {
@@ -228,6 +231,7 @@ public class MarkDupsConfig
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(PERF_DEBUG, PERF_DEBUG_DESC);
         configBuilder.addFlag(RUN_CHECKS, "Run duplicate mismatch checks");
+        configBuilder.addFlag(LOG_FINAL_CACHE, "Log cached fragments on completion");
         configBuilder.addConfigItem(SPECIFIC_REGION_FILTER_TYPE, "Used with specific regions, to filter mates or supps");
     }
 
@@ -263,5 +267,6 @@ public class MarkDupsConfig
         PerfDebug = false;
         RunChecks = true;
         WriteStats = false;
+        LogFinalCache = true;
     }
 }
