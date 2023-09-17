@@ -205,7 +205,6 @@ public class ProbeFinder
                     if(i > 0 && (i % 10) == 0)
                     {
                         CT_LOGGER.info("{}: processed {} samples", mTaskId, i);
-                        System.gc();
                     }
                 }
             }
