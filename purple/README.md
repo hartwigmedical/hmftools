@@ -233,23 +233,26 @@ For more information on how to run AMBER please refer to the [readme](https://gi
 
 
 ### Structural Variant Input VCFs (optional)
-Providing a high quality set of structural variant calls to PURPLE allows exact base resolution of copy number changes. 
+Providing a high quality set of somatic structural variant calls to PURPLE allows exact base resolution of copy number changes. 
 An accurate estimation of VAF at each breakend also allows PURPLE to infer copy number changes even across very short segments of the genome where a depth based estimation is inaccurate or impractical. 
 Finally, PURPLE also supports recovery of filtered structural variant calls 
+
+A VCF with germline structural variants can also be provided. PURPLE can annotate such variants with purity adjusted local and variant copy number estimations in the tumor. Also, this information can be used to make calling of germline deletions more accurate.
 
 For these purposes, PURPLE provides full support and integration with the structural variant caller [GRIDSS](https://github.com/PapenfussLab/gridss). 
 GRIDSS can be run directly on tumor and reference BAMs. 
 Alternatively a lightweight version of GRIDSS can be used to re-analyse a set of variant calls and provide additional filtering and accurate VAF estimation.
 
-
-### Somatic Variant Input VCF (optional)
-An high quality set of somatic SNV and INDEL calls can also improve the accuracy and utility of PURPLE. 
+### Small Variant Input VCFs (optional)
+A high quality set of somatic SNV and INDEL calls can also improve the accuracy and utility of PURPLE. 
 If provided, passing (or unfiltered) variants enhance the purity and ploidy fit in 2 ways. 
 Firstly, each solution receives a penalty for the proportion of somatic variants which have implied variant copy numbers that are inconsistent with the minor and major allele copy number. 
 Secondly, for highly diploid samples, the VAFs of the somatic variants are used directly to calculate a somatic variant implied purity.
 
 For both purposes, accurate VAF estimation is essential thus PURPLE requires the ‘AD’ (Allelic Depth) field in the vcf.
 High quality filtering of artifacts and false positive calls is also critical to achieving an accurate fit.    [SAGE](https://github.com/hartwigmedical/hmftools/tree/master/sage) is the recommended input somatic variant caller.
+
+If a similar VCF of germline SNV and INDEL variants is provided, PURPLE will annotate them with additional fields described [here](#11-germline-enrichment).
 
 ## Tumor-Only Mode
 Whilst PURPLE is primarily designed to be run with paired normal / tumor data, it is possible to run with tumor data only by leaving the reference and reference_bam parameters null. 
