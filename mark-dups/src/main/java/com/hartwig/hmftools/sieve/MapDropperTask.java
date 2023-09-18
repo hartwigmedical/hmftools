@@ -97,8 +97,8 @@ public class MapDropperTask implements Callable
     {
         if(records.isEmpty())
         {
-            // TODO(m_cooper): Raise error here.
-            return;
+            MD_LOGGER.error("Read group is empty.");
+            System.exit(1);
         }
 
         mRecordCounter += records.size();
