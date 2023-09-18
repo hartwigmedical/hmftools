@@ -40,7 +40,7 @@ public class MapDropper
 
         final RecordWriter writer = new RecordWriter(mConfig);
 
-        // TODO: Multi-thread.
+        // TODO(m_cooper): Multi-thread.
         final List<MapDropperTask> dropTasks = Lists.newArrayList();
         dropTasks.add(new MapDropperTask(mConfig, writer));
         final List<Callable> callableList = dropTasks.stream().collect(Collectors.toList());
