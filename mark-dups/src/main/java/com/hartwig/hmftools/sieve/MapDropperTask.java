@@ -97,6 +97,7 @@ public class MapDropperTask implements Callable
     {
         if(records.isEmpty())
         {
+            // TODO(m_cooper): Raise error here.
             return;
         }
 
@@ -193,6 +194,7 @@ public class MapDropperTask implements Callable
             }
         }
 
+        // TODO(m_cooper): Make fraction configurable.
         return gCount >= 0.9 * (baseEnd - baseStart + 1);
     }
 }

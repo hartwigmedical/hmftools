@@ -14,6 +14,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
+// TODO(m_cooper): Duplicate code?
 public class RecordWriter
 {
     private final MapDropperConfig mConfig;

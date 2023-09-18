@@ -15,6 +15,8 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.jetbrains.annotations.NotNull;
 
+// TODO(m_cooper): Unit tests.
+// TODO(m_cooper): Write readme.
 public class MapDropper
 {
     private final MapDropperConfig mConfig;
@@ -59,7 +61,8 @@ public class MapDropper
         configBuilder.checkAndParseCommandLine(args);
 
         setLogLevel(configBuilder);
-        logVersion();
+        // TODO(m_cooper): Fix null pointer exception here.
+//        logVersion();
 
         MapDropper mapDropper = new MapDropper(configBuilder);
         mapDropper.run();
