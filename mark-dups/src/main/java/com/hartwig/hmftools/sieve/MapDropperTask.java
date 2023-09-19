@@ -22,8 +22,9 @@ public class MapDropperTask implements Callable
     private final RecordWriter mWriter;
     private final SamReader mSamReader;
     private final PerformanceCounter mPerfCounter;
-    private int mRecordCounter;
+    private int mReadCounter;
     private int mPrimaryUnmappedCounter;
+    private int mSupplementaryDroppedCounter;
 
     public MapDropperTask(@NotNull final MapDropperConfig config, @NotNull RecordWriter writer)
     {
@@ -31,8 +32,9 @@ public class MapDropperTask implements Callable
         mWriter = writer;
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
         mPerfCounter = new PerformanceCounter("MapDropperTask");
-        mRecordCounter = 0;
+        mReadCounter = 0;
         mPrimaryUnmappedCounter = 0;
+        mSupplementaryDroppedCounter = 0;
     }
 
     @Override
@@ -77,7 +79,7 @@ public class MapDropperTask implements Callable
         processReadGroup(readNameRecords);
 
         mPerfCounter.stop();
-        MD_LOGGER.info("{} reads processed, {} primary reads unmapped", mRecordCounter, mPrimaryUnmappedCounter);
+        MD_LOGGER.info("{} reads processed, {} primary reads unmapped, {} supplementary reads dropped", mReadCounter, mPrimaryUnmappedCounter, mSupplementaryDroppedCounter);
         return (long) 0;
     }
 
@@ -101,10 +103,12 @@ public class MapDropperTask implements Callable
             if(highFreqGMatch(primaryRead))
             {
                 unmapPrimaryRead(primaryRead, primaryMate);
+                mSupplementaryDroppedCounter += supplementaryReads.size();
                 supplementaryReads.clear();
             }
             else
             {
+                mSupplementaryDroppedCounter += supplementaryReads.stream().filter(this::highFreqGMatch).count();
                 supplementaryReads.removeIf(this::highFreqGMatch);
             }
         }
@@ -123,72 +127,72 @@ public class MapDropperTask implements Callable
             System.exit(1);
         }
 
-        mRecordCounter += reads.size();
+        mReadCounter += reads.size();
         final String readName = reads.get(0).getReadName();
 
         // Get first and second primary and supplementary reads.
-        SAMRecord first_primary = null;
-        SAMRecord second_primary = null;
-        final List<SAMRecord> first_supp = new ArrayList<>();
-        final List<SAMRecord> second_supp = new ArrayList<>();
+        SAMRecord firstPrimary = null;
+        SAMRecord secondPrimary = null;
+        final List<SAMRecord> firstSupp = new ArrayList<>();
+        final List<SAMRecord> secondSupp = new ArrayList<>();
         for(var record : reads)
         {
             if(record.getSupplementaryAlignmentFlag())
             {
                 if(record.getFirstOfPairFlag())
                 {
-                    first_supp.add(record);
+                    firstSupp.add(record);
                 }
                 else
                 {
-                    second_supp.add(record);
+                    secondSupp.add(record);
                 }
             }
             else
             {
                 if(record.getFirstOfPairFlag())
                 {
-                    if(first_primary != null)
+                    if(firstPrimary != null)
                     {
                         MD_LOGGER.error("Multiple primary reads for first in pair with read name {}", readName);
                         System.exit(1);
                     }
 
-                    first_primary = record;
+                    firstPrimary = record;
                 }
                 else
                 {
-                    if(second_primary != null)
+                    if(secondPrimary != null)
                     {
                         MD_LOGGER.error("Multiple primary reads for second in pair with read name {}", readName);
                         System.exit(1);
                     }
 
-                    second_primary = record;
+                    secondPrimary = record;
                 }
             }
         }
 
-        if(first_primary == null)
+        if(firstPrimary == null)
         {
             MD_LOGGER.error("No primary read for first in pair with read name {}", readName);
             System.exit(1);
         }
 
-        if(second_primary == null)
+        if(secondPrimary == null)
         {
             MD_LOGGER.error("No primary read for second in pair with read name {}", readName);
             System.exit(1);
         }
 
         // TODO(m_cooper): Handling past partition?
-        processPrimaryAndSupplementaries(true, first_primary, first_supp, second_primary);
-        processPrimaryAndSupplementaries(false, second_primary, second_supp, first_primary);
+        processPrimaryAndSupplementaries(true, firstPrimary, firstSupp, secondPrimary);
+        processPrimaryAndSupplementaries(false, secondPrimary, secondSupp, firstPrimary);
 
-        mWriter.writeRead(first_primary);
-        mWriter.writeRead(second_primary);
-        mWriter.writeReads(first_supp);
-        mWriter.writeReads(second_supp);
+        mWriter.writeRead(firstPrimary);
+        mWriter.writeRead(secondPrimary);
+        mWriter.writeReads(firstSupp);
+        mWriter.writeReads(secondSupp);
     }
 
     private boolean highFreqGMatch(@NotNull final SAMRecord read)
