@@ -67,14 +67,14 @@ public class MapDropperTask implements Callable
             }
             else
             {
-                processReads(readNameRecords);
+                processReadGroup(readNameRecords);
                 lastReadName = readName;
                 readNameRecords = new ArrayList<>();
                 readNameRecords.add(record);
             }
         }
 
-        processReads(readNameRecords);
+        processReadGroup(readNameRecords);
 
         mPerfCounter.stop();
         MD_LOGGER.info("{} reads processed, {} primary reads unmapped", mRecordCounter, mPrimaryUnmappedCounter);
@@ -93,23 +93,45 @@ public class MapDropperTask implements Callable
         mate.setMateAlignmentStart(SAMRecord.NO_ALIGNMENT_START);
     }
 
-    private void processReads(@NotNull final List<SAMRecord> records)
+    private void processPrimaryAndSupplementaries(final boolean isFirstInPair, final @NotNull SAMRecord primaryRead,
+            final @NotNull List<SAMRecord> supplementaryReads, final @NotNull SAMRecord primaryMate)
     {
-        if(records.isEmpty())
+        if(!primaryRead.getReadUnmappedFlag())
+        {
+            if(highFreqGMatch(primaryRead))
+            {
+                unmapPrimaryRead(primaryRead, primaryMate);
+                supplementaryReads.clear();
+            }
+            else
+            {
+                supplementaryReads.removeIf(this::highFreqGMatch);
+            }
+        }
+        else if(!supplementaryReads.isEmpty())
+        {
+            MD_LOGGER.error("Primary read for {} in pair is unmapped, but it has supplementary reads.", isFirstInPair ? "first" : "second");
+            System.exit(1);
+        }
+    }
+
+    private void processReadGroup(@NotNull final List<SAMRecord> reads)
+    {
+        if(reads.isEmpty())
         {
             MD_LOGGER.error("Read group is empty.");
             System.exit(1);
         }
 
-        mRecordCounter += records.size();
-        final String readName = records.get(0).getReadName();
+        mRecordCounter += reads.size();
+        final String readName = reads.get(0).getReadName();
 
         // Get first and second primary and supplementary reads.
         SAMRecord first_primary = null;
         SAMRecord second_primary = null;
         final List<SAMRecord> first_supp = new ArrayList<>();
         final List<SAMRecord> second_supp = new ArrayList<>();
-        for(var record : records)
+        for(var record : reads)
         {
             if(record.getSupplementaryAlignmentFlag())
             {
@@ -160,18 +182,8 @@ public class MapDropperTask implements Callable
         }
 
         // TODO(m_cooper): Handling past partition?
-        // TODO(m_cooper): Handle supplementary.
-        if(!first_primary.getReadUnmappedFlag() && highFreqGMatch(first_primary))
-        {
-            unmapPrimaryRead(first_primary, second_primary);
-            first_supp.clear();
-        }
-
-        if(!second_primary.getReadUnmappedFlag() && highFreqGMatch(second_primary))
-        {
-            unmapPrimaryRead(second_primary, first_primary);
-            second_supp.clear();
-        }
+        processPrimaryAndSupplementaries(true, first_primary, first_supp, second_primary);
+        processPrimaryAndSupplementaries(false, second_primary, second_supp, first_primary);
 
         mWriter.writeRead(first_primary);
         mWriter.writeRead(second_primary);
