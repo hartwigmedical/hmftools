@@ -48,39 +48,39 @@ public class MapDropperTask implements Callable
         }
 
         mPerfCounter.start();
-
-        // Process reads in chunks which have the same read names.
-        String lastReadName = null;
-        List<SAMRecord> readNameRecords = null;
-        final var it = mSamReader.iterator();
-        while(it.hasNext())
-        {
-            final SAMRecord record = it.next();
-            final String readName = record.getReadName();
-            if(lastReadName == null)
-            {
-                lastReadName = readName;
-                readNameRecords = new ArrayList<>();
-                readNameRecords.add(record);
-            }
-            else if(lastReadName.equals(readName))
-            {
-                readNameRecords.add(record);
-            }
-            else
-            {
-                processReadGroup(readNameRecords);
-                lastReadName = readName;
-                readNameRecords = new ArrayList<>();
-                readNameRecords.add(record);
-            }
-        }
-
-        processReadGroup(readNameRecords);
-
+        partitionAndProcessReadGroups();
         mPerfCounter.stop();
         MD_LOGGER.info("{} reads processed, {} primary reads unmapped, {} supplementary reads dropped", mReadCounter, mPrimaryUnmappedCounter, mSupplementaryDroppedCounter);
         return (long) 0;
+    }
+
+    private void partitionAndProcessReadGroups()
+    {
+        final var it = mSamReader.iterator();
+        if(!it.hasNext())
+        {
+            return;
+        }
+
+        SAMRecord read = it.next();
+        String lastReadName = read.getReadName();
+        List<SAMRecord> readGroup = new ArrayList<>(List.of(read));
+        while(it.hasNext())
+        {
+            read = it.next();
+            final String readName = read.getReadName();
+            if(lastReadName.equals(readName))
+            {
+                readGroup.add(read);
+                continue;
+            }
+
+            processReadGroup(readGroup);
+            lastReadName = readName;
+            readGroup = new ArrayList<>(List.of(read));
+        }
+
+        processReadGroup(readGroup);
     }
 
     private void unmapPrimaryRead(@NotNull final SAMRecord read, @NotNull final SAMRecord mate)
@@ -186,6 +186,7 @@ public class MapDropperTask implements Callable
         }
 
         // TODO(m_cooper): Handling past partition?
+        // TODO(m_cooper): Insertions and deletions?
         processPrimaryAndSupplementaries(true, firstPrimary, firstSupp, secondPrimary);
         processPrimaryAndSupplementaries(false, secondPrimary, secondSupp, firstPrimary);
 
