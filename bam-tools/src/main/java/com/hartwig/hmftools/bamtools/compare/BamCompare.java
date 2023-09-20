@@ -12,10 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -38,6 +40,8 @@ public class BamCompare
 
         List<ChrBaseRegion> allRegions = Lists.newArrayList();
 
+        ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion);
+
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
@@ -45,8 +49,13 @@ public class BamCompare
             if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
-            allRegions.addAll(partitionChromosome(
-                    chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize));
+            List<ChrBaseRegion> partitions = partitionChromosome(
+                    chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize);
+
+            if(mConfig.ExcludeRegions)
+                allRegions.addAll(partitions.stream().filter(x -> !x.overlaps(excludedRegion)).collect(Collectors.toList()));
+            else
+                allRegions.addAll(partitions);
         }
 
         ReadWriter readWriter = new ReadWriter(mConfig);

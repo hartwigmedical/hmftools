@@ -84,6 +84,14 @@ public class PartitionReader
         if(!mRegion.containsPosition(refRead.getAlignmentStart()))
             return;
 
+        if(exceededMaxReads())
+        {
+            BT_LOGGER.info("partition({}) exiting ref read processing at limit(ref={} new={})",
+                    mRegion, mStats.RefReadCount, mStats.NewReadCount);
+            mBamSlicer.haltProcessing();
+            return;
+        }
+
         if(mLogReadIds && mConfig.LogReadIds.contains(refRead.getReadName()))
         {
             BT_LOGGER.debug("specific readId({})", refRead.getReadName());
@@ -109,6 +117,14 @@ public class PartitionReader
     {
         if(!mRegion.containsPosition(newRead.getAlignmentStart()))
             return;
+
+        if(exceededMaxReads())
+        {
+            BT_LOGGER.info("partition({}) exiting new read processing at limit(ref={} new={})",
+                    mRegion, mStats.RefReadCount, mStats.NewReadCount);
+            mBamSlicer.haltProcessing();
+            return;
+        }
 
         if(mLogReadIds && mConfig.LogReadIds.contains(newRead.getReadName()))
         {
@@ -177,6 +193,11 @@ public class PartitionReader
         // no match
         mReadWriter.writeComparison(newRead, NEW_ONLY, null);
         ++mStats.DiffCount;
+    }
+
+    private boolean exceededMaxReads()
+    {
+        return mConfig.MaxPartitionReads > 0 && mStats.RefReadCount + mStats.NewReadCount >= mConfig.MaxPartitionReads;
     }
 
     private static final List<String> KEY_ATTRIBUTES = List.of(SUPPLEMENTARY_ATTRIBUTE, MATE_CIGAR_ATTRIBUTE);

@@ -28,6 +28,8 @@ public class CompareConfig
     public final RefGenomeVersion RefGenVersion;
 
     public final int PartitionSize;
+    public final int MaxPartitionReads;
+    public final boolean ExcludeRegions;
 
     public final int Threads;
     public final List<String> LogReadIds;
@@ -38,6 +40,8 @@ public class CompareConfig
     private static final String OUTPUT_FILE = "output_file";
     private static final String REF_BAM_FILE = "ref_bam_file";
     private static final String NEW_BAM_FILE = "new_bam_file";
+    private static final String EXCLUDE_REGIONS = "exclude_regions";
+    private static final String MAX_PARTITION_READS = "max_partition_reads";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 100000;
 
@@ -61,11 +65,14 @@ public class CompareConfig
         BT_LOGGER.info("output file({})", OutputFile);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
+        MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
         if(SpecificChrRegions == null)
             System.exit(1);
+
+        ExcludeRegions = configBuilder.hasFlag(EXCLUDE_REGIONS);
 
         Threads = parseThreads(configBuilder);
 
@@ -75,11 +82,13 @@ public class CompareConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addInteger(MAX_PARTITION_READS, "Maximum partition reads before exit", 0);
 
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output comparison file");
         configBuilder.addRequiredConfigItem(REF_BAM_FILE, "Ref BAM file");
         configBuilder.addRequiredConfigItem(NEW_BAM_FILE,"New BAM file");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
+        configBuilder.addFlag(EXCLUDE_REGIONS, "Ignore excluded regions");
 
         addRefGenomeConfig(configBuilder, true);;
         addSpecificChromosomesRegionsConfig(configBuilder);
