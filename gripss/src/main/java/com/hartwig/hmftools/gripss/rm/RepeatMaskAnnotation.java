@@ -2,6 +2,8 @@ package com.hartwig.hmftools.gripss.rm;
 
 import static java.lang.String.format;
 
+import com.hartwig.hmftools.common.gripss.RepeatMaskData;
+
 public class RepeatMaskAnnotation
 {
     public final RepeatMaskData RmData;

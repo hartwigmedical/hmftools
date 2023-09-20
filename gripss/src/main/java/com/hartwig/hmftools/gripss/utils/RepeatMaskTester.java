@@ -2,7 +2,7 @@ package com.hartwig.hmftools.gripss.utils;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
-import static com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,11 +21,12 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
-import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations;
+import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotator;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -34,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
 public class RepeatMaskTester
 {
     private final String mSvDataFile;
-    private final RepeatMaskAnnotations mRmAnnotation;
+    private final RepeatMaskAnnotator mRmAnnotation;
     private final BufferedWriter mWriter;
     private final int mThreads;
 
@@ -43,7 +43,7 @@ public class RepeatMaskTester
 
     public RepeatMaskTester(final ConfigBuilder configBuilder)
     {
-        mRmAnnotation = new RepeatMaskAnnotations();
+        mRmAnnotation = new RepeatMaskAnnotator();
         mSvDataFile = configBuilder.getValue(SV_DATA_FILE);
 
         if(!mRmAnnotation.load(configBuilder.getValue(REPEAT_MASK_FILE), RefGenomeVersion.V37))

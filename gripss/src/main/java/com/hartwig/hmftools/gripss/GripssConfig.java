@@ -18,13 +18,14 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.TargetRegions;
-import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations;
+import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotator;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

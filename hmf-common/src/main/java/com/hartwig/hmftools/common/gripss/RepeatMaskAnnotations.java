@@ -1,8 +1,6 @@
-package com.hartwig.hmftools.gripss.rm;
+package com.hartwig.hmftools.common.gripss;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
-import static com.hartwig.hmftools.gripss.rm.AlignmentData.fromInsertSequenceAlignments;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,8 +12,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RepeatMaskAnnotations
 {
@@ -24,15 +25,7 @@ public class RepeatMaskAnnotations
     public static final String REPEAT_MASK_FILE = "repeat_mask_file";
     public static final String REPEAT_MASK_FILE_DESC = "Repeat mask definitions file";
 
-    private static final int MIN_OVERLAP = 20;
-    private static final double MIN_COVERAGE_PERC = 0.1;
-    private static final double POLY_A_T_PERC = 0.9;
-
-    private static final RepeatMaskData POLY_T_DATA = new RepeatMaskData(
-            0, new BaseRegion(0, 1), 0, ' ', "T(n)", "Simple_repeat");
-
-    private static final RepeatMaskData POLY_A_DATA = new RepeatMaskData(
-            0, new BaseRegion(0, 1), 0, ' ', "A(n)", "Simple_repeat");
+    private static final Logger LOGGER = LogManager.getLogger(RepeatMaskAnnotations.class);
 
     public RepeatMaskAnnotations()
     {
@@ -45,78 +38,6 @@ public class RepeatMaskAnnotations
     }
 
     public boolean hasData() { return !mChrDataMap.isEmpty(); }
-
-    public RepeatMaskAnnotation annotate(final String insertSequence, final String alignmentsStr)
-    {
-        List<AlignmentData> alignments = fromInsertSequenceAlignments(alignmentsStr);
-
-        if(alignments == null || alignments.isEmpty())
-            return null;
-
-        double insSeqLength = insertSequence.length();
-
-        // first check for a poly-A or T
-        for(AlignmentData alignment : alignments)
-        {
-            String matchedBases = alignment.extractMatchedBases(insertSequence);
-            double polyAtPerc = calcPolyATPercent(matchedBases);
-
-            if(polyAtPerc >= POLY_A_T_PERC)
-            {
-                double coverage = matchedBases.length() / insSeqLength;
-                long aCount = matchedBases.chars().filter(x -> x == 'A').count();
-                RepeatMaskData rmData = aCount > matchedBases.length() / 2 ? POLY_A_DATA : POLY_T_DATA;
-                return new RepeatMaskAnnotation(rmData, coverage, alignment);
-            }
-        }
-
-        RepeatMaskData topRm = null;
-        AlignmentData topAlignment = null;
-        double topCoverage = 0;
-
-        for(AlignmentData alignment : alignments)
-        {
-            List<RepeatMaskData> rmMatches = findMatches(alignment.Chromosome, alignment.Region);
-
-            if(rmMatches.isEmpty())
-                continue;
-
-            for(RepeatMaskData rmData : rmMatches)
-            {
-                int overlap = rmData.overlappingBases(alignment);
-
-                if(overlap < MIN_OVERLAP)
-                    continue;
-
-                double coverage = overlap / insSeqLength;
-
-                if(coverage < MIN_COVERAGE_PERC)
-                    continue;
-
-                if(coverage > topCoverage)
-                {
-                    topCoverage = coverage;
-                    topRm = rmData;
-                    topAlignment = alignment;
-                }
-            }
-        }
-
-        return topRm != null ? new RepeatMaskAnnotation(topRm, topCoverage, topAlignment) : null;
-    }
-
-    private static double calcPolyATPercent(final String sequence)
-    {
-        int count = 0;
-
-        for(int i = 0; i < sequence.length(); ++i)
-        {
-            if(sequence.charAt(i) == 'T' || sequence.charAt(i) == 'A')
-                ++count;
-        }
-
-        return count / (double)sequence.length();
-    }
 
     public List<RepeatMaskData> findMatches(final String chromosome, final BaseRegion region)
     {
@@ -242,19 +163,19 @@ public class RepeatMaskAnnotations
                 }
                 catch(Exception e)
                 {
-                    GR_LOGGER.error("invalid RM file entry: index({}) line({})", line, index);
+                    LOGGER.error("invalid RM file entry: index({}) line({})", line, index);
                     return false;
                 }
 
                 ++index;
             }
 
-            GR_LOGGER.info("loaded {} repeat-mask entries from file({})",
+            LOGGER.info("loaded {} repeat-mask entries from file({})",
                     mChrDataMap.values().stream().mapToInt(x -> x.size()).sum(), filename);
         }
         catch(IOException e)
         {
-            GR_LOGGER.error("failed to load repeat-mask data from file({}): {}", filename, e.toString());
+            LOGGER.error("failed to load repeat-mask data from file({}): {}", filename, e.toString());
             return false;
         }
 

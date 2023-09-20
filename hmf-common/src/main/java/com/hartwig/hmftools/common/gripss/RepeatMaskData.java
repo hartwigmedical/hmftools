@@ -1,7 +1,5 @@
-package com.hartwig.hmftools.gripss.rm;
+package com.hartwig.hmftools.common.gripss;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
@@ -26,10 +24,12 @@ public class RepeatMaskData
         ClassType = classType;
     }
 
+    /*
     public int overlappingBases(final AlignmentData alignment)
     {
         return min(Region.end(), alignment.Region.end()) - max(Region.start(), alignment.Region.start()) + 1;
     }
+    */
 
     public String toString() { return format("%d: region(%s) type(%s: %s)", Id, Region, ClassType, Repeat); }
 }
