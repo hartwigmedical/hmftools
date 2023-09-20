@@ -104,7 +104,7 @@ public class SvConfig
 
     private static final String WRITE_TYPES = "write_types";
 
-    private static final String READ_LENGTH = "read_length";
+    public static final String READ_LENGTH = "read_length";
     private static final String CALC_FRAG_LENGTH = "calc_fragment_length";
     private static final String PARTITION_SIZE = "partition_size";
 
@@ -191,26 +191,8 @@ public class SvConfig
         if(!mIsValid)
             return false;
 
-        if(!Files.exists(Paths.get(BamFile)))
-        {
-            SV_LOGGER.error("invalid bam file path: {}", BamFile);
-            return false;
-        }
-
-        if(!Files.exists(Paths.get(RefGenomeFile)))
-        {
-            SV_LOGGER.error("invalid ref genome file: {}", RefGenomeFile);
-            return false;
-        }
-
         if(!Hotspots.isValid() || !Blacklist.isValid())
             return false;
-
-        if(ExistingJunctionFile != null && !Files.exists(Paths.get(ExistingJunctionFile)))
-        {
-            SV_LOGGER.error("invalid existing junctions file: {}", ExistingJunctionFile);
-            return false;
-        }
 
         return true;
     }

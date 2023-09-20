@@ -28,8 +28,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 import static com.hartwig.hmftools.svprep.tools.HighDepthConfig.HIGH_DEPTH_REGION_MAX_GAP;
 
 import java.io.BufferedWriter;
@@ -721,7 +721,8 @@ public class HighDepthCombiner
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+
         addSampleIdFile(configBuilder, true);
         configBuilder.addConfigItem(HIGH_DEPTH_FILES, true, "High depth sample file(s), use '*' in for sampleId");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file");
@@ -737,9 +738,6 @@ public class HighDepthCombiner
         addSpecificChromosomesRegionsConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
-        logVersion();
 
         HighDepthCombiner highDepthCombiner = new HighDepthCombiner(configBuilder);
         highDepthCombiner.run();

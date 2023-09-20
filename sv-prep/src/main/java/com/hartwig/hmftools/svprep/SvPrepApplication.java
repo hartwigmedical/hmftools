@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -111,21 +112,12 @@ public class SvPrepApplication
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         SvConfig.addConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(configBuilder);
-        logVersion();
-
         SvPrepApplication svPrep = new SvPrepApplication(configBuilder);
         svPrep.run();
-    }
-
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("sv-prep.version");
-        SV_LOGGER.info("SvPrep version: {}", version.version());
     }
 }

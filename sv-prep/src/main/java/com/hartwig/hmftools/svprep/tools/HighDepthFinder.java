@@ -6,8 +6,8 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -106,15 +106,12 @@ public class HighDepthFinder
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         HighDepthConfig.addConfig(configBuilder);
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
-        logVersion();
 
         HighDepthFinder highDepthFinder = new HighDepthFinder(configBuilder);
         highDepthFinder.run();

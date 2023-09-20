@@ -10,8 +10,7 @@ import org.apache.logging.log4j.Logger;
 public class SvCommon
 {
     public static final Logger SV_LOGGER = LogManager.getLogger(SvCommon.class);
-
-    private static final long MEGABYTE = 1024L * 1024L;
+    public static final String APP_NAME = "SvPrep";
 
     public static BamSlicer createBamSlicer()
     {

@@ -8,18 +8,18 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPA
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
+import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConfig.BLACKLIST_BED;
-import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -250,7 +250,7 @@ public class BlacklistExplorer
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         addSampleIdFile(configBuilder, false);
         configBuilder.addConfigItem(VCF_FILE, true, "VCF file, can use '*' in place of sampleIds");
@@ -258,13 +258,10 @@ public class BlacklistExplorer
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
 
         addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
-        logVersion();
 
         BlacklistExplorer blacklistExplorer = new BlacklistExplorer(configBuilder);
         blacklistExplorer.run();

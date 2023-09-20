@@ -2,11 +2,9 @@ package com.hartwig.hmftools.svprep.tools;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 import static com.hartwig.hmftools.svprep.append.AppendConstants.BREAKEND_PROXIMITY;
 
 import java.io.BufferedWriter;
@@ -101,19 +99,13 @@ public class SvVcfBedWriter
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+
         configBuilder.addPath(INPUT_VCF, true, "Input VCF");
         configBuilder.addConfigItem(OUTPUT_BED, true, "Output BED");
         ConfigUtils.addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         writeBedFromSvVcf(configBuilder);
     }

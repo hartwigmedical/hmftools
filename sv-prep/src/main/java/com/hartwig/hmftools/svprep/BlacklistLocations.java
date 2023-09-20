@@ -28,6 +28,7 @@ public class BlacklistLocations
 
     public List<BaseRegion> getRegions(final String chromosome) { return mChrLocationsMap.get(chromosome); }
     public boolean isValid() { return mIsValid; }
+    public int size() { return mChrLocationsMap.values().stream().mapToInt(x -> x.size()).sum(); }
 
     public boolean inBlacklistLocation(final String chromosome, final int posStart, int posEnd)
     {

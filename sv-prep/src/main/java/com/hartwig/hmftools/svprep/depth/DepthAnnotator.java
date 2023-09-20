@@ -9,9 +9,8 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPA
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE_DESC;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -348,13 +347,10 @@ public class DepthAnnotator
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         DepthConfig.addConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
-        logVersion();
 
         DepthAnnotator bamSvSlicer = new DepthAnnotator(configBuilder);
         bamSvSlicer.run();
