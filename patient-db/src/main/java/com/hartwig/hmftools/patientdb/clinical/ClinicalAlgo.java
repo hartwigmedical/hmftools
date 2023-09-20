@@ -3,13 +3,13 @@ package com.hartwig.hmftools.patientdb.clinical;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.doid.DoidNode;
+import com.google.common.base.Strings;
 import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfig;
 import com.hartwig.hmftools.patientdb.clinical.consents.ConsentConfigFactory;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
+import com.hartwig.hmftools.patientdb.clinical.curators.DoidNodesResolver;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.clinical.datamodel.Patient;
@@ -27,7 +27,6 @@ import com.hartwig.hmftools.patientdb.clinical.readers.drup.DrupPatientReader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,6 +34,7 @@ import static java.lang.String.join;
 
 public class ClinicalAlgo {
 
+    private static final String EMPTY_STRING = "";
     private static final Logger LOGGER = LogManager.getLogger(ClinicalAlgo.class);
     @NotNull
     private final EcrfModels ecrfModels;
@@ -45,15 +45,15 @@ public class ClinicalAlgo {
     @NotNull
     private final TreatmentCurator treatmentCurator;
     @NotNull
-    private final List<DoidNode> doidNodes;
+    private final DoidNodesResolver doidNodesResolver;
 
     ClinicalAlgo(@NotNull final EcrfModels ecrfModels, @NotNull final PrimaryTumorCurator primaryTumorCurator,
-            @NotNull final BiopsySiteCurator biopsySiteCurator, @NotNull final TreatmentCurator treatmentCurator, @NotNull List<DoidNode> doidNodes) {
+            @NotNull final BiopsySiteCurator biopsySiteCurator, @NotNull final TreatmentCurator treatmentCurator, @NotNull final DoidNodesResolver doidNodesResolver) {
         this.ecrfModels = ecrfModels;
         this.primaryTumorCurator = primaryTumorCurator;
         this.biopsySiteCurator = biopsySiteCurator;
         this.treatmentCurator = treatmentCurator;
-        this.doidNodes = doidNodes;
+        this.doidNodesResolver = doidNodesResolver;
     }
 
     @NotNull
@@ -80,7 +80,7 @@ public class ClinicalAlgo {
         Map<String, ConsentConfig> consentConfigMap = ConsentConfigFactory.read(consentConfigTsv);
 
         LOGGER.info("Interpreting and curating data for LIMS patients");
-        List<Patient> limsPatients = readLimsPatients(samplesPerPatient, consentConfigMap, doidNodes);
+        List<Patient> limsPatients = readLimsPatients(samplesPerPatient, consentConfigMap, doidNodesResolver);
         LOGGER.info(" Finished curation of {} LIMS patients", limsPatients.size());
 
         LOGGER.info("Interpreting and curating data for {} CPCT patients", cpctEcrfModel.patientCount());
@@ -113,7 +113,7 @@ public class ClinicalAlgo {
         List<Patient> patients = Lists.newArrayList();
         for (EcrfPatient ecrfPatient : ecrfPatients) {
             List<SampleData> sequencedSamples = sequencedSamplesOnly(samplesPerPatient.get(ecrfPatient.patientId()));
-            String cohortId = !sequencedSamples.isEmpty() ? sequencedSamples.get(0).cohortId() : Strings.EMPTY;
+            String cohortId = !sequencedSamples.isEmpty() ? sequencedSamples.get(0).cohortId() : EMPTY_STRING;
 
             patients.add(reader.read(ecrfPatient, sequencedSamples, consentConfigMap, cohortId));
         }
@@ -122,10 +122,10 @@ public class ClinicalAlgo {
 
     @NotNull
     private List<Patient> readLimsPatients(@NotNull Map<String, List<SampleData>> samplesPerPatient,
-                                           @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull List<DoidNode> doidNodes) {
+                                           @NotNull Map<String, ConsentConfig> consentConfigMap, @NotNull DoidNodesResolver doidNodesResolver) {
         List<Patient> patients = Lists.newArrayList();
         CorePatientReader corePatientReader = new CorePatientReader(primaryTumorCurator);
-        LimsPatientReader limsPatientReader = new LimsPatientReader(doidNodes);
+        LimsPatientReader limsPatientReader = new LimsPatientReader(doidNodesResolver);
 
         for (Map.Entry<String, List<SampleData>> entry : samplesPerPatient.entrySet()) {
             List<SampleData> tumorSamples = tumorSamplesOnly(entry.getValue());
@@ -137,14 +137,14 @@ public class ClinicalAlgo {
                 String logInfo = join("|", chosenSample.sampleBarcode(), chosenSample.sampleId(),
                         chosenSample.cohortId());
 
-                if (!hasAllRequiredFields(chosenSample)) {
+                if (chosenSample.cohortId().isEmpty()) {
                     LOGGER.warn("Not processing sample from LIMS/LAMA due to required fields missing [{}]", logInfo);
-                } else if (hasLamaBasedCuration(chosenSample)) {
+                } else if (!Strings.isNullOrEmpty(chosenSample.limsTumorLocation())) {
                     LOGGER.info("Processing sample from LIMS/LAMA sample with curation from LAMA [{}]", logInfo);
                     patients.add(limsPatientReader.read(patientId, chosenSample, sequencedSamplesOnly(tumorSamples)));
                 } else if (isCuratedFromEcrfSource(chosenSample)) {
                     LOGGER.info("Not processing sample from LIMS/LAMA because has ECRF cohort [{}]", logInfo);
-                } else if (hasPrimaryTumorStringForCuration(chosenSample)) {
+                } else if (!Strings.isNullOrEmpty(chosenSample.limsPrimaryTumor())) {
                     logInfo = join("|", logInfo, "ptum:" + chosenSample.limsPrimaryTumor());
                     LOGGER.info("Processing sample from LIMS/LAMA without curation but with ptum string [{}]", logInfo);
                     patients.add(corePatientReader.read(patientId,
@@ -163,18 +163,6 @@ public class ClinicalAlgo {
     private boolean isCuratedFromEcrfSource(SampleData sample) {
         String cohortStart = sample.cohortId().substring(0, 4);
         return List.of("CPCT", "DRUP").contains(cohortStart);
-    }
-
-    private boolean hasAllRequiredFields(SampleData sample) {
-        return !Objects.requireNonNull(sample.cohortId()).isEmpty();
-    }
-
-    private boolean hasLamaBasedCuration(SampleData sample) {
-        return sample.limsTumorLocation() != null && !Objects.requireNonNull(sample.limsTumorLocation()).isEmpty();
-    }
-
-    private boolean hasPrimaryTumorStringForCuration(SampleData sample) {
-        return sample.limsPrimaryTumor() != null && !Objects.requireNonNull(sample.limsPrimaryTumor()).isEmpty();
     }
 
     @NotNull

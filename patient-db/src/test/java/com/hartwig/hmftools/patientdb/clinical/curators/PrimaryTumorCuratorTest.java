@@ -48,7 +48,8 @@ public class PrimaryTumorCuratorTest {
     @Test
     public void canResolveDoidNodes() throws IOException {
         List<DoidNode> doidNodes = DiseaseOntology.readDoidOwlEntryFromDoidJson(DOID_FILE_JSON).nodes();
-        assertEquals(Lists.newArrayList(doidNodes.get(0)), PrimaryTumorCurator.resolveDoidNodes(doidNodes, Lists.newArrayList("8718")));
+        DoidNodesResolver doidNodesResolver = new DoidNodesResolver(doidNodes);
+        assertEquals(Lists.newArrayList(doidNodes.get(0)), doidNodesResolver.resolveDoidNodes(Lists.newArrayList("8718")));
     }
 
     @Test

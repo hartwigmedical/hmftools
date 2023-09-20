@@ -27,6 +27,7 @@ public abstract class LimsCohortModel {
         LimsCohortConfig cohortConfigData = limsCohortMap().get(cohortString);
         if (cohortConfigData == null) {
             LOGGER.warn("Could not resolve cohort config for sample '{}' based on LIMS cohort '{}'", sampleId, cohortString);
+            return null;
         }
         return cohortConfigData;
     }
