@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -22,12 +23,16 @@ import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
+import com.hartwig.hmftools.common.gripss.RepeatMaskData;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -40,6 +45,7 @@ public class BlacklistRepeatAnalyser
     private final String mOutputFile;
 
     private final BlacklistLocations mBlacklistLocations;
+    private final RepeatMaskAnnotations mRepeatMaskAnnotations;
     private final BufferedWriter mWriter;
     private final RefGenomeInterface mRefGenome;
     public final RefGenomeVersion mRefGenVersion;
@@ -62,11 +68,19 @@ public class BlacklistRepeatAnalyser
         mRefGenVersion = RefGenomeVersion.from(configBuilder);
         mReadLength = configBuilder.getInteger(READ_LENGTH);
         mMinRepeatPercent = configBuilder.getDecimal(MIN_REPEAT_PERC);
+
+        mRepeatMaskAnnotations = new RepeatMaskAnnotations();
+        if(configBuilder.hasValue(REPEAT_MASK_FILE))
+        {
+            if(!mRepeatMaskAnnotations.load(configBuilder.getValue(REPEAT_MASK_FILE), mRefGenVersion))
+                System.exit(1);
+        }
+
     }
 
     public void run()
     {
-        SV_LOGGER.info("analysing repaats in {} blacklist locations", mBlacklistLocations.size());
+        SV_LOGGER.info("analysing repeats in {} blacklist locations", mBlacklistLocations.size());
 
         int regionCount = 0;
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -106,8 +120,11 @@ public class BlacklistRepeatAnalyser
         RepeatData currentRepeat = null;
         int readIndex = 0;
 
+        List<RepeatMaskData> rmMatches = mRepeatMaskAnnotations.findMatches(chromosome, region);
+
         while(readIndex < refBaseLength)
         {
+            boolean atRegionEnd = readIndex + mReadLength >= refBaseLength;
             String readRefBases = refBases.substring(readIndex, min(readIndex + mReadLength, refBaseLength));
 
             if(readRefBases.length() < MIN_REPEAT_BASES)
@@ -130,36 +147,34 @@ public class BlacklistRepeatAnalyser
                 }
             }
 
-            if(currentRepeat == null)
+            if(repeatedBase > 0)
             {
-                if(repeatedBase > 0)
+                int repeatRegionStart = region.start() + readIndex;
+                int repeatRegionEnd = repeatRegionStart + readRefBases.length() - 1;
+
+                if(currentRepeat == null || repeatRegionStart > currentRepeat.Region.end())
                 {
-                    int repeatRegionStart = region.start() + readIndex;
-                    int repeatRegionEnd = repeatRegionStart + readRefBases.length() - 1;
                     BaseRegion repeatRegion = new BaseRegion(repeatRegionStart, repeatRegionEnd);
                     currentRepeat = new RepeatData(repeatRegion, String.valueOf(repeatedBase));
                     currentRepeat.MinCount = currentRepeat.MaxCount = repeatCount;
                     repeats.add(currentRepeat);
                 }
-            }
-            else
-            {
-                if(repeatedBase == 0)
-                {
-                    currentRepeat = null;
-                }
                 else
                 {
+                    currentRepeat.Region.setEnd(repeatRegionEnd);
                     currentRepeat.MaxCount = max(currentRepeat.MaxCount, repeatCount);
                     currentRepeat.MinCount = min(currentRepeat.MinCount, repeatCount);
                 }
             }
 
+            if(atRegionEnd)
+                break;
+
             readIndex += readShift;
         }
 
-        if(!repeats.isEmpty())
-            writeRegionData(chromosome, region, repeats);
+        if(!repeats.isEmpty() || !rmMatches.isEmpty())
+            writeRegionData(chromosome, region, repeats, rmMatches);
     }
 
     private int[] calcNucleotideCounts(final String bases)
@@ -194,15 +209,34 @@ public class BlacklistRepeatAnalyser
         }
     }
 
-    private void writeRegionData(final String chromosome, final BaseRegion region, final List<RepeatData> repeats)
+    private void writeRegionData(
+            final String chromosome, final BaseRegion region, final List<RepeatData> repeats, final List<RepeatMaskData> rmMatches)
     {
         try
         {
+            String regionStr = format("%s\t%d\t%d", chromosome, region.start(), region.end());
+
             for(RepeatData repeatData : repeats)
             {
-                mWriter.write(format("%s\t%d\t%d\t%s\t%d\t%d",
-                        chromosome, region.start() - 1, region.end(),
-                        repeatData.Repeat, repeatData.Region.start(), repeatData.Region.end(), repeatData.MinCount, repeatData.MaxCount));
+                mWriter.write(format("%s\t%s\t%s\t%d\t%d\t%d\t%s",
+                        regionStr, "BASE_REPEAT", repeatData.Repeat, repeatData.Region.start(), repeatData.Region.end(),
+                        repeatData.MaxCount, format("MinCount=%d",repeatData.MinCount)));
+                mWriter.newLine();
+            }
+
+            // log once per class type
+            Set<String> processedClasses = Sets.newHashSet();
+
+            for(RepeatMaskData rmData : rmMatches)
+            {
+                if(processedClasses.contains(rmData.ClassType))
+                    continue;
+
+                processedClasses.add(rmData.ClassType);
+
+                mWriter.write(format("%s\t%s\t%s\t%d\t%d\t%d\t%s",
+                        regionStr, "REPEAT_MASK", rmData.ClassType,
+                        rmData.Region.start(), rmData.Region.end(), 0, format("Id=%s", rmData.Id)));
                 mWriter.newLine();
             }
         }
@@ -218,7 +252,7 @@ public class BlacklistRepeatAnalyser
         {
             BufferedWriter writer = createBufferedWriter(mOutputFile, false);
 
-            writer.write("Chromosome\tPosStart\tPosEnd\tRepeat\tRepeatPosStart\tRepeatPosEnd\tMinCount\tMaxCount");
+            writer.write("Chromosome\tPosStart\tPosEnd\tRepeatType\tRepeatInfo\tRepeatPosStart\tRepeatPosEnd\tCount\tOtherInfo");
             writer.newLine();
 
             return writer;
@@ -239,6 +273,7 @@ public class BlacklistRepeatAnalyser
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output filename");
         configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
         configBuilder.addDecimal(MIN_REPEAT_PERC, "Min repeat perecent of read", DEFAULT_MIN_REPEAT_PERC);
+        RepeatMaskAnnotations.addConfig(configBuilder);
 
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
