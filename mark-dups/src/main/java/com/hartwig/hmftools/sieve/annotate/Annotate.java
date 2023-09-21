@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sieve.annotate;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
 
@@ -8,10 +7,10 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
@@ -51,16 +50,15 @@ public class Annotate
 
         // TODO(m_cooper): Read entirely contained?
 
-        final List<AnnotateTask> annotateTasks = new ArrayList<>();
-        for(HumanChromosome chromosome : HumanChromosome.values())
+        final ArrayBlockingQueue<AnnotatedBedRecord> jobs = new ArrayBlockingQueue<>(bedRecords.size(), true, bedRecords);
+        final List<AnnotateConsumer> annotateConsumers = new ArrayList<>();
+        for(int i = 0; i < Math.max(mConfig.Threads, 1); i++)
         {
-            final String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
-            final List<AnnotatedBedRecord> filteredBedRecords = bedRecords.stream().filter(q -> q.getChromosome().equals(stripChrPrefix(chrStr))).collect(Collectors.toList());
-            final AnnotateTask annotateTask = new AnnotateTask(chrStr, mConfig, filteredBedRecords);
-            annotateTasks.add(annotateTask);
+            final AnnotateConsumer annotateConsumer = new AnnotateConsumer(i, mConfig, jobs);
+            annotateConsumers.add(annotateConsumer);
         }
 
-        final List<Callable> callableList = annotateTasks.stream().collect(Collectors.toList());
+        final List<Callable> callableList = annotateConsumers.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         // TODO(m_cooper): Does this wait for all the tasks to finish?

@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,25 +54,25 @@ public class BedReader
     {
         final String chromosome = fields[0];
 
-        long posStart = 0;
+        int posStart = 0;
         try
         {
-            posStart = Long.parseLong(fields[1]);
+            posStart = Integer.parseInt(fields[1]);
         }
         catch(NumberFormatException e)
         {
-            MD_LOGGER.error("Failed to parse 'posStart' field to a long while reading a BED file.");
+            MD_LOGGER.error("Failed to parse 'posStart' field to an int while reading a BED file.");
             System.exit(1);
         }
 
-        long posEnd = 0;
+        int posEnd = 0;
         try
         {
-            posEnd = Long.parseLong(fields[2]);
+            posEnd = Integer.parseInt(fields[2]);
         }
         catch(NumberFormatException e)
         {
-            MD_LOGGER.error("Failed to parse 'posEnd' field to a long while reading a BED file.");
+            MD_LOGGER.error("Failed to parse 'posEnd' field to an int while reading a BED file.");
             System.exit(1);
         }
 

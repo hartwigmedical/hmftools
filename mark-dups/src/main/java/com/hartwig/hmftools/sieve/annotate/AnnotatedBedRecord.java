@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sieve.annotate;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 
@@ -19,8 +20,8 @@ public class AnnotatedBedRecord
             "Chromosome\tPosStart\tPosEnd\tSampleCount\tDepthMin\tDepthMax\tPrimaryReadCount\tPrimarySoftClippedCount\tSupplementaryCount\tPrimaryImproperPairCount";
 
     private final String mChromosome;
-    private final long mPosStart;
-    private final long mPosEnd;
+    private final int mPosStart;
+    private final int mPosEnd;
     private final long mSampleCount;
     private final long mDepthMin;
     private final long mDepthMax;
@@ -30,10 +31,10 @@ public class AnnotatedBedRecord
     private long mSupplementaryCount;
     private long mPrimaryImproperPairCount;
 
-    public AnnotatedBedRecord(@NotNull final String chromosome, final long posStart, final long posEnd, final long sampleCount,
+    public AnnotatedBedRecord(@NotNull final String chromosome, final int posStart, final int posEnd, final long sampleCount,
             final long depthMin, final long depthMax)
     {
-        mChromosome = chromosome;
+        mChromosome = stripChrPrefix(chromosome);
         mPosStart = posStart;
         mPosEnd = posEnd;
         mSampleCount = sampleCount;
@@ -82,7 +83,7 @@ public class AnnotatedBedRecord
         return false;
     }
 
-    public void matchedRead(SAMRecord read)
+    public void matchedRead(@NotNull final SAMRecord read)
     {
         if(read.getSupplementaryAlignmentFlag())
         {
@@ -112,17 +113,26 @@ public class AnnotatedBedRecord
         }
     }
 
+    public void resetCounts()
+    {
+        mPrimaryReadCount = 0;
+        mPrimarySoftClippedCount = 0;
+        mSupplementaryCount = 0;
+        mPrimaryImproperPairCount = 0;
+    }
+
+    @NotNull
     public String getChromosome()
     {
         return mChromosome;
     }
 
-    public long getPosStart()
+    public int getPosStart()
     {
         return mPosStart;
     }
 
-    public long getPosEnd()
+    public int getPosEnd()
     {
         return mPosEnd;
     }
@@ -165,25 +175,8 @@ public class AnnotatedBedRecord
     @Override
     public String toString()
     {
-        final String sb = mChromosome
-                + '\t'
-                + mPosStart
-                + '\t'
-                + mPosEnd
-                + '\t'
-                + mSampleCount
-                + '\t'
-                + mDepthMin
-                + '\t'
-                + mDepthMax
-                + '\t'
-                + mPrimaryReadCount
-                + '\t'
-                + mPrimarySoftClippedCount
-                + '\t'
-                + mSupplementaryCount
-                + '\t'
-                + mPrimaryImproperPairCount;
+        final String sb = mChromosome + '\t' + mPosStart + '\t' + mPosEnd + '\t' + mSampleCount + '\t' + mDepthMin + '\t' + mDepthMax + '\t'
+                + mPrimaryReadCount + '\t' + mPrimarySoftClippedCount + '\t' + mSupplementaryCount + '\t' + mPrimaryImproperPairCount;
 
         return sb;
     }
