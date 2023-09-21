@@ -1,6 +1,6 @@
-package com.hartwig.hmftools.sieve;
+package com.hartwig.hmftools.sieve.unmap;
 
-import static com.hartwig.hmftools.sieve.MapDropperConfig.MD_LOGGER;
+import static com.hartwig.hmftools.sieve.unmap.MapDropperConfig.MD_LOGGER;
 
 import java.io.File;
 import java.util.ArrayList;

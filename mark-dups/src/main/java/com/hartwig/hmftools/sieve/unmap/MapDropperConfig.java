@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sieve;
+package com.hartwig.hmftools.sieve.unmap;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
