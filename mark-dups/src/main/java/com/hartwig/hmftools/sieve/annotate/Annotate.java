@@ -56,7 +56,7 @@ public class Annotate
         final List<AnnotateConsumer> annotateConsumers = new ArrayList<>();
         for(int i = 0; i < Math.max(mConfig.Threads, 1); i++)
         {
-            final AnnotateConsumer annotateConsumer = new AnnotateConsumer(i, mConfig, jobs);
+            final AnnotateConsumer annotateConsumer = new AnnotateConsumer(mConfig, jobs);
             annotateConsumers.add(annotateConsumer);
         }
 

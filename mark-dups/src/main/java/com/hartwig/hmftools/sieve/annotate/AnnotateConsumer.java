@@ -18,30 +18,29 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class AnnotateConsumer implements Callable
 {
-    private final int mTaskID;
     private final AnnotateConfig mConfig;
     private final ArrayBlockingQueue<AnnotatedBlacklistRegion> mJobs;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
-    private final PerformanceCounter mPerfCounter;
+    private final PerformanceCounter mConsumerPerfCounter;
+    private final PerformanceCounter mJobPerfCounter;
 
     private AnnotatedBlacklistRegion mCurrentBlacklistRegion;
     private long mReadCounter;
     private long mBlacklistRegionCounter;
 
-    public AnnotateConsumer(final int taskID, @NotNull final AnnotateConfig config,
-            @NotNull final ArrayBlockingQueue<AnnotatedBlacklistRegion> jobs)
+    public AnnotateConsumer(@NotNull final AnnotateConfig config, @NotNull final ArrayBlockingQueue<AnnotatedBlacklistRegion> jobs)
     {
-        mTaskID = taskID;
         mConfig = config;
         mJobs = jobs;
 
         mBamSlicer = new BamSlicer(0, false, true, false);
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(mConfig.BamFile));
 
-        mPerfCounter = new PerformanceCounter(String.format("Task %d", taskID));
+        mJobPerfCounter = new PerformanceCounter("Job");
+        mConsumerPerfCounter = new PerformanceCounter("Total");
         mReadCounter = 0;
         mBlacklistRegionCounter = 0;
     }
@@ -51,25 +50,28 @@ public class AnnotateConsumer implements Callable
     {
         MD_LOGGER.info("Consumer is starting starting.");
 
+        mConsumerPerfCounter.start();
+
         AnnotatedBlacklistRegion blacklistRegion;
+        // TODO(m_cooper): Chunk size.
         while((blacklistRegion = mJobs.poll()) != null)
         {
             ++mBlacklistRegionCounter;
             mCurrentBlacklistRegion = blacklistRegion;
-
-            mPerfCounter.start();
-
-            // TODO(m_cooper): Chunk size.
             ChrBaseRegion partition = new ChrBaseRegion(
                     mCurrentBlacklistRegion.getBlacklistRegion().getChromosome(),
                     mCurrentBlacklistRegion.getBlacklistRegion().getPosStart(),
                     mCurrentBlacklistRegion.getBlacklistRegion().getPosEnd());
-            mBamSlicer.slice(mSamReader, partition, this::processSamRecord);
 
-            mPerfCounter.stop();
+            mJobPerfCounter.start();
+            mBamSlicer.slice(mSamReader, partition, this::processSamRecord);
+            mJobPerfCounter.stop();
         }
 
-        mPerfCounter.logStats();
+        mConsumerPerfCounter.stop();
+
+        mJobPerfCounter.logStats();
+        mConsumerPerfCounter.logStats();
         MD_LOGGER.info("Consumer is finished, {} reads processed, {} blacklisted regions processed", mReadCounter, mBlacklistRegionCounter);
 
         return (long) 0;
