@@ -97,15 +97,13 @@ public class AnnotateStatistics
 
     public String getCSVFragment()
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append(mPrimaryReadCount);
-        sb.append(',');
-        sb.append(mPrimarySoftClippedCount);
-        sb.append(',');
-        sb.append(mPrimaryImproperPairCount);
-        sb.append(',');
-        sb.append(mSupplementaryCount);
-        return sb.toString();
+        return String.valueOf(mPrimaryReadCount)
+                + ','
+                + mPrimarySoftClippedCount
+                + ','
+                + mPrimaryImproperPairCount
+                + ','
+                + mSupplementaryCount;
     }
 
     public long getPrimaryReadCount()

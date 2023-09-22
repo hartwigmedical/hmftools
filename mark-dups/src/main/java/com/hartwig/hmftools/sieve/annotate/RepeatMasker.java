@@ -27,20 +27,17 @@ public class RepeatMasker
 
     public String getCSVFragment()
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append(mRepeatType);
-        sb.append(',');
-        sb.append(mRepeatInfo);
-        sb.append(',');
-        sb.append(mRepeatPosStart);
-        sb.append(',');
-        sb.append(mRepeatPosEnd);
-        sb.append(',');
-        sb.append(mCount);
-        sb.append(',');
-        sb.append(mOtherInfo);
-
-        return sb.toString();
+        return mRepeatType
+                + ','
+                + mRepeatInfo
+                + ','
+                + mRepeatPosStart
+                + ','
+                + mRepeatPosEnd
+                + ','
+                + mCount
+                + ','
+                + mOtherInfo;
     }
 
     public String getRepeatType()

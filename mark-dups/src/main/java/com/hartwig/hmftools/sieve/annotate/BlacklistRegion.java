@@ -30,20 +30,17 @@ public class BlacklistRegion
 
     public String getCSVFragment()
     {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(mChromosome);
-        sb.append(',');
-        sb.append(mPosStart);
-        sb.append(',');
-        sb.append(mPosEnd);
-        sb.append(',');
-        sb.append(mSampleCount);
-        sb.append(',');
-        sb.append(mDepthMin);
-        sb.append(',');
-        sb.append(mDepthMax);
-
-        return sb.toString();
+        return mChromosome
+                + ','
+                + mPosStart
+                + ','
+                + mPosEnd
+                + ','
+                + mSampleCount
+                + ','
+                + mDepthMin
+                + ','
+                + mDepthMax;
     }
 
     public String getChromosome()

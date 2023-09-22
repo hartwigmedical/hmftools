@@ -50,29 +50,27 @@ public class AnnotatedBlacklistRegion
         final String statisticsFragment = mStatistics.getCSVFragment();
         if(mAnnotatedRepeatMaskers.isEmpty())
         {
-            StringBuilder sb = new StringBuilder();
-            sb.append(blacklistRegionFragment);
-            sb.append(',');
-            sb.append(statisticsFragment);
-            sb.append(',');
-            sb.append(RepeatMasker.EMPTY_CSV_FRAGMENT);
-            sb.append(',');
-            sb.append(AnnotateStatistics.EMPTY_CSV_FRAGMENT);
-            return List.of(sb.toString());
+            final String line = blacklistRegionFragment
+                    + ','
+                    + statisticsFragment
+                    + ','
+                    + RepeatMasker.EMPTY_CSV_FRAGMENT
+                    + ','
+                    + AnnotateStatistics.EMPTY_CSV_FRAGMENT;
+            return List.of(line);
         }
 
         final List<String> lines = new ArrayList<>();
         for(var annotatedRepeatMasker : mAnnotatedRepeatMaskers)
         {
-            StringBuilder sb  = new StringBuilder();
-            sb.append(blacklistRegionFragment);
-            sb.append(',');
-            sb.append(statisticsFragment);
-            sb.append(',');
-            sb.append(annotatedRepeatMasker.getLeft().getCSVFragment());
-            sb.append(',');
-            sb.append(annotatedRepeatMasker.getRight().getCSVFragment());
-            lines.add(sb.toString());
+            final String line = blacklistRegionFragment
+                    + ','
+                    + statisticsFragment
+                    + ','
+                    + annotatedRepeatMasker.getLeft().getCSVFragment()
+                    + ','
+                    + annotatedRepeatMasker.getRight().getCSVFragment();
+            lines.add(line);
         }
 
         return lines;
