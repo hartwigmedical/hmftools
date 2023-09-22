@@ -34,7 +34,6 @@ import static java.lang.String.join;
 
 public class ClinicalAlgo {
 
-    private static final String EMPTY_STRING = "";
     private static final Logger LOGGER = LogManager.getLogger(ClinicalAlgo.class);
     @NotNull
     private final EcrfModels ecrfModels;
@@ -113,7 +112,7 @@ public class ClinicalAlgo {
         List<Patient> patients = Lists.newArrayList();
         for (EcrfPatient ecrfPatient : ecrfPatients) {
             List<SampleData> sequencedSamples = sequencedSamplesOnly(samplesPerPatient.get(ecrfPatient.patientId()));
-            String cohortId = !sequencedSamples.isEmpty() ? sequencedSamples.get(0).cohortId() : EMPTY_STRING;
+            String cohortId = !sequencedSamples.isEmpty() ? sequencedSamples.get(0).cohortId() : "";
 
             patients.add(reader.read(ecrfPatient, sequencedSamples, consentConfigMap, cohortId));
         }
