@@ -54,7 +54,6 @@ public class AnnotateStatistics
         if(read.getReadPairedFlag())
         {
             // inter-chromosomal
-            // TODO(m_cooper): Why not use contig?
             if(!read.getReferenceName().equals(read.getMateReferenceName()))
             {
                 return true;
@@ -92,7 +91,6 @@ public class AnnotateStatistics
 
         if(isNotProperReadPair(read))
         {
-            // TODO(m_cooper): Double counting?
             mPrimaryImproperPairCount++;
         }
     }

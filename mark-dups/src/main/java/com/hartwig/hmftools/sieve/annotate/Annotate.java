@@ -41,7 +41,6 @@ public class Annotate
             System.exit(1);
         }
 
-        // TODO(m_cooper): Remove this after testing.
         final List<AnnotatedBlacklistRegion> blacklistRegions =
                 BlacklistRepeatMaskerReader.readFromFile(mConfig.BlacklistRegionRepeatMaskerFile);
 
@@ -64,7 +63,6 @@ public class Annotate
         final List<Callable> callableList = annotateConsumers.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
-        // TODO(m_cooper): Does this wait for all the tasks to finish?
         writeAnnotatedBedFile(blacklistRegions);
 
         MD_LOGGER.info("annotate complete");
