@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -33,19 +32,22 @@ public class PrimaryTumorCurator implements CleanableCurator {
     private final Map<String, String> tumorLocationOverridesMap;
     @NotNull
     private final Set<String> unusedSearchTerms;
+    @NotNull
+    private final DoidNodesResolver doidNodesResolver;
 
     public PrimaryTumorCurator(@NotNull String tumorLocationMappingTsv, @NotNull String tumorLocationOverridesTsv,
-            @NotNull List<DoidNode> doidNodes) throws IOException {
-        primaryTumorMap = loadFromMappingTsv(tumorLocationMappingTsv, doidNodes);
+            @NotNull DoidNodesResolver doidNodesResolver) throws IOException {
         tumorLocationOverridesMap = loadFromOverridesTsv(tumorLocationOverridesTsv);
+        this.doidNodesResolver = doidNodesResolver;
+        primaryTumorMap = loadFromMappingTsv(tumorLocationMappingTsv);
+
 
         // Need to create a copy of the key set so that we can remove elements from it without affecting the curation.
         unusedSearchTerms = Sets.newHashSet(primaryTumorMap.keySet());
     }
 
     @NotNull
-    private static Map<String, CuratedPrimaryTumor> loadFromMappingTsv(@NotNull String tumorLocationMappingTsv,
-            @NotNull List<DoidNode> doidNodes) throws IOException {
+    private Map<String, CuratedPrimaryTumor> loadFromMappingTsv(@NotNull String tumorLocationMappingTsv) throws IOException {
         Map<String, CuratedPrimaryTumor> primaryTumorMap = Maps.newHashMap();
 
         List<String> lines = Files.readAllLines(new File(tumorLocationMappingTsv).toPath());
@@ -61,6 +63,7 @@ public class PrimaryTumorCurator implements CleanableCurator {
             String extraDetails = parts[5];
             List<String> doids = Lists.newArrayList(parts[6].split(STRING_DELIMITER));
             List<String> snomedConceptIds = Lists.newArrayList(parts[7].split(STRING_DELIMITER));
+            List<DoidNode> resolvedDoidNodes = doidNodesResolver.resolveDoidNodes(doids);
 
             primaryTumorMap.put(searchTerm,
                     ImmutableCuratedPrimaryTumor.builder()
@@ -71,25 +74,11 @@ public class PrimaryTumorCurator implements CleanableCurator {
                             .type(type)
                             .subType(subType)
                             .extraDetails(extraDetails)
-                            .doidNodes(resolveDoidNodes(doidNodes, doids))
+                            .doidNodes(resolvedDoidNodes)
                             .snomedConceptIds(snomedConceptIds)
                             .build());
         }
         return primaryTumorMap;
-    }
-
-    @NotNull
-    @VisibleForTesting
-    static List<DoidNode> resolveDoidNodes(@NotNull List<DoidNode> doidNodes, @NotNull List<String> doidsToResolve) {
-        List<DoidNode> resolvedDoidNodes = Lists.newArrayList();
-        for (String doid : doidsToResolve) {
-            for (DoidNode doidNode : doidNodes) {
-                if (doidNode.doid().equals(doid)) {
-                    resolvedDoidNodes.add(doidNode);
-                }
-            }
-        }
-        return resolvedDoidNodes;
     }
 
     @NotNull
