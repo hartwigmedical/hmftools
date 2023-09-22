@@ -20,19 +20,19 @@ public class AnnotateConsumer implements Callable
 {
     private final int mTaskID;
     private final AnnotateConfig mConfig;
-    private final ArrayBlockingQueue<AnnotatedBedRecord> mJobs;
+    private final ArrayBlockingQueue<AnnotatedBlacklistRegion> mJobs;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
     private final PerformanceCounter mPerfCounter;
 
-    private AnnotatedBedRecord mCurrentBedRecord;
+    private AnnotatedBlacklistRegion mCurrentBlacklistRegion;
     private long mReadCounter;
-    private long mBedRecordCounter;
+    private long mBlacklistRegionCounter;
 
     public AnnotateConsumer(final int taskID, @NotNull final AnnotateConfig config,
-            @NotNull final ArrayBlockingQueue<AnnotatedBedRecord> jobs)
+            @NotNull final ArrayBlockingQueue<AnnotatedBlacklistRegion> jobs)
     {
         mTaskID = taskID;
         mConfig = config;
@@ -43,31 +43,34 @@ public class AnnotateConsumer implements Callable
 
         mPerfCounter = new PerformanceCounter(String.format("Task %d", taskID));
         mReadCounter = 0;
-        mBedRecordCounter = 0;
+        mBlacklistRegionCounter = 0;
     }
 
     @Override
     public Long call()
     {
-        MD_LOGGER.info("Task {} is starting.", mTaskID);
+        MD_LOGGER.info("Consumer is starting starting.");
 
-        AnnotatedBedRecord bedRecord;
-        while((bedRecord = mJobs.poll()) != null)
+        AnnotatedBlacklistRegion blacklistRegion;
+        while((blacklistRegion = mJobs.poll()) != null)
         {
-            ++mBedRecordCounter;
-            mCurrentBedRecord = bedRecord;
+            ++mBlacklistRegionCounter;
+            mCurrentBlacklistRegion = blacklistRegion;
 
             mPerfCounter.start();
 
             // TODO(m_cooper): Chunk size.
-            ChrBaseRegion partition = new ChrBaseRegion(bedRecord.getChromosome(), bedRecord.getPosStart(), bedRecord.getPosEnd());
+            ChrBaseRegion partition = new ChrBaseRegion(
+                    mCurrentBlacklistRegion.getBlacklistRegion().getChromosome(),
+                    mCurrentBlacklistRegion.getBlacklistRegion().getPosStart(),
+                    mCurrentBlacklistRegion.getBlacklistRegion().getPosEnd());
             mBamSlicer.slice(mSamReader, partition, this::processSamRecord);
 
             mPerfCounter.stop();
         }
 
         mPerfCounter.logStats();
-        MD_LOGGER.info("Task {} is finished, {} reads processed, {} BED records processed", mTaskID, mReadCounter, mBedRecordCounter);
+        MD_LOGGER.info("Consumer is finished, {} reads processed, {} blacklisted regions processed", mReadCounter, mBlacklistRegionCounter);
 
         return (long) 0;
     }
@@ -81,9 +84,10 @@ public class AnnotateConsumer implements Callable
             return;
         }
 
-        if(read.getAlignmentStart() >= mCurrentBedRecord.getPosStart() && read.getAlignmentEnd() <= mCurrentBedRecord.getPosEnd())
+        if(read.getAlignmentStart() >= mCurrentBlacklistRegion.getBlacklistRegion().getPosStart()
+                && read.getAlignmentEnd() <= mCurrentBlacklistRegion.getBlacklistRegion().getPosEnd())
         {
-            mCurrentBedRecord.matchedRead(read);
+            mCurrentBlacklistRegion.matchedRead(read);
         }
     }
 }

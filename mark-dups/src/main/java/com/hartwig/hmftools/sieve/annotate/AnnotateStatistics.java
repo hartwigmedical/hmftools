@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sieve.annotate;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 
@@ -13,34 +12,18 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-// TODO(m_cooper): Duplication.
-public class AnnotatedBedRecord
+public class AnnotateStatistics
 {
-    public static final String TSV_HEADER =
-            "Chromosome\tPosStart\tPosEnd\tSampleCount\tDepthMin\tDepthMax\tPrimaryReadCount\tPrimarySoftClippedCount\tSupplementaryCount\tPrimaryImproperPairCount";
-
-    private final String mChromosome;
-    private final int mPosStart;
-    private final int mPosEnd;
-    private final long mSampleCount;
-    private final long mDepthMin;
-    private final long mDepthMax;
+    public static final String CSV_HEADER = "PrimaryReadCount,PrimarySoftClippedCount,PrimaryImproperPairCount,SupplementaryCount";
+    public static final String EMPTY_CSV_FRAGMENT = "NA,NA,NA,NA";
 
     private long mPrimaryReadCount;
     private long mPrimarySoftClippedCount;
     private long mSupplementaryCount;
     private long mPrimaryImproperPairCount;
 
-    public AnnotatedBedRecord(@NotNull final String chromosome, final int posStart, final int posEnd, final long sampleCount,
-            final long depthMin, final long depthMax)
+    public AnnotateStatistics()
     {
-        mChromosome = stripChrPrefix(chromosome);
-        mPosStart = posStart;
-        mPosEnd = posEnd;
-        mSampleCount = sampleCount;
-        mDepthMin = depthMin;
-        mDepthMax = depthMax;
-
         mPrimaryReadCount = 0;
         mPrimarySoftClippedCount = 0;
         mSupplementaryCount = 0;
@@ -71,6 +54,7 @@ public class AnnotatedBedRecord
         if(read.getReadPairedFlag())
         {
             // inter-chromosomal
+            // TODO(m_cooper): Why not use contig?
             if(!read.getReferenceName().equals(read.getMateReferenceName()))
             {
                 return true;
@@ -113,51 +97,25 @@ public class AnnotatedBedRecord
         }
     }
 
-    public void resetCounts()
+    public String getCSVFragment()
     {
-        mPrimaryReadCount = 0;
-        mPrimarySoftClippedCount = 0;
-        mSupplementaryCount = 0;
-        mPrimaryImproperPairCount = 0;
+        StringBuilder sb = new StringBuilder();
+        sb.append(mPrimaryReadCount);
+        sb.append(',');
+        sb.append(mPrimarySoftClippedCount);
+        sb.append(',');
+        sb.append(mPrimaryImproperPairCount);
+        sb.append(',');
+        sb.append(mSupplementaryCount);
+        return sb.toString();
     }
 
-    @NotNull
-    public String getChromosome()
-    {
-        return mChromosome;
-    }
-
-    public int getPosStart()
-    {
-        return mPosStart;
-    }
-
-    public int getPosEnd()
-    {
-        return mPosEnd;
-    }
-
-    public long getSampleCount()
-    {
-        return mSampleCount;
-    }
-
-    public long getDepthMin()
-    {
-        return mDepthMin;
-    }
-
-    public long getDepthMax()
-    {
-        return mDepthMax;
-    }
-
-    public long getReadCount()
+    public long getPrimaryReadCount()
     {
         return mPrimaryReadCount;
     }
 
-    public long getSoftClippedCount()
+    public long getPrimarySoftClippedCount()
     {
         return mPrimarySoftClippedCount;
     }
@@ -167,17 +125,8 @@ public class AnnotatedBedRecord
         return mSupplementaryCount;
     }
 
-    public long getImproperPairCount()
+    public long getPrimaryImproperPairCount()
     {
         return mPrimaryImproperPairCount;
-    }
-
-    @Override
-    public String toString()
-    {
-        final String sb = mChromosome + '\t' + mPosStart + '\t' + mPosEnd + '\t' + mSampleCount + '\t' + mDepthMin + '\t' + mDepthMax + '\t'
-                + mPrimaryReadCount + '\t' + mPrimarySoftClippedCount + '\t' + mSupplementaryCount + '\t' + mPrimaryImproperPairCount;
-
-        return sb;
     }
 }

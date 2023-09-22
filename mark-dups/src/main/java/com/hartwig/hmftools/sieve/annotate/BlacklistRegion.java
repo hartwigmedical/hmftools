@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sieve.annotate;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
+
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +20,7 @@ public class BlacklistRegion
     public BlacklistRegion(@NotNull final String chromosome, final int posStart, final int posEnd, final int sampleCount,
             final int depthMin, final int depthMax)
     {
-        mChromosome = chromosome;
+        mChromosome = stripChrPrefix(chromosome);
         mPosStart = posStart;
         mPosEnd = posEnd;
         mSampleCount = sampleCount;
