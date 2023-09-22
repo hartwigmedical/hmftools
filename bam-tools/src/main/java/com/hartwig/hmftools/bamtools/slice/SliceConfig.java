@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.PARTITION_SIZE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.READ_LENGTH;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.addCommonCommandOptions;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegionsConfig;
@@ -37,9 +39,11 @@ public class SliceConfig
     public final String OutputId;
 
     public final boolean WriteBam;
+    public final boolean UnsortedBam;
     public final boolean WriteReads;
     public final boolean DropExcluded;
     public final boolean DropRemoteSupplementaries;
+    public final int ReadLength;
     public final int MaxRemoteReads;
     public final int MaxPartitionReads;
     public final int Threads;
@@ -52,6 +56,7 @@ public class SliceConfig
     private boolean mIsValid;
 
     private static final String WRITE_BAM = "write_bam";
+    private static final String UNSORTED_BAM = "unsorted_bam";
     private static final String WRITE_READS = "write_reads";
     private static final String DROP_EXCLUDED = "drop_excluded";
     private static final String DROP_REMOTE_SUPPS = "drop_remote_supps";
@@ -69,10 +74,12 @@ public class SliceConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
         WriteReads = configBuilder.hasFlag(WRITE_READS);
         WriteBam = configBuilder.hasFlag(WRITE_BAM) || !WriteReads;
+        UnsortedBam = configBuilder.hasFlag(UNSORTED_BAM);
         DropExcluded = configBuilder.hasFlag(DROP_EXCLUDED);
         DropRemoteSupplementaries = configBuilder.hasFlag(DROP_REMOTE_SUPPS);
         MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
+        ReadLength = configBuilder.getInteger(READ_LENGTH);
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -124,6 +131,7 @@ public class SliceConfig
         configBuilder.addInteger(MAX_PARTITION_READS, "Max partition reads (perf-only)", 0);
         configBuilder.addInteger(MAX_REMOTE_READS, "Max remote reads (perf-only)", 0);
         configBuilder.addFlag(WRITE_BAM, "Write BAM file for sliced region");
+        configBuilder.addFlag(UNSORTED_BAM, "Write BAM unsorted");
         configBuilder.addFlag(WRITE_READS, "Write CSV reads file for sliced region");
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
         configBuilder.addFlag(DROP_REMOTE_SUPPS, "Ignore remote supplementary reads");
@@ -141,6 +149,7 @@ public class SliceConfig
         OutputId = null;
         WriteReads = false;
         WriteBam = false;
+        UnsortedBam = false;
         DropExcluded = false;
         DropRemoteSupplementaries = false;
         MaxRemoteReads = 0;
@@ -151,5 +160,6 @@ public class SliceConfig
         SpecificRegions = Lists.newArrayList();
         Threads = 0;
         PerfDebug = false;
+        ReadLength = DEFAULT_READ_LENGTH;
     }
 }

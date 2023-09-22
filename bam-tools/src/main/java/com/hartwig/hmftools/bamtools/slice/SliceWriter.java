@@ -47,8 +47,11 @@ public class SliceWriter
         mOutputBam = mConfig.formFilename(BAM_FILE_TYPE);
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
-        fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
-        // fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+        if(mConfig.UnsortedBam)
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        else
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mOutputBam));
     }

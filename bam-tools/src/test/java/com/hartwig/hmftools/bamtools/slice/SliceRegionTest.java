@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.bamtools.slice;
 
+import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_NEG_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -35,22 +37,42 @@ public class SliceRegionTest
         ChrBaseRegion sliceRegion = new ChrBaseRegion(CHR_1, 1000, 2000);
         RegionBamSlicer regionSlicer = new RegionBamSlicer(sliceRegion, CONFIG, mReadCache, mSliceWriter);
 
-        String readId1 = "READ_01";
+        String readId = "READ_01";
 
+        SAMRecord read = createSamRecord(readId, CHR_1, 1000, CHR_1, 1300,false, null);
 
-        SAMRecord read1 = createSamRecord(readId1, CHR_1, 1000, CHR_1, 1300,false, null);
+        regionSlicer.processSamRecord(read);
 
-        regionSlicer.processSamRecord(read1);
-
-        assertEquals(1, regionSlicer.readGroupMap().size());
         assertTrue(mReadCache.chrRemotePositions().isEmpty());
 
-        SAMRecord mate1 = createSamRecord(readId1, CHR_1, 1300, CHR_1, 1000,false, null);
+        read = createSamRecord(readId, CHR_1, 1300, CHR_1, 1000,false, null);
+
+        regionSlicer.processSamRecord(read);
+
+        assertTrue(mReadCache.chrRemotePositions().isEmpty());
+
+        // mate just outside region but still captured by initial slice
+        read = createSamRecord(readId, CHR_1, 900, CHR_1, 1200,false, null);
+
+        regionSlicer.processSamRecord(read);
+
+        assertTrue(mReadCache.chrRemotePositions().isEmpty());
+
+        SAMRecord mate1 = createSamRecord(readId, CHR_1, 1200, CHR_1, 900,false, null);
 
         regionSlicer.processSamRecord(mate1);
 
-        assertTrue(regionSlicer.readGroupMap().isEmpty());
         assertTrue(mReadCache.chrRemotePositions().isEmpty());
+
+        // mate in later region, supplementary on diff chromosome
+        read = createSamRecord(
+                readId, CHR_1, 1100, CHR_1, 2010,
+                false, new SupplementaryReadData(CHR_2, 1020, SUPP_NEG_STRAND, READ_CIGAR, 60));
+
+        regionSlicer.processSamRecord(read);
+
+        assertEquals(2, mReadCache.chrRemotePositions().size());
+
     }
 
     private static SAMRecord createSamRecord(
@@ -59,7 +81,7 @@ public class SliceRegionTest
     {
         return SamRecordTestUtils.createSamRecord(
                 readId, chrStr, readStart, READ_BASES, READ_CIGAR, mateChr, mateStart, false,
-                false, null, false, READ_CIGAR);
+                isSupplementary, suppAlignment, false, READ_CIGAR);
     }
 
 }

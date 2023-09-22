@@ -28,11 +28,13 @@ public final class CommonUtils
 
     // constants
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;
+    public static final int DEFAULT_READ_LENGTH = 151;
 
     // config strings
     public static final String BAM_FILE = "bam_file";
     public static final String PARTITION_SIZE = "partition_size";
     public static final String REGIONS_BED_FILE = "regions_bed_file";
+    public static final String READ_LENGTH = "read_length";
 
     public static final String BAM_FILE_TYPE = "bam";
 
@@ -49,6 +51,7 @@ public final class CommonUtils
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addPath(BAM_FILE, true, "BAM file location");
         configBuilder.addPath(REGIONS_BED_FILE, false, "BED file with regions to analyse");
+        configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
     }
 
     public static boolean loadSpecificRegionsConfig(

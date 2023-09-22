@@ -36,6 +36,12 @@ public class ReadCache
                 if(remotePosition.Position < positions.get(index).Position)
                     break;
 
+                if(remotePosition.Position == positions.get(index).Position
+                && remotePosition.ReadId.equals(positions.get(index).ReadId))
+                {
+                    return;
+                }
+
                 ++index;
             }
 
