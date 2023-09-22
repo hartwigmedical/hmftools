@@ -2,18 +2,18 @@ package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.bamtools.common.ReadGroup;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -41,7 +41,8 @@ public class RegionBamSlicer implements Callable
         mReadCache = readCache;
         mSliceWriter = sliceWriter;
 
-        mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
+        mSamReader = !mConfig.RefGenomeFile.isEmpty() ?
+                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
 
         mBamSlicer = new BamSlicer(0, true, true, false);
         mBamSlicer.setKeepHardClippedSecondaries();
@@ -66,60 +67,95 @@ public class RegionBamSlicer implements Callable
         return (long)0;
     }
 
-    private void processSamRecord(final SAMRecord read)
+    private static final int LOG_COUNT = 100_000;
+
+    @VisibleForTesting
+    public void processSamRecord(final SAMRecord read)
     {
         if(!positionsOverlap(mRegion.start(), mRegion.end(), read.getAlignmentStart(), read.getAlignmentEnd()))
             return;
 
         ++mReadsProcessed;
 
-        ReadGroup readGroup = mReadGroupMap.get(read.getReadName());
-
-        if(readGroup != null)
+        if((mReadsProcessed % LOG_COUNT) == 0)
         {
-            readGroup.addRead(read);
+            BT_LOGGER.debug("region({}) processed {} reads, current pos({}) readGroupMap({})",
+                    mRegion, mReadsProcessed, read.getAlignmentStart(), mReadGroupMap.size());
+        }
 
-            if(readGroup.allReadsPresent())
-            {
-                mReadGroupMap.remove(read.getReadName());
-                mSliceWriter.writeReads(readGroup.reads());
-            }
-            else
-            {
-                List<RemotePosition> otherReadPositions = getOutstandingReadPositions(readGroup);
-
-                if(!hasLocalRegionMatch(otherReadPositions))
-                {
-                    mReadGroupMap.remove(read.getReadName());
-                    mSliceWriter.writeReads(readGroup.reads());
-
-                    if(!otherReadPositions.isEmpty())
-                        mReadCache.addReadGroup(otherReadPositions);
-                }
-            }
-
+        if(mConfig.MaxPartitionReads > 0 && mReadsProcessed >= mConfig.MaxPartitionReads)
+        {
+            BT_LOGGER.debug("region({}) halting slice after {} reads", mRegion, mReadsProcessed);
+            mBamSlicer.haltProcessing();
             return;
         }
 
-        List<RemotePosition> otherReadPositions = getOtherReadPositions(read);
+        mSliceWriter.writeRead(read);
 
-        if(hasLocalRegionMatch(otherReadPositions))
+        // register any remote reads
+
+        ReadGroup readGroup = mReadGroupMap.get(read.getReadName());
+
+        boolean groupExists = readGroup != null;
+
+        // check for remote mates and supplementaries
+        if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
         {
-            mReadGroupMap.put(read.getReadName(), new ReadGroup(read));
+            if(mRegion.containsPosition(read.getMateReferenceName(), read.getMateAlignmentStart()))
+            {
+                if(readGroup == null)
+                    readGroup = new ReadGroup(read.getReadName());
+
+                readGroup.registerMate();
+            }
+            else
+            {
+                mReadCache.addRemotePosition(new RemotePosition(read.getReadName(), read.getMateReferenceName(), read.getMateAlignmentStart()));
+            }
         }
-        else
+
+        if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
         {
-            mSliceWriter.writeRead(read);
-            mReadCache.addReadGroup(otherReadPositions);
+            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+
+            if(mRegion.containsPosition(suppData.Chromosome, suppData.Position))
+            {
+                if(readGroup == null)
+                    readGroup = new ReadGroup(read.getReadName());
+
+                readGroup.registerSupplementaryData(read, suppData);
+            }
+            else
+            {
+                mReadCache.addRemotePosition(new RemotePosition(read.getReadName(), suppData.Chromosome, suppData.Position));
+            }
+        }
+
+        if(readGroup == null)
+            return;
+
+        readGroup.registerRead(read);
+
+        if(!groupExists && !readGroup.localReadsReceived())
+        {
+            mReadGroupMap.put(read.getReadName(), readGroup);
+        }
+        else if(groupExists && readGroup.localReadsReceived())
+        {
+            mReadGroupMap.remove(read.getReadName());
         }
     }
 
+    @VisibleForTesting
+    public Map<String,ReadGroup> readGroupMap() { return mReadGroupMap; }
+
+    /*
     private boolean hasLocalRegionMatch(final List<RemotePosition> readPositions)
     {
         return readPositions.stream().anyMatch(x -> mRegion.containsPosition(x.Chromosome, x.Position));
     }
 
-    private List<RemotePosition> getOutstandingReadPositions(final ReadGroup readGroup)
+    private List<RemotePosition> getRemoteReadPositions(final ReadGroup readGroup)
     {
         List<RemotePosition> positions = Lists.newArrayList();
 
@@ -142,7 +178,7 @@ public class RegionBamSlicer implements Callable
 
     private List<RemotePosition> getOtherReadPositions(final SAMRecord read)
     {
-        List<RemotePosition> positions = org.apache.commons.compress.utils.Lists.newArrayList();
+        List<RemotePosition> positions = Lists.newArrayList();
 
         if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
         {
@@ -161,4 +197,5 @@ public class RegionBamSlicer implements Callable
 
         return positions;
     }
+    */
 }

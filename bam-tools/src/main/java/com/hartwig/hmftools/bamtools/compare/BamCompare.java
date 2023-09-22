@@ -40,8 +40,6 @@ public class BamCompare
 
         List<ChrBaseRegion> allRegions = Lists.newArrayList();
 
-        ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion);
-
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
@@ -52,10 +50,7 @@ public class BamCompare
             List<ChrBaseRegion> partitions = partitionChromosome(
                     chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize);
 
-            if(mConfig.ExcludeRegions)
-                allRegions.addAll(partitions.stream().filter(x -> !x.overlaps(excludedRegion)).collect(Collectors.toList()));
-            else
-                allRegions.addAll(partitions);
+            allRegions.addAll(partitions);
         }
 
         ReadWriter readWriter = new ReadWriter(mConfig);

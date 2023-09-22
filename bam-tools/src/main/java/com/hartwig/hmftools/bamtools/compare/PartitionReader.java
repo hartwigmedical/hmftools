@@ -15,6 +15,7 @@ import java.util.Queue;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
+import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -35,6 +36,7 @@ public class PartitionReader
     private final ReadWriter mReadWriter;
     private boolean mLogReadIds;
 
+    private final ChrBaseRegion mExcludedRegion;
     private final Statistics mStats;
 
     public PartitionReader(
@@ -52,6 +54,9 @@ public class PartitionReader
 
         mRefReads = Queues.newArrayDeque();
         mCurrentRefPosReads = null;
+
+        ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion);
+        mExcludedRegion = mRegion.overlaps(excludedRegion) ? excludedRegion : null;
 
         mStats = new Statistics();
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
@@ -84,13 +89,11 @@ public class PartitionReader
         if(!mRegion.containsPosition(refRead.getAlignmentStart()))
             return;
 
-        if(exceededMaxReads())
-        {
-            BT_LOGGER.info("partition({}) exiting ref read processing at limit(ref={} new={})",
-                    mRegion, mStats.RefReadCount, mStats.NewReadCount);
-            mBamSlicer.haltProcessing();
+        if(mExcludedRegion != null && mExcludedRegion.containsPosition(refRead.getAlignmentStart()))
             return;
-        }
+
+        if(exceededMaxReads("ref", mStats.RefReadCount))
+            return;
 
         if(mLogReadIds && mConfig.LogReadIds.contains(refRead.getReadName()))
         {
@@ -101,6 +104,11 @@ public class PartitionReader
             return;
 
         ++mStats.RefReadCount;
+
+        if((mStats.RefReadCount % LOG_COUNT) == 0)
+        {
+            BT_LOGGER.debug("partition({}) ref reads processed({})", mRegion, mStats.RefReadCount);
+        }
 
         if(mCurrentRefPosReads == null || mCurrentRefPosReads.get(0).getAlignmentStart() != refRead.getAlignmentStart())
         {
@@ -113,18 +121,18 @@ public class PartitionReader
         }
     }
 
+    private static final int LOG_COUNT = 1000_000;
+
     private void processNewRecord(final SAMRecord newRead)
     {
         if(!mRegion.containsPosition(newRead.getAlignmentStart()))
             return;
 
-        if(exceededMaxReads())
-        {
-            BT_LOGGER.info("partition({}) exiting new read processing at limit(ref={} new={})",
-                    mRegion, mStats.RefReadCount, mStats.NewReadCount);
-            mBamSlicer.haltProcessing();
+        if(mExcludedRegion != null && mExcludedRegion.containsPosition(newRead.getAlignmentStart()))
             return;
-        }
+
+        if(exceededMaxReads("new", mStats.NewReadCount))
+            return;
 
         if(mLogReadIds && mConfig.LogReadIds.contains(newRead.getReadName()))
         {
@@ -135,6 +143,11 @@ public class PartitionReader
             return;
 
         ++mStats.NewReadCount;
+
+        if((mStats.NewReadCount % LOG_COUNT) == 0)
+        {
+            BT_LOGGER.debug("partition({}) new reads processed({})", mRegion, mStats.NewReadCount);
+        }
 
         if(mRefReads.isEmpty())
         {
@@ -195,9 +208,16 @@ public class PartitionReader
         ++mStats.DiffCount;
     }
 
-    private boolean exceededMaxReads()
+    private boolean exceededMaxReads(final String source, int readCount)
     {
-        return mConfig.MaxPartitionReads > 0 && mStats.RefReadCount + mStats.NewReadCount >= mConfig.MaxPartitionReads;
+        if(mConfig.MaxPartitionReads == 0 || readCount < mConfig.MaxPartitionReads)
+            return false;
+
+        BT_LOGGER.info("partition({}) exiting {} read processing at limit({})", mRegion, source, readCount);
+
+        mBamSlicer.haltProcessing();
+
+        return true;
     }
 
     private static final List<String> KEY_ATTRIBUTES = List.of(SUPPLEMENTARY_ATTRIBUTE, MATE_CIGAR_ATTRIBUTE);

@@ -19,33 +19,27 @@ public class ReadCache
 
     public Map<String,List<RemotePosition>> chrRemotePositions() { return mChrRemotePositions; }
 
-    public synchronized void addReadGroup(final List<RemotePosition> otherReadPositions)
+    public synchronized void addRemotePosition(final RemotePosition remotePosition)
     {
-        for(RemotePosition remotePosition : otherReadPositions)
+        // positions already part of the initial slice are assumed to have been checked and omitted
+        List<RemotePosition> positions = mChrRemotePositions.get(remotePosition.Chromosome);
+
+        if(positions == null)
         {
-            // skip over positions already part of the initial slice
-            if(mConfig.SpecificRegions.stream().anyMatch(x -> x.containsPosition(remotePosition.Chromosome, remotePosition.Position)))
-                continue;
-
-            List<RemotePosition> positions = mChrRemotePositions.get(remotePosition.Chromosome);
-
-            if(positions == null)
+            mChrRemotePositions.put(remotePosition.Chromosome, Lists.newArrayList(remotePosition));
+        }
+        else
+        {
+            int index = 0;
+            while(index < positions.size())
             {
-                mChrRemotePositions.put(remotePosition.Chromosome, Lists.newArrayList(remotePosition));
-            }
-            else
-            {
-                int index = 0;
-                while(index < positions.size())
-                {
-                    if(remotePosition.Position < positions.get(index).Position)
-                        break;
+                if(remotePosition.Position < positions.get(index).Position)
+                    break;
 
-                    ++index;
-                }
-
-                positions.add(index, remotePosition);
+                ++index;
             }
+
+            positions.add(index, remotePosition);
         }
     }
 }

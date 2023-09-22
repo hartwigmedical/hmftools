@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.loadSpecificRegio
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -16,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -39,6 +41,7 @@ public class SliceConfig
     public final boolean DropExcluded;
     public final boolean DropRemoteSupplementaries;
     public final int MaxRemoteReads;
+    public final int MaxPartitionReads;
     public final int Threads;
 
     // debug
@@ -52,6 +55,7 @@ public class SliceConfig
     private static final String WRITE_READS = "write_reads";
     private static final String DROP_EXCLUDED = "drop_excluded";
     private static final String DROP_REMOTE_SUPPS = "drop_remote_supps";
+    private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String MAX_REMOTE_READS = "max_remote_reads";
 
     public SliceConfig(final ConfigBuilder configBuilder)
@@ -68,6 +72,7 @@ public class SliceConfig
         DropExcluded = configBuilder.hasFlag(DROP_EXCLUDED);
         DropRemoteSupplementaries = configBuilder.hasFlag(DROP_REMOTE_SUPPS);
         MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
+        MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -116,11 +121,35 @@ public class SliceConfig
         addCommonCommandOptions(configBuilder);
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addInteger(MAX_PARTITION_READS, "Max partition reads (perf-only)", 0);
         configBuilder.addInteger(MAX_REMOTE_READS, "Max remote reads (perf-only)", 0);
         configBuilder.addFlag(WRITE_BAM, "Write BAM file for sliced region");
         configBuilder.addFlag(WRITE_READS, "Write CSV reads file for sliced region");
         configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
         configBuilder.addFlag(DROP_REMOTE_SUPPS, "Ignore remote supplementary reads");
         configBuilder.addFlag(PERF_DEBUG, "Detailed performance tracking and logging");
+    }
+
+    @VisibleForTesting
+    public SliceConfig()
+    {
+        mIsValid = true;
+        SampleId = "";
+        BamFile = "";
+        RefGenomeFile = "";
+        OutputDir = "";
+        OutputId = null;
+        WriteReads = false;
+        WriteBam = false;
+        DropExcluded = false;
+        DropRemoteSupplementaries = false;
+        MaxRemoteReads = 0;
+        MaxPartitionReads = 0;
+        RefGenVersion = V37;
+        PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
+        SpecificChromosomes = Lists.newArrayList();
+        SpecificRegions = Lists.newArrayList();
+        Threads = 0;
+        PerfDebug = false;
     }
 }

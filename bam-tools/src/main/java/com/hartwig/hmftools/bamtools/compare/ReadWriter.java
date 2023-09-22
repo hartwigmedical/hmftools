@@ -35,7 +35,7 @@ public class ReadWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write("ReadId\tChromosome\tPosStart\tMismatchType\tDiff\tMateChr\tMatePos");
-            writer.write("\tCigar\tFlags\tPaired\tIsFirst\tNegStrand\tDuplicate\tIsSupp\tSuppData");
+            writer.write("\tCigar\tFlags\tMapQual\tPaired\tIsFirst\tNegStrand\tDuplicate\tIsSupp\tSuppData");
             writer.newLine();
             return writer;
         }
@@ -55,8 +55,8 @@ public class ReadWriter
                     read.getReadName(), read.getReferenceName(), read.getAlignmentStart(), mismatchType, diffDetails,
                     read.getMateReferenceName(), read.getMateAlignmentStart()));
 
-            mWriter.write(format("\t%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s",
-                    read.getCigarString(), read.getFlags(), read.getReadPairedFlag(), read.getFirstOfPairFlag(),
+            mWriter.write(format("\t%s\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s",
+                    read.getCigarString(), read.getFlags(), read.getMappingQuality(), read.getReadPairedFlag(), read.getFirstOfPairFlag(),
                     read.getReadNegativeStrandFlag(), read.getDuplicateReadFlag(), read.getSupplementaryAlignmentFlag(),
                     read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) ? SupplementaryReadData.from(read).asCsv() : "N/A"));
 
