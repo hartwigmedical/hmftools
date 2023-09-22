@@ -5,13 +5,8 @@ import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
@@ -40,31 +35,62 @@ public class Annotate
             System.exit(1);
         }
 
-        final List<AnnotatedBedRecord> bedRecords = BedReader.readFromFile(mConfig.BedFile);
-
-        // TODO(m_cooper): Overlapping
-        // TODO(m_cooper): 9
-        // TODO(m_cooper): [68999357, 69000000]
-        // TODO(m_cooper): [69000000, 69000299]
-        // TODO(m_cooper): PosEnd included?
-
-        // TODO(m_cooper): Read entirely contained?
-
-        final ArrayBlockingQueue<AnnotatedBedRecord> jobs = new ArrayBlockingQueue<>(bedRecords.size(), true, bedRecords);
-        final List<AnnotateConsumer> annotateConsumers = new ArrayList<>();
-        for(int i = 0; i < Math.max(mConfig.Threads, 1); i++)
+        if(mConfig.BlacklistRegionRepeatMaskerFile == null)
         {
-            final AnnotateConsumer annotateConsumer = new AnnotateConsumer(i, mConfig, jobs);
-            annotateConsumers.add(annotateConsumer);
+            MD_LOGGER.error("no blacklist region repeat masker CSV file specified");
+            System.exit(1);
         }
 
-        final List<Callable> callableList = annotateConsumers.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        // TODO(m_cooper): Remove this after testing.
+        final List<AnnotatedBedRecord> bedRecords = BedReader.readFromFile(mConfig.BedFile);
+        final List<AnnotatedBlacklistRegion> blacklistRegions =
+                BlacklistRepeatMaskerReader.readFromFile(mConfig.BlacklistRegionRepeatMaskerFile);
 
-        // TODO(m_cooper): Does this wait for all the tasks to finish?
-        writeAnnotatedBedFile(bedRecords);
+        try
+        {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(mConfig.OutputFile));
+            writer.write(AnnotatedBlacklistRegion.CSV_HEADER);
+            writer.newLine();
+            for(AnnotatedBlacklistRegion blacklistRegion : blacklistRegions)
+            {
+                for(String line : blacklistRegion.getCSVLines())
+                {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            }
 
-        MD_LOGGER.info("annotate complete");
+            writer.close();
+        }
+        catch(Exception e)
+        {
+            MD_LOGGER.error("An exception was raised while writing the output to {}: {}", mConfig.OutputFile, e.toString());
+            System.exit(1);
+        }
+
+        //        // TODO(m_cooper): Overlapping
+        //        // TODO(m_cooper): 9
+        //        // TODO(m_cooper): [68999357, 69000000]
+        //        // TODO(m_cooper): [69000000, 69000299]
+        //        // TODO(m_cooper): PosEnd included?
+        //
+        //        // TODO(m_cooper): Read entirely contained?
+        //
+        //        final ArrayBlockingQueue<AnnotatedBedRecord> jobs = new ArrayBlockingQueue<>(bedRecords.size(), true, bedRecords);
+        //        final List<AnnotateConsumer> annotateConsumers = new ArrayList<>();
+        //        for(int i = 0; i < Math.max(mConfig.Threads, 1); i++)
+        //        {
+        //            final AnnotateConsumer annotateConsumer = new AnnotateConsumer(i, mConfig, jobs);
+        //            annotateConsumers.add(annotateConsumer);
+        //        }
+        //
+        //        final List<Callable> callableList = annotateConsumers.stream().collect(Collectors.toList());
+        //        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        //
+        //        // TODO(m_cooper): Does this wait for all the tasks to finish?
+        //        writeAnnotatedBedFile(bedRecords);
+        //
+        //        MD_LOGGER.info("annotate complete");
     }
 
     private void writeAnnotatedBedFile(@NotNull final List<AnnotatedBedRecord> bedRecords)
