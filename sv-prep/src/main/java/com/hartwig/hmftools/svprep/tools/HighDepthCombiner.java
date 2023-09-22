@@ -16,19 +16,18 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
 import static com.hartwig.hmftools.common.immune.ImmuneRegions.getIgRegion;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
-import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 import static com.hartwig.hmftools.svprep.tools.HighDepthConfig.HIGH_DEPTH_REGION_MAX_GAP;
@@ -53,11 +52,11 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.sv.ExcludedRegions;
+import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 
 import org.apache.commons.cli.ParseException;
@@ -101,7 +100,7 @@ public class HighDepthCombiner
 
         for(String sampleId : sampleIds)
         {
-            mInputFiles.add(highDepthFiles.replaceAll("\\*", sampleId));
+            mInputFiles.add(convertWildcardSamplePath(highDepthFiles, sampleId));
         }
 
         mWriter = initialiseWriter(configBuilder.getValue(OUTPUT_FILE));
@@ -134,7 +133,7 @@ public class HighDepthCombiner
 
         try
         {
-            mSpecificRegions.addAll(loadSpecificRegions(configBuilder.getValue(SPECIFIC_REGIONS)));
+            mSpecificRegions.addAll(loadSpecificRegions(configBuilder));
         }
         catch(ParseException e)
         {
@@ -297,13 +296,13 @@ public class HighDepthCombiner
         // include the excluded region
         ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(mRefGenVersion);
 
-        if(excludedRegion.Chromosome.equals(chromosome))
-        {
-            referenceRegions.add(new BaseRegion(excludedRegion.start(), excludedRegion.end()));
-        }
-
         if(referenceRegions != null)
         {
+            if(excludedRegion.Chromosome.equals(chromosome))
+            {
+                referenceRegions.add(new BaseRegion(excludedRegion.start(), excludedRegion.end()));
+            }
+
             for(BaseRegion refRegion : referenceRegions)
             {
                 // merge any adjacent regions
@@ -577,7 +576,7 @@ public class HighDepthCombiner
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            StringJoiner header = new StringJoiner("\t");
+            StringJoiner header = new StringJoiner(TSV_DELIM);
             header.add("Chromosome");
             header.add("PosStart");
             header.add("PosEnd");
@@ -614,7 +613,7 @@ public class HighDepthCombiner
                     if(region.baseLength() < MIN_REGION_LENGTH)
                         continue;
 
-                    StringJoiner regionData = new StringJoiner("\t");
+                    StringJoiner regionData = new StringJoiner(TSV_DELIM);
                     regionData.add(region.Chromosome);
                     regionData.add(String.valueOf(region.start() - 1));  // write as a BED file, so note the -1 on the start
                     regionData.add(String.valueOf(region.end()));
@@ -669,7 +668,7 @@ public class HighDepthCombiner
 
                 for(String line : lines)
                 {
-                    String[] values = line.split(DELIM, -1);
+                    String[] values = line.split(TSV_DELIM, -1);
 
                     String chromosome = values[0];
 

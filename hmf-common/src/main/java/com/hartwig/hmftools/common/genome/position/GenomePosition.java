@@ -4,7 +4,8 @@ import com.hartwig.hmftools.common.genome.chromosome.ContigComparator;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface GenomePosition extends Comparable<GenomePosition> {
+public interface GenomePosition extends Comparable<GenomePosition>
+{
 
     @NotNull
     String chromosome();
@@ -12,7 +13,8 @@ public interface GenomePosition extends Comparable<GenomePosition> {
     int position();
 
     @Override
-    default int compareTo(@NotNull GenomePosition other) {
+    default int compareTo(@NotNull GenomePosition other)
+    {
         return compare(this, other);
     }
 
@@ -20,9 +22,11 @@ public interface GenomePosition extends Comparable<GenomePosition> {
     // extends GenomePosition but may have their own compareTo function.
     // i.e.
     // new TreeMap(GenomePosition::compare);
-    static int compare(final GenomePosition gp1, final GenomePosition gp2) {
+    static int compare(final GenomePosition gp1, final GenomePosition gp2)
+    {
         int chromosomeCompare = ContigComparator.INSTANCE.compare(gp1.chromosome(), gp2.chromosome());
-        if (chromosomeCompare == 0) {
+        if(chromosomeCompare == 0)
+        {
             return Integer.compare(gp1.position(), gp2.position());
         }
         return chromosomeCompare;

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.pave;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
@@ -24,7 +24,6 @@ import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.pave.compare.RefVariantData;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -68,8 +67,6 @@ public class VariantData
 
     // associated data
     private VariantContext mVariantContext;
-    private String mSampleId;
-    private RefVariantData mRefVariantData;
 
     private boolean mReportable;
 
@@ -220,12 +217,6 @@ public class VariantData
 
     public VariantContext context() { return mVariantContext; }
     public void setContext(final VariantContext context) { mVariantContext = context; }
-
-    public String sampleId() { return mSampleId; }
-    public void setSampleId(final String sampleId) { mSampleId = sampleId; }
-
-    public RefVariantData refData() { return mRefVariantData; }
-    public void setRefData(final RefVariantData refData) { mRefVariantData = refData; }
 
     public boolean reported() { return mReportable; }
     public void markReported() { mReportable = true; }

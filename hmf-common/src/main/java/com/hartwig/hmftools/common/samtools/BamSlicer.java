@@ -7,10 +7,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.QueryInterval;
@@ -50,6 +47,11 @@ public class BamSlicer
 
     public void haltProcessing() { mConsumerHalt = true; }
 
+    public void slice(final SamReader samReader, final ChrBaseRegion region, final Consumer<SAMRecord> consumer)
+    {
+        slice(samReader, List.of(region), consumer);
+    }
+
     public void slice(final SamReader samReader, final List<ChrBaseRegion> regions, final Consumer<SAMRecord> consumer)
     {
         mConsumerHalt = false;
@@ -75,17 +77,7 @@ public class BamSlicer
 
     public List<SAMRecord> slice(final SamReader samReader, final ChrBaseRegion region)
     {
-        return slice(samReader, createIntervals(Lists.newArrayList(region), samReader.getFileHeader()));
-    }
-
-    public List<SAMRecord> slice(final SamReader samReader, final GenomePosition variantRegion)
-    {
-        int position = variantRegion.position();
-
-        final QueryInterval[] queryIntervals = createIntervals(Lists.newArrayList(
-                new ChrBaseRegion(variantRegion.chromosome(), position, position)), samReader.getFileHeader());
-
-        return slice(samReader, queryIntervals);
+        return slice(samReader, createIntervals(List.of(region), samReader.getFileHeader()));
     }
 
     public List<SAMRecord> slice(final SamReader samReader, final QueryInterval[] queryIntervals)

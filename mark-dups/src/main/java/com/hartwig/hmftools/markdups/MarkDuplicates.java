@@ -3,7 +3,8 @@ package com.hartwig.hmftools.markdups;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.APP_NAME;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
 
@@ -17,17 +18,11 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.Statistics;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class MarkDuplicates
@@ -60,7 +55,7 @@ public class MarkDuplicates
         {
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
             ChrBaseRegion chrBaseRegion = new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome));
@@ -73,7 +68,7 @@ public class MarkDuplicates
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
 
-        int maxLogFragments = (mConfig.RunChecks || mConfig.PerfDebug) ? 100 : 0;
+        int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
         int totalUnwrittenFragments = 0;
         ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
         consensusReads.setDebugOptions(mConfig.RunChecks);
@@ -122,16 +117,29 @@ public class MarkDuplicates
             }
         }
 
-        PerformanceCounter combinedPerfCounter = chromosomeReaders.get(0).perfCounter();
+        List<PerformanceCounter> combinedPerfCounters = chromosomeReaders.get(0).perfCounters();
 
         for(int i = 1; i < chromosomeReaders.size(); ++i)
         {
-            combinedPerfCounter.merge(chromosomeReaders.get(i).perfCounter());
+            List<PerformanceCounter> chrPerfCounters = chromosomeReaders.get(i).perfCounters();
+
+            for(int j = 0; j < chrPerfCounters.size(); ++j)
+            {
+                combinedPerfCounters.get(j).merge(chrPerfCounters.get(j));
+            }
         }
 
         if(mConfig.PerfDebug)
         {
-            combinedPerfCounter.logIntervalStats(10);
+            for(int j = 0; j < combinedPerfCounters.size(); ++j)
+            {
+                PerformanceCounter perfCounter = combinedPerfCounters.get(j);
+
+                if(j == 0)
+                    perfCounter.logIntervalStats(10);
+                else
+                    perfCounter.logStats();
+            }
 
             List<Double> partitionLockTimes = Lists.newArrayList();
             partitionDataStore.partitions().forEach(x -> partitionLockTimes.add(x.totalLockTime()));
@@ -151,36 +159,20 @@ public class MarkDuplicates
         }
         else
         {
-            combinedPerfCounter.logStats();
+            combinedPerfCounters.forEach(x -> x.logStats());
         }
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        MD_LOGGER.info("Mark duplicates complete, mins({})", format("%.3f", timeTakeMins));
+        MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         MarkDuplicates markDuplicates = new MarkDuplicates(configBuilder);
         markDuplicates.run();
-    }
-
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("mark-dups.version");
-        MD_LOGGER.info("MarkDups version: {}", version.version());
     }
 }

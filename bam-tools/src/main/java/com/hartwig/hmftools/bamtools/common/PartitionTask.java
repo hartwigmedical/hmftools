@@ -10,7 +10,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class PartitionTask
 {
@@ -34,7 +34,10 @@ public class PartitionTask
             {
                 if(region.Chromosome.equals(chromosome))
                 {
-                    partitions.addAll(buildPartitions(chromosome, region.start() ,region.end(), partitionSize));
+                    if(region.baseLength() <= partitionSize)
+                        partitions.add(region);
+                    else
+                        partitions.addAll(buildPartitions(chromosome, region.start() ,region.end(), partitionSize));
                 }
             }
 

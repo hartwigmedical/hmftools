@@ -38,6 +38,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -145,7 +146,6 @@ public class IsofoxConfig
             for(final String functionStr : functionsStr)
             {
                 Functions.add(IsofoxFunction.valueOf(functionStr));
-                ISF_LOGGER.info("running function(s): {}", functionStr);
             }
         }
         else
@@ -154,6 +154,9 @@ public class IsofoxConfig
             Functions.add(ALT_SPLICE_JUNCTIONS);
             Functions.add(FUSIONS);
         }
+
+        ISF_LOGGER.info("running function(s): {}",
+                Functions.stream().map(x -> x.toString()).collect(Collectors.joining(",")));
 
         CanonicalTranscriptOnly = configBuilder.hasValue(CANONICAL_ONLY);
 
@@ -342,7 +345,7 @@ public class IsofoxConfig
         addOutputOptions(configBuilder);
         addLoggingOptions(configBuilder);
 
-        configBuilder.addConfigItem(FUNCTIONS, true, "List of functional routines to run (see documentation)");
+        configBuilder.addConfigItem(FUNCTIONS, false, "List of functional routines to run (see documentation)");
         configBuilder.addFlag(CANONICAL_ONLY, "Check all transcripts, not just canonical");
         configBuilder.addInteger(GENE_READ_LIMIT, "Per-gene limit on max reads processed (0 = not applied)", 0);
         addRefGenomeConfig(configBuilder, true);
@@ -354,7 +357,6 @@ public class IsofoxConfig
 
         configBuilder.addFlag(FRAG_LENGTHS_BY_GENE, "Write fragment lengths by gene");
         configBuilder.addPath(BAM_FILE, true, "RNA BAM file location");
-        configBuilder.addPath(GENE_ID_FILE, false, GENE_ID_FILE_DESC);
         configBuilder.addFlag(WRITE_EXON_DATA, "Exon region data");
         configBuilder.addFlag(WRITE_SPLICE_JUNC_DATA, "Write canonical splice junction counts");
         configBuilder.addFlag(WRITE_READ_DATA, "BAM read data");
@@ -379,11 +381,5 @@ public class IsofoxConfig
         GeneRegionFilters.registerConfig(configBuilder);
         FusionConfig.registerConfig(configBuilder);
         addThreadOptions(configBuilder);
-    }
-
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("isofox.version");
-        ISF_LOGGER.info("Isofox version: {}", version.version());
     }
 }

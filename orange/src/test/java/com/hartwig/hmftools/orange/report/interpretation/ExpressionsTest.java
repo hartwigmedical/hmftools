@@ -14,10 +14,11 @@ import com.hartwig.hmftools.orange.report.ReportResources;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ExpressionsTest {
-
+public class ExpressionsTest
+{
     @Test
-    public void canCalcFoldChange() {
+    public void canCalcFoldChange()
+    {
         GeneExpression normal = builder().tpm(1).medianTpmCancer(2).medianTpmCohort(3).build();
         assertEquals("0.5", Expressions.foldChangeType(normal));
         assertEquals("0.3", Expressions.foldChangeDatabase(normal));
@@ -28,7 +29,8 @@ public class ExpressionsTest {
     }
 
     @Test
-    public void canFindExpressionByGene() {
+    public void canFindExpressionByGene()
+    {
         GeneExpression entry = builder().geneName("gene 1").build();
 
         List<GeneExpression> expressions = Lists.newArrayList(entry);
@@ -37,7 +39,8 @@ public class ExpressionsTest {
     }
 
     @Test
-    public void canFormatFieldsCorrectly() {
+    public void canFormatFieldsCorrectly()
+    {
         GeneExpression expression = builder().tpm(1.234).percentileCancer(0.12345).percentileCohort(0.23445).build();
 
         assertEquals("1.2", Expressions.tpm(expression));
@@ -46,7 +49,8 @@ public class ExpressionsTest {
     }
 
     @NotNull
-    private static ImmutableGeneExpression.Builder builder() {
+    private static ImmutableGeneExpression.Builder builder()
+    {
         return OrangeIsofoxTestFactory.geneExpressionBuilder();
     }
 }

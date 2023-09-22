@@ -13,18 +13,20 @@ import com.itextpdf.layout.element.Text;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Header {
-
+public class Header
+{
     @NotNull
     private final PdfImageXObject orangeCircosObject;
     private final ReportResources reportResources;
 
-    public Header(@NotNull URL orangeCircosPath, @NotNull ReportResources reportResources) {
+    public Header(@NotNull URL orangeCircosPath, @NotNull ReportResources reportResources)
+    {
         this.orangeCircosObject = new PdfImageXObject(ImageDataFactory.create(orangeCircosPath));
         this.reportResources = reportResources;
     }
 
-    public void renderHeader(@NotNull PdfPage page) {
+    public void renderHeader(@NotNull PdfPage page)
+    {
         PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
         Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 

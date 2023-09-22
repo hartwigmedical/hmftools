@@ -156,10 +156,8 @@ public class CombinedRegion implements GenomeRegion
 
         if(!Doubles.isZero(region.refNormalisedCopyNumber()))
         {
-            mCombined.setRefNormalisedCopyNumber(weightedAverage(currentWeight,
-                    mCombined.refNormalisedCopyNumber(),
-                    newWeight,
-                    region.refNormalisedCopyNumber()));
+            mCombined.setRefNormalisedCopyNumber(weightedAverage(
+                    currentWeight, mCombined.refNormalisedCopyNumber(), newWeight, region.refNormalisedCopyNumber()));
         }
 
         if(!Doubles.isZero(region.gcContent()))

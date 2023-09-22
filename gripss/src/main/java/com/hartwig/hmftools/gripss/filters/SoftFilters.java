@@ -2,8 +2,8 @@ package com.hartwig.hmftools.gripss.filters;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_C_INSERT;
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_INSERT;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_A_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.LineElements.POLY_T_HOMOLOGY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;

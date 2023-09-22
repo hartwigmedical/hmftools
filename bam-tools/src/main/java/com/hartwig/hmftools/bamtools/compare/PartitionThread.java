@@ -21,6 +21,7 @@ public class PartitionThread extends Thread
     private final SamReader mNewSamReader;
     private final ReadWriter mReadWriter;
     private final Queue<PartitionTask> mPartitions;
+    private final Statistics mStats;
 
     public PartitionThread(
             final CompareConfig config, final Queue<PartitionTask> partitions, final ReadWriter readWriter)
@@ -37,8 +38,12 @@ public class PartitionThread extends Thread
                 .validationStringency(ValidationStringency.SILENT)
                 .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.NewBamFile));
 
+        mStats = new Statistics();
+
         start();
     }
+
+    public Statistics stats() { return mStats; }
 
     public void run()
     {
@@ -50,17 +55,13 @@ public class PartitionThread extends Thread
 
                 PartitionReader reader = new PartitionReader(partition.Region, mConfig, mRefSamReader, mNewSamReader, mReadWriter);
 
-                boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
-
-                if(logAndGc)
+                if(partition.TaskId > 0 && (partition.TaskId % 100) == 0)
                 {
                     BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
                 }
 
                 reader.run();
-
-                if(logAndGc)
-                    System.gc();
+                mStats.merge(reader.stats());
             }
             catch(NoSuchElementException e)
             {

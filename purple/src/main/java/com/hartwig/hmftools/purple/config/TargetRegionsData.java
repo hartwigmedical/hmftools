@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.IOException;
@@ -33,7 +34,6 @@ public class TargetRegionsData
     private boolean mIsValid;
 
     private static final String CODING_REGION_ID = "CODING";
-    private static final String FILE_DELIM = "\t";
 
     public static final List<String> TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A","HLA-B","HLA-C","PIM1","BCL2");
 
@@ -142,13 +142,13 @@ public class TargetRegionsData
 
                 String header = lines.get(0);
                 lines.remove(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, FILE_DELIM);
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
                 int chrIndex = fieldsIndexMap.get("Chromosome");
                 int posIndex = fieldsIndexMap.get("Position");
 
                 for(String line : lines)
                 {
-                    String[] values = line.split(FILE_DELIM, -1);
+                    String[] values = line.split(TSV_DELIM, -1);
 
                     String chromosome = values[chrIndex];
                     int position = Integer.parseInt(values[posIndex]);
@@ -184,8 +184,8 @@ public class TargetRegionsData
                 List<String> lines = Files.readAllLines(Paths.get(filename));
 
                 String header = lines.get(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, FILE_DELIM);
-                String[] values = lines.get(1).split(FILE_DELIM, -1);
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+                String[] values = lines.get(1).split(TSV_DELIM, -1);
 
                 mTmbRatio = Double.parseDouble(values[fieldsIndexMap.get("TmbRatio")]);
                 mTmlRatio = Double.parseDouble(values[fieldsIndexMap.get("TmlRatio")]);

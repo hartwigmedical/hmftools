@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
-import com.hartwig.hmftools.common.amber.AmberMapping;
-import com.hartwig.hmftools.common.amber.AmberPatient;
-import com.hartwig.hmftools.common.amber.AmberSample;
+import com.hartwig.hmftools.patientdb.amber.AmberMapping;
+import com.hartwig.hmftools.patientdb.amber.AmberPatient;
+import com.hartwig.hmftools.patientdb.amber.AmberSample;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;

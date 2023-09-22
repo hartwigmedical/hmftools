@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class PurpleConstants
 {
@@ -8,6 +8,7 @@ public class PurpleConstants
 
     // common
     public static final int WINDOW_SIZE = 1000;
+    public static final double BAF_PNT_5 = 0.5;
 
     // TMB calcs
     public static final double MB_PER_GENOME = 2859;
@@ -25,6 +26,16 @@ public class PurpleConstants
     // purity fitting
     public static final double MAX_DIPLOID_COPY_NUMBER = 1.2;
     public static final double MIN_DIPLOID_COPY_NUMBER = 0.8;
+
+    // segmentation and regions
+    public static final int CENTROMERIC_WIDTH = 4_000_000;
+    public static final double GERMLINE_AMP_RATIO = 1.3;
+    public static final double GERMLINE_DEL_RATIO = 0.7;
+    public static final int GERMLINE_DEL_MIN_LENGTH = 5_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_1 = 30_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_9 = 135_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_17 = 75_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_19 = 10_000_000;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;

@@ -1,14 +1,13 @@
 package com.hartwig.hmftools.bamtools.common;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -18,13 +17,15 @@ import com.hartwig.hmftools.bamtools.metrics.MetricsConfig;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public final class CommonUtils
 {
+    public static final String APP_NAME = "BamTools";
+
     // constants
     public static final int DEFAULT_CHR_PARTITION_SIZE = 1000000;
 
@@ -34,8 +35,6 @@ public final class CommonUtils
     public static final String REGIONS_BED_FILE = "regions_bed_file";
 
     public static final String BAM_FILE_TYPE = "bam";
-
-    public static final String BT_DELIM = ",";
 
     public static final Logger BT_LOGGER = LogManager.getLogger(MetricsConfig.class);
 
@@ -55,7 +54,7 @@ public final class CommonUtils
     public static boolean loadSpecificRegionsConfig(
             final ConfigBuilder configBuilder, final List<String> specificChromosomes, final List<ChrBaseRegion> specificRegions)
     {
-        if(configBuilder.hasValue(REGIONS_BED_FILE))
+        if(configBuilder.isRegistered(REGIONS_BED_FILE) && configBuilder.hasValue(REGIONS_BED_FILE))
         {
             return BedFileReader.loadBedFile(configBuilder.getValue(REGIONS_BED_FILE), specificRegions);
         }
@@ -63,7 +62,7 @@ public final class CommonUtils
         {
             try
             {
-                loadSpecificChromsomesOrRegions(configBuilder, specificChromosomes, specificRegions, BT_LOGGER);
+                loadSpecificChromsomesOrRegions(configBuilder, specificChromosomes, specificRegions);
             }
             catch(Exception e)
             {

@@ -10,13 +10,11 @@ import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class TestCuppaFactory {
-
-    private TestCuppaFactory() {
-    }
-
+public final class TestCuppaFactory
+{
     @NotNull
-    public static CuppaData createMinimalCuppaData() {
+    public static CuppaData createMinimalCuppaData()
+    {
         // Some downstream algo's expect at least one prediction, so that is considered "minimal"
         List<CuppaPrediction> predictions = Lists.newArrayList();
         predictions.add(ImmutableCuppaPrediction.builder().cancerType("cancer").likelihood(1D).build());

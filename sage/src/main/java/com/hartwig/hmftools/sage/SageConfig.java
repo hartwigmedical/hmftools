@@ -1,19 +1,18 @@
 package com.hartwig.hmftools.sage;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_PARTITION_SLICES;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_READ_DEPTH_PANEL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
@@ -29,14 +28,13 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
 
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.util.Strings;
 
 import htsjdk.samtools.ValidationStringency;
@@ -62,6 +60,7 @@ public class SageConfig
     public final int MaxReadDepthPanel;
     public final int ReadContextFlankSize;
     public final int ExpectedReadLength;
+    public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
 
     public final String Version;
@@ -70,8 +69,7 @@ public class SageConfig
     public final boolean TrackUMIs;
 
     // debug
-    public final List<String> SpecificChromosomes;
-    public final List<ChrBaseRegion> SpecificRegions;
+    public final SpecificRegions SpecificChrRegions;
     public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
@@ -90,6 +88,7 @@ public class SageConfig
     private static final String EXPECTED_READ_LENGTH = "read_length";
     private static final String SYNC_FRAGMENTS = "sync_fragments";
     private static final String TRACK_UMIS = "track_umis";
+    private static final String MAX_PARTITION_SLICES = "max_partition_slices";
 
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
     private static final String LOG_LPS_DATA = "log_lps_data";
@@ -108,7 +107,6 @@ public class SageConfig
             ReferenceIds.addAll(Arrays.asList(configBuilder.getValue(REFERENCE).split(SAMPLE_DELIM)));
         }
 
-
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG, ""));
 
         ReferenceBams = Lists.newArrayList();
@@ -122,17 +120,10 @@ public class SageConfig
 
         IncludeMT = configBuilder.hasFlag(INCLUDE_MT);
 
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
 
-        try
-        {
-            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, SG_LOGGER);
-        }
-        catch(ParseException e)
-        {
+        if(SpecificChrRegions == null)
             mIsValid = false;
-        }
 
         OutputFile = SampleDataDir + configBuilder.getValue(OUTPUT_VCF);
 
@@ -145,6 +136,7 @@ public class SageConfig
         MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
         ExpectedReadLength = configBuilder.getInteger(EXPECTED_READ_LENGTH);
+        MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = configBuilder.hasFlag(SYNC_FRAGMENTS);
 
         Filter = new FilterConfig(configBuilder);
@@ -154,11 +146,11 @@ public class SageConfig
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
 
         LogLpsData = configBuilder.hasFlag(LOG_LPS_DATA);
-        LogEvidenceReads = !SpecificRegions.isEmpty() && configBuilder.hasFlag(LOG_EVIDENCE_READS);
+        LogEvidenceReads = SpecificChrRegions.hasFilters() && configBuilder.hasFlag(LOG_EVIDENCE_READS);
 
         if(LogEvidenceReads)
         {
-            SG_LOGGER.trace("READ_EV,SampleId,Chromosome,Position,Ref,Alt,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex");
+            SG_LOGGER.trace("READ_EV,SampleId,Chromosome,Position,Ref,Alt,MatchType,ReadId,ReadStart,Cigar,LeftCore,Index,RightCore,ReadIndex,Quality");
         }
 
         PerfWarnTime = configBuilder.getDecimal(PERF_WARN_TIME);
@@ -216,7 +208,7 @@ public class SageConfig
 
     public boolean processChromosome(final String chromosome)
     {
-        if(!SpecificChromosomes.isEmpty() && !SpecificChromosomes.contains(chromosome))
+        if(SpecificChrRegions.excludeChromosome(chromosome))
             return false;
 
         if(HumanChromosome.contains(chromosome))
@@ -248,6 +240,7 @@ public class SageConfig
         configBuilder.addInteger(EXPECTED_READ_LENGTH, "Expected read length", DEFAULT_READ_LENGTH);
         configBuilder.addFlag(INCLUDE_MT, "Call MT variants");
         configBuilder.addInteger(SLICE_SIZE, "Slice size", DEFAULT_SLICE_SIZE);
+        configBuilder.addInteger(MAX_PARTITION_SLICES, "Max slices per partition", DEFAULT_MAX_PARTITION_SLICES);
 
         configBuilder.addInteger(MAX_READ_DEPTH, "Max depth to look for evidence", DEFAULT_MAX_READ_DEPTH);
         configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
@@ -277,8 +270,7 @@ public class SageConfig
         Filter = new FilterConfig();
         Quality = new QualityConfig();
         QualityRecalibration = new QualityRecalibrationConfig();
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
         RegionSliceSize = 500_000;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
@@ -286,6 +278,7 @@ public class SageConfig
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
         ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
         ExpectedReadLength = DEFAULT_READ_LENGTH;
+        MaxPartitionSlices = 1;
         RefGenomeFile = "refGenome";
         OutputFile = "out.vcf";
         Version = "1.0";

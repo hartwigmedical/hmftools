@@ -8,25 +8,27 @@ import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.Nullable;
 
-final class GermlineVariantSelector {
-
-    private GermlineVariantSelector() {
-    }
-
+final class GermlineVariantSelector
+{
     @Nullable
-    public static List<PurpleVariant> selectInterestingUnreportedVariants(@Nullable List<PurpleVariant> allGermlineVariants) {
-        if (allGermlineVariants == null) {
+    public static List<PurpleVariant> selectInterestingUnreportedVariants(@Nullable List<PurpleVariant> allGermlineVariants)
+    {
+        if(allGermlineVariants == null)
+        {
             return null;
         }
 
         List<PurpleVariant> filtered = Lists.newArrayList();
-        for (PurpleVariant variant : allGermlineVariants) {
-            if (!variant.reported()) {
+        for(PurpleVariant variant : allGermlineVariants)
+        {
+            if(!variant.reported())
+            {
                 boolean isHotspot = variant.hotspot() == Hotspot.HOTSPOT;
 
                 // TODO: Add pathogenic variants that were not reported
                 // TODO: Add variants with conflicting evidence in ClinVar
-                if (isHotspot) {
+                if(isHotspot)
+                {
                     filtered.add(variant);
                 }
             }

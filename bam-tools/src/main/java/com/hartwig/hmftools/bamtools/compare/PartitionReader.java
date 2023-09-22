@@ -1,9 +1,14 @@
 package com.hartwig.hmftools.bamtools.compare;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.NEW_ONLY;
 import static com.hartwig.hmftools.bamtools.compare.MismatchType.REF_ONLY;
+import static com.hartwig.hmftools.bamtools.compare.MismatchType.VALUE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.util.List;
 import java.util.Queue;
@@ -11,7 +16,7 @@ import java.util.Queue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -30,9 +35,7 @@ public class PartitionReader
     private final ReadWriter mReadWriter;
     private boolean mLogReadIds;
 
-    private int mRefReadCount;
-    private int mNewReadCount;
-    private int mDiffCount;
+    private final Statistics mStats;
 
     public PartitionReader(
             final ChrBaseRegion region, final CompareConfig config, final SamReader refSamReader, final SamReader newSamReader,
@@ -50,11 +53,11 @@ public class PartitionReader
         mRefReads = Queues.newArrayDeque();
         mCurrentRefPosReads = null;
 
-        mRefReadCount = 0;
-        mNewReadCount = 0;
-        mDiffCount = 0;
+        mStats = new Statistics();
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
+
+    public Statistics stats() { return mStats; }
 
     public void run()
     {
@@ -68,12 +71,12 @@ public class PartitionReader
         {
             // write remaining records
             List<SAMRecord> refReads = mRefReads.remove();
-            refReads.forEach(x -> mReadWriter.writeComparison(x, REF_ONLY, ""));
-            mDiffCount += refReads.size();
+            refReads.forEach(x -> mReadWriter.writeComparison(x, REF_ONLY, null));
+            mStats.DiffCount += refReads.size();
         }
 
         BT_LOGGER.debug("region({}) complete: refReads({}) newReads({}) diff({})",
-                mRegion, mRefReadCount, mNewReadCount, mDiffCount);
+                mRegion, mStats.RefReadCount, mStats.NewReadCount, mStats.DiffCount);
     }
 
     private void processRefRecord(final SAMRecord refRead)
@@ -89,7 +92,7 @@ public class PartitionReader
         if(excludeRead(refRead))
             return;
 
-        ++mRefReadCount;
+        ++mStats.RefReadCount;
 
         if(mCurrentRefPosReads == null || mCurrentRefPosReads.get(0).getAlignmentStart() != refRead.getAlignmentStart())
         {
@@ -115,12 +118,12 @@ public class PartitionReader
         if(excludeRead(newRead))
             return;
 
-        ++mNewReadCount;
+        ++mStats.NewReadCount;
 
         if(mRefReads.isEmpty())
         {
-            mReadWriter.writeComparison(newRead, NEW_ONLY, "");
-            ++mDiffCount;
+            mReadWriter.writeComparison(newRead, NEW_ONLY, null);
+            ++mStats.DiffCount;
             return;
         }
 
@@ -138,8 +141,8 @@ public class PartitionReader
                 if(refPosStart >= newRead.getAlignmentStart())
                     break;
 
-                refReads.forEach(x -> mReadWriter.writeComparison(x, REF_ONLY, ""));
-                mDiffCount += refReads.size();
+                refReads.forEach(x -> mReadWriter.writeComparison(x, REF_ONLY, null));
+                mStats.DiffCount += refReads.size();
                 mRefReads.remove();
             }
         }
@@ -147,8 +150,8 @@ public class PartitionReader
         // write if before the current ref read
         if(newRead.getAlignmentStart() < refPosStart)
         {
-            mReadWriter.writeComparison(newRead, NEW_ONLY, "");
-            ++mDiffCount;
+            mReadWriter.writeComparison(newRead, NEW_ONLY, null);
+            ++mStats.DiffCount;
             return;
         }
 
@@ -164,6 +167,7 @@ public class PartitionReader
                 if(refReads.isEmpty())
                     mRefReads.remove();
 
+                checkReadDetails(refRead, newRead);
                 return;
             }
 
@@ -171,8 +175,76 @@ public class PartitionReader
         }
 
         // no match
-        mReadWriter.writeComparison(newRead, NEW_ONLY, "");
-        ++mDiffCount;
+        mReadWriter.writeComparison(newRead, NEW_ONLY, null);
+        ++mStats.DiffCount;
+    }
+
+    private static final List<String> KEY_ATTRIBUTES = List.of(SUPPLEMENTARY_ATTRIBUTE, MATE_CIGAR_ATTRIBUTE);
+
+    private void checkReadDetails(final SAMRecord read1, final SAMRecord read2)
+    {
+        if(read1.getInferredInsertSize() == read2.getInferredInsertSize()
+        && read1.getMappingQuality() == read2.getMappingQuality()
+        && read1.getFlags() == read2.getFlags()
+        && read1.getCigarString().equals(read2.getCigarString()))
+        {
+            // assume most reads match to avoid creating a array for the diffs
+            return;
+        }
+
+        List<String> diffs = Lists.newArrayListWithExpectedSize(4);;
+
+        if(read1.getInferredInsertSize() != read2.getInferredInsertSize())
+        {
+            diffs.add(format("insertSize(%d/%d)", read1.getInferredInsertSize(), read2.getInferredInsertSize()));
+        }
+
+        if(read1.getMappingQuality() != read2.getMappingQuality())
+        {
+            diffs.add(format("mapQuality(%d/%d)", read1.getMappingQuality(), read2.getMappingQuality()));
+        }
+
+        if(!read1.getCigarString().equals(read2.getCigarString()))
+        {
+            diffs.add(format("cigar(%s/%s)", read1.getCigarString(), read2.getCigarString()));
+        }
+
+        if(read1.getFlags() != read2.getFlags())
+        {
+            diffs.add(format("flags(%d/%d)", read1.getFlags(), read2.getFlags()));
+        }
+
+        // check key attributes:
+        for(String attribute : KEY_ATTRIBUTES)
+        {
+            String readAttr1 = read1.getStringAttribute(attribute);
+            String readAttr2 = read2.getStringAttribute(attribute);
+
+            if(readAttr1 == null && readAttr2 == null)
+                continue;
+
+            if(readAttr1 != null && readAttr2 != null)
+            {
+                if(!readAttr1.equals(readAttr2))
+                {
+                    diffs.add(format("attrib_%s(%s/%s)", attribute, readAttr1, readAttr2));
+                }
+            }
+            else if(readAttr1 == null && readAttr2 != null)
+            {
+                diffs.add(format("attrib_%s(missing/%s)", attribute, readAttr2));
+            }
+            else if(readAttr1 != null && readAttr2 == null)
+            {
+                diffs.add(format("attrib_%s(%s/missing)", attribute, readAttr1));
+            }
+        }
+
+        if(diffs.isEmpty())
+            return;
+
+        ++mStats.DiffCount;
+        mReadWriter.writeComparison(read1, VALUE, diffs);
     }
 
     private static boolean readsMatch(final SAMRecord read1, final SAMRecord read2)

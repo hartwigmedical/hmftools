@@ -14,9 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.svprep.reads.PartitionStats;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.PartitionTask;
 import com.hartwig.hmftools.svprep.reads.PartitionThread;
 import com.hartwig.hmftools.svprep.reads.ReadFilterType;
@@ -109,11 +107,11 @@ public class ChromosomeTask
 
     private List<ChrBaseRegion> partition(final String chromosome)
     {
-        if(!mConfig.SpecificRegions.isEmpty())
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
         {
             List<ChrBaseRegion> partitions = Lists.newArrayList();
 
-            for(ChrBaseRegion region : mConfig.SpecificRegions)
+            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
             {
                 if(region.Chromosome.equals(chromosome))
                 {

@@ -2,16 +2,18 @@ package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -20,7 +22,7 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.pave.annotation.Blacklistings;
 import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
@@ -46,6 +48,7 @@ public class PaveConfig
     public final boolean WritePassOnly;
     public final boolean SetReportable;
     public final List<ChrBaseRegion> SpecificRegions;
+    public final int Threads;
 
     private static final String VCF_FILE = "vcf_file";
     private static final String OUTPUT_VCF_FILE = "output_vcf_file";
@@ -79,6 +82,7 @@ public class PaveConfig
         ReadPassOnly = configBuilder.hasFlag(READ_PASS_ONLY);
         WritePassOnly = configBuilder.hasFlag(WRITE_PASS_ONLY);
         SetReportable = configBuilder.hasFlag(SET_REPORTABLE);
+        Threads = parseThreads(configBuilder);
 
         SpecificRegions = Lists.newArrayList();
 
@@ -97,7 +101,9 @@ public class PaveConfig
         }
         else
         {
-            OutputDir = checkAddDirSeparator(Paths.get(VcfFile).getParent().toString());
+            String vcfFile = OutputVcfFile != null ? OutputVcfFile : VcfFile;
+            Path vcfDir = Paths.get(vcfFile).getParent();
+            OutputDir = vcfDir != null ? checkAddDirSeparator(vcfDir.toString()) : "./";
         }
     }
 
@@ -134,6 +140,7 @@ public class PaveConfig
         Mappability.addConfig(configBuilder);
         ClinvarAnnotation.addConfig(configBuilder);
         Blacklistings.addConfig(configBuilder);
+        addThreadOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
 
         addOutputDir(configBuilder);

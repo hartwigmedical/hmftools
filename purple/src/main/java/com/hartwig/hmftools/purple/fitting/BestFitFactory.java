@@ -80,34 +80,6 @@ public class BestFitFactory
     public BestFit bestNormalFit() { return mBestNormalFit; }
     public BestFit somaticFit() { return mSomaticFit; }
 
-    public static BestFit buildGermlineBestFit()
-    {
-        FittedPurity fittedPurity = ImmutableFittedPurity.builder()
-                .purity(1)
-                .ploidy(2)
-                .normFactor(1)
-                .diploidProportion(1)
-                .somaticPenalty(0)
-                .score(0)
-                .build();
-
-        FittedPurityScore score = ImmutableFittedPurityScore.builder()
-                .minPloidy(fittedPurity.ploidy())
-                .maxPloidy(fittedPurity.ploidy())
-                .minPurity(fittedPurity.purity())
-                .maxPurity(fittedPurity.purity())
-                .minDiploidProportion(1)
-                .maxDiploidProportion(1)
-                .build();
-
-        return ImmutableBestFit.builder()
-                .fit(fittedPurity)
-                .method(NORMAL)
-                .score(score)
-                .allFits(Lists.newArrayList(fittedPurity))
-                .build();
-    }
-
     private void determineBestFit(
             final List<FittedPurity> allCandidates, final List<SomaticVariant> fittingSomatics,
             final List<StructuralVariant> structuralVariants, final List<ObservedRegion> observedRegions)
@@ -167,11 +139,11 @@ public class BestFitFactory
         else
         {
             mBestNormalFit = builder.fit(lowestScoreFit).method(FittedPurityMethod.NORMAL).build();
-        }
 
-        if(somaticFit != null && !somaticFitIsWorse(lowestScoreFit, somaticFit))
-        {
-            mSomaticFit = builder.fit(somaticFit).method(FittedPurityMethod.SOMATIC).build();
+            if(!somaticFitIsWorse(lowestScoreFit, somaticFit))
+            {
+                mSomaticFit = builder.fit(somaticFit).method(FittedPurityMethod.SOMATIC).build();
+            }
         }
     }
 
@@ -273,5 +245,33 @@ public class BestFitFactory
                 mAlleleReadCountTotal += variant.alleleReadCount();
             }
         }
+    }
+
+    public static BestFit buildGermlineBestFit()
+    {
+        FittedPurity fittedPurity = ImmutableFittedPurity.builder()
+                .purity(1)
+                .ploidy(2)
+                .normFactor(1)
+                .diploidProportion(1)
+                .somaticPenalty(0)
+                .score(0)
+                .build();
+
+        FittedPurityScore score = ImmutableFittedPurityScore.builder()
+                .minPloidy(fittedPurity.ploidy())
+                .maxPloidy(fittedPurity.ploidy())
+                .minPurity(fittedPurity.purity())
+                .maxPurity(fittedPurity.purity())
+                .minDiploidProportion(1)
+                .maxDiploidProportion(1)
+                .build();
+
+        return ImmutableBestFit.builder()
+                .fit(fittedPurity)
+                .method(NORMAL)
+                .score(score)
+                .allFits(Lists.newArrayList(fittedPurity))
+                .build();
     }
 }

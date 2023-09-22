@@ -1,14 +1,20 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
+import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_COUNT;
 import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_MAX;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
@@ -17,6 +23,7 @@ import com.hartwig.hmftools.pave.annotation.ClinvarAnnotation;
 import com.hartwig.hmftools.pave.annotation.GnomadAnnotation;
 import com.hartwig.hmftools.pave.annotation.Mappability;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
+import com.hartwig.hmftools.pave.annotation.ReferenceData;
 import com.hartwig.hmftools.pave.annotation.Reportability;
 
 import htsjdk.variant.variantcontext.VariantContext;
@@ -32,6 +39,10 @@ public class VcfWriter
     private final VCFFileReader mHeader;
     private final VariantContextWriter mWriter;
 
+    private final Map<HumanChromosome,List<VariantContext>> mChrPendingVariants;
+    private final Set<HumanChromosome> mCompleteChromosomes;
+    private HumanChromosome mCurrentChromosome;
+
     public static final String PASS = "PASS";
 
     public VcfWriter(final String outputVCF, final String templateVCF)
@@ -43,50 +54,59 @@ public class VcfWriter
                 .setOutputFile(outputVCF)
                 .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
                 .build();
+
+        mChrPendingVariants = Maps.newHashMap();
+        mCompleteChromosomes = Sets.newHashSet();
+        mCurrentChromosome = HumanChromosome._1;
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            mChrPendingVariants.put(chromosome, Lists.newArrayList());
+        }
     }
 
-    public final void writeHeader(
-            final String paveVersion, boolean hasGnomadFrequency, boolean hasPon, boolean hasMappability, boolean hasClinvar,
-            boolean hasBlacklistings, boolean hasReportability)
+    public final void writeHeader(final ReferenceData referenceData, boolean setReportability)
     {
+        final VersionInfo version = new VersionInfo("pave.version");
+
         VCFHeader newHeader = new VCFHeader(mHeader.getFileHeader());
-        newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", paveVersion));
+        newHeader.addMetaDataLine(new VCFHeaderLine("PaveVersion", version.version()));
 
         VariantTranscriptImpact.writeHeader(newHeader);
         VariantImpactSerialiser.writeHeader(newHeader);
 
-        if(hasPon)
+        if(referenceData.StandardPon.enabled() || referenceData.ArtefactsPon.enabled())
         {
             PonAnnotation.addHeader(newHeader);
         }
 
-        if(hasGnomadFrequency)
+        if(referenceData.Gnomad.enabled())
         {
             GnomadAnnotation.addHeader(newHeader);
         }
 
-        if(hasMappability)
+        if(referenceData.VariantMappability.enabled()   )
         {
             Mappability.addHeader(newHeader);
         }
 
-        if(hasClinvar)
+        if(referenceData.Clinvar.enabled())
         {
             ClinvarAnnotation.addHeader(newHeader);
         }
 
-        if(hasBlacklistings)
+        if(referenceData.BlacklistedVariants.enabled())
         {
             Blacklistings.addHeader(newHeader);
         }
 
-        if(hasReportability)
+        if(setReportability)
             Reportability.addHeader(newHeader);
 
         mWriter.writeHeader(newHeader);
     }
 
-    public final void writeVariant(final VariantContext context, final VariantData variant, final VariantImpact variantImpact)
+    public static VariantContext buildVariant(final VariantContext context, final VariantData variant, final VariantImpact variantImpact)
     {
         VariantContextBuilder builder = new VariantContextBuilder(variant.context())
                 .genotypes(variant.context().getGenotypes())
@@ -101,7 +121,7 @@ public class VcfWriter
         if(builder.getFilters().isEmpty())
             builder.getFilters().add(PASS);
 
-        final VariantContext newContext = builder.make();
+        VariantContext newContext = builder.make();
 
         if(!variant.getImpacts().isEmpty())
         {
@@ -136,11 +156,70 @@ public class VcfWriter
             newContext.getCommonInfo().putAttribute(PON_MAX, variant.ponMaxReadCount());
         }
 
-        mWriter.add(newContext);
+        return newContext;
+    }
+
+    public synchronized void onChromosomeComplete(final HumanChromosome chromosome)
+    {
+        mCompleteChromosomes.add(chromosome);
+        writePendingVariants();
+    }
+
+    public synchronized void writeVariant(final HumanChromosome chromosome, final VariantContext variantContext)
+    {
+        if(mCurrentChromosome == chromosome)
+        {
+            mWriter.add(variantContext);
+            return;
+        }
+
+        List<VariantContext> pendingVariants = mChrPendingVariants.get(chromosome);
+
+        if(pendingVariants == null)
+        {
+            pendingVariants = Lists.newArrayList();
+            mChrPendingVariants.put(chromosome, pendingVariants);
+        }
+
+        pendingVariants.add(variantContext);
+    }
+
+    private void writePendingVariants()
+    {
+        boolean exitOnNext = false;
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            if(!mCompleteChromosomes.contains(chromosome))
+            {
+                // move to the next chromosome to allow writing of current or pending variants
+                mCurrentChromosome = chromosome;
+                exitOnNext = true;
+            }
+
+            List<VariantContext> pendingVariants = mChrPendingVariants.get(chromosome);
+
+            if(pendingVariants != null)
+            {
+                if(!pendingVariants.isEmpty())
+                {
+                    PV_LOGGER.debug("chr({}) writing {} pending variants", chromosome, pendingVariants.size());
+
+                    pendingVariants.forEach(x -> mWriter.add(x));
+                    pendingVariants.clear();
+                }
+
+                mChrPendingVariants.remove(chromosome);
+            }
+
+            if(exitOnNext)
+                break;
+        }
     }
 
     public void close()
     {
+        writePendingVariants();
         mWriter.close();
     }
 }

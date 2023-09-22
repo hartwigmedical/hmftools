@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.flagstat;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -14,6 +16,13 @@ import org.jetbrains.annotations.Nullable;
 
 public final class FlagstatFile
 {
+    public static final String FILE_EXTENSION = ".flagstat";
+
+    public static String generateFilename(final String basePath, final String sampleId)
+    {
+        return checkAddDirSeparator(basePath) + sampleId + FILE_EXTENSION;
+    }
+
     public static Flagstat read(final String flagstatPath) throws IOException
     {
         List<String> lines = Files.readAllLines(new File(flagstatPath).toPath());

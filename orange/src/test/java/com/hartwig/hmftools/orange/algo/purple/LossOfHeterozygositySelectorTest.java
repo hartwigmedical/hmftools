@@ -17,12 +17,13 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class LossOfHeterozygositySelectorTest {
-
+public class LossOfHeterozygositySelectorTest
+{
     private static final double EPSILON = 1.0E-10;
 
     @Test
-    public void canSelectGenesForLOH() {
+    public void canSelectGenesForLOH()
+    {
         String hrdGene = LossOfHeterozygositySelector.HRD_GENES.iterator().next();
         GeneCopyNumber hrdGeneWithLOH =
                 GeneCopyNumberTestFactory.builder().geneName(hrdGene).minMinorAlleleCopyNumber(0D).minCopyNumber(2D).build();
@@ -75,7 +76,8 @@ public class LossOfHeterozygositySelectorTest {
     }
 
     @Test
-    public void canSelectGeneForLOHBasedOnGermlineDeletion() {
+    public void canSelectGeneForLOHBasedOnGermlineDeletion()
+    {
         String gene = LossOfHeterozygositySelector.HRD_GENES.iterator().next();
         GeneCopyNumber hrdGene = GeneCopyNumberTestFactory.builder().geneName(gene).minMinorAlleleCopyNumber(1D).minCopyNumber(2D).build();
 
@@ -93,7 +95,8 @@ public class LossOfHeterozygositySelectorTest {
 
     @NotNull
     private static List<GeneCopyNumber> runWithHRDOneGeneOneGermlineDeletion(@NotNull GeneCopyNumber geneCopyNumber,
-            @NotNull GermlineDeletion germlineDeletion) {
+            @NotNull GermlineDeletion germlineDeletion)
+    {
         return LossOfHeterozygositySelector.selectHRDOrMSIGenesWithLOH(Lists.newArrayList(geneCopyNumber),
                 Lists.newArrayList(germlineDeletion),
                 MicrosatelliteStatus.MSS,

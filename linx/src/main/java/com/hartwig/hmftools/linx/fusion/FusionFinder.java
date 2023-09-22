@@ -493,16 +493,40 @@ public class FusionFinder
 
         final BreakendTransData upTrans = generateIgTranscript(igGene, kfData);
 
-        if(!candidateTranscripts.isEmpty())
+        // add new candidates only if no matching IG fusion has already been created
+        // this is done since multiple upstream genes in the IG region can be processed, but all creating identical IG fusions
+        for(final BreakendTransData downTrans : candidateTranscripts)
         {
-            for(final BreakendTransData downTrans : candidateTranscripts)
-            {
-                GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
-                fusion.setId(nextFusionId());
-                fusion.setKnownType(knownType);
-                potentialFusions.add(fusion);
-            }
+            if(hasMatchingIgFusion(potentialFusions, knownType, upTrans, downTrans))
+                continue;
+
+            GeneFusion fusion = new GeneFusion(upTrans, downTrans, true);
+            fusion.setId(nextFusionId());
+            fusion.setKnownType(knownType);
+            potentialFusions.add(fusion);
         }
+    }
+
+    private static boolean hasMatchingIgFusion(
+            final List<GeneFusion> potentialFusions, final KnownFusionType knownType,
+            final BreakendTransData upTrans, final BreakendTransData downTrans)
+    {
+        for(GeneFusion fusion : potentialFusions)
+        {
+            if(fusion.knownType() != knownType)
+                continue;
+
+            if(fusion.svId(true) != upTrans.gene().id() || fusion.svId(false) != downTrans.gene().id())
+                continue;
+
+            if(!fusion.upstreamTrans().TransData.TransName.equals(upTrans.TransData.TransName))
+                continue;
+
+            if(fusion.downstreamTrans() == downTrans) // straight comparison since not internally generated per fusion
+                return true;
+        }
+
+        return false;
     }
 
     private BreakendTransData generateIgTranscript(final BreakendGeneData gene, final KnownFusionData knownFusionData)
@@ -596,6 +620,13 @@ public class FusionFinder
         if(downTrans.nonCoding())
             return;
 
+        if(fusion.knownType() == IG_KNOWN_PAIR || fusion.knownType() == IG_PROMISCUOUS)
+        {
+            // ignore proteins lost for downstream transcripts since the IG region functions as a promotor
+            if(downTrans.postCoding())
+                return;
+        }
+
         final List<TranscriptProteinData> transProteinData = mGeneTransCache.getTranscriptProteinDataMap().get(downTrans.transId());
 
         if(transProteinData == null || transProteinData.isEmpty())
@@ -633,7 +664,6 @@ public class FusionFinder
 
             processedFeatures.add(feature);
         }
-
     }
 
     private static boolean proteinFeaturePreserved(
@@ -654,7 +684,7 @@ public class FusionFinder
             if(isDownstream)
             {
                 // coding must start before the start of the feature for it to be preserved
-                int featureCodingBaseStart = featureStart * 3;
+                int featureCodingBaseStart = featureStart * 3 - 2; // adjusted for start of codon
                 int svCodingBaseStart = transcript.CodingBases;
                 featurePreserved = (featureCodingBaseStart >= svCodingBaseStart);
             }

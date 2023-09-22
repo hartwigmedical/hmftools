@@ -3,8 +3,8 @@ package com.hartwig.hmftools.sage.candidate;
 import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_INSERT_ALIGNMENT_OVERLAP;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_SC_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_INSERT_MIN_LENGTH;
@@ -24,7 +24,7 @@ import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -99,6 +99,7 @@ public class RefContextConsumer
 
         int scAdjustedMapQual = (int)round(adjustedMapQual - scEvents * mConfig.Quality.ReadEventsPenalty);
         boolean readExceedsScAdjustedQuality = scAdjustedMapQual > 0;
+        boolean ignoreScAdapter = scEvents > 0 && ignoreSoftClipAdapter(record);
 
         final List<AltRead> altReads = Lists.newArrayList();
         final IndexedBases refBases = mRefGenome.alignment();
@@ -157,7 +158,7 @@ public class RefContextConsumer
             @Override
             public void handleLeftSoftClip(final SAMRecord record, final CigarElement element)
             {
-                if(ignoreSoftClipAdapter(record))
+                if(ignoreScAdapter)
                     return;
 
                 AltRead altRead = processSoftClip(
@@ -170,7 +171,7 @@ public class RefContextConsumer
             @Override
             public void handleRightSoftClip(final SAMRecord record, final CigarElement element, int readIndex, int refPosition)
             {
-                if(ignoreSoftClipAdapter(record))
+                if(ignoreScAdapter)
                     return;
 
                 AltRead altRead = processSoftClip(

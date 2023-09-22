@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class AltSjLocation
 {

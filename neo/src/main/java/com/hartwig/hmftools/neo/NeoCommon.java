@@ -14,6 +14,8 @@ import org.apache.logging.log4j.Logger;
 
 public class NeoCommon
 {
+    public static final String APP_NAME = "Neo";
+
     public static final int DOWNSTREAM_PRE_GENE_DISTANCE = 100000; // in concordance with Linx
 
     public static final Logger NE_LOGGER = LogManager.getLogger(NeoCommon.class);
@@ -26,11 +28,5 @@ public class NeoCommon
         final StringJoiner transStr = new StringJoiner(ITEM_DELIM);
         transcripts.forEach(x -> transStr.add(x));
         return transStr.toString();
-    }
-
-    public static void logVersion()
-    {
-        final VersionInfo version = new VersionInfo("neo.version");
-        NE_LOGGER.info("Neo version: {}", version.version());
     }
 }

@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 import com.hartwig.hmftools.svprep.HotspotCache;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
@@ -80,7 +80,7 @@ public class RegionTask implements Callable
     {
         SV_LOGGER.debug("slicing region({}) for {} breakends", mRegion, mBreakends.size());
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processRead);
+        mBamSlicer.slice(mSamReader, mRegion, this::processRead);
 
         mBreakendTracker.assignFragments();
 

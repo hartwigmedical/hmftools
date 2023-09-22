@@ -32,20 +32,15 @@ import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class GermlineConversion {
-
-    private static final Logger LOGGER = LogManager.getLogger(GermlineConversion.class);
-
-    private GermlineConversion() {
-    }
-
+public final class GermlineConversion
+{
     @NotNull
-    public static OrangeRecord convertGermlineToSomatic(@NotNull OrangeRecord report) {
+    public static OrangeRecord convertGermlineToSomatic(@NotNull OrangeRecord report)
+    {
         boolean containsTumorCells = report.purple().fit().containsTumorCells();
 
         return ImmutableOrangeRecord.builder()
@@ -58,15 +53,19 @@ public final class GermlineConversion {
 
     @NotNull
     @VisibleForTesting
-    static PurpleRecord convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleRecord purple) {
+    static PurpleRecord convertPurpleGermline(boolean containsTumorCells, @NotNull PurpleRecord purple)
+    {
         List<PurpleDriver> mergedDrivers;
         List<PurpleVariant> additionalReportableVariants;
         List<PurpleGainLoss> additionalReportableGainsLosses;
-        if (containsTumorCells) {
+        if(containsTumorCells)
+        {
             mergedDrivers = mergeGermlineDriversIntoSomatic(purple.somaticDrivers(), purple.germlineDrivers());
             additionalReportableVariants = toSomaticVariants(purple.reportableGermlineVariants());
             additionalReportableGainsLosses = toSomaticGainsLosses(purple.reportableGermlineFullLosses());
-        } else {
+        }
+        else
+        {
             mergedDrivers = purple.somaticDrivers();
             additionalReportableVariants = Lists.newArrayList();
             additionalReportableGainsLosses = Lists.newArrayList();
@@ -91,7 +90,8 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static PurpleFit removeGermlineAberrations(@NotNull PurpleFit fit) {
+    private static PurpleFit removeGermlineAberrations(@NotNull PurpleFit fit)
+    {
         return ImmutablePurpleFit.builder()
                 .from(fit)
                 .qc(ImmutablePurpleQC.builder().from(fit.qc()).germlineAberrations(Sets.newHashSet()).build())
@@ -101,34 +101,45 @@ public final class GermlineConversion {
     @NotNull
     @VisibleForTesting
     static List<PurpleDriver> mergeGermlineDriversIntoSomatic(@NotNull List<PurpleDriver> somaticDrivers,
-            @Nullable List<PurpleDriver> germlineDrivers) {
+            @Nullable List<PurpleDriver> germlineDrivers)
+    {
         List<PurpleDriver> merged = Lists.newArrayList();
-        for (PurpleDriver somaticDriver : somaticDrivers) {
+        for(PurpleDriver somaticDriver : somaticDrivers)
+        {
             PurpleDriver matchingGermlineDriver = findMatchingGermlineDriver(somaticDriver, germlineDrivers);
-            if (somaticDriver.driver() == PurpleDriverType.MUTATION && matchingGermlineDriver != null) {
+            if(somaticDriver.driver() == PurpleDriverType.MUTATION && matchingGermlineDriver != null)
+            {
                 merged.add(mergeSomaticMutationDriverWithGermline(somaticDriver, matchingGermlineDriver));
-            } else {
+            }
+            else
+            {
                 merged.add(somaticDriver);
             }
         }
 
-        if (germlineDrivers != null) {
-            for (PurpleDriver germlineDriver : germlineDrivers) {
-                if (germlineDriver.driver() == PurpleDriverType.GERMLINE_MUTATION
-                        && findMatchingSomaticDriver(germlineDriver, somaticDrivers, PurpleDriverType.MUTATION) == null) {
+        if(germlineDrivers != null)
+        {
+            for(PurpleDriver germlineDriver : germlineDrivers)
+            {
+                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_MUTATION
+                        && findMatchingSomaticDriver(germlineDriver, somaticDrivers, PurpleDriverType.MUTATION) == null)
+                {
                     merged.add(convertToSomaticMutationDriver(germlineDriver));
                 }
 
-                if (germlineDriver.driver() == PurpleDriverType.GERMLINE_DELETION
-                        && findMatchingSomaticDriver(germlineDriver, somaticDrivers, PurpleDriverType.DEL) == null) {
+                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_DELETION
+                        && findMatchingSomaticDriver(germlineDriver, somaticDrivers, PurpleDriverType.DEL) == null)
+                {
                     merged.add(convertToSomaticDeletionDriver(germlineDriver));
                 }
 
-                if (germlineDriver.driver() == PurpleDriverType.GERMLINE_DISRUPTION) {
+                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_DISRUPTION)
+                {
                     merged.add(convertToSomaticDisruptionDriver(germlineDriver));
                 }
 
-                if (germlineDriver.driver() == PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION) {
+                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION)
+                {
                     merged.add(convertToSomaticHomozygousDisruptionDriver(germlineDriver));
                 }
             }
@@ -138,18 +149,21 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static List<PurpleVariant> toSomaticVariants(@Nullable List<PurpleVariant> reportableGermlineVariants) {
+    private static List<PurpleVariant> toSomaticVariants(@Nullable List<PurpleVariant> reportableGermlineVariants)
+    {
         return reportableGermlineVariants != null ? reportableGermlineVariants : Lists.newArrayList();
     }
 
     @NotNull
-    private static List<PurpleGainLoss> toSomaticGainsLosses(@Nullable List<PurpleGainLoss> reportableGermlineGainsLosses) {
+    private static List<PurpleGainLoss> toSomaticGainsLosses(@Nullable List<PurpleGainLoss> reportableGermlineGainsLosses)
+    {
         return reportableGermlineGainsLosses != null ? reportableGermlineGainsLosses : Lists.newArrayList();
     }
 
     @NotNull
     private static PurpleDriver mergeSomaticMutationDriverWithGermline(@NotNull PurpleDriver somaticDriver,
-            @NotNull PurpleDriver germlineDriver) {
+            @NotNull PurpleDriver germlineDriver)
+    {
         return ImmutablePurpleDriver.builder()
                 .from(somaticDriver)
                 .likelihoodMethod(PurpleLikelihoodMethod.HOTSPOT)
@@ -159,8 +173,10 @@ public final class GermlineConversion {
 
     @Nullable
     private static PurpleDriver findMatchingGermlineDriver(@NotNull PurpleDriver somaticDriver,
-            @Nullable List<PurpleDriver> germlineDrivers) {
-        if (germlineDrivers == null) {
+            @Nullable List<PurpleDriver> germlineDrivers)
+    {
+        if(germlineDrivers == null)
+        {
             return null;
         }
 
@@ -169,16 +185,20 @@ public final class GermlineConversion {
 
     @Nullable
     private static PurpleDriver findMatchingSomaticDriver(@NotNull PurpleDriver germlineDriver, @NotNull List<PurpleDriver> somaticDrivers,
-            @NotNull PurpleDriverType somaticTypeToFind) {
+            @NotNull PurpleDriverType somaticTypeToFind)
+    {
         return find(somaticDrivers, somaticTypeToFind, germlineDriver.gene(), germlineDriver.transcript());
     }
 
     @Nullable
     private static PurpleDriver find(@NotNull List<PurpleDriver> drivers, @NotNull PurpleDriverType PurpleDriverTypeToFind,
-            @NotNull String geneToFind, @NotNull String transcriptToFind) {
-        for (PurpleDriver driver : drivers) {
-            if (driver.driver() == PurpleDriverTypeToFind && driver.gene().equals(geneToFind) && driver.transcript()
-                    .equals(transcriptToFind)) {
+            @NotNull String geneToFind, @NotNull String transcriptToFind)
+    {
+        for(PurpleDriver driver : drivers)
+        {
+            if(driver.driver() == PurpleDriverTypeToFind && driver.gene().equals(geneToFind) && driver.transcript()
+                    .equals(transcriptToFind))
+            {
                 return driver;
             }
         }
@@ -187,8 +207,10 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static PurpleDriver convertToSomaticMutationDriver(@NotNull PurpleDriver germlineDriver) {
-        if (!Doubles.equal(germlineDriver.driverLikelihood(), 1)) {
+    private static PurpleDriver convertToSomaticMutationDriver(@NotNull PurpleDriver germlineDriver)
+    {
+        if(!Doubles.equal(germlineDriver.driverLikelihood(), 1))
+        {
             LOGGER.warn("Germline driver converted to somatic with driver likelihood <> 1: {}", germlineDriver);
         }
 
@@ -202,7 +224,8 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static PurpleDriver convertToSomaticDeletionDriver(@NotNull PurpleDriver germlineDriver) {
+    private static PurpleDriver convertToSomaticDeletionDriver(@NotNull PurpleDriver germlineDriver)
+    {
         assert germlineDriver.driver() == PurpleDriverType.GERMLINE_DELETION;
 
         return ImmutablePurpleDriver.builder()
@@ -213,7 +236,8 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static PurpleDriver convertToSomaticDisruptionDriver(@NotNull PurpleDriver germlineDriver) {
+    private static PurpleDriver convertToSomaticDisruptionDriver(@NotNull PurpleDriver germlineDriver)
+    {
         assert germlineDriver.driver() == PurpleDriverType.GERMLINE_DISRUPTION;
 
         return ImmutablePurpleDriver.builder()
@@ -225,7 +249,8 @@ public final class GermlineConversion {
     }
 
     @NotNull
-    private static PurpleDriver convertToSomaticHomozygousDisruptionDriver(@NotNull PurpleDriver germlineDriver) {
+    private static PurpleDriver convertToSomaticHomozygousDisruptionDriver(@NotNull PurpleDriver germlineDriver)
+    {
         assert germlineDriver.driver() == PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION;
 
         return ImmutablePurpleDriver.builder()
@@ -238,12 +263,14 @@ public final class GermlineConversion {
 
     @NotNull
     @VisibleForTesting
-    static LinxRecord convertLinxGermline(boolean containsTumorCells, @NotNull LinxRecord linx) {
+    static LinxRecord convertLinxGermline(boolean containsTumorCells, @NotNull LinxRecord linx)
+    {
         List<LinxSvAnnotation> additionalStructuralVariants = Lists.newArrayList();
         List<LinxBreakend> additionalReportableBreakends = Lists.newArrayList();
         List<HomozygousDisruption> additionalHomozygousDisruptions = Lists.newArrayList();
 
-        if (containsTumorCells) {
+        if(containsTumorCells)
+        {
             Map<Integer, Integer> svIdMapping = buildSvIdMapping(linx.allSomaticStructuralVariants(), linx.allGermlineStructuralVariants());
             Map<Integer, Integer> clusterIdMapping =
                     buildClusterIdMapping(linx.allSomaticStructuralVariants(), linx.allGermlineStructuralVariants());
@@ -269,10 +296,13 @@ public final class GermlineConversion {
 
     @NotNull
     private static List<LinxSvAnnotation> toSomaticStructuralVariants(@Nullable List<LinxSvAnnotation> germlineStructuralVariants,
-            @NotNull Map<Integer, Integer> svIdMapping, @NotNull Map<Integer, Integer> clusterIdMapping) {
+            @NotNull Map<Integer, Integer> svIdMapping, @NotNull Map<Integer, Integer> clusterIdMapping)
+    {
         List<LinxSvAnnotation> converted = Lists.newArrayList();
-        if (germlineStructuralVariants != null) {
-            for (LinxSvAnnotation structuralVariant : germlineStructuralVariants) {
+        if(germlineStructuralVariants != null)
+        {
+            for(LinxSvAnnotation structuralVariant : germlineStructuralVariants)
+            {
                 converted.add(ImmutableLinxSvAnnotation.builder()
                         .from(structuralVariant)
                         .svId(svIdMapping.get(structuralVariant.svId()))
@@ -285,10 +315,13 @@ public final class GermlineConversion {
 
     @NotNull
     private static List<LinxBreakend> toSomaticBreakends(@Nullable List<LinxBreakend> germlineBreakends,
-            @NotNull Map<Integer, Integer> breakendIdMapping, @NotNull Map<Integer, Integer> svIdMapping) {
+            @NotNull Map<Integer, Integer> breakendIdMapping, @NotNull Map<Integer, Integer> svIdMapping)
+    {
         List<LinxBreakend> converted = Lists.newArrayList();
-        if (germlineBreakends != null) {
-            for (LinxBreakend breakend : germlineBreakends) {
+        if(germlineBreakends != null)
+        {
+            for(LinxBreakend breakend : germlineBreakends)
+            {
                 converted.add(ImmutableLinxBreakend.builder()
                         .from(breakend)
                         .id(breakendIdMapping.get(breakend.id()))
@@ -301,11 +334,14 @@ public final class GermlineConversion {
 
     @NotNull
     private static Map<Integer, Integer> buildSvIdMapping(@NotNull List<LinxSvAnnotation> allSomaticStructuralVariants,
-            @Nullable List<LinxSvAnnotation> allGermlineStructuralVariants) {
+            @Nullable List<LinxSvAnnotation> allGermlineStructuralVariants)
+    {
         Map<Integer, Integer> svIdMapping = Maps.newHashMap();
-        if (allGermlineStructuralVariants != null) {
+        if(allGermlineStructuralVariants != null)
+        {
             int newId = findMaxSvId(allSomaticStructuralVariants) + 1;
-            for (LinxSvAnnotation structuralVariant : allGermlineStructuralVariants) {
+            for(LinxSvAnnotation structuralVariant : allGermlineStructuralVariants)
+            {
                 svIdMapping.put(structuralVariant.svId(), newId);
                 newId++;
             }
@@ -314,9 +350,11 @@ public final class GermlineConversion {
     }
 
     @VisibleForTesting
-    static int findMaxSvId(@NotNull List<LinxSvAnnotation> structuralVariants) {
+    static int findMaxSvId(@NotNull List<LinxSvAnnotation> structuralVariants)
+    {
         int maxSvId = 0;
-        for (LinxSvAnnotation structuralVariant : structuralVariants) {
+        for(LinxSvAnnotation structuralVariant : structuralVariants)
+        {
             maxSvId = Math.max(maxSvId, structuralVariant.svId());
         }
         return maxSvId;
@@ -324,23 +362,29 @@ public final class GermlineConversion {
 
     @NotNull
     private static Map<Integer, Integer> buildClusterIdMapping(@NotNull List<LinxSvAnnotation> allSomaticStructuralVariants,
-            @Nullable List<LinxSvAnnotation> allGermlineStructuralVariants) {
-        if (allGermlineStructuralVariants != null) {
+            @Nullable List<LinxSvAnnotation> allGermlineStructuralVariants)
+    {
+        if(allGermlineStructuralVariants != null)
+        {
             int idOffset = findMaxClusterId(allSomaticStructuralVariants);
             List<Integer> germlineClusterIds =
                     allGermlineStructuralVariants.stream().map(LinxSvAnnotation::clusterId).distinct().collect(Collectors.toList());
             return IntStream.range(0, germlineClusterIds.size())
                     .boxed()
                     .collect(Collectors.toMap(germlineClusterIds::get, clusterIndex -> clusterIndex + idOffset + 1));
-        } else {
+        }
+        else
+        {
             return new HashMap<>();
         }
     }
 
     @VisibleForTesting
-    static int findMaxClusterId(@NotNull List<LinxSvAnnotation> structuralVariants) {
+    static int findMaxClusterId(@NotNull List<LinxSvAnnotation> structuralVariants)
+    {
         int maxClusterId = 0;
-        for (LinxSvAnnotation structuralVariant : structuralVariants) {
+        for(LinxSvAnnotation structuralVariant : structuralVariants)
+        {
             maxClusterId = Math.max(maxClusterId, structuralVariant.clusterId());
         }
         return maxClusterId;
@@ -348,11 +392,14 @@ public final class GermlineConversion {
 
     @NotNull
     private static Map<Integer, Integer> buildBreakendIdMapping(@NotNull List<LinxBreakend> allSomaticBreakends,
-            @Nullable List<LinxBreakend> allGermlineBreakends) {
+            @Nullable List<LinxBreakend> allGermlineBreakends)
+    {
         Map<Integer, Integer> breakendIdMapping = Maps.newHashMap();
-        if (allGermlineBreakends != null) {
+        if(allGermlineBreakends != null)
+        {
             int newId = findMaxBreakendId(allSomaticBreakends) + 1;
-            for (LinxBreakend breakend : allGermlineBreakends) {
+            for(LinxBreakend breakend : allGermlineBreakends)
+            {
                 breakendIdMapping.put(breakend.id(), newId);
                 newId++;
             }
@@ -361,9 +408,11 @@ public final class GermlineConversion {
     }
 
     @VisibleForTesting
-    static int findMaxBreakendId(@NotNull List<LinxBreakend> breakends) {
+    static int findMaxBreakendId(@NotNull List<LinxBreakend> breakends)
+    {
         int maxId = 0;
-        for (LinxBreakend breakend : breakends) {
+        for(LinxBreakend breakend : breakends)
+        {
             maxId = Math.max(maxId, breakend.id());
         }
         return maxId;
@@ -371,7 +420,8 @@ public final class GermlineConversion {
 
     @NotNull
     private static List<HomozygousDisruption> toSomaticHomozygousDisruptions(
-            @Nullable List<HomozygousDisruption> germlineHomozygousDisruptions) {
+            @Nullable List<HomozygousDisruption> germlineHomozygousDisruptions)
+    {
         return germlineHomozygousDisruptions != null ? germlineHomozygousDisruptions : Lists.newArrayList();
     }
 }

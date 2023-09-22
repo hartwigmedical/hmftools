@@ -11,18 +11,22 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class IsofoxTestFactory {
+public final class IsofoxTestFactory
+{
 
-    private IsofoxTestFactory() {
+    private IsofoxTestFactory()
+    {
     }
 
     @NotNull
-    public static IsofoxData createMinimalIsofoxTestData() {
+    public static IsofoxData createMinimalIsofoxTestData()
+    {
         return ImmutableIsofoxData.builder().summary(IsofoxTestFactory.rnaStatisticsBuilder().build()).build();
     }
-    
+
     @NotNull
-    public static ImmutableRnaStatistics.Builder rnaStatisticsBuilder() {
+    public static ImmutableRnaStatistics.Builder rnaStatisticsBuilder()
+    {
         return ImmutableRnaStatistics.builder()
                 .totalFragments(0)
                 .qcStatus("PASS")
@@ -42,7 +46,8 @@ public final class IsofoxTestFactory {
     }
 
     @NotNull
-    public static ImmutableGeneExpression.Builder geneExpressionBuilder() {
+    public static ImmutableGeneExpression.Builder geneExpressionBuilder()
+    {
         return ImmutableGeneExpression.builder()
                 .geneName(Strings.EMPTY)
                 .tpm(0D)
@@ -55,7 +60,8 @@ public final class IsofoxTestFactory {
     }
 
     @NotNull
-    public static ImmutableRnaFusion.Builder rnaFusionBuilder() {
+    public static ImmutableRnaFusion.Builder rnaFusionBuilder()
+    {
         return ImmutableRnaFusion.builder()
                 .name(Strings.EMPTY)
                 .chromosomeUp(Strings.EMPTY)
@@ -78,7 +84,8 @@ public final class IsofoxTestFactory {
     }
 
     @NotNull
-    public static ImmutableNovelSpliceJunction.Builder novelSpliceJunctionBuilder() {
+    public static ImmutableNovelSpliceJunction.Builder novelSpliceJunctionBuilder()
+    {
         return ImmutableNovelSpliceJunction.builder()
                 .geneName(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)

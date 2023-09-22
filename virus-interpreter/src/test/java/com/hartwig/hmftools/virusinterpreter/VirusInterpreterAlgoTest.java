@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
 import com.hartwig.hmftools.virusinterpreter.algo.ImmutableVirusReportingDb;
@@ -73,22 +74,22 @@ public class VirusInterpreterAlgoTest
         AnnotatedVirus reportedVirus1 = reportedVirus.get(0);
         assertEquals(name, reportedVirus1.name());
         assertEquals(2, reportedVirus1.integrations());
-        assertEquals("EBV", reportedVirus1.interpretation());
+        assertEquals(VirusType.EBV, reportedVirus1.interpretation());
 
         AnnotatedVirus reportedVirus2 = reportedVirus.get(1);
         assertEquals(name, reportedVirus2.name());
         assertEquals(0, reportedVirus2.integrations());
-        assertEquals("EBV", reportedVirus2.interpretation());
+        assertEquals(VirusType.EBV, reportedVirus2.interpretation());
 
         AnnotatedVirus reportedVirus3 = reportedVirus.get(2);
         assertEquals(name, reportedVirus3.name());
         assertEquals(0, reportedVirus3.integrations());
-        assertEquals("EBV", reportedVirus3.interpretation());
+        assertEquals(VirusType.EBV, reportedVirus3.interpretation());
 
         AnnotatedVirus reportedVirus4 = reportedVirus.get(3);
         assertEquals(name, reportedVirus4.name());
         assertEquals(0, reportedVirus4.integrations());
-        assertEquals("EBV", reportedVirus4.interpretation());
+        assertEquals(VirusType.EBV, reportedVirus4.interpretation());
 
         assertEquals(Integer.valueOf(90), algo.determineMinimalCoverageVirus(0, 1));
         assertNull(algo.determineMinimalCoverageVirus(1, 1));
@@ -125,21 +126,21 @@ public class VirusInterpreterAlgoTest
     private static VirusInterpreterAlgo createTestAlgo(@NotNull String name)
     {
         VirusReportingDb virusReporting1 = ImmutableVirusReportingDb.builder()
-                .virusInterpretation("EBV")
+                .virusInterpretation(VirusType.EBV)
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(90)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
         VirusReportingDb virusReporting2 = ImmutableVirusReportingDb.builder()
-                .virusInterpretation("EBV")
+                .virusInterpretation(VirusType.EBV)
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
                 .build();
 
         VirusReportingDb virusReporting3 = ImmutableVirusReportingDb.builder()
-                .virusInterpretation("EBV")
+                .virusInterpretation(VirusType.EBV)
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)

@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.pave.VariantData;
 
 import org.apache.commons.compress.utils.Lists;
@@ -23,7 +23,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class Blacklistings
+public class Blacklistings extends AnnotationData
 {
     private final List<ChrBaseRegion> mBedRegions;
     private final List<VcfEntry> mVcfEntries;
@@ -52,8 +52,19 @@ public class Blacklistings
         }
     }
 
+    @Override
+    public String type() { return "Blacklistings"; }
+
+    @Override
+    public boolean enabled() { return hasData(); }
+
     public boolean hasData() { return !mBedRegions.isEmpty() || !mVcfEntries.isEmpty(); }
+
+    @Override
     public boolean hasValidData() { return mHasValidData; }
+
+    @Override
+    public synchronized void onChromosomeComplete(final String chromosome) {}
 
     public void annotateVariant(final VariantData variant)
     {
@@ -168,7 +179,4 @@ public class Blacklistings
 
         public String toString() { return String.format("%d %s>%s", Position, Ref, Alt); }
     }
-
-
-
 }

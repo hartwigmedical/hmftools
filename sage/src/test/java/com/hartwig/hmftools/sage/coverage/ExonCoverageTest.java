@@ -4,9 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.genome.bed.ImmutableNamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class ExonCoverageTest

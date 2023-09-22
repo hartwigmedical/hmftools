@@ -20,6 +20,7 @@ import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndic
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.common.utils.GenericDataCollection.GD_TYPE_STRING;
 import static com.hartwig.hmftools.common.utils.GenericDataLoader.DEFAULT_DELIM;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.sigs.buckets.BaConfig.BA_EXT_SAMPLE_DATA_FILE;
@@ -48,7 +49,6 @@ import static com.hartwig.hmftools.sigs.buckets.SigOptimiser.BUCKET_RANGE_MAX_PE
 import static com.hartwig.hmftools.sigs.buckets.SigOptimiser.SMALL_RATIO_PERC_CUTOFF;
 import static com.hartwig.hmftools.common.sigs.DataUtils.doubleToStr;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SAMPLE_COUNTS_FILE;
-import static com.hartwig.hmftools.sigs.common.CommonUtils.LOG_DEBUG;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.OUTPUT_FILE_ID;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.SIG_LOGGER;
 import static com.hartwig.hmftools.sigs.common.CommonUtils.getDiffList;
@@ -71,6 +71,7 @@ import com.hartwig.hmftools.common.utils.GenericDataLoader;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.sigs.common.CommonUtils;
 import com.hartwig.hmftools.sigs.nmf.NmfConfig;
 import com.hartwig.hmftools.sigs.sim.SimConfig;
 
@@ -185,7 +186,7 @@ public class BucketAnalyser
     public BucketAnalyser(GenericDataCollection collection, final CommandLine cmd)
     {
         mOutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = CommonUtils.parseOutputDir(cmd);
         mConfig = new BaConfig(cmd);
 
         // initialise sample counts and related totals

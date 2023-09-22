@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.ALT_SPLICE_JUNCTIONS;
@@ -16,7 +16,6 @@ import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_GC_ADJ
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_NOVEL_LOCATIONS;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_READS;
 import static com.hartwig.hmftools.isofox.common.PerformanceTracking.PERF_TOTAL;
-import static com.hartwig.hmftools.isofox.common.PerformanceTracking.logMemory;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findUniqueBases;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.getChromosomeLength;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -32,7 +31,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -171,7 +170,7 @@ public class ChromosomeTaskExecutor implements Callable
         int nextLogCount = 100;
         int lastGeneCollectionEndPosition = 1;
 
-        boolean genesFiltered = !mConfig.Filters.RestrictedGeneIds.isEmpty() || !mConfig.Filters.SpecificRegions.isEmpty();
+        boolean genesFiltered = !mConfig.Filters.RestrictedGeneIds.isEmpty() || mConfig.Filters.SpecificChrRegions.hasFilters();
 
         while(mCurrentGeneIndex < mGeneDataList.size())
         {
@@ -250,8 +249,6 @@ public class ChromosomeTaskExecutor implements Callable
         {
             ISF_LOGGER.info("chr({}) processing complete", mChromosome);
         }
-
-        logMemory(mConfig, String.format("chr(%s)-Complete", mChromosome));
     }
 
     public static int findNextOverlappingGenes(

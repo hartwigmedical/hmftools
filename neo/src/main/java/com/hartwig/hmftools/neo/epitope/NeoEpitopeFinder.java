@@ -2,8 +2,8 @@ package com.hartwig.hmftools.neo.epitope;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.NeoCommon.logVersion;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -124,18 +124,11 @@ public class NeoEpitopeFinder
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         NeoConfig.addCmdLineArgs(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         NeoEpitopeFinder neoEpitopeFinder = new NeoEpitopeFinder(configBuilder);
         neoEpitopeFinder.run();

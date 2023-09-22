@@ -12,10 +12,11 @@ import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
 import org.junit.Test;
 
-public class VariantDedupTest {
-
+public class VariantDedupTest
+{
     @Test
-    public void canDedupVariants() {
+    public void canDedupVariants()
+    {
         PurpleVariant variant1 = TestPurpleVariantFactory.builder()
                 .gene("EGFR")
                 .canonicalImpact(TestPurpleVariantFactory.impactBuilder()

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -56,7 +56,7 @@ public class FragmentSizeDistribution
             String chromosome = String.valueOf(i);
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome);
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
             ChromosomeTask chrTask = new ChromosomeTask(chromosomeStr);
@@ -217,10 +217,10 @@ public class FragmentSizeDistribution
         public Long call()
         {
             // slice a fixed region from each chromosome
-            ChrBaseRegion region = !mConfig.SpecificRegions.isEmpty() ?
-                mConfig.SpecificRegions.get(0) : new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
+            ChrBaseRegion region = !mConfig.SpecificChrRegions.Regions.isEmpty() ?
+                mConfig.SpecificChrRegions.Regions.get(0) : new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
 
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(region), this::processBamRead);
+            mBamSlicer.slice(mSamReader, region, this::processBamRead);
 
             return (long)0;
         }

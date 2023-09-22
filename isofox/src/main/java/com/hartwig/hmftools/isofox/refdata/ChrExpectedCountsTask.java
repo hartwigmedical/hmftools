@@ -51,7 +51,6 @@ public class ChrExpectedCountsTask implements Callable
     public Long call()
     {
         generateExpectedCounts();
-        System.gc();
         return (long)0;
     }
 

@@ -14,8 +14,8 @@ import com.itextpdf.kernel.pdf.navigation.PdfExplicitRemoteGoToDestination;
 
 import org.jetbrains.annotations.NotNull;
 
-public class PageEventHandler implements IEventHandler {
-
+public class PageEventHandler implements IEventHandler
+{
     @NotNull
     private final Header header;
     @NotNull
@@ -29,26 +29,31 @@ public class PageEventHandler implements IEventHandler {
 
     @NotNull
     static PageEventHandler create(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportResources reportResources,
-            boolean addDisclaimer) {
+            boolean addDisclaimer)
+    {
         return new PageEventHandler(new Header(Resources.getResource("orange_circos.png"), reportResources),
                 new Footer(reportResources, addDisclaimer),
                 new SidePanel(sampleId, platinumVersion, reportResources));
     }
 
-    private PageEventHandler(@NotNull final Header header, @NotNull final Footer footer, @NotNull final SidePanel sidePanel) {
+    private PageEventHandler(@NotNull final Header header, @NotNull final Footer footer, @NotNull final SidePanel sidePanel)
+    {
         this.header = header;
         this.footer = footer;
         this.sidePanel = sidePanel;
     }
 
     @Override
-    public void handleEvent(@NotNull Event event) {
+    public void handleEvent(@NotNull Event event)
+    {
         PdfDocumentEvent documentEvent = (PdfDocumentEvent) event;
-        if (documentEvent.getType().equals(PdfDocumentEvent.START_PAGE)) {
+        if(documentEvent.getType().equals(PdfDocumentEvent.START_PAGE))
+        {
             PdfPage page = documentEvent.getPage();
 
             header.renderHeader(page);
-            if (firstPageOfChapter) {
+            if(firstPageOfChapter)
+            {
                 firstPageOfChapter = false;
 
                 createChapterBookmark(documentEvent.getDocument(), chapterTitle);
@@ -59,20 +64,25 @@ public class PageEventHandler implements IEventHandler {
         }
     }
 
-    void chapterTitle(@NotNull String chapterTitle) {
+    void chapterTitle(@NotNull String chapterTitle)
+    {
         this.chapterTitle = chapterTitle;
     }
 
-    void resetChapterPageCounter() {
+    void resetChapterPageCounter()
+    {
         firstPageOfChapter = true;
     }
 
-    void writeFooters(@NotNull PdfDocument document) {
+    void writeFooters(@NotNull PdfDocument document)
+    {
         footer.writeFooters(document);
     }
 
-    private void createChapterBookmark(@NotNull PdfDocument pdf, @NotNull String title) {
-        if (outline == null) {
+    private void createChapterBookmark(@NotNull PdfDocument pdf, @NotNull String title)
+    {
+        if(outline == null)
+        {
             outline = pdf.getOutlines(false);
         }
 

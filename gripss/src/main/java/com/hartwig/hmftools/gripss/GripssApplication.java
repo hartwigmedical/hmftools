@@ -67,9 +67,6 @@ public class GripssApplication
             final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome,
             final ConfigBuilder configBuilder)
     {
-        final VersionInfo version = new VersionInfo("gripss.version");
-        GR_LOGGER.info("Gripss version: {}", version.version());
-
         mConfig = config;
         mFilterConstants = filterConstants;
 
@@ -161,7 +158,7 @@ public class GripssApplication
 
         vcfFileReader.iterator().forEach(x -> processVariant(x, genotypeIds));
 
-        GR_LOGGER.info("read VCF: breakends({}) unmatched({}) complete({}) hardFiltered({})",
+        GR_LOGGER.info("read VCF: processedBreakends({}) unmatched({}) complete({}) hardFiltered({})",
                 mProcessedVariants, mVariantBuilder.incompleteSVs(), mSvDataCache.getSvList().size(), mVariantBuilder.hardFilteredCount());
 
         GR_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
@@ -362,18 +359,12 @@ public class GripssApplication
         mSvDataCache.addSvData(svData);
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder("Gripss");
         addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         GripssApplication gripss = GripssApplication.fromCommandArgs(configBuilder);
         gripss.run();

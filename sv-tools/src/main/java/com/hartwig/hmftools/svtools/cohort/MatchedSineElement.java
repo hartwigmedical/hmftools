@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svtools.cohort;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
 import java.util.List;
 

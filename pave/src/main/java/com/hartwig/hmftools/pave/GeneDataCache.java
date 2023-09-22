@@ -2,7 +2,7 @@ package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveConstants.GENE_UPSTREAM_DISTANCE;
 import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
@@ -19,10 +19,11 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
-import com.hartwig.hmftools.common.ensemblcache.GeneNameMapping;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+
+import org.jetbrains.annotations.Nullable;
 
 public class GeneDataCache
 {
@@ -33,12 +34,14 @@ public class GeneDataCache
     private final Set<String> mDriverGeneNames;
     private final Map<String,List<String>> mOtherReportableTranscripts;
 
+    /*
     private final boolean mUseIndexing;
     private String mCurrentChromosome;
     private List<GeneData> mCurrentChromosomeGenes;
     private List<GeneData> mCurrentGenes; // in the current vacinity
     private int mCurrentPosStrandGeneIndex;
     private int mCurrentNegStrandGeneIndex;
+    */
 
     public GeneDataCache(
             final String ensemblDir, final RefGenomeVersion refGenVersion, final String driverGeneFile, boolean useIndexing)
@@ -50,12 +53,14 @@ public class GeneDataCache
         mDriverGeneNames = Sets.newHashSet();
         mOtherReportableTranscripts = Maps.newHashMap();
 
+        /*
         mUseIndexing = useIndexing;
         mCurrentChromosome = null;
         mCurrentChromosomeGenes = null;
         mCurrentPosStrandGeneIndex = 0;
         mCurrentNegStrandGeneIndex = 0;
         mCurrentGenes = Lists.newArrayList();
+        */
     }
 
     public EnsemblDataCache getEnsemblCache() { return mEnsemblDataCache; }
@@ -156,9 +161,15 @@ public class GeneDataCache
                 .collect(Collectors.toList());
     }
 
-    public List<GeneData> findGenes(final String chromosome, int startPosition, int endPosition)
+    public GeneCacheIndexing createIndexing(final String chromosome)
     {
-        if(!mUseIndexing)
+        return new GeneCacheIndexing(mEnsemblDataCache.getChrGeneDataMap().get(chromosome));
+    }
+
+    public List<GeneData> findGenes(
+            final String chromosome, int startPosition, int endPosition, @Nullable final GeneCacheIndexing cacheIndexing)
+    {
+        if(cacheIndexing == null)
         {
             List<GeneData> genes = Lists.newArrayList();
 
@@ -178,6 +189,7 @@ public class GeneDataCache
             return genes;
         }
 
+        /*
         if(mCurrentChromosome == null || !mCurrentChromosome.equals(chromosome))
         {
             mCurrentChromosome = chromosome;
@@ -186,8 +198,9 @@ public class GeneDataCache
             mCurrentNegStrandGeneIndex = 0;
             mCurrentGenes.clear();
         }
+        */
 
-        if(mCurrentChromosomeGenes == null)
+        if(cacheIndexing.ChromosomeGenes == null)
         {
             // PV_LOGGER.error("invalid chromosome({})", chromosome); // just MT
             return Lists.newArrayList();
@@ -195,15 +208,15 @@ public class GeneDataCache
 
         // purge any gene where the position is now past its end
         int index = 0;
-        while(index < mCurrentGenes.size())
+        while(index < cacheIndexing.CurrentGenes.size())
         {
-            GeneData geneData = mCurrentGenes.get(index);
+            GeneData geneData = cacheIndexing.CurrentGenes.get(index);
 
             boolean isPastGene = (geneData.forwardStrand() && geneData.GeneEnd < endPosition)
                     || (geneData.reverseStrand() && geneData.GeneEnd + GENE_UPSTREAM_DISTANCE < endPosition);
 
             if(isPastGene)
-                mCurrentGenes.remove(index);
+                cacheIndexing.CurrentGenes.remove(index);
             else
                 ++index;
         }
@@ -213,24 +226,24 @@ public class GeneDataCache
         for(int i = 0; i <= 1; ++i)
         {
             int currentStrand = (i == 0) ? POS_STRAND : NEG_STRAND;
-            int geneIndex = (i == 0) ? mCurrentPosStrandGeneIndex : mCurrentNegStrandGeneIndex;
+            int geneIndex = (i == 0) ? cacheIndexing.CurrentPosStrandGeneIndex : cacheIndexing.CurrentNegStrandGeneIndex;
 
-            for(; geneIndex < mCurrentChromosomeGenes.size(); ++geneIndex)
+            for(; geneIndex < cacheIndexing.ChromosomeGenes.size(); ++geneIndex)
             {
-                GeneData geneData = mCurrentChromosomeGenes.get(geneIndex);
+                GeneData geneData = cacheIndexing.ChromosomeGenes.get(geneIndex);
 
                 if(geneData.Strand != currentStrand)
                     continue;
 
                 if(isWithinGeneRange(geneData, startPosition, endPosition))
                 {
-                    if(mCurrentGenes.contains(geneData))
+                    if(cacheIndexing.CurrentGenes.contains(geneData))
                     {
                         PV_LOGGER.error("adding current gene({}:{}) index({}) twice", geneData.GeneId, geneData.GeneName, geneIndex);
                         break;
                     }
 
-                    mCurrentGenes.add(geneData);
+                    cacheIndexing.CurrentGenes.add(geneData);
                 }
                 else if(startPosition > geneData.GeneEnd)
                 {
@@ -243,12 +256,12 @@ public class GeneDataCache
             }
 
             if(i == 0)
-                mCurrentPosStrandGeneIndex = geneIndex;
+                cacheIndexing.CurrentPosStrandGeneIndex = geneIndex;
             else
-                mCurrentNegStrandGeneIndex = geneIndex;
+                cacheIndexing.CurrentNegStrandGeneIndex = geneIndex;
         }
 
-        return mCurrentGenes;
+        return cacheIndexing.CurrentGenes;
     }
 
     private boolean isWithinGeneRange(final GeneData geneData, int startPosition, int endPosition)

@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.cuppa.CategoryType.GENE_EXP;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SAMPLE_TRAIT;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SNV;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
+import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 import static com.hartwig.hmftools.cup.common.CupConstants.DEFAULT_RNA_LENGTH;
 
 import java.util.List;
@@ -182,15 +183,10 @@ public class CupAnalyser
 
     public static void main(@NotNull final String[] args)
     {
-        final VersionInfo version = new VersionInfo("cuppa.version");
-        CUP_LOGGER.info("Cuppa version: {}", version.version());
-
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         CuppaConfig.registerConfig(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
 
         CupAnalyser cupAnalyser = new CupAnalyser(configBuilder);
         cupAnalyser.run();

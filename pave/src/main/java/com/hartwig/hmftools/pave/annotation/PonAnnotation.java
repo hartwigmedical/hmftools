@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.pave.annotation;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
@@ -8,60 +9,63 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.StringCache;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.pave.VariantData;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.variant.vcf.VCFFilterHeaderLine;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class PonAnnotation
+public class PonAnnotation extends AnnotationData implements Callable
 {
-    private final Map<String,Map<Integer,List<PonVariantData>>> mPonEntries; // mapped by chromosome then position
-    private final boolean mLoadOnDemand;
-
     private final String mPonFilename;
     private BufferedReader mFileReader;
-    private String mCurrentChromosome;
     private int mColumnCount;
     private boolean mHasValidData;
 
     private final Map<VariantTier,PonFilters> mPonFilters;
+    private final Map<String,PonChrCache> mChrCacheMap;
+    private final StringCache mStringCache;
 
     public static final String PON_COUNT = "PON_COUNT";
     public static final String PON_MAX = "PON_MAX";
     public static final String PON_FILTER = "PON";
     public static final String PON_ARTEFACT_FILTER = "PONArtefact";
 
-    public static final String PON_DELIM = "\t";
-
     public PonAnnotation(final String filename, boolean loadOnDemand)
     {
-        mPonEntries = Maps.newHashMap();
-        mLoadOnDemand = loadOnDemand;
         mPonFilename = filename;
         mFileReader = null;
-        mCurrentChromosome = "";
         mColumnCount = -1;
         mHasValidData = true;
+        mChrCacheMap = Maps.newHashMap();
+        mStringCache = new StringCache();
 
         if(filename != null && !filename.isEmpty())
         {
-            loadPonFile(filename);
+            initialiseFile(filename, loadOnDemand);
         }
 
         mPonFilters = Maps.newHashMap();
     }
 
-    public boolean hasValidData() { return mHasValidData; }
+    @Override
+    public String type() { return "PON"; }
 
-    public boolean isEnabled() { return mPonFilename != null; }
+    @Override
+    public boolean enabled() { return mPonFilename != null; }
+
+    @Override
+    public boolean hasValidData() { return mHasValidData; }
 
     public boolean loadFilters(final String filtersConfig)
     {
@@ -94,9 +98,43 @@ public class PonAnnotation
         return true;
     }
 
-    public void annotateVariant(final VariantData variant)
+    public synchronized PonChrCache getChromosomeCache(final String chromosome)
     {
-        PonVariantData ponData = getPonData(variant);
+        PonChrCache chrCache = mChrCacheMap.get(chromosome);
+
+        if(chrCache != null && chrCache.isComplete())
+            return chrCache;
+
+        loadPonEntries(chromosome);
+        return mChrCacheMap.get(chromosome);
+    }
+
+    @Override
+    public synchronized void onChromosomeComplete(final String chromosome)
+    {
+        PonChrCache chrCache = mChrCacheMap.get(chromosome);
+
+        if(chrCache != null)
+        {
+            chrCache.clear();
+            mChrCacheMap.remove(chromosome);
+        }
+    }
+
+    @Override
+    public Long call()
+    {
+        for(String chromosome : mInitialChromosomes)
+        {
+            loadPonEntries(chromosome);
+        }
+
+        return (long)0;
+    }
+
+    public void annotateVariant(final VariantData variant, final PonChrCache chrCache)
+    {
+        PonVariantData ponData = chrCache.getPonData(variant);
         if(ponData == null)
             return;
 
@@ -113,50 +151,13 @@ public class PonAnnotation
             variant.addFilter(PON_FILTER);
     }
 
-    public PonVariantData getPonData(final VariantData variant)
-    {
-        if(mLoadOnDemand && !variant.Chromosome.equals(mCurrentChromosome))
-        {
-            mPonEntries.remove(mCurrentChromosome);
-            mCurrentChromosome = variant.Chromosome;
-            loadPonEntries();
-        }
-        Map<Integer,List<PonVariantData>> posMap = mPonEntries.get(variant.Chromosome);
-
-        if(posMap == null)
-            return null;
-
-        List<PonVariantData> posList = posMap.get(variant.Position);
-
-        if(posList == null)
-            return null;
-
-        return posList.stream().filter(x -> x.matches(variant.Ref, variant.Alt)).findFirst().orElse(null);
-    }
-
     public boolean hasEntry(final String chromosome, final int position, final String ref, final String alt)
     {
-        if(mLoadOnDemand && !chromosome.equals(mCurrentChromosome))
-        {
-            mPonEntries.remove(mCurrentChromosome);
-            mCurrentChromosome = chromosome;
-            loadPonEntries();
-        }
-
-        Map<Integer,List<PonVariantData>> posMap = mPonEntries.get(chromosome);
-
-        if(posMap == null)
-            return false;
-
-        List<PonVariantData> posList = posMap.get(position);
-
-        if(posList == null)
-            return false;
-
-        return posList.stream().anyMatch(x -> x.matches(ref, alt));
+        PonChrCache chrCache = mChrCacheMap.get(chromosome);
+        return chrCache != null ? chrCache.hasEntry(position, ref, alt) : false;
     }
 
-    private void loadPonFile(final String filename)
+    private void initialiseFile(final String filename, boolean loadOnDemand)
     {
         if(filename == null)
             return;
@@ -172,7 +173,7 @@ public class PonAnnotation
             mFileReader = createBufferedReader(filename);
 
             String line = mFileReader.readLine();
-            final String[] values = line.split(PON_DELIM, -1);
+            final String[] values = line.split(TSV_DELIM, -1);
             mColumnCount = values.length;
 
             if(mColumnCount < 4)
@@ -181,13 +182,11 @@ public class PonAnnotation
                 mFileReader = null;
             }
 
-            if(!mLoadOnDemand)
-            {
-                // load the full file
-                loadPonEntries();
-            }
-
             mHasValidData = true;
+
+            if(!loadOnDemand)
+                loadPonEntries(null);
+
         }
         catch(IOException e)
         {
@@ -196,51 +195,55 @@ public class PonAnnotation
         }
     }
 
-    private void loadPonEntries()
+    private void loadPonEntries(@Nullable final String requestedChromosome)
     {
         if(mFileReader == null)
             return;
 
         try
         {
-            int currentPos = 0;
-
-            String requestedChromosome = mLoadOnDemand ? mCurrentChromosome : null;
-
-            Map<Integer,List<PonVariantData>> posMap = null;
-            List<PonVariantData> posList = null;
-
             String line = null;
-            String currentChr = "";
-            boolean foundRequested = false;
-
-            if(requestedChromosome != null && mPonEntries.containsKey(requestedChromosome))
-            {
-                currentChr = requestedChromosome;
-                posMap = mPonEntries.get(requestedChromosome);
-            }
-
+            PonChrCache currentCache = requestedChromosome != null ? mChrCacheMap.get(requestedChromosome) : null;
+            boolean foundRequested = currentCache != null;
             int itemCount = 0;
 
             while((line = mFileReader.readLine()) != null)
             {
-                final String[] values = line.split(PON_DELIM, -1);
+                final String[] values = line.split(TSV_DELIM, -1);
 
                 int colIndex = 0;
                 String chromosome = values[colIndex++];
 
-                if(requestedChromosome != null)
+                boolean exitOnNew = false;
+
+                if(currentCache == null || !currentCache.Chromosome.equals(chromosome))
                 {
-                    if(chromosome.equals(requestedChromosome))
+                    if(currentCache != null && !currentCache.isComplete())
                     {
-                        foundRequested = true;
+                        PV_LOGGER.debug("chr({}) loaded {} PON entries, strCache({})",
+                                currentCache.Chromosome, currentCache.entryCount(), mStringCache.size());
+
+                        currentCache.setComplete();
                     }
-                    else
+
+                    currentCache = mChrCacheMap.get(chromosome);
+
+                    if(currentCache == null)
+                    {
+                        currentCache = new PonChrCache(chromosome, mStringCache);
+                        mChrCacheMap.put(chromosome, currentCache);
+                    }
+
+                    if(requestedChromosome != null)
                     {
                         if(!foundRequested)
-                            continue; // skip past this until a match is found
-
-                        // otherwise record this entry and then break
+                        {
+                            foundRequested = chromosome.equals(requestedChromosome);
+                        }
+                        else if(HumanChromosome.chromosomeRank(chromosome) > HumanChromosome.chromosomeRank(requestedChromosome))
+                        {
+                            exitOnNew = true;
+                        }
                     }
                 }
 
@@ -252,47 +255,25 @@ public class PonAnnotation
                 int maxReadsCount = mColumnCount > colIndex ? Integer.parseInt(values[colIndex++]) : 0;
                 int totalReadsCount = mColumnCount > colIndex ? Integer.parseInt(values[colIndex++]) : 0;
 
-                if(!chromosome.equals(currentChr))
-                {
-                    currentChr = chromosome;
-                    currentPos = position;
-                    posMap = Maps.newHashMap();
-                    mPonEntries.put(chromosome, posMap);
-
-                    posList = Lists.newArrayList();
-                    posMap.put(position, posList);
-                }
-                else if(currentPos != position)
-                {
-                    currentPos = position;
-                    posList = Lists.newArrayList();
-                    posMap.put(position, posList);
-                }
-
-                posList.add(new PonVariantData(ref, alt, sampleCount, maxReadsCount, totalReadsCount));
+                currentCache.addEntry(position, ref, alt, sampleCount, maxReadsCount, totalReadsCount);
                 ++itemCount;
 
-                if(requestedChromosome != null && foundRequested && !chromosome.equals(requestedChromosome))
-                {
-                    --itemCount;
+                if(exitOnNew)
                     break;
-                }
             }
 
-            if(requestedChromosome != null)
-            {
-                PV_LOGGER.debug("pon file({}) loaded {} entries for chromosome({})", mPonFilename, itemCount, requestedChromosome);
-            }
-            else
+            if(requestedChromosome == null)
             {
                 PV_LOGGER.info("pon file({}) loaded {} entries", mPonFilename, itemCount);
             }
+
+            if(line == null)
+                mFileReader = null;
         }
         catch(IOException e)
         {
             PV_LOGGER.error("failed to load PON file: {}", e.toString());
             mHasValidData = false;
-            return;
         }
     }
 
@@ -319,5 +300,4 @@ public class PonAnnotation
             RequiredMaxReadCount = requiredMaxReadCount;
         }
     }
-
 }

@@ -3,6 +3,7 @@ package com.hartwig.hmftools.neo.utils;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.io.IOException;
@@ -25,19 +26,13 @@ public class AucCalcTester
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         configBuilder.addPath(DATA_FILE, true, "Input filename");
         configBuilder.addFlag(IS_PERCENTILE, "In percentile or rank form");
         configBuilder.addConfigItem(OUTPUT_DIR, true, "Output directory");
         addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         String dataFile = configBuilder.getValue(DATA_FILE);
         boolean isPercentile = configBuilder.hasFlag(IS_PERCENTILE);

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.svprep.reads;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class PartitionTask
 {

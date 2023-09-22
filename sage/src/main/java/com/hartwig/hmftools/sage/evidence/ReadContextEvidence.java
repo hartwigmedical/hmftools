@@ -5,19 +5,21 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 
 import static htsjdk.samtools.CigarOperator.S;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
@@ -32,47 +34,77 @@ import htsjdk.samtools.SAMRecord;
 
 public class ReadContextEvidence implements FragmentSyncReadHandler
 {
-    private final SageConfig mSageConfig;
+    private final SageConfig mConfig;
     private final RefGenomeInterface mRefGenome;
     private final ReadContextCounterFactory mFactory;
     private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
 
     // state per slice region
     private RefSequence mRefSequence;
-    private QualityCalculator mQualityCalculator;
     private List<ReadContextCounter> mReadCounters; // has one per candidate
     private int mLastCandidateIndex;
 
     private VariantPhaser mVariantPhaser;
     private final FragmentSync mFragmentSync;
-    private String mCurrentSample;
+    private List<ReadContextCounter> mSelectedReadCounters; // persisted array to avoid re-creation on every read
+    private final EvidenceStats mStats;
 
     public ReadContextEvidence(
             final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
     {
-        mSageConfig = config;
+        mConfig = config;
         mRefGenome = refGenome;
         mFactory = new ReadContextCounterFactory(config);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mFragmentSync = new FragmentSync(this);
 
         mRefSequence = null;
-        mQualityCalculator = null;
         mReadCounters = null;
         mLastCandidateIndex = 0;
         mVariantPhaser = null;
-        mCurrentSample = null;
+        mSelectedReadCounters = null;
+        mStats = new EvidenceStats();
     }
 
     public List<ReadContextCounter> collectEvidence(
             final List<Candidate> candidates, final String sample, final SamSlicerFactory samSlicerFactory, final VariantPhaser variantPhaser)
     {
-        mReadCounters = mFactory.create(candidates);
+        if(candidates.isEmpty())
+            return Collections.emptyList();
+
+        List<ChrBaseRegion> sliceRegions = buildCandidateRegions(candidates);
+
+        // add a buffer around each slice to support variants in soft-clip regions
+        int softClipBuffer = 30;
+
+        for(ChrBaseRegion sliceRegion : sliceRegions)
+        {
+            sliceRegion.setStart(max(sliceRegion.start() - softClipBuffer, 1));
+            sliceRegion.setEnd(sliceRegion.end() + softClipBuffer);
+        }
+
+        ++mStats.PartitionCount;
+        mStats.SliceCount += sliceRegions.size();
+        mStats.SliceLength += sliceRegions.stream().mapToInt(x -> x.baseLength()).sum();
+
+        int sliceRegionStart = sliceRegions.get(0).start();
+        int sliceRegionEnd = sliceRegions.get(sliceRegions.size() - 1).end();
+        ChrBaseRegion regionBounds = new ChrBaseRegion(sliceRegions.get(0).chromosome(), sliceRegionStart, sliceRegionEnd);
+
+        mVariantPhaser = variantPhaser;
+
+        if(mVariantPhaser != null)
+            mVariantPhaser.initialise(regionBounds, mConfig.LogLpsData);
+
+        mRefSequence = new RefSequence(regionBounds, mRefGenome);
+
+        QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
+        QualityCalculator qualityCalculator = new QualityCalculator(mConfig.Quality, qrMap, mRefSequence.IndexedBases);
+
+        mReadCounters = mFactory.create(candidates, mConfig, qualityCalculator, sample);
         mLastCandidateIndex = 0;
 
-        if(candidates.isEmpty())
-            return mReadCounters;
-
+        mSelectedReadCounters = Lists.newArrayListWithCapacity(mReadCounters.size());
 
         List<Candidate> deleteCandidates = candidates.stream().filter(x -> x.variant().isDelete()).collect(Collectors.toList());
 
@@ -86,34 +118,84 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
                 readContextCounter.setMaxCandidateDeleteLength(maxCloseDel);
         }
 
-        final Candidate firstCandidate = candidates.get(0);
-        final Candidate lastCandidate = candidates.get(candidates.size() - 1);
-
-        final ChrBaseRegion sliceRegion = new ChrBaseRegion(
-                firstCandidate.chromosome(),
-                max(firstCandidate.position() - mSageConfig.ExpectedReadLength, 1),
-                lastCandidate.position() + mSageConfig.ExpectedReadLength);
-
-        mVariantPhaser = variantPhaser;
-
-        if(mVariantPhaser != null)
-            mVariantPhaser.initialise(sliceRegion, mSageConfig.LogLpsData);
-
-        mRefSequence = new RefSequence(sliceRegion, mRefGenome);
-
-        QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
-        mQualityCalculator = new QualityCalculator(mSageConfig.Quality, qrMap, mRefSequence.IndexedBases);
-
-        mCurrentSample = sample;
         mFragmentSync.clear();
 
-        final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, Lists.newArrayList(sliceRegion), false);
+        final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, sliceRegions, false);
         samSlicer.slice(this::processReadRecord);
+
+        if(mConfig.PerfWarnTime > 0)
+        {
+            SG_LOGGER.debug("region({}) evidence stats: {}", regionBounds, mStats);
+        }
+
+        // SG_LOGGER.debug("variant-reads({}) phasing checks({})", mVariantReadChecks, mPhasingChecks);
 
         return mReadCounters;
     }
 
+    private List<ChrBaseRegion> buildCandidateRegions(final List<Candidate> candidates)
+    {
+        // make up to X regions based on distance between them
+        final Candidate firstCandidate = candidates.get(0);
+        final Candidate lastCandidate = candidates.get(candidates.size() - 1);
+
+        List<ChrBaseRegion> sliceRegions = Lists.newArrayList();
+
+        int minGap = mConfig.ExpectedReadLength * 2;
+
+        int sliceLength = lastCandidate.position() - firstCandidate.position();
+        int averageGap = sliceLength / candidates.size();
+
+        if(averageGap <= minGap || mConfig.MaxPartitionSlices == 1)
+        {
+            sliceRegions.add(new ChrBaseRegion(firstCandidate.chromosome(), firstCandidate.position(), lastCandidate.position()));
+            return sliceRegions;
+        }
+
+        List<Integer> gapDistances = Lists.newArrayListWithCapacity(candidates.size() - 1);
+
+        for(int i = 0; i < candidates.size() - 1; ++i)
+        {
+            int gap = candidates.get(i + 1).position() - candidates.get(i).position();
+            gapDistances.add(gap);
+        }
+
+        Collections.sort(gapDistances, Collections.reverseOrder());
+
+        int gapCount = gapDistances.size();
+        int nth = min(mConfig.MaxPartitionSlices, gapDistances.size());
+        int nthGap = gapDistances.get(nth - 1);
+        int medianGap = gapDistances.get(gapCount / 2);
+
+        SG_LOGGER.debug("region({}:{}-{} len={}) candidates({}) gap(n={} nth={}, max={} avg={} median={})",
+                firstCandidate.chromosome(), firstCandidate.position(), lastCandidate.position(), sliceLength,
+                candidates.size(), nth, nthGap, gapDistances.get(0), averageGap, medianGap);
+
+        ChrBaseRegion currentRegion = new ChrBaseRegion(firstCandidate.chromosome(), firstCandidate.position(), firstCandidate.position());
+
+        sliceRegions.add(currentRegion);
+
+        for(int i = 1; i < candidates.size(); ++i)
+        {
+            Candidate candidate = candidates.get(i);
+            int gap = candidate.position() - currentRegion.end();
+
+            if(gap <= max(minGap, nthGap))
+            {
+                currentRegion.setEnd(candidate.position());
+            }
+            else
+            {
+                currentRegion = new ChrBaseRegion(candidate.chromosome(), candidate.position(), candidate.position());
+                sliceRegions.add(currentRegion);
+            }
+        }
+
+        return sliceRegions;
+    }
+
     public final int[] getSynCounts() { return mFragmentSync.getSynCounts(); }
+    public EvidenceStats evidenceStats() { return mStats; }
 
     private void processReadRecord(final SAMRecord record)
     {
@@ -123,11 +205,15 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     @Override
     public void processReadRecord(final SAMRecord record, boolean checkSync)
     {
-        if(checkSync && mSageConfig.SyncFragments)
+        ++mStats.ReadCount;
+
+        if(mConfig.SyncFragments && checkSync)
         {
             if(mFragmentSync.handleOverlappingReads(record))
                 return;
         }
+
+        mSelectedReadCounters.clear();
 
         // find any candidate potentially interested in this record
         int readStart = record.getAlignmentStart();
@@ -135,16 +221,13 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         if(record.getCigar().getFirstCigarElement().getOperator() == S)
         {
-            readStart -= record.getCigar().getFirstCigarElement().getLength();;
+            readStart -= record.getCigar().getFirstCigarElement().getLength();
         }
 
         if(record.getCigar().getLastCigarElement().getOperator() == S)
         {
             readEnd += record.getCigar().getLastCigarElement().getLength();
         }
-
-        // first look back from the last-used index
-        List<ReadContextCounter> readCounters = Lists.newArrayList();
 
         // first check previous candidates starting with the current
         int nextIndex = mLastCandidateIndex + 1;
@@ -154,10 +237,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             ReadContextCounter readCounter = mReadCounters.get(prevIndex);
 
-            if(positionWithin(readCounter.position(), readStart, readEnd))
+            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.exceedsMaxCoverage())
             {
                 mLastCandidateIndex = prevIndex;
-                readCounters.add(0, readCounter);
+                mSelectedReadCounters.add(0, readCounter);
                 readStart -= readCounter.maxCandidateDeleteLength();
                 readEnd += readCounter.maxCandidateDeleteLength();
             }
@@ -174,9 +257,9 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             ReadContextCounter readCounter = mReadCounters.get(nextIndex);
 
-            if(positionWithin(readCounter.position(), readStart, readEnd))
+            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.exceedsMaxCoverage())
             {
-                readCounters.add(readCounter);
+                mSelectedReadCounters.add(readCounter);
             }
             else if(readCounter.position() < readStart)
             {
@@ -190,18 +273,22 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
             ++nextIndex;
         }
 
-        if(readCounters.isEmpty())
+        if(mSelectedReadCounters.isEmpty())
+        {
+            ++mStats.NoVariantReadCount;
             return;
+        }
 
         List<ReadContextCounter> posPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
         List<ReadContextCounter> negPhasedCounters = mVariantPhaser != null ? Lists.newArrayList() : null;
 
         int numberOfEvents = NumberEvents.calc(record, mRefSequence);
 
-        for(ReadContextCounter readCounter : readCounters)
+        for(ReadContextCounter readCounter : mSelectedReadCounters)
         {
-            ReadMatchType matchType = readCounter.processRead(
-                    record, mSageConfig, mQualityCalculator, numberOfEvents, mSageConfig.LogEvidenceReads ? mCurrentSample : null);
+            ReadMatchType matchType = readCounter.processRead(record, numberOfEvents);
+
+            ++mStats.SupportCounts[matchType.ordinal()];
 
             if(mVariantPhaser != null)
             {
@@ -213,6 +300,8 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         }
 
         if(mVariantPhaser != null)
+        {
             mVariantPhaser.registeredPhasedVariants(posPhasedCounters, negPhasedCounters);
+        }
     }
 }

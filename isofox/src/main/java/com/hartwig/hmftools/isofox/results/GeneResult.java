@@ -3,9 +3,9 @@ package com.hartwig.hmftools.isofox.results;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
 import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_SET_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 

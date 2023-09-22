@@ -8,7 +8,6 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.CORE_PARTIAL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.apache.logging.log4j.util.Strings;
@@ -242,7 +241,6 @@ public class IndexedBasesTest
 
         return new ReadContext(refPosition, "", 0, microhomology, readBasesIndexed, incompleteCore);
     }
-
 
     @Test
     public void testCreate()

@@ -26,11 +26,10 @@ import org.junit.Test;
 
 public class PurpleVariantFactoryTest
 {
-
     @Test
     public void testCanCreateVariantFromContext()
     {
-        var otherImpacts = List.of(
+        List<VariantTranscriptImpact> otherImpacts = List.of(
                 new VariantTranscriptImpact(
                         "ENSG00000109265",
                         "CRACD",
@@ -72,7 +71,7 @@ public class PurpleVariantFactoryTest
                 .localPhaseSets(List.of(1, 2, 3))
                 .build();
 
-        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache());
+        PaveAlgo paveAlgo = new PaveAlgo(TestEnsemblDataCacheFactory.createDummyCache(), false);
         PurpleVariant purpleVariant = new PurpleVariantFactory(paveAlgo).fromPurpleVariantContext(context);
 
         assertEquals(PurpleVariantType.INDEL, purpleVariant.type());
@@ -83,7 +82,7 @@ public class PurpleVariantFactoryTest
         assertEquals("T", purpleVariant.alt());
         assertEquals(PurpleCodingEffect.UNDEFINED, purpleVariant.worstCodingEffect());
 
-        var canonicalImpact = purpleVariant.canonicalImpact();
+        PurpleTranscriptImpact canonicalImpact = purpleVariant.canonicalImpact();
         assertEquals("ENST00000504228", canonicalImpact.transcript());
         assertEquals("c.2187C>T", canonicalImpact.hgvsCodingImpact());
         assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
@@ -94,7 +93,7 @@ public class PurpleVariantFactoryTest
 
         List<PurpleTranscriptImpact> purpleOtherImpacts = purpleVariant.otherImpacts();
         assertEquals(1, purpleOtherImpacts.size());
-        var purpleOtherImpact = purpleOtherImpacts.get(0);
+        PurpleTranscriptImpact purpleOtherImpact = purpleOtherImpacts.get(0);
         assertEquals("ENST00000264229", purpleOtherImpact.transcript());
         assertEquals("c.2187C>T", purpleOtherImpact.hgvsCodingImpact());
         assertEquals("p.Ser729=", purpleOtherImpact.hgvsProteinImpact());

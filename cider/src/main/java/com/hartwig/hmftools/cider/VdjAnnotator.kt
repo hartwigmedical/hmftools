@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.VdjAnnotator.Companion.PASS_FILTER
+import com.hartwig.hmftools.cider.blastn.BlastnAnnotation
+import com.hartwig.hmftools.cider.blastn.BlastnStatus
 import com.hartwig.hmftools.cider.primer.VdjPrimerMatch
 import com.hartwig.hmftools.common.utils.IntPair
 import htsjdk.samtools.SAMRecord
@@ -11,8 +12,7 @@ import kotlin.collections.HashMap
 
 // some annotation that we want to print out
 data class VdjAnnotation(val vdj: VDJSequence,
-                         val filters: List<String>,
-                         val matchesRef: Boolean,
+                         val filters: List<Filter>,
                          val vAlignedReads: Int,
                          val jAlignedReads: Int,
                          val vNonSplitReads: Int,
@@ -21,11 +21,37 @@ data class VdjAnnotation(val vdj: VDJSequence,
                          val vSimilarityScore: Int?,
                          val jSimilarityScore: Int?,
                          val vPrimerMatchCount: Int,
-                         val jPrimerMatchCount: Int)
+                         val jPrimerMatchCount: Int,
+                         var blastnAnnotation: BlastnAnnotation? = null)
 {
+    enum class Filter
+    {
+        PASS,
+        MATCHES_REF,
+        NO_V_ANCHOR,
+        NO_J_ANCHOR,
+        POOR_V_ANCHOR,
+        POOR_J_ANCHOR,
+        PARTIAL,
+        NO_VDJ_ALIGNMENT,
+        DUPLICATE,
+        MIN_LENGTH,
+        MAX_LENGTH,
+        CDR3_DELETED,
+        NO_HIGH_QUAL_SUPPORT
+    }
+    
     val passesFilter : Boolean get()
     {
-        return filters.contains(PASS_FILTER)
+        return filters.contains(Filter.PASS)
+    }
+
+    val locus : IgTcrLocus get()
+    {
+        return if (vdj.vAnchor != null)
+            vdj.vAnchor.geneType.locus
+        else
+            vdj.jAnchor!!.geneType.locus
     }
 }
 
@@ -33,7 +59,9 @@ data class VdjAnnotation(val vdj: VDJSequence,
 class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
                    private val blosumSearcher: IAnchorBlosumSearcher)
 {
-    fun sortAndAnnotateVdjs(vdjSequences: List<VDJSequence>, primerMatches: List<VdjPrimerMatch>) : List<VdjAnnotation>
+    fun sortAndAnnotateVdjs(vdjSequences: List<VDJSequence>,
+                            blastnAnnotations: Collection<BlastnAnnotation>,
+                            primerMatches: List<VdjPrimerMatch>) : List<VdjAnnotation>
     {
         val sortedVdj = vdjSequences.sortedWith(
             Collections.reverseOrder(
@@ -72,13 +100,15 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             val vdjWithMoreSupport : VDJSequence? = notDuplicateVdjs[vdj.cdr3Sequence]
             requireNotNull(vdjWithMoreSupport)
             val isDuplicate: Boolean = vdjWithMoreSupport !== vdj
-            vdjAnnotations.add(annotateVdj(vdj, isDuplicate, primerMatches))
+            val blastnAnnotation: BlastnAnnotation? = blastnAnnotations.find { o -> o.vdjSequence === vdj }
+            vdjAnnotations.add(annotateVdj(vdj, isDuplicate, blastnAnnotation, primerMatches))
         }
 
         return vdjAnnotations
     }
 
-    fun annotateVdj(vdj: VDJSequence, isDuplicate: Boolean, primerMatches: List<VdjPrimerMatch>) : VdjAnnotation
+    fun annotateVdj(vdj: VDJSequence, isDuplicate: Boolean, blastnAnnotation: BlastnAnnotation?,
+                    primerMatches: List<VdjPrimerMatch>) : VdjAnnotation
     {
         val vAnchorByReadMatch: VJAnchorByReadMatch? = vdj.vAnchor as? VJAnchorByReadMatch
         val jAnchorByReadMatch: VJAnchorByReadMatch? = vdj.jAnchor as? VJAnchorByReadMatch
@@ -91,7 +121,7 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         val matchesRef: Boolean = vdjMatchesRef(vdj, vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
                                                 vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads)
 
-        val filterReasons = annotateFilterReasons(vdj, isDuplicate, matchesRef, cdr3SupportMin)
+        val filterReasons = annotateFilterReasons(vdj, isDuplicate, matchesRef, cdr3SupportMin, blastnAnnotation)
 
         val vSimilarityScore: Int? = if (vdj.vAnchor != null) calcAnchorSimilarity(vdj, vdj.vAnchor) else null
         val jSimilarityScore: Int? = if (vdj.jAnchor != null) calcAnchorSimilarity(vdj, vdj.jAnchor) else null
@@ -101,12 +131,13 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
         val vPrimerMatchCount = primerMatches.filter({ o -> o.vdj === vdj && o.primer.vj == VJ.V}).size
         val jPrimerMatchCount = primerMatches.filter({ o -> o.vdj === vdj && o.primer.vj == VJ.J}).size
 
-        return VdjAnnotation(vdj, filterReasons, matchesRef = matchesRef,
+        return VdjAnnotation(vdj, filterReasons,
             vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
             vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads,
             cdr3SupportMin = cdr3SupportMin,
             vSimilarityScore = vSimilarityScore, jSimilarityScore = jSimilarityScore,
-            vPrimerMatchCount = vPrimerMatchCount, jPrimerMatchCount = jPrimerMatchCount)
+            vPrimerMatchCount = vPrimerMatchCount, jPrimerMatchCount = jPrimerMatchCount,
+            blastnAnnotation = blastnAnnotation)
     }
 
     fun findAnchorByBlosum(vdj: VDJSequence, vj: VJ) : AnchorBlosumMatch?
@@ -243,12 +274,23 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             (jNonSplitReads + vNonSplitReads) >= maxNonSplitReads)
     }
 
+    fun vdjMatchesRef(vdj: VDJSequence) : Boolean
+    {
+        val vAnchorByReadMatch: VJAnchorByReadMatch? = vdj.vAnchor as? VJAnchorByReadMatch
+        val jAnchorByReadMatch: VJAnchorByReadMatch? = vdj.jAnchor as? VJAnchorByReadMatch
+        val vAlignedReads: Int = vAnchorByReadMatch?.numReads ?: 0
+        val jAlignedReads: Int = jAnchorByReadMatch?.numReads ?: 0
+        val vNonSplitReads: Int = countNonSplitReads(vdj, VJ.V)
+        val jNonSplitReads: Int = countNonSplitReads(vdj, VJ.J)
+        return vdjMatchesRef(vdj, vAlignedReads = vAlignedReads, jAlignedReads = jAlignedReads,
+            vNonSplitReads = vNonSplitReads, jNonSplitReads = jNonSplitReads)
+    }
+
     companion object
     {
         const val CDR3_FILTER_AA_MIN_LENGTH = 5
         const val CDR3_FILTER_AA_MAX_LENGTH = 40
         const val MAX_NONSPLIT_READS = 2
-        const val PASS_FILTER = "PASS"
 
         private val sLogger = LogManager.getLogger(VdjAnnotator::class.java)
 
@@ -264,11 +306,11 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
 
             if (anchor.vj == VJ.V)
             {
-                seq = vdj.vAnchorSequence
+                seq = vdj.vAnchorSequence!!
             }
             else
             {
-                seq = vdj.jAnchorSequence
+                seq = vdj.jAnchorSequence!!
             }
 
             try
@@ -281,54 +323,73 @@ class VdjAnnotator(private val adaptor: IVJReadLayoutAdaptor,
             }
         }
 
-        fun annotateFilterReasons(vdj: VDJSequence, isDuplicate: Boolean, matchesRef: Boolean, cdr3SupportMin: Int): List<String>
+        fun annotateFilterReasons(vdj: VDJSequence, isDuplicate: Boolean, matchesRef: Boolean, cdr3SupportMin: Int,
+                                  blastnAnnotation: BlastnAnnotation?): List<VdjAnnotation.Filter>
         {
-            val filters = ArrayList<String>()
+            val filters = ArrayList<VdjAnnotation.Filter>()
 
-            if (matchesRef)
+            if (matchesRef || blastnAnnotation?.blastnStatus == BlastnStatus.NO_REARRANGEMENT)
             {
-                filters.add("MATCHES_REF")
+                filters.add(VdjAnnotation.Filter.MATCHES_REF)
             }
-            if (vdj.vAnchor == null)
+            if (blastnAnnotation == null)
             {
-                filters.add("NO_V_ANCHOR")
+                // following filters are only applied if we do not use blastn
+                if (vdj.vAnchor == null)
+                {
+                    filters.add(VdjAnnotation.Filter.NO_V_ANCHOR)
+                }
+                if (vdj.jAnchor == null)
+                {
+                    filters.add(VdjAnnotation.Filter.NO_J_ANCHOR)
+                }
+                if ((vdj.vAnchor is VJAnchorByBlosum) && (vdj.vAnchor.similarityScore < 0))
+                {
+                    filters.add(VdjAnnotation.Filter.POOR_V_ANCHOR)
+                }
+                if ((vdj.jAnchor is VJAnchorByBlosum) && (vdj.jAnchor.similarityScore < 0))
+                {
+                    filters.add(VdjAnnotation.Filter.POOR_J_ANCHOR)
+                }
             }
-            if (vdj.jAnchor == null)
+            else
             {
-                filters.add("NO_J_ANCHOR")
-            }
-            if ((vdj.vAnchor is VJAnchorByBlosum) && (vdj.vAnchor.similarityScore < 0))
-            {
-                filters.add("POOR_V_ANCHOR")
-            }
-            if ((vdj.jAnchor is VJAnchorByBlosum) && (vdj.jAnchor.similarityScore < 0))
-            {
-                filters.add("POOR_J_ANCHOR")
+                if (blastnAnnotation.blastnStatus == BlastnStatus.V_D ||
+                    blastnAnnotation.blastnStatus == BlastnStatus.D_J ||
+                    blastnAnnotation.blastnStatus == BlastnStatus.V_ONLY ||
+                    blastnAnnotation.blastnStatus == BlastnStatus.J_ONLY)
+                {
+                    filters.add(VdjAnnotation.Filter.PARTIAL)
+                }
+                else if (blastnAnnotation.blastnStatus == BlastnStatus.NO_VDJ_ALIGNMENT)
+                {
+                    filters.add(VdjAnnotation.Filter.NO_VDJ_ALIGNMENT)
+                }
             }
             if (isDuplicate)
             {
-                filters.add("DUPLICATE")
+                filters.add(VdjAnnotation.Filter.DUPLICATE)
             }
             if (vdj.cdr3Sequence.length < CDR3_FILTER_AA_MIN_LENGTH * 3)
             {
-                filters.add("MIN_LENGTH")
+                filters.add(VdjAnnotation.Filter.MIN_LENGTH)
             }
             if (vdj.cdr3Sequence.length > CDR3_FILTER_AA_MAX_LENGTH * 3)
             {
-                filters.add("MAX_LENGTH")
+                filters.add(VdjAnnotation.Filter.MAX_LENGTH)
             }
             if (vdj.vAnchor != null && vdj.jAnchor != null &&
                 vdj.vAnchorBoundary!! > vdj.jAnchorBoundary!!)
             {
-                filters.add("CDR3_DELETED")
+                filters.add(VdjAnnotation.Filter.CDR3_DELETED)
             }
             if (cdr3SupportMin <= 0)
             {
-                filters.add("NO_HIGH_QUAL_SUPPORT")
+                filters.add(VdjAnnotation.Filter.NO_HIGH_QUAL_SUPPORT)
             }
             if (filters.isEmpty())
             {
-                filters.add(PASS_FILTER)
+                filters.add(VdjAnnotation.Filter.PASS)
             }
             return filters
         }

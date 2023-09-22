@@ -20,7 +20,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class SliceConfig
 {
@@ -36,6 +36,9 @@ public class SliceConfig
 
     public final boolean WriteBam;
     public final boolean WriteReads;
+    public final boolean DropExcluded;
+    public final boolean DropRemoteSupplementaries;
+    public final int MaxRemoteReads;
     public final int Threads;
 
     // debug
@@ -47,6 +50,9 @@ public class SliceConfig
 
     private static final String WRITE_BAM = "write_bam";
     private static final String WRITE_READS = "write_reads";
+    private static final String DROP_EXCLUDED = "drop_excluded";
+    private static final String DROP_REMOTE_SUPPS = "drop_remote_supps";
+    private static final String MAX_REMOTE_READS = "max_remote_reads";
 
     public SliceConfig(final ConfigBuilder configBuilder)
     {
@@ -59,6 +65,9 @@ public class SliceConfig
         OutputId = configBuilder.getValue(OUTPUT_ID);
         WriteReads = configBuilder.hasFlag(WRITE_READS);
         WriteBam = configBuilder.hasFlag(WRITE_BAM) || !WriteReads;
+        DropExcluded = configBuilder.hasFlag(DROP_EXCLUDED);
+        DropRemoteSupplementaries = configBuilder.hasFlag(DROP_REMOTE_SUPPS);
+        MaxRemoteReads = configBuilder.getInteger(MAX_REMOTE_READS);
 
         if(BamFile == null || OutputDir == null || RefGenomeFile == null)
         {
@@ -107,8 +116,11 @@ public class SliceConfig
         addCommonCommandOptions(configBuilder);
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addInteger(MAX_REMOTE_READS, "Max remote reads (perf-only)", 0);
         configBuilder.addFlag(WRITE_BAM, "Write BAM file for sliced region");
         configBuilder.addFlag(WRITE_READS, "Write CSV reads file for sliced region");
+        configBuilder.addFlag(DROP_EXCLUDED, "Ignore remote reads in excluded regions (eg poly-G)");
+        configBuilder.addFlag(DROP_REMOTE_SUPPS, "Ignore remote supplementary reads");
         configBuilder.addFlag(PERF_DEBUG, "Detailed performance tracking and logging");
     }
 }

@@ -8,6 +8,9 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.pave.VariantData;
+
+import org.checkerframework.checker.units.qual.A;
 
 public class RefVariantData
 {
@@ -73,6 +76,11 @@ public class RefVariantData
                 variant.canonicalHgvsCodingImpact(), variant.canonicalHgvsProteinImpact(),
                 variant.microhomology(), variant.repeatSequence(), variant.repeatCount(),
                 localPhaseSet, variant.reported(), variant.isHotspot());
+    }
+
+    public boolean matches(final VariantData variant)
+    {
+        return variant.Chromosome.equals(Chromosome) && variant.Position == Position && variant.Ref.equals(Ref) && variant.Alt.equals(Alt);
     }
 
     public String toString()

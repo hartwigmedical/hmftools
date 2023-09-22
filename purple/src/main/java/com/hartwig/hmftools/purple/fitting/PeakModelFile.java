@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.fitting;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +19,7 @@ public final class PeakModelFile
 
     public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
     public static void write(final String filename, final List<PeakModelData> model) throws IOException

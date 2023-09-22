@@ -7,10 +7,6 @@ import org.jetbrains.annotations.Nullable;
 
 public final class VariantTranscriptImpactCleaner
 {
-    private VariantTranscriptImpactCleaner()
-    {
-    }
-
     /**
      * When VariantTranscriptImpacts are created from the VCF file, it sometimes (incorrectly) parses the square array brackets.
      * These parsed brackets are then included in the impacts fields and here we remove them.
@@ -19,12 +15,12 @@ public final class VariantTranscriptImpactCleaner
     @NotNull
     public static VariantTranscriptImpact cleanFields(@NotNull VariantTranscriptImpact impact)
     {
-        var cleanedGeneId = stripSquareBracketsAndWhiteSpace(impact.GeneId);
-        var cleanedGeneName = stripSquareBracketsAndWhiteSpace(impact.GeneName);
-        var cleanedTranscript = stripSquareBracketsAndWhiteSpace(impact.Transcript);
-        var cleanedHgvsCoding = stripSquareBracketsAndWhiteSpace(impact.HgvsCoding);
-        var cleanedHgvsProtein = stripSquareBracketsAndWhiteSpace(impact.HgvsProtein);
-        var cleanedEffects = stripSquareBracketsAndWhiteSpace(impact.Effects);
+        String cleanedGeneId = stripSquareBracketsAndWhiteSpace(impact.GeneId);
+        String cleanedGeneName = stripSquareBracketsAndWhiteSpace(impact.GeneName);
+        String cleanedTranscript = stripSquareBracketsAndWhiteSpace(impact.Transcript);
+        String cleanedHgvsCoding = stripSquareBracketsAndWhiteSpace(impact.HgvsCoding);
+        String cleanedHgvsProtein = stripSquareBracketsAndWhiteSpace(impact.HgvsProtein);
+        String cleanedEffects = stripSquareBracketsAndWhiteSpace(impact.Effects);
         return new VariantTranscriptImpact(
                 cleanedGeneId,
                 cleanedGeneName,
@@ -36,7 +32,7 @@ public final class VariantTranscriptImpactCleaner
     }
 
     @Nullable
-    private static String stripSquareBracketsAndWhiteSpace(String string)
+    private static String stripSquareBracketsAndWhiteSpace(@Nullable String string)
     {
         if(string == null)
         {

@@ -212,7 +212,7 @@ public class ComparConfig
             CMP_LOGGER.info("restricting comparison to {} driver genes", DriverGenes.size());
         }
 
-        LiftoverCache = new GenomeLiftoverCache(true);
+        LiftoverCache = new GenomeLiftoverCache(true, true);
     }
 
     public boolean runCopyNumberGeneComparer() { return Categories.containsKey(DRIVER) && !Categories.containsKey(GENE_COPY_NUMBER); }

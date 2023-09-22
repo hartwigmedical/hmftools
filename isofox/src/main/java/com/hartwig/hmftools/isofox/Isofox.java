@@ -2,12 +2,14 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_PANEL_THRESHOLD;
+import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
-import static com.hartwig.hmftools.isofox.IsofoxConfig.logVersion;
+import static com.hartwig.hmftools.isofox.IsofoxConstants.APP_NAME;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.PRIORITISED_CHROMOSOMES;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.FUSIONS;
 import static com.hartwig.hmftools.isofox.IsofoxFunction.NEO_EPITOPES;
@@ -16,7 +18,6 @@ import static com.hartwig.hmftools.isofox.TaskType.APPLY_GC_ADJUSTMENT;
 import static com.hartwig.hmftools.isofox.TaskType.TRANSCRIPT_COUNTS;
 import static com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs.setConfigFragmentLengthData;
 import static com.hartwig.hmftools.isofox.adjusts.GcRatioCounts.writeReadGcRatioCounts;
-import static com.hartwig.hmftools.isofox.common.PerformanceTracking.logMemory;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.calcTpmFactors;
 import static com.hartwig.hmftools.isofox.expression.TranscriptExpression.setTranscriptsPerMillion;
 import static com.hartwig.hmftools.isofox.results.SummaryStats.createSummaryStats;
@@ -35,7 +36,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -98,7 +99,7 @@ public class Isofox
 
     public boolean runAnalysis()
     {
-        long startTime = System.currentTimeMillis();
+        long startTimeMs = System.currentTimeMillis();
 
         // all other routines split work by chromosome
         Map<String,List<GeneData>> chrGeneMap = getChromosomeGeneLists();
@@ -127,10 +128,7 @@ public class Isofox
         if(!allocateBamFragments(chrGeneMap))
             return false;
 
-        long timeTakenMs = System.currentTimeMillis() - startTime;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        ISF_LOGGER.info("Isofox complete, mins({})", String.format("%.3f", timeTakeMins));
+        ISF_LOGGER.info("Isofox complete, mins({})", runTimeMinsStr(startTimeMs));
         return true;
     }
 
@@ -153,8 +151,6 @@ public class Isofox
                 mResultsWriter.close();
                 return true;
             }
-
-            logMemory(mConfig, "CalcFragLengths");
         }
 
         final List<ChromosomeTaskExecutor> chrTasks = Lists.newArrayList();
@@ -192,14 +188,10 @@ public class Isofox
         int totalReadsProcessed = chrTasks.stream().mapToInt(x -> x.totalReadCount()).sum();
         ISF_LOGGER.info("read {} total BAM records", totalReadsProcessed);
 
-        logMemory(mConfig, "BamReading");
-
         if(!mConfig.runFusionsOnly())
         {
-            // post processing for summary stats and gene expression data
+            // post-processing for summary stats and gene expression data
             processBamFragments(chrTasks, callableList);
-
-            logMemory(mConfig, "Transcripts");
         }
 
         if(mConfig.runFunction(FUSIONS))
@@ -210,8 +202,6 @@ public class Isofox
             ISF_LOGGER.info("overall chimeric stats: {} inv={}", chimericStats, chimericStats.Inversions);
 
             mFusionTaskManager.close();
-
-            logMemory(mConfig, "Fusions");
         }
 
         final List<PerformanceCounter[]> perfCounters = chrTasks.stream().map(x -> x.getPerfCounters()).collect(Collectors.toList());
@@ -297,9 +287,13 @@ public class Isofox
         {
             double medianGCRatio = nonEnrichedGcRatioCounts.getPercentileRatio(0.5);
 
+            int lowCoverageThreshold = !mConfig.Filters.RestrictedGeneIds.isEmpty() && !mConfig.PanelTpmNormFile.isEmpty()
+                    ? LOW_COVERAGE_PANEL_THRESHOLD : LOW_COVERAGE_THRESHOLD;
+
             final RnaStatistics summaryStats = createSummaryStats(
                     totalFragmentCounts, enrichedGeneFragCount, spliceGeneCount,
-                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength);
+                    medianGCRatio, mFragmentLengthDistribution, mMaxObservedReadLength > 0 ? mMaxObservedReadLength : mConfig.ReadLength,
+                    lowCoverageThreshold);
 
             mResultsWriter.writeSummaryStats(summaryStats);
         }
@@ -328,21 +322,21 @@ public class Isofox
 
     private Map<String,List<GeneData>> getChromosomeGeneLists()
     {
-        if(mConfig.Filters.SpecificRegions.isEmpty() && mConfig.Filters.SpecificChromosomes.isEmpty())
+        if(!mConfig.Filters.SpecificChrRegions.hasFilters())
             return mGeneTransCache.getChrGeneDataMap();
 
         final Map<String,List<GeneData>> chrGeneMap = Maps.newHashMap();
 
-        if(mConfig.Filters.SpecificRegions.isEmpty())
+        if(mConfig.Filters.SpecificChrRegions.Regions.isEmpty())
         {
             mGeneTransCache.getChrGeneDataMap().entrySet().stream()
-                    .filter(x -> mConfig.Filters.SpecificChromosomes.contains(x.getKey()))
+                    .filter(x -> mConfig.Filters.SpecificChrRegions.includeChromosome(x.getKey()))
                     .filter(x -> !x.getValue().isEmpty())
                     .forEach(x -> chrGeneMap.put(x.getKey(), x.getValue()));
         }
         else
         {
-            for(final ChrBaseRegion region : mConfig.Filters.SpecificRegions)
+            for(ChrBaseRegion region : mConfig.Filters.SpecificChrRegions.Regions)
             {
                 List<GeneData> geneDataList = mGeneTransCache.getChrGeneDataMap().get(region.Chromosome);
 
@@ -424,17 +418,10 @@ public class Isofox
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         IsofoxConfig.registerConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
-        logVersion();
+        configBuilder.checkAndParseCommandLine(args);
 
         IsofoxConfig config = new IsofoxConfig(configBuilder);
 

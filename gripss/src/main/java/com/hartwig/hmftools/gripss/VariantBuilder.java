@@ -3,6 +3,7 @@ package com.hartwig.hmftools.gripss;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
@@ -57,6 +58,9 @@ public class VariantBuilder
 
     public SvData checkCreateVariant(final VariantContext variant, final GenotypeIds genotypeIds)
     {
+        if(!HumanChromosome.contains(variant.getContig()))
+            return null;
+
         // each SV breakend can be a) not hard-filtered, b) hard-filtered but a hotspot candidate or c) neither
         // and if it's not a single then these 3 scenarios need to be considered together for the pair of breakends
         // if either are hard-filtered and not hotspot candidates, then drop them both

@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
-import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.IntUnaryOperator;
@@ -15,8 +14,6 @@ import com.hartwig.hmftools.common.purple.CopyNumberMethod;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
-
-import org.jetbrains.annotations.NotNull;
 
 public class ExtendDiploid
 {
@@ -42,9 +39,9 @@ public class ExtendDiploid
 
     private final int mMinTumorCount;
     private final int mCentromereMinTumorCount;
-    private final CopyNumberTolerance mTolerance;
+    private final AlleleTolerance mTolerance;
 
-    public ExtendDiploid(final CopyNumberTolerance tolerance, final int minTumorCount, final int minTumorCountAtCentromere)
+    public ExtendDiploid(final AlleleTolerance tolerance, final int minTumorCount, final int minTumorCountAtCentromere)
     {
         mMinTumorCount = minTumorCount;
         mCentromereMinTumorCount = minTumorCountAtCentromere;
@@ -68,11 +65,11 @@ public class ExtendDiploid
             final CombinedRegion highestConfidence = regions.get(highestConfidenceIndex);
             highestConfidence.setCopyNumberMethod(CopyNumberMethod.BAF_WEIGHTED);
 
-            PPL_LOGGER.trace("selected region {}", toString(highestConfidence.region()));
+            //PPL_LOGGER.trace("selected region {}", toString(highestConfidence.region()));
             extendRight(regions, highestConfidenceIndex);
             extendLeft(regions, highestConfidenceIndex);
 
-            PPL_LOGGER.trace("completed region {}", toString(highestConfidence.region()));
+            //PPL_LOGGER.trace("completed region {}", toString(highestConfidence.region()));
             highestConfidenceIndex = nextIndex(regions);
         }
 
@@ -115,7 +112,7 @@ public class ExtendDiploid
         final CombinedRegion target = regions.get(targetIndex);
         final ObservedRegion neighbour = regions.get(direction.moveIndex(targetIndex)).region();
 
-        if(Extend.doNotExtend(target, neighbour))
+        if(ExtendUtils.doNotExtend(target, neighbour))
             return false;
 
         int minTumorCount = nextBigBreakIsCentromereOrTelomere(regions, direction, targetIndex) ? mCentromereMinTumorCount : mMinTumorCount;

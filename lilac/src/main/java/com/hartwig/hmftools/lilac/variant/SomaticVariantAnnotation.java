@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.lilac.variant;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 
 import com.google.common.collect.Lists;
@@ -15,7 +15,6 @@ import com.hartwig.hmftools.lilac.LilacConstants;
 import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
-import com.hartwig.hmftools.lilac.read.BamReader;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 
 import static com.hartwig.hmftools.lilac.seq.HlaSequence.WILD_STR;
@@ -86,10 +85,8 @@ public class SomaticVariantAnnotation
     public List<SomaticVariant> getSomaticVariants() { return mSomaticVariants; }
 
     public final List<AlleleCoverage> assignAlleleCoverage(
-            final SomaticVariant variant, final BamReader reader, final List<HlaSequenceLoci> winners)
+            final SomaticVariant variant, final List<Fragment> fragments, final List<HlaSequenceLoci> winners)
     {
-        List<Fragment> fragments = reader.readFromBam(variant);
-
         List<AlleleCoverage> coverages = Lists.newArrayList();
 
         if(fragments.isEmpty())

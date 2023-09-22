@@ -15,19 +15,21 @@ import com.itextpdf.layout.property.TextAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Footer {
-
+public class Footer
+{
     private final List<FooterTemplate> footerTemplates = Lists.newArrayList();
     @NotNull
     private final ReportResources reportResources;
     private final boolean addDisclaimer;
 
-    public Footer(@NotNull ReportResources reportResources, boolean addDisclaimer) {
+    public Footer(@NotNull ReportResources reportResources, boolean addDisclaimer)
+    {
         this.reportResources = reportResources;
         this.addDisclaimer = addDisclaimer;
     }
 
-    public void renderFooter(@NotNull PdfPage page) {
+    public void renderFooter(@NotNull PdfPage page)
+    {
         PdfCanvas canvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
 
         int pageNumber = page.getDocument().getPageNumber(page);
@@ -38,34 +40,40 @@ public class Footer {
         canvas.release();
     }
 
-    public void writeFooters(@NotNull PdfDocument document) {
+    public void writeFooters(@NotNull PdfDocument document)
+    {
         int totalPageCount = document.getNumberOfPages();
-        for (FooterTemplate tpl : footerTemplates) {
+        for(FooterTemplate tpl : footerTemplates)
+        {
             tpl.renderFooter(totalPageCount, document, reportResources);
         }
     }
 
-    private static class FooterTemplate {
+    private static class FooterTemplate
+    {
 
         private final int pageNumber;
         @NotNull
         private final PdfFormXObject template;
         private final boolean addDisclaimer;
 
-        FooterTemplate(int pageNumber, @NotNull PdfFormXObject template, boolean addDisclaimer) {
+        FooterTemplate(int pageNumber, @NotNull PdfFormXObject template, boolean addDisclaimer)
+        {
             this.pageNumber = pageNumber;
             this.template = template;
             this.addDisclaimer = addDisclaimer;
         }
 
-        void renderFooter(int totalPageCount, @NotNull PdfDocument document, @NotNull ReportResources reportResources) {
+        void renderFooter(int totalPageCount, @NotNull PdfDocument document, @NotNull ReportResources reportResources)
+        {
             String displayString = pageNumber + "/" + totalPageCount;
 
             Canvas canvas = new Canvas(template, document);
             Paragraph pageNumberParagraph = new Paragraph().add(displayString).addStyle(reportResources.pageNumberStyle());
             canvas.showTextAligned(pageNumberParagraph, 0, 0, TextAlignment.LEFT);
 
-            if (addDisclaimer) {
+            if(addDisclaimer)
+            {
                 String disclaimer = "All results and data described in this report are for research use only and have not "
                         + "been generated using a clinically validated and controlled procedure.";
                 Paragraph disclaimerParagraph = new Paragraph(disclaimer).setMaxWidth(400).addStyle(reportResources.deemphasizedStyle());

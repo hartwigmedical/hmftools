@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.quality;
 
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.sage.SageCommon.generateBqrFilename;
-import static com.hartwig.hmftools.sage.ReferenceData.loadBedFile;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.ArrayList;
@@ -20,8 +20,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 
@@ -210,13 +210,13 @@ public class BaseQualityRecalibration
         int taskId = 1;
 
         // form regions from 2MB per chromosome and additionally include the coding panel
-        Map<Chromosome,List<BaseRegion>> panelBed = !mPanelBedFile.isEmpty() ? loadBedFile(mPanelBedFile) : null;
+        Map<Chromosome,List<BaseRegion>> panelBed = !mPanelBedFile.isEmpty() ? loadBedFileChrMap(mPanelBedFile) : null;
 
         for(final SAMSequenceRecord sequenceRecord : mRefGenome.getSequenceDictionary().getSequences())
         {
             final String chromosome = sequenceRecord.getSequenceName();
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosome))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosome))
                 continue;
 
             if(!HumanChromosome.contains(chromosome) || !HumanChromosome.fromString(chromosome).isAutosome())

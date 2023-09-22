@@ -19,13 +19,14 @@ import com.hartwig.hmftools.orange.algo.pave.TestEnsemblDataCacheFactory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class GermlineGainLossFactoryTest {
-
+public class GermlineGainLossFactoryTest
+{
     private static final String TEST_GENE = "gene";
     private static final double EPSILON = 1.0E-2;
 
     @Test
-    public void canFilterHetDeletion() {
+    public void canFilterHetDeletion()
+    {
         GermlineGainLossFactory factory = createTestFactory();
 
         GermlineDeletion reportableHet = GermlineDeletionTestFactory.create(TEST_GENE, true, GermlineStatus.HET_DELETION);
@@ -33,7 +34,8 @@ public class GermlineGainLossFactoryTest {
     }
 
     @Test
-    public void canTransformHomDeletionToPartial() {
+    public void canTransformHomDeletionToPartial()
+    {
         GermlineGainLossFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
@@ -53,7 +55,8 @@ public class GermlineGainLossFactoryTest {
     }
 
     @Test
-    public void canTransformHomDeletionToFull() {
+    public void canTransformHomDeletionToFull()
+    {
         GermlineGainLossFactory factory = createTestFactory();
 
         // Gene runs from 150 to 950
@@ -73,7 +76,8 @@ public class GermlineGainLossFactoryTest {
     }
 
     @NotNull
-    private static GermlineGainLossFactory createTestFactory() {
+    private static GermlineGainLossFactory createTestFactory()
+    {
         EnsemblDataCache ensemblDataCache = TestEnsemblDataCacheFactory.loadTestCache();
         return new GermlineGainLossFactory(ensemblDataCache);
     }

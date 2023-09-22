@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.formRange;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.calcAminoAcidIndices;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.lilac.read.ReadRecord;
 
 import org.junit.Test;
 
@@ -40,12 +42,13 @@ public class FragmentsTest
     public void testFragmentMerge()
     {
         String readId = "01";
+        ReadRecord readRecord = createReadRecord(readId);
         Fragment frag1 = new Fragment(
-                readId, "", GENE_A, Sets.newHashSet(GENE_A),
+                readRecord, GENE_A, Sets.newHashSet(GENE_A),
                 Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
 
         Fragment frag2 = new Fragment(
-                readId, "", GENE_B, Sets.newHashSet(GENE_B),
+                readRecord, GENE_B, Sets.newHashSet(GENE_B),
                 Lists.newArrayList(1), Lists.newArrayList(30), Lists.newArrayList("A"));
 
         Fragment mergedFrag = mergeFragments(frag1, frag2);
@@ -57,7 +60,7 @@ public class FragmentsTest
         assertEquals(1, mergedFrag.getNucleotides().size());
 
         frag2 = new Fragment(
-                readId, "", GENE_A, Sets.newHashSet(GENE_A),
+                readRecord, GENE_A, Sets.newHashSet(GENE_A),
                 Lists.newArrayList(0, 1, 2, 3),
                 Lists.newArrayList(30, 30, 30, 30),
                 Lists.newArrayList("A", "A", "A", "A"));
@@ -72,7 +75,7 @@ public class FragmentsTest
         assertEquals(4, mergedFrag.getNucleotides().size());
 
         frag2 = new Fragment(
-                readId, "", GENE_C, Sets.newHashSet(GENE_C),
+                readRecord, GENE_C, Sets.newHashSet(GENE_C),
                 Lists.newArrayList(3, 4, 5),
                 Lists.newArrayList(30, 30, 30),
                 Lists.newArrayList("A", "A", "A"));

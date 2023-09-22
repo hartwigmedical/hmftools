@@ -763,9 +763,16 @@ public class FusionDisruptionAnalyser
             // limit to known fusion genes
             final List<BreakendGeneData> genesList = var.getGenesList(false);
 
+            // take the genes if any are in an IG region
+            if(var.getSglMappings().stream().anyMatch(x -> mFusionFinder.getKnownFusionCache().withinIgRegion(x.Chromosome, x.Position)))
+                return genesList;
+
+            // otherwise check known pairs (including IG pair 3' genes)
             return genesList.stream()
                     .filter(x -> mFusionFinder.getKnownFusionCache().isSingleBreakendCandidate(x.geneName(), x.isUpstream()))
                     .collect(Collectors.toList());
+
+            // mFusionFinder.getKnownFusionCache().withinIgRegion(var.chromosome(false), var.position(false))
         }
 
         return var.getGenesList(isStart);

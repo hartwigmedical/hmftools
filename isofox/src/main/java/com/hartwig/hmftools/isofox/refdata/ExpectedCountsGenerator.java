@@ -3,8 +3,8 @@ package com.hartwig.hmftools.isofox.refdata;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.FragmentAllocator.calcFragmentLength;
@@ -51,9 +51,6 @@ public class ExpectedCountsGenerator
     private int mReadLength;
 
     private final BufferedWriter mExpRateWriter;
-
-    public static final int FL_LENGTH = 0;
-    public static final int FL_FREQUENCY = 1;
 
     public ExpectedCountsGenerator(final RefDataConfig config, final RefDataWriter resultsWriter)
     {

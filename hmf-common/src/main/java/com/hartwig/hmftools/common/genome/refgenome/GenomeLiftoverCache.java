@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.genome.refgenome;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.LOGGER;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -12,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 public class GenomeLiftoverCache
 {
     private final Map<String,List<CoordMapping>> mMappings;
+    private final boolean mMaps37to38;
 
     public static final String LIFTOVER_MAPPING_FILE = "liftover_mapping";
     public static final String LIFTOVER_MAPPING_FILE_DESC = "Liftover mapping file";
@@ -32,11 +33,12 @@ public class GenomeLiftoverCache
 
     private static final String NEG_ORIENT = "-";
 
-    public GenomeLiftoverCache() { this(false); }
+    public GenomeLiftoverCache() { this(false, true); }
 
-    public GenomeLiftoverCache(boolean loadDefaultMappings)
+    public GenomeLiftoverCache(boolean loadDefaultMappings, boolean maps37to38)
     {
         mMappings = Maps.newHashMap();
+        mMaps37to38 = maps37to38;
 
         if(loadDefaultMappings)
             loadDefaultResource();
@@ -46,21 +48,40 @@ public class GenomeLiftoverCache
 
     public List<CoordMapping> getChromosomeMappings(final String chromosome) { return mMappings.get(chromosome); }
 
-    public int convertPositionv37(final String chromosome, final int position) { return convertPosition(chromosome, position, V37); }
-    public int convertPositionv38(final String chromosome, final int position)
+    public int convertPosition(final String chromosome, final int position) { return convertPositionTo38(chromosome, position); }
+
+    public int convertPosition(final String chromosome, final int position, final RefGenomeVersion destinationVersion)
     {
-        return convertPosition(stripChrPrefix(chromosome), position, V38);
+        return destinationVersion == V38 ? convertPositionTo38(chromosome, position) : convertPositionTo37(chromosome, position);
     }
 
-    public int convertPosition(final String chromosome, final int position) { return convertPosition(chromosome, position, V37); }
+    public int convertPositionTo37(final String chromosome, final int position)
+    {
+        List<CoordMapping> mappings = mMappings.get(stripChrPrefix(chromosome));
 
-    public int convertPosition(final String chromosome, final int position, final RefGenomeVersion refGenomeVersion)
+        if(mappings == null || mappings.isEmpty())
+            return position;
+
+        for(CoordMapping mapping : mappings)
+        {
+            if(mapping.DestEnd < position)
+                continue;
+
+            if(mapping.DestStart > position && !mMaps37to38) // can exit if sorted
+                return UNMAPPED_POSITION;
+
+            return mapping.reversePosition(position);
+        }
+
+        return UNMAPPED_POSITION;
+    }
+
+    public int convertPositionTo38(final String chromosome, final int position)
     {
         List<CoordMapping> mappings = mMappings.get(chromosome);
 
         if(mappings == null || mappings.isEmpty())
             return position;
-
 
         for(CoordMapping mapping : mappings)
         {
@@ -147,6 +168,15 @@ public class GenomeLiftoverCache
                     Integer.parseInt(values[fieldsIndexMap.get("Start38")]) + 1,
                     Integer.parseInt(values[fieldsIndexMap.get("End38")]),
                     isReverse));
+        }
+
+        if(!mMaps37to38)
+        {
+            // sort each chromosome's mappings by the end/destination region
+            for(List<CoordMapping> mappings : mMappings.values())
+            {
+                Collections.sort(mappings, new CoordMapping.CoordComparatorOnDestination());
+            }
         }
 
         return true;

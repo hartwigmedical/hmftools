@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.common.amber;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.*;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,31 +22,26 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class AmberBAFFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
 
-    private static final String DELIMITER = "\t";
     private static final String AMBER_EXTENSION = ".amber.baf.tsv.gz";
     private static final String AMBER_EXTENSION_OLD = ".amber.baf.tsv";
 
-    @NotNull
     public static String generateAmberFilenameForWriting(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + AMBER_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION;
     }
 
-    @NotNull
     public static String generateAmberFilenameForReading(final String basePath, final String sample)
     {
-        String filename = basePath + File.separator + sample + AMBER_EXTENSION;
+        String filename = checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION;
 
         if(Files.exists(Paths.get(filename)))
             return filename;
 
-        return basePath + File.separator + sample + AMBER_EXTENSION_OLD;
+        return checkAddDirSeparator(basePath) + sample + AMBER_EXTENSION_OLD;
     }
 
     private static final String CHROMOSOME = "chromosome";
@@ -58,7 +53,6 @@ public final class AmberBAFFile
     private static final String NORM_MOD_BAF = "normalModifiedBAF";
     private static final String NORM_DEPTH = "normalDepth";
 
-    @NotNull
     public static Multimap<Chromosome,AmberBAF> read(final String fileName, boolean hasTumor) throws IOException
     {
         ListMultimap<Chromosome,AmberBAF> chrBafMap = ArrayListMultimap.create();
@@ -66,7 +60,7 @@ public final class AmberBAFFile
         try(BufferedReader reader = fileName.endsWith(".gz") ? createGzipBufferedReader(fileName) : createBufferedReader(fileName))
         {
             String line = reader.readLine();
-            Map<String, Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(line, DELIMITER);
+            Map<String, Integer> fieldsIndexMap = FileReaderUtils.createFieldsIndexMap(line, TSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get(CHROMOSOME);
             int posIndex = fieldsIndexMap.get(POSITION);
@@ -77,7 +71,7 @@ public final class AmberBAFFile
 
             while((line = reader.readLine()) != null)
             {
-                String[] values = line.split(DELIMITER, -1);
+                String[] values = line.split(TSV_DELIM, -1);
 
                 String chromosome = values[chrIndex];
 
@@ -120,7 +114,7 @@ public final class AmberBAFFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add(CHROMOSOME)
                 .add(POSITION)
                 .add(TUMOR_BAF)
@@ -134,7 +128,7 @@ public final class AmberBAFFile
 
     private static String toString(final AmberBAF baf)
     {
-        return new StringJoiner(DELIMITER).add(baf.chromosome())
+        return new StringJoiner(TSV_DELIM).add(baf.chromosome())
                 .add(String.valueOf(baf.position()))
                 .add(FORMAT.format(baf.tumorBAF()))
                 .add(FORMAT.format(baf.tumorModifiedBAF()))

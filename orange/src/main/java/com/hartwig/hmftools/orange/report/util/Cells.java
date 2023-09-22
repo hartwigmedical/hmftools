@@ -13,17 +13,19 @@ import com.itextpdf.layout.property.VerticalAlignment;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Cells {
-
+public class Cells
+{
     @NotNull
     private final ReportResources reportResources;
 
-    public Cells(@NotNull ReportResources reportResources) {
+    public Cells(@NotNull ReportResources reportResources)
+    {
         this.reportResources = reportResources;
     }
 
     @NotNull
-    public Cell createHeader(@NotNull String text) {
+    public Cell createHeader(@NotNull String text)
+    {
         Cell cell = new Cell(1, 1);
         cell.setHeight(23); // Set fixed height to create consistent spacing between table title and header
         cell.setBorder(Border.NO_BORDER);
@@ -34,7 +36,8 @@ public class Cells {
     }
 
     @NotNull
-    public Cell createSpanningEntry(@NotNull Table table, @NotNull String text) {
+    public Cell createSpanningEntry(@NotNull Table table, @NotNull String text)
+    {
         Cell cell = new Cell(1, table.getNumberOfColumns());
         cell.add(new Paragraph(text));
         cell.setBorder(Border.NO_BORDER);
@@ -44,7 +47,8 @@ public class Cells {
     }
 
     @NotNull
-    public Cell createUrl(@NotNull String text, @NotNull String url) {
+    public Cell createUrl(@NotNull String text, @NotNull String url)
+    {
         Cell cell = createBorderlessBase();
         cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
         cell.addStyle(reportResources.urlStyle());
@@ -54,12 +58,14 @@ public class Cells {
     }
 
     @NotNull
-    public Cell createContent(@NotNull String text) {
+    public Cell createContent(@NotNull String text)
+    {
         return createContent(new Paragraph(text));
     }
 
     @NotNull
-    public Cell createContent(@NotNull IBlockElement element) {
+    public Cell createContent(@NotNull IBlockElement element)
+    {
         Cell cell = createBorderlessBase();
         cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
         cell.addStyle(reportResources.tableContentStyle());
@@ -68,7 +74,8 @@ public class Cells {
     }
 
     @NotNull
-    public Cell createImage(@NotNull Image image) {
+    public Cell createImage(@NotNull Image image)
+    {
         Cell cell = createBorderlessBase();
         cell.setBorderBottom(new SolidBorder(ReportResources.PALETTE_MID_GREY, 0.25F));
         cell.addStyle(reportResources.tableContentStyle());
@@ -77,7 +84,8 @@ public class Cells {
     }
 
     @NotNull
-    public Cell createKey(@NotNull String text) {
+    public Cell createKey(@NotNull String text)
+    {
         Cell cell = createBorderlessBase();
         cell.addStyle(reportResources.keyStyle());
         cell.add(new Paragraph(text));
@@ -85,12 +93,14 @@ public class Cells {
     }
 
     @NotNull
-    public Cell createValue(@NotNull String text) {
+    public Cell createValue(@NotNull String text)
+    {
         return createValue(new Paragraph(text));
     }
 
     @NotNull
-    public Cell createValue(@NotNull IBlockElement element) {
+    public Cell createValue(@NotNull IBlockElement element)
+    {
         Cell cell = createBorderlessBase();
         cell.addStyle(reportResources.valueStyle());
         cell.add(element);
@@ -98,7 +108,8 @@ public class Cells {
     }
 
     @NotNull
-    private static Cell createBorderlessBase() {
+    private static Cell createBorderlessBase()
+    {
         Cell cell = new Cell();
         cell.setBorder(Border.NO_BORDER);
         return cell;

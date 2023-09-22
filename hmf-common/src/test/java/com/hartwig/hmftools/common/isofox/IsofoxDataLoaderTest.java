@@ -8,7 +8,8 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class IsofoxDataLoaderTest {
+public class IsofoxDataLoaderTest
+{
 
     private static final String ISOFOX_DATA_DIR = Resources.getResource("isofox").getPath();
 
@@ -21,7 +22,8 @@ public class IsofoxDataLoaderTest {
     private static final String ISOFOX_ALT_SPLICE_JUNCTION_CSV = ISOFOX_DATA_DIR + "/sample.alt_splice_junc.csv";
 
     @Test
-    public void canLoadIsofoxData() throws IOException {
+    public void canLoadIsofoxData() throws IOException
+    {
         IsofoxData isofox = IsofoxDataLoader.load("Stomach",
                 ISOFOX_GENE_DISTRIBUTION_CSV,
                 ISOFOX_ALT_SJ_COHORT_CSV,

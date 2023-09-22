@@ -102,10 +102,9 @@ public final class CigarUtils
     public static String leftSoftClipBases(@NotNull final SAMRecord record)
     {
         int leftClip = leftSoftClipLength(record);
-        if (leftClip == 0)
-        {
+        if(leftClip == 0)
             return null;
-        }
+
         return record.getReadString().substring(0, leftClip);
     }
 
@@ -113,10 +112,9 @@ public final class CigarUtils
     public static String rightSoftClipBases(@NotNull final SAMRecord record)
     {
         int rightClip = rightSoftClipLength(record);
-        if (rightClip == 0)
-        {
+        if(rightClip == 0)
             return null;
-        }
+
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
 }

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.RecordWriter;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
@@ -560,23 +560,6 @@ public class PartitionData
         }
     }
 
-    public void clear()
-    {
-        try
-        {
-            acquireLock();
-
-            mFragmentStatus.clear();
-            mIncompleteFragments.clear();
-            mCandidateDuplicatesMap.clear();
-            mDuplicateGroupMap.clear();
-        }
-        finally
-        {
-            mLock.unlock();
-        }
-    }
-
     private void acquireLock()
     {
         if(!mPerfChecks)
@@ -618,5 +601,14 @@ public class PartitionData
     public void processPrimaryFragments(final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList)
     {
         processPrimaryFragments(resolvedFragments, candidateDuplicatesList, Collections.EMPTY_LIST);
+    }
+
+    @VisibleForTesting
+    public void clearState()
+    {
+        mFragmentStatus.clear();
+        mIncompleteFragments.clear();
+        mCandidateDuplicatesMap.clear();
+        mDuplicateGroupMap.clear();
     }
 }

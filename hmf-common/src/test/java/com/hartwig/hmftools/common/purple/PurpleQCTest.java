@@ -128,6 +128,7 @@ public class PurpleQCTest
                 .cobaltGender(Gender.MALE)
                 .deletedGenes(0)
                 .method(FittedPurityMethod.NORMAL)
-                .amberMeanDepth(91);
+                .amberMeanDepth(91)
+                .lohPercent(0);
     }
 }

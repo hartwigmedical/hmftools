@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.bamtools.slice;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
 import java.io.File;
 import java.util.List;
@@ -13,7 +13,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bamtools.common.ReadGroup;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -73,9 +73,6 @@ public class RegionBamSlicer implements Callable
 
         ++mReadsProcessed;
 
-        if(mReadsProcessed > 0 && (mReadsProcessed % 1_000_000) == 0)
-            System.gc();
-
         ReadGroup readGroup = mReadGroupMap.get(read.getReadName());
 
         if(readGroup != null)
@@ -104,7 +101,6 @@ public class RegionBamSlicer implements Callable
             return;
         }
 
-
         List<RemotePosition> otherReadPositions = getOtherReadPositions(read);
 
         if(hasLocalRegionMatch(otherReadPositions))
@@ -123,7 +119,7 @@ public class RegionBamSlicer implements Callable
         return readPositions.stream().anyMatch(x -> mRegion.containsPosition(x.Chromosome, x.Position));
     }
 
-    private static List<RemotePosition> getOutstandingReadPositions(final ReadGroup readGroup)
+    private List<RemotePosition> getOutstandingReadPositions(final ReadGroup readGroup)
     {
         List<RemotePosition> positions = Lists.newArrayList();
 
@@ -144,7 +140,7 @@ public class RegionBamSlicer implements Callable
         return positions;
     }
 
-    private static List<RemotePosition> getOtherReadPositions(final SAMRecord read)
+    private List<RemotePosition> getOtherReadPositions(final SAMRecord read)
     {
         List<RemotePosition> positions = org.apache.commons.compress.utils.Lists.newArrayList();
 
@@ -152,6 +148,9 @@ public class RegionBamSlicer implements Callable
         {
             positions.add(new RemotePosition(read.getReadName(), read.getMateReferenceName(), read.getMateAlignmentStart()));
         }
+
+        if(!read.getSupplementaryAlignmentFlag() && mConfig.DropRemoteSupplementaries)
+            return positions;
 
         SupplementaryReadData suppData = SupplementaryReadData.from(read);
 

@@ -43,7 +43,7 @@ public class VariantFilters
 
     public boolean passesHardFilters(final ReadContextCounter readCounter)
     {
-        if(readCounter.Tier.equals(VariantTier.HOTSPOT))
+        if(readCounter.tier().equals(VariantTier.HOTSPOT))
             return true;
 
         if(readCounter.rawAltBaseQuality() < mConfig.HardMinTumorRawBaseQuality)

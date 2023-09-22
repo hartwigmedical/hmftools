@@ -15,14 +15,14 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class GermlineVariantTable {
-
-    private GermlineVariantTable() {
-    }
-
+public final class GermlineVariantTable
+{
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<VariantEntry> variants, @NotNull ReportResources reportResources) {
-        if (variants.isEmpty()) {
+    public static Table build(@NotNull String title, float width, @NotNull List<VariantEntry> variants,
+            @NotNull ReportResources reportResources)
+    {
+        if(variants.isEmpty())
+        {
             return new Tables(reportResources).createEmpty(title, width);
         }
 
@@ -33,7 +33,8 @@ public final class GermlineVariantTable {
                         cells.createHeader("RNA Depth"), cells.createHeader("Biallelic"), cells.createHeader("Hotspot"),
                         cells.createHeader("Genotype") });
 
-        for (VariantEntry variant : Variants.sort(variants)) {
+        for(VariantEntry variant : Variants.sort(variants))
+        {
             table.addCell(cells.createContent(Variants.variantField(variant)));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.variantCopyNumber())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(variant.totalCopyNumber())));
@@ -47,13 +48,17 @@ public final class GermlineVariantTable {
         return new Tables(reportResources).createWrapping(table, title);
     }
 
-    private static String simplifiedDisplay(PurpleGenotypeStatus genotypeStatus) {
-        switch (genotypeStatus) {
+    private static String simplifiedDisplay(PurpleGenotypeStatus genotypeStatus)
+    {
+        switch(genotypeStatus)
+        {
             case HOM_REF:
             case HOM_ALT:
                 return "HOM";
-            case HET: return "HET";
-            case UNKNOWN: return "UNKNOWN";
+            case HET:
+                return "HET";
+            case UNKNOWN:
+                return "UNKNOWN";
         }
         throw new IllegalStateException();
     }

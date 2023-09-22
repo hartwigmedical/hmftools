@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isInframe;
@@ -16,7 +15,6 @@ import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DEL;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DUP;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_INS;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_UNKNOWN;
-import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.util.List;
 import java.util.Map;
@@ -84,6 +82,10 @@ public final class HgvsProtein
             else if(topEffect != FRAMESHIFT)
             {
                 hgvs += HGVS_STOP_GAINED;
+            }
+            else if(hgvs.endsWith(HGVS_FRAMESHIFT))
+            {
+                hgvs = hgvs.substring(0, hgvs.length() - HGVS_FRAMESHIFT.length()) + HGVS_STOP_GAINED;
             }
         }
 

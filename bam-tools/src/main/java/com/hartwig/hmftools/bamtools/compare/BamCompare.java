@@ -3,10 +3,10 @@ package com.hartwig.hmftools.bamtools.compare;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.bamtools.common.PartitionTask.partitionChromosome;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +17,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,10 +42,11 @@ public class BamCompare
         {
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
-            allRegions.addAll(partitionChromosome(chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificRegions, mConfig.PartitionSize));
+            allRegions.addAll(partitionChromosome(
+                    chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize));
         }
 
         ReadWriter readWriter = new ReadWriter(mConfig);
@@ -64,11 +64,14 @@ public class BamCompare
             partitions.add(new PartitionTask(allRegions.get(i), taskId++));
         }
 
+        List<PartitionThread> partitionTasks = Lists.newArrayList();
         List<Thread> workers = new ArrayList<>();
 
         for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
         {
-            workers.add(new PartitionThread(mConfig, partitions, readWriter));
+            PartitionThread partitionThread = new PartitionThread(mConfig, partitions, readWriter);
+            partitionTasks.add(partitionThread);
+            workers.add(partitionThread);
         }
 
         for(Thread worker : workers)
@@ -84,29 +87,23 @@ public class BamCompare
             }
         }
 
+        Statistics combinedStats = new Statistics();
+        partitionTasks.forEach(x -> combinedStats.merge(x.stats()));
+
         readWriter.close();
 
-        long timeTakenMs = System.currentTimeMillis() - startTimeMs;
-        double timeTakeMins = timeTakenMs / 60000.0;
+        BT_LOGGER.info("summary: reads(ref={} new={}) diffs({})",
+                combinedStats.RefReadCount, combinedStats.NewReadCount, combinedStats.DiffCount);
 
-        BT_LOGGER.info("BamCompare complete, mins({})", format("%.3f", timeTakeMins));
+        BT_LOGGER.info("BamCompare complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     public static void main(@NotNull final String[] args)
     {
-        final VersionInfo version = new VersionInfo("bam-tools.version");
-        BT_LOGGER.info("BamTools version: {}", version.version());
-
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         CompareConfig.addConfig(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         BamCompare bamCompare = new BamCompare(configBuilder);
         bamCompare.run();

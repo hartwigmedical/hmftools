@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
+import com.hartwig.hmftools.sigs.common.CommonUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -37,7 +38,7 @@ public class DataLoaderConfig
 
     public DataLoaderConfig(final CommandLine cmd)
     {
-        OutputDir = parseOutputDir(cmd);
+        OutputDir = CommonUtils.parseOutputDir(cmd);
         OutputFileId = cmd.getOptionValue(OUTPUT_FILE_ID);
 
         ApplySampleQC = cmd.hasOption(APPLY_SAMPLE_QC);

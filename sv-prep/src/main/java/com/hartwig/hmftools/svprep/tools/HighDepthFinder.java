@@ -2,12 +2,10 @@ package com.hartwig.hmftools.svprep.tools;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvPrepApplication.logVersion;
 
@@ -73,7 +71,7 @@ public class HighDepthFinder
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,PosStart,PosEnd,BaseDepthMin,BaseDepthMax");
+            writer.write("Chromosome\tPosStart\tPosEnd\tBaseDepthMin\tBaseDepthMax");
             writer.newLine();
 
             return writer;
@@ -95,7 +93,7 @@ public class HighDepthFinder
         {
             for(HighDepthRegion region : regions)
             {
-                writer.write(format("%s,%d,%d,%d,%d",
+                writer.write(format("%s\t%d\t%d\t%d\t%d",
                         region.Chromosome, region.start(), region.end(), region.DepthMin, region.DepthMax));
                 writer.newLine();
             }

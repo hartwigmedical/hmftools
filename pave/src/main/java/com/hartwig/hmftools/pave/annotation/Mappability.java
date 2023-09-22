@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.pave.annotation;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
@@ -7,27 +8,23 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.pave.VariantData;
 
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
-public class Mappability
+public class Mappability extends AnnotationData implements Callable
 {
     private BufferedReader mFileReader;
-    private String mCurrentChromosome;
-    private int mCurrentIndex;
-    private List<MapEntry> mEntries;
-    private MapEntry mNextChromosomeEntry;
+    private final Map<String,MappabilityChrCache> mChrCacheMap;
     private boolean mHasValidData;
 
-    private static final int MAX_LIST_COUNT = 1000;
     public static final String MAPPABILITY_BED = "mappability_bed";
 
     public static final String MAPPABILITY = "MAPPABILITY";
@@ -36,11 +33,8 @@ public class Mappability
     public Mappability(final ConfigBuilder configBuilder)
     {
         mFileReader = null;
-        mCurrentChromosome = "";
-        mCurrentIndex = 0;
-        mEntries = Lists.newArrayList();
-        mNextChromosomeEntry = null;
         mHasValidData = true;
+        mChrCacheMap = Maps.newHashMap();
 
         if(configBuilder.hasValue(MAPPABILITY_BED))
         {
@@ -48,62 +42,47 @@ public class Mappability
         }
     }
 
-    public boolean hasData() { return mFileReader != null; }
+    @Override
+    public String type() { return "Mappability"; }
+
+    @Override
+    public boolean enabled() { return mFileReader != null; }
+
+    @Override
     public boolean hasValidData() { return mHasValidData; }
 
-    public void annotateVariant(final VariantData variant)
+    public synchronized MappabilityChrCache getChromosomeCache(final String chromosome)
     {
-        if(mFileReader == null && mEntries.isEmpty())
-            return;
+        MappabilityChrCache chrCache = mChrCacheMap.get(chromosome);
 
-        while(!mEntries.isEmpty() || mFileReader != null)
-        {
-            if(checkEntries(variant))
-                return;
+        if(chrCache != null && chrCache.isComplete())
+            return chrCache;
 
-            loadEntries(variant.Chromosome);
-        }
-
-        PV_LOGGER.warn("variant({}) no mappability entry found", variant);
+        loadEntries(chromosome);
+        return mChrCacheMap.get(chromosome);
     }
 
-    private boolean checkEntries(final VariantData variant)
+    @Override
+    public synchronized void onChromosomeComplete(final String chromosome)
     {
-        if(!variant.Chromosome.equals(mCurrentChromosome))
-            return false;
+        MappabilityChrCache chrCache = mChrCacheMap.get(chromosome);
 
-        if(mEntries.isEmpty() || mEntries.get(mEntries.size() - 1).Region.end() < variant.Position)
-            return false;
-
-        for(int i = mCurrentIndex; i < mEntries.size(); ++i)
+        if(chrCache != null)
         {
-            MapEntry entry = mEntries.get(i);
-
-            if(entry.Region.containsPosition(variant.Position))
-            {
-                setMappability(variant, entry.Mappability);
-                mCurrentIndex = i;
-                return true;
-            }
-
-            // take previous if the next is past this variant
-            if(variant.Position < entry.Region.start() && i > 0)
-            {
-                MapEntry prevEntry = mEntries.get(i - 1);
-                setMappability(variant, prevEntry.Mappability);
-                return true;
-            }
+            chrCache.clear();
+            mChrCacheMap.remove(chromosome);
         }
-
-        return false;
     }
 
-    private void setMappability(final VariantData variant, double mappability)
+    @Override
+    public Long call()
     {
-        if(!variant.context().getCommonInfo().hasAttribute(MAPPABILITY))
+        for(String chromosome : mInitialChromosomes)
         {
-            variant.context().getCommonInfo().putAttribute(MAPPABILITY, mappability);
+            loadEntries(chromosome);
         }
+
+        return (long)0;
     }
 
     public static void addHeader(final VCFHeader header)
@@ -132,7 +111,7 @@ public class Mappability
             mFileReader = createBufferedReader(filename);
 
             if(mFileReader != null)
-                PV_LOGGER.info("loaded mappability file({})", filename);
+                PV_LOGGER.debug("loading mappability file({})", filename);
         }
         catch(IOException e)
         {
@@ -144,30 +123,17 @@ public class Mappability
     private void loadEntries(final String requestedChromosome)
     {
         if(mFileReader == null)
-        {
-            mEntries.clear();
             return;
-        }
-
-        // clear all but the last if it's a match for the required chromosome
-        mEntries.clear();
-
-        if(mNextChromosomeEntry != null && mNextChromosomeEntry.Region.chromosome().equals(requestedChromosome))
-            mEntries.add(mNextChromosomeEntry);
-
-        mNextChromosomeEntry = null;
-
-        mCurrentChromosome = requestedChromosome;
-        mCurrentIndex = 0;
 
         try
         {
             String line = null;
-            boolean foundRequested = !mEntries.isEmpty();
+            MappabilityChrCache currentCache = mChrCacheMap.get(requestedChromosome);
+            boolean foundRequested = currentCache != null;
 
             while((line = mFileReader.readLine()) != null)
             {
-                final String[] values = line.split("\t", -1); // eg: 1       0       10000   0.000000
+                final String[] values = line.split(TSV_DELIM, -1); // eg: 1       0       10000   0.000000
 
                 if(values.length != 4)
                 {
@@ -180,32 +146,38 @@ public class Mappability
 
                 String chromosome = values[0];
 
-                if(chromosome.equals(requestedChromosome))
+                boolean exitOnNew = false;
+
+                if(currentCache == null || !currentCache.Chromosome.equals(chromosome))
                 {
-                    foundRequested = true;
-                }
-                else
-                {
+                    if(currentCache != null)
+                    {
+                        PV_LOGGER.debug("chr({}) loaded {} mappability entries", currentCache.Chromosome, currentCache.entryCount());
+                        currentCache.setComplete();
+                    }
+
+                    currentCache = mChrCacheMap.get(chromosome);
+
+                    if(currentCache == null)
+                    {
+                        currentCache = new MappabilityChrCache(chromosome);
+                        mChrCacheMap.put(chromosome, currentCache);
+                    }
+
                     if(!foundRequested)
-                        continue; // skip past this until a match is found
+                    {
+                        foundRequested = chromosome.equals(requestedChromosome);
+                    }
+                    else if(HumanChromosome.chromosomeRank(chromosome) > HumanChromosome.chromosomeRank(requestedChromosome))
+                    {
+                        exitOnNew = true;
+                    }
                 }
 
-                MapEntry entry = new MapEntry(
-                        new ChrBaseRegion(chromosome, Integer.parseInt(values[1]) + 1, Integer.parseInt(values[2])),
-                        Double.parseDouble(values[3]));
+                currentCache.addEntry(Integer.parseInt(values[1]) + 1, Integer.parseInt(values[2]), Double.parseDouble(values[3]));
 
-                if(chromosome.equals(requestedChromosome))
-                {
-                    mEntries.add(entry);
-
-                    if(mEntries.size() >= MAX_LIST_COUNT)
-                        return;
-                }
-                else
-                {
-                    mNextChromosomeEntry = entry;
+                if(exitOnNew)
                     break;
-                }
             }
 
             if(line == null)
@@ -216,19 +188,5 @@ public class Mappability
             PV_LOGGER.error("failed to load mappability file: {}", e.toString());
             mHasValidData = false;
         }
-    }
-
-    private class MapEntry
-    {
-        public final ChrBaseRegion Region;
-        public final double Mappability;
-
-        public MapEntry(final ChrBaseRegion region, final double mappability)
-        {
-            Region = region;
-            Mappability = mappability;
-        }
-
-        public String toString() { return String.format("%s map(%.4f)", Region, Mappability); }
     }
 }

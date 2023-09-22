@@ -11,18 +11,19 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class Drivers {
-
-    private static final Set<PurpleDriverType> MUTATION_DRIVER_TYPES = Sets.newHashSet(PurpleDriverType.MUTATION, PurpleDriverType.GERMLINE_MUTATION);
-
-    private Drivers() {
-    }
+public final class Drivers
+{
+    private static final Set<PurpleDriverType> MUTATION_DRIVER_TYPES =
+            Sets.newHashSet(PurpleDriverType.MUTATION, PurpleDriverType.GERMLINE_MUTATION);
 
     @NotNull
-    public static List<PurpleDriver> nonCanonicalMutationEntries(@NotNull List<PurpleDriver> drivers) {
+    public static List<PurpleDriver> nonCanonicalMutationEntries(@NotNull List<PurpleDriver> drivers)
+    {
         List<PurpleDriver> nonCanonicalVariantEntries = Lists.newArrayList();
-        for (PurpleDriver driver : drivers) {
-            if (MUTATION_DRIVER_TYPES.contains(driver.driver()) && !driver.isCanonical()) {
+        for(PurpleDriver driver : drivers)
+        {
+            if(MUTATION_DRIVER_TYPES.contains(driver.driver()) && !driver.isCanonical())
+            {
                 nonCanonicalVariantEntries.add(driver);
             }
         }
@@ -30,11 +31,15 @@ public final class Drivers {
     }
 
     @Nullable
-    public static PurpleDriver canonicalMutationEntryForGene(@NotNull List<PurpleDriver> drivers, @NotNull String geneToFind) {
+    public static PurpleDriver canonicalMutationEntryForGene(@NotNull List<PurpleDriver> drivers, @NotNull String geneToFind)
+    {
         PurpleDriver highest = null;
-        for (PurpleDriver driver : drivers) {
-            if (MUTATION_DRIVER_TYPES.contains(driver.driver()) && driver.gene().equals(geneToFind) && driver.isCanonical()) {
-                if (highest == null || driver.driverLikelihood() > highest.driverLikelihood()) {
+        for(PurpleDriver driver : drivers)
+        {
+            if(MUTATION_DRIVER_TYPES.contains(driver.driver()) && driver.gene().equals(geneToFind) && driver.isCanonical())
+            {
+                if(highest == null || driver.driverLikelihood() > highest.driverLikelihood())
+                {
                     highest = driver;
                 }
             }

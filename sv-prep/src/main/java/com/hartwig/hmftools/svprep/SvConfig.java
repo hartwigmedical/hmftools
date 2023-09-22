@@ -3,6 +3,7 @@ package com.hartwig.hmftools.svprep;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
@@ -11,7 +12,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -19,8 +19,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomesOrRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_CHR_PARTITION_SIZE;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
@@ -46,10 +44,11 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.ReadFilterConfig;
 import com.hartwig.hmftools.svprep.reads.ReadFilters;
 
@@ -84,9 +83,8 @@ public class SvConfig
     public final boolean UnpairedReads;
 
     // debug
-    public final List<String> SpecificChromosomes;
+    public final SpecificRegions SpecificChrRegions;
     public final List<String> LogReadIds;
-    public final List<ChrBaseRegion> SpecificRegions;
     public final boolean TrackRemotes;
     public final boolean PerfDebug;
 
@@ -167,26 +165,19 @@ public class SvConfig
         CalcFragmentLength = configBuilder.hasFlag(CALC_FRAG_LENGTH) || WriteTypes.contains(FRAGMENT_LENGTH_DIST);
         BamStringency = BamUtils.validationStringency(configBuilder);
 
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = SpecificRegions.from(configBuilder);
 
-        try
-        {
-            loadSpecificChromsomesOrRegions(configBuilder, SpecificChromosomes, SpecificRegions, SV_LOGGER);
-        }
-        catch(ParseException e)
-        {
+        if(SpecificChrRegions == null)
             mIsValid = false;
-        }
 
         LogReadIds = parseLogReadIds(configBuilder);
 
         Threads = parseThreads(configBuilder);
 
         // optimisations and debug
-        TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && SpecificRegions.isEmpty();
+        TrimReadId = !configBuilder.hasFlag(NO_TRIM_READ_ID) && !SpecificChrRegions.hasFilters();
         UnpairedReads = configBuilder.hasFlag(UNPAIRED_READS);
-        UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && SpecificRegions.isEmpty();
+        UseCacheBam = !configBuilder.hasFlag(NO_CACHE_BAM) && !SpecificChrRegions.hasFilters();
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
         JunctionFragmentCap = configBuilder.getInteger(JUNCTION_FRAGS_CAP);
         CaptureDepth = configBuilder.hasFlag(CAPTURE_DEPTH);
@@ -281,8 +272,7 @@ public class SvConfig
         CaptureDepth = false;
         BamStringency = ValidationStringency.STRICT;
         WriteTypes = Sets.newHashSet();
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = new SpecificRegions();
         LogReadIds = Lists.newArrayList();
         Threads = 1;
         MaxPartitionReads = 0;

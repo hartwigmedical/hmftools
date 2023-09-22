@@ -17,10 +17,11 @@ import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 
 import org.junit.Test;
 
-public class CopyNumberSelectorTest {
-
+public class CopyNumberSelectorTest
+{
     @Test
-    public void canSelectNearReportableGains() {
+    public void canSelectNearReportableGains()
+    {
         DriverGene driver1 = DriverGeneTestFactory.builder().gene("driver 1").reportAmplification(true).build();
         DriverGene driver2 = DriverGeneTestFactory.builder().gene("driver 2").reportAmplification(true).build();
         DriverGene driver3 = DriverGeneTestFactory.builder().gene("driver 3").reportAmplification(false).build();
@@ -42,7 +43,8 @@ public class CopyNumberSelectorTest {
     }
 
     @Test
-    public void warnIfNearReportableIsReported() {
+    public void warnIfNearReportableIsReported()
+    {
         DriverGene driver = DriverGeneTestFactory.builder().gene("driver 1").reportAmplification(true).build();
 
         GeneCopyNumber match = GeneCopyNumberTestFactory.builder().geneName(driver.gene()).minCopyNumber(11D).build();
@@ -56,7 +58,8 @@ public class CopyNumberSelectorTest {
     }
 
     @Test
-    public void canSelectPotentiallyInterestingGains() {
+    public void canSelectPotentiallyInterestingGains()
+    {
         PurpleGainLoss gain = TestPurpleGainLossFactory.builder()
                 .chromosome("chr1")
                 .chromosomeBand("band 1")
@@ -100,7 +103,8 @@ public class CopyNumberSelectorTest {
     }
 
     @Test
-    public void canSelectPotentiallyInterestingLosses() {
+    public void canSelectPotentiallyInterestingLosses()
+    {
         ImmutablePurpleGainLoss.Builder lossBuilder =
                 TestPurpleGainLossFactory.builder().interpretation(CopyNumberInterpretation.FULL_LOSS).minCopies(0).maxCopies(0);
 

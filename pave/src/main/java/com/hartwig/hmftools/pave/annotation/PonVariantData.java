@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.pave.annotation;
 
-class PonVariantData
+public class PonVariantData
 {
     public final String Ref;
     public final String Alt;

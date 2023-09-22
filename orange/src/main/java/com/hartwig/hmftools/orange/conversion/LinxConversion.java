@@ -17,13 +17,11 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class LinxConversion {
-
-    private LinxConversion() {
-    }
-
+public final class LinxConversion
+{
     @NotNull
-    public static LinxSvAnnotation convert(com.hartwig.hmftools.common.linx.LinxSvAnnotation linxSvAnnotation) {
+    public static LinxSvAnnotation convert(com.hartwig.hmftools.common.linx.LinxSvAnnotation linxSvAnnotation)
+    {
         return ImmutableLinxSvAnnotation.builder()
                 .vcfId(linxSvAnnotation.vcfId())
                 .svId(linxSvAnnotation.svId())
@@ -48,7 +46,8 @@ public final class LinxConversion {
     }
 
     @NotNull
-    public static LinxFusion convert(com.hartwig.hmftools.common.linx.LinxFusion linxFusion) {
+    public static LinxFusion convert(com.hartwig.hmftools.common.linx.LinxFusion linxFusion)
+    {
         return ImmutableLinxFusion.builder()
                 .name(linxFusion.name())
                 .reported(linxFusion.reported())
@@ -72,7 +71,8 @@ public final class LinxConversion {
     }
 
     @NotNull
-    public static LinxBreakend convert(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend) {
+    public static LinxBreakend convert(com.hartwig.hmftools.common.linx.LinxBreakend linxBreakend)
+    {
         return ImmutableLinxBreakend.builder()
                 .id(linxBreakend.id())
                 .svId(linxBreakend.svId())
@@ -100,7 +100,8 @@ public final class LinxConversion {
     }
 
     @NotNull
-    public static HomozygousDisruption convert(com.hartwig.hmftools.common.linx.HomozygousDisruption homozygousDisruption) {
+    public static HomozygousDisruption convert(com.hartwig.hmftools.common.linx.HomozygousDisruption homozygousDisruption)
+    {
         return ImmutableHomozygousDisruption.builder()
                 .chromosome(homozygousDisruption.chromosome())
                 .chromosomeBand(homozygousDisruption.chromosomeBand())

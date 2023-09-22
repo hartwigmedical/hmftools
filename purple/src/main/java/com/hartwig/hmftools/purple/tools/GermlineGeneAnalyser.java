@@ -111,7 +111,7 @@ public class GermlineGeneAnalyser
 
         closeBufferedWriter(mWriter);
 
-        PPL_LOGGER.info("Purple germline gene analysis cnmplete");
+        PPL_LOGGER.info("Purple germline gene analysis complete");
     }
 
     private BufferedWriter initialiseWriter(final String outputDir)

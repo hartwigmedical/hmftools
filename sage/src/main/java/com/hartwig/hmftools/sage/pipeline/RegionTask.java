@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.pipeline;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageCommon.calcMemoryUsage;
 
 import java.util.List;
 import java.util.Map;
@@ -12,15 +11,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.utils.MemoryCalcs;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.coverage.Coverage;
@@ -30,8 +29,6 @@ import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
-
-import htsjdk.samtools.reference.ReferenceSequenceFile;
 
 public class RegionTask
 {
@@ -198,7 +195,8 @@ public class RegionTask
         if(mConfig.Common.logPerfStats())
             mResults.addPerfCounters(mPerfCounters);
 
-        mResults.addMaxMemory(calcMemoryUsage(false));
+        mResults.addMaxMemory(MemoryCalcs.calcMemoryUsage());
         mResults.addSynCounts(mEvidenceStage.getSyncCounts());
+        mResults.addEvidenceStats(mEvidenceStage.getEvidenceStats());
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.teal
 
 import java.lang.StringBuilder
 import java.lang.ThreadLocal
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 import com.hartwig.hmftools.teal.telbam.TelbamParams
 import htsjdk.samtools.SamReader
 import htsjdk.samtools.SamReaderFactory

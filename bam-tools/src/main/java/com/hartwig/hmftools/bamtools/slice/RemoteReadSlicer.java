@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -28,6 +29,7 @@ public class RemoteReadSlicer implements Callable
 
     private final SliceWriter mSliceWriter;
 
+    private int mMatchedPositions;
     private int mTotalReads;
 
     public RemoteReadSlicer(
@@ -49,20 +51,30 @@ public class RemoteReadSlicer implements Callable
         mSlicePositions = Lists.newArrayList();
 
         mTotalReads = 0;
+        mMatchedPositions = 0;
     }
 
     public int totalReads() { return mTotalReads; }
 
     private static final int MAX_POSITION_DIFF = 300;
+    private static final int MAX_REMOTE_READS = 10_000_000;
 
     @Override
     public Long call()
     {
         BT_LOGGER.debug("processing chromosome({}) with {} remote reads", mChromosome, mRemotePositions.size());
 
+        List<ChrBaseRegion> excludedRegions = ExcludedRegions.getPolyGRegions(mConfig.RefGenVersion);
+
         for(int i = 0; i < mRemotePositions.size(); )
         {
             RemotePosition position = mRemotePositions.get(i);
+
+            if(mConfig.DropExcluded && ChrBaseRegion.containsPosition(excludedRegions, position.Chromosome, position.Position))
+            {
+                ++i;
+                continue;
+            }
 
             mSlicePositions.add(position);
 
@@ -82,6 +94,9 @@ public class RemoteReadSlicer implements Callable
             i += mSlicePositions.size();
             sliceRemotePositions();
             mSlicePositions.clear();
+
+            if(mConfig.MaxRemoteReads > 0 && mTotalReads >= mConfig.MaxRemoteReads)
+                break;
         }
 
         BT_LOGGER.info("chromosome({}) remote positions({}) complete, processed {} reads",
@@ -97,12 +112,23 @@ public class RemoteReadSlicer implements Callable
                 mSlicePositions.get(0).Position,
                 mSlicePositions.get(mSlicePositions.size() - 1).Position);
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(sliceRegion), this::processSamRecord);
+        BT_LOGGER.trace("remote region slice({}) for {} remote positions, matched({}/{}), processed {} reads",
+                sliceRegion, mSlicePositions.size(), mMatchedPositions, mRemotePositions.size(), mTotalReads);
+
+        mBamSlicer.slice(mSamReader, sliceRegion, this::processSamRecord);
     }
 
     private void processSamRecord(final SAMRecord read)
     {
         ++mTotalReads;
+
+        if(mConfig.MaxRemoteReads > 0 && mTotalReads >= mConfig.MaxRemoteReads)
+        {
+            BT_LOGGER.debug("chromosome({}) halting reads of remote region, matched({}/{}), processed {} reads",
+                    mChromosome, mMatchedPositions, mRemotePositions.size(), mTotalReads);
+            mBamSlicer.haltProcessing();
+            return;
+        }
 
         for(int i = 0; i < mSlicePositions.size(); ++i)
         {
@@ -112,6 +138,7 @@ public class RemoteReadSlicer implements Callable
             {
                 mSliceWriter.writeRead(read);
                 mSlicePositions.remove(i);
+                ++mMatchedPositions;
 
                 if(mSlicePositions.isEmpty())
                     mBamSlicer.haltProcessing();

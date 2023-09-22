@@ -9,6 +9,8 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
@@ -32,28 +34,28 @@ public class ReadWriter
             // write summary metrics
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("ReadId,Chromosome,PosStart,MismatchType,Diff,MateChr,MatePos");
-            writer.write(",Cigar,Flags,Paired,IsFirst,NegStrand,Duplicate,IsSupp,SuppData");
+            writer.write("ReadId\tChromosome\tPosStart\tMismatchType\tDiff\tMateChr\tMatePos");
+            writer.write("\tCigar\tFlags\tPaired\tIsFirst\tNegStrand\tDuplicate\tIsSupp\tSuppData");
             writer.newLine();
             return writer;
         }
         catch(IOException e)
         {
-            BT_LOGGER.error("failed to initialise reads comparison file: {}", e.toString());
+            BT_LOGGER.error("failed to initialise BAM comparison file: {}", e.toString());
             return null;
         }
     }
 
-    public synchronized void writeComparison(
-            final SAMRecord read, final MismatchType mismatchType, final String diffDetails)
+    public synchronized void writeComparison(final SAMRecord read, final MismatchType mismatchType, final List<String> diffList)
     {
         try
         {
-            mWriter.write(format("%s,%s,%d,%s,%s,%s,%d",
+            String diffDetails = diffList != null ? diffList.stream().collect(Collectors.joining(";")) : "";
+            mWriter.write(format("%s\t%s\t%d\t%s\t%s\t%s\t%d",
                     read.getReadName(), read.getReferenceName(), read.getAlignmentStart(), mismatchType, diffDetails,
                     read.getMateReferenceName(), read.getMateAlignmentStart()));
 
-            mWriter.write(format(",%s,%d,%s,%s,%s,%s,%s,%s",
+            mWriter.write(format("\t%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s",
                     read.getCigarString(), read.getFlags(), read.getReadPairedFlag(), read.getFirstOfPairFlag(),
                     read.getReadNegativeStrandFlag(), read.getDuplicateReadFlag(), read.getSupplementaryAlignmentFlag(),
                     read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE) ? SupplementaryReadData.from(read).asCsv() : "N/A"));
@@ -62,7 +64,7 @@ public class ReadWriter
         }
         catch(IOException e)
         {
-            BT_LOGGER.error("failed to write coverage frequency file: {}", e.toString());
+            BT_LOGGER.error("failed to write BAM comparison file: {}", e.toString());
         }
     }
 
@@ -79,6 +81,5 @@ public class ReadWriter
                 read.getReadNegativeStrandFlag() ? "fwd" : "rev",
                 read.getFirstOfPairFlag() ? "R1" : "R2",
                 read.getSupplementaryAlignmentFlag() ? "supp" : "prim");
-
     }
 }

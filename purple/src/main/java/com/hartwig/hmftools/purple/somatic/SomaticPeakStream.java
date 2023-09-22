@@ -57,12 +57,14 @@ public class SomaticPeakStream
 
         List<PeakModelData> peakModels = modelFactory.model(weightedPloidies);
 
+        /*
         for(PeakModelData peakModel : peakModels)
         {
             PPL_LOGGER.trace(format("somatic peak(%.4f wgt=%.4f) bucket(%.4f wgt=%.4f) valid(%s) subclonal(%s)",
                     peakModel.Peak, peakModel.PeakAvgWeight, peakModel.Bucket, peakModel.BucketWeight,
                     peakModel.IsValid, peakModel.IsSubclonal));
         }
+        */
 
         return peakModels;
     }

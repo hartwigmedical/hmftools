@@ -18,11 +18,6 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PurpleTestFactory
 {
-
-    private PurpleTestFactory()
-    {
-    }
-
     @NotNull
     public static PurpleData createMinimalTestPurpleData()
     {
@@ -87,6 +82,7 @@ public final class PurpleTestFactory
                 .contamination(0D)
                 .cobaltGender(Gender.FEMALE)
                 .amberGender(Gender.FEMALE)
+                .lohPercent(0)
                 .build();
     }
 }

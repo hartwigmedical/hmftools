@@ -8,7 +8,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
@@ -16,7 +16,7 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.annotation.PonAnnotation.PON_DELIM;
+import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -29,14 +29,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -76,7 +70,7 @@ public class PonBuilder
 
         mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
-        mExistingPon = new PonAnnotation(configBuilder.getValue(PON_FILE), true);
+        mExistingPon = new PonAnnotation(configBuilder.getValue(PON_FILE), false);
 
         mChrVariantsMap = Maps.newHashMap();
 
@@ -181,7 +175,7 @@ public class PonBuilder
 
             BufferedWriter writer = createBufferedWriter(fileName);
 
-            StringJoiner sj = new StringJoiner(PON_DELIM);
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add("Chromosome");
             sj.add("Position");
             sj.add("Ref");
@@ -207,7 +201,7 @@ public class PonBuilder
                     if(mExistingPon.hasEntry(variant.Chromosome, variant.Position, variant.Ref, variant.Alt))
                         continue;
 
-                    sj = new StringJoiner(PON_DELIM);
+                    sj = new StringJoiner(TSV_DELIM);
                     sj.add(variant.Chromosome);
                     sj.add(String.valueOf(variant.Position));
                     sj.add(variant.Ref);
@@ -293,9 +287,9 @@ public class PonBuilder
         public String toString() { return format("var(%s:%d %s>%s) samples(%d)", Chromosome, Position, Ref, Alt, SampleCount); }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addSampleIdFile(configBuilder, true);
         configBuilder.addConfigItem(VCF_PATH, true, "VCF path for samples");
         configBuilder.addInteger(MIN_SAMPLES, "Min samples for variant to be included in PON", 3);
@@ -305,26 +299,13 @@ public class PonBuilder
         configBuilder.addPath(PON_FILE, false, "PON entries");
 
         addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         PonBuilder ponBuilder = new PonBuilder(configBuilder);
         ponBuilder.run();
 
         PV_LOGGER.info("Pave PON building from VCFs complete");
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

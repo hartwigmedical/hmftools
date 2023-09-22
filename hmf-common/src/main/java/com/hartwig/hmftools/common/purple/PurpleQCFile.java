@@ -50,6 +50,7 @@ public final class PurpleQCFile
     private static final String CONTAMINATION = "Contamination";
     private static final String GERMLINE_ABERRATIONS = "GermlineAberrations";
     private static final String AMBER_MEAN_DEPTH = "AmberMeanDepth";
+    private static final String LOH_PERCENT = "LohPercent";
 
     private static PurpleQC fromLines(final List<String> lines)
     {
@@ -69,28 +70,29 @@ public final class PurpleQCFile
                 .contamination(Double.parseDouble(getValue(lines, CONTAMINATION, "0", TSV_DELIM)))
                 .germlineAberrations(GermlineAberration.fromString(getValue(
                         lines, GERMLINE_ABERRATIONS, GermlineAberration.NONE.toString(), TSV_DELIM)))
-                .amberMeanDepth(Integer.parseInt(getValue(lines, AMBER_MEAN_DEPTH, "0", TSV_DELIM)));
+                .amberMeanDepth(Integer.parseInt(getValue(lines, AMBER_MEAN_DEPTH, "0", TSV_DELIM)))
+                .lohPercent(Double.parseDouble(getValue(lines, LOH_PERCENT, "-1", TSV_DELIM))); // indicating not calculated
 
         return builder.build();
     }
 
-    @NotNull
     @VisibleForTesting
-    static List<String> toLines(final PurpleQC check)
+    static List<String> toLines(final PurpleQC purpleQC)
     {
         final List<String> result = Lists.newArrayList();
 
-        result.add(QC_STATUS + TSV_DELIM + check.toString());
-        result.add(METHOD + TSV_DELIM + check.method());
-        result.add(CN_SEGMENTS + TSV_DELIM + check.copyNumberSegments());
-        result.add(UNSUPPORTED_CN_SEGMENTS + TSV_DELIM + check.unsupportedCopyNumberSegments());
-        result.add(PURITY + TSV_DELIM + FORMAT.format(check.purity()));
-        result.add(AMBER_GENDER + TSV_DELIM + check.amberGender());
-        result.add(COBALT_GENDER + TSV_DELIM + check.cobaltGender());
-        result.add(DELETED_GENES + TSV_DELIM + check.deletedGenes());
-        result.add(CONTAMINATION + TSV_DELIM + check.contamination());
-        result.add(GERMLINE_ABERRATIONS + TSV_DELIM + GermlineAberration.toString(check.germlineAberrations()));
-        result.add(AMBER_MEAN_DEPTH + TSV_DELIM + check.amberMeanDepth());
+        result.add(QC_STATUS + TSV_DELIM + purpleQC.toString());
+        result.add(METHOD + TSV_DELIM + purpleQC.method());
+        result.add(CN_SEGMENTS + TSV_DELIM + purpleQC.copyNumberSegments());
+        result.add(UNSUPPORTED_CN_SEGMENTS + TSV_DELIM + purpleQC.unsupportedCopyNumberSegments());
+        result.add(PURITY + TSV_DELIM + FORMAT.format(purpleQC.purity()));
+        result.add(AMBER_GENDER + TSV_DELIM + purpleQC.amberGender());
+        result.add(COBALT_GENDER + TSV_DELIM + purpleQC.cobaltGender());
+        result.add(DELETED_GENES + TSV_DELIM + purpleQC.deletedGenes());
+        result.add(CONTAMINATION + TSV_DELIM + purpleQC.contamination());
+        result.add(GERMLINE_ABERRATIONS + TSV_DELIM + GermlineAberration.toString(purpleQC.germlineAberrations()));
+        result.add(AMBER_MEAN_DEPTH + TSV_DELIM + purpleQC.amberMeanDepth());
+        result.add(LOH_PERCENT + TSV_DELIM + FORMAT.format(purpleQC.lohPercent()));
         return result;
     }
 }

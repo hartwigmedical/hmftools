@@ -3,7 +3,7 @@ package com.hartwig.hmftools.purple.segment;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.Collection;
@@ -22,10 +22,6 @@ import com.hartwig.hmftools.common.purple.SegmentSupport;
 import com.hartwig.hmftools.common.utils.pcf.PCFPosition;
 import com.hartwig.hmftools.common.utils.pcf.PCFSource;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.purple.region.ObservedRegion;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class PurpleSegmentFactory
 {
@@ -50,7 +46,6 @@ public class PurpleSegmentFactory
         return segmentCluster(clusterMap);
     }
 
-    @NotNull
     private List<PurpleSegment> segmentCluster(final Multimap<Chromosome, Cluster> clusters)
     {
         final List<PurpleSegment> results = Lists.newArrayList();

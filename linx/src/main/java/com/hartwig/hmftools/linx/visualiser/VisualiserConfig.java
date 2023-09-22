@@ -3,6 +3,9 @@ package com.hartwig.hmftools.linx.visualiser;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_REGIONS;
+import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_REGIONS_DESC;
+import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -10,8 +13,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_REGIONS_DESC;
 import static com.hartwig.hmftools.linx.LinxConfig.GERMLINE;
 
 import java.io.File;
@@ -28,7 +29,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.Highlights;
 
 import org.apache.commons.cli.ParseException;
@@ -94,7 +95,7 @@ public class VisualiserConfig
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         EnsemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
 
-        SpecificRegions = ChrBaseRegion.loadSpecificRegions(configBuilder);
+        SpecificRegions = loadSpecificRegions(configBuilder);
         ClusterIds = parseClusterIds(configBuilder);
         ChainIds = parseChainIds(configBuilder);
         Chromosomes = parseChromosomes(configBuilder);

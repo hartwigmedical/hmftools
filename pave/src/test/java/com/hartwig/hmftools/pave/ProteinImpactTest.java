@@ -354,7 +354,7 @@ public class ProteinImpactTest
         pos = 35;
         ref = mRefBases.substring(pos, pos + 1);
         alt = ref + "GA";
-        checkHgvsStrings(pos, 1, alt, FRAMESHIFT, "c.16_17insGA", "p.Leu6fs");
+        checkHgvsStrings(pos, 1, alt, FRAMESHIFT, "c.16_17insGA", "p.Leu6*");
 
         // SNV and deletion combined: ie CT -> A, should be c.5_6delCTinsA instead of c.6delT
         pos = 24;

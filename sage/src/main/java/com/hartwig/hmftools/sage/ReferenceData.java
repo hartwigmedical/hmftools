@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.sage;
 
+import static com.hartwig.hmftools.common.genome.bed.BedFileReader.loadBedFileChrMap;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -24,7 +23,7 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 
@@ -85,10 +84,7 @@ public class ReferenceData
         {
             String chromosome = entry.getKey();
 
-            if(!mConfig.Common.SpecificChromosomes.isEmpty() && !mConfig.Common.SpecificChromosomes.contains(chromosome))
-                continue;
-
-            if(!mConfig.Common.SpecificRegions.isEmpty() && mConfig.Common.SpecificRegions.stream().noneMatch(x -> x.Chromosome.equals(chromosome)))
+            if(mConfig.Common.SpecificChrRegions.excludeChromosome(chromosome))
                 continue;
 
             List<GeneData> geneDataList = entry.getValue();
@@ -98,11 +94,8 @@ public class ReferenceData
 
             for(GeneData geneData : geneDataList)
             {
-                if(!mConfig.Common.SpecificRegions.isEmpty() && mConfig.Common.SpecificRegions.stream()
-                        .noneMatch(x -> positionsOverlap(x.start(), x.end(), geneData.GeneStart, geneData.GeneEnd)))
-                {
+                if(mConfig.Common.SpecificChrRegions.excludeRegion(geneData.GeneStart, geneData.GeneEnd))
                     continue;
-                }
 
                 transDataList.add(GeneDataCache.getCanonicalTranscriptData(geneData.GeneId));
             }
@@ -124,7 +117,7 @@ public class ReferenceData
 
             if(!mConfig.PanelBed.isEmpty())
             {
-                Map<Chromosome,List<BaseRegion>> panelBed = loadBedFile(mConfig.PanelBed);
+                Map<Chromosome,List<BaseRegion>> panelBed = loadBedFileChrMap(mConfig.PanelBed);
 
                 if(panelBed == null)
                     return false;
@@ -138,7 +131,7 @@ public class ReferenceData
 
             if(!mConfig.HighConfidenceBed.isEmpty())
             {
-                Map<Chromosome,List<BaseRegion>> hcPanelBed = loadBedFile(mConfig.HighConfidenceBed);
+                Map<Chromosome,List<BaseRegion>> hcPanelBed = loadBedFileChrMap(mConfig.HighConfidenceBed);
 
                 if(hcPanelBed == null)
                     return false;
@@ -242,47 +235,6 @@ public class ReferenceData
                     panel.put(HumanChromosome.fromString(bed.chromosome()), bed);
                 }
             }
-        }
-
-        return panel;
-    }
-
-    public static Map<Chromosome,List<BaseRegion>> loadBedFile(final String bedFile)
-    {
-        final Map<Chromosome,List<BaseRegion>> panel = Maps.newHashMap();
-
-        try
-        {
-            BufferedReader fileReader = createBufferedReader(bedFile);
-
-            final String fileDelim = "\t";
-            String line = "";
-
-            List<BaseRegion> chrRegions = null;
-            Chromosome currentChr = null;
-
-            while((line = fileReader.readLine()) != null)
-            {
-                final String[] values = line.split(fileDelim, -1);
-
-                Chromosome chromosome = HumanChromosome.fromString(values[0]);
-                int posStart = Integer.parseInt(values[1]) + 1; // as per convention
-                int posEnd = Integer.parseInt(values[2]);
-
-                if(currentChr != chromosome)
-                {
-                    currentChr = chromosome;
-                    chrRegions = Lists.newArrayList();
-                    panel.put(chromosome, chrRegions);
-                }
-
-                chrRegions.add(new BaseRegion(posStart, posEnd));
-            }
-        }
-        catch(IOException e)
-        {
-            SG_LOGGER.error("failed to load panel BED file({}): {}", bedFile, e.toString());
-            return null;
         }
 
         return panel;

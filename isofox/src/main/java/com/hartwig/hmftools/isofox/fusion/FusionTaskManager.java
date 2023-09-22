@@ -153,9 +153,9 @@ public class FusionTaskManager
                 Map<String, FusionReadGroup> rgMap = chrEntry.getValue();
                 for(FusionReadGroup readGroup : rgMap.values())
                 {
-                    if(!mConfig.Filters.SpecificChromosomes.isEmpty())
+                    if(!mConfig.Filters.SpecificChrRegions.Chromosomes.isEmpty())
                     {
-                        if(readGroup.Reads.stream().anyMatch(x -> !mConfig.Filters.SpecificChromosomes.contains(x.MateChromosome)))
+                        if(readGroup.Reads.stream().anyMatch(x -> mConfig.Filters.SpecificChrRegions.excludeChromosome(x.MateChromosome)))
                             continue;
                     }
 

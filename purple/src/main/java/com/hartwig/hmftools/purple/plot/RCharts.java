@@ -24,7 +24,6 @@ public class RCharts
         mOutputDir = config.OutputDir;
     }
 
-    @NotNull
     public List<Future<Integer>> chartFutures(final String sampleId, boolean plotSomatics)
     {
         final List<Future<Integer>> result = Lists.newArrayList();

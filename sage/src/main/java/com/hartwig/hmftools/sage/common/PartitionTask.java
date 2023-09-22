@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 import java.util.Comparator;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class PartitionTask
 {

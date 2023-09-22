@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
@@ -140,22 +141,16 @@ public class GnomadCacheBuilder
 
     public static void main(@NotNull final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(GNOMAD_FILE, true, "Gnomad VCF input file");
         configBuilder.addDecimal(FREQ_THRESHOLD, "Population frequency (AF) threshold to write VCF entry", 0);
         configBuilder.addFlag(SPECIFIC_CHROMOSOME, "Produce file per chromosome");
 
         addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         GnomadCacheBuilder gnomadCacheBuilder = new GnomadCacheBuilder(configBuilder);
         gnomadCacheBuilder.run();

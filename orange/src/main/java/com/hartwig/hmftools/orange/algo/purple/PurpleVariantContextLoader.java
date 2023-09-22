@@ -128,7 +128,8 @@ public class PurpleVariantContextLoader
         final List<VariantTranscriptImpact> otherImpacts = filterOutCanonicalImpact(allImpacts, variantImpact.CanonicalTranscript);
         final AllelicDepth rnaDepth = extractRnaDepth(variantContext, rna);
 
-        var localPhaseSets = variantContext.hasAttribute(LOCAL_PHASE_SET) ? variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0) : null;
+        List<Integer> localPhaseSets =
+                variantContext.hasAttribute(LOCAL_PHASE_SET) ? variantContext.getAttributeAsIntList(LOCAL_PHASE_SET, 0) : null;
 
         return ImmutablePurpleVariantContext.builder()
                 .chromosome(contextDecorator.chromosome())
@@ -163,7 +164,8 @@ public class PurpleVariantContextLoader
     }
 
     @NotNull
-    private static List<VariantTranscriptImpact> filterOutCanonicalImpact(@NotNull List<VariantTranscriptImpact> impacts, String canonicalTranscript)
+    private static List<VariantTranscriptImpact> filterOutCanonicalImpact(@NotNull List<VariantTranscriptImpact> impacts,
+            String canonicalTranscript)
     {
         return impacts.stream().filter(impact -> !impact.Transcript.equals(canonicalTranscript)).collect(Collectors.toList());
     }

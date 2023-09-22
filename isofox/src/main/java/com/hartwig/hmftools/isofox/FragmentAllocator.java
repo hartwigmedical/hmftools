@@ -3,9 +3,10 @@ package com.hartwig.hmftools.isofox;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
@@ -53,7 +54,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -224,12 +225,12 @@ public class FragmentAllocator
             mExcludedRegion = mConfig.Filters.ExcludedRegion;
             final ChrBaseRegion preRegion = new ChrBaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
             final ChrBaseRegion postRegion = new ChrBaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(preRegion), this::processSamRecord);
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(postRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, preRegion, this::processSamRecord);
+            mBamSlicer.slice(mSamReader, postRegion, this::processSamRecord);
         }
         else
         {
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(geneRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, geneRegion, this::processSamRecord);
         }
 
         if(mEnrichedGeneFragments > 0)
@@ -290,7 +291,7 @@ public class FragmentAllocator
         if(record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment())
             return;
 
-        if(!record.getMateUnmappedFlag() && !record.getFirstOfPairFlag())
+        if(!firstInPair(record))
             return;
 
         mCurrentGenes.addCount(TOTAL, 1);
@@ -308,7 +309,6 @@ public class FragmentAllocator
         {
             mNextGeneCountLog += GENE_LOG_COUNT;
             ISF_LOGGER.info("chr({}) genes({}) bamRecordCount({})", mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
-            System.gc(); // attempting to reduce allocation to discarded SAMRecords and ReadRecords
         }
 
         if(reachedGeneReadLimit())
@@ -789,7 +789,6 @@ public class FragmentAllocator
             mNextGeneCountLog += GENE_LOG_COUNT;
             ISF_LOGGER.info("chr({}) genes({}) enriched bamRecordCount({})",
                     mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
-            System.gc();
         }
 
         if(reachedGeneReadLimit())

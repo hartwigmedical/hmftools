@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConfig.RESOURCE_DIR;
+import static com.hartwig.hmftools.lilac.LilacConstants.APP_NAME;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.getAminoAcidExonBoundaries;
@@ -66,25 +67,19 @@ public class GenerateReferenceSequences
         mAminoAcidSequences = Lists.newArrayList();
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        LL_LOGGER.info("generating HLA sequence reference data");
-
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         configBuilder.addPath(RESOURCE_DIR, true, "Path to resource files");
         addOutputDir(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        if(!configBuilder.parseCommandLine(args))
-        {
-            configBuilder.logInvalidDetails();
-            System.exit(1);
-        }
-
-        setLogLevel(configBuilder);
+        configBuilder.checkAndParseCommandLine(args);
 
         GenerateReferenceSequences seqGenerator = new GenerateReferenceSequences(configBuilder.getValue(RESOURCE_DIR));
+
+        LL_LOGGER.info("generating HLA sequence reference data");
 
         EXCLUDED_ALLELES.clear();
 

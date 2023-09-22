@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_REGIONS_V37;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_REGIONS_V37;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;

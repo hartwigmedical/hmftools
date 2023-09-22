@@ -18,8 +18,6 @@ import java.util.zip.GZIPOutputStream;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
 public final class FileWriterUtils
@@ -59,31 +57,6 @@ public final class FileWriterUtils
         return checkAddDirSeparator(outputDir);
     }
 
-    public static void addOutputDir(final Options options)
-    {
-        options.addOption(OUTPUT_DIR, true, OUTPUT_DIR_DESC);
-    }
-
-    public static void addOutputId(final Options options)
-    {
-        options.addOption(OUTPUT_ID, true, OUTPUT_ID_DESC);
-    }
-
-    public static void addOutputOptions(final Options options)
-    {
-        addOutputDir(options);
-        addOutputId(options);
-    }
-
-    public static String parseOutputDir(final CommandLine cmd)
-    {
-        String outputDir = cmd.getOptionValue(OUTPUT_DIR);
-        if(outputDir == null)
-            return null;
-
-        return checkAddDirSeparator(outputDir);
-    }
-
     public static boolean checkCreateOutputDir(final String outputDirPath)
     {
         if (Files.exists(Paths.get(outputDirPath)))
@@ -104,13 +77,20 @@ public final class FileWriterUtils
         return outputDir + File.separator;
     }
 
+    // Note: if filename ends with .gz returns a Gzipped buffered writer
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException
     {
-        return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile, appendIfExists), StandardCharsets.UTF_8));
+        OutputStream outputStream = new FileOutputStream(outputFile, appendIfExists);
+        if(outputFile.endsWith(".gz"))
+        {
+            outputStream = new GZIPOutputStream(outputStream);
+        }
+        return new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8));
     }
 
     // overwrite if file exists
+    // Note: if filename ends with .gz returns a Gzipped buffered writer
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile) throws IOException
     {

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.teal
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
 import htsjdk.samtools.util.SequenceUtil
 
 object TealConstants
