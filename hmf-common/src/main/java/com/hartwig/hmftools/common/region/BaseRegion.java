@@ -3,6 +3,8 @@ package com.hartwig.hmftools.common.region;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
@@ -135,6 +137,35 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
     public static boolean positionsWithin(int innerStart, int innerEnd, int outerStart, int outerEnd)
     {
         return (innerStart <= innerEnd && innerStart >= outerStart && innerEnd <= outerEnd);
+    }
+
+    public static void checkMergeOverlaps(final List<BaseRegion> regions)
+    {
+        checkMergeOverlaps(regions, true);
+    }
+
+    public static void checkMergeOverlaps(final List<BaseRegion> regions, boolean checkSorted)
+    {
+        if(checkSorted)
+            Collections.sort(regions);
+
+        // merge any adjacent regions
+        int index = 0;
+        while(index < regions.size() - 1)
+        {
+            BaseRegion region = regions.get(index);
+            BaseRegion nextRegion = regions.get(index + 1);
+
+            if(region.end() >= nextRegion.start() - 2)
+            {
+                region.setEnd(nextRegion.end());
+                regions.remove(index + 1);
+            }
+            else
+            {
+                ++index;
+            }
+        }
     }
 }
 

@@ -1,16 +1,30 @@
 package com.hartwig.hmftools.common.region;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.checkMergeOverlaps;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegions;
+import com.hartwig.hmftools.common.utils.file.FileDelimiters;
+import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -161,6 +175,68 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
             return 0;
 
         return rank1 < rank2 ? -1 : 1;
+    }
+
+    public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename)
+    {
+        return loadChrBaseRegions(filename, false);
+    }
+
+    public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename, boolean isBedFile)
+    {
+        Map<String,List<BaseRegion>> chrRegionsMap = Maps.newHashMap();
+
+        if(filename == null)
+            return chrRegionsMap;
+
+        try
+        {
+            List<String> lines = Files.readAllLines(Paths.get(filename));
+            String delim = FileDelimiters.inferFileDelimiter(filename);
+
+            String header = lines.get(0);
+            lines.remove(0);
+            Map<String,Integer> fieldIndexMap = FileReaderUtils.createFieldsIndexMap(header, delim);
+
+            int chrIndex = fieldIndexMap.get(FLD_CHROMOSOME);
+
+            Integer posStartIndex = fieldIndexMap.containsKey(FLD_POSITION_START) ?
+                    fieldIndexMap.get(FLD_POSITION_START) : fieldIndexMap.get(FLD_POS_START);
+
+            Integer posEndIndex = fieldIndexMap.containsKey(FLD_POSITION_END) ?
+                    fieldIndexMap.get(FLD_POSITION_END) : fieldIndexMap.get(FLD_POS_END);
+
+            for(String line : lines)
+            {
+                final String[] values = line.split(delim, -1);
+
+                String chromosome = values[chrIndex];
+                int posStart = Integer.parseInt(values[posStartIndex]);
+
+                if(isBedFile)
+                    ++posStart;
+
+                int posEnd = Integer.parseInt(values[posEndIndex]);
+
+                List<BaseRegion> regions = chrRegionsMap.get(chromosome);
+
+                if(regions == null)
+                {
+                    regions = Lists.newArrayList();
+                    chrRegionsMap.put(chromosome, regions);
+                }
+
+                regions.add(new BaseRegion(posStart, posEnd));
+            }
+
+            chrRegionsMap.values().forEach(x -> checkMergeOverlaps(x));
+
+            return chrRegionsMap;
+        }
+        catch(IOException e)
+        {
+            return null;
+        }
     }
 }
 
