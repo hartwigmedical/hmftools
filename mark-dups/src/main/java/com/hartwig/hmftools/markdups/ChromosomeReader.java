@@ -48,7 +48,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
     private final PartitionDataStore mPartitionDataStore;
-    private final RecordWriter mRecordWriter;
+    private final BamWriter mBamWriter;
     private final ReadPositionsCache mReadPositions;
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
@@ -68,13 +68,13 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final PerformanceCounter mPcPendingIncompletes;
 
     public ChromosomeReader(
-            final ChrBaseRegion region, final MarkDupsConfig config, final RecordWriter recordWriter,
+            final ChrBaseRegion region, final MarkDupsConfig config, FileWriterCache fileWriterCache,
             final PartitionDataStore partitionDataStore)
     {
         mConfig = config;
         mRegion = region;
         mPartitionDataStore = partitionDataStore;
-        mRecordWriter = recordWriter;
+        mBamWriter = fileWriterCache.getBamWriter(mRegion.Chromosome);
 
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
@@ -124,6 +124,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     }
 
     public Statistics statistics() { return mStats; }
+    public BamWriter recordWriter() { return mBamWriter; }
 
     @Override
     public Long call()
@@ -209,7 +210,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         ++mPartitionRecordCount;
 
         if(mConfig.RunChecks)
-            mRecordWriter.registerRead(read);
+            mBamWriter.registerRead(read);
 
         int readStart = read.getAlignmentStart();
 
@@ -219,7 +220,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
             if(mCurrentPartition == null)
             {
-                mRecordWriter.writeFragment(new Fragment(read));
+                mBamWriter.writeFragment(new Fragment(read));
                 return;
             }
         }
@@ -240,7 +241,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                 if(basePartition == null)
                 {
                     // mate or supp is on a non-human chromsome, meaning it won't be retrieved - so write this immediately
-                    mRecordWriter.writeRead(read, FragmentStatus.UNSET);
+                    mBamWriter.writeRead(read, FragmentStatus.UNSET);
                     return;
                 }
 
@@ -275,11 +276,11 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                         partitionResults.umiGroups().forEach(x -> processDuplicateGroup(x));
 
                     if(partitionResults.resolvedFragments() != null)
-                        mRecordWriter.writeFragments(partitionResults.resolvedFragments(), true);
+                        mBamWriter.writeFragments(partitionResults.resolvedFragments(), true);
                 }
                 else if(partitionResults.fragmentStatus() != null && partitionResults.fragmentStatus().isResolved())
                 {
-                    mRecordWriter.writeRead(read, partitionResults.fragmentStatus());
+                    mBamWriter.writeRead(read, partitionResults.fragmentStatus());
                 }
             }
         }
@@ -326,7 +327,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                 partitionResults.umiGroups().forEach(x -> processDuplicateGroup(x));
 
             if(partitionResults.resolvedFragments() != null)
-                mRecordWriter.writeFragments(partitionResults.resolvedFragments(), true);
+                mBamWriter.writeFragments(partitionResults.resolvedFragments(), true);
         }
 
         mPendingIncompleteReads.clear();
@@ -338,7 +339,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     {
         // form consensus reads for any complete read leg groups and write reads
         List<SAMRecord> completeReads = duplicateGroup.popCompletedReads(mConsensusReads, false);
-        mRecordWriter.writeDuplicateGroup(duplicateGroup, completeReads);
+        mBamWriter.writeDuplicateGroup(duplicateGroup, completeReads);
     }
 
     public void accept(final List<Fragment> positionFragments)
@@ -401,7 +402,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(!resolvedFragments.isEmpty())
         {
-            mRecordWriter.writeFragments(resolvedFragments, true);
+            mBamWriter.writeFragments(resolvedFragments, true);
 
             mStats.LocalComplete += (int)resolvedFragments.stream().filter(x -> x.allReadsPresent()).count();
         }

@@ -27,7 +27,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
-import com.hartwig.hmftools.markdups.RecordWriter;
+import com.hartwig.hmftools.markdups.BamWriter;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import htsjdk.samtools.SAMRecord;
@@ -421,7 +421,7 @@ public class PartitionData
 
     private boolean umiEnabled() { return mDuplicateGroupBuilder.umiConfig().Enabled; }
 
-    public int writeRemainingReads(final RecordWriter recordWriter, final ConsensusReads consensusReads, boolean logCachedReads)
+    public int writeRemainingReads(final BamWriter recordWriter, final ConsensusReads consensusReads, boolean logCachedReads)
     {
         if(mDuplicateGroupMap.isEmpty() && mIncompleteFragments.isEmpty() && mFragmentStatus.isEmpty())
             return 0;

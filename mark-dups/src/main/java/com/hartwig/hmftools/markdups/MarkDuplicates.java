@@ -47,7 +47,8 @@ public class MarkDuplicates
 
         RefGenomeCoordinates refGenomeCoordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
-        RecordWriter recordWriter = new RecordWriter(mConfig);
+        FileWriterCache fileWriterCache = new FileWriterCache(mConfig);
+
         PartitionDataStore partitionDataStore = new PartitionDataStore(mConfig);
         final List<Callable> callableList = Lists.newArrayList();
 
@@ -60,7 +61,7 @@ public class MarkDuplicates
 
             ChrBaseRegion chrBaseRegion = new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome));
 
-            ChromosomeReader chromosomeReader = new ChromosomeReader(chrBaseRegion, mConfig, recordWriter, partitionDataStore);
+            ChromosomeReader chromosomeReader = new ChromosomeReader(chrBaseRegion, mConfig, fileWriterCache, partitionDataStore);
             chromosomeReaders.add(chromosomeReader);
             callableList.add(chromosomeReader);
         }
@@ -72,6 +73,8 @@ public class MarkDuplicates
         int totalUnwrittenFragments = 0;
         ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
         consensusReads.setDebugOptions(mConfig.RunChecks);
+
+        BamWriter recordWriter = chromosomeReaders.get(0).recordWriter();
 
         for(PartitionData partitionData : partitionDataStore.partitions())
         {
@@ -85,7 +88,7 @@ public class MarkDuplicates
             MD_LOGGER.info("wrote {} cached fragments", totalUnwrittenFragments);
         }
 
-        recordWriter.close();
+        fileWriterCache.close();
 
         MD_LOGGER.debug("all chromosome tasks complete");
 
@@ -93,12 +96,14 @@ public class MarkDuplicates
         chromosomeReaders.forEach(x -> combinedStats.merge(x.statistics()));
         partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
 
+        int totalWrittenReads = chromosomeReaders.stream().mapToInt(x -> x.recordWriter().recordWriteCount()).sum();
+
         combinedStats.logStats();
 
-        if(combinedStats.TotalReads != recordWriter.recordWriteCount())
+        if(combinedStats.TotalReads != totalWrittenReads)
         {
-            MD_LOGGER.warn("reads processed({}) vs written({}) mismatch", combinedStats.TotalReads, recordWriter.recordWriteCount());
-            recordWriter.logUnwrittenReads();
+            MD_LOGGER.warn("reads processed({}) vs written({}) mismatch", combinedStats.TotalReads, totalWrittenReads);
+            chromosomeReaders.forEach(x -> x.recordWriter().logUnwrittenReads());
         }
 
         if(mConfig.WriteStats)

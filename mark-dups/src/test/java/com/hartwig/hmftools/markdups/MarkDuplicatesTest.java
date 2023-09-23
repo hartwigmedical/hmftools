@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.markdups;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -29,7 +27,8 @@ public class MarkDuplicatesTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MockRefGenome mRefGenome;
-    private final RecordWriter mWriter;
+    private final FileWriterCache mFileWriterCache;
+    private final BamWriter mWriter;
 
     private final ChrBaseRegion mChrBaseRegion;
     private final ChromosomeReader mChromosomeReader;
@@ -40,12 +39,14 @@ public class MarkDuplicatesTest
         mRefGenome = new MockRefGenome();
 
         MarkDupsConfig config = new MarkDupsConfig(1000, 1000, mRefGenome, false, false, false);
-        mWriter = new RecordWriter(config);
-        mWriter.setCacheReads();
 
         mChrBaseRegion = new ChrBaseRegion(CHR_1, 1, 100000);
 
-        mChromosomeReader = new ChromosomeReader(mChrBaseRegion, config, mWriter, new PartitionDataStore(config));
+        mFileWriterCache = new FileWriterCache(config);
+        mWriter = mFileWriterCache.getBamWriter(mChrBaseRegion.Chromosome);
+        mWriter.setCacheReads();
+
+        mChromosomeReader = new ChromosomeReader(mChrBaseRegion, config, mFileWriterCache, new PartitionDataStore(config));
     }
 
     @Test
@@ -203,7 +204,8 @@ public class MarkDuplicatesTest
         MarkDupsConfig consensusConfig = new MarkDupsConfig(
                 1000, 1000, mRefGenome, false, false, true);
 
-        ChromosomeReader chrReaderConsensus = new ChromosomeReader(mChrBaseRegion, consensusConfig, mWriter, new PartitionDataStore(consensusConfig));
+        ChromosomeReader chrReaderConsensus = new ChromosomeReader(
+                mChrBaseRegion, consensusConfig, mFileWriterCache, new PartitionDataStore(consensusConfig));
 
         int readPos = 100;
         int matePos = 1500;
@@ -282,15 +284,15 @@ public class MarkDuplicatesTest
         PartitionDataStore partitionDataStore = new PartitionDataStore(consensusConfig);
 
         ChrBaseRegion chr1Region = new ChrBaseRegion(CHR_1, 1, 10000);
-        ChromosomeReader chr1Reader = new ChromosomeReader(chr1Region, consensusConfig, mWriter, partitionDataStore);
+        ChromosomeReader chr1Reader = new ChromosomeReader(chr1Region, consensusConfig, mFileWriterCache, partitionDataStore);
 
         ChrBaseRegion excludedRegion = new ChrBaseRegion(CHR_2, 500, 1000);
         ChrBaseRegion chr2Region = new ChrBaseRegion(CHR_2, 1, 10000);
-        ChromosomeReader chr2Reader = new ChromosomeReader(chr2Region, consensusConfig, mWriter, partitionDataStore);
+        ChromosomeReader chr2Reader = new ChromosomeReader(chr2Region, consensusConfig, mFileWriterCache, partitionDataStore);
         chr2Reader.setExcludedRegion(excludedRegion);
 
         ChrBaseRegion chr3Region = new ChrBaseRegion(CHR_3, 1, 10000);
-        ChromosomeReader chr3Reader = new ChromosomeReader(chr3Region, consensusConfig, mWriter, partitionDataStore);
+        ChromosomeReader chr3Reader = new ChromosomeReader(chr3Region, consensusConfig, mFileWriterCache, partitionDataStore);
 
         int suppPos = 100;;
         int readPos = excludedRegion.start();

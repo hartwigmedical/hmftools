@@ -117,7 +117,7 @@ public class TaskExecutor
     {
         try
         {
-            for (FutureTask futureTask : taskList)
+            for(FutureTask futureTask : taskList)
             {
                 futureTask.get();
             }

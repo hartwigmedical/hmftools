@@ -36,7 +36,8 @@ public class UmiDuplicatesTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MockRefGenome mRefGenome;
-    private final RecordWriter mWriter;
+    private final FileWriterCache mFileWriterCache;
+    private final BamWriter mWriter;
 
     private final ChrBaseRegion mChrBaseRegion;
     private final ChromosomeReader mChrReaderUMIs;
@@ -48,15 +49,17 @@ public class UmiDuplicatesTest
         mRefGenome = new MockRefGenome();
 
         MarkDupsConfig umiConfig = new MarkDupsConfig(1000, 1000, mRefGenome, true, false, false);
-        mWriter = new RecordWriter(umiConfig);
-        mWriter.setCacheReads();
 
         mChrBaseRegion = new ChrBaseRegion(CHR_1, 1, 100000);
 
-        mChrReaderUMIs = new ChromosomeReader(mChrBaseRegion, umiConfig, mWriter, new PartitionDataStore(umiConfig));
+        mFileWriterCache = new FileWriterCache(umiConfig);
+        mWriter = mFileWriterCache.getBamWriter(mChrBaseRegion.Chromosome);
+        mWriter.setCacheReads();
+
+        mChrReaderUMIs = new ChromosomeReader(mChrBaseRegion, umiConfig, mFileWriterCache, new PartitionDataStore(umiConfig));
 
         MarkDupsConfig duplexUmiConfig = new MarkDupsConfig(1000, 1000, mRefGenome, true, true, false);
-        mChrReaderDuplexUMIs = new ChromosomeReader(mChrBaseRegion, duplexUmiConfig, mWriter, new PartitionDataStore(duplexUmiConfig));
+        mChrReaderDuplexUMIs = new ChromosomeReader(mChrBaseRegion, duplexUmiConfig, mFileWriterCache, new PartitionDataStore(duplexUmiConfig));
     }
 
     @Test

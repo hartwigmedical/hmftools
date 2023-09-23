@@ -68,6 +68,8 @@ public class MarkDupsConfig
     public final String OutputDir;
     public final String OutputId;
     public final boolean WriteBam;
+    public final boolean SortedBam;
+    public final boolean MultiBam;
     public final boolean NoMateCigar;
     public final int Threads;
 
@@ -94,6 +96,8 @@ public class MarkDupsConfig
     private static final String NO_MATE_CIGAR = "no_mate_cigar";
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String WRITE_BAM = "write_bam";
+    private static final String SORTED_BAM = "sorted_bam";
+    private static final String MULTI_BAM = "multi_bam";
 
     private static final String RUN_CHECKS = "run_checks";
     private static final String LOG_FINAL_CACHE = "log_final_cache";
@@ -152,11 +156,14 @@ public class MarkDupsConfig
                 FilterReadsType.valueOf(configBuilder.getValue(SPECIFIC_REGION_FILTER_TYPE, FilterReadsType.READ.toString())) :
                 FilterReadsType.NONE;
 
+        Threads = parseThreads(configBuilder);
+
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
         WriteBam = configBuilder.hasFlag(WRITE_BAM) || LogReadType == NONE;
+        MultiBam = Threads > 1 && configBuilder.hasFlag(MULTI_BAM);
+        SortedBam = configBuilder.hasFlag(SORTED_BAM);
 
         LogReadIds = parseLogReadIds(configBuilder);
-        Threads = parseThreads(configBuilder);
 
         WriteStats = configBuilder.hasFlag(WRITE_STATS);
         PerfDebug = configBuilder.hasFlag(PERF_DEBUG);
@@ -217,6 +224,8 @@ public class MarkDupsConfig
                 READ_OUTPUTS, false, format("Write reads: %s", ReadOutput.valuesStr()), NONE.toString());
 
         configBuilder.addFlag(WRITE_BAM, "Write BAM, default is true if not writing other read TSV output");
+        configBuilder.addFlag(SORTED_BAM, "Write sorted BAM");
+        configBuilder.addFlag(MULTI_BAM, "Write temporary BAMs with multi-threading");
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
@@ -260,6 +269,8 @@ public class MarkDupsConfig
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
 
         WriteBam = false;
+        SortedBam = false;
+        MultiBam = false;
         LogReadType = NONE;
 
         LogReadIds = Lists.newArrayList();
