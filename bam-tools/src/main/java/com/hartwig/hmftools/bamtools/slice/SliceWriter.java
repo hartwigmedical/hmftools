@@ -126,6 +126,12 @@ public class SliceWriter
         if(mBamWriter != null)
         {
             BT_LOGGER.info("{} records written to BAM: {}", mRecordWriteCount, mOutputBam);
+
+            if(!mConfig.UnsortedBam)
+            {
+                BT_LOGGER.debug("sorting sliced BAM");
+            }
+
             mBamWriter.close();
         }
 

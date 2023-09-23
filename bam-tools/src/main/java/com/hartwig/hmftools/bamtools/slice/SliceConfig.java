@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -49,8 +50,7 @@ public class SliceConfig
     public final int Threads;
 
     // debug
-    public final List<String> SpecificChromosomes;
-    public final List<ChrBaseRegion> SpecificRegions;
+    public final SpecificRegions SpecificChrRegions;
     public final boolean PerfDebug;
 
     private boolean mIsValid;
@@ -95,12 +95,11 @@ public class SliceConfig
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
 
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = new SpecificRegions();
 
-        mIsValid &= loadSpecificRegionsConfig(configBuilder, SpecificChromosomes, SpecificRegions);
+        mIsValid &= loadSpecificRegionsConfig(configBuilder, SpecificChrRegions.Chromosomes, SpecificChrRegions.Regions);
 
-        if(SpecificRegions.isEmpty())
+        if(SpecificChrRegions.Regions.isEmpty())
         {
             BT_LOGGER.error("missing specific regions or slice BED file for slicing");
             mIsValid = false;
@@ -156,8 +155,7 @@ public class SliceConfig
         MaxPartitionReads = 0;
         RefGenVersion = V37;
         PartitionSize = DEFAULT_CHR_PARTITION_SIZE;
-        SpecificChromosomes = Lists.newArrayList();
-        SpecificRegions = Lists.newArrayList();
+        SpecificChrRegions = new SpecificRegions();
         Threads = 0;
         PerfDebug = false;
         ReadLength = DEFAULT_READ_LENGTH;

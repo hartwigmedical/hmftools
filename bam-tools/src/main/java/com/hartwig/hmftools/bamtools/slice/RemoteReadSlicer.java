@@ -22,15 +22,16 @@ public class RemoteReadSlicer implements Callable
     private final String mChromosome;
     private final List<RemotePosition> mRemotePositions;
 
-    private final List<RemotePosition> mSlicePositions;
-
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
     private final SliceWriter mSliceWriter;
 
+    private final List<RemotePosition> mSlicePositions;
+    private int mCurrentSliceIndex;
     private int mMatchedPositions;
     private int mTotalReads;
+    private int mSliceCount;
 
     public RemoteReadSlicer(
             final String chromosome, final List<RemotePosition> remotePositions, final SliceConfig config, final SliceWriter sliceWriter)
@@ -52,12 +53,11 @@ public class RemoteReadSlicer implements Callable
 
         mTotalReads = 0;
         mMatchedPositions = 0;
+        mSliceCount = 0;
+        mCurrentSliceIndex = 0;
     }
 
-    public int totalReads() { return mTotalReads; }
-
     private static final int MAX_POSITION_DIFF = 300;
-    private static final int MAX_REMOTE_READS = 10_000_000;
 
     @Override
     public Long call()
@@ -99,8 +99,8 @@ public class RemoteReadSlicer implements Callable
                 break;
         }
 
-        BT_LOGGER.info("chromosome({}) remote positions({}) complete, processed {} reads",
-                mChromosome, mRemotePositions.size(), mTotalReads);
+        BT_LOGGER.info("chromosome({}) remote positions({}) complete, processed {} reads, slices({})",
+                mChromosome, mRemotePositions.size(), mTotalReads, mSliceCount);
 
         return (long)0;
     }
@@ -115,6 +115,9 @@ public class RemoteReadSlicer implements Callable
         BT_LOGGER.trace("remote region slice({}) for {} remote positions, matched({}/{}), processed {} reads",
                 sliceRegion, mSlicePositions.size(), mMatchedPositions, mRemotePositions.size(), mTotalReads);
 
+        mCurrentSliceIndex = 0;
+
+        ++mSliceCount;
         mBamSlicer.slice(mSamReader, sliceRegion, this::processSamRecord);
     }
 
@@ -130,11 +133,24 @@ public class RemoteReadSlicer implements Callable
             return;
         }
 
-        for(int i = 0; i < mSlicePositions.size(); ++i)
-        {
-            RemotePosition position = mSlicePositions.get(i);
+        int readStartPos = read.getAlignmentStart();
 
-            if(position.Position == read.getAlignmentStart() && read.getReadName().equals(position.ReadId))
+        int i = 0;
+        while(i < mSlicePositions.size())
+        {
+            RemotePosition remotePosition = mSlicePositions.get(i);
+
+            if(readStartPos < remotePosition.Position)
+                break;
+
+            if(readStartPos > remotePosition.Position)
+            {
+                // suggests the read wasn't found, is unexpected
+                mSlicePositions.remove(i);
+                continue;
+            }
+
+            if(remotePosition.Position == readStartPos && read.getReadName().equals(remotePosition.ReadId))
             {
                 mSliceWriter.writeRead(read);
                 mSlicePositions.remove(i);
@@ -145,6 +161,8 @@ public class RemoteReadSlicer implements Callable
 
                 return;
             }
+
+            ++i;
         }
     }
 }

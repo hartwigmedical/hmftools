@@ -2,9 +2,11 @@ package com.hartwig.hmftools.bamtools.slice;
 
 import static java.lang.String.format;
 
+import com.hartwig.hmftools.common.sage.GeneDepth;
+
 import htsjdk.samtools.SAMRecord;
 
-public class RemotePosition
+public class RemotePosition implements Comparable<RemotePosition>
 {
     public final String ReadId;
     public final String Chromosome;
@@ -15,6 +17,15 @@ public class RemotePosition
         ReadId = readId;
         Chromosome = chromosome;
         Position = position;
+    }
+
+    @Override
+    public int compareTo(final RemotePosition other)
+    {
+        if(Position == other.Position)
+            return 0;
+
+        return Position < other.Position ? -1 : 1;
     }
 
     public boolean positionsMatch(final RemotePosition other)

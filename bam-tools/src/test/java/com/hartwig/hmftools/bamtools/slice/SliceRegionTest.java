@@ -51,18 +51,14 @@ public class SliceRegionTest
 
         assertTrue(mReadCache.chrRemotePositions().isEmpty());
 
-        // mate just outside region but still captured by initial slice
-        read = createSamRecord(readId, CHR_1, 900, CHR_1, 1200,false, null);
+        // mate just outside region so not captured by initial slice
+        read = createSamRecord(readId, CHR_1, 1200, CHR_1, 990,false, null);
 
         regionSlicer.processSamRecord(read);
 
-        assertTrue(mReadCache.chrRemotePositions().isEmpty());
+        assertEquals(1, mReadCache.chrRemotePositions().size());
 
-        SAMRecord mate1 = createSamRecord(readId, CHR_1, 1200, CHR_1, 900,false, null);
-
-        regionSlicer.processSamRecord(mate1);
-
-        assertTrue(mReadCache.chrRemotePositions().isEmpty());
+        mReadCache.chrRemotePositions().clear();
 
         // mate in later region, supplementary on diff chromosome
         read = createSamRecord(

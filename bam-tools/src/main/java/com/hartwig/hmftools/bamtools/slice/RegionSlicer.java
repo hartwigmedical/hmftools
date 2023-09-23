@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -42,7 +43,7 @@ public class RegionSlicer
 
         List<RegionBamSlicer> regionBamSlicers = Lists.newArrayList();
 
-        for(ChrBaseRegion region : mConfig.SpecificRegions)
+        for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
         {
             regionBamSlicers.add(new RegionBamSlicer(region, mConfig, readCache, sliceWriter));
         }
@@ -65,8 +66,11 @@ public class RegionSlicer
             if(!HumanChromosome.contains(chromosome))
                 continue;
 
-            remoteReadSlicers.add(new RemoteReadSlicer(entry.getKey(), entry.getValue(), mConfig, sliceWriter));
+            List<RemotePosition> remotePositions = entry.getValue();
 
+            Collections.sort(remotePositions);
+
+            remoteReadSlicers.add(new RemoteReadSlicer(entry.getKey(), remotePositions, mConfig, sliceWriter));
         }
 
         callableTasks = remoteReadSlicers.stream().collect(Collectors.toList());

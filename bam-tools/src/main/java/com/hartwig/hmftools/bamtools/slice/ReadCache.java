@@ -30,22 +30,7 @@ public class ReadCache
         }
         else
         {
-            int index = 0;
-            while(index < positions.size())
-            {
-                if(remotePosition.Position < positions.get(index).Position)
-                    break;
-
-                if(remotePosition.Position == positions.get(index).Position
-                && remotePosition.ReadId.equals(positions.get(index).ReadId))
-                {
-                    return;
-                }
-
-                ++index;
-            }
-
-            positions.add(index, remotePosition);
+            positions.add(remotePosition);
         }
     }
 }

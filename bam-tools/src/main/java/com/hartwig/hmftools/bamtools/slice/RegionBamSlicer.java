@@ -29,6 +29,7 @@ public class RegionBamSlicer implements Callable
     private final SliceWriter mSliceWriter;
 
     private int mReadsProcessed;
+    private int mRemotePositionCount;
 
     public RegionBamSlicer(
             final ChrBaseRegion region, final SliceConfig config, final ReadCache readCache, final SliceWriter sliceWriter)
@@ -46,9 +47,8 @@ public class RegionBamSlicer implements Callable
         mBamSlicer.setKeepUnmapped();
 
         mReadsProcessed = 0;
+        mRemotePositionCount = 0;
     }
-
-    public int totalReads() { return mReadsProcessed; }
 
     @Override
     public Long call()
@@ -57,7 +57,8 @@ public class RegionBamSlicer implements Callable
 
         mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
 
-        BT_LOGGER.info("region({}) complete, processed {} reads", mRegion, mReadsProcessed);
+        BT_LOGGER.info("region({}) complete, processed {} reads, remote positions({})",
+                mRegion, mReadsProcessed, mRemotePositionCount);
 
         return (long)0;
     }
@@ -92,26 +93,27 @@ public class RegionBamSlicer implements Callable
         // check for remote mates and supplementaries
         if(read.getReadPairedFlag() && !read.getMateUnmappedFlag())
         {
-            if(!isInsideRegion(read.getMateReferenceName(), read.getMateAlignmentStart()))
-            {
-                mReadCache.addRemotePosition(new RemotePosition(read.getReadName(), read.getMateReferenceName(), read.getMateAlignmentStart()));
-            }
+            checkAddRemotePosition(read.getReadName(), read.getMateReferenceName(), read.getMateAlignmentStart());
         }
 
         if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
         {
             SupplementaryReadData suppData = SupplementaryReadData.from(read);
 
-            if(!isInsideRegion(suppData.Chromosome, suppData.Position))
-            {
-                mReadCache.addRemotePosition(new RemotePosition(read.getReadName(), suppData.Chromosome, suppData.Position));
-            }
+            checkAddRemotePosition(read.getReadName(), suppData.Chromosome, suppData.Position);
         }
     }
 
-    private boolean isInsideRegion(final String chromosome, final int startPosition)
+    private void checkAddRemotePosition(final String readId, final String chromosome, final int startPosition)
     {
-        return mRegion.Chromosome.equals(chromosome)
-                && startPosition >= mRegion.start() - mConfig.ReadLength && startPosition <= mRegion.end();
+        if(mRegion.containsPosition(chromosome, startPosition))
+            return;
+
+        // skip over positions already part of the initial slice
+        if(mConfig.SpecificChrRegions.Regions.stream().anyMatch(x -> x.containsPosition(chromosome, startPosition)))
+            return;
+
+        mReadCache.addRemotePosition(new RemotePosition(readId, chromosome, startPosition));
+        ++mRemotePositionCount;
     }
 }
