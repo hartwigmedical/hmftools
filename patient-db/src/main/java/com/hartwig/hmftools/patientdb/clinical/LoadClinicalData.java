@@ -62,7 +62,7 @@ public class LoadClinicalData {
         LOGGER.info("Running clinical patient db algo on {} patients", samplesPerPatient.size());
         List<Patient> patients = algo.interpret(samplesPerPatient, lims, config.consentConfigTsv());
 
-        LOGGER.info("Writing primary tumor data for {} patients", samplesPerPatient.size());
+        LOGGER.info("Writing primary tumor data to output file");
         PrimaryTumorDataWriter.write(config, samplesPerPatient, patients);
 
         if (config.doLoadClinicalData()) {

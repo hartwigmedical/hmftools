@@ -12,4 +12,5 @@ ALTER TABLE somaticVariant
 ALTER TABLE purity
     DROP COLUMN version;
 
-
+ALTER TABLE sample
+    ADD COLUMN cohortId varchar(255) NOT NULL after sampleId

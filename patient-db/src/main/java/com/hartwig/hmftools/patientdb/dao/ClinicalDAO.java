@@ -91,6 +91,7 @@ class ClinicalDAO {
     private void writeSampleData(int patientId, @NotNull SampleData sample) {
         context.insertInto(SAMPLE,
                         SAMPLE.SAMPLEID,
+                        SAMPLE.COHORTID,
                         SAMPLE.PATIENTID,
                         SAMPLE.SETNAME,
                         SAMPLE.ARRIVALDATE,
@@ -100,6 +101,7 @@ class ClinicalDAO {
                         SAMPLE.LIMSPRIMARYTUMOR,
                         SAMPLE.PATHOLOGYTUMORPERCENTAGE)
                 .values(sample.sampleId(),
+                        sample.cohortId(),
                         patientId,
                         sample.setName(),
                         sample.arrivalDate(),
