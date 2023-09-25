@@ -57,6 +57,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.svprep.BlacklistLocations;
 
 import org.apache.commons.cli.ParseException;
@@ -83,7 +84,7 @@ public class HighDepthCombiner
 
     private static final String HIGH_DEPTH_FILES = "high_depth_files";
     private static final String OUTPUT_FILE = "output_file";
-    private static final String REF_BLACKLIST_FILE = "ref_blacklist_file";
+    private static final String REF_BLACKLIST_FILE = "ref_blacklist_file"; // the Gridss blacklist file
     private static final String MIN_SAMPLE_COUNT = "min_sample_count";
     private static final String REMOVE_GENE_OVERLAPS = "remove_gene_overlaps";
 
@@ -273,6 +274,7 @@ public class HighDepthCombiner
                     {
                         // extend the region
                         currentRegion.setEnd(positionCount.Position);
+                        currentRegion.DepthMin = min(currentRegion.DepthMin, positionCount.DepthMin);
                         currentRegion.DepthMax = max(currentRegion.DepthMax, positionCount.DepthMax);
                         currentRegion.SampleCount = max(currentRegion.SampleCount, positionCount.Count);
                     }
@@ -662,13 +664,15 @@ public class HighDepthCombiner
             try
             {
                 List<String> lines = Files.readAllLines(Paths.get(filename));
+                String delim = FileDelimiters.inferFileDelimiter(filename);
+
                 lines.remove(0);
 
                 Map<String,List<HighDepthRegion>> chrRegions = Maps.newHashMap();
 
                 for(String line : lines)
                 {
-                    String[] values = line.split(TSV_DELIM, -1);
+                    String[] values = line.split(delim, -1);
 
                     String chromosome = values[0];
 

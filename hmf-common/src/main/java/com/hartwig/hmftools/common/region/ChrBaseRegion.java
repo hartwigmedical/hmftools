@@ -8,9 +8,11 @@ import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_E
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION_START;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_END;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POS_START;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -191,22 +193,31 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
         try
         {
-            List<String> lines = Files.readAllLines(Paths.get(filename));
+            // accepts zipped / non-zipped, with and without headers, Chromosome/chromosome,PosStart/PositionStart etc
+            BufferedReader fileReader = createBufferedReader(filename);
+
             String delim = FileDelimiters.inferFileDelimiter(filename);
 
-            String header = lines.get(0);
-            lines.remove(0);
-            Map<String,Integer> fieldIndexMap = FileReaderUtils.createFieldsIndexMap(header, delim);
+            int chrIndex = 0;
+            int posStartIndex = 1;
+            int posEndIndex = 2;
 
-            int chrIndex = fieldIndexMap.get(FLD_CHROMOSOME);
+            String line = fileReader.readLine();
 
-            Integer posStartIndex = fieldIndexMap.containsKey(FLD_POSITION_START) ?
-                    fieldIndexMap.get(FLD_POSITION_START) : fieldIndexMap.get(FLD_POS_START);
+            boolean hasHeader = line.contains(FLD_CHROMOSOME);
 
-            Integer posEndIndex = fieldIndexMap.containsKey(FLD_POSITION_END) ?
-                    fieldIndexMap.get(FLD_POSITION_END) : fieldIndexMap.get(FLD_POS_END);
+            if(hasHeader)
+            {
+                Map<String,Integer> fieldIndexMap = FileReaderUtils.createFieldsIndexMap(line, delim);
 
-            for(String line : lines)
+                chrIndex = getChromosomeFieldIndex(fieldIndexMap);
+                posStartIndex = getPositionStartFieldIndex(fieldIndexMap);
+                posEndIndex = getPositionEndFieldIndex(fieldIndexMap);
+
+                line = fileReader.readLine();
+            }
+
+            while(line != null)
             {
                 final String[] values = line.split(delim, -1);
 
@@ -227,6 +238,8 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
                 }
 
                 regions.add(new BaseRegion(posStart, posEnd));
+
+                line = fileReader.readLine();
             }
 
             chrRegionsMap.values().forEach(x -> checkMergeOverlaps(x));
@@ -237,6 +250,48 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
         {
             return null;
         }
+    }
+
+    public static final int INVALID_FIELD = -1;
+
+    public static int getChromosomeFieldIndex(final Map<String,Integer> fieldIndexMap)
+    {
+        if(fieldIndexMap.containsKey(FLD_CHROMOSOME))
+            return fieldIndexMap.get(FLD_CHROMOSOME);
+        else if(fieldIndexMap.containsKey(FLD_CHROMOSOME.toLowerCase()))
+            return fieldIndexMap.get(FLD_CHROMOSOME.toLowerCase());
+
+        return INVALID_FIELD;
+    }
+
+    public static int getPositionStartFieldIndex(final Map<String,Integer> fieldIndexMap)
+    {
+        if(fieldIndexMap.containsKey(FLD_POSITION_START))
+            return fieldIndexMap.get(FLD_POSITION_START);
+        else if(fieldIndexMap.containsKey(FLD_POSITION_START.toLowerCase()))
+            return fieldIndexMap.get(FLD_POSITION_START.toLowerCase());
+
+        if(fieldIndexMap.containsKey(FLD_POS_START))
+            return fieldIndexMap.get(FLD_POS_START);
+        else if(fieldIndexMap.containsKey(FLD_POS_START.toLowerCase()))
+            return fieldIndexMap.get(FLD_POS_START.toLowerCase());
+
+        return INVALID_FIELD;
+    }
+
+    public static int getPositionEndFieldIndex(final Map<String,Integer> fieldIndexMap)
+    {
+        if(fieldIndexMap.containsKey(FLD_POSITION_END))
+            return fieldIndexMap.get(FLD_POSITION_END);
+        else if(fieldIndexMap.containsKey(FLD_POSITION_END.toLowerCase()))
+            return fieldIndexMap.get(FLD_POSITION_END.toLowerCase());
+
+        if(fieldIndexMap.containsKey(FLD_POS_END))
+            return fieldIndexMap.get(FLD_POS_END);
+        else if(fieldIndexMap.containsKey(FLD_POS_END.toLowerCase()))
+            return fieldIndexMap.get(FLD_POS_END.toLowerCase());
+
+        return INVALID_FIELD;
     }
 }
 
