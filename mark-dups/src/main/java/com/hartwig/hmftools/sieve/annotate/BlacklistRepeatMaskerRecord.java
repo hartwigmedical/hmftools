@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sieve.annotate;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
 
 import java.util.Optional;
@@ -26,7 +27,7 @@ public class BlacklistRepeatMaskerRecord
             @NotNull final Optional<Integer> repeatPosStart, @NotNull final Optional<Integer> repeatPosEnd,
             @NotNull final Optional<Integer> count, @NotNull final Optional<String> otherInfo)
     {
-        mChromosome = chromosome;
+        mChromosome = stripChrPrefix(chromosome);
         mPosStart = posStart;
         mPosEnd = posEnd;
         mSampleCount = sampleCount;
@@ -156,19 +157,9 @@ public class BlacklistRepeatMaskerRecord
     @Override
     public String toString()
     {
-        return "BlacklistRepeatMaskerRecord{" +
-                "Chromosome='" + mChromosome + '\'' +
-                ", PosStart=" + mPosStart +
-                ", PosEnd=" + mPosEnd +
-                ", SampleCount=" + mSampleCount +
-                ", DepthMin=" + mDepthMin +
-                ", DepthMax=" + mDepthMax +
-                ", RepeatType=" + mRepeatType +
-                ", RepeatInfo=" + mRepeatInfo +
-                ", RepeatPosStart=" + mRepeatPosStart +
-                ", RepeatPosEnd=" + mRepeatPosEnd +
-                ", Count=" + mCount +
-                ", OtherInfo=" + mOtherInfo +
-                '}';
+        return "BlacklistRepeatMaskerRecord{" + "Chromosome='" + mChromosome + '\'' + ", PosStart=" + mPosStart + ", PosEnd=" + mPosEnd
+                + ", SampleCount=" + mSampleCount + ", DepthMin=" + mDepthMin + ", DepthMax=" + mDepthMax + ", RepeatType=" + mRepeatType
+                + ", RepeatInfo=" + mRepeatInfo + ", RepeatPosStart=" + mRepeatPosStart + ", RepeatPosEnd=" + mRepeatPosEnd + ", Count="
+                + mCount + ", OtherInfo=" + mOtherInfo + '}';
     }
 }

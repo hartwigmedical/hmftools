@@ -1,69 +1,31 @@
 package com.hartwig.hmftools.sieve.annotate;
 
-import static java.lang.Math.abs;
-
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
+import static com.hartwig.hmftools.sieve.annotate.Util.isNotProperReadPair;
+import static com.hartwig.hmftools.sieve.annotate.Util.isSoftClipped;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class AnnotateStatistics
 {
-    public static final String CSV_HEADER = "PrimaryReadCount,PrimarySoftClippedCount,PrimaryImproperPairCount,SupplementaryCount";
-    public static final String EMPTY_CSV_FRAGMENT = "NA,NA,NA,NA";
+    public static final String CSV_HEADER =
+            "PrimaryReadCount,PrimarySoftClippedCount,PrimaryImproperPairCount,PrimarySoftClippedANDImproperPairCount,SupplementaryCount";
+    public static final String EMPTY_CSV_FRAGMENT = "NA,NA,NA,NA,NA";
 
     private long mPrimaryReadCount;
     private long mPrimarySoftClippedCount;
-    private long mSupplementaryCount;
     private long mPrimaryImproperPairCount;
+    private long mPrimarySoftClippedAndImproperPairCount;
+    private long mSupplementaryCount;
 
     public AnnotateStatistics()
     {
         mPrimaryReadCount = 0;
         mPrimarySoftClippedCount = 0;
-        mSupplementaryCount = 0;
         mPrimaryImproperPairCount = 0;
-    }
-
-    // TODO(m_cooper): Use the original implementation.
-    private static boolean isNotProperReadPair(@NotNull final SAMRecord read)
-    {
-        if(read.getReadUnmappedFlag())
-        {
-            return false;
-        }
-
-        // or a fragment length outside the observed distribution
-        // TODO(m_cooper): Make this configurable.
-        if(abs(read.getInferredInsertSize()) > 1000)
-        {
-            return true;
-        }
-
-        // an unmapped mate
-        if(mateUnmapped(read))
-        {
-            return true;
-        }
-
-        if(read.getReadPairedFlag())
-        {
-            // inter-chromosomal
-            if(!read.getReferenceName().equals(read.getMateReferenceName()))
-            {
-                return true;
-            }
-
-            // inversion
-            return read.getReadNegativeStrandFlag() == mateNegativeStrand(read);
-        }
-
-        return false;
+        mPrimarySoftClippedAndImproperPairCount = 0;
+        mSupplementaryCount = 0;
     }
 
     public void matchedRead(@NotNull final SAMRecord read)
@@ -76,20 +38,20 @@ public class AnnotateStatistics
 
         mPrimaryReadCount++;
 
-        final Cigar cigar = read.getCigar();
-        final var it = cigar.getCigarElements().iterator();
-        while(it.hasNext())
+        boolean softClipped = isSoftClipped(read);
+        boolean improperPair = isNotProperReadPair(read);
+
+        if(softClipped && improperPair)
         {
-            final CigarElement el = it.next();
-            final CigarOperator op = el.getOperator();
-            if(op == CigarOperator.SOFT_CLIP)
-            {
-                mPrimarySoftClippedCount++;
-                break;
-            }
+            mPrimarySoftClippedAndImproperPairCount++;
         }
 
-        if(isNotProperReadPair(read))
+        if(softClipped)
+        {
+            mPrimarySoftClippedCount++;
+        }
+
+        if(improperPair)
         {
             mPrimaryImproperPairCount++;
         }
@@ -97,13 +59,8 @@ public class AnnotateStatistics
 
     public String getCSVFragment()
     {
-        return String.valueOf(mPrimaryReadCount)
-                + ','
-                + mPrimarySoftClippedCount
-                + ','
-                + mPrimaryImproperPairCount
-                + ','
-                + mSupplementaryCount;
+        return String.valueOf(mPrimaryReadCount) + ',' + mPrimarySoftClippedCount + ',' + mPrimaryImproperPairCount + ','
+                + mPrimarySoftClippedAndImproperPairCount + ',' + mSupplementaryCount;
     }
 
     public long getPrimaryReadCount()
@@ -116,13 +73,18 @@ public class AnnotateStatistics
         return mPrimarySoftClippedCount;
     }
 
-    public long getSupplementaryCount()
-    {
-        return mSupplementaryCount;
-    }
-
     public long getPrimaryImproperPairCount()
     {
         return mPrimaryImproperPairCount;
+    }
+
+    public long getPrimarySoftClippedAndImproperPairCount()
+    {
+        return mPrimarySoftClippedAndImproperPairCount;
+    }
+
+    public long getSupplementaryCount()
+    {
+        return mSupplementaryCount;
     }
 }

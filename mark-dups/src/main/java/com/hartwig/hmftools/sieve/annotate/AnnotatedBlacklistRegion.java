@@ -3,26 +3,28 @@ package com.hartwig.hmftools.sieve.annotate;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 
-public class AnnotatedBlacklistRegion
+public class AnnotatedBlacklistRegion implements IJobRegion
 {
     public static final String CSV_HEADER =
             BlacklistRegion.CSV_HEADER + "," + AnnotateStatistics.CSV_HEADER + "," + RepeatMasker.CSV_HEADER + ","
                     + AnnotateStatistics.CSV_HEADER;
 
     final private BlacklistRegion mBlacklistRegion;
-    final private List<Pair<RepeatMasker, AnnotateStatistics>> mAnnotatedRepeatMaskers;
-    final private AnnotateStatistics mStatistics;
+    final private AnnotateStatistics mStats;
+
+    final private List<AnnotatedRepeatMasker> mAnnotatedRepeatMaskers;
 
     public AnnotatedBlacklistRegion(@NotNull final BlacklistRegion blacklistRegion)
     {
         mBlacklistRegion = blacklistRegion;
         mAnnotatedRepeatMaskers = new ArrayList<>();
-        mStatistics = new AnnotateStatistics();
+        mStats = new AnnotateStatistics();
     }
 
     public void addRepeatMasker(@NotNull final RepeatMasker repeatMasker)
@@ -34,7 +36,7 @@ public class AnnotatedBlacklistRegion
         //            System.exit(1);
         //        }
 
-        mAnnotatedRepeatMaskers.add(Pair.of(repeatMasker, new AnnotateStatistics()));
+        mAnnotatedRepeatMaskers.add(new AnnotatedRepeatMasker(this, repeatMasker));
     }
 
     @NotNull
@@ -43,19 +45,22 @@ public class AnnotatedBlacklistRegion
         return mBlacklistRegion;
     }
 
+    public List<IJobRegion> getJobRegions()
+    {
+        List<IJobRegion> output = new ArrayList<>();
+        output.add(this);
+        output.addAll(mAnnotatedRepeatMaskers);
+        return output;
+    }
+
     @NotNull
     public List<String> getCSVLines()
     {
         final String blacklistRegionFragment = mBlacklistRegion.getCSVFragment();
-        final String statisticsFragment = mStatistics.getCSVFragment();
+        final String statsFragment = mStats.getCSVFragment();
         if(mAnnotatedRepeatMaskers.isEmpty())
         {
-            final String line = blacklistRegionFragment
-                    + ','
-                    + statisticsFragment
-                    + ','
-                    + RepeatMasker.EMPTY_CSV_FRAGMENT
-                    + ','
+            final String line = blacklistRegionFragment + ',' + statsFragment + ',' + RepeatMasker.EMPTY_CSV_FRAGMENT + ','
                     + AnnotateStatistics.EMPTY_CSV_FRAGMENT;
             return List.of(line);
         }
@@ -63,32 +68,23 @@ public class AnnotatedBlacklistRegion
         final List<String> lines = new ArrayList<>();
         for(var annotatedRepeatMasker : mAnnotatedRepeatMaskers)
         {
-            final String line = blacklistRegionFragment
-                    + ','
-                    + statisticsFragment
-                    + ','
-                    + annotatedRepeatMasker.getLeft().getCSVFragment()
-                    + ','
-                    + annotatedRepeatMasker.getRight().getCSVFragment();
+            final String line = blacklistRegionFragment + ',' + statsFragment + ',' + annotatedRepeatMasker.getCSVFragment();
+
             lines.add(line);
         }
 
         return lines;
     }
 
+    @Override
+    public ChrBaseRegion getChrBaseRegion()
+    {
+        return new ChrBaseRegion(mBlacklistRegion.getChromosome(), mBlacklistRegion.getPosStart(), mBlacklistRegion.getPosEnd());
+    }
+
+    @Override
     public void matchedRead(@NotNull final SAMRecord read)
     {
-        mStatistics.matchedRead(read);
-
-        // TODO(m_cooper): What if the repeat mask is outside of the blacklisted region?
-        for(var annotatedRepeatMask : mAnnotatedRepeatMaskers)
-        {
-            RepeatMasker repeatMask = annotatedRepeatMask.getLeft();
-            AnnotateStatistics repeatMaskStats = annotatedRepeatMask.getRight();
-            if(read.getAlignmentStart() >= repeatMask.getRepeatPosStart() && read.getAlignmentEnd() <= repeatMask.getRepeatPosEnd())
-            {
-                repeatMaskStats.matchedRead(read);
-            }
-        }
+        mStats.matchedRead(read);
     }
 }

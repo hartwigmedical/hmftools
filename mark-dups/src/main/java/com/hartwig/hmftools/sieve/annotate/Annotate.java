@@ -44,6 +44,12 @@ public class Annotate
         final List<AnnotatedBlacklistRegion> blacklistRegions =
                 BlacklistRepeatMaskerReader.readFromFile(mConfig.BlacklistRegionRepeatMaskerFile);
 
+        final List<IJobRegion> jobRegions = new ArrayList<>();
+        for(AnnotatedBlacklistRegion blacklistRegion : blacklistRegions)
+        {
+            jobRegions.addAll(blacklistRegion.getJobRegions());
+        }
+
         // TODO(m_cooper): Overlapping
         // TODO(m_cooper): 9
         // TODO(m_cooper): [68999357, 69000000]
@@ -52,7 +58,7 @@ public class Annotate
 
         // TODO(m_cooper): Read entirely contained?
 
-        final ArrayBlockingQueue<AnnotatedBlacklistRegion> jobs = new ArrayBlockingQueue<>(blacklistRegions.size(), true, blacklistRegions);
+        final ArrayBlockingQueue<IJobRegion> jobs = new ArrayBlockingQueue<>(jobRegions.size(), true, jobRegions);
         final List<AnnotateConsumer> annotateConsumers = new ArrayList<>();
         for(int i = 0; i < Math.max(mConfig.Threads, 1); i++)
         {
