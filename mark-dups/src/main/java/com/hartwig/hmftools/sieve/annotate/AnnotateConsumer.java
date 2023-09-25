@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
@@ -19,7 +18,7 @@ import htsjdk.samtools.SamReaderFactory;
 public class AnnotateConsumer implements Callable
 {
     private final AnnotateConfig mConfig;
-    private final ArrayBlockingQueue<AnnotatedBlacklistRegion> mJobs;
+    private final ArrayBlockingQueue<IJobRegion> mJobs;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
@@ -27,11 +26,11 @@ public class AnnotateConsumer implements Callable
     private final PerformanceCounter mConsumerPerfCounter;
     private final PerformanceCounter mJobPerfCounter;
 
-    private AnnotatedBlacklistRegion mCurrentBlacklistRegion;
+    private IJobRegion mCurrentRegion;
     private long mReadCounter;
-    private long mBlacklistRegionCounter;
+    private long mRegionCounter;
 
-    public AnnotateConsumer(@NotNull final AnnotateConfig config, @NotNull final ArrayBlockingQueue<AnnotatedBlacklistRegion> jobs)
+    public AnnotateConsumer(@NotNull final AnnotateConfig config, @NotNull final ArrayBlockingQueue<IJobRegion> jobs)
     {
         mConfig = config;
         mJobs = jobs;
@@ -42,7 +41,7 @@ public class AnnotateConsumer implements Callable
         mJobPerfCounter = new PerformanceCounter("Job");
         mConsumerPerfCounter = new PerformanceCounter("Total");
         mReadCounter = 0;
-        mBlacklistRegionCounter = 0;
+        mRegionCounter = 0;
     }
 
     @Override
@@ -52,19 +51,11 @@ public class AnnotateConsumer implements Callable
 
         mConsumerPerfCounter.start();
 
-        AnnotatedBlacklistRegion blacklistRegion;
-        // TODO(m_cooper): Chunk size.
-        while((blacklistRegion = mJobs.poll()) != null)
+        while((mCurrentRegion = mJobs.poll()) != null)
         {
-            ++mBlacklistRegionCounter;
-            mCurrentBlacklistRegion = blacklistRegion;
-            ChrBaseRegion partition = new ChrBaseRegion(
-                    mCurrentBlacklistRegion.getBlacklistRegion().getChromosome(),
-                    mCurrentBlacklistRegion.getBlacklistRegion().getPosStart(),
-                    mCurrentBlacklistRegion.getBlacklistRegion().getPosEnd());
-
+            ++mRegionCounter;
             mJobPerfCounter.start();
-            mBamSlicer.slice(mSamReader, partition, this::processSamRecord);
+            mBamSlicer.slice(mSamReader, mCurrentRegion.getChrBaseRegion(), this::processSamRecord);
             mJobPerfCounter.stop();
         }
 
@@ -72,7 +63,7 @@ public class AnnotateConsumer implements Callable
 
         mJobPerfCounter.logStats();
         mConsumerPerfCounter.logStats();
-        MD_LOGGER.info("Consumer is finished, {} reads processed, {} blacklisted regions processed", mReadCounter, mBlacklistRegionCounter);
+        MD_LOGGER.info("Consumer is finished, {} reads processed, {} regions processed", mReadCounter, mRegionCounter);
 
         return (long) 0;
     }
@@ -86,10 +77,6 @@ public class AnnotateConsumer implements Callable
             return;
         }
 
-        if(read.getAlignmentStart() >= mCurrentBlacklistRegion.getBlacklistRegion().getPosStart()
-                && read.getAlignmentEnd() <= mCurrentBlacklistRegion.getBlacklistRegion().getPosEnd())
-        {
-            mCurrentBlacklistRegion.matchedRead(read);
-        }
+        mCurrentRegion.matchedRead(read);
     }
 }
