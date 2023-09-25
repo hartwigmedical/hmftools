@@ -1,15 +1,10 @@
 package com.hartwig.hmftools.sieve.annotate;
 
-import static java.lang.Math.abs;
-
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
+import static com.hartwig.hmftools.sieve.annotate.Util.isNotProperReadPair;
+import static com.hartwig.hmftools.sieve.annotate.Util.isSoftClipped;
 
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.samtools.Cigar;
-import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
 public class AnnotateStatistics
@@ -30,42 +25,6 @@ public class AnnotateStatistics
         mPrimaryImproperPairCount = 0;
     }
 
-    // TODO(m_cooper): Use the original implementation.
-    private static boolean isNotProperReadPair(@NotNull final SAMRecord read)
-    {
-        if(read.getReadUnmappedFlag())
-        {
-            return false;
-        }
-
-        // or a fragment length outside the observed distribution
-        // TODO(m_cooper): Make this configurable.
-        if(abs(read.getInferredInsertSize()) > 1000)
-        {
-            return true;
-        }
-
-        // an unmapped mate
-        if(mateUnmapped(read))
-        {
-            return true;
-        }
-
-        if(read.getReadPairedFlag())
-        {
-            // inter-chromosomal
-            if(!read.getReferenceName().equals(read.getMateReferenceName()))
-            {
-                return true;
-            }
-
-            // inversion
-            return read.getReadNegativeStrandFlag() == mateNegativeStrand(read);
-        }
-
-        return false;
-    }
-
     public void matchedRead(@NotNull final SAMRecord read)
     {
         if(read.getSupplementaryAlignmentFlag())
@@ -76,17 +35,9 @@ public class AnnotateStatistics
 
         mPrimaryReadCount++;
 
-        final Cigar cigar = read.getCigar();
-        final var it = cigar.getCigarElements().iterator();
-        while(it.hasNext())
+        if(isSoftClipped(read))
         {
-            final CigarElement el = it.next();
-            final CigarOperator op = el.getOperator();
-            if(op == CigarOperator.SOFT_CLIP)
-            {
-                mPrimarySoftClippedCount++;
-                break;
-            }
+            mPrimarySoftClippedCount++;
         }
 
         if(isNotProperReadPair(read))
@@ -97,12 +48,7 @@ public class AnnotateStatistics
 
     public String getCSVFragment()
     {
-        return String.valueOf(mPrimaryReadCount)
-                + ','
-                + mPrimarySoftClippedCount
-                + ','
-                + mPrimaryImproperPairCount
-                + ','
+        return String.valueOf(mPrimaryReadCount) + ',' + mPrimarySoftClippedCount + ',' + mPrimaryImproperPairCount + ','
                 + mSupplementaryCount;
     }
 
