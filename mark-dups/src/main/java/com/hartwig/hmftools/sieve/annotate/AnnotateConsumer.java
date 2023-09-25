@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
@@ -27,6 +28,7 @@ public class AnnotateConsumer implements Callable
     private final PerformanceCounter mJobPerfCounter;
 
     private IJobRegion mCurrentRegion;
+    private ChrBaseRegion mCurrentChrBaseRegion;
     private long mReadCounter;
     private long mRegionCounter;
 
@@ -47,7 +49,7 @@ public class AnnotateConsumer implements Callable
     @Override
     public Long call()
     {
-        MD_LOGGER.info("Consumer is starting starting.");
+        MD_LOGGER.info("Consumer is starting.");
 
         mConsumerPerfCounter.start();
 
@@ -55,7 +57,8 @@ public class AnnotateConsumer implements Callable
         {
             ++mRegionCounter;
             mJobPerfCounter.start();
-            mBamSlicer.slice(mSamReader, mCurrentRegion.getChrBaseRegion(), this::processSamRecord);
+            mCurrentChrBaseRegion = mCurrentRegion.getChrBaseRegion();
+            mBamSlicer.slice(mSamReader, mCurrentChrBaseRegion, this::processSamRecord);
             mJobPerfCounter.stop();
         }
 
@@ -75,6 +78,12 @@ public class AnnotateConsumer implements Callable
         if(read.getReadUnmappedFlag())
         {
             return;
+        }
+
+        if(read.getAlignmentEnd() < mCurrentChrBaseRegion.start() || read.getAlignmentStart() > mCurrentChrBaseRegion.end())
+        {
+            MD_LOGGER.error("The read ({}) does not overlap the current region ({})", read, mCurrentChrBaseRegion);
+            System.exit(1);
         }
 
         mCurrentRegion.matchedRead(read);
