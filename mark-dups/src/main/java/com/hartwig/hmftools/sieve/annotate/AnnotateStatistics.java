@@ -9,20 +9,23 @@ import htsjdk.samtools.SAMRecord;
 
 public class AnnotateStatistics
 {
-    public static final String CSV_HEADER = "PrimaryReadCount,PrimarySoftClippedCount,PrimaryImproperPairCount,SupplementaryCount";
-    public static final String EMPTY_CSV_FRAGMENT = "NA,NA,NA,NA";
+    public static final String CSV_HEADER =
+            "PrimaryReadCount,PrimarySoftClippedCount,PrimaryImproperPairCount,PrimarySoftClippedANDImproperPairCount,SupplementaryCount";
+    public static final String EMPTY_CSV_FRAGMENT = "NA,NA,NA,NA,NA";
 
     private long mPrimaryReadCount;
     private long mPrimarySoftClippedCount;
-    private long mSupplementaryCount;
     private long mPrimaryImproperPairCount;
+    private long mPrimarySoftClippedAndImproperPairCount;
+    private long mSupplementaryCount;
 
     public AnnotateStatistics()
     {
         mPrimaryReadCount = 0;
         mPrimarySoftClippedCount = 0;
-        mSupplementaryCount = 0;
         mPrimaryImproperPairCount = 0;
+        mPrimarySoftClippedAndImproperPairCount = 0;
+        mSupplementaryCount = 0;
     }
 
     public void matchedRead(@NotNull final SAMRecord read)
@@ -35,12 +38,20 @@ public class AnnotateStatistics
 
         mPrimaryReadCount++;
 
-        if(isSoftClipped(read))
+        boolean softClipped = isSoftClipped(read);
+        boolean improperPair = isNotProperReadPair(read);
+
+        if(softClipped && improperPair)
+        {
+            mPrimarySoftClippedAndImproperPairCount++;
+        }
+
+        if(softClipped)
         {
             mPrimarySoftClippedCount++;
         }
 
-        if(isNotProperReadPair(read))
+        if(improperPair)
         {
             mPrimaryImproperPairCount++;
         }
@@ -49,7 +60,7 @@ public class AnnotateStatistics
     public String getCSVFragment()
     {
         return String.valueOf(mPrimaryReadCount) + ',' + mPrimarySoftClippedCount + ',' + mPrimaryImproperPairCount + ','
-                + mSupplementaryCount;
+                + mPrimarySoftClippedAndImproperPairCount + ',' + mSupplementaryCount;
     }
 
     public long getPrimaryReadCount()
@@ -62,13 +73,18 @@ public class AnnotateStatistics
         return mPrimarySoftClippedCount;
     }
 
-    public long getSupplementaryCount()
-    {
-        return mSupplementaryCount;
-    }
-
     public long getPrimaryImproperPairCount()
     {
         return mPrimaryImproperPairCount;
+    }
+
+    public long getPrimarySoftClippedAndImproperPairCount()
+    {
+        return mPrimarySoftClippedAndImproperPairCount;
+    }
+
+    public long getSupplementaryCount()
+    {
+        return mSupplementaryCount;
     }
 }
