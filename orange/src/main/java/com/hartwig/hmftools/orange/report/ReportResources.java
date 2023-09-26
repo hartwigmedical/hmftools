@@ -22,6 +22,7 @@ public class ReportResources
     static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
 
     public static final String NOT_AVAILABLE = "NA";
+    public static final String NONE = "NONE";
 
     public static final float PAGE_MARGIN_TOP = 100; // Top margin also excludes the chapter title, which is rendered in the header
     public static final float PAGE_MARGIN_LEFT = 30;

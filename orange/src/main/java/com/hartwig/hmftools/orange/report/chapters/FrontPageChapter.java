@@ -35,7 +35,7 @@ import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
-import com.hartwig.hmftools.orange.report.interpretation.PurpleQualityInterpretation;
+import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -130,7 +130,7 @@ public class FrontPageChapter implements ReportChapter
             return "";
         }
 
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -417,7 +417,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String wgdString()
     {
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -428,7 +428,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String msiString()
     {
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -441,7 +441,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String tmbString()
     {
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -454,7 +454,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String tmlString()
     {
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -466,7 +466,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String hrDeficiencyString()
     {
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -528,7 +528,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String svTmbString()
     {
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -558,7 +558,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String maxComplexSizeString()
     {
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -570,7 +570,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String telomericSGLString()
     {
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -582,7 +582,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String lineCountString()
     {
-        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.report.util;
 
-import com.hartwig.hmftools.common.utils.DataUtil;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.Cell;
@@ -24,14 +23,26 @@ public class Tables
     }
 
     @NotNull
+    public Table createNotAvailable(@NotNull String title, float width)
+    {
+        return createNonContent(title, width, ReportResources.NOT_AVAILABLE);
+    }
+
+    @NotNull
     public Table createEmpty(@NotNull String title, float width)
+    {
+        return createNonContent(title, width, ReportResources.NONE);
+    }
+
+    @NotNull
+    private Table createNonContent(@NotNull String title, float width, @NotNull String value)
     {
         Cell headerCell = new Cell().setBorder(Border.NO_BORDER).add(new Paragraph(title).addStyle(reportResources.tableTitleStyle()));
 
         Table table = Tables.createContent(width, new float[] { 1 }, new Cell[] { headerCell });
         table.setKeepTogether(true);
         table.setMarginBottom(TABLE_BOTTOM_MARGIN);
-        table.addCell(new Cells(reportResources).createContent(new Paragraph(DataUtil.NONE_STRING)));
+        table.addCell(new Cells(reportResources).createContent(new Paragraph(value)));
 
         return table;
     }

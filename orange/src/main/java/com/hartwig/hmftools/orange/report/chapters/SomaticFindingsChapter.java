@@ -17,6 +17,7 @@ import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntryFactory;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntry;
 import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
+import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
 import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
@@ -28,6 +29,7 @@ import com.hartwig.hmftools.orange.report.tables.SomaticVariantTable;
 import com.hartwig.hmftools.orange.report.tables.ViralPresenceTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
+import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
@@ -41,7 +43,7 @@ import org.jetbrains.annotations.NotNull;
 public class SomaticFindingsChapter implements ReportChapter
 {
     @NotNull
-    private final OrangeRecord  report;
+    private final OrangeRecord report;
     @NotNull
     private final PlotPathResolver plotPathResolver;
     @NotNull
@@ -75,36 +77,55 @@ public class SomaticFindingsChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addSomaticVariants(document);
-        addKataegisPlot(document);
+        if(!PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            addKataegisPlot(document);
+        }
         addSomaticAmpDels(document);
         addFusions(document);
 
         if(!report.tumorOnlyMode())
+        {
             addViralPresence(document);
+        }
 
         addHomozygousDisruptions(document);
         addBreakends(document);
         addLossOfHeterozygosity(document);
 
         if(!report.tumorOnlyMode())
+        {
             addSignatureAllocations(document);
+        }
 
         addStructuralDriverPlots(document);
     }
 
     private void addSomaticVariants(@NotNull Document document)
     {
-        List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
+        String driverVariantsTitle = "Driver variants";
+        String otherPotentiallyInterestingTitle = "Other potentially relevant variants";
 
-        List<VariantEntry> reportableVariants =
-                VariantEntryFactory.create(VariantDedup.apply(report.purple().reportableSomaticVariants()), somaticDrivers);
-        String titleDrivers = "Driver variants (" + reportableVariants.size() + ")";
-        document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, reportResources));
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            Tables tables = new Tables(reportResources);
+            document.add(tables.createNotAvailable(driverVariantsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(otherPotentiallyInterestingTitle, contentWidth()));
+        }
+        else
+        {
+            List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
 
-        List<VariantEntry> additionalSuspectVariants =
-                VariantEntryFactory.create(VariantDedup.apply(report.purple().additionalSuspectSomaticVariants()), somaticDrivers);
-        String titleNonDrivers = "Other potentially relevant variants (" + additionalSuspectVariants.size() + ")";
-        document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(additionalSuspectVariants), reportResources));
+            List<VariantEntry> reportableVariants =
+                    VariantEntryFactory.create(VariantDedup.apply(report.purple().reportableSomaticVariants()), somaticDrivers);
+            String titleDrivers = driverVariantsTitle + " (" + reportableVariants.size() + ")";
+            document.add(SomaticVariantTable.build(titleDrivers, contentWidth(), reportableVariants, reportResources));
+
+            List<VariantEntry> additionalSuspectVariants =
+                    VariantEntryFactory.create(VariantDedup.apply(report.purple().additionalSuspectSomaticVariants()), somaticDrivers);
+            String titleNonDrivers = otherPotentiallyInterestingTitle + " (" + additionalSuspectVariants.size() + ")";
+            document.add(SomaticVariantTable.build(titleNonDrivers, contentWidth(), max10(additionalSuspectVariants), reportResources));
+        }
     }
 
     private void addKataegisPlot(@NotNull Document document)
@@ -126,28 +147,43 @@ public class SomaticFindingsChapter implements ReportChapter
 
     private void addSomaticAmpDels(@NotNull Document document)
     {
-        String titleDrivers = "Driver amps/dels (" + report.purple().reportableSomaticGainsLosses().size() + ")";
-        document.add(GainLossTable.build(titleDrivers,
-                contentWidth(),
-                report.purple().reportableSomaticGainsLosses(),
-                report.isofox(),
-                reportResources));
+        String driverAmpsDelsTitle = "Driver amps/dels";
+        String nearDriverGainsTitle = "Potentially interesting near-driver amps";
+        String suspectGainsTitle = "Other regions with amps";
+        String suspectLossesTitle = "Regions with deletions in genes in other autosomal regions";
 
-        String titleNearDriverGains =
-                "Potentially interesting near-driver amps (" + report.purple().nearReportableSomaticGains().size() + ")";
-        document.add(GainLossTable.build(titleNearDriverGains,
-                contentWidth(),
-                report.purple().nearReportableSomaticGains(),
-                report.isofox(),
-                reportResources));
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            Tables tables = new Tables(reportResources);
+            document.add(tables.createNotAvailable(driverAmpsDelsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(nearDriverGainsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(suspectGainsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(suspectLossesTitle, contentWidth()));
+        }
+        else
+        {
+            String titleDrivers = driverAmpsDelsTitle + " (" + report.purple().reportableSomaticGainsLosses().size() + ")";
+            document.add(GainLossTable.build(titleDrivers,
+                    contentWidth(),
+                    report.purple().reportableSomaticGainsLosses(),
+                    report.isofox(),
+                    reportResources));
 
-        List<PurpleGainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
-        String titleSuspectGains = "Other regions with amps (" + suspectGains.size() + ")";
-        document.add(GainLossTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox(), reportResources));
+            String titleNearDriverGains = nearDriverGainsTitle + " (" + report.purple().nearReportableSomaticGains().size() + ")";
+            document.add(GainLossTable.build(titleNearDriverGains,
+                    contentWidth(),
+                    report.purple().nearReportableSomaticGains(),
+                    report.isofox(),
+                    reportResources));
 
-        List<PurpleGainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
-        String titleSuspectLosses = "Regions with deletions in genes in other autosomal regions (" + suspectLosses.size() + ")";
-        document.add(GainLossTable.build(titleSuspectLosses, contentWidth(), max10(suspectLosses), report.isofox(), reportResources));
+            List<PurpleGainLoss> suspectGains = selectGains(report.purple().additionalSuspectSomaticGainsLosses());
+            String titleSuspectGains = suspectGainsTitle + " (" + suspectGains.size() + ")";
+            document.add(GainLossTable.build(titleSuspectGains, contentWidth(), max10(suspectGains), report.isofox(), reportResources));
+
+            List<PurpleGainLoss> suspectLosses = selectLosses(report.purple().additionalSuspectSomaticGainsLosses());
+            String titleSuspectLosses = suspectLossesTitle + " (" + suspectLosses.size() + ")";
+            document.add(GainLossTable.build(titleSuspectLosses, contentWidth(), max10(suspectLosses), report.isofox(), reportResources));
+        }
     }
 
     @NotNull
