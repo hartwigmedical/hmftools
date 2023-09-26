@@ -3,6 +3,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
@@ -48,7 +49,8 @@ public class CohortComparisonChapter implements ReportChapter
     {
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
-        if(!report.tumorOnlyMode() && report.plots().cuppaSummaryPlot() != null)
+        boolean isFail = PurpleQCInterpretation.isFail(report.purple().fit().qc());
+        if(!isFail && report.plots().cuppaSummaryPlot() != null)
         {
             addCuppaSummaryPlot(document);
             addCuppaFeaturePlot(document);

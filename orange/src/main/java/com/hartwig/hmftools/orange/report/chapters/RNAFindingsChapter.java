@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentag
 
 import java.util.List;
 
+import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
@@ -27,6 +28,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class RNAFindingsChapter implements ReportChapter
 {
+    private static final String RNA_QC_PASS = RnaStatistics.QC_PASS;
+
     @NotNull
     private final IsofoxRecord isofox;
     @NotNull
@@ -62,6 +65,20 @@ public class RNAFindingsChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addKeyQC(document);
+
+        if(PurpleQCInterpretation.isFailNoTumor(purple.fit().qc()))
+        {
+            document.add(new Paragraph("The DNA QC status of this sample is fail (no tumor). "
+                    + "In addition to DNA findings, all RNA findings should be interpreted with caution")
+                    .addStyle(reportResources.tableContentStyle()));
+        }
+        else if(!isofox.summary().qcStatus().equalsIgnoreCase(RNA_QC_PASS))
+        {
+            document.add(new Paragraph(
+                    "The RNA QC status of this sample is not a pass. All presented RNA data should be interpreted with caution")
+                    .addStyle(reportResources.tableContentStyle()));
+        }
+
         addExpressionTables(document);
         addRNAFusionTables(document);
         addNovelSpliceJunctionTables(document);
@@ -91,13 +108,6 @@ public class RNAFindingsChapter implements ReportChapter
             table.addCell(cells.createContent(formatPercentage(duplicateRate)));
 
             document.add(new Tables(reportResources).createWrapping(table));
-
-            if(PurpleQCInterpretation.isFailNoTumor(purple.fit().qc()))
-            {
-                document.add(new Paragraph("The DNA QC status of this sample is fail (no tumor). "
-                        + "In addition to DNA findings, all RNA findings should be interpreted with caution")
-                        .addStyle(reportResources.subTextStyle()));
-            }
         }
 
         document.add(new Tables(reportResources).createWrapping(table));
