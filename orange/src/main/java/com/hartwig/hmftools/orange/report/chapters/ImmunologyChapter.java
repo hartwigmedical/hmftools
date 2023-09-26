@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.report.chapters;
 
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.tables.HLAAlleleTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -58,6 +59,7 @@ public class ImmunologyChapter implements ReportChapter
         document.add(new Tables(reportResources).createWrapping(qc, "HLA QC"));
 
         String title = "HLA Alleles (" + report.lilac().alleles().size() + ")";
-        document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().alleles(), reportResources));
+        boolean isTumorFail = PurpleQCInterpretation.isFail(report.purple().fit().qc());
+        document.add(HLAAlleleTable.build(title, contentWidth(), report.lilac().alleles(), reportResources, isTumorFail));
     }
 }
