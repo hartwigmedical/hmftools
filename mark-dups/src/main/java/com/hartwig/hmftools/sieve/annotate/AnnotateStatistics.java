@@ -8,12 +8,12 @@ import htsjdk.samtools.SAMRecord;
 public class AnnotateStatistics
 {
     public static final String TSV_HEADER =
-            "PrimaryReadCount\tPrimarySoftClippedCount\tPrimaryImproperPairCount\tPrimarySoftClippedANDImproperPairCount\tSupplementaryCount";
+            "PrimaryReadCount\tPrimarySoftClippedCount\tPrimaryImproperPairCount\tPrimarySoftClippedORImproperPairCount\tSupplementaryCount";
 
     private long mPrimaryReadCount;
     private long mPrimarySoftClippedCount;
     private long mPrimaryImproperPairCount;
-    private long mPrimarySoftClippedAndImproperPairCount;
+    private long mPrimarySoftClippedOrImproperPairCount;
     private long mSupplementaryCount;
 
     public AnnotateStatistics()
@@ -21,7 +21,7 @@ public class AnnotateStatistics
         mPrimaryReadCount = 0;
         mPrimarySoftClippedCount = 0;
         mPrimaryImproperPairCount = 0;
-        mPrimarySoftClippedAndImproperPairCount = 0;
+        mPrimarySoftClippedOrImproperPairCount = 0;
         mSupplementaryCount = 0;
     }
 
@@ -38,9 +38,9 @@ public class AnnotateStatistics
         boolean softClipped = isSoftClipped(read);
         boolean improperPair = isNotProperReadPair(read);
 
-        if(softClipped && improperPair)
+        if(softClipped || improperPair)
         {
-            mPrimarySoftClippedAndImproperPairCount++;
+            mPrimarySoftClippedOrImproperPairCount++;
         }
 
         if(softClipped)
@@ -57,7 +57,7 @@ public class AnnotateStatistics
     public String getTSVFragment()
     {
         return String.valueOf(mPrimaryReadCount) + '\t' + mPrimarySoftClippedCount + '\t' + mPrimaryImproperPairCount + '\t'
-                + mPrimarySoftClippedAndImproperPairCount + '\t' + mSupplementaryCount;
+                + mPrimarySoftClippedOrImproperPairCount + '\t' + mSupplementaryCount;
     }
 
     public long getPrimaryReadCount()
@@ -75,9 +75,9 @@ public class AnnotateStatistics
         return mPrimaryImproperPairCount;
     }
 
-    public long getPrimarySoftClippedAndImproperPairCount()
+    public long getPrimarySoftClippedOrImproperPairCount()
     {
-        return mPrimarySoftClippedAndImproperPairCount;
+        return mPrimarySoftClippedOrImproperPairCount;
     }
 
     public long getSupplementaryCount()
