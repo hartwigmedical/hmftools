@@ -3,7 +3,6 @@ package com.hartwig.hmftools.orange.report;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -144,7 +143,8 @@ public class ReportWriter
                 .useSmartMode();
         if(writeToDisk)
         {
-            String outputFilePath = outputDir + File.separator + sampleId + ".orange.pdf";
+            String basePath = FileWriterUtils.checkAddDirSeparator(outputDir);
+            String outputFilePath = basePath + sampleId + ".orange.pdf";
             LOGGER.info("Writing PDF report to {}", outputFilePath);
             writer = new PdfWriter(outputFilePath, properties);
         }
