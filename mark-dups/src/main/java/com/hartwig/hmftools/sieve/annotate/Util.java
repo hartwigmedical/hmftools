@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 
 import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -52,11 +51,8 @@ public class Util
 
     public static boolean isSoftClipped(final SAMRecord read)
     {
-        final Cigar cigar = read.getCigar();
-        final var it = cigar.getCigarElements().iterator();
-        while(it.hasNext())
+        for(CigarElement el : read.getCigar().getCigarElements())
         {
-            final CigarElement el = it.next();
             final CigarOperator op = el.getOperator();
             if(op == CigarOperator.SOFT_CLIP)
             {
