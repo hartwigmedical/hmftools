@@ -3,15 +3,12 @@ package com.hartwig.hmftools.sieve.annotate;
 import static com.hartwig.hmftools.sieve.annotate.Util.isNotProperReadPair;
 import static com.hartwig.hmftools.sieve.annotate.Util.isSoftClipped;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.samtools.SAMRecord;
 
 public class AnnotateStatistics
 {
-    public static final String CSV_HEADER =
-            "PrimaryReadCount,PrimarySoftClippedCount,PrimaryImproperPairCount,PrimarySoftClippedANDImproperPairCount,SupplementaryCount";
-    public static final String EMPTY_CSV_FRAGMENT = "NA,NA,NA,NA,NA";
+    public static final String TSV_HEADER =
+            "PrimaryReadCount\tPrimarySoftClippedCount\tPrimaryImproperPairCount\tPrimarySoftClippedANDImproperPairCount\tSupplementaryCount";
 
     private long mPrimaryReadCount;
     private long mPrimarySoftClippedCount;
@@ -28,7 +25,7 @@ public class AnnotateStatistics
         mSupplementaryCount = 0;
     }
 
-    public void matchedRead(@NotNull final SAMRecord read)
+    public void matchedRead(final SAMRecord read)
     {
         if(read.getSupplementaryAlignmentFlag())
         {
@@ -57,10 +54,10 @@ public class AnnotateStatistics
         }
     }
 
-    public String getCSVFragment()
+    public String getTSVFragment()
     {
-        return String.valueOf(mPrimaryReadCount) + ',' + mPrimarySoftClippedCount + ',' + mPrimaryImproperPairCount + ','
-                + mPrimarySoftClippedAndImproperPairCount + ',' + mSupplementaryCount;
+        return String.valueOf(mPrimaryReadCount) + '\t' + mPrimarySoftClippedCount + '\t' + mPrimaryImproperPairCount + '\t'
+                + mPrimarySoftClippedAndImproperPairCount + '\t' + mSupplementaryCount;
     }
 
     public long getPrimaryReadCount()

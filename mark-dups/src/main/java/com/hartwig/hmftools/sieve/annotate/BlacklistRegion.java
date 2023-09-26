@@ -2,13 +2,9 @@ package com.hartwig.hmftools.sieve.annotate;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.stripChrPrefix;
 
-import java.util.Objects;
-
-import org.jetbrains.annotations.NotNull;
-
 public class BlacklistRegion
 {
-    public static final String CSV_HEADER = "Chromosome,PosStart,PosEnd,SampleCount,DepthMin,DepthMax";
+    public static final String TSV_HEADER = "Chromosome\tPosStart\tPosEnd\tSampleCount\tDepthMin\tDepthMax";
 
     private final String mChromosome;
     private final int mPosStart;
@@ -17,7 +13,7 @@ public class BlacklistRegion
     private final int mDepthMin;
     private final int mDepthMax;
 
-    public BlacklistRegion(@NotNull final String chromosome, final int posStart, final int posEnd, final int sampleCount,
+    public BlacklistRegion(final String chromosome, final int posStart, final int posEnd, final int sampleCount,
             final int depthMin, final int depthMax)
     {
         mChromosome = stripChrPrefix(chromosome);
@@ -28,18 +24,18 @@ public class BlacklistRegion
         mDepthMax = depthMax;
     }
 
-    public String getCSVFragment()
+    public String getTSVFragment()
     {
         return mChromosome
-                + ','
+                + '\t'
                 + mPosStart
-                + ','
+                + '\t'
                 + mPosEnd
-                + ','
+                + '\t'
                 + mSampleCount
-                + ','
+                + '\t'
                 + mDepthMin
-                + ','
+                + '\t'
                 + mDepthMax;
     }
 
@@ -71,40 +67,5 @@ public class BlacklistRegion
     public int getDepthMax()
     {
         return mDepthMax;
-    }
-
-    @Override
-    public boolean equals(final Object o)
-    {
-        if(this == o)
-        {
-            return true;
-        }
-        if(!(o instanceof BlacklistRegion))
-        {
-            return false;
-        }
-        final BlacklistRegion that = (BlacklistRegion) o;
-        return mPosStart == that.mPosStart && mPosEnd == that.mPosEnd && mSampleCount == that.mSampleCount && mDepthMin == that.mDepthMin
-                && mDepthMax == that.mDepthMax && mChromosome.equals(that.mChromosome);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(mChromosome, mPosStart, mPosEnd, mSampleCount, mDepthMin, mDepthMax);
-    }
-
-    @Override
-    public String toString()
-    {
-        return "BlacklistRegion{" +
-                "Chromosome='" + mChromosome + '\'' +
-                ", PosStart=" + mPosStart +
-                ", PosEnd=" + mPosEnd +
-                ", SampleCount=" + mSampleCount +
-                ", DepthMin=" + mDepthMin +
-                ", DepthMax=" + mDepthMax +
-                '}';
     }
 }
