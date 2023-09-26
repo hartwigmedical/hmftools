@@ -262,12 +262,22 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String somaticVariantDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         return variantDriverString(report.purple().reportableSomaticVariants(), report.purple().somaticDrivers());
     }
 
     @NotNull
     private String germlineVariantDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
         List<PurpleDriver> germlineDrivers = report.purple().germlineDrivers();
         if(reportableGermlineVariants != null && germlineDrivers != null)
@@ -304,12 +314,22 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String somaticCopyNumberDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         return copyNumberDriverString(report.purple().reportableSomaticGainsLosses());
     }
 
     @NotNull
     private String germlineCopyNumberDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         List<PurpleGainLoss> germlineGainsLosses = report.purple().reportableGermlineFullLosses();
         if(germlineGainsLosses == null)
         {
@@ -337,12 +357,22 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String somaticDisruptionDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         return disruptionDriverString(report.linx().somaticHomozygousDisruptions());
     }
 
     @NotNull
     private String germlineDisruptionDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         List<HomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
         if(germlineHomozygousDisruptions == null)
         {
@@ -370,6 +400,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String fusionDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         if(report.linx().reportableSomaticFusions().isEmpty())
         {
             return NONE;
@@ -386,6 +421,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String virusString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         VirusInterpreterData virusInterpreter = report.virusInterpreter();
         if(virusInterpreter == null)
         {
