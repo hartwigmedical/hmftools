@@ -15,6 +15,17 @@ import org.junit.Test;
 public class PurpleQCInterpretationTest
 {
     @Test
+    public void shouldInterpretAsFailIfAtLeastOneQCStateIsFail()
+    {
+        assertTrue(PurpleQCInterpretation.isFail(create(PurpleQCStatus.FAIL_NO_TUMOR)));
+        assertTrue(PurpleQCInterpretation.isFail(create(PurpleQCStatus.FAIL_CONTAMINATION)));
+
+        assertFalse(PurpleQCInterpretation.isFail(create(PurpleQCStatus.PASS)));
+
+        assertTrue(PurpleQCInterpretation.isFail(create(PurpleQCStatus.PASS, PurpleQCStatus.FAIL_NO_TUMOR)));
+    }
+
+    @Test
     public void shouldInterpretContaminatedIfOneStateImpliesContamination()
     {
         assertTrue(PurpleQCInterpretation.isContaminated(create(PurpleQCStatus.FAIL_CONTAMINATION)));
@@ -25,14 +36,13 @@ public class PurpleQCInterpretationTest
     }
 
     @Test
-    public void shouldInterpretAsFailIfAtLeastOneQCStateIsFail()
+    public void shouldInterpretFailNoTumorIfOneStateImpliesFailNoTumor()
     {
-        assertTrue(PurpleQCInterpretation.isFail(create(PurpleQCStatus.FAIL_NO_TUMOR)));
-        assertTrue(PurpleQCInterpretation.isFail(create(PurpleQCStatus.FAIL_CONTAMINATION)));
+        assertTrue(PurpleQCInterpretation.isFailNoTumor(create(PurpleQCStatus.FAIL_NO_TUMOR)));
 
-        assertFalse(PurpleQCInterpretation.isFail(create(PurpleQCStatus.PASS)));
+        assertFalse(PurpleQCInterpretation.isFailNoTumor(create(PurpleQCStatus.FAIL_CONTAMINATION)));
 
-        assertTrue(PurpleQCInterpretation.isFail(create(PurpleQCStatus.PASS, PurpleQCStatus.FAIL_NO_TUMOR)));
+        assertTrue(PurpleQCInterpretation.isFailNoTumor(create(PurpleQCStatus.PASS, PurpleQCStatus.FAIL_NO_TUMOR)));
     }
 
     @NotNull
