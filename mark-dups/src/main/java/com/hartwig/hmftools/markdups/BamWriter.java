@@ -144,8 +144,11 @@ public class BamWriter
 
     public void close()
     {
-        MD_LOGGER.info("{} records written to BAM", mWriteCount);
-        mBamWriter.close();
+        if(mBamWriter != null)
+        {
+            MD_LOGGER.info("{} records written to BAM", mWriteCount);
+            mBamWriter.close();
+        }
     }
 
     public synchronized void registerRead(final SAMRecord read)

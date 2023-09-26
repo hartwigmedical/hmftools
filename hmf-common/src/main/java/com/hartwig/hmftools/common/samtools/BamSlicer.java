@@ -103,6 +103,24 @@ public class BamSlicer
         return records;
     }
 
+    public void queryUnmapped(final SamReader samReader, final Consumer<SAMRecord> consumer)
+    {
+        mConsumerHalt = false;
+
+        try(final SAMRecordIterator iterator = samReader.queryUnmapped())
+        {
+            while(!mConsumerHalt && iterator.hasNext())
+            {
+                final SAMRecord record = iterator.next();
+
+                if(passesFilters(record))
+                {
+                    consumer.accept(record);
+                }
+            }
+        }
+    }
+
     public List<SAMRecord> queryMates(final SamReader samReader, final List<SAMRecord> records)
     {
         List<SAMRecord> mateRecords = Lists.newArrayListWithExpectedSize(records.size());

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.markdups.common;
 
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
@@ -23,7 +22,6 @@ public class Statistics
     public long TotalReads;
     public long DuplicateReads;
     public long DuplicateGroups;
-    public long UmiGroups;
 
     // technical metrics
     public long LocalComplete; // fragments where all reads are in the same partition
@@ -40,7 +38,6 @@ public class Statistics
         TotalReads = 0;
         DuplicateReads = 0;
         DuplicateGroups = 0;
-        UmiGroups = 0;
         InterPartition = 0;
         LocalComplete = 0;
         Incomplete = 0;
@@ -54,7 +51,6 @@ public class Statistics
         TotalReads += other.TotalReads;
         DuplicateReads += other.DuplicateReads;
         DuplicateGroups += other.DuplicateGroups;
-        UmiGroups += other.UmiGroups;
         LocalComplete += other.LocalComplete;
         Incomplete += other.Incomplete;
         InterPartition += other.InterPartition;
@@ -105,7 +101,7 @@ public class Statistics
     public void logStats()
     {
         MD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({})",
-                TotalReads, DuplicateReads, DuplicateGroups, UmiGroups);
+                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups);
 
         if(MD_LOGGER.isDebugEnabled())
         {

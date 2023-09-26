@@ -122,6 +122,11 @@ public class MarkDuplicates
             }
         }
 
+        if(mConfig.UnmapRegions.enabled())
+        {
+            MD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
+        }
+
         List<PerformanceCounter> combinedPerfCounters = chromosomeReaders.get(0).perfCounters();
 
         for(int i = 1; i < chromosomeReaders.size(); ++i)

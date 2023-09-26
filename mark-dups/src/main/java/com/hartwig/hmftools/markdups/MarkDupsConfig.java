@@ -27,18 +27,25 @@ import static com.hartwig.hmftools.markdups.ReadOutput.NONE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH;
 
-import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.markdups.common.ReadUnmapper;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
 import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
@@ -64,6 +71,8 @@ public class MarkDupsConfig
     public final UmiConfig UMIs;
     public final boolean FormConsensus;
     public final GroupIdGenerator IdGenerator;
+
+    public final ReadUnmapper UnmapRegions;
 
     public final String OutputDir;
     public final String OutputId;
@@ -98,6 +107,7 @@ public class MarkDupsConfig
     private static final String WRITE_BAM = "write_bam";
     private static final String SORTED_BAM = "sorted_bam";
     private static final String MULTI_BAM = "multi_bam";
+    private static final String UNMAP_REGIONS = "unmap_regions";
 
     private static final String RUN_CHECKS = "run_checks";
     private static final String LOG_FINAL_CACHE = "log_final_cache";
@@ -144,6 +154,18 @@ public class MarkDupsConfig
         FormConsensus = !UMIs.Enabled && !NoMateCigar && configBuilder.hasFlag(FORM_CONSENSUS);
         IdGenerator = new GroupIdGenerator();
 
+        if(configBuilder.hasValue(UNMAP_REGIONS))
+        {
+            UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS), DEFAULT_READ_LENGTH);
+        }
+        else
+        {
+            Map<String,List<BaseRegion>> unmappedMap = Maps.newHashMap();
+            ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
+            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(BaseRegion.from(excludedRegion)));
+            UnmapRegions = new ReadUnmapper(unmappedMap, DEFAULT_READ_LENGTH);
+        }
+
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
         MD_LOGGER.info("duplicate logic: {}", duplicateLogic);
 
@@ -176,25 +198,7 @@ public class MarkDupsConfig
         }
     }
 
-    public boolean isValid()
-    {
-        if(!mIsValid)
-            return false;
-
-        if(!Files.exists(Paths.get(BamFile)))
-        {
-            MD_LOGGER.error("invalid bam file path: {}", BamFile);
-            return false;
-        }
-
-        if(!Files.exists(Paths.get(RefGenomeFile)))
-        {
-            MD_LOGGER.error("invalid ref genome file: {}", RefGenomeFile);
-            return false;
-        }
-
-        return true;
-    }
+    public boolean isValid() { return mIsValid; }
 
     public String formFilename(final String fileType)
     {
@@ -222,6 +226,8 @@ public class MarkDupsConfig
 
         configBuilder.addConfigItem(
                 READ_OUTPUTS, false, format("Write reads: %s", ReadOutput.valuesStr()), NONE.toString());
+
+        configBuilder.addPath(UNMAP_REGIONS, false, "Unmap reads within these regions");
 
         configBuilder.addFlag(WRITE_BAM, "Write BAM, default is true if not writing other read TSV output");
         configBuilder.addFlag(SORTED_BAM, "Write sorted BAM");
@@ -267,6 +273,8 @@ public class MarkDupsConfig
 
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
+
+        UnmapRegions = new ReadUnmapper(Collections.emptyMap(), DEFAULT_READ_LENGTH);
 
         WriteBam = false;
         SortedBam = false;

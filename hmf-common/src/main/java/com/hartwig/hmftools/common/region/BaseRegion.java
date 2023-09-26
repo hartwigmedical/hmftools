@@ -23,6 +23,7 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
     }
 
     public static BaseRegion from(final GenomeRegion region) { return new BaseRegion(region.start(), region.end()); }
+    public static BaseRegion from(final ChrBaseRegion region) { return new BaseRegion(region.start(), region.end()); }
 
     public int start() { return mStart; }
     public int end() { return mEnd; }

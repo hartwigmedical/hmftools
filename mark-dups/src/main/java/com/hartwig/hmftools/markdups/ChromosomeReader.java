@@ -33,6 +33,7 @@ import com.hartwig.hmftools.markdups.common.FragmentUtils;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
+import com.hartwig.hmftools.markdups.common.UnmapStats;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 
@@ -57,6 +58,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
     private ChrBaseRegion mExcludedRegion;
+    private final List<BaseRegion> mUnmapRegions;
 
     private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
 
@@ -87,6 +89,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mConsensusReads = new ConsensusReads(config.RefGenome);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
+        mUnmapRegions = Lists.newArrayList();
+
         if(!mConfig.SpecificChrRegions.Regions.isEmpty())
         {
             // NOTE: doesn't currently handle multiple regions on the same chromosome
@@ -100,6 +104,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         {
             mCurrentPartition = new BaseRegion(1, mConfig.PartitionSize - 1);
         }
+
+        setUnmappedRegions();
 
         mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
         mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
@@ -145,13 +151,13 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
                     continue;
 
                 MD_LOGGER.debug("processing specific region({})", region);
-                mBamSlicer.slice(mSamReader, Lists.newArrayList(region), this::processSamRecord);
+                mBamSlicer.slice(mSamReader, region, this::processSamRecord);
             }
         }
         else
         {
             MD_LOGGER.info("processing chromosome({})", mRegion.Chromosome);
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
         }
 
         onPartitionComplete(false);
@@ -193,6 +199,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
             mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
             setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
+            setUnmappedRegions();
 
             perfCountersStart();
         }
@@ -228,6 +235,20 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
         {
             MD_LOGGER.debug("specific read: {}", readToString(read));
+        }
+
+        if(mConfig.UnmapRegions.enabled())
+        {
+            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegions);
+
+            if(read.getSupplementaryAlignmentFlag() && read.getReadUnmappedFlag())
+                return; // drop unmapped supplementaries
+
+            if(read.getReadUnmappedFlag() && read.getMateUnmappedFlag())
+            {
+                mBamWriter.writeFragment(new Fragment(read));
+                return;
+            }
         }
 
         try
@@ -422,6 +443,16 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         {
             mExcludedRegion = null;
         }
+    }
+
+    private void setUnmappedRegions()
+    {
+        mUnmapRegions.clear();
+
+        List<BaseRegion> chrRegions = mConfig.UnmapRegions.getRegions(mRegion.Chromosome);
+
+        if(chrRegions != null)
+            chrRegions.stream().filter(x -> x.overlaps(mCurrentPartition)).forEach(x -> mUnmapRegions.add(x));
     }
 
     private void perfCountersStart()

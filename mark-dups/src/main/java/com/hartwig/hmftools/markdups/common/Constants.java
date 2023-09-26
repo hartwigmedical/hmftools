@@ -6,6 +6,8 @@ public class Constants
     public static final int DEFAULT_PARTITION_SIZE = 1000000;
     public static final int DEFAULT_POS_BUFFER_SIZE = 500;
 
+    public static final int DEFAULT_READ_LENGTH = 151;
+
     // UMIs
     public static final int DEFAULT_MAX_UMI_BASE_DIFF = 1;
 

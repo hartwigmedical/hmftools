@@ -3,6 +3,9 @@ package com.hartwig.hmftools.common.test;
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_INDEX;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -17,7 +20,6 @@ import htsjdk.samtools.SAMSequenceRecord;
 public final class SamRecordTestUtils
 {
     public static final int DEFAULT_BASE_QUAL = 37;
-    public static final String NO_MATE_CHR = "*";
 
     public static SAMSequenceDictionary SAM_DICTIONARY_V37;
 
@@ -73,18 +75,21 @@ public final class SamRecordTestUtils
         record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
         record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
+        record.setReadPairedFlag(true);
 
-        if(!mateChr.isEmpty() && !mateChr.equals(NO_MATE_CHR))
+        if(!mateChr.isEmpty() && !mateChr.equals(NO_CHROMOSOME_NAME))
         {
             record.setMateReferenceName(mateChr);
             record.setMateAlignmentStart(mateStart);
             record.setMateReferenceIndex(HumanChromosome.fromString(mateChr).ordinal());
-            record.setReadPairedFlag(true);
             record.setProperPairFlag(true);
         }
         else
         {
             record.setMateUnmappedFlag(true);
+            record.setMateReferenceName(NO_CHROMOSOME_NAME);
+            record.setMateAlignmentStart(NO_POSITION);
+            record.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
             record.setProperPairFlag(false);
         }
 

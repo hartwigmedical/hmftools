@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.markdups.common.Fragment;
 
 import htsjdk.samtools.SAMRecord;
@@ -91,7 +92,6 @@ public class ReadPositionsCache
         // if the mate has a lower position or is on a lower chromosome, don't add it to a position group
         boolean mateUnmapped = read.getMateUnmappedFlag();
         boolean readUnmapped = read.getReadUnmappedFlag();
-
         boolean sameChromosome = !mateUnmapped && read.getMateReferenceName().equals(mChromosome);
 
         // skip if mate is on a lower chromosome
