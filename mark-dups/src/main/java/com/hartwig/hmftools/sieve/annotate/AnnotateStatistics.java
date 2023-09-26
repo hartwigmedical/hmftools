@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sieve.annotate;
 
+import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
+import static com.hartwig.hmftools.sieve.annotate.Util.getNM;
 import static com.hartwig.hmftools.sieve.annotate.Util.isNotProperReadPair;
 import static com.hartwig.hmftools.sieve.annotate.Util.isSoftClipped;
 
@@ -9,10 +11,13 @@ public class AnnotateStatistics
 {
     // Bucket MapQs into 0-9, 10-19, ..., 40-49, >= 50.
     private static final int MAPQ_BUCKET_COUNT = 6;
+    private static final int NM_BUCKET_COUNT = 11;
     public static final String TSV_HEADER = getTSVHeader();
 
     private final long[] mPrimaryMapQBuckets;
     private final long[] mSupplementaryMapQBuckets;
+    private final long[] mPrimaryNMBuckets;
+    private final long[] mSupplementaryNMBuckets;
 
     private long mPrimaryReadCount;
     private long mPrimarySoftClippedCount;
@@ -38,6 +43,18 @@ public class AnnotateStatistics
         for(int i = 0; i < mSupplementaryMapQBuckets.length; i++)
         {
             mSupplementaryMapQBuckets[i] = 0;
+        }
+
+        mPrimaryNMBuckets = new long[NM_BUCKET_COUNT];
+        for(int i = 0; i < mPrimaryNMBuckets.length; i++)
+        {
+            mPrimaryNMBuckets[i] = 0;
+        }
+
+        mSupplementaryNMBuckets = new long[NM_BUCKET_COUNT];
+        for(int i = 0; i < mSupplementaryNMBuckets.length; i++)
+        {
+            mSupplementaryNMBuckets[i] = 0;
         }
     }
 
@@ -82,6 +99,30 @@ public class AnnotateStatistics
             }
         }
 
+        for(int i = 0; i < NM_BUCKET_COUNT; i++)
+        {
+            if(i < NM_BUCKET_COUNT - 1)
+            {
+                sb.append("\tPrimary NM " + i);
+            }
+            else
+            {
+                sb.append("\tPrimary NM >=" + i);
+            }
+        }
+
+        for(int i = 0; i < NM_BUCKET_COUNT; i++)
+        {
+            if(i < NM_BUCKET_COUNT - 1)
+            {
+                sb.append("\tSupplementary NM " + i);
+            }
+            else
+            {
+                sb.append("\tSupplementary NM >=" + i);
+            }
+        }
+
         return sb.toString();
     }
 
@@ -90,17 +131,31 @@ public class AnnotateStatistics
         return Math.min(mapQ / 10, MAPQ_BUCKET_COUNT - 1);
     }
 
+    private static int getNMBucketIndex(int nm)
+    {
+        return Math.min(nm, NM_BUCKET_COUNT - 1);
+    }
+
     public void matchedRead(final SAMRecord read)
     {
+        Integer editDistance = getNM(read);
+        if(editDistance == null)
+        {
+            MD_LOGGER.error("Read {} does not contain NM attribute.", read);
+            System.exit(1);
+        }
+
         if(read.getSupplementaryAlignmentFlag())
         {
             mSupplementaryCount++;
             mSupplementaryMapQBuckets[getMapQBucketIndex(read.getMappingQuality())]++;
+            mSupplementaryNMBuckets[getNMBucketIndex(editDistance)]++;
             return;
         }
 
         mPrimaryReadCount++;
         mPrimaryMapQBuckets[getMapQBucketIndex(read.getMappingQuality())]++;
+        mPrimaryNMBuckets[getNMBucketIndex(editDistance)]++;
 
         boolean softClipped = isSoftClipped(read);
         boolean improperPair = isNotProperReadPair(read);
@@ -137,6 +192,18 @@ public class AnnotateStatistics
         {
             sb.append('\t');
             sb.append(mSupplementaryMapQBuckets[i]);
+        }
+
+        for(int i = 0; i < mPrimaryNMBuckets.length; i++)
+        {
+            sb.append('\t');
+            sb.append(mPrimaryNMBuckets[i]);
+        }
+
+        for(int i = 0; i < mSupplementaryNMBuckets.length; i++)
+        {
+            sb.append('\t');
+            sb.append(mSupplementaryNMBuckets[i]);
         }
 
         return sb.toString();

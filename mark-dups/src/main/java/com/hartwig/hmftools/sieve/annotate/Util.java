@@ -5,6 +5,8 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -63,5 +65,12 @@ public class Util
         }
 
         return false;
+    }
+
+    @Nullable
+    public static Integer getNM(final SAMRecord read)
+    {
+        Object rawAttr = read.getAttribute("NM");
+        return rawAttr == null ? null : (int) rawAttr;
     }
 }
