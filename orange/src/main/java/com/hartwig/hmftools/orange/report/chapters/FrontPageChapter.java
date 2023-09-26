@@ -24,9 +24,7 @@ import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
-import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
-import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
@@ -202,10 +200,9 @@ public class FrontPageChapter implements ReportChapter
             addCellEntry(summary, cells, "Viral presence:", virusString());
         }
 
-        addCellEntry(summary, cells, "Whole genome duplicated:", report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No");
+        addCellEntry(summary, cells, "Whole genome duplicated:", wgdString());
         addCellEntry(summary, cells, "Microsatellite indels per Mb:", msiString());
-        addCellEntry(summary, cells, "Tumor mutations per Mb:",
-                formatSingleDigitDecimal(report.purple().characteristics().tumorMutationalBurdenPerMb()));
+        addCellEntry(summary, cells, "Tumor mutations per Mb:", tmbString());
         addCellEntry(summary, cells, "Tumor mutational load:", tmlString());
 
         if(includeGermline) // will change once we solve HRD for panel
@@ -418,51 +415,62 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
+    private String wgdString()
+    {
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        return report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No";
+    }
+
+    @NotNull
     private String msiString()
     {
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         PurpleCharacteristics characteristics = report.purple().characteristics();
         return formatSingleDigitDecimal(characteristics.microsatelliteIndelsPerMb()) + " ("
-                + display(characteristics.microsatelliteStatus()) + ")";
+                + characteristics.microsatelliteStatus().display() + ")";
+    }
+
+    @NotNull
+    private String tmbString()
+    {
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        PurpleCharacteristics characteristics = report.purple().characteristics();
+        return formatSingleDigitDecimal(characteristics.tumorMutationalBurdenPerMb()) +
+                " (" + characteristics.tumorMutationalBurdenStatus().display() + ")";
     }
 
     @NotNull
     private String tmlString()
     {
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         PurpleCharacteristics characteristics = report.purple().characteristics();
-        return characteristics.tumorMutationalLoad() + " (" + display(characteristics.tumorMutationalLoadStatus()) + ")";
-    }
-
-    private static String display(PurpleMicrosatelliteStatus microsatelliteStatus)
-    {
-        switch(microsatelliteStatus)
-        {
-            case MSI:
-                return "Unstable";
-            case MSS:
-                return "Stable";
-            case UNKNOWN:
-                return "Unknown";
-        }
-        throw new IllegalStateException();
-    }
-
-    private static String display(@NotNull PurpleTumorMutationalStatus tumorMutationalStatus)
-    {
-        switch(tumorMutationalStatus)
-        {
-            case HIGH:
-                return "High";
-            case LOW:
-                return "Low";
-            case UNKNOWN:
-                return "Unknown";
-        }
-        throw new IllegalStateException();
+        return characteristics.tumorMutationalLoad() + " (" + characteristics.tumorMutationalLoadStatus().display() + ")";
     }
 
     @NotNull
     private String hrDeficiencyString()
     {
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         ChordRecord chord = report.chord();
         if(chord == null)
         {
@@ -471,7 +479,7 @@ public class FrontPageChapter implements ReportChapter
 
         if(chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED)
         {
-            return displayChordStatus(ChordStatus.CANNOT_BE_DETERMINED);
+            return chord.hrStatus().display();
         }
 
         String addon = Strings.EMPTY;
@@ -494,22 +502,7 @@ public class FrontPageChapter implements ReportChapter
                 addon = " - " + chord.hrdType();
             }
         }
-        return formatSingleDigitDecimal(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
-    }
-
-    private static String displayChordStatus(ChordStatus chordStatus)
-    {
-        switch(chordStatus)
-        {
-            case CANNOT_BE_DETERMINED:
-                return "Cannot be determined";
-            case HR_PROFICIENT:
-                return "Proficient";
-            case HR_DEFICIENT:
-                return "Deficient";
-            default:
-                return "Unknown";
-        }
+        return formatSingleDigitDecimal(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
     }
 
     @NotNull
@@ -535,6 +528,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String svTmbString()
     {
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         String svTmb = String.valueOf(report.purple().characteristics().svTumorMutationalBurden());
 
         Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
@@ -560,6 +558,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String maxComplexSizeString()
     {
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         CuppaData cuppa = report.cuppa();
         return cuppa != null ? Integer.toString(cuppa.maxComplexSize()) : ReportResources.NOT_AVAILABLE;
     }
@@ -567,6 +570,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String telomericSGLString()
     {
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         CuppaData cuppa = report.cuppa();
         return cuppa != null ? Integer.toString(cuppa.telomericSGLs()) : ReportResources.NOT_AVAILABLE;
     }
@@ -574,6 +582,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String lineCountString()
     {
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         CuppaData cuppa = report.cuppa();
         return cuppa != null ? Integer.toString(cuppa.lineCount()) : ReportResources.NOT_AVAILABLE;
     }
