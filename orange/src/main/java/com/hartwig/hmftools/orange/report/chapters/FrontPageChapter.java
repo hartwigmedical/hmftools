@@ -130,7 +130,7 @@ public class FrontPageChapter implements ReportChapter
             return "";
         }
 
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -417,7 +417,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String wgdString()
     {
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -428,7 +428,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String msiString()
     {
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -441,7 +441,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String tmbString()
     {
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -454,7 +454,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String tmlString()
     {
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -466,7 +466,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String hrDeficiencyString()
     {
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -528,7 +528,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String svTmbString()
     {
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -558,7 +558,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String maxComplexSizeString()
     {
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -570,7 +570,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String telomericSGLString()
     {
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }
@@ -582,7 +582,7 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String lineCountString()
     {
-        if(PurpleQCInterpretation.isQCFail(report.purple().fit().qc()))
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
         {
             return ReportResources.NOT_AVAILABLE;
         }

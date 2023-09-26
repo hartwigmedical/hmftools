@@ -12,7 +12,7 @@ public final class PurpleQCInterpretation
         return purpleQC.status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
     }
 
-    public static boolean isQCFail(@NotNull PurpleQC purpleQC)
+    public static boolean isFail(@NotNull PurpleQC purpleQC)
     {
         return purpleQC.status().contains(PurpleQCStatus.FAIL_NO_TUMOR) || purpleQC.status().contains(PurpleQCStatus.FAIL_CONTAMINATION);
     }

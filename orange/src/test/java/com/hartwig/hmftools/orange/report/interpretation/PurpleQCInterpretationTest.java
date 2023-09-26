@@ -27,12 +27,12 @@ public class PurpleQCInterpretationTest
     @Test
     public void shouldInterpretAsFailIfAtLeastOneQCStateIsFail()
     {
-        assertTrue(PurpleQCInterpretation.isQCFail(create(PurpleQCStatus.FAIL_NO_TUMOR)));
-        assertTrue(PurpleQCInterpretation.isQCFail(create(PurpleQCStatus.FAIL_CONTAMINATION)));
+        assertTrue(PurpleQCInterpretation.isFail(create(PurpleQCStatus.FAIL_NO_TUMOR)));
+        assertTrue(PurpleQCInterpretation.isFail(create(PurpleQCStatus.FAIL_CONTAMINATION)));
 
-        assertFalse(PurpleQCInterpretation.isQCFail(create(PurpleQCStatus.PASS)));
+        assertFalse(PurpleQCInterpretation.isFail(create(PurpleQCStatus.PASS)));
 
-        assertTrue(PurpleQCInterpretation.isQCFail(create(PurpleQCStatus.PASS, PurpleQCStatus.FAIL_NO_TUMOR)));
+        assertTrue(PurpleQCInterpretation.isFail(create(PurpleQCStatus.PASS, PurpleQCStatus.FAIL_NO_TUMOR)));
     }
 
     @NotNull
