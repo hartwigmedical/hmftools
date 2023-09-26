@@ -106,8 +106,6 @@ public class RNAFindingsChapter implements ReportChapter
 
             double duplicateRate = isofox.summary().duplicateFragments() / (double) isofox.summary().totalFragments();
             table.addCell(cells.createContent(formatPercentage(duplicateRate)));
-
-            document.add(new Tables(reportResources).createWrapping(table));
         }
 
         document.add(new Tables(reportResources).createWrapping(table));
