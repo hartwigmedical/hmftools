@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.datamodel.OrangeJson;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
@@ -92,7 +93,8 @@ public class ReportWriter
     {
         if(writeToDisk && outputDir != null)
         {
-            String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
+            String basePath = FileWriterUtils.checkAddDirSeparator(outputDir);
+            String outputFilePath = basePath + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
 
             OrangeJson.getInstance().write(report, outputFilePath);
