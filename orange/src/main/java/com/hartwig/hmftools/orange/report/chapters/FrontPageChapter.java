@@ -37,6 +37,7 @@ import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
+import com.hartwig.hmftools.orange.report.interpretation.PurpleQualityInterpretation;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -106,22 +107,10 @@ public class FrontPageChapter implements ReportChapter
         Table table = Tables.createContent(contentWidth(), headerComponents, headerCells);
 
         table.addCell(cells.createContent(configuredPrimaryTumor(report.configuredPrimaryTumor())));
-        table.addCell(cells.createContent(!report.tumorOnlyMode() ? cuppaCancerType(report.cuppa()) : ""));
+        table.addCell(cells.createContent(cuppaCancerTypeString()));
         table.addCell(cells.createContent(purpleQCString()));
 
         document.add(new Tables(reportResources).createWrapping(table));
-    }
-
-    @NotNull
-    private static String cuppaCancerType(@Nullable CuppaData cuppa)
-    {
-        if(cuppa == null)
-        {
-            return ReportResources.NOT_AVAILABLE;
-        }
-
-        CuppaPrediction best = CuppaInterpretation.best(cuppa);
-        return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
     }
 
     @NotNull
@@ -134,6 +123,33 @@ public class FrontPageChapter implements ReportChapter
         }
 
         return concat(configured);
+    }
+
+    private String cuppaCancerTypeString()
+    {
+        if(report.tumorOnlyMode())
+        {
+            return "";
+        }
+
+        if(PurpleQualityInterpretation.isQCFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        return cuppaCancerType(report.cuppa());
+    }
+
+    @NotNull
+    private static String cuppaCancerType(@Nullable CuppaData cuppa)
+    {
+        if(cuppa == null)
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        CuppaPrediction best = CuppaInterpretation.best(cuppa);
+        return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
     }
 
     @NotNull
@@ -161,22 +177,30 @@ public class FrontPageChapter implements ReportChapter
         addCellEntry(summary, cells, "Somatic variant drivers:", somaticVariantDriverString());
 
         if(includeGermline)
+        {
             addCellEntry(summary, cells, "Germline variant drivers:", germlineVariantDriverString());
+        }
 
         addCellEntry(summary, cells, "Somatic copy number drivers:", somaticCopyNumberDriverString());
 
         if(includeGermline)
+        {
             addCellEntry(summary, cells, "Germline copy number drivers:", germlineCopyNumberDriverString());
+        }
 
         addCellEntry(summary, cells, "Somatic disruption drivers:", somaticDisruptionDriverString());
 
         if(includeGermline)
+        {
             addCellEntry(summary, cells, "Germline disruption drivers:", germlineDisruptionDriverString());
+        }
 
         addCellEntry(summary, cells, "Fusion drivers:", fusionDriverString());
 
         if(includeGermline)
+        {
             addCellEntry(summary, cells, "Viral presence:", virusString());
+        }
 
         addCellEntry(summary, cells, "Whole genome duplicated:", report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No");
         addCellEntry(summary, cells, "Microsatellite indels per Mb:", msiString());

@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
@@ -52,13 +51,9 @@ public final class TestPurpleInterpretationFactory
     @NotNull
     private static PurpleQC qcPass()
     {
-        return ImmutablePurpleQC.builder()
+        return TestPurpleQCFactory.builder()
                 .addStatus(PurpleQCStatus.PASS)
                 .addGermlineAberrations(PurpleGermlineAberration.NONE)
-                .amberMeanDepth(0)
-                .unsupportedCopyNumberSegments(0)
-                .deletedGenes(0)
-                .contamination(0D)
                 .build();
     }
 
