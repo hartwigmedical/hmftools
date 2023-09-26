@@ -25,6 +25,37 @@ public class Annotate
         mConfig = new AnnotateConfig(configBuilder);
     }
 
+    public static synchronized void writeRecord(final BufferedWriter outputWriter, final BlacklistRegion region,
+            final AnnotateStatistics stats)
+    {
+        try
+        {
+            outputWriter.write(region.getTSVFragment() + '\t' + stats.getTSVFragment());
+            outputWriter.newLine();
+        }
+        catch(IOException e)
+        {
+            MD_LOGGER.error("An exception was raised while writing a record to the output file: {}", e.toString());
+            System.exit(1);
+        }
+    }
+
+    public static void main(final String[] args)
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        AnnotateConfig.addConfig(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        setLogLevel(configBuilder);
+        // TODO(m_cooper): Fill in.
+        // logVersion();
+
+        Annotate annotate = new Annotate(configBuilder);
+        annotate.run();
+    }
+
     public void run()
     {
         if(mConfig.BamFile == null)
@@ -92,36 +123,5 @@ public class Annotate
         }
 
         return null;
-    }
-
-    public static synchronized void writeRecord(final BufferedWriter outputWriter, final BlacklistRegion region,
-            final AnnotateStatistics stats)
-    {
-        try
-        {
-            outputWriter.write(region.getTSVFragment() + '\t' + stats.getTSVFragment());
-            outputWriter.newLine();
-        }
-        catch(IOException e)
-        {
-            MD_LOGGER.error("An exception was raised while writing a record to the output file: {}", e.toString());
-            System.exit(1);
-        }
-    }
-
-    public static void main(final String[] args)
-    {
-        ConfigBuilder configBuilder = new ConfigBuilder();
-        AnnotateConfig.addConfig(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
-
-        configBuilder.checkAndParseCommandLine(args);
-
-        setLogLevel(configBuilder);
-        // TODO(m_cooper): Fill in.
-        // logVersion();
-
-        Annotate annotate = new Annotate(configBuilder);
-        annotate.run();
     }
 }

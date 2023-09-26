@@ -14,6 +14,9 @@ import org.apache.logging.log4j.Logger;
 public class AnnotateConfig
 {
     public static final Logger MD_LOGGER = LogManager.getLogger(AnnotateConfig.class);
+    private static final String BAM_FILE = "bam_file";
+    private static final String BED_FILE = "bed_file";
+    private static final String OUTPUT_FILE = "output_file";
 
     public final String BamFile;
     public final String BedFile;
@@ -21,11 +24,6 @@ public class AnnotateConfig
     public final String OutputFile;
     public final RefGenomeVersion RefGenVersion;
     public final int Threads;
-
-    private static final String BAM_FILE = "bam_file";
-    private static final String BED_FILE = "bed_file";
-
-    private static final String OUTPUT_FILE = "output_file";
 
     public AnnotateConfig(final ConfigBuilder configBuilder)
     {
