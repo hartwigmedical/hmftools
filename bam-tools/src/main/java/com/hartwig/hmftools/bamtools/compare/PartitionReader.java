@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.bamtools.compare;
 
+import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
@@ -9,6 +10,8 @@ import static com.hartwig.hmftools.bamtools.compare.MismatchType.VALUE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+
+import static htsjdk.samtools.SAMFlag.DUPLICATE_READ;
 
 import java.util.List;
 import java.util.Queue;
@@ -222,18 +225,29 @@ public class PartitionReader
 
     private static final List<String> KEY_ATTRIBUTES = List.of(SUPPLEMENTARY_ATTRIBUTE, MATE_CIGAR_ATTRIBUTE);
 
+    private boolean flagsMatch(final int flags1, final int flags2)
+    {
+        if(flags1 == flags2)
+            return true;
+
+        if(mConfig.IgnoreDupDiffs && abs(flags1 - flags2) == DUPLICATE_READ.intValue())
+            return true;
+
+        return false;
+    }
+
     private void checkReadDetails(final SAMRecord read1, final SAMRecord read2)
     {
         if(read1.getInferredInsertSize() == read2.getInferredInsertSize()
         && read1.getMappingQuality() == read2.getMappingQuality()
-        && read1.getFlags() == read2.getFlags()
+        && flagsMatch(read1.getFlags(), read2.getFlags())
         && read1.getCigarString().equals(read2.getCigarString()))
         {
             // assume most reads match to avoid creating a array for the diffs
             return;
         }
 
-        List<String> diffs = Lists.newArrayListWithExpectedSize(4);;
+        List<String> diffs = Lists.newArrayListWithExpectedSize(4);
 
         if(read1.getInferredInsertSize() != read2.getInferredInsertSize())
         {
@@ -252,7 +266,11 @@ public class PartitionReader
 
         if(read1.getFlags() != read2.getFlags())
         {
-            diffs.add(format("flags(%d/%d)", read1.getFlags(), read2.getFlags()));
+            if(read1.getReadNegativeStrandFlag() != read2.getReadNegativeStrandFlag())
+                diffs.add(format("negStrand(%s/%s)", read1.getReadNegativeStrandFlag(), read2.getReadNegativeStrandFlag()));
+
+            if(!mConfig.IgnoreDupDiffs && read1.getDuplicateReadFlag() != read2.getDuplicateReadFlag())
+                diffs.add(format("duplicate(%s/%s)", read1.getDuplicateReadFlag(), read2.getDuplicateReadFlag()));
         }
 
         // check key attributes:

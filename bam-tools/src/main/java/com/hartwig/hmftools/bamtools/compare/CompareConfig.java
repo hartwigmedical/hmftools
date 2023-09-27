@@ -30,6 +30,7 @@ public class CompareConfig
     public final int PartitionSize;
     public final int MaxPartitionReads;
     public final boolean ExcludeRegions;
+    public final boolean IgnoreDupDiffs;
 
     public final int Threads;
     public final List<String> LogReadIds;
@@ -42,6 +43,7 @@ public class CompareConfig
     private static final String NEW_BAM_FILE = "new_bam_file";
     private static final String EXCLUDE_REGIONS = "exclude_regions";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
+    private static final String IGNORE_DUP_DIFFS = "ignore_dup_diffs";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 100000;
 
@@ -66,6 +68,7 @@ public class CompareConfig
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
+        IgnoreDupDiffs = configBuilder.hasFlag(IGNORE_DUP_DIFFS);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -89,6 +92,7 @@ public class CompareConfig
         configBuilder.addRequiredConfigItem(NEW_BAM_FILE,"New BAM file");
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(EXCLUDE_REGIONS, "Ignore excluded regions");
+        configBuilder.addFlag(IGNORE_DUP_DIFFS, "Ignore duplicate diffs");
 
         addRefGenomeConfig(configBuilder, true);;
         addSpecificChromosomesRegionsConfig(configBuilder);
