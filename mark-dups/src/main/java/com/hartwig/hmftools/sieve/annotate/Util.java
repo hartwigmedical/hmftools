@@ -5,9 +5,8 @@ import static java.lang.Math.abs;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -15,7 +14,7 @@ import htsjdk.samtools.SAMRecord;
 public class Util
 {
     // TODO(m_cooper): Use the original implementation.
-    public static boolean isNotProperReadPair(@NotNull final SAMRecord read)
+    public static boolean isNotProperReadPair(final SAMRecord read)
     {
         if(read.getReadUnmappedFlag())
         {
@@ -50,13 +49,10 @@ public class Util
         return false;
     }
 
-    public static boolean isSoftClipped(@NotNull final SAMRecord read)
+    public static boolean isSoftClipped(final SAMRecord read)
     {
-        final Cigar cigar = read.getCigar();
-        final var it = cigar.getCigarElements().iterator();
-        while(it.hasNext())
+        for(CigarElement el : read.getCigar().getCigarElements())
         {
-            final CigarElement el = it.next();
             final CigarOperator op = el.getOperator();
             if(op == CigarOperator.SOFT_CLIP)
             {
@@ -65,5 +61,12 @@ public class Util
         }
 
         return false;
+    }
+
+    @Nullable
+    public static Integer getNM(final SAMRecord read)
+    {
+        Object rawAttr = read.getAttribute("NM");
+        return rawAttr == null ? null : (int) rawAttr;
     }
 }

@@ -14,23 +14,21 @@ import org.apache.logging.log4j.Logger;
 public class AnnotateConfig
 {
     public static final Logger MD_LOGGER = LogManager.getLogger(AnnotateConfig.class);
+    private static final String BAM_FILE = "bam_file";
+    private static final String BED_FILE = "bed_file";
+    private static final String OUTPUT_FILE = "output_file";
 
     public final String BamFile;
-    public final String BlacklistRegionRepeatMaskerFile;
+    public final String BedFile;
     public final String RefGenome;
     public final String OutputFile;
     public final RefGenomeVersion RefGenVersion;
     public final int Threads;
 
-    private static final String BAM_FILE = "bam_file";
-    private static final String BLACKLIST_REGION_REPEAT_MASKER_FILE = "blacklist_region_repeat_makser_file";
-
-    private static final String OUTPUT_FILE = "output_file";
-
     public AnnotateConfig(final ConfigBuilder configBuilder)
     {
         BamFile = configBuilder.getValue(BAM_FILE);
-        BlacklistRegionRepeatMaskerFile = configBuilder.getValue(BLACKLIST_REGION_REPEAT_MASKER_FILE);
+        BedFile = configBuilder.getValue(BED_FILE);
         OutputFile = configBuilder.getValue(OUTPUT_FILE);
         RefGenome = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
@@ -39,8 +37,8 @@ public class AnnotateConfig
 
     public static void addConfig(final ConfigBuilder configBuilder)
     {
-        configBuilder.addPath(BAM_FILE, true, "BAM file to annotate");
-        configBuilder.addPath(BLACKLIST_REGION_REPEAT_MASKER_FILE, true, "CSV file containing the blacklisted regions and their repeat masks");
+        configBuilder.addPath(BAM_FILE, true, "BAM file");
+        configBuilder.addPath(BED_FILE, true, "BED file");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file");
         addRefGenomeConfig(configBuilder, true);
         addThreadOptions(configBuilder);
