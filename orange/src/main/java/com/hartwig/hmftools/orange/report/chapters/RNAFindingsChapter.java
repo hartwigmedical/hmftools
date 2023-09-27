@@ -65,7 +65,6 @@ public class RNAFindingsChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addKeyQC(document);
-        addQCWarningInCaseOfFail(document);
         addExpressionTables(document);
         addRNAFusionTables(document);
         addNovelSpliceJunctionTables(document);
@@ -93,24 +92,26 @@ public class RNAFindingsChapter implements ReportChapter
 
             double duplicateRate = isofox.summary().duplicateFragments() / (double) isofox.summary().totalFragments();
             table.addCell(cells.createContent(formatPercentage(duplicateRate)));
+
+            addQCWarningInCaseOfFail(table, cells);
         }
 
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
-    private void addQCWarningInCaseOfFail(@NotNull Document document)
+    private void addQCWarningInCaseOfFail(@NotNull Table table, @NotNull Cells cells)
     {
         boolean isRNAFail = !isofox.summary().qcStatus().equalsIgnoreCase(RNA_QC_PASS);
         boolean isDNAFailNoTumor = PurpleQCInterpretation.isFailNoTumor(purple.fit().qc());
 
         if(isRNAFail || isDNAFailNoTumor)
         {
-            String message = isRNAFail ?
+            String warning = isRNAFail ?
                     "The RNA QC status of this sample is not a pass. All presented RNA data should be interpreted with caution"
                     : "The DNA QC status of this sample is fail (no tumor). "
                             + "In addition to DNA findings, all RNA findings should be interpreted with caution";
 
-            document.add(new Paragraph(message).addStyle(reportResources.qcWarningStyle()));
+            table.addCell(cells.createSpanningWarning(table, warning));
         }
     }
 

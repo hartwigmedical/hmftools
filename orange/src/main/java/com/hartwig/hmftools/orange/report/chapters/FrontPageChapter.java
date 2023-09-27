@@ -43,7 +43,6 @@ import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.property.HorizontalAlignment;
 import com.itextpdf.layout.property.UnitValue;
@@ -89,7 +88,6 @@ public class FrontPageChapter implements ReportChapter
     public void render(@NotNull Document document)
     {
         addSummaryTable(document);
-        addQCWarningInCaseOfFail(document);
         addDetailsAndPlots(document);
     }
 
@@ -110,10 +108,12 @@ public class FrontPageChapter implements ReportChapter
         table.addCell(cells.createContent(cuppaCancerTypeString()));
         table.addCell(cells.createContent(purpleQCString()));
 
+        addQCWarningInCaseOfFail(table, cells);
+
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
-    private void addQCWarningInCaseOfFail(@NotNull Document document)
+    private void addQCWarningInCaseOfFail(@NotNull Table table, @NotNull Cells cells)
     {
         boolean isFailNoTumor = PurpleQCInterpretation.isFailNoTumor(report.purple().fit().qc());
         boolean isContaminated = PurpleQCInterpretation.isContaminated(report.purple().fit().qc());
@@ -130,9 +130,8 @@ public class FrontPageChapter implements ReportChapter
 
             String warning = "The QC status of this sample is fail " + reason +
                     ": all presented data in this report should be interpreted with caution";
-            document.add(new Paragraph(warning).addStyle(reportResources.qcWarningStyle()));
+            table.addCell(cells.createSpanningWarning(table, warning));
         }
-
     }
 
     @NotNull
