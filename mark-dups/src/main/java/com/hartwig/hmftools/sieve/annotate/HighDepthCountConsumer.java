@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.sieve.annotate;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
 
 import java.io.BufferedWriter;
@@ -8,6 +9,7 @@ import java.io.File;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
@@ -24,6 +26,8 @@ public class HighDepthCountConsumer implements Callable
     private final BufferedWriter mOutputWriter;
 
     private final RefGenomeSource mRefGenome;
+    private final RefGenomeCoordinates mRefGenomeCoords;
+
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
 
@@ -43,6 +47,8 @@ public class HighDepthCountConsumer implements Callable
         mOutputWriter = outputWriter;
 
         mRefGenome = loadRefGenome(config.RefGenome);
+        mRefGenomeCoords = mConfig.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+
         mBamSlicer = new BamSlicer(0, false, true, false);
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(mConfig.BamFile));
 
@@ -96,14 +102,18 @@ public class HighDepthCountConsumer implements Callable
     // TODO(m_cooper): This is probably implemented somewhere.
     private RefGenomeRegionAnnotations annotateRegionFromRefGenome()
     {
-        String refBases =
-                mRefGenome.getBaseString(mCurrentRegion.getChromosome(), mCurrentRegion.getPosStart(), mCurrentRegion.getPosEnd());
+        String refBases = mRefGenome.getBaseString(
+                mCurrentRegion.getChromosome(),
+                mCurrentRegion.getPosStart(),
+                mCurrentRegion.getPosEnd());
+
         if(refBases.isEmpty())
         {
             MD_LOGGER.error("Requested empty base string from ref genome ({}) at {}:{}-{}.", mConfig.RefGenome, mCurrentRegion.getChromosome(), mCurrentRegion.getPosStart(), mCurrentRegion.getPosEnd());
             System.exit(1);
         }
 
+        // Base counts.
         int aCount = 0;
         int tCount = 0;
         int gCount = 0;
@@ -142,7 +152,25 @@ public class HighDepthCountConsumer implements Callable
             }
         }
 
+        // Is this close to the centromere?
+        final int centromere = mRefGenomeCoords.centromere(mCurrentRegion.getChromosome());
+        boolean isCentromic;
+        // TODO(m_cooper): Configure the 2.5Mb threshold.
+        if(mCurrentRegion.getPosEnd() <= centromere)
+        {
+            isCentromic = centromere - mCurrentRegion.getPosEnd() <= 2500000;
+        }
+        else if(centromere <= mCurrentRegion.getPosStart())
+        {
+            isCentromic = mCurrentRegion.getPosStart() - centromere <= 2500000;
+        }
+        else
+        {
+            isCentromic = true;
+        }
+
         return new RefGenomeRegionAnnotations(
+                isCentromic,
                 1.0 * aCount / refBases.length(),
                 1.0 * tCount / refBases.length(),
                 1.0 * gCount / refBases.length(),
