@@ -62,11 +62,11 @@ public class HighDepthCounts
         sb.append('\t');
         sb.append("PrimaryReadCount");
         sb.append('\t');
-        sb.append("PrimaryDiscordantCount");
+        sb.append("PrimaryDiscordantProp");
         sb.append('\t');
-        sb.append("PrimaryConcordantCount");
+        sb.append("PrimaryConcordantProp");
         sb.append('\t');
-        sb.append("PrimaryConcordantShortReads");
+        sb.append("PrimaryConcordantShortReadsProp");
 
         for(int i = 0; i < MAPQ_BUCKET_COUNT; i++)
         {
@@ -74,11 +74,11 @@ public class HighDepthCounts
             final int mapQEnd = mapQStart + 9;
             if(i < MAPQ_BUCKET_COUNT - 1)
             {
-                sb.append("\tConcordant MAPQ " + mapQStart + '-' + mapQEnd);
+                sb.append("\tConcordant MAPQ " + mapQStart + '-' + mapQEnd + " Prop");
             }
             else
             {
-                sb.append("\tConcordant MAPQ >=" + mapQStart);
+                sb.append("\tConcordant MAPQ >=" + mapQStart + " Prop");
             }
         }
 
@@ -86,18 +86,18 @@ public class HighDepthCounts
         {
             if(i < NM_BUCKET_COUNT - 1)
             {
-                sb.append("\tConcordant NM " + i);
+                sb.append("\tConcordant NM " + i + " Prop");
             }
             else
             {
-                sb.append("\tConcordant NM >=" + i);
+                sb.append("\tConcordant NM >=" + i + " Prop");
             }
         }
 
         // Bucket SOFT_CLIP counts into buckets of 1-3, 4-10, and >=11.
-        sb.append("\tConcordant SOFT_CLIP 1-3");
-        sb.append("\tConcordant SOFT_CLIP 4-10");
-        sb.append("\tConcordant SOFT_CLIP >=11");
+        sb.append("\tConcordant SOFT_CLIP 1-3 Prop");
+        sb.append("\tConcordant SOFT_CLIP 4-10 Prop");
+        sb.append("\tConcordant SOFT_CLIP >=11 Prop");
 
         return sb.toString();
     }
@@ -182,28 +182,28 @@ public class HighDepthCounts
         sb.append('\t');
         sb.append(mPrimaryReadCount);
         sb.append('\t');
-        sb.append(mPrimaryDiscordantCount);
+        sb.append(mPrimaryReadCount == 0 ? "-" : String.valueOf(1.0 * mPrimaryDiscordantCount / mPrimaryReadCount));
         sb.append('\t');
-        sb.append(mPrimaryConcordantCount);
+        sb.append(mPrimaryReadCount == 0 ? "-" : String.valueOf(1.0 * mPrimaryConcordantCount / mPrimaryReadCount));
         sb.append('\t');
-        sb.append(mPrimaryConcordantShortReads);
+        sb.append(mPrimaryConcordantCount == 0 ? "-" : String.valueOf(1.0 * mPrimaryConcordantShortReads / mPrimaryConcordantCount));
 
         for(int i = 0; i < mConcordantMapQBuckets.length; i++)
         {
             sb.append('\t');
-            sb.append(mConcordantMapQBuckets[i]);
+            sb.append(mPrimaryConcordantCount == 0 ? "-" : String.valueOf(1.0 * mConcordantMapQBuckets[i] / mPrimaryConcordantCount));
         }
 
         for(int i = 0; i < mConcordantNMBuckets.length; i++)
         {
             sb.append('\t');
-            sb.append(mConcordantNMBuckets[i]);
+            sb.append(mPrimaryConcordantCount == 0 ? "-" : String.valueOf(1.0 * mConcordantNMBuckets[i] / mPrimaryConcordantCount));
         }
 
         for(int i = 0; i < mConcordantSoftClipBuckets.length; i++)
         {
             sb.append('\t');
-            sb.append(mConcordantSoftClipBuckets[i]);
+            sb.append(mPrimaryConcordantCount == 0 ? "-" : String.valueOf(1.0 * mConcordantSoftClipBuckets[i] / mPrimaryConcordantCount));
         }
 
         return sb.toString();
