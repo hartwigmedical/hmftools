@@ -178,8 +178,15 @@ public class HighDepthCounts
     public String getTSVFragment()
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.valueOf(mSupplementaryCount) + '\t' + mPrimaryReadCount + '\t' + mPrimaryDiscordantCount + '\t'
-                + mPrimaryConcordantCount + '\t' + mPrimaryConcordantShortReads);
+        sb.append(mSupplementaryCount);
+        sb.append('\t');
+        sb.append(mPrimaryReadCount);
+        sb.append('\t');
+        sb.append(mPrimaryDiscordantCount);
+        sb.append('\t');
+        sb.append(mPrimaryConcordantCount);
+        sb.append('\t');
+        sb.append(mPrimaryConcordantShortReads);
 
         for(int i = 0; i < mConcordantMapQBuckets.length; i++)
         {
