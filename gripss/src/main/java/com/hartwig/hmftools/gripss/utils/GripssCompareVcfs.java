@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
@@ -507,23 +508,23 @@ public class GripssCompareVcfs
     {
         try
         {
-            String fileName = mOutputDir + mSampleId + ".compare";
+            String fileName = mOutputDir + mSampleId + ".sv_compare";
 
             if(mOutputId != null)
                 fileName += "." + mOutputId;
 
-            fileName += ".csv";
+            fileName += TSV_EXTENSION;
 
             GR_LOGGER.info("writing comparison file: {}", fileName);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             if(mKeyByCoords)
-                writer.write("OrigId,NewId");
+                writer.write("OrigId\tNewId");
             else
                 writer.write("SvId");
 
-            writer.write(",Coords,Type,DiffType,OrigValue,NewValue,OrigQual,NewQual,OrigFilters,NewFilters");
+            writer.write("\tCoords\tType\tDiffType\tOrigValue\tNewValue\tOrigQual\tNewQual\tOrigFilters\tNewFilters");
             writer.newLine();
 
             return writer;
@@ -544,7 +545,7 @@ public class GripssCompareVcfs
 
             if(mKeyByCoords)
             {
-                mWriter.write(format("%s,%s",
+                mWriter.write(format("%s\t%s",
                         origSv != null ? origSv.id() : "", newSv != null ? newSv.id() : ""));
             }
             else
@@ -552,10 +553,10 @@ public class GripssCompareVcfs
                 mWriter.write(format("%s", origSv != null ? origSv.id() : newSv.id()));
             }
 
-            mWriter.write(format(",%s,%s,%s,%s,%s",
+            mWriter.write(format("\t%s\t%s\t%s\t%s\t%s",
                     coords, type, diffType, origValue, newValue));
 
-            mWriter.write(format(",%.1f,%.1f,%s,%s",
+            mWriter.write(format("\t%.1f\t%.1f\t%s\t%s",
                     origSv != null ? origSv.breakendStart().Qual : -1, newSv != null ? newSv.breakendStart().Qual : -1,
                     origSv != null ? filtersStr(origSv.breakendStart().Context.getFilters(), true) : "",
                     newSv != null ? filtersStr(newSv.breakendStart().Context.getFilters(), true) : ""));
