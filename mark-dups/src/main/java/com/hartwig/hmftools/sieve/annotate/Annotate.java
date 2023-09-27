@@ -26,11 +26,11 @@ public class Annotate
     }
 
     public static synchronized void writeRecord(final BufferedWriter outputWriter, final HighDepthRegion region,
-            final HighDepthCounts stats)
+            final RefGenomeRegionAnnotations refAnnotations, final HighDepthCounts counts)
     {
         try
         {
-            outputWriter.write(region.getTSVFragment() + '\t' + stats.getTSVFragment());
+            outputWriter.write(region.getTSVFragment() + '\t' + refAnnotations.getTSVFragment() + '\t' + counts.getTSVFragment());
             outputWriter.newLine();
         }
         catch(IOException e)
@@ -112,7 +112,7 @@ public class Annotate
         try
         {
             BufferedWriter writer = new BufferedWriter(new FileWriter(mConfig.OutputFile));
-            writer.write(HighDepthRegion.TSV_HEADER + '\t' + HighDepthCounts.TSV_HEADER);
+            writer.write(HighDepthRegion.TSV_HEADER + '\t' + RefGenomeRegionAnnotations.TSV_HEADER + '\t' + HighDepthCounts.TSV_HEADER);
             writer.newLine();
             return writer;
         }
