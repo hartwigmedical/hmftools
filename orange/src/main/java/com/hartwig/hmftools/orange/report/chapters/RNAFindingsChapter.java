@@ -110,7 +110,7 @@ public class RNAFindingsChapter implements ReportChapter
                     : "The DNA QC status of this sample is fail (no tumor). "
                             + "In addition to DNA findings, all RNA findings should be interpreted with caution";
 
-            document.add(new Paragraph(message).addStyle(reportResources.warningStyle()));
+            document.add(new Paragraph(message).addStyle(reportResources.qcWarningStyle()));
         }
     }
 

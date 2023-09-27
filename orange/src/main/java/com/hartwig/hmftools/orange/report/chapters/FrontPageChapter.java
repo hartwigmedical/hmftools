@@ -130,7 +130,7 @@ public class FrontPageChapter implements ReportChapter
 
             String warning = "The QC status of this sample is fail " + reason +
                     ": all presented data in this report should be interpreted with caution";
-            document.add(new Paragraph(warning).addStyle(reportResources.warningStyle()));
+            document.add(new Paragraph(warning).addStyle(reportResources.qcWarningStyle()));
         }
 
     }

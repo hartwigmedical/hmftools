@@ -163,7 +163,7 @@ public class ReportResources
     }
 
     @NotNull
-    public Style warningStyle()
+    public Style qcWarningStyle()
     {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
