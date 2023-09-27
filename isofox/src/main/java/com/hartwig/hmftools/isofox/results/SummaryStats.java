@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.isofox.results;
 
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.qcFiltersToString;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.ImmutableRnaStatistics;
+import com.hartwig.hmftools.common.rna.RnaQcFilter;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
@@ -41,10 +43,10 @@ public class SummaryStats
 
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
-        String qcStatus = RnaStatistics.calcQcStatus(totalFragments, duplicateFragments, spliceGeneCount, lowCoverageThreshold);
+        List<RnaQcFilter> qcFilters = RnaStatistics.calcQcStatus(totalFragments, duplicateFragments, spliceGeneCount, lowCoverageThreshold);
 
         return ImmutableRnaStatistics.builder()
-                .qcStatus(qcStatus)
+                .qcStatus(qcFilters)
                 .totalFragments(totalFragments)
                 .duplicateFragments(duplicateFragments)
                 .splicedFragmentPerc(fragmentTypeCounts.typeCount(TRANS_SUPPORTING) / totalFragmentsDenom)

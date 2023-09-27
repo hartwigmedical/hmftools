@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.isofox;
 
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.PASS;
+
+import java.util.List;
+
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
@@ -29,7 +33,7 @@ public final class IsofoxTestFactory
     {
         return ImmutableRnaStatistics.builder()
                 .totalFragments(0)
-                .qcStatus("PASS")
+                .qcStatus(List.of(PASS))
                 .duplicateFragments(0)
                 .splicedFragmentPerc(0D)
                 .unsplicedFragmentPerc(0D)

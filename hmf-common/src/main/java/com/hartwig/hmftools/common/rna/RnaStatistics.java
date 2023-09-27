@@ -2,7 +2,12 @@ package com.hartwig.hmftools.common.rna;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.FAIL_LOW_COVERAGE;
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.PASS;
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.WARN_DUPLICATE_RATE;
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.WARN_SPLICED_GENE_COVERAGE;
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.qcFiltersFromString;
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.qcFiltersToString;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferHeaderDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getDoubleValue;
@@ -45,17 +50,12 @@ public abstract class RnaStatistics
 
     public abstract double forwardStrandPercent();
 
-    public abstract String qcStatus();
+    public abstract List<RnaQcFilter> qcStatus();
 
     public static final int LOW_COVERAGE_THRESHOLD = 2500000;
     public static final int LOW_COVERAGE_PANEL_THRESHOLD = 100000;
     private static final int SPLICE_GENE_THRESHOLD = 17000;
     private static final double HIGH_DUPLICATES_THRESHOLD = 0.9;
-
-    public static final String QC_PASS = "PASS";
-    public static final String QC_FAIL_LOW_COVERAGE = "FAIL_LOW_COVERAGE";
-    public static final String QC_WARN_DUPLICATES = "WARN_DUPLICATE_RATE";
-    public static final String QC_WARN_LOW_SPLICE_GENES = "WARN_SPLICED_GENE_COVERAGE";
 
     public static final String SUMMARY_FILE_ID = "summary.csv";
 
@@ -90,7 +90,7 @@ public abstract class RnaStatistics
     {
         return new StringJoiner(DELIMITER)
                 .add(sampleId)
-                .add(qcStatus())
+                .add(qcFiltersToString(qcStatus()))
                 .add(String.valueOf(totalFragments()))
                 .add(String.valueOf(duplicateFragments()))
                 .add(String.format("%.3f", splicedFragmentPerc()))
@@ -122,19 +122,20 @@ public abstract class RnaStatistics
         int splicedGeneCount = fieldsIndexMap.containsKey("SplicedGeneCount") ?
                 getIntValue(fieldsIndexMap, "SplicedGeneCount", values) : -1;
 
-        String qcStatus;
+        List<RnaQcFilter> statusValues;
 
         if(fieldsIndexMap.containsKey("QcStatus"))
         {
-            qcStatus = values[fieldsIndexMap.get("QcStatus")];
+            String qcStatusStr = values[fieldsIndexMap.get("QcStatus")];
+            statusValues = qcFiltersFromString(qcStatusStr);
         }
         else
         {
-            qcStatus = calcQcStatus(totalFragments, duplicateFragments, splicedGeneCount);
+            statusValues = calcQcStatus(totalFragments, duplicateFragments, splicedGeneCount);
         }
 
         return ImmutableRnaStatistics.builder()
-                .qcStatus(qcStatus)
+                .qcStatus(statusValues)
                 .totalFragments(totalFragments)
                 .duplicateFragments(duplicateFragments)
                 .splicedFragmentPerc(getDoubleValue(fieldsIndexMap, "SplicedFragmentPerc", values))
@@ -152,32 +153,26 @@ public abstract class RnaStatistics
                 .build();
     }
 
-    public static String calcQcStatus(long totalFragments, long duplicateFragments, int splicedGenes)
+    public static List<RnaQcFilter> calcQcStatus(long totalFragments, long duplicateFragments, int splicedGenes)
     {
         return calcQcStatus(totalFragments, duplicateFragments, splicedGenes, LOW_COVERAGE_THRESHOLD);
     }
 
-    public static String calcQcStatus(long totalFragments, long duplicateFragments, int splicedGenes, int lowCoverageThreshold)
+    public static List<RnaQcFilter> calcQcStatus(long totalFragments, long duplicateFragments, int splicedGenes, int lowCoverageThreshold)
     {
         if(totalFragments - duplicateFragments < lowCoverageThreshold)
-            return QC_FAIL_LOW_COVERAGE;
+            return List.of(FAIL_LOW_COVERAGE);
 
-        List<String> warnings = Lists.newArrayList();
+        List<RnaQcFilter> statusValues = Lists.newArrayListWithExpectedSize(2);
 
         double duplicatePerc = totalFragments > 0 ? duplicateFragments / (double)totalFragments : 0;
 
         if(duplicatePerc > HIGH_DUPLICATES_THRESHOLD)
-            warnings.add(QC_WARN_DUPLICATES);
+            statusValues.add(WARN_DUPLICATE_RATE);
 
         if(splicedGenes >= 0 && splicedGenes < SPLICE_GENE_THRESHOLD)
-            warnings.add(QC_WARN_LOW_SPLICE_GENES);
+            statusValues.add(WARN_SPLICED_GENE_COVERAGE);
 
-        if(warnings.isEmpty())
-            return QC_PASS;
-
-        StringJoiner sj = new StringJoiner(";");
-        warnings.forEach(x -> sj.add(x));
-        return sj.toString();
+        return statusValues.isEmpty() ? List.of(PASS) : statusValues;
     }
-
 }

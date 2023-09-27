@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.qcFiltersToString;
+
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
@@ -23,7 +25,7 @@ public final class IsofoxConversion
         return ImmutableIsofoxRnaStatistics.builder()
                 .totalFragments(rnaStatistics.totalFragments())
                 .duplicateFragments(rnaStatistics.duplicateFragments())
-                .qcStatus(rnaStatistics.qcStatus())
+                .qcStatus(qcFiltersToString(rnaStatistics.qcStatus()))
                 .build();
     }
 
