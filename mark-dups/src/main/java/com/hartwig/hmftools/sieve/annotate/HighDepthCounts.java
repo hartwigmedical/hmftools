@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sieve.annotate;
 
 import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
 import static com.hartwig.hmftools.sieve.annotate.Util.getNM;
-import static com.hartwig.hmftools.sieve.annotate.Util.isNotProperReadPair;
-import static com.hartwig.hmftools.sieve.annotate.Util.isSoftClipped;
+import static com.hartwig.hmftools.sieve.annotate.Util.getSoftClipCount;
+import static com.hartwig.hmftools.sieve.annotate.Util.isDiscordantPair;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -12,64 +12,55 @@ public class HighDepthCounts
     // Bucket MapQs into 0-9, 10-19, ..., 40-49, >= 50.
     private static final int MAPQ_BUCKET_COUNT = 6;
     private static final int NM_BUCKET_COUNT = 11;
+    // Bucket SOFT_CLIP counts into buckets of 1-3, 4-10, and >=11.
+    private static final int SOFT_CLIP_BUCKET_COUNT = 3;
     public static final String TSV_HEADER = getTSVHeader();
 
-    private final long[] mPrimaryMapQBuckets;
-    private final long[] mSupplementaryMapQBuckets;
-    private final long[] mPrimaryNMBuckets;
-    private final long[] mSupplementaryNMBuckets;
+    private final long[] mConcordantMapQBuckets;
+    private final long[] mConcordantNMBuckets;
+    private final long[] mConcordantSoftClipBuckets;
 
-    private long mPrimaryReadCount;
-    private long mPrimarySoftClippedCount;
-    private long mPrimaryImproperPairCount;
-    private long mPrimarySoftClippedOrImproperPairCount;
     private long mSupplementaryCount;
+    private long mPrimaryReadCount;
+    private long mPrimaryDiscordantCount;
+    private long mPrimaryConcordantCount;
 
     public HighDepthCounts()
     {
-        mPrimaryReadCount = 0;
-        mPrimarySoftClippedCount = 0;
-        mPrimaryImproperPairCount = 0;
-        mPrimarySoftClippedOrImproperPairCount = 0;
         mSupplementaryCount = 0;
+        mPrimaryReadCount = 0;
+        mPrimaryDiscordantCount = 0;
+        mPrimaryConcordantCount = 0;
 
-        mPrimaryMapQBuckets = new long[MAPQ_BUCKET_COUNT];
-        for(int i = 0; i < mPrimaryMapQBuckets.length; i++)
+        mConcordantMapQBuckets = new long[MAPQ_BUCKET_COUNT];
+        for(int i = 0; i < mConcordantMapQBuckets.length; i++)
         {
-            mPrimaryMapQBuckets[i] = 0;
+            mConcordantMapQBuckets[i] = 0;
         }
 
-        mSupplementaryMapQBuckets = new long[MAPQ_BUCKET_COUNT];
-        for(int i = 0; i < mSupplementaryMapQBuckets.length; i++)
+        mConcordantNMBuckets = new long[NM_BUCKET_COUNT];
+        for(int i = 0; i < mConcordantNMBuckets.length; i++)
         {
-            mSupplementaryMapQBuckets[i] = 0;
+            mConcordantNMBuckets[i] = 0;
         }
 
-        mPrimaryNMBuckets = new long[NM_BUCKET_COUNT];
-        for(int i = 0; i < mPrimaryNMBuckets.length; i++)
+        mConcordantSoftClipBuckets = new long[SOFT_CLIP_BUCKET_COUNT];
+        for(int i = 0; i < mConcordantSoftClipBuckets.length; i++)
         {
-            mPrimaryNMBuckets[i] = 0;
-        }
-
-        mSupplementaryNMBuckets = new long[NM_BUCKET_COUNT];
-        for(int i = 0; i < mSupplementaryNMBuckets.length; i++)
-        {
-            mSupplementaryNMBuckets[i] = 0;
+            mConcordantSoftClipBuckets[i] = 0;
         }
     }
 
     private static String getTSVHeader()
     {
         final StringBuilder sb = new StringBuilder();
+        sb.append("SupplementaryCount");
+        sb.append('\t');
         sb.append("PrimaryReadCount");
         sb.append('\t');
-        sb.append("PrimarySoftClippedCount");
+        sb.append("PrimaryDiscordantCount");
         sb.append('\t');
-        sb.append("PrimaryImproperPairCount");
-        sb.append('\t');
-        sb.append("PrimarySoftClippedORImproperPairCount");
-        sb.append('\t');
-        sb.append("SupplementaryCount");
+        sb.append("PrimaryConcordantCount");
 
         for(int i = 0; i < MAPQ_BUCKET_COUNT; i++)
         {
@@ -77,25 +68,11 @@ public class HighDepthCounts
             final int mapQEnd = mapQStart + 9;
             if(i < MAPQ_BUCKET_COUNT - 1)
             {
-                sb.append("\tPrimary MAPQ " + mapQStart + '-' + mapQEnd);
+                sb.append("\tConcordant MAPQ " + mapQStart + '-' + mapQEnd);
             }
             else
             {
-                sb.append("\tPrimary MAPQ >=" + mapQStart);
-            }
-        }
-
-        for(int i = 0; i < MAPQ_BUCKET_COUNT; i++)
-        {
-            final int mapQStart = 10 * i;
-            final int mapQEnd = mapQStart + 9;
-            if(i < MAPQ_BUCKET_COUNT - 1)
-            {
-                sb.append("\tSupplementary MAPQ " + mapQStart + '-' + mapQEnd);
-            }
-            else
-            {
-                sb.append("\tSupplementary MAPQ >=" + mapQStart);
+                sb.append("\tConcordant MAPQ >=" + mapQStart);
             }
         }
 
@@ -103,25 +80,18 @@ public class HighDepthCounts
         {
             if(i < NM_BUCKET_COUNT - 1)
             {
-                sb.append("\tPrimary NM " + i);
+                sb.append("\tConcordant NM " + i);
             }
             else
             {
-                sb.append("\tPrimary NM >=" + i);
+                sb.append("\tConcordant NM >=" + i);
             }
         }
 
-        for(int i = 0; i < NM_BUCKET_COUNT; i++)
-        {
-            if(i < NM_BUCKET_COUNT - 1)
-            {
-                sb.append("\tSupplementary NM " + i);
-            }
-            else
-            {
-                sb.append("\tSupplementary NM >=" + i);
-            }
-        }
+        // Bucket SOFT_CLIP counts into buckets of 1-3, 4-10, and >=11.
+        sb.append("\tConcordant SOFT_CLIP 1-3");
+        sb.append("\tConcordant SOFT_CLIP 4-10");
+        sb.append("\tConcordant SOFT_CLIP >=11");
 
         return sb.toString();
     }
@@ -136,74 +106,85 @@ public class HighDepthCounts
         return Math.min(nm, NM_BUCKET_COUNT - 1);
     }
 
-    public void matchedRead(final SAMRecord read)
+    private static int getSoftClipBucketIndex(int softClipSize)
     {
-        Integer editDistance = getNM(read);
-        if(editDistance == null)
+        if(softClipSize <= 0)
         {
-            MD_LOGGER.error("Read {} does not contain NM attribute.", read);
+            MD_LOGGER.error("Cannot get soft clip bucket index when there are no soft clips.");
             System.exit(1);
         }
 
+        // Bucket SOFT_CLIP counts into buckets of 1-3, 4-10, and >=11.
+        if(softClipSize <= 3)
+        {
+            return 0;
+        }
+
+        if(softClipSize <= 10)
+        {
+            return 1;
+        }
+
+        return 2;
+    }
+
+    public void matchedRead(final SAMRecord read)
+    {
         if(read.getSupplementaryAlignmentFlag())
         {
             mSupplementaryCount++;
-            mSupplementaryMapQBuckets[getMapQBucketIndex(read.getMappingQuality())]++;
-            mSupplementaryNMBuckets[getNMBucketIndex(editDistance)]++;
             return;
         }
 
         mPrimaryReadCount++;
-        mPrimaryMapQBuckets[getMapQBucketIndex(read.getMappingQuality())]++;
-        mPrimaryNMBuckets[getNMBucketIndex(editDistance)]++;
 
-        boolean softClipped = isSoftClipped(read);
-        boolean improperPair = isNotProperReadPair(read);
-
-        if(softClipped || improperPair)
+        if(isDiscordantPair(read))
         {
-            mPrimarySoftClippedOrImproperPairCount++;
+            mPrimaryDiscordantCount++;
+            return;
         }
 
-        if(softClipped)
+        mPrimaryConcordantCount++;
+        mConcordantMapQBuckets[getMapQBucketIndex(read.getMappingQuality())]++;
+
+        Integer editDistance = getNM(read);
+        if(editDistance == null)
         {
-            mPrimarySoftClippedCount++;
+            MD_LOGGER.error("Concordant primary read {} does not contain NM attribute.", read);
+            System.exit(1);
         }
 
-        if(improperPair)
+        mConcordantNMBuckets[getNMBucketIndex(editDistance)]++;
+
+        int softClipCount = getSoftClipCount(read);
+        if(softClipCount > 0)
         {
-            mPrimaryImproperPairCount++;
+            mConcordantSoftClipBuckets[getSoftClipBucketIndex(softClipCount)]++;
         }
     }
 
     public String getTSVFragment()
     {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.valueOf(mPrimaryReadCount) + '\t' + mPrimarySoftClippedCount + '\t' + mPrimaryImproperPairCount + '\t'
-                + mPrimarySoftClippedOrImproperPairCount + '\t' + mSupplementaryCount);
+        sb.append(String.valueOf(mSupplementaryCount) + '\t' + mPrimaryReadCount + '\t' + mPrimaryDiscordantCount + '\t'
+                + mPrimaryConcordantCount);
 
-        for(int i = 0; i < mPrimaryMapQBuckets.length; i++)
+        for(int i = 0; i < mConcordantMapQBuckets.length; i++)
         {
             sb.append('\t');
-            sb.append(mPrimaryMapQBuckets[i]);
+            sb.append(mConcordantMapQBuckets[i]);
         }
 
-        for(int i = 0; i < mSupplementaryMapQBuckets.length; i++)
+        for(int i = 0; i < mConcordantNMBuckets.length; i++)
         {
             sb.append('\t');
-            sb.append(mSupplementaryMapQBuckets[i]);
+            sb.append(mConcordantNMBuckets[i]);
         }
 
-        for(int i = 0; i < mPrimaryNMBuckets.length; i++)
+        for(int i = 0; i < mConcordantSoftClipBuckets.length; i++)
         {
             sb.append('\t');
-            sb.append(mPrimaryNMBuckets[i]);
-        }
-
-        for(int i = 0; i < mSupplementaryNMBuckets.length; i++)
-        {
-            sb.append('\t');
-            sb.append(mSupplementaryNMBuckets[i]);
+            sb.append(mConcordantSoftClipBuckets[i]);
         }
 
         return sb.toString();
