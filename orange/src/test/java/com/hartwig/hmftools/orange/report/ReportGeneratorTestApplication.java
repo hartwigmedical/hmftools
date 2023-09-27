@@ -46,7 +46,7 @@ public class ReportGeneratorTestApplication
 
     private static final boolean USE_MOCK_DATA_FOR_REPORT = false;
     private static final boolean REMOVE_UNREPORTED_VARIANTS = false;
-    private static final PurpleQCStatus OVERRIDE_QC_STATUS = null;
+    private static final Set<PurpleQCStatus> OVERRIDE_QC_STATUS = null;
 
     public static void main(String[] args) throws IOException
     {
@@ -81,7 +81,7 @@ public class ReportGeneratorTestApplication
         if (OVERRIDE_QC_STATUS != null)
         {
             LOGGER.info("Overriding QC status to {}", OVERRIDE_QC_STATUS);
-            report = overwritePurpleQCStatus(report, Set.of(OVERRIDE_QC_STATUS));
+            report = overwritePurpleQCStatus(report, OVERRIDE_QC_STATUS);
         }
 
         OrangeRecord withPercentiles = overwriteCohortPercentiles(report);

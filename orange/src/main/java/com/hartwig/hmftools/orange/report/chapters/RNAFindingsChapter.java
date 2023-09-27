@@ -65,20 +65,7 @@ public class RNAFindingsChapter implements ReportChapter
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addKeyQC(document);
-
-        if(PurpleQCInterpretation.isFailNoTumor(purple.fit().qc()))
-        {
-            document.add(new Paragraph("The DNA QC status of this sample is fail (no tumor). "
-                    + "In addition to DNA findings, all RNA findings should be interpreted with caution")
-                    .addStyle(reportResources.tableContentStyle()));
-        }
-        else if(!isofox.summary().qcStatus().equalsIgnoreCase(RNA_QC_PASS))
-        {
-            document.add(new Paragraph(
-                    "The RNA QC status of this sample is not a pass. All presented RNA data should be interpreted with caution")
-                    .addStyle(reportResources.tableContentStyle()));
-        }
-
+        addQCWarningInCaseOfFail(document);
         addExpressionTables(document);
         addRNAFusionTables(document);
         addNovelSpliceJunctionTables(document);
@@ -109,6 +96,22 @@ public class RNAFindingsChapter implements ReportChapter
         }
 
         document.add(new Tables(reportResources).createWrapping(table));
+    }
+
+    private void addQCWarningInCaseOfFail(@NotNull Document document)
+    {
+        boolean isRNAFail = !isofox.summary().qcStatus().equalsIgnoreCase(RNA_QC_PASS);
+        boolean isDNAFailNoTumor = PurpleQCInterpretation.isFailNoTumor(purple.fit().qc());
+
+        if(isRNAFail || isDNAFailNoTumor)
+        {
+            String message = isRNAFail ?
+                    "The RNA QC status of this sample is not a pass. All presented RNA data should be interpreted with caution"
+                    : "The DNA QC status of this sample is fail (no tumor). "
+                            + "In addition to DNA findings, all RNA findings should be interpreted with caution";
+
+            document.add(new Paragraph(message).addStyle(reportResources.warningStyle()));
+        }
     }
 
     private void addExpressionTables(@NotNull Document document)

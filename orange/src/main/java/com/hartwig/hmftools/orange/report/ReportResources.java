@@ -163,6 +163,12 @@ public class ReportResources
     }
 
     @NotNull
+    public Style warningStyle()
+    {
+        return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
+    }
+
+    @NotNull
     public Style sidePanelLabelStyle()
     {
         return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_WHITE);
