@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sieve.annotate;
 
+import static java.lang.Math.abs;
+
 import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
 import static com.hartwig.hmftools.sieve.annotate.Util.getNM;
 import static com.hartwig.hmftools.sieve.annotate.Util.getSoftClipCount;
@@ -24,6 +26,7 @@ public class HighDepthCounts
     private long mPrimaryReadCount;
     private long mPrimaryDiscordantCount;
     private long mPrimaryConcordantCount;
+    private long mPrimaryConcordantShortReads;
 
     public HighDepthCounts()
     {
@@ -31,6 +34,7 @@ public class HighDepthCounts
         mPrimaryReadCount = 0;
         mPrimaryDiscordantCount = 0;
         mPrimaryConcordantCount = 0;
+        mPrimaryConcordantShortReads = 0;
 
         mConcordantMapQBuckets = new long[MAPQ_BUCKET_COUNT];
         for(int i = 0; i < mConcordantMapQBuckets.length; i++)
@@ -61,6 +65,8 @@ public class HighDepthCounts
         sb.append("PrimaryDiscordantCount");
         sb.append('\t');
         sb.append("PrimaryConcordantCount");
+        sb.append('\t');
+        sb.append("PrimaryConcordantShortReads");
 
         for(int i = 0; i < MAPQ_BUCKET_COUNT; i++)
         {
@@ -145,6 +151,12 @@ public class HighDepthCounts
         }
 
         mPrimaryConcordantCount++;
+        // TODO(m_cooper): Make 150 configurable?
+        if(abs(read.getInferredInsertSize()) < 150)
+        {
+            mPrimaryConcordantShortReads++;
+        }
+
         mConcordantMapQBuckets[getMapQBucketIndex(read.getMappingQuality())]++;
 
         Integer editDistance = getNM(read);
@@ -167,7 +179,7 @@ public class HighDepthCounts
     {
         StringBuilder sb = new StringBuilder();
         sb.append(String.valueOf(mSupplementaryCount) + '\t' + mPrimaryReadCount + '\t' + mPrimaryDiscordantCount + '\t'
-                + mPrimaryConcordantCount);
+                + mPrimaryConcordantCount + '\t' + mPrimaryConcordantShortReads);
 
         for(int i = 0; i < mConcordantMapQBuckets.length; i++)
         {
