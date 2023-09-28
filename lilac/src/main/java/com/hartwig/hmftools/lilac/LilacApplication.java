@@ -24,6 +24,8 @@ import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_CANDIDATE_NUC
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_SOMATIC_VCF;
 import static com.hartwig.hmftools.lilac.LilacConstants.WARN_LOW_COVERAGE_DEPTH;
 import static com.hartwig.hmftools.lilac.evidence.Candidates.addPhasedCandidates;
+import static com.hartwig.hmftools.lilac.fragment.FragmentSource.RNA;
+import static com.hartwig.hmftools.lilac.fragment.FragmentSource.TUMOR;
 import static com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory.calculateGeneCoverage;
 import static com.hartwig.hmftools.lilac.read.BamRecordReader.filterVariantFragments;
 import static com.hartwig.hmftools.lilac.seq.SequenceCount.extractHeterozygousLociSequences;
@@ -53,6 +55,7 @@ import com.hartwig.hmftools.lilac.coverage.HlaComplexFile;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidence;
 import com.hartwig.hmftools.lilac.evidence.PhasedEvidenceFactory;
 import com.hartwig.hmftools.lilac.fragment.AminoAcidFragmentPipeline;
+import com.hartwig.hmftools.lilac.fragment.FragmentSource;
 import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
 import com.hartwig.hmftools.lilac.fragment.NucleotideGeneEnrichment;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
@@ -442,7 +445,7 @@ public class LilacApplication
 
         LL_LOGGER.info("{}", HlaComplexFile.header());
 
-        for (ComplexCoverage rankedComplex : mRankedComplexes)
+        for(ComplexCoverage rankedComplex : mRankedComplexes)
         {
             LL_LOGGER.info(HlaComplexFile.asString(rankedComplex));
         }
@@ -545,7 +548,7 @@ public class LilacApplication
         List<FragmentAlleles> tumorFragAlleles = mFragAlleleMapper.createFragmentAlleles(tumorFragments, winningSequences, winningNucSequences);
 
         if(mHlaYCoverage.exceedsThreshold())
-            mHlaYCoverage.assignFragments(winningAlleles, tumorFragAlleles, tumorFragments, "TUMOR");
+            mHlaYCoverage.assignFragments(winningAlleles, tumorFragAlleles, tumorFragments, TUMOR);
 
         mTumorCoverage = ComplexBuilder.calcProteinCoverage(tumorFragAlleles, winningAlleles);
 
@@ -639,7 +642,7 @@ public class LilacApplication
         List<FragmentAlleles> rnaFragAlleles = mFragAlleleMapper.createFragmentAlleles(rnaFragments, winningSequences, winningNucSequences);
 
         if(mHlaYCoverage.exceedsThreshold())
-            mHlaYCoverage.assignFragments(winningAlleles, rnaFragAlleles, rnaFragments, "RNA");
+            mHlaYCoverage.assignFragments(winningAlleles, rnaFragAlleles, rnaFragments, RNA);
 
         mRnaCoverage = ComplexBuilder.calcProteinCoverage(rnaFragAlleles, winningAlleles);
 

@@ -144,5 +144,4 @@ public class HlaSequenceFile
 
         return orderAlleles.stream().map(x -> reducedMap.get(x)).collect(Collectors.toList());
     }
-
 }
