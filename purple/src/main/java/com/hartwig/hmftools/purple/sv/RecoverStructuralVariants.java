@@ -29,6 +29,7 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.SampleData;
 import com.hartwig.hmftools.purple.config.SampleDataFiles;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
@@ -63,11 +64,14 @@ public class RecoverStructuralVariants implements Closeable
     private int mCounter = 0;
 
     public RecoverStructuralVariants(
-            final FittingConfig config, final PurityAdjuster purityAdjuster, final String recoveryVCF, final List<PurpleCopyNumber> allCopyNumbers)
+            final PurpleConfig config, final PurityAdjuster purityAdjuster, final String recoveryVCF, final List<PurpleCopyNumber> allCopyNumbers)
     {
-        this(purityAdjuster,
-                new RecoveredVariantFactory(purityAdjuster, recoveryVCF, config.RecoveryMinMateQualScore, config.RecoveryMinSglQualScore),
-                allCopyNumbers);
+        RecoveredVariantFactory svFactory = new RecoveredVariantFactory(purityAdjuster, recoveryVCF, config);
+
+        mPurityAdjuster = purityAdjuster;
+        mAllCopyNumbers = Multimaps.fromRegions(allCopyNumbers);
+        mPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
+        mRecoveredVariantFactory = svFactory;
     }
 
     RecoverStructuralVariants(
@@ -80,7 +84,7 @@ public class RecoverStructuralVariants implements Closeable
     }
 
     public static int recoverStructuralVariants(
-            final SampleData sampleData, final SampleDataFiles sampleDataFiles, final FittingConfig fitting,
+            final SampleData sampleData, final SampleDataFiles sampleDataFiles, final PurpleConfig config,
             final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
     {
         if(sampleDataFiles.RecoveredSvVcfFile.isEmpty())
@@ -88,8 +92,8 @@ public class RecoverStructuralVariants implements Closeable
 
         PPL_LOGGER.info("loading recovery candidates from {}", sampleDataFiles.RecoveredSvVcfFile);
 
-        final RecoverStructuralVariants recovery = new RecoverStructuralVariants(
-                fitting, purityAdjuster, sampleDataFiles.RecoveredSvVcfFile, copyNumbers);
+        RecoverStructuralVariants recovery = new RecoverStructuralVariants(
+                config, purityAdjuster, sampleDataFiles.RecoveredSvVcfFile, copyNumbers);
 
         try
         {

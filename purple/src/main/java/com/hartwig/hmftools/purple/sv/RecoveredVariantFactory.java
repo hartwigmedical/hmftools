@@ -21,6 +21,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.gripss.GripssFilters;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.copynumber.sv.StructuralVariantLegPloidy;
@@ -37,26 +39,31 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.filter.CompoundFilter;
 import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
 
 public class RecoveredVariantFactory implements AutoCloseable
 {
     public static final Set<String> DO_NOT_RESCUE =
             Sets.newHashSet("af", "qual", GripssFilters.DEDUP, GripssFilters.MIN_TUMOR_AF);
 
-    private final AbstractFeatureReader<VariantContext, LineIterator> mReader;
+    private final AbstractFeatureReader<VariantContext,LineIterator> mReader;
     private final StructuralVariantFactory mSvFactory;
     private final StructuralVariantLegPloidyFactory<PurpleCopyNumber> mPloidyFactory;
     private final int mMinMateQual;
     private final int mMinSglQual;
 
     public RecoveredVariantFactory(
-            final PurityAdjuster purityAdjuster, final String recoveryVCF, final int minMateQual, final int minSglQual)
+            final PurityAdjuster purityAdjuster, final String recoveryVCF, final PurpleConfig config)
     {
         mReader = getFeatureReader(recoveryVCF, new VCFCodec(), true);
+        VCFHeader vcfHeader = (VCFHeader)mReader.getHeader();
+        GenotypeIds genotypeIds = GenotypeIds.fromVcfHeader(vcfHeader, config.ReferenceId, config.TumorId);
+
         mSvFactory = new StructuralVariantFactory(new CompoundFilter(false));
+        mSvFactory.setGenotypeOrdinals(genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
         mPloidyFactory = new StructuralVariantLegPloidyFactory<>(purityAdjuster, PurpleCopyNumber::averageTumorCopyNumber);
-        mMinMateQual = minMateQual;
-        mMinSglQual = minSglQual;
+        mMinMateQual = config.Fitting.RecoveryMinMateQualScore;
+        mMinSglQual = config.Fitting.RecoveryMinSglQualScore;
     }
 
     protected List<RecoveredVariant> recoverVariantAtIndex(

@@ -20,6 +20,7 @@ public class GenotypeIds
     }
 
     public boolean hasReference() { return ReferenceOrdinal >= 0; }
+    public boolean hasTumor() { return TumorOrdinal >= 0; }
 
     public static boolean hasValidSampleIds(
             final VCFHeader header, final String referenceId, final String tumorId, boolean referenceFirst, boolean allowContains)

@@ -39,6 +39,8 @@ import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
@@ -60,6 +62,7 @@ public class GermlineSvCache
     private final Optional<VCFHeader> mVcfHeader;
     private final VariantContextCollection mVariantCollection;
     private final IndexedFastaSequenceFile mRefGenomeFile;
+    private final GenotypeIds mGenotypeIds;
 
     private final PurityContext mPurityContext;
     private final List<ObservedRegion> mFittedRegions;
@@ -73,10 +76,11 @@ public class GermlineSvCache
         mPurityContext = null;
         mFittedRegions = null;
         mCopyNumbers = null;
+        mGenotypeIds = null;
     }
 
     public GermlineSvCache(
-            final String version, final String inputVcf, final ReferenceData referenceData,
+            final String version, final String inputVcf, final ReferenceData referenceData, final PurpleConfig config,
             final List<ObservedRegion> fittedRegions, final List<PurpleCopyNumber> copyNumbers, final PurityContext purityContext)
     {
         mPurityContext = purityContext;
@@ -85,6 +89,8 @@ public class GermlineSvCache
 
         final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
         mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
+
+        mGenotypeIds = mVcfHeader.isPresent() ? GenotypeIds.fromVcfHeader(mVcfHeader.get(), config.ReferenceId, config.TumorId) : null;
 
         mVariantCollection = new VariantContextCollection(mVcfHeader.get());
         mRefGenomeFile = referenceData.RefGenome;
@@ -206,14 +212,14 @@ public class GermlineSvCache
 
                 double purity = mPurityContext.bestFit().purity();
 
-                if(context.getGenotypes().size() > 1 && purity > 0)
+                if(mGenotypeIds.hasReference() && mGenotypeIds.hasTumor() && purity > 0)
                 {
                     // [tumorAF*[2*(1-purity)+adjCNStart*purity] -refAF*2*(1-purity)]/adjCNStart/purity = adjAFStart
                     // rearranged from tumorAF = [refAF*2*(1-purity) + adjAFStart*purity*adjCNStart] / [2*(1-purity) + purity*adjCNStart]
 
                     // a check has already been made that the germline VCF has the tumor ID in genotype 0 and the ref in genotype 1
-                    Genotype refGenotype = context.getGenotype(1);
-                    Genotype tumorGenotype = context.getGenotype(0);
+                    Genotype refGenotype = context.getGenotype(mGenotypeIds.ReferenceOrdinal);
+                    Genotype tumorGenotype = context.getGenotype(mGenotypeIds.TumorOrdinal);
 
                     double refAF = getOrCalculateAlleleFrequency(refGenotype);
                     double tumorAF = getOrCalculateAlleleFrequency(tumorGenotype);

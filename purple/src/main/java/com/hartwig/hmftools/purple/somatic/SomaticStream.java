@@ -80,7 +80,7 @@ public class SomaticStream
     private static final int CHART_DOWNSAMPLE_FACTOR = 25000; // eg for 50K variants, only every second will be kept for plotting
 
     public SomaticStream(
-            final PurpleConfig config, final ReferenceData referenceData, final SomaticVariantCache somaticVariants,
+            final PurpleConfig config, final ReferenceData referenceData, final SomaticVariantCache somaticVariantCache,
             final List<PeakModelData> peakModel)
     {
         mReferenceData = referenceData;
@@ -89,18 +89,18 @@ public class SomaticStream
         mGenePanel = referenceData.DriverGenes;
         mPeakModel = peakModel;
         mOutputVCF = PurpleCommon.purpleSomaticVcfFile(config.OutputDir, config.TumorId);
-        mEnabled = somaticVariants.hasData();
+        mEnabled = somaticVariantCache.hasData();
         mTumorMutationalLoad = new TumorMutationalLoad(mReferenceData.TargetRegions);
-        mSomaticGermlineLikelihood = new SomaticGermlineLikelihood(mConfig);
+        mSomaticGermlineLikelihood = new SomaticGermlineLikelihood(mConfig, somaticVariantCache.genotypeIds());
         mMicrosatelliteIndels = new MicrosatelliteIndels(mReferenceData.TargetRegions);
         mDrivers = new SomaticVariantDrivers(mGenePanel);
-        mSomaticVariants = somaticVariants;
+        mSomaticVariants = somaticVariantCache;
         mRChartData = new RChartData(config, config.TumorId);
 
         mReportedGenes = Sets.newHashSet();
         mDownsampledVariants = Lists.newArrayList();
-        mSnpMod = somaticVariants.snpCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariants.snpCount() / CHART_DOWNSAMPLE_FACTOR;
-        mIndelMod = somaticVariants.indelCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariants.indelCount() / CHART_DOWNSAMPLE_FACTOR;
+        mSnpMod = somaticVariantCache.snpCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariantCache.snpCount() / CHART_DOWNSAMPLE_FACTOR;
+        mIndelMod = somaticVariantCache.indelCount() <= CHART_DOWNSAMPLE_FACTOR ? 1 : somaticVariantCache.indelCount() / CHART_DOWNSAMPLE_FACTOR;
 
         mTmb = 0;
         mTml = 0;

@@ -8,6 +8,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -23,6 +24,7 @@ public class SomaticVariantCache
     private final List<SomaticVariant> mVariants;
 
     private VCFHeader mVcfHeader;
+    private GenotypeIds mGenotypeIds;
 
     // counts for plot & chart down-sampling
     private int mIndelCount;
@@ -36,10 +38,12 @@ public class SomaticVariantCache
         mIndelCount = 0;
         mSnpCount = 0;
         mVcfHeader = null;
+        mGenotypeIds = null;
     }
 
     public boolean hasData() { return !mVariants.isEmpty(); }
     public List<SomaticVariant> variants() { return mVariants; }
+    public GenotypeIds genotypeIds() { return mGenotypeIds; }
 
     public int snpCount() { return mSnpCount; }
     public int indelCount() { return mIndelCount; }
@@ -53,6 +57,8 @@ public class SomaticVariantCache
 
         VcfFileReader vcfReader = new VcfFileReader(somaticVcf);
         mVcfHeader = vcfReader.vcfHeader();
+
+        mGenotypeIds = GenotypeIds.fromVcfHeader(mVcfHeader, mConfig.ReferenceId, mConfig.TumorId);
 
         boolean tumorOnly = mConfig.tumorOnlyMode();
 

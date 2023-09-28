@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.purple.somatic;
 
 import static java.lang.Math.abs;
-import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_VAF_DISTANCE;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_GERMLINE_VAF_DISTANCE_DESC;
@@ -12,6 +10,7 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LI
 import static com.hartwig.hmftools.purple.config.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH;
 import static com.hartwig.hmftools.purple.config.TargetRegionsData.PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW;
 
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 
@@ -23,10 +22,12 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 public class SomaticGermlineLikelihood
 {
     private final boolean mEnabled;
+    private final GenotypeIds mGenotypeIds;
 
-    public SomaticGermlineLikelihood(final PurpleConfig config)
+    public SomaticGermlineLikelihood(final PurpleConfig config, final GenotypeIds genotypeIds)
     {
         mEnabled = config.tumorOnlyMode();
+        mGenotypeIds = genotypeIds;
     }
 
     public static VCFHeader enrichHeader(final VCFHeader template)
@@ -41,7 +42,8 @@ public class SomaticGermlineLikelihood
         if(!mEnabled)
             return;
 
-        double rawAf = getGenotypeAttributeAsDouble(variant.context().getGenotype(0), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
+        double rawAf = getGenotypeAttributeAsDouble(
+                variant.context().getGenotype(mGenotypeIds.ReferenceOrdinal), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
 
         double segmentCn = variant.decorator().adjustedCopyNumber();
         double tumorMinorCn = variant.decorator().minorAlleleCopyNumber();
@@ -51,10 +53,6 @@ public class SomaticGermlineLikelihood
         double referenceMajorCn = 1; // B2
         double referenceMinorCn = 1; // C2
         double germlineCn = referenceMajorCn + referenceMinorCn;
-
-        // double minorVAF = (refPurity + tumorMinorCn * purity) / denom;
-        // double majorVAF = (refPurity + tumorMajorCn * purity) / denom;
-        // boolean isUnclearGermline = abs(majorVAF - rawAf) < mTargetRegions.maxAFDiff() || abs(minorVAF - rawAf) < mTargetRegions.maxAFDiff();
 
         // B3 = tumorMinorCn
         // C3 = tumorMajorCn
@@ -92,8 +90,6 @@ public class SomaticGermlineLikelihood
 
         if(rawAf < somaticVaf1)
             somaticMinDiff = 0; // the subclonal case
-
-        boolean closestDiffGermline = abs(germlineMinDiff) < abs(somaticMinDiff);
 
         /*
         if(PPL_LOGGER.isTraceEnabled())

@@ -12,9 +12,11 @@ import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 
 import htsjdk.variant.vcf.VCFFileReader;
 
@@ -85,14 +87,36 @@ public class SampleDataFiles
     public boolean hasValidSampleNames(final PurpleConfig config)
     {
         boolean germlineValid = !config.runGermline()
-                || (hasValidVcfSampleNames(GermlineSvVcfFile, config, true)
-                && hasValidVcfSampleNames(GermlineVcfFile, config, true));
+                || (hasValidVcfSampleNames(GermlineSvVcfFile, config) && hasValidVcfSampleNames(GermlineVcfFile, config));
 
         boolean tumorValid = !config.runGermline()
-                || (hasValidVcfSampleNames(SomaticSvVcfFile, config, false)
-                && hasValidVcfSampleNames(SomaticVcfFile, config, false));
+                || (hasValidVcfSampleNames(SomaticSvVcfFile, config) && hasValidVcfSampleNames(SomaticVcfFile, config));
 
         return tumorValid && germlineValid;
+    }
+
+    private boolean hasValidVcfSampleNames(final String vcfFile, final PurpleConfig config)
+    {
+        if(vcfFile.isEmpty())
+            return true;
+
+        VcfFileReader vcfReader = new VcfFileReader(vcfFile);
+
+        List<String> vcfSampleNames = vcfReader.vcfHeader().getGenotypeSamples();
+
+        if(config.runTumor() && !vcfSampleNames.contains(config.TumorId))
+        {
+            PPL_LOGGER.error("vcf({}) missing tumorId({}) genotype", vcfFile, config.TumorId);
+            return false;
+        }
+
+        if(config.runGermline() && !vcfSampleNames.contains(config.ReferenceId))
+        {
+            PPL_LOGGER.error("vcf({}) missing referenceId({}) genotype", vcfFile, config.ReferenceId);
+            return false;
+        }
+
+        return true;
     }
 
     private boolean hasValidVcfSampleNames(final String vcfFile, final PurpleConfig config, boolean isGermline)

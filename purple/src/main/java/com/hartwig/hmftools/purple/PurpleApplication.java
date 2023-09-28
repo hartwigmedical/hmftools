@@ -189,7 +189,7 @@ public class PurpleApplication
             final String outputVcf = purpleSomaticSvFile(mConfig.OutputDir, tumorId);
 
             final SomaticSvCache svCache = !sampleDataFiles.SomaticSvVcfFile.isEmpty() ?
-                    new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mReferenceData)
+                    new SomaticSvCache(mPurpleVersion.version(), sampleDataFiles.SomaticSvVcfFile, outputVcf, mReferenceData, mConfig)
                     : new SomaticSvCache();
 
             sampleData = new SampleData(referenceId, tumorId, amberData, cobaltData, svCache, somaticVariantCache);
@@ -361,7 +361,8 @@ public class PurpleApplication
             if(!sampleDataFiles.GermlineSvVcfFile.isEmpty())
             {
                 germlineSvCache = new GermlineSvCache(
-                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, mReferenceData, fittedRegions, copyNumbers, purityContext);
+                        mPurpleVersion.version(), sampleDataFiles.GermlineSvVcfFile, mReferenceData, mConfig,
+                        fittedRegions, copyNumbers, purityContext);
 
                 germlineSvCache.write(purpleGermlineSvFile(mConfig.OutputDir, tumorId));
             }
@@ -466,8 +467,8 @@ public class PurpleApplication
 
         copyNumberFactory.buildCopyNumbers(fittedRegions, sampleData.SvCache.variants());
 
-        final int recoveredSVCount = RecoverStructuralVariants.recoverStructuralVariants(
-                sampleData, sampleDataFiles, mConfig.Fitting, purityAdjuster, copyNumberFactory.copyNumbers());
+        int recoveredSVCount = RecoverStructuralVariants.recoverStructuralVariants(
+                sampleData, sampleDataFiles, mConfig, purityAdjuster, copyNumberFactory.copyNumbers());
 
         if(recoveredSVCount > 0)
         {
@@ -540,7 +541,8 @@ public class PurpleApplication
             if(Files.exists(Paths.get(germlineSvVcf)))
             {
                 GermlineSvCache germlineSvCache = new GermlineSvCache(
-                        mPurpleVersion.version(), germlineSvVcf, mReferenceData, fittedRegions, copyNumbers, purityContext);
+                        mPurpleVersion.version(), germlineSvVcf, mReferenceData, mConfig,
+                        fittedRegions, copyNumbers, purityContext);
 
                 germlineSVs.addAll(germlineSvCache.variants());
             }
