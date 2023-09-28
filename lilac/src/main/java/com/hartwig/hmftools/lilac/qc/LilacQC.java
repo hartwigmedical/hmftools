@@ -145,7 +145,6 @@ public final class LilacQC
         catch(IOException e)
         {
             LL_LOGGER.error("failed to write {}: {}", fileName, e.toString());
-            return;
         }
     }
 

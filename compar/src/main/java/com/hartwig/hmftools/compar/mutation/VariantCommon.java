@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
 
 import java.util.List;
 

@@ -126,17 +126,25 @@ public class BamRecordReader implements BamReader
 
         for(SAMRecord record : records)
         {
-            if(bothEndsInRangeOfCodingTranscripts(record))
+            List<BaseRegion> codingExonOverlaps = geneCodingRegions.CodingRegions.stream()
+                    .filter(x -> positionsOverlap(x.start(), x.end(), record.getAlignmentStart(), record.getAlignmentEnd()))
+                    .collect(Collectors.toList());
+
+            // read must overlap an exon to even be considered
+            if(codingExonOverlaps.isEmpty())
+                continue;
+
+            if(!bothEndsInRangeOfCodingTranscripts(record))
             {
-                for(BaseRegion codingRegion : geneCodingRegions.CodingRegions)
-                {
-                    if(positionsOverlap(codingRegion.start(), codingRegion.end(), record.getAlignmentStart(), record.getAlignmentEnd()))
-                        reads.add(ReadRecord.create(codingRegion, record, true, true));
-                }
+                LL_LOGGER.trace("filter read: id({}) coords({}-{}) cigar({}) from gene region({}:{}-{})",
+                        record.getReadName(), record.getAlignmentStart(), record.getAlignmentEnd(), record.getCigarString(),
+                        geneCodingRegions.GeneName, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
+
+                ++mFilteredRecordCount;
             }
             else
             {
-                ++mFilteredRecordCount;
+                codingExonOverlaps.forEach(x -> reads.add(ReadRecord.create(x, record, true, true)));
             }
         }
 
@@ -230,17 +238,14 @@ public class BamRecordReader implements BamReader
         if(!record.getMateReferenceName().equals(HLA_CHR))
             return false;
 
-        // this check allows records to span across HLA genes but instead tighten this up
-        for(GeneCodingRegions geneCodingRegions : mGeneCodingRegions.values())
-        {
-            if(geneCodingRegions.withinCodingBounds(record.getAlignmentStart(), MAX_DISTANCE)
-            && geneCodingRegions.withinCodingBounds(record.getMateAlignmentStart(), MAX_DISTANCE))
-            {
-                return true;
-            }
-        }
+        // this check allows records to span across HLA genes, since a read may be mismapped
+        boolean readInRange = mGeneCodingRegions.values().stream()
+                .anyMatch(x -> x.withinCodingBounds(record.getAlignmentStart(), MAX_DISTANCE));
 
-        return false;
+        boolean mateInRange = mGeneCodingRegions.values().stream()
+                .anyMatch(x -> x.withinCodingBounds(record.getMateAlignmentStart(), MAX_DISTANCE));
+
+        return readInRange && mateInRange;
     }
 
     // methods for checking somatic variant support in HLA regions

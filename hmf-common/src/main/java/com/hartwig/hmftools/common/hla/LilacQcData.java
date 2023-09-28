@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDel
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,32 +19,25 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class LilacQcData
 {
-    // full field list
-    // Status,ScoreMargin,NextSolutionAlleles,MedianBaseQuality,HlaYAllele,DiscardedIndels,DiscardedIndelMaxFrags,DiscardedAlignmentFragments,
-    // A_LowCoverageBases,B_LowCoverageBases,C_LowCoverageBases,ATypes,BTypes,CTypes,TotalFragments,FittedFragments,UnmatchedFragments,
-    // UninformativeFragments,HlaYFragments,PercentUnique,PercentShared,PercentWildcard,UnusedAminoAcids,UnusedAminoAcidMaxFrags,UnusedHaplotypes,
-    // UnusedHaplotypeMaxFrags,SomaticVariantsMatched,SomaticVariantsUnmatched
-
     public abstract String status();
+    public abstract int totalFragments();
+    public abstract int fittedFragments();
+    public abstract int discardedIndels();
+    public abstract int discardedAlignmentFragments();
+    public abstract String hlaYAllele();
 
     private static final String FILE_EXTENSION = ".lilac.qc.tsv";
-    private static final String OLD_FILE_EXTENSION = ".lilac.qc.csv";
 
     public static final String FLD_QC_STATUS = "Status";
-
-    public static String generateFilenameForWriting(final String basePath, final String sample)
-    {
-        return checkAddDirSeparator(basePath) + sample + FILE_EXTENSION;
-    }
+    public static final String FLD_HLA_Y = "HlaYAllele";
+    public static final String FLD_TOTAL_FRAGS = "TotalFragments";
+    public static final String FLD_FIT_FRAGS = "FittedFragments";
+    public static final String FLD_DISC_INDELS = "DiscardedIndels";
+    public static final String FLD_DISC_ALIGN_FRAGS = "DiscardedAlignmentFragments";
 
     public static String generateFilename(final String basePath, final String sample)
     {
-        String filename = generateFilenameForWriting(basePath, sample);
-
-        if(Files.exists(Paths.get(filename)))
-            return filename;
-
-        return checkAddDirSeparator(basePath) + sample + OLD_FILE_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + FILE_EXTENSION;
     }
 
     public static LilacQcData read(final String filePath) throws IOException
@@ -60,7 +52,12 @@ public abstract class LilacQcData
         String[] values = lines.get(1).split(delim);
 
         return ImmutableLilacQcData.builder()
-                    .status(values[fieldsIndexMap.get(FLD_QC_STATUS)])
-                    .build();
+                .status(values[fieldsIndexMap.get(FLD_QC_STATUS)])
+                .totalFragments(Integer.parseInt(values[fieldsIndexMap.get(FLD_TOTAL_FRAGS)]))
+                .fittedFragments(Integer.parseInt(values[fieldsIndexMap.get(FLD_FIT_FRAGS)]))
+                .discardedAlignmentFragments(Integer.parseInt(values[fieldsIndexMap.get(FLD_DISC_ALIGN_FRAGS)]))
+                .discardedIndels(Integer.parseInt(values[fieldsIndexMap.get(FLD_DISC_INDELS)]))
+                .hlaYAllele(values[fieldsIndexMap.get(FLD_HLA_Y)])
+                .build();
     }
 }

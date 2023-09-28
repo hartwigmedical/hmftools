@@ -17,16 +17,16 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
-import static com.hartwig.hmftools.compar.Category.DRIVER;
-import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
-import static com.hartwig.hmftools.compar.Category.LINX_CATEGORIES;
-import static com.hartwig.hmftools.compar.Category.PANEL_CATEGORIES;
-import static com.hartwig.hmftools.compar.Category.PURPLE_CATEGORIES;
-import static com.hartwig.hmftools.compar.Category.purpleCategories;
-import static com.hartwig.hmftools.compar.Category.linxCategories;
-import static com.hartwig.hmftools.compar.FileSources.fromConfig;
-import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.common.Category.ALL_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.Category.DRIVER;
+import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.Category.LINX_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.Category.PANEL_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.Category.PURPLE_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.Category.purpleCategories;
+import static com.hartwig.hmftools.compar.common.Category.linxCategories;
+import static com.hartwig.hmftools.compar.common.FileSources.fromConfig;
+import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
@@ -47,6 +47,10 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.logging.log4j.LogManager;
@@ -56,7 +60,7 @@ public class ComparConfig
 {
     public final List<String> SampleIds;
 
-    public final Map<Category,MatchLevel> Categories;
+    public final Map<Category, MatchLevel> Categories;
 
     public final List<String> SourceNames; // list of sources to compare, eg prod vs pilot, or pipeline_1 vs pipeline_2
 
@@ -85,7 +89,6 @@ public class ComparConfig
     public static final String MATCH_LEVEL = "match_level";
 
     public static final String DB_SOURCE = "db_source";
-    public static final String FILE_SOURCE = "file_source";
     public static final String THRESHOLDS = "thresholds";
 
     public static final String WRITE_DETAILED_FILES = "write_detailed";
@@ -391,7 +394,7 @@ public class ComparConfig
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, REF_SOURCE), false, "Database configurations for reference data");
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, NEW_SOURCE), false, "Database configurations for new data");
 
-        com.hartwig.hmftools.compar.FileSources.registerConfig(configBuilder);
+        com.hartwig.hmftools.compar.common.FileSources.registerConfig(configBuilder);
 
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");

@@ -1,13 +1,15 @@
-package com.hartwig.hmftools.compar;
+package com.hartwig.hmftools.compar.common;
 
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
-import static com.hartwig.hmftools.compar.DiffFunctions.diffsStr;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.diffsStr;
 
 import java.util.List;
 import java.util.StringJoiner;
+
+import com.hartwig.hmftools.compar.ComparableItem;
 
 public class Mismatch
 {

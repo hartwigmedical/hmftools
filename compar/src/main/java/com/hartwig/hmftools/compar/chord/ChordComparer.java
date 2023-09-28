@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.chord;
 
-import static com.hartwig.hmftools.compar.Category.CHORD;
+import static com.hartwig.hmftools.compar.common.Category.CHORD;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA1;
 import static com.hartwig.hmftools.compar.chord.ChordComparData.FLD_BRCA2;
@@ -14,14 +14,14 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
-import com.hartwig.hmftools.compar.Category;
-import com.hartwig.hmftools.compar.CommonUtils;
+import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.FileSources;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class ChordComparer implements ItemComparer

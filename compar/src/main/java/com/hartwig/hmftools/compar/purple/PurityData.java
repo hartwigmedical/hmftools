@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.Category.PURITY;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.Category.PURITY;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 import java.util.Set;
@@ -12,11 +12,11 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 import com.hartwig.hmftools.common.purple.PurpleQCStatus;
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.MatchLevel;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class PurityData implements ComparableItem
 {

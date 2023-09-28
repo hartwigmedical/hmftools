@@ -2,6 +2,7 @@ package com.hartwig.hmftools.lilac.read;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import java.util.List;
 
@@ -45,5 +46,10 @@ public class GeneCodingRegions
     public boolean withinCodingBounds(int position, int buffer)
     {
         return position >= CodingStart - buffer && position <= CodingEnd + buffer;
+    }
+
+    public String toString()
+    {
+        return format("gene(%s) strand(%d) coding(%d-%d)", GeneName, Strand, CodingStart, CodingEnd);
     }
 }

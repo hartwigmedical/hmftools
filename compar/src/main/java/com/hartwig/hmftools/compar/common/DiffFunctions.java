@@ -1,6 +1,7 @@
-package com.hartwig.hmftools.compar;
+package com.hartwig.hmftools.compar.common;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.compar.common.DiffThresholds.DEFAULT_DECIMAL_THRESHOLD;
 
 import java.util.List;
 import java.util.Set;
@@ -13,6 +14,9 @@ public final class DiffFunctions
 
     public static boolean checkDiff(final List<String> diffs, final String name, int value1, int value2, final DiffThresholds thresholds)
     {
+        if(!thresholds.isFieldRegistered(name))
+            return checkDiff(diffs, name, value1, value2);
+
         if(thresholds.hasDifference(name, value1, value2))
         {
             diffs.add(String.format("%s(%d/%d)", name, value1, value2));
@@ -24,7 +28,8 @@ public final class DiffFunctions
 
     public static boolean checkDiff(final List<String> diffs, final String name, double value1, double value2, final DiffThresholds thresholds)
     {
-        if(thresholds.hasDifference(name, value1, value2))
+        if((!thresholds.isFieldRegistered(name) && DEFAULT_DECIMAL_THRESHOLD.hasDiff(value1, value2))
+        || thresholds.hasDifference(name, value1, value2))
         {
             diffs.add(String.format("%s(%.3f/%.3f)", name, value1, value2));
             return true;

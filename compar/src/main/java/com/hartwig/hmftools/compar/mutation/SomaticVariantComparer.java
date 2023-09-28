@@ -1,29 +1,25 @@
 package com.hartwig.hmftools.compar.mutation;
 
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
-import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
+import static com.hartwig.hmftools.compar.common.Category.SOMATIC_VARIANT;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
-import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
-import static com.hartwig.hmftools.compar.MismatchType.INVALID_BOTH;
-import static com.hartwig.hmftools.compar.MismatchType.INVALID_NEW;
-import static com.hartwig.hmftools.compar.MismatchType.INVALID_REF;
-import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
-import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
+import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
+import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
+import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_REF;
+import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
+import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_LPS;
 import static com.hartwig.hmftools.compar.mutation.SomaticVariantData.FLD_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -36,25 +32,21 @@ import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.FileSources;
-import com.hartwig.hmftools.compar.InvalidDataItem;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.InvalidDataItem;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.MatchLevel;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.jooq.Record;
 import org.jooq.Result;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.filter.CompoundFilter;
-import htsjdk.variant.variantcontext.filter.PassingVariantFilter;
 
 public class SomaticVariantComparer implements ItemComparer
 {

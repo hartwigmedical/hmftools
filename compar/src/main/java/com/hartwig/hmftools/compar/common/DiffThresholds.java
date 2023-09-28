@@ -1,8 +1,4 @@
-package com.hartwig.hmftools.compar;
-
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.String.format;
+package com.hartwig.hmftools.compar.common;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
@@ -10,17 +6,26 @@ import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.compar.common.ThresholdData;
+import com.hartwig.hmftools.compar.common.ThresholdType;
 
 public class DiffThresholds
 {
-    private final Map<String,ThresholdData> mFieldThresholds;
+    private final Map<String, ThresholdData> mFieldThresholds;
 
     private static final String THRESHOLD_ITEM_DELIM = ":";
+
+    public static final double DEFAULT_DIFF_PERC = 0.1;
+
+    public static final ThresholdData DEFAULT_DECIMAL_THRESHOLD = new ThresholdData(
+            ThresholdType.ABSOLUTE_AND_PERCENT, 1, DEFAULT_DIFF_PERC);
 
     public DiffThresholds()
     {
         mFieldThresholds = Maps.newHashMap();
     }
+
+    public boolean isFieldRegistered(final String field) { return mFieldThresholds.containsKey(field); }
 
     public boolean hasDifference(final String field, double value1, double value2)
     {
@@ -61,47 +66,5 @@ public class DiffThresholds
 
             CMP_LOGGER.info("added threshold: field({}) absoluteDiff({}) percentDiff({})", field, absDiff, percDiff);
         }
-    }
-
-    private enum ThresholdType
-    {
-        ABSOLUTE,
-        PERCENT,
-        ABSOLUTE_AND_PERCENT
-    }
-
-    private class ThresholdData
-    {
-        public final ThresholdType Type;
-        public final double AbsoluteDiff;
-        public final double PercentDiff;
-
-        public ThresholdData(final ThresholdType type, final double absoluteDiff, final double percentDiff)
-        {
-            Type = type;
-            AbsoluteDiff = absoluteDiff;
-            PercentDiff = percentDiff;
-        }
-
-        public boolean hasDiff(double value1, double value2)
-        {
-            if(value1 == 0 && value2 == 0)
-                return false;
-
-            double absDiff = abs(value1 - value2);
-
-            boolean hasAbsDiff = absDiff > AbsoluteDiff;
-            boolean hasRelDiff = absDiff / max(value1, value2) > PercentDiff;
-
-            if(Type == ThresholdType.ABSOLUTE_AND_PERCENT)
-                return hasAbsDiff && hasRelDiff;
-
-            if(Type == ThresholdType.ABSOLUTE)
-                return hasAbsDiff;
-
-            return hasRelDiff;
-        }
-
-        public String toString() { return format("type(%s) abs(%f) perc(%.3f)", Type, AbsoluteDiff, PercentDiff); }
     }
 }

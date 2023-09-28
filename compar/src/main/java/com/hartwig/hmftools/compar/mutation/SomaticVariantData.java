@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
-import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
+import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
+import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
@@ -11,13 +11,13 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELI
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
-import static com.hartwig.hmftools.compar.Category.SOMATIC_VARIANT;
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.DiffFunctions.FILTER_DIFF;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkFilterDiffs;
-import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.Category.SOMATIC_VARIANT;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.FILTER_DIFF;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkFilterDiffs;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_BIALLELIC;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
@@ -41,11 +41,11 @@ import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.MatchLevel;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
 
 import org.jooq.Record;

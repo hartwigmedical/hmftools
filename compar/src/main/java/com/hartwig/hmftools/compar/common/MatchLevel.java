@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.compar;
+package com.hartwig.hmftools.compar.common;
 
 public enum MatchLevel
 {

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.compar;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.compar.CommonUtils.buildComparers;
+import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.io.BufferedWriter;
@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class MismatchWriter
 {

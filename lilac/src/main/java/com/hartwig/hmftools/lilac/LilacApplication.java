@@ -422,7 +422,6 @@ public class LilacApplication
             if(actualAllelesCoverage == null)
             {
                 actualAllelesCoverage = ComplexBuilder.calcProteinCoverage(mRefFragAlleles, mConfig.ActualAlleles);
-
             }
 
             LL_LOGGER.info("forcing winning coverage to actual alleles");

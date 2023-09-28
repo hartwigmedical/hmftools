@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.Category.COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.Category.COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.purple.CopyNumberData.FLD_MAJOR_ALLELE_CN;
@@ -12,14 +12,14 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
-import com.hartwig.hmftools.compar.Category;
-import com.hartwig.hmftools.compar.CommonUtils;
+import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.FileSources;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class CopyNumberComparer implements ItemComparer

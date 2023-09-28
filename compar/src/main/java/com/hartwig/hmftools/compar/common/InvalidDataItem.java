@@ -1,7 +1,9 @@
-package com.hartwig.hmftools.compar;
+package com.hartwig.hmftools.compar.common;
 
 import java.util.Collections;
 import java.util.List;
+
+import com.hartwig.hmftools.compar.ComparableItem;
 
 public class InvalidDataItem implements ComparableItem
 {

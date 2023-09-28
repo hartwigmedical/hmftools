@@ -1,14 +1,14 @@
-package com.hartwig.hmftools.compar;
+package com.hartwig.hmftools.compar.common;
 
-import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
-import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
-import static com.hartwig.hmftools.compar.MismatchType.INVALID_BOTH;
-import static com.hartwig.hmftools.compar.MismatchType.INVALID_NEW;
-import static com.hartwig.hmftools.compar.MismatchType.INVALID_REF;
-import static com.hartwig.hmftools.compar.MismatchType.NEW_ONLY;
-import static com.hartwig.hmftools.compar.MismatchType.REF_ONLY;
+import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_BOTH;
+import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_NEW;
+import static com.hartwig.hmftools.compar.common.MismatchType.INVALID_REF;
+import static com.hartwig.hmftools.compar.common.MismatchType.NEW_ONLY;
+import static com.hartwig.hmftools.compar.common.MismatchType.REF_ONLY;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +16,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.compar.ComparConfig;
+import com.hartwig.hmftools.compar.ComparableItem;
+import com.hartwig.hmftools.compar.ItemComparer;
 import com.hartwig.hmftools.compar.chord.ChordComparer;
 import com.hartwig.hmftools.compar.cuppa.CuppaComparer;
 import com.hartwig.hmftools.compar.driver.DriverComparer;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.compar;
+package com.hartwig.hmftools.compar.common;
 
 import static java.lang.String.format;
 
@@ -15,9 +15,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLIN
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.compar.CommonUtils.SUB_ITEM_DELIM;
 import static com.hartwig.hmftools.compar.ComparConfig.NEW_SOURCE;
 import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.compar.purple;
 
-import static com.hartwig.hmftools.compar.Category.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MAX_COPY_NUMBER;
 import static com.hartwig.hmftools.compar.purple.GeneCopyNumberData.FLD_MIN_COPY_NUMBER;
@@ -16,14 +16,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberFile;
-import com.hartwig.hmftools.compar.Category;
-import com.hartwig.hmftools.compar.CommonUtils;
+import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.FileSources;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class GeneCopyNumberComparer implements ItemComparer

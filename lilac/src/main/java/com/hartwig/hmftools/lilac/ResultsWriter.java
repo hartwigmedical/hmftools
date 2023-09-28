@@ -108,10 +108,8 @@ public class ResultsWriter
         if(mConfig.OutputDir.isEmpty())
             return;
 
-        LL_LOGGER.info("writing output to {}", mConfig.OutputDir);
-
-        solutionSummary.write(LilacAllele.generateFilenameForWriting(mConfig.OutputDir, mConfig.Sample));
-        summaryMetrics.writefile(LilacQcData.generateFilenameForWriting(mConfig.OutputDir, mConfig.Sample));
+        solutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        summaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
 
         HlaComplexFile.writeToFile(mConfig.formFileId(LILAC_FILE_CANDIDATE_COVERAGE), rankedComplexes);
     }

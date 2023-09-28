@@ -4,12 +4,10 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.checkFileExtensionRename;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -52,21 +50,10 @@ public abstract class LilacAllele {
     }
 
     private static final String FILE_EXTENSION = ".lilac.tsv";
-    private static final String OLD_FILE_EXTENSION = ".lilac.csv";
-
-    public static String generateFilenameForWriting(final String basePath, final String sample)
-    {
-        return basePath + File.separator + sample + FILE_EXTENSION;
-    }
 
     public static String generateFilename(final String basePath, final String sample)
     {
-        String filename = generateFilenameForWriting(basePath, sample);
-
-        if(Files.exists(Paths.get(filename)))
-            return filename;
-
-        return checkAddDirSeparator(basePath) + sample + OLD_FILE_EXTENSION;
+        return basePath + File.separator + sample + FILE_EXTENSION;
     }
 
     public static List<LilacAllele> read(final String filePath) throws IOException

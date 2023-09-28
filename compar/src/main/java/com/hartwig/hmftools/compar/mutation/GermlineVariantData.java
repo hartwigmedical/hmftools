@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.compar.mutation;
 
-import static com.hartwig.hmftools.compar.Category.GERMLINE_VARIANT;
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkFilterDiffs;
-import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.Category.GERMLINE_VARIANT;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkFilterDiffs;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_BIALLELIC;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CANON_EFFECT;
 import static com.hartwig.hmftools.compar.mutation.VariantCommon.FLD_CODING_EFFECT;
@@ -23,11 +23,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.MatchLevel;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class GermlineVariantData implements ComparableItem
 {

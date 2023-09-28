@@ -114,5 +114,4 @@ public class SolutionSummary
             return first.Allele.compareTo(second.Allele);
         }
     }
-
 }
