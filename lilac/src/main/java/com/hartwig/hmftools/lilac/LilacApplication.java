@@ -656,8 +656,8 @@ public class LilacApplication
 
         mSolutionSummary = new SolutionSummary(null, mTumorCoverage, mTumorCopyNumber, mSomaticCodingCounts, mRnaCoverage);
 
-        mSolutionSummary.write(LilacAllele.generateFilename(mConfig.OutputDir, mConfig.Sample));
-        mSummaryMetrics.writefile(LilacQcData.generateFilename(mConfig.OutputDir, mConfig.Sample));
+        mSolutionSummary.write(LilacAllele.generateFilenameForWriting(mConfig.OutputDir, mConfig.Sample));
+        mSummaryMetrics.writefile(LilacQcData.generateFilenameForWriting(mConfig.OutputDir, mConfig.Sample));
     }
 
     private boolean validateFragments(final List<Fragment> fragments)
