@@ -119,30 +119,6 @@ public class SampleDataFiles
         return true;
     }
 
-    private boolean hasValidVcfSampleNames(final String vcfFile, final PurpleConfig config, boolean isGermline)
-    {
-        if(vcfFile.isEmpty())
-            return true;
-
-        boolean referenceFirst = !isGermline;
-
-        VCFFileReader vcfReader = new VCFFileReader(new File(vcfFile), false);
-
-        String tumorId = config.runTumor() ? config.TumorId : null;
-        String referenceId = config.runGermline() ? config.ReferenceId : null;
-
-        boolean validVcfNames = GenotypeIds.hasValidSampleIds(
-                vcfReader.getFileHeader(), referenceId, tumorId,  referenceFirst, false);
-
-        if(!validVcfNames)
-        {
-            PPL_LOGGER.error("vcf({}) has invalid sample names: {}", vcfFile, vcfReader.getFileHeader().getGenotypeSamples());
-            return false;
-        }
-
-        return true;
-    }
-
     private String getFilename(
             final ConfigBuilder configBuilder, final String config, final String toolDir, final String sampleId, final String fileSuffix)
     {
