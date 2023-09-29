@@ -118,17 +118,23 @@ public class FrontPageChapter implements ReportChapter
         boolean isFailNoTumor = PurpleQCInterpretation.isFailNoTumor(report.purple().fit().qc());
         boolean isContaminated = PurpleQCInterpretation.isContaminated(report.purple().fit().qc());
 
-        if (isFailNoTumor || isContaminated) {
+        if(isFailNoTumor || isContaminated)
+        {
             String reason;
-            if (isFailNoTumor && isContaminated) {
+            if(isFailNoTumor && isContaminated)
+            {
                 reason = "no tumor and contamination";
-            } else if (isFailNoTumor) {
+            }
+            else if(isFailNoTumor)
+            {
                 reason = "no tumor";
-            } else {
+            }
+            else
+            {
                 reason = "contamination";
             }
 
-            String warning = "The QC status of this sample is fail " + reason +
+            String warning = "The QC status of this sample is fail (" + reason + ")" +
                     ": all presented data in this report should be interpreted with caution";
             table.addCell(cells.createSpanningWarning(table, warning));
         }
