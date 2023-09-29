@@ -22,6 +22,7 @@ public class ReportResources
     static final String METADATA_AUTHOR = "Hartwig Platinum Pipeline";
 
     public static final String NOT_AVAILABLE = "NA";
+    public static final String NONE = "NONE";
 
     public static final float PAGE_MARGIN_TOP = 100; // Top margin also excludes the chapter title, which is rendered in the header
     public static final float PAGE_MARGIN_LEFT = 30;
@@ -159,6 +160,12 @@ public class ReportResources
     public Style deemphasizedStyle()
     {
         return new Style().setFont(fontRegular).setFontSize(5).setFontColor(ReportResources.PALETTE_MID_GREY);
+    }
+
+    @NotNull
+    public Style qcWarningStyle()
+    {
+        return new Style().setFont(fontBold).setFontSize(7).setFontColor(ReportResources.PALETTE_DARK_GREY);
     }
 
     @NotNull

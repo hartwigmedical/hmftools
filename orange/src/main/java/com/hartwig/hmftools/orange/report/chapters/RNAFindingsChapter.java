@@ -4,14 +4,15 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentag
 
 import java.util.List;
 
-import com.google.common.collect.Lists;
-import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
-import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
-import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
+import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
+import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
 import com.hartwig.hmftools.orange.report.tables.RNAFusionTable;
@@ -27,14 +28,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class RNAFindingsChapter implements ReportChapter
 {
+    private static final String RNA_QC_PASS = RnaStatistics.QC_PASS;
+
     @NotNull
-    private final OrangeRecord report;
+    private final IsofoxRecord isofox;
+    @NotNull
+    private final PurpleRecord purple;
     @NotNull
     private final ReportResources reportResources;
 
-    public RNAFindingsChapter(@NotNull final OrangeRecord report, @NotNull final ReportResources reportResources)
+    public RNAFindingsChapter(@NotNull final IsofoxRecord isofox, @NotNull final PurpleRecord purple,
+            @NotNull final ReportResources reportResources)
     {
-        this.report = report;
+        this.isofox = isofox;
+        this.purple = purple;
         this.reportResources = reportResources;
     }
 
@@ -71,68 +78,114 @@ public class RNAFindingsChapter implements ReportChapter
                 new Cell[] { cells.createHeader("QC"), cells.createHeader("Total Fragments"), cells.createHeader("Non-Duplicate Fragments"),
                         cells.createHeader("Duplicate rate") });
 
-        if(report.isofox() != null)
+        if(PurpleQCInterpretation.isContaminated(purple.fit().qc()))
         {
-            table.addCell(cells.createContent(report.isofox().summary().qcStatus()));
-            table.addCell(cells.createContent(String.valueOf(report.isofox().summary().totalFragments())));
-
-            long nonDuplicates = report.isofox().summary().totalFragments() - report.isofox().summary().duplicateFragments();
-            table.addCell(cells.createContent(String.valueOf(nonDuplicates)));
-
-            double duplicateRate = report.isofox().summary().duplicateFragments() / (double) report.isofox().summary().totalFragments();
-            table.addCell(cells.createContent(formatPercentage(duplicateRate)));
+            table.addCell(cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
         }
         else
         {
-            table.addCell(cells.createSpanningEntry(table, ReportResources.NOT_AVAILABLE));
+            table.addCell(cells.createContent(isofox.summary().qcStatus()));
+            table.addCell(cells.createContent(String.valueOf(isofox.summary().totalFragments())));
+
+            long nonDuplicates = isofox.summary().totalFragments() - isofox.summary().duplicateFragments();
+            table.addCell(cells.createContent(String.valueOf(nonDuplicates)));
+
+            double duplicateRate = isofox.summary().duplicateFragments() / (double) isofox.summary().totalFragments();
+            table.addCell(cells.createContent(formatPercentage(duplicateRate)));
+
+            addQCWarningInCaseOfFail(table, cells);
         }
 
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
+    private void addQCWarningInCaseOfFail(@NotNull Table table, @NotNull Cells cells)
+    {
+        boolean isRNAFail = !isofox.summary().qcStatus().equalsIgnoreCase(RNA_QC_PASS);
+        boolean isDNAFailNoTumor = PurpleQCInterpretation.isFailNoTumor(purple.fit().qc());
+
+        if(isRNAFail || isDNAFailNoTumor)
+        {
+            String warning = isRNAFail ?
+                    "The RNA QC status of this sample is not a pass. All presented RNA data should be interpreted with caution"
+                    : "The DNA QC status of this sample is fail (no tumor). "
+                            + "In addition to DNA findings, all RNA findings should be interpreted with caution";
+
+            table.addCell(cells.createSpanningWarning(table, warning));
+        }
+    }
+
     private void addExpressionTables(@NotNull Document document)
     {
-        IsofoxRecord isofox = report.isofox();
-        List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = report.purple().allSomaticGeneCopyNumbers();
+        String highExpressionTitle = "Genes with high expression";
+        String lowExpressionTitle = "Genes with low expression";
 
-        List<GeneExpression> reportableHighExpression = isofox != null ? isofox.reportableHighExpression() : Lists.newArrayList();
-        String titleHighExpression = "Genes with high expression (" + reportableHighExpression.size() + ")";
-        document.add(ExpressionTable.build(titleHighExpression, contentWidth(), reportableHighExpression, false, somaticGeneCopyNumbers,
-                reportResources));
+        if(PurpleQCInterpretation.isContaminated(purple.fit().qc()))
+        {
+            Tables tables = new Tables(reportResources);
+            document.add(tables.createNotAvailable(highExpressionTitle, contentWidth()));
+            document.add(tables.createNotAvailable(lowExpressionTitle, contentWidth()));
+        }
+        else
+        {
+            List<PurpleGeneCopyNumber> somaticGeneCopyNumbers = purple.allSomaticGeneCopyNumbers();
 
-        List<GeneExpression> reportableLowExpression = isofox != null ? isofox.reportableLowExpression() : Lists.newArrayList();
-        String titleLowExpression = "Genes with low expression (" + reportableLowExpression.size() + ")";
-        document.add(ExpressionTable.build(titleLowExpression, contentWidth(), reportableLowExpression, true, somaticGeneCopyNumbers,
-                reportResources));
+            List<GeneExpression> reportableHighExpression = isofox.reportableHighExpression();
+            String titleHighExpression = highExpressionTitle + " (" + reportableHighExpression.size() + ")";
+            document.add(ExpressionTable.build(titleHighExpression, contentWidth(), reportableHighExpression, false, somaticGeneCopyNumbers,
+                    reportResources));
+
+            List<GeneExpression> reportableLowExpression = isofox.reportableLowExpression();
+            String titleLowExpression = lowExpressionTitle + " (" + reportableLowExpression.size() + ")";
+            document.add(ExpressionTable.build(titleLowExpression, contentWidth(), reportableLowExpression, true, somaticGeneCopyNumbers,
+                    reportResources));
+        }
     }
 
     private void addRNAFusionTables(@NotNull Document document)
     {
-        IsofoxRecord isofox = report.isofox();
+        String knownFusionsTitle = "Known fusions detected in RNA and not in DNA";
+        String promiscuousFusionsTitle = "Promiscuous fusions detected in RNA and not in DNA";
 
-        List<RnaFusion> reportableNovelKnownFusions = isofox != null ? isofox.reportableNovelKnownFusions() : Lists.newArrayList();
-        String titleKnownFusions = "Known fusions detected in RNA and not in DNA (" + reportableNovelKnownFusions.size() + ")";
-        document.add(RNAFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, reportResources));
+        if(PurpleQCInterpretation.isContaminated(purple.fit().qc()))
+        {
+            Tables tables = new Tables(reportResources);
+            document.add(tables.createNotAvailable(knownFusionsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(promiscuousFusionsTitle, contentWidth()));
+        }
+        else
+        {
+            List<RnaFusion> reportableNovelKnownFusions = isofox.reportableNovelKnownFusions();
+            String titleKnownFusions = knownFusionsTitle + " (" + reportableNovelKnownFusions.size() + ")";
+            document.add(RNAFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, reportResources));
 
-        List<RnaFusion> reportableNovelPromiscuous = isofox != null ? isofox.reportableNovelPromiscuousFusions() : Lists.newArrayList();
-        String titlePromiscuousFusions = "Promiscuous fusions detected in RNA and not in DNA (" + reportableNovelPromiscuous.size() + ")";
-        document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
+            List<RnaFusion> reportableNovelPromiscuous = isofox.reportableNovelPromiscuousFusions();
+            String titlePromiscuousFusions = promiscuousFusionsTitle + " (" + reportableNovelPromiscuous.size() + ")";
+            document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
+        }
     }
 
     private void addNovelSpliceJunctionTables(@NotNull Document document)
     {
-        IsofoxRecord isofox = report.isofox();
+        String skippedExonsTitle = "Potentially interesting novel splice junctions - Skipped exons";
+        String novelExonsIntronsTitle = "Potentially interesting novel splice junctions - Novel exon/intron";
 
-        List<NovelSpliceJunction> reportableSkippedExons = isofox != null ? isofox.reportableSkippedExons() : Lists.newArrayList();
-        String titleSkippedExonJunctions =
-                "Potentially interesting novel splice junctions - Skipped exons (" + reportableSkippedExons.size() + ")";
-        document.add(NovelSpliceJunctionTable.build(titleSkippedExonJunctions, contentWidth(), reportableSkippedExons, reportResources));
+        if(PurpleQCInterpretation.isContaminated(purple.fit().qc()))
+        {
+            Tables tables = new Tables(reportResources);
+            document.add(tables.createNotAvailable(skippedExonsTitle, contentWidth()));
+            document.add(tables.createNotAvailable(novelExonsIntronsTitle, contentWidth()));
+        }
+        else
+        {
+            List<NovelSpliceJunction> reportableSkippedExons = isofox.reportableSkippedExons();
+            String titleSkippedExonJunctions = skippedExonsTitle + " (" + reportableSkippedExons.size() + ")";
+            document.add(NovelSpliceJunctionTable.build(titleSkippedExonJunctions, contentWidth(), reportableSkippedExons, reportResources));
 
-        List<NovelSpliceJunction> reportableNovelExonsIntrons =
-                isofox != null ? isofox.reportableNovelExonsIntrons() : Lists.newArrayList();
-        String titleNovelExonIntronJunctions =
-                "Potentially interesting novel splice junctions - Novel exon/intron (" + reportableNovelExonsIntrons.size() + ")";
-        document.add(NovelSpliceJunctionTable.build(titleNovelExonIntronJunctions, contentWidth(), reportableNovelExonsIntrons,
-                reportResources));
+            List<NovelSpliceJunction> reportableNovelExonsIntrons = isofox.reportableNovelExonsIntrons();
+            String titleNovelExonIntronJunctions = novelExonsIntronsTitle + " (" + reportableNovelExonsIntrons.size() + ")";
+            document.add(NovelSpliceJunctionTable.build(titleNovelExonIntronJunctions, contentWidth(), reportableNovelExonsIntrons,
+                    reportResources));
+        }
     }
 }

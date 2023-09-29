@@ -15,7 +15,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
@@ -29,6 +28,7 @@ import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleQCFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
@@ -159,7 +159,7 @@ public class GermlineConversionTest
         PurpleFit base = TestPurpleInterpretationFactory.createMinimalTestFitData();
         return ImmutablePurpleFit.builder()
                 .from(base)
-                .qc(ImmutablePurpleQC.builder().from(base.qc()).addGermlineAberrations(PurpleGermlineAberration.MOSAIC_X).build())
+                .qc(TestPurpleQCFactory.builder().from(base.qc()).addGermlineAberrations(PurpleGermlineAberration.MOSAIC_X).build())
                 .build();
     }
 

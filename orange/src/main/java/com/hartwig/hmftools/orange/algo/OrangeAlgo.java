@@ -2,6 +2,7 @@ package com.hartwig.hmftools.orange.algo;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,8 +92,6 @@ import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesFile;
 import com.hartwig.hmftools.orange.cohort.percentile.CohortPercentilesModel;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.OrangeConversion;
-
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -744,5 +743,8 @@ public class OrangeAlgo
     }
 
     @VisibleForTesting
-    public void setSuppressGeneWarnings() { suppressGeneWarnings = true;}
+    public void setSuppressGeneWarnings()
+    {
+        suppressGeneWarnings = true;
+    }
 }
