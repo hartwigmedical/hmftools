@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.INFERRED;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_COUNT;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_AF;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_CN_CHANGE;
@@ -11,10 +12,18 @@ import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_JUNCTION_
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.valueNotNull;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
+import com.hartwig.hmftools.common.utils.collection.Multimaps;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.EnrichedStructuralVariantFactory;
@@ -29,15 +38,16 @@ import com.hartwig.hmftools.patientdb.dao.DatabaseUtil;
 import org.apache.commons.cli.CommandLine;
 
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFFileReader;
 
 public final class SvFileLoader
 {
     public static List<StructuralVariantData> loadSampleSvDataFromFile(final LinxConfig config, final String sampleId)
     {
-        String vcfFile = config.SvVcfFile.contains("*") ? config.SvVcfFile.replaceAll("\\*", sampleId) : config.SvVcfFile;
+        String vcfFile = convertWildcardSamplePath(config.SvVcfFile, sampleId);
 
         if(config.IsGermline)
-            return loadSvDataFromGermlineVcf(vcfFile);
+            return loadSvDataFromGermlineVcf(vcfFile, sampleId);
         else
             return loadSvDataFromVcf(vcfFile);
     }
@@ -48,8 +58,8 @@ public final class SvFileLoader
 
         try
         {
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
-            final List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
+            List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter());
+            List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(variants);
 
             // generate a unique ID for each SV record
             int svId = 0;
@@ -69,30 +79,62 @@ public final class SvFileLoader
         return svDataList;
     }
 
-    private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile)
+    private static List<StructuralVariantData> loadSvDataFromGermlineVcf(final String vcfFile, final String sampleId)
     {
-        final List<StructuralVariantData> svDataList = Lists.newArrayList();
+        StructuralVariantFactory svFactory = StructuralVariantFactory.build(new GermlineFilter());
 
-        try
+        VcfFileReader vcfReader = new VcfFileReader(vcfFile);
+
+        if(!vcfReader.fileValid())
+            return Collections.emptyList();
+
+        // NOTE: if linx (and Purple) are run in germline-only mode, then consider setting the reference ordinal only here,
+        // but depends on the downstream interpretation of the Linx output
+        List<String> sampleIds = vcfReader.vcfHeader().getGenotypeSamples();
+        int tumorOrdinal = -1;
+
+        List<String> genotypeSamples = vcfReader.vcfHeader().getGenotypeSamples();
+
+        for(int genotypeIndex = 0; genotypeIndex < genotypeSamples.size(); ++genotypeIndex)
         {
-            final List<StructuralVariant> variants = StructuralVariantFileLoader.fromFile(vcfFile, new GermlineFilter());
+            String genotypeSample = genotypeSamples.get(genotypeIndex);
 
-            int svId = 0;
-
-            for(StructuralVariant var : variants)
+            if(genotypeSample.equals(sampleId))
             {
-                svDataList.add(convertGermlineSvData(var, svId++));
+                tumorOrdinal = genotypeIndex;
+                break;
             }
-
-            LNX_LOGGER.info("loaded {} germline SV data records from VCF file: {}", svDataList.size(), vcfFile);
         }
-        catch(Exception e)
+
+        if(tumorOrdinal == -1)
         {
-            LNX_LOGGER.error("failed to load SVs from VCF: {}", e.toString());
-            e.printStackTrace();
-            System.exit(1);
+            LNX_LOGGER.error("vcf({}) missing sampleId(sampleId)", vcfFile, sampleId);
+            return Collections.emptyList();
         }
 
+        int referenceOrdinal = -1;
+
+        if(sampleIds.size() > 1)
+        {
+            referenceOrdinal = tumorOrdinal == 0 ? 1 : 0;
+        }
+
+        svFactory.setGenotypeOrdinals(referenceOrdinal, tumorOrdinal);
+
+        for(VariantContext variantContext : vcfReader.iterator())
+        {
+            svFactory.addVariantContext(variantContext);
+        }
+
+        List<StructuralVariantData> svDataList = Lists.newArrayList();
+        int svId = 0;
+
+        for(StructuralVariant var : svFactory.results())
+        {
+            svDataList.add(convertGermlineSvData(var, svId++));
+        }
+
+        LNX_LOGGER.info("loaded {} germline SV data records from VCF file: {}", svDataList.size(), vcfFile);
         return svDataList;
     }
 
