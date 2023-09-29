@@ -247,7 +247,7 @@ public class OrangeAlgo
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(ConversionUtil.mapToIterable(sigAllocations, OrangeConversion::convert))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
-                .plots(buildPlots(config))
+                .plots(buildPlots(config, shouldHaveLinxPlots(linxData)))
                 .build();
 
         if(config.limitJsonOutput())
@@ -658,7 +658,7 @@ public class OrangeAlgo
     }
 
     @NotNull
-    private OrangePlots buildPlots(@NotNull OrangeConfig config) throws IOException
+    private OrangePlots buildPlots(@NotNull OrangeConfig config, boolean shouldHaveLinxPlots) throws IOException
     {
         LOGGER.info("Loading plots");
 
@@ -674,9 +674,9 @@ public class OrangeAlgo
             }
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         }
-        else
-        {
-            LOGGER.debug(" No linx plots have been loaded as plot directory {} does not exist", linxPlotDir);
+
+        if (shouldHaveLinxPlots && linxDriverPlots.isEmpty()) {
+            throw new RuntimeException("Expected Linx plots but no plots found");
         }
 
         String sageReferenceBQRPlot = plotManager.processPlotFile(config.sageSomaticRefSampleBQRPlot());
@@ -746,5 +746,11 @@ public class OrangeAlgo
     public void setSuppressGeneWarnings()
     {
         suppressGeneWarnings = true;
+    }
+
+    public boolean shouldHaveLinxPlots(@NotNull LinxData linxData) {
+        return linxData.reportableSomaticFusions().size()
+                + linxData.reportableSomaticBreakends().size()
+                + linxData.somaticHomozygousDisruptions().size() > 0;
     }
 }
