@@ -213,6 +213,7 @@ investigate potential causes for QC failure.
 - Upcoming
     - Data is displayed in the report as "NA" in case of purple QC failure, in case the data by itself is not interpretable (e.g. TML)
     - The TMB status (high vs low) is displayed on the front page along with the actual TMB
+    - The status of UGT1A1 is displayed on the front page
 - [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
     - Supports panel tumor-only mode:
         - Omits Cuppa, Chord, Sigs and VirusBreakends

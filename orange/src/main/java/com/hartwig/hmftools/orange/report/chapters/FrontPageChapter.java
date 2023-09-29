@@ -238,7 +238,8 @@ public class FrontPageChapter implements ReportChapter
         {
             addCellEntry(summary, cells, "HR deficiency score:", hrDeficiencyString());
 
-            addCellEntry(summary, cells, "DPYD status:", dpydStatus());
+            addCellEntry(summary, cells, "DPYD status:", geneStatus("DPYD"));
+            addCellEntry(summary, cells, "UGT1A1 status:", geneStatus("UGT1A1"));
 
             addCellEntry(summary, cells, "Number of SVs:", svTmbString());
             addCellEntry(summary, cells, "Max complex cluster size:", maxComplexSizeString());
@@ -575,7 +576,7 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
-    private String dpydStatus()
+    private String geneStatus(@NotNull String gene)
     {
         Set<PeachGenotype> genotypes = report.peach();
         if(genotypes == null)
@@ -586,7 +587,7 @@ public class FrontPageChapter implements ReportChapter
         Set<String> haplotypes = Sets.newHashSet();
         for(PeachGenotype genotype : genotypes)
         {
-            if(genotype.gene().equals("DPYD"))
+            if(genotype.gene().equals(gene))
             {
                 haplotypes.add(genotype.haplotype() + " (" + genotype.function() + ")");
             }
