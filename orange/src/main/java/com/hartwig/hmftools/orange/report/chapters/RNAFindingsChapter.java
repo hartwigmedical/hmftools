@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentag
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.rna.RnaStatistics;
+import com.hartwig.hmftools.common.rna.RnaQcFilter;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
@@ -28,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class RNAFindingsChapter implements ReportChapter
 {
-    private static final String RNA_QC_PASS = RnaStatistics.QC_PASS;
+    private static final String RNA_PASS = RnaQcFilter.PASS.toString();
 
     @NotNull
     private final IsofoxRecord isofox;
@@ -101,7 +101,7 @@ public class RNAFindingsChapter implements ReportChapter
 
     private void addQCWarningInCaseOfFail(@NotNull Table table, @NotNull Cells cells)
     {
-        boolean isRNAFail = !isofox.summary().qcStatus().equalsIgnoreCase(RNA_QC_PASS);
+        boolean isRNAFail = !isofox.summary().qcStatus().equalsIgnoreCase(RNA_PASS);
         boolean isDNAFailNoTumor = PurpleQCInterpretation.isFailNoTumor(purple.fit().qc());
 
         if(isRNAFail || isDNAFailNoTumor)
