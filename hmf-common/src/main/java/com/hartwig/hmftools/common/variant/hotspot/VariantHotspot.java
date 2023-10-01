@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.common.variant.hotspot;
 
-import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
-
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import org.immutables.value.Value;

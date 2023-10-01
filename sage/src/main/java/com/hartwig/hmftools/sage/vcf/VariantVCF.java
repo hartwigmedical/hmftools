@@ -148,7 +148,7 @@ public class VariantVCF implements AutoCloseable
         return header(version, samples);
     }
 
-    private static VCFHeader header(final String version, final List<String> allSamples)
+    public static VCFHeader header(final String version, final List<String> allSamples)
     {
         VCFHeader header = SageVcfTags.addMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
