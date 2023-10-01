@@ -104,9 +104,11 @@ public class MarkDupsConfig
     private static final String READ_OUTPUTS = "read_output";
     private static final String NO_MATE_CIGAR = "no_mate_cigar";
     private static final String FORM_CONSENSUS = "form_consensus";
-    private static final String WRITE_BAM = "write_bam";
+
+    private static final String NO_WRITE_BAM = "no_write_bam";
     private static final String SORTED_BAM = "sorted_bam";
     private static final String MULTI_BAM = "multi_bam";
+
     private static final String UNMAP_REGIONS = "unmap_regions";
 
     private static final String RUN_CHECKS = "run_checks";
@@ -181,8 +183,9 @@ public class MarkDupsConfig
         Threads = parseThreads(configBuilder);
 
         LogReadType = ReadOutput.valueOf(configBuilder.getValue(READ_OUTPUTS, NONE.toString()));
-        WriteBam = configBuilder.hasFlag(WRITE_BAM) || LogReadType == NONE;
-        MultiBam = Threads > 1 && configBuilder.hasFlag(MULTI_BAM);
+
+        WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM);
+        MultiBam = WriteBam && Threads > 1 && configBuilder.hasFlag(MULTI_BAM);
         SortedBam = configBuilder.hasFlag(SORTED_BAM);
 
         LogReadIds = parseLogReadIds(configBuilder);
@@ -229,7 +232,7 @@ public class MarkDupsConfig
 
         configBuilder.addPath(UNMAP_REGIONS, false, "Unmap reads within these regions");
 
-        configBuilder.addFlag(WRITE_BAM, "Write BAM, default is true if not writing other read TSV output");
+        configBuilder.addFlag(NO_WRITE_BAM, "BAM not written");
         configBuilder.addFlag(SORTED_BAM, "Write sorted BAM");
         configBuilder.addFlag(MULTI_BAM, "Write temporary BAMs with multi-threading");
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");

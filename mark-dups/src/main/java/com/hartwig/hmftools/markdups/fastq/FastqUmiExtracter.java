@@ -91,6 +91,8 @@ public class FastqUmiExtracter
     private static final int READ_ITEM_BASES = 1;
     private static final int READ_ITEM_SPARE = 2;
     private static final int READ_ITEM_QUALS = 3;
+    private static final int READ_LINE_COUNT = 4;
+
     private static final char READ_ID_START = '@';
     private static final char READ_ID_BREAK = ' ';
     private static final char READ_ID_DELIM = ':';
@@ -139,7 +141,7 @@ public class FastqUmiExtracter
 
                 ++readLineCount;
 
-                if(readLineCount == 4)
+                if(readLineCount == READ_LINE_COUNT)
                 {
                     if(!processReadBases(r1ReadBuffer, r2ReadBuffer))
                     {

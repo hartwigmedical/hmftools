@@ -152,6 +152,7 @@ public class ReadUnmapper
     {
         // set flag unmapped
         read.setReadUnmappedFlag(true);
+        read.setMappingQuality(0);
         read.setProperPairFlag(false);
 
         // clear insert size
