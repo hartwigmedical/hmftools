@@ -41,7 +41,7 @@ public class SageConstants
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
     public static final int LONG_GERMLINE_INSERT_LENGTH = 10;
 
-    public static final int DEFAULT_EVIDENCE_MAP_QUAL = 1;
+    public static final int DEFAULT_EVIDENCE_MAP_QUAL = 0;
     
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
