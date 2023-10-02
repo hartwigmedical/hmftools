@@ -19,7 +19,9 @@ public interface GeneExpression {
 
     double percentileCancer();
 
-    double medianTpmCohort();
+    @Nullable
+    Double medianTpmCohort();
 
-    double percentileCohort();
+    @Nullable
+    Double percentileCohort();
 }

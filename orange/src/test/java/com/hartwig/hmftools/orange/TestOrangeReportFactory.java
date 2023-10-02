@@ -207,7 +207,7 @@ public final class TestOrangeReportFactory
                 .tpm(126.27)
                 .medianTpmCancer(41)
                 .percentileCancer(0.91)
-                .medianTpmCohort(37)
+                .medianTpmCohort(37D)
                 .percentileCohort(0.93)
                 .build();
 
@@ -216,7 +216,7 @@ public final class TestOrangeReportFactory
                 .tpm(5.34)
                 .medianTpmCancer(18.32)
                 .percentileCancer(0.04)
-                .medianTpmCohort(16)
+                .medianTpmCohort(16D)
                 .percentileCohort(0.07)
                 .build();
 
