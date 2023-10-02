@@ -31,7 +31,7 @@ import htsjdk.variant.vcf.VCFConstants;
 
 public final class VariantContextFactory
 {
-    private static final List<Allele> NO_CALL = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
+    public static final List<Allele> NO_CALL = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
 
     public static VariantContext create(final SageVariant variant, final List<String> referenceIds, final List<String> tumorIds)
     {

@@ -493,8 +493,6 @@ public class GermlineDisruptions
             StringJoiner filters = new StringJoiner(";");
             allFilters.forEach(x -> filters.add(x));
 
-            // note the switch of ordering for tumor and reference fragment counts since the VCF from Gripss and Purple keeps them
-            // ordered as tumor in genotype 0 and reference in genotype 1
             germlineSVs.add(new LinxGermlineSv(
                     var.id(), svData.vcfId(),
                     var.chromosome(true), var.chromosome(false),
@@ -505,8 +503,8 @@ public class GermlineDisruptions
                     svData.junctionCopyNumber(), svData.adjustedStartAF(), svData.adjustedEndAF(),
                     svData.adjustedStartCopyNumber(), svData.adjustedEndCopyNumber(),
                     svData.adjustedStartCopyNumberChange(), svData.adjustedEndCopyNumberChange(),
-                    svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
                     svData.startNormalVariantFragmentCount(), svData.startNormalReferenceFragmentCount(), svData.endNormalReferenceFragmentCount(),
+                    svData.startTumorVariantFragmentCount(), svData.startTumorReferenceFragmentCount(), svData.endTumorReferenceFragmentCount(),
                     svData.insertSequence(), svData.insertSequenceAlignments(), svData.insertSequenceRepeatClass(), svData.insertSequenceRepeatType(),
                     geneName, cluster.id(), cluster.getSvCount(), cluster.getResolvedType().toString(),
                     svData.startLinkedBy(), svData.endLinkedBy(), ponCount));

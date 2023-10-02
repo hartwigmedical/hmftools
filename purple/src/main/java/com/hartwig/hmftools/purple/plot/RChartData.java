@@ -45,7 +45,7 @@ public class RChartData
         mHistogramFilename = config.OutputDir + tumorSample + ".purple.somatic.hist.tsv";
 
         String somaticFilename = somaticDataFilename(config, tumorSample);
-        mSomaticWriter = initialiseSomaticWriter(somaticFilename);
+        mSomaticWriter = !config.Charting.Disabled ? initialiseSomaticWriter(somaticFilename) : null;
         mSomaticCount = 0;
     }
 
