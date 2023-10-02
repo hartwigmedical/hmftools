@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
@@ -267,7 +267,7 @@ public final class GermlineConversion
     {
         List<LinxSvAnnotation> additionalStructuralVariants = Lists.newArrayList();
         List<LinxBreakend> additionalReportableBreakends = Lists.newArrayList();
-        List<HomozygousDisruption> additionalHomozygousDisruptions = Lists.newArrayList();
+        List<LinxHomozygousDisruption> additionalHomozygousDisruptions = Lists.newArrayList();
 
         if(containsTumorCells)
         {
@@ -419,8 +419,8 @@ public final class GermlineConversion
     }
 
     @NotNull
-    private static List<HomozygousDisruption> toSomaticHomozygousDisruptions(
-            @Nullable List<HomozygousDisruption> germlineHomozygousDisruptions)
+    private static List<LinxHomozygousDisruption> toSomaticHomozygousDisruptions(
+            @Nullable List<LinxHomozygousDisruption> germlineHomozygousDisruptions)
     {
         return germlineHomozygousDisruptions != null ? germlineHomozygousDisruptions : Lists.newArrayList();
     }

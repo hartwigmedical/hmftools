@@ -11,7 +11,7 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
@@ -41,7 +41,7 @@ public class WildTypeAlgoTest
 
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
         List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
@@ -66,7 +66,7 @@ public class WildTypeAlgoTest
 
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
         List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
@@ -90,7 +90,7 @@ public class WildTypeAlgoTest
         PurpleGainLoss reportableDel = TestPurpleGainLossFactory.createGainLoss("APC", CopyNumberInterpretation.FULL_LOSS);
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList(reportableAmp, reportableDel);
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
         List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
@@ -113,7 +113,7 @@ public class WildTypeAlgoTest
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         LinxFusion reportedFusionMatch = createFusion("BAG4", "EGFR");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
         List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
@@ -136,7 +136,7 @@ public class WildTypeAlgoTest
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         LinxFusion reportedFusionMatch = createFusion("EGFR", "BAG4");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
         List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
@@ -158,8 +158,8 @@ public class WildTypeAlgoTest
         List<PurpleVariant> reportableGermlineVariants = null;
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        HomozygousDisruption homozygousDisruption = createHomDisruption("NRAS");
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
+        LinxHomozygousDisruption homozygousDisruption = createHomDisruption("NRAS");
+        List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
         List<LinxBreakend> reportableBreakends = Lists.newArrayList();
 
         List<WildTypeGene> wildTypes = WildTypeAlgo.determineWildTypeGenes(driverGenes,
@@ -182,7 +182,7 @@ public class WildTypeAlgoTest
         List<PurpleVariant> reportableGermlineVariants = null;
         List<PurpleGainLoss> reportableSomaticGainsLosses = Lists.newArrayList();
         List<LinxFusion> reportableFusions = Lists.newArrayList();
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
+        List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList();
 
         LinxBreakend breakend = createBreakend("MYC");
         List<LinxBreakend> reportableBreakends = Lists.newArrayList(breakend);
@@ -218,8 +218,8 @@ public class WildTypeAlgoTest
         LinxFusion reportedFusionMatch = createFusion("BAG4", "FGFR1");
         List<LinxFusion> reportableFusions = Lists.newArrayList(reportedFusionMatch);
 
-        HomozygousDisruption homozygousDisruption = createHomDisruption("NRAS");
-        List<HomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
+        LinxHomozygousDisruption homozygousDisruption = createHomDisruption("NRAS");
+        List<LinxHomozygousDisruption> homozygousDisruptions = Lists.newArrayList(homozygousDisruption);
 
         LinxBreakend breakend = createBreakend("MYC");
         List<LinxBreakend> reportableBreakends = Lists.newArrayList(breakend);
@@ -266,7 +266,7 @@ public class WildTypeAlgoTest
     }
 
     @NotNull
-    private static HomozygousDisruption createHomDisruption(@NotNull String gene)
+    private static LinxHomozygousDisruption createHomDisruption(@NotNull String gene)
     {
         return LinxOrangeTestFactory.homozygousDisruptionBuilder().gene(gene).build();
     }

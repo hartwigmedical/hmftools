@@ -4,8 +4,8 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
-import com.hartwig.hmftools.datamodel.linx.ImmutableHomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
@@ -100,9 +100,9 @@ public final class LinxConversion
     }
 
     @NotNull
-    public static HomozygousDisruption convert(com.hartwig.hmftools.common.linx.HomozygousDisruption homozygousDisruption)
+    public static LinxHomozygousDisruption convert(com.hartwig.hmftools.common.linx.HomozygousDisruption homozygousDisruption)
     {
-        return ImmutableHomozygousDisruption.builder()
+        return ImmutableLinxHomozygousDisruption.builder()
                 .chromosome(homozygousDisruption.chromosome())
                 .chromosomeBand(homozygousDisruption.chromosomeBand())
                 .gene(homozygousDisruption.gene())

@@ -43,8 +43,8 @@ public interface LinxRecord {
     List<LinxBreakend> additionalSuspectSomaticBreakends();
 
     @NotNull
-    List<HomozygousDisruption> somaticHomozygousDisruptions();
+    List<LinxHomozygousDisruption> somaticHomozygousDisruptions();
 
     @Nullable
-    List<HomozygousDisruption> germlineHomozygousDisruptions();
+    List<LinxHomozygousDisruption> germlineHomozygousDisruptions();
 }

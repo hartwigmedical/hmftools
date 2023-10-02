@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
-import com.hartwig.hmftools.datamodel.linx.ImmutableHomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
@@ -33,9 +33,9 @@ public final class LinxOrangeTestFactory
     }
 
     @NotNull
-    public static ImmutableHomozygousDisruption.Builder homozygousDisruptionBuilder()
+    public static ImmutableLinxHomozygousDisruption.Builder homozygousDisruptionBuilder()
     {
-        return ImmutableHomozygousDisruption.builder()
+        return ImmutableLinxHomozygousDisruption.builder()
                 .from(LinxConversion.convert(LinxTestFactory.homozygousDisruptionBuilder().build()));
     }
 }

@@ -20,7 +20,7 @@ import com.hartwig.hmftools.datamodel.hla.LilacAllele;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
@@ -268,7 +268,7 @@ public class OrangeJsonTest {
         assertEquals(4, structuralVariant.localTICountEnd());
 
         assertEquals(1, linx.somaticHomozygousDisruptions().size());
-        HomozygousDisruption homozygousDisruption = linx.somaticHomozygousDisruptions().iterator().next();
+        LinxHomozygousDisruption homozygousDisruption = linx.somaticHomozygousDisruptions().iterator().next();
         assertEquals("4", homozygousDisruption.chromosome());
         assertEquals("p1.12", homozygousDisruption.chromosomeBand());
         assertEquals("NF1", homozygousDisruption.gene());

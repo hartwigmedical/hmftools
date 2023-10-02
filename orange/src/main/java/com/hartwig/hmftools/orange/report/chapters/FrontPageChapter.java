@@ -15,7 +15,7 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
@@ -403,7 +403,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<HomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
+        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
         if(germlineHomozygousDisruptions == null)
         {
             return ReportResources.NOT_AVAILABLE;
@@ -412,7 +412,7 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
-    private static String disruptionDriverString(@NotNull List<HomozygousDisruption> homozygousDisruptions)
+    private static String disruptionDriverString(@NotNull List<LinxHomozygousDisruption> homozygousDisruptions)
     {
         if(homozygousDisruptions.isEmpty())
         {
@@ -420,7 +420,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for(HomozygousDisruption homozygousDisruption : homozygousDisruptions)
+        for(LinxHomozygousDisruption homozygousDisruption : homozygousDisruptions)
         {
             genes.add(homozygousDisruption.gene());
         }
