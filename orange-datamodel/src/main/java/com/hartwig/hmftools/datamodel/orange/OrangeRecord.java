@@ -31,9 +31,9 @@ public interface OrangeRecord {
     String sampleId();
 
     @NotNull
-    LocalDate experimentDate();
+    LocalDate samplingDate();
 
-    @Nullable
+    @NotNull
     ExperimentType experimentType();
 
     @NotNull

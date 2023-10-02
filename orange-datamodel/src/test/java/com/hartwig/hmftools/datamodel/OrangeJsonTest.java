@@ -81,7 +81,7 @@ public class OrangeJsonTest {
         OrangeRecord record = OrangeJson.getInstance().read(MINIMALLY_POPULATED_ORANGE_JSON);
 
         assertEquals("TEST", record.sampleId());
-        assertEquals(LocalDate.of(2022, 1, 20), record.experimentDate());
+        assertEquals(LocalDate.of(2022, 1, 20), record.samplingDate());
         assertEquals(OrangeRefGenomeVersion.V37, record.refGenomeVersion());
 
         assertPurple(record.purple());

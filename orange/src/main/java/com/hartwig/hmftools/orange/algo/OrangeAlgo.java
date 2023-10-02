@@ -228,7 +228,7 @@ public class OrangeAlgo
 
         OrangeRecord report = ImmutableOrangeRecord.builder()
                 .sampleId(config.tumorSampleId())
-                .experimentDate(config.experimentDate())
+                .samplingDate(config.experimentDate())
                 .experimentType(experimentType)
                 .configuredPrimaryTumor(ConversionUtil.mapToIterable(configuredPrimaryTumor, OrangeConversion::convert))
                 .refGenomeVersion(config.refGenomeVersion())

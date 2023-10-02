@@ -1,6 +1,7 @@
 {
   "sampleId": "TEST",
-  "experimentDate": {
+  "experimentType": "WHOLE_GENOME",
+  "samplingDate": {
     "year": 2022,
     "month": 1,
     "day": 20
