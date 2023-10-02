@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public interface GeneExpression {
 
     @NotNull
-    String geneName();
+    String gene();
 
     double tpm();
 

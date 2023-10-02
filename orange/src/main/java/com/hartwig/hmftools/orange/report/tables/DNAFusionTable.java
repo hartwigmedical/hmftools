@@ -154,7 +154,7 @@ public final class DNAFusionTable
         String fcDbString = "FC " + Expressions.foldChangeDatabase(geneEndExpression);
         String dbString = " DB percentile " + Expressions.percentileDatabase(geneEndExpression) + " (" + fcDbString + ")";
 
-        return new Paragraph(geneEndExpression.geneName() + " " + tpmString + ", " + typeString + ", " + dbString);
+        return new Paragraph(geneEndExpression.gene() + " " + tpmString + ", " + typeString + ", " + dbString);
     }
 
     @NotNull

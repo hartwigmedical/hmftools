@@ -20,7 +20,7 @@ public final class Expressions
     {
         for(GeneExpression expression : expressions)
         {
-            if(expression.geneName().equals(geneToFind))
+            if(expression.gene().equals(geneToFind))
             {
                 return expression;
             }

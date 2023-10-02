@@ -203,7 +203,7 @@ public final class TestOrangeReportFactory
                 OrangeIsofoxTestFactory.rnaStatisticsBuilder().totalFragments(120000).duplicateFragments(60000).build();
 
         GeneExpression highExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
-                .geneName("MYC")
+                .gene("MYC")
                 .tpm(126.27)
                 .medianTpmCancer(41)
                 .percentileCancer(0.91)
@@ -212,7 +212,7 @@ public final class TestOrangeReportFactory
                 .build();
 
         GeneExpression lowExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
-                .geneName("CDKN2A")
+                .gene("CDKN2A")
                 .tpm(5.34)
                 .medianTpmCancer(18.32)
                 .percentileCancer(0.04)

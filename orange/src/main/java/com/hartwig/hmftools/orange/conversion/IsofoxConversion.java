@@ -33,7 +33,7 @@ public final class IsofoxConversion
     public static GeneExpression convert(com.hartwig.hmftools.common.rna.GeneExpression geneExpression)
     {
         return ImmutableGeneExpression.builder()
-                .geneName(geneExpression.geneName())
+                .gene(geneExpression.geneName())
                 .tpm(geneExpression.tpm())
                 .medianTpmCancer(geneExpression.medianTpmCancer())
                 .percentileCancer(geneExpression.percentileCancer())

@@ -31,7 +31,7 @@ public class ExpressionsTest
     @Test
     public void canFindExpressionByGene()
     {
-        GeneExpression entry = builder().geneName("gene 1").build();
+        GeneExpression entry = builder().gene("gene 1").build();
 
         List<GeneExpression> expressions = Lists.newArrayList(entry);
         assertEquals(entry, Expressions.findByGene(expressions, "gene 1"));
