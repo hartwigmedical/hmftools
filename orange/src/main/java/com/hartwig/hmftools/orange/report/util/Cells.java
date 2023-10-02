@@ -47,6 +47,16 @@ public class Cells
     }
 
     @NotNull
+    public Cell createSpanningWarning(@NotNull Table table, @NotNull String text)
+    {
+        Cell cell = new Cell(1, table.getNumberOfColumns());
+        cell.add(new Paragraph(text));
+        cell.setBorder(Border.NO_BORDER);
+        cell.addStyle(reportResources.qcWarningStyle());
+        return cell;
+    }
+
+    @NotNull
     public Cell createUrl(@NotNull String text, @NotNull String url)
     {
         Cell cell = createBorderlessBase();
