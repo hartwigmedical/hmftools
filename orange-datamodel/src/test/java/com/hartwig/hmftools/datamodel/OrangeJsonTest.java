@@ -202,7 +202,7 @@ public class OrangeJsonTest {
 
         assertEquals(1, purple.allSomaticGeneCopyNumbers().size());
         PurpleGeneCopyNumber geneCopyNumber = purple.allSomaticGeneCopyNumbers().iterator().next();
-        assertEquals("gene", geneCopyNumber.geneName());
+        assertEquals("gene", geneCopyNumber.gene());
         assertEquals("12", geneCopyNumber.chromosome());
         assertEquals("p13", geneCopyNumber.chromosomeBand());
         assertEquals(1.2, geneCopyNumber.minCopyNumber(), EPSILON);

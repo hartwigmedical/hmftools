@@ -70,7 +70,7 @@ public final class ExpressionTable
     {
         for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
-            if(geneCopyNumber.geneName().equals(geneToFind))
+            if(geneCopyNumber.gene().equals(geneToFind))
             {
                 return geneCopyNumber;
             }

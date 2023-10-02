@@ -1236,7 +1236,7 @@
         "minMinorAlleleCopyNumber": 0.0,
         "transName": "ENST00000371953",
         "isCanonical": true,
-        "geneName": "PTEN",
+        "gene": "PTEN",
         "chromosomeBand": "q23.31",
         "chromosome": "10",
         "start": 89622870,

@@ -55,7 +55,7 @@ public final class PurpleConversion
         return ImmutablePurpleGeneCopyNumber.builder()
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
-                .geneName(geneCopyNumber.geneName())
+                .gene(geneCopyNumber.geneName())
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .minMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
                 .build();

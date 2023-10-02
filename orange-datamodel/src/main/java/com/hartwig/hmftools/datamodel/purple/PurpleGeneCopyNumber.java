@@ -17,7 +17,7 @@ public interface PurpleGeneCopyNumber {
     String chromosomeBand();
 
     @NotNull
-    String geneName();
+    String gene();
 
     double minCopyNumber();
 

@@ -200,7 +200,7 @@ public class ReportGeneratorTestApplication
         List<PurpleGeneCopyNumber> reportable = Lists.newArrayList();
         for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
-            if(copyNumberDriverGenes.contains(geneCopyNumber.geneName()))
+            if(copyNumberDriverGenes.contains(geneCopyNumber.gene()))
             {
                 reportable.add(geneCopyNumber);
             }

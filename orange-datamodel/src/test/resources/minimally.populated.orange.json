@@ -272,7 +272,7 @@
     ],
     "allSomaticGeneCopyNumbers": [
       {
-        "geneName": "gene",
+        "gene": "gene",
         "chromosome": "12",
         "chromosomeBand": "p13",
         "minCopyNumber": 1.2,
@@ -305,7 +305,7 @@
     ],
     "suspectGeneCopyNumbersWithLOH": [
       {
-        "geneName": "gene",
+        "gene": "gene",
         "chromosome": "12",
         "chromosomeBand": "p13",
         "minCopyNumber": 1.2,
