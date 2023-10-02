@@ -15,7 +15,7 @@ import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.sigs.SignatureTestFactory;
 import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 
@@ -64,7 +64,7 @@ public class OrangeConversionTest
         assertEqualsValue(input.reportableViruses(), converted.reportableViruses());
     }
 
-    private static void assertEqualsValue(List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input, List<AnnotatedVirus> converted)
+    private static void assertEqualsValue(List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input, List<VirusInterpreterEntry> converted)
     {
         assertEquals(converted.size(), input.size());
         for(int i = 0; i < input.size(); i++)
@@ -73,7 +73,7 @@ public class OrangeConversionTest
         }
     }
 
-    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.AnnotatedVirus input, AnnotatedVirus converted)
+    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.AnnotatedVirus input, VirusInterpreterEntry converted)
     {
         assertEquals(input.name(), converted.name());
         assertEquals(input.qcStatus().name(), converted.qcStatus().name());

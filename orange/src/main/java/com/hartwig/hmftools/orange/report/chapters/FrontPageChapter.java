@@ -26,7 +26,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
@@ -468,7 +468,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
-        for(AnnotatedVirus virus : virusInterpreter.reportableViruses())
+        for(VirusInterpreterEntry virus : virusInterpreter.reportableViruses())
         {
             VirusInterpretation interpretation = virus.interpretation();
             if(interpretation != null)

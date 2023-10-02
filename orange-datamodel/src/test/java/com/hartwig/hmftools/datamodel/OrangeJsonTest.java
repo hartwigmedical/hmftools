@@ -47,7 +47,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
@@ -346,7 +346,7 @@ public class OrangeJsonTest {
 
     private static void assertVirusInterpreter(@NotNull VirusInterpreterData virusInterpreter) {
         assertEquals(2, virusInterpreter.allViruses().size());
-        AnnotatedVirus virus1 = findVirusByName(virusInterpreter.allViruses(), "Human papillomavirus 16");
+        VirusInterpreterEntry virus1 = findVirusByName(virusInterpreter.allViruses(), "Human papillomavirus 16");
         assertTrue(virus1.reported());
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus1.qcStatus());
         assertEquals(VirusInterpretation.HPV, virus1.interpretation());
@@ -354,7 +354,7 @@ public class OrangeJsonTest {
         assertEquals(VirusLikelihoodType.HIGH, virus1.virusDriverLikelihoodType());
         assertEquals(0.9, virus1.percentageCovered(), EPSILON);
 
-        AnnotatedVirus virus2 = findVirusByName(virusInterpreter.allViruses(), "Human betaherpesvirus 6B");
+        VirusInterpreterEntry virus2 = findVirusByName(virusInterpreter.allViruses(), "Human betaherpesvirus 6B");
         assertFalse(virus2.reported());
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus2.qcStatus());
         assertNull(virus2.interpretation());
@@ -367,8 +367,8 @@ public class OrangeJsonTest {
     }
 
     @NotNull
-    private static AnnotatedVirus findVirusByName(@NotNull Iterable<AnnotatedVirus> entries, @NotNull String nameToFind) {
-        for (AnnotatedVirus entry : entries) {
+    private static VirusInterpreterEntry findVirusByName(@NotNull Iterable<VirusInterpreterEntry> entries, @NotNull String nameToFind) {
+        for (VirusInterpreterEntry entry : entries) {
             if (entry.name().equals(nameToFind)) {
                 return entry;
             }

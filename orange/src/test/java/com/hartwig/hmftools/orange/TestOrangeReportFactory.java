@@ -41,7 +41,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangeSample;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
@@ -299,9 +299,9 @@ public final class TestOrangeReportFactory
     @NotNull
     private static VirusInterpreterData createTestVirusInterpreterData()
     {
-        List<AnnotatedVirus> reportableViruses = Lists.newArrayList();
+        List<VirusInterpreterEntry> reportableViruses = Lists.newArrayList();
 
-        reportableViruses.add(com.hartwig.hmftools.datamodel.virus.ImmutableAnnotatedVirus.builder()
+        reportableViruses.add(com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry.builder()
                 .name("virus A")
                 .qcStatus(VirusBreakendQCStatus.NO_ABNORMALITIES)
                 .integrations(3)

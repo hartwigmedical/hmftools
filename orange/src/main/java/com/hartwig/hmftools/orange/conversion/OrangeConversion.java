@@ -22,8 +22,8 @@ import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
-import com.hartwig.hmftools.datamodel.virus.ImmutableAnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
@@ -107,10 +107,10 @@ public final class OrangeConversion
 
     @NotNull
     @VisibleForTesting
-    static AnnotatedVirus convert(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
+    static VirusInterpreterEntry convert(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
     {
         VirusType interpretation = annotatedVirus.interpretation();
-        return ImmutableAnnotatedVirus.builder()
+        return ImmutableVirusInterpreterEntry.builder()
                 .name(annotatedVirus.name())
                 .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
                 .integrations(annotatedVirus.integrations())

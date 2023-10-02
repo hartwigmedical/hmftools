@@ -9,7 +9,7 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -264,8 +264,8 @@ public class SomaticFindingsChapter implements ReportChapter
                 String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
                 document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), reportResources));
 
-                List<AnnotatedVirus> unreported = Lists.newArrayList();
-                for(AnnotatedVirus virus : virusInterpreter.allViruses())
+                List<VirusInterpreterEntry> unreported = Lists.newArrayList();
+                for(VirusInterpreterEntry virus : virusInterpreter.allViruses())
                 {
                     if(!virus.reported())
                     {
