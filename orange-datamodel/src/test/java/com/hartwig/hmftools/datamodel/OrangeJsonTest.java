@@ -112,18 +112,18 @@ public class OrangeJsonTest {
         assertEquals(2, purple.somaticDrivers().size());
         PurpleDriver somaticDriver1 = findDriverByGene(purple.somaticDrivers(), "SF3B1");
         assertEquals("ENST00000335508", somaticDriver1.transcript());
-        assertEquals(PurpleDriverType.MUTATION, somaticDriver1.driver());
+        assertEquals(PurpleDriverType.MUTATION, somaticDriver1.type());
         assertEquals(0.2, somaticDriver1.driverLikelihood(), EPSILON);
 
         PurpleDriver somaticDriver2 = findDriverByGene(purple.somaticDrivers(), "SMAD4");
         assertEquals("ENST00000342988", somaticDriver2.transcript());
-        assertEquals(PurpleDriverType.DEL, somaticDriver2.driver());
+        assertEquals(PurpleDriverType.DEL, somaticDriver2.type());
         assertEquals(1.0, somaticDriver2.driverLikelihood(), EPSILON);
 
         assertEquals(1, purple.germlineDrivers().size());
         PurpleDriver germlineDriver1 = findDriverByGene(purple.germlineDrivers(), "BRCA1");
         assertEquals("ENST00000471181", germlineDriver1.transcript());
-        assertEquals(PurpleDriverType.GERMLINE_MUTATION, germlineDriver1.driver());
+        assertEquals(PurpleDriverType.GERMLINE_MUTATION, germlineDriver1.type());
         assertEquals(0.8, germlineDriver1.driverLikelihood(), EPSILON);
 
         assertEquals(1, purple.allSomaticVariants().size());

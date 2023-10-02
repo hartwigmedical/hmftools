@@ -48,7 +48,7 @@ public class VariantEntryFactoryTest
                 .build();
 
         PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
-                .driver(PurpleDriverType.MUTATION)
+                .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
                 .isCanonical(true)
@@ -56,7 +56,7 @@ public class VariantEntryFactoryTest
                 .build();
 
         PurpleDriver nonCanonicalDriver = PurpleDriverTestFactory.builder()
-                .driver(PurpleDriverType.MUTATION)
+                .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 2")
                 .isCanonical(false)

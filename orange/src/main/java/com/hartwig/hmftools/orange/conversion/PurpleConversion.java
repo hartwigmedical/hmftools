@@ -67,7 +67,7 @@ public final class PurpleConversion
         return ImmutablePurpleDriver.builder()
                 .gene(catalog.gene())
                 .transcript(catalog.transcript())
-                .driver(PurpleDriverType.valueOf(catalog.driver().name()))
+                .type(PurpleDriverType.valueOf(catalog.driver().name()))
                 .driverLikelihood(catalog.driverLikelihood())
                 .likelihoodMethod(PurpleLikelihoodMethod.valueOf(catalog.likelihoodMethod().name()))
                 .isCanonical(catalog.isCanonical())

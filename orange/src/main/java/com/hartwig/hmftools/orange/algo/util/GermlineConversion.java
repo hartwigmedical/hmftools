@@ -107,7 +107,7 @@ public final class GermlineConversion
         for(PurpleDriver somaticDriver : somaticDrivers)
         {
             PurpleDriver matchingGermlineDriver = findMatchingGermlineDriver(somaticDriver, germlineDrivers);
-            if(somaticDriver.driver() == PurpleDriverType.MUTATION && matchingGermlineDriver != null)
+            if(somaticDriver.type() == PurpleDriverType.MUTATION && matchingGermlineDriver != null)
             {
                 merged.add(mergeSomaticMutationDriverWithGermline(somaticDriver, matchingGermlineDriver));
             }
@@ -121,24 +121,24 @@ public final class GermlineConversion
         {
             for(PurpleDriver germlineDriver : germlineDrivers)
             {
-                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_MUTATION
+                if(germlineDriver.type() == PurpleDriverType.GERMLINE_MUTATION
                         && findMatchingSomaticDriver(germlineDriver, somaticDrivers, PurpleDriverType.MUTATION) == null)
                 {
                     merged.add(convertToSomaticMutationDriver(germlineDriver));
                 }
 
-                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_DELETION
+                if(germlineDriver.type() == PurpleDriverType.GERMLINE_DELETION
                         && findMatchingSomaticDriver(germlineDriver, somaticDrivers, PurpleDriverType.DEL) == null)
                 {
                     merged.add(convertToSomaticDeletionDriver(germlineDriver));
                 }
 
-                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_DISRUPTION)
+                if(germlineDriver.type() == PurpleDriverType.GERMLINE_DISRUPTION)
                 {
                     merged.add(convertToSomaticDisruptionDriver(germlineDriver));
                 }
 
-                if(germlineDriver.driver() == PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION)
+                if(germlineDriver.type() == PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION)
                 {
                     merged.add(convertToSomaticHomozygousDisruptionDriver(germlineDriver));
                 }
@@ -196,7 +196,7 @@ public final class GermlineConversion
     {
         for(PurpleDriver driver : drivers)
         {
-            if(driver.driver() == PurpleDriverTypeToFind && driver.gene().equals(geneToFind) && driver.transcript()
+            if(driver.type() == PurpleDriverTypeToFind && driver.gene().equals(geneToFind) && driver.transcript()
                     .equals(transcriptToFind))
             {
                 return driver;
@@ -214,11 +214,11 @@ public final class GermlineConversion
             LOGGER.warn("Germline driver converted to somatic with driver likelihood <> 1: {}", germlineDriver);
         }
 
-        assert germlineDriver.driver() == PurpleDriverType.GERMLINE_MUTATION;
+        assert germlineDriver.type() == PurpleDriverType.GERMLINE_MUTATION;
 
         return ImmutablePurpleDriver.builder()
                 .from(germlineDriver)
-                .driver(PurpleDriverType.MUTATION)
+                .type(PurpleDriverType.MUTATION)
                 .likelihoodMethod(PurpleLikelihoodMethod.HOTSPOT)
                 .build();
     }
@@ -226,11 +226,11 @@ public final class GermlineConversion
     @NotNull
     private static PurpleDriver convertToSomaticDeletionDriver(@NotNull PurpleDriver germlineDriver)
     {
-        assert germlineDriver.driver() == PurpleDriverType.GERMLINE_DELETION;
+        assert germlineDriver.type() == PurpleDriverType.GERMLINE_DELETION;
 
         return ImmutablePurpleDriver.builder()
                 .from(germlineDriver)
-                .driver(PurpleDriverType.DEL)
+                .type(PurpleDriverType.DEL)
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .build();
     }
@@ -238,11 +238,11 @@ public final class GermlineConversion
     @NotNull
     private static PurpleDriver convertToSomaticDisruptionDriver(@NotNull PurpleDriver germlineDriver)
     {
-        assert germlineDriver.driver() == PurpleDriverType.GERMLINE_DISRUPTION;
+        assert germlineDriver.type() == PurpleDriverType.GERMLINE_DISRUPTION;
 
         return ImmutablePurpleDriver.builder()
                 .from(germlineDriver)
-                .driver(PurpleDriverType.DISRUPTION)
+                .type(PurpleDriverType.DISRUPTION)
                 .driverLikelihood(0D)
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .build();
@@ -251,11 +251,11 @@ public final class GermlineConversion
     @NotNull
     private static PurpleDriver convertToSomaticHomozygousDisruptionDriver(@NotNull PurpleDriver germlineDriver)
     {
-        assert germlineDriver.driver() == PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION;
+        assert germlineDriver.type() == PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION;
 
         return ImmutablePurpleDriver.builder()
                 .from(germlineDriver)
-                .driver(PurpleDriverType.HOM_DUP_DISRUPTION)
+                .type(PurpleDriverType.HOM_DUP_DISRUPTION)
                 .driverLikelihood(1D)
                 .likelihoodMethod(PurpleLikelihoodMethod.DEL)
                 .build();

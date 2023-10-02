@@ -74,7 +74,7 @@
       {
         "gene": "SF3B1",
         "transcript": "ENST00000335508",
-        "driver": "MUTATION",
+        "type": "MUTATION",
         "driverLikelihood": 0.2,
         "likelihoodMethod": "HOTSPOT",
         "isCanonical": false
@@ -82,7 +82,7 @@
       {
         "gene": "SMAD4",
         "transcript": "ENST00000342988",
-        "driver": "DEL",
+        "type": "DEL",
         "driverLikelihood": 1.0,
         "likelihoodMethod": "HOTSPOT",
         "isCanonical": false
@@ -92,7 +92,7 @@
       {
         "gene": "BRCA1",
         "transcript": "ENST00000471181",
-        "driver": "GERMLINE_MUTATION",
+        "type": "GERMLINE_MUTATION",
         "driverLikelihood": 0.8,
         "likelihoodMethod": "HOTSPOT",
         "isCanonical": false

@@ -17,7 +17,7 @@ public interface PurpleDriver {
     String transcript();
 
     @NotNull
-    PurpleDriverType driver();
+    PurpleDriverType type();
 
     double driverLikelihood();
 
