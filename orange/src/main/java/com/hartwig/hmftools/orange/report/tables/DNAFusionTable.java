@@ -164,7 +164,7 @@ public final class DNAFusionTable
         List<NovelSpliceJunction> matches = Lists.newArrayList();
         for(NovelSpliceJunction junction : isofox.allNovelSpliceJunctions())
         {
-            if(junction.geneName().equals(fusion.geneStart()) && junction.geneName().equals(fusion.geneEnd()))
+            if(junction.gene().equals(fusion.geneStart()) && junction.gene().equals(fusion.geneEnd()))
             {
                 matches.add(junction);
             }

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 public interface NovelSpliceJunction {
 
     @NotNull
-    String geneName();
+    String gene();
 
     @NotNull
     String chromosome();

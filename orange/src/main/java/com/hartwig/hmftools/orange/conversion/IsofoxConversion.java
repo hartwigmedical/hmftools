@@ -67,7 +67,7 @@ public final class IsofoxConversion
     public static com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction convert(NovelSpliceJunction novelSpliceJunction)
     {
         return ImmutableNovelSpliceJunction.builder()
-                .geneName(novelSpliceJunction.geneName())
+                .gene(novelSpliceJunction.geneName())
                 .chromosome(novelSpliceJunction.chromosome())
                 .junctionStart(novelSpliceJunction.junctionStart())
                 .junctionEnd(novelSpliceJunction.junctionEnd())

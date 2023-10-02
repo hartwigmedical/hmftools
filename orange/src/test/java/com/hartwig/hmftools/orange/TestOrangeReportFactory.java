@@ -256,7 +256,7 @@ public final class TestOrangeReportFactory
 
         NovelSpliceJunction novelSkippedExon = OrangeIsofoxTestFactory.novelSpliceJunctionBuilder()
                 .chromosome("1")
-                .geneName("ALK")
+                .gene("ALK")
                 .junctionStart(50403003)
                 .junctionEnd(60403003)
                 .type(AltSpliceJunctionType.SKIPPED_EXONS)
@@ -270,7 +270,7 @@ public final class TestOrangeReportFactory
 
         NovelSpliceJunction novelIntron = OrangeIsofoxTestFactory.novelSpliceJunctionBuilder()
                 .chromosome("1")
-                .geneName("ALK")
+                .gene("ALK")
                 .junctionStart(50403003)
                 .junctionEnd(60403003)
                 .type(AltSpliceJunctionType.NOVEL_INTRON)
