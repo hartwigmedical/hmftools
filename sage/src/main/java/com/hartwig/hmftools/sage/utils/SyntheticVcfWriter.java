@@ -31,11 +31,13 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.STRAND_BIAS;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
@@ -50,6 +52,8 @@ import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
+
+import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -110,7 +114,7 @@ public class SyntheticVcfWriter
         SG_LOGGER.info("compilation complete");
     }
 
-    private class VariantData
+    private class VariantData implements Comparable<VariantData>
     {
         public final String Chromosome;
         public final int Position;
@@ -129,6 +133,26 @@ public class SyntheticVcfWriter
         public boolean isDelete() { return Alt.length() < Ref.length();}
         public boolean isSnv() { return Alt.length() == Ref.length() && Alt.length() == 1;}
         public boolean isMnv() { return Alt.length() == Ref.length() && Alt.length() > 1;}
+
+        @Override
+        public int compareTo(@NotNull final VariantData other)
+        {
+            if(Chromosome.equals(other.Chromosome))
+            {
+                if(Position != other.Position)
+                    return Position < other.Position ? -1 : 1;
+                else
+                    return 0;
+            }
+
+            int rank1 = HumanChromosome.chromosomeRank(Chromosome);
+            int rank2 = HumanChromosome.chromosomeRank(other.Chromosome);
+
+            if(rank1 == rank2)
+                return 0;
+
+            return rank1 < rank2 ? -1 : 1;
+        }
 
         public String toString()
         {
@@ -185,6 +209,9 @@ public class SyntheticVcfWriter
                         variantContext.getReference().getBaseString(), variantContext.getAlternateAlleles().get(0).toString()));
             }
         }
+
+        // ensure variants are sorted
+        Collections.sort(mVariants);
     }
 
     private VariantContextWriter initialiseVcf()
@@ -192,8 +219,6 @@ public class SyntheticVcfWriter
         SAMSequenceDictionary sequenceDictionary = mRefGenome.getSequenceDictionary();
 
         VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(mOutputVcfFile)
-                // .modifyOption(Options.INDEX_ON_THE_FLY, true)
-                // .modifyOption(Options.USE_ASYNC_IO, false)
                 .setReferenceDictionary(sequenceDictionary)
                 .build();
 
