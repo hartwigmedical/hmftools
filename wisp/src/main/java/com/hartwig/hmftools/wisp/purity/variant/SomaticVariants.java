@@ -265,14 +265,24 @@ public class SomaticVariants
         if(sampleDepthTotal == 0)
             return INVALID_RESULT;
 
-        double tumorDepthTotal = tumorCounts.totalFragments();
-        if(tumorDepthTotal == 0)
-            return INVALID_RESULT;
+        double tumorVaf;
+
+        if(!mConfig.hasSyntheticTumor())
+        {
+            double tumorDepthTotal = tumorCounts.totalFragments();
+            if(tumorDepthTotal == 0)
+                return INVALID_RESULT;
+
+            tumorVaf = mConfig.hasSyntheticTumor() ? 0.5 : tumorCounts.alleleFragments() / tumorDepthTotal;
+        }
+        else
+        {
+            tumorVaf = 0.5;
+        }
 
         double tumorPurity = purityContext.bestFit().purity();
         double tumorPloidy = purityContext.bestFit().ploidy();
 
-        double tumorVaf = tumorCounts.alleleFragments() / tumorDepthTotal;
         double adjustedTumorVaf = tumorVaf * (tumorPloidy * tumorPurity + 2 * (1 - tumorPurity)) / tumorPurity / tumorPloidy;
 
         double qualPerAllele = sampleCounts.alleleFragments() > 0 ? sampleCounts.allelelQualTotal() / (double)sampleCounts.alleleFragments() : 0;

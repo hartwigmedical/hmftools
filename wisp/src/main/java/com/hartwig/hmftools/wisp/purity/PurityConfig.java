@@ -114,6 +114,7 @@ public class PurityConfig
     }
 
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
+    public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
 
     private void loadSampleData(final ConfigBuilder configBuilder)
     {
