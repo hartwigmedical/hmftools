@@ -194,7 +194,7 @@ public class PurpleInterpreter
             LinxBreakend first = breakendPair.getLeft();
             LinxBreakend second = breakendPair.getRight();
 
-            boolean bothReported = first.reportedDisruption() && second.reportedDisruption();
+            boolean bothReported = first.reported() && second.reported();
             boolean bothDel = first.type() == LinxBreakendType.DEL && second.type() == LinxBreakendType.DEL;
             boolean sameGene = first.gene().equals(second.gene());
             boolean sameTranscript = first.transcriptId().equals(second.transcriptId());

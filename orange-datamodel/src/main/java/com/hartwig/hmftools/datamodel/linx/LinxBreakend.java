@@ -30,7 +30,7 @@ public interface LinxBreakend {
 
     boolean disruptive();
 
-    boolean reportedDisruption();
+    boolean reported();
 
     double undisruptedCopyNumber();
 

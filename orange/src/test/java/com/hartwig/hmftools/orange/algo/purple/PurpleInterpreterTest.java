@@ -64,7 +64,7 @@ public class PurpleInterpreterTest
     public void canImplyDeletionsFromBreakends()
     {
         LinxBreakend left = LinxOrangeTestFactory.breakendBuilder()
-                .reportedDisruption(true)
+                .reported(true)
                 .gene(TEST_GENE)
                 .transcriptId("trans 1")
                 .svId(1)
@@ -72,7 +72,7 @@ public class PurpleInterpreterTest
                 .undisruptedCopyNumber(0.3)
                 .build();
         LinxBreakend right = LinxOrangeTestFactory.breakendBuilder()
-                .reportedDisruption(true)
+                .reported(true)
                 .gene(TEST_GENE)
                 .transcriptId("trans 1")
                 .svId(1)

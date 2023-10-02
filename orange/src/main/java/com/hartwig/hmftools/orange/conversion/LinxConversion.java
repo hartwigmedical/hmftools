@@ -83,7 +83,7 @@ public final class LinxConversion
                 .canonical(linxBreakend.canonical())
                 .orientation(linxBreakend.orientation())
                 .disruptive(linxBreakend.disruptive())
-                .reportedDisruption(linxBreakend.reportedDisruption())
+                .reported(linxBreakend.reportedDisruption())
                 .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
                 .regionType(TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
                 .codingType(TranscriptCodingType.valueOf(linxBreakend.codingType().name()))

@@ -277,7 +277,7 @@ public class OrangeJsonTest {
 
         assertEquals(1, linx.allSomaticBreakends().size());
         LinxBreakend breakend = linx.allSomaticBreakends().iterator().next();
-        assertFalse(breakend.reportedDisruption());
+        assertFalse(breakend.reported());
         assertFalse(breakend.disruptive());
         assertEquals(1, breakend.svId());
         assertEquals("NF1", breakend.gene());
