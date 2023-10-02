@@ -100,7 +100,7 @@ public final class PurpleConversion
     public static PurpleGermlineDeletion convert(GermlineDeletion germlineDeletion)
     {
         return ImmutablePurpleGermlineDeletion.builder()
-                .geneName(germlineDeletion.GeneName)
+                .gene(germlineDeletion.GeneName)
                 .chromosome(germlineDeletion.Chromosome)
                 .chromosomeBand(germlineDeletion.ChromosomeBand)
                 .regionStart(germlineDeletion.RegionStart)
