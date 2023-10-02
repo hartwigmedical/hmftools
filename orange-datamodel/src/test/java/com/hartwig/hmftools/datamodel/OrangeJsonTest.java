@@ -312,7 +312,7 @@ public class OrangeJsonTest {
         assertEquals("ENST00000319349", fusion.geneTranscriptEnd());
         assertEquals("Exon 2", fusion.geneContextEnd());
         assertEquals(2, fusion.fusedExonDown());
-        assertEquals(FusionLikelihoodType.HIGH, fusion.likelihood());
+        assertEquals(FusionLikelihoodType.HIGH, fusion.driverLikelihood());
         assertEquals(FusionPhasedType.INFRAME, fusion.phased());
         assertEquals(1.1, fusion.junctionCopyNumber(), EPSILON);
 

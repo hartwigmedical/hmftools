@@ -341,7 +341,7 @@
       {
         "reported": true,
         "reportedType": "KNOWN_PAIR",
-        "likelihood": "HIGH",
+        "driverLikelihood": "HIGH",
         "fusedExonUp": 1,
         "fusedExonDown": 2,
         "name": "TMPRSS2-ETV4",
@@ -363,7 +363,7 @@
       {
         "reported": true,
         "reportedType": "KNOWN_PAIR",
-        "likelihood": "HIGH",
+        "driverLikelihood": "HIGH",
         "fusedExonUp": 1,
         "fusedExonDown": 2,
         "name": "TMPRSS2-ETV4",

@@ -57,7 +57,7 @@ public final class DNAFusionTable
                                     cells.createValue(rnaFragmentSupportTable(isofox, fusion, cells)).setKeepTogether(true)),
                             Maps.immutableEntry("Phasing", cells.createValue(display(fusion.phased()))),
                             Maps.immutableEntry("Reported type (DL)",
-                                    cells.createValue(fusion.reportedType() + " (" + display(fusion.likelihood()) + ")")),
+                                    cells.createValue(fusion.reportedType() + " (" + display(fusion.driverLikelihood()) + ")")),
                             Maps.immutableEntry("Chain links (terminated?)",
                                     cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)"))),
                             Maps.immutableEntry("Domains kept", cells.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-")),
@@ -247,7 +247,7 @@ public final class DNAFusionTable
     {
         return fusions.stream().sorted((fusion1, fusion2) ->
         {
-            if(fusion1.likelihood() == fusion2.likelihood())
+            if(fusion1.driverLikelihood() == fusion2.driverLikelihood())
             {
                 if(fusion1.geneStart().equals(fusion2.geneStart()))
                 {
@@ -260,7 +260,7 @@ public final class DNAFusionTable
             }
             else
             {
-                return fusion1.likelihood() == FusionLikelihoodType.HIGH ? -1 : 1;
+                return fusion1.driverLikelihood() == FusionLikelihoodType.HIGH ? -1 : 1;
             }
         }).collect(Collectors.toList());
     }

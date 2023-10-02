@@ -53,7 +53,7 @@ public final class LinxConversion
                 .reported(linxFusion.reported())
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
-                .likelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
+                .driverLikelihood(FusionLikelihoodType.valueOf(linxFusion.likelihood().name()))
                 .fusedExonUp(linxFusion.fusedExonUp())
                 .fusedExonDown(linxFusion.fusedExonDown())
                 .chainLinks(linxFusion.chainLinks())

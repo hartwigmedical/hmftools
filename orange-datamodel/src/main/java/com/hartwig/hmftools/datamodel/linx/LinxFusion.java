@@ -22,7 +22,7 @@ public interface LinxFusion {
     FusionPhasedType phased();
 
     @NotNull
-    FusionLikelihoodType likelihood();
+    FusionLikelihoodType driverLikelihood();
 
     int fusedExonUp();
 
