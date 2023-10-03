@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.findDuplicateFragments;
 import static com.hartwig.hmftools.markdups.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
@@ -363,6 +364,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mBamWriter.writeDuplicateGroup(duplicateGroup, completeReads);
     }
 
+    private static final double LOG_PERF_TIME_SEC = 1;
+    private static final int LOG_PERF_FRAG_COUNT = 3000;
+
     public void accept(final List<Fragment> positionFragments)
     {
         if(positionFragments.isEmpty())
@@ -374,13 +378,14 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         List<List<Fragment>> positionDuplicateGroups = Lists.newArrayList();
 
         int posFragmentCount = positionFragments.size();
-        boolean logDetails = mConfig.PerfDebug && posFragmentCount > 10000;
+        int position = positionFragments.get(0).initialPosition();
+        boolean logDetails = mConfig.PerfDebug && posFragmentCount > LOG_PERF_FRAG_COUNT; // was 10000
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
-        int position = positionFragments.get(0).initialPosition();
+        boolean inExcludedRegion = false; // dropped logic since added region unmapping logic
 
-        boolean inExcludedRegion = mExcludedRegion != null && positionFragments.stream()
-                .anyMatch(x -> x.reads().stream().anyMatch(y -> FragmentUtils.overlapsExcludedRegion(mExcludedRegion, y)));
+        //boolean inExcludedRegion = mExcludedRegion != null && positionFragments.stream()
+        //        .anyMatch(x -> x.reads().stream().anyMatch(y -> FragmentUtils.overlapsExcludedRegion(mExcludedRegion, y)));
 
         findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList, mConfig.UMIs.Enabled);
 
@@ -392,15 +397,12 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(logDetails)
         {
-            double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
+            double timeTakenSec = secondsSinceNow(startTimeMs);
 
-            if(timeTakenSec >= 1.0)
-            {
-                MD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) candidates({}) processing time({})",
-                        mRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(),
-                        candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
-                        format("%.1fs", timeTakenSec));
-            }
+            MD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) dupGroups({}) candidates({}) processing time({})",
+                    mRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(), duplicateGroups.size(),
+                    candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
+                    format("%.1fs", timeTakenSec));
         }
 
         startTimeMs = logDetails ? System.currentTimeMillis() : 0;
@@ -409,9 +411,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(logDetails)
         {
-            double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
+            double timeTakenSec = secondsSinceNow(startTimeMs);
 
-            if(timeTakenSec >= 1.0)
+            if(timeTakenSec >= LOG_PERF_TIME_SEC)
             {
                 MD_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
                         mRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));

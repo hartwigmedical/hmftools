@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.APP_NAME;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
+import static com.hartwig.hmftools.markdups.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
 
 import java.util.Collections;
 import java.util.List;
@@ -96,13 +97,20 @@ public class MarkDuplicates
         chromosomeReaders.forEach(x -> combinedStats.merge(x.statistics()));
         partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
 
-        int totalWrittenReads = chromosomeReaders.stream().mapToInt(x -> x.recordWriter().recordWriteCount()).sum();
-
         combinedStats.logStats();
 
-        if(combinedStats.TotalReads != totalWrittenReads)
+        int totalWrittenReads = chromosomeReaders.stream().mapToInt(x -> x.recordWriter().recordWriteCount()).sum();
+        int unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
+
+        if(mConfig.UnmapRegions.enabled())
         {
-            MD_LOGGER.warn("reads processed({}) vs written({}) mismatch", combinedStats.TotalReads, totalWrittenReads);
+            MD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
+        }
+
+        if(combinedStats.TotalReads != totalWrittenReads + unmappedDroppedReads)
+        {
+            MD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
+                    combinedStats.TotalReads, totalWrittenReads, combinedStats.TotalReads - totalWrittenReads - unmappedDroppedReads);
             chromosomeReaders.forEach(x -> x.recordWriter().logUnwrittenReads());
         }
 
@@ -120,11 +128,6 @@ public class MarkDuplicates
                     combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
                 }
             }
-        }
-
-        if(mConfig.UnmapRegions.enabled())
-        {
-            MD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
         }
 
         List<PerformanceCounter> combinedPerfCounters = chromosomeReaders.get(0).perfCounters();
@@ -151,20 +154,26 @@ public class MarkDuplicates
                     perfCounter.logStats();
             }
 
-            List<Double> partitionLockTimes = Lists.newArrayList();
-            partitionDataStore.partitions().forEach(x -> partitionLockTimes.add(x.totalLockTime()));
-            Collections.sort(partitionLockTimes, Collections.reverseOrder());
-            double nthTime = partitionLockTimes.size() >= 5 ? partitionLockTimes.get(4) : partitionLockTimes.get(partitionLockTimes.size() - 1);
+            // check partition store locking times
+            double totalLockTimeMs = 0;
 
             for(PartitionData partitionData : partitionDataStore.partitions())
             {
-                double lockTime = partitionData.totalLockTime();
+                double lockTime = partitionData.totalLockTimeMs();
 
-                if(lockTime > 0 && lockTime >= nthTime)
+                totalLockTimeMs += lockTime;
+
+                if(lockTime > LOCK_ACQUIRE_LONG_TIME_MS)
                 {
-                    MD_LOGGER.debug("partition({}) total lock-acquisition time({})",
-                            partitionData.partitionStr(), format("%.3f", lockTime));
+                    MD_LOGGER.debug("partition({}) lock-acquisition time({}ms)",
+                            partitionData.partitionStr(), format("%.1f", lockTime));
                 }
+            }
+
+            if(totalLockTimeMs > LOCK_ACQUIRE_LONG_TIME_MS)
+            {
+                MD_LOGGER.debug("partition cache total lock-acquisition time({}s)",
+                        format("%.3f", totalLockTimeMs / 1000));
             }
         }
         else
