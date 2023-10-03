@@ -212,6 +212,10 @@ public class SomaticVariantAnnotation
             // check that the variant covers any exon
             if(transData.exons().stream().anyMatch(x -> positionsOverlap(posStart, posEnd, x.Start, x.End)))
                 return true;
+
+            // otherwise any splice variant
+            if(variant.variantImpact() != null && variant.variantImpact().CanonicalCodingEffect == CodingEffect.SPLICE)
+                return true;
         }
 
         return false;
