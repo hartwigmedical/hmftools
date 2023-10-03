@@ -40,7 +40,7 @@ public final class NumberEvents
     {
         int softClippedBases = leftSoftClipLength(record) + rightSoftClipLength(record);
 
-        return softClippedBases > 0 ? max(1, softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
+        return softClippedBases > 0 && SC_READ_EVENTS_FACTOR > 0 ? max(1, softClippedBases / SC_READ_EVENTS_FACTOR) : 0;
     }
 
     public static int rawNM(final SAMRecord record, final RefSequence refGenome)
