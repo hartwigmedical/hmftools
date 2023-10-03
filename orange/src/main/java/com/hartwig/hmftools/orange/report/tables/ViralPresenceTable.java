@@ -43,7 +43,7 @@ public final class ViralPresenceTable
             table.addCell(cells.createContent(formatPercentage(virus.percentageCovered(), false)));
             table.addCell(cells.createContent(formatSingleDigitDecimal(virus.meanCoverage())));
             table.addCell(cells.createContent(expectedClonalCoverageField(virus)));
-            table.addCell(cells.createContent(display(virus.virusDriverLikelihoodType())));
+            table.addCell(cells.createContent(display(virus.driverLikelihood())));
         }
 
         return new Tables(reportResources).createWrapping(table, title);

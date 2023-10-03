@@ -351,7 +351,7 @@ public class OrangeJsonTest {
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus1.qcStatus());
         assertEquals(VirusInterpretation.HPV, virus1.interpretation());
         assertEquals(1, virus1.integrations());
-        assertEquals(VirusLikelihoodType.HIGH, virus1.virusDriverLikelihoodType());
+        assertEquals(VirusLikelihoodType.HIGH, virus1.driverLikelihood());
         assertEquals(0.9, virus1.percentageCovered(), EPSILON);
 
         VirusInterpreterEntry virus2 = findVirusByName(virusInterpreter.allViruses(), "Human betaherpesvirus 6B");
@@ -359,7 +359,7 @@ public class OrangeJsonTest {
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, virus2.qcStatus());
         assertNull(virus2.interpretation());
         assertEquals(0, virus2.integrations());
-        assertEquals(VirusLikelihoodType.LOW, virus2.virusDriverLikelihoodType());
+        assertEquals(VirusLikelihoodType.LOW, virus2.driverLikelihood());
         assertEquals(0.4, virus2.percentageCovered(), EPSILON);
 
         assertEquals(1, virusInterpreter.reportableViruses().size());

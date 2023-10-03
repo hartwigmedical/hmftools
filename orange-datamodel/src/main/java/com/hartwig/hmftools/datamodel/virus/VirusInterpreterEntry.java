@@ -32,5 +32,5 @@ public interface VirusInterpreterEntry
     boolean reported();
 
     @NotNull
-    VirusLikelihoodType virusDriverLikelihoodType();
+    VirusLikelihoodType driverLikelihood();
 }

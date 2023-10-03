@@ -118,7 +118,7 @@ public final class OrangeConversion
                 .percentageCovered(annotatedVirus.percentageCovered())
                 .reported(annotatedVirus.reported())
                 .meanCoverage(annotatedVirus.meanCoverage())
-                .virusDriverLikelihoodType(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
+                .driverLikelihood(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
                 .expectedClonalCoverage(annotatedVirus.expectedClonalCoverage())
                 .build();
     }

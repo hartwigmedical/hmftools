@@ -310,7 +310,7 @@ public final class TestOrangeReportFactory
                 .meanCoverage(42D)
                 .expectedClonalCoverage(3D)
                 .reported(true)
-                .virusDriverLikelihoodType(VirusLikelihoodType.UNKNOWN)
+                .driverLikelihood(VirusLikelihoodType.UNKNOWN)
                 .build());
 
         return ImmutableVirusInterpreterData.builder().reportableViruses(reportableViruses).build();
