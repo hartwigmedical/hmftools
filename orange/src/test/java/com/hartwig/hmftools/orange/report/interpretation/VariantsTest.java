@@ -6,7 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.TestVariantEntryFactory;
@@ -51,7 +51,7 @@ public class VariantsTest
     @Test
     public void canHandleAllHotspotValues()
     {
-        for(Hotspot hotspot : Hotspot.values())
+        for(HotspotType hotspot : HotspotType.values())
         {
             VariantEntry entry = TestVariantEntryFactory.builder().hotspot(hotspot).build();
             assertNotNull(Variants.hotspotField(entry));

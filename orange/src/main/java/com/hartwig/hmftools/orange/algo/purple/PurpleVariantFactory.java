@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
@@ -58,7 +58,7 @@ public class PurpleVariantFactory
                 .worstCodingEffect(PurpleConversion.convert(context.worstCodingEffect()))
                 .canonicalImpact(extractCanonicalImpact(context))
                 .otherImpacts(purpleVariantTranscriptImpacts)
-                .hotspot(Hotspot.valueOf(context.hotspot().name()))
+                .hotspot(HotspotType.valueOf(context.hotspot().name()))
                 .reported(context.reported())
                 .tumorDepth(PurpleConversion.convert(context))
                 .rnaDepth(rnaDepth)

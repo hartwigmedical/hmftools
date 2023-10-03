@@ -32,7 +32,7 @@ import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
@@ -137,7 +137,7 @@ public class OrangeJsonTest {
         assertEquals(2.03, somaticVariant.variantCopyNumber(), EPSILON);
         assertEquals(0.4, somaticVariant.minorAlleleCopyNumber(), EPSILON);
         assertEquals(3.02, somaticVariant.adjustedCopyNumber(), EPSILON);
-        assertEquals(Hotspot.NON_HOTSPOT, somaticVariant.hotspot());
+        assertEquals(HotspotType.NON_HOTSPOT, somaticVariant.hotspot());
         assertEquals(20, somaticVariant.tumorDepth().totalReadCount());
         assertEquals(10, somaticVariant.tumorDepth().alleleReadCount());
         assertEquals(0.0, somaticVariant.subclonalLikelihood(), EPSILON);
@@ -169,7 +169,7 @@ public class OrangeJsonTest {
         assertEquals(1.0, germlineVariant.variantCopyNumber(), EPSILON);
         assertEquals(0.8, germlineVariant.minorAlleleCopyNumber(), EPSILON);
         assertEquals(2.0, germlineVariant.adjustedCopyNumber(), EPSILON);
-        assertEquals(Hotspot.HOTSPOT, germlineVariant.hotspot());
+        assertEquals(HotspotType.HOTSPOT, germlineVariant.hotspot());
         assertEquals(30, germlineVariant.tumorDepth().totalReadCount());
         assertEquals(20, germlineVariant.tumorDepth().alleleReadCount());
         assertEquals(0.2, germlineVariant.subclonalLikelihood(), EPSILON);
