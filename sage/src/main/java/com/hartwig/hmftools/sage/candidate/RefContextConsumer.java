@@ -540,7 +540,8 @@ public class RefContextConsumer
 
     private boolean withinReadContext(int readIndex, final SAMRecord record)
     {
-        return readIndex >= mConfig.ReadContextFlankSize && readIndex < record.getReadLength() - mConfig.ReadContextFlankSize;
+        int minReadPadding = 2;
+        return readIndex >= minReadPadding && readIndex < record.getReadLength() - minReadPadding;
     }
 
     @VisibleForTesting

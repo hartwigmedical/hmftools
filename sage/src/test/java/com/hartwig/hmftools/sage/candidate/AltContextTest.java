@@ -40,7 +40,7 @@ public class AltContextTest
         readContexts.forEach(x -> altContext.addReadContext(0, x));
 
         altContext.selectCandidates();
-        assertFalse(altContext.hasValidCandidate());
+        assertTrue(altContext.hasValidCandidate());
     }
 
     @Test

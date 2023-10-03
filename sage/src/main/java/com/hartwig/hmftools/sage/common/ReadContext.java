@@ -64,7 +64,8 @@ public class ReadContext
 
     public boolean hasIncompleteFlanks()
     {
-        return !mReadBases.flanksComplete();
+        return false;
+//        return !mReadBases.flanksComplete();
     }
     public boolean hasIncompleteCore() { return mIncompleteCore; }
 
