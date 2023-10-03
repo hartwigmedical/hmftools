@@ -24,7 +24,6 @@ public class LocalDateAdapter extends TypeAdapter<LocalDate>
         jsonWriter.name("month").value(localDate.getMonthValue());
         jsonWriter.name("day").value(localDate.getDayOfMonth());
         jsonWriter.endObject();
-        //        jsonWriter.value(localDate.toString());
     }
 
     @Override
