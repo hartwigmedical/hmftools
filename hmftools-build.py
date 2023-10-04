@@ -1,6 +1,7 @@
 """
 This script does the following:
 - Whenever a user pushes a git tag in the format '<tool>-<version>' this script will parse that tag.
+  The 'v' character prefixing the version will be stripped.
 - The script will build the tool with the given version and deploy it using Maven with version equal to the 'version'
   part of the tag.
 - The script will build all direct hmf-tools dependencies of the given tool (i.e. 'hmf-common') and deploy those with
@@ -8,7 +9,7 @@ This script does the following:
 
 By building and deploying each tool together with their dependencies, we ensure each deployment is isolated.
 Example:
-    - 'git tag neo-1.0.0' will start building the 'neo' tool and deploy it with version '1.0.0'.
+    - 'git tag neo-v1.0.0' will start building the 'neo' tool and deploy it with version '1.0.0'.
     - 'neo' has a dependency on 'hmf-common', so it will deploy 'hmf-common' with version 'neo-1.0.0'.
     - The pom of the deployed 'neo' will be updated such that the 'hmf-common' dependency will point towards the correct
       version.
