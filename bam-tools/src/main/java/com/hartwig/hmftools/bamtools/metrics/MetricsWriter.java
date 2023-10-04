@@ -229,6 +229,8 @@ public final class MetricsWriter
             writer.newLine();
             writer.write(String.format("%d + %d duplicates", flagStats.getDuplicateQCPassed(), flagStats.getDuplicateQCFailed()));
             writer.newLine();
+            writer.write(String.format("%d + %d primary duplicates", flagStats.getPrimaryDuplicateQCPassed(), flagStats.getPrimaryDuplicateQCFailed()));
+            writer.newLine();
 
             writer.close();
         }

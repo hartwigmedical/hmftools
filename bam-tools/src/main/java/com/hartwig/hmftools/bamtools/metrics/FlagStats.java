@@ -14,6 +14,8 @@ public class FlagStats
     private int mSuppQCFailed;
     private int mDuplicateQCPassed;
     private int mDuplicateQCFailed;
+    private int mPrimaryDuplicateQCPassed;
+    private int mPrimaryDuplicateQCFailed;
 
     public FlagStats()
     {
@@ -27,6 +29,8 @@ public class FlagStats
         mSuppQCFailed = 0;
         mDuplicateQCPassed = 0;
         mDuplicateQCFailed = 0;
+        mPrimaryDuplicateQCPassed = 0;
+        mPrimaryDuplicateQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -41,13 +45,16 @@ public class FlagStats
         mSuppQCFailed += other.mSuppQCFailed;
         mDuplicateQCPassed += other.mDuplicateQCPassed;
         mDuplicateQCFailed += other.mDuplicateQCFailed;
+        mPrimaryDuplicateQCPassed += other.mPrimaryDuplicateQCPassed;
+        mPrimaryDuplicateQCFailed += other.mPrimaryDuplicateQCFailed;
     }
 
     public void processRead(final SAMRecord read)
     {
-        boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
-        boolean isSecondary = read.isSecondaryAlignment();
-        boolean isSupp = read.getSupplementaryAlignmentFlag();
+        final boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
+        final boolean isSecondary = read.isSecondaryAlignment();
+        final boolean isSupp = read.getSupplementaryAlignmentFlag();
+        final boolean isDuplicate = read.getDuplicateReadFlag();
 
         if(passesQC)
         {
@@ -85,14 +92,22 @@ public class FlagStats
             if(passesQC)
             {
                 mPrimaryQCPassed++;
+                if(isDuplicate)
+                {
+                    mPrimaryDuplicateQCPassed++;
+                }
             }
             else
             {
                 mPrimaryQCFailed++;
+                if(isDuplicate)
+                {
+                    mPrimaryDuplicateQCFailed++;
+                }
             }
         }
 
-        if(read.getDuplicateReadFlag())
+        if(isDuplicate)
         {
             if(passesQC)
             {
@@ -153,5 +168,15 @@ public class FlagStats
     public int getDuplicateQCFailed()
     {
         return mDuplicateQCFailed;
+    }
+
+    public int getPrimaryDuplicateQCPassed()
+    {
+        return mPrimaryDuplicateQCPassed;
+    }
+
+    public int getPrimaryDuplicateQCFailed()
+    {
+        return mPrimaryDuplicateQCFailed;
     }
 }
