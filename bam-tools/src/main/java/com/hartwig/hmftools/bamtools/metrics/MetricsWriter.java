@@ -223,6 +223,10 @@ public final class MetricsWriter
             writer.newLine();
             writer.write(String.format("%d + %d primary", flagStats.getPrimaryQCPassed(), flagStats.getPrimaryQCFailed()));
             writer.newLine();
+            writer.write(String.format("%d + %d secondary", flagStats.getSecondaryQCPassed(), flagStats.getSecondaryQCFailed()));
+            writer.newLine();
+            writer.write(String.format("%d + %d supplementary", flagStats.getSuppQCPassed(), flagStats.getSuppQCFailed()));
+            writer.newLine();
 
             writer.close();
         }

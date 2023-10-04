@@ -8,6 +8,10 @@ public class FlagStats
     private int mTotalQCFailed;
     private int mPrimaryQCPassed;
     private int mPrimaryQCFailed;
+    private int mSecondaryQCPassed;
+    private int mSecondaryQCFailed;
+    private int mSuppQCPassed;
+    private int mSuppQCFailed;
 
     public FlagStats()
     {
@@ -15,6 +19,10 @@ public class FlagStats
         mTotalQCFailed = 0;
         mPrimaryQCPassed = 0;
         mPrimaryQCFailed = 0;
+        mSecondaryQCPassed = 0;
+        mSecondaryQCFailed = 0;
+        mSuppQCPassed = 0;
+        mSuppQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -23,11 +31,17 @@ public class FlagStats
         mTotalQCFailed += other.mTotalQCFailed;
         mPrimaryQCPassed += other.mPrimaryQCPassed;
         mPrimaryQCFailed += other.mPrimaryQCFailed;
+        mSecondaryQCPassed += other.mSecondaryQCPassed;
+        mSecondaryQCFailed += other.mSecondaryQCFailed;
+        mSuppQCPassed += other.mSuppQCPassed;
+        mSuppQCFailed += other.mSuppQCFailed;
     }
 
     public void processRead(final SAMRecord read)
     {
         boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
+        boolean isSecondary = read.isSecondaryAlignment();
+        boolean isSupp = read.getSupplementaryAlignmentFlag();
 
         if(passesQC)
         {
@@ -38,7 +52,29 @@ public class FlagStats
             mTotalQCFailed++;
         }
 
-        if (!read.isSecondaryOrSupplementary())
+        if(isSecondary)
+        {
+            if(passesQC)
+            {
+                mSecondaryQCPassed++;
+            }
+            else
+            {
+                mSecondaryQCFailed++;
+            }
+        }
+        else if(isSupp)
+        {
+            if(passesQC)
+            {
+                mSuppQCPassed++;
+            }
+            else
+            {
+                mSuppQCFailed++;
+            }
+        }
+        else
         {
             if(passesQC)
             {
@@ -69,5 +105,25 @@ public class FlagStats
     public int getPrimaryQCFailed()
     {
         return mPrimaryQCFailed;
+    }
+
+    public int getSecondaryQCPassed()
+    {
+        return mSecondaryQCPassed;
+    }
+
+    public int getSecondaryQCFailed()
+    {
+        return mSecondaryQCFailed;
+    }
+
+    public int getSuppQCPassed()
+    {
+        return mSuppQCPassed;
+    }
+
+    public int getSuppQCFailed()
+    {
+        return mSuppQCFailed;
     }
 }
