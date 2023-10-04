@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
+import org.jetbrains.annotations.Nullable;
+
 import htsjdk.samtools.SAMRecord;
 
 public class FlagStats
@@ -16,6 +18,8 @@ public class FlagStats
     private int mDuplicateQCFailed;
     private int mPrimaryDuplicateQCPassed;
     private int mPrimaryDuplicateQCFailed;
+    private int mMappedQCPassed;
+    private int mMappedQCFailed;
 
     public FlagStats()
     {
@@ -31,6 +35,8 @@ public class FlagStats
         mDuplicateQCFailed = 0;
         mPrimaryDuplicateQCPassed = 0;
         mPrimaryDuplicateQCFailed = 0;
+        mMappedQCPassed = 0;
+        mMappedQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -47,6 +53,8 @@ public class FlagStats
         mDuplicateQCFailed += other.mDuplicateQCFailed;
         mPrimaryDuplicateQCPassed += other.mPrimaryDuplicateQCPassed;
         mPrimaryDuplicateQCFailed += other.mPrimaryDuplicateQCFailed;
+        mMappedQCPassed += other.mMappedQCPassed;
+        mMappedQCFailed += other.mMappedQCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -118,6 +126,18 @@ public class FlagStats
                 mDuplicateQCFailed++;
             }
         }
+
+        if(!read.getReadUnmappedFlag())
+        {
+            if(passesQC)
+            {
+                mMappedQCPassed++;
+            }
+            else
+            {
+                mMappedQCFailed++;
+            }
+        }
     }
 
     public int getTotalQCPassed()
@@ -178,5 +198,37 @@ public class FlagStats
     public int getPrimaryDuplicateQCFailed()
     {
         return mPrimaryDuplicateQCFailed;
+    }
+
+    public int getMappedQCPassed()
+    {
+        return mMappedQCPassed;
+    }
+
+    public int getMappedQCFailed()
+    {
+        return mMappedQCFailed;
+    }
+
+    @Nullable
+    public Float getProportionMappedQCPassed()
+    {
+        if(mTotalQCPassed == 0)
+        {
+            return null;
+        }
+
+        return 1.0f * mMappedQCPassed / mTotalQCPassed;
+    }
+
+    @Nullable
+    public Float getProportionMappedQCFailed()
+    {
+        if(mTotalQCFailed == 0)
+        {
+            return null;
+        }
+
+        return 1.0f * mMappedQCFailed / mTotalQCFailed;
     }
 }

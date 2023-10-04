@@ -221,15 +221,28 @@ public final class MetricsWriter
 
             writer.write(String.format("%d + %d in total (QC-passed reads + QC-failed reads)", flagStats.getTotalQCPassed(), flagStats.getTotalQCFailed()));
             writer.newLine();
+
             writer.write(String.format("%d + %d primary", flagStats.getPrimaryQCPassed(), flagStats.getPrimaryQCFailed()));
             writer.newLine();
+
             writer.write(String.format("%d + %d secondary", flagStats.getSecondaryQCPassed(), flagStats.getSecondaryQCFailed()));
             writer.newLine();
+
             writer.write(String.format("%d + %d supplementary", flagStats.getSuppQCPassed(), flagStats.getSuppQCFailed()));
             writer.newLine();
+
             writer.write(String.format("%d + %d duplicates", flagStats.getDuplicateQCPassed(), flagStats.getDuplicateQCFailed()));
             writer.newLine();
+
             writer.write(String.format("%d + %d primary duplicates", flagStats.getPrimaryDuplicateQCPassed(), flagStats.getPrimaryDuplicateQCFailed()));
+            writer.newLine();
+
+            // TODO(m_cooper): Repetitive?
+            final Float propMappedQCPassed = flagStats.getProportionMappedQCPassed();
+            final String propMatchedQCPassedStr = (propMappedQCPassed == null) ? "N/A" : String.format("%.2f%%", 100 * propMappedQCPassed);
+            final Float propMappedQCFailed = flagStats.getProportionMappedQCFailed();
+            final String propMatchedQCFailedStr = (propMappedQCFailed == null) ? "N/A" : String.format("%.2f%%", 100 * propMappedQCFailed);
+            writer.write(String.format("%d + %d mapped (%s : %s)", flagStats.getMappedQCPassed(), flagStats.getMappedQCFailed(), propMatchedQCPassedStr, propMatchedQCFailedStr));
             writer.newLine();
 
             writer.close();
