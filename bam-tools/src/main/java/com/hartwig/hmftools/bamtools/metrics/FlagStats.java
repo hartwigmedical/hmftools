@@ -12,6 +12,8 @@ public class FlagStats
     private int mSecondaryQCFailed;
     private int mSuppQCPassed;
     private int mSuppQCFailed;
+    private int mDuplicateQCPassed;
+    private int mDuplicateQCFailed;
 
     public FlagStats()
     {
@@ -23,6 +25,8 @@ public class FlagStats
         mSecondaryQCFailed = 0;
         mSuppQCPassed = 0;
         mSuppQCFailed = 0;
+        mDuplicateQCPassed = 0;
+        mDuplicateQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -35,6 +39,8 @@ public class FlagStats
         mSecondaryQCFailed += other.mSecondaryQCFailed;
         mSuppQCPassed += other.mSuppQCPassed;
         mSuppQCFailed += other.mSuppQCFailed;
+        mDuplicateQCPassed += other.mDuplicateQCPassed;
+        mDuplicateQCFailed += other.mDuplicateQCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -85,6 +91,18 @@ public class FlagStats
                 mPrimaryQCFailed++;
             }
         }
+
+        if(read.getDuplicateReadFlag())
+        {
+            if(passesQC)
+            {
+                mDuplicateQCPassed++;
+            }
+            else
+            {
+                mDuplicateQCFailed++;
+            }
+        }
     }
 
     public int getTotalQCPassed()
@@ -125,5 +143,15 @@ public class FlagStats
     public int getSuppQCFailed()
     {
         return mSuppQCFailed;
+    }
+
+    public int getDuplicateQCPassed()
+    {
+        return mDuplicateQCPassed;
+    }
+
+    public int getDuplicateQCFailed()
+    {
+        return mDuplicateQCFailed;
     }
 }

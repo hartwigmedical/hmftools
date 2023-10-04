@@ -227,6 +227,8 @@ public final class MetricsWriter
             writer.newLine();
             writer.write(String.format("%d + %d supplementary", flagStats.getSuppQCPassed(), flagStats.getSuppQCFailed()));
             writer.newLine();
+            writer.write(String.format("%d + %d duplicates", flagStats.getDuplicateQCPassed(), flagStats.getDuplicateQCFailed()));
+            writer.newLine();
 
             writer.close();
         }
