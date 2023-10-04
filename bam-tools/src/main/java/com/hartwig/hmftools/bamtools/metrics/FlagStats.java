@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
-import org.jetbrains.annotations.Nullable;
-
 import htsjdk.samtools.SAMRecord;
 
 public class FlagStats
@@ -20,6 +18,8 @@ public class FlagStats
     private int mPrimaryDuplicateQCFailed;
     private int mMappedQCPassed;
     private int mMappedQCFailed;
+    private int mPrimaryMappedQCPassed;
+    private int mPrimaryMappedQCFailed;
 
     public FlagStats()
     {
@@ -37,6 +37,8 @@ public class FlagStats
         mPrimaryDuplicateQCFailed = 0;
         mMappedQCPassed = 0;
         mMappedQCFailed = 0;
+        mPrimaryMappedQCPassed = 0;
+        mPrimaryMappedQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -55,6 +57,8 @@ public class FlagStats
         mPrimaryDuplicateQCFailed += other.mPrimaryDuplicateQCFailed;
         mMappedQCPassed += other.mMappedQCPassed;
         mMappedQCFailed += other.mMappedQCFailed;
+        mPrimaryMappedQCPassed += other.mPrimaryMappedQCPassed;
+        mPrimaryMappedQCFailed += other.mPrimaryMappedQCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -63,6 +67,7 @@ public class FlagStats
         final boolean isSecondary = read.isSecondaryAlignment();
         final boolean isSupp = read.getSupplementaryAlignmentFlag();
         final boolean isDuplicate = read.getDuplicateReadFlag();
+        final boolean isMapped = !read.getReadUnmappedFlag();
 
         if(passesQC)
         {
@@ -104,6 +109,10 @@ public class FlagStats
                 {
                     mPrimaryDuplicateQCPassed++;
                 }
+                if(isMapped)
+                {
+                    mPrimaryMappedQCPassed++;
+                }
             }
             else
             {
@@ -111,6 +120,10 @@ public class FlagStats
                 if(isDuplicate)
                 {
                     mPrimaryDuplicateQCFailed++;
+                }
+                if(isMapped)
+                {
+                    mPrimaryMappedQCFailed++;
                 }
             }
         }
@@ -127,7 +140,7 @@ public class FlagStats
             }
         }
 
-        if(!read.getReadUnmappedFlag())
+        if(isMapped)
         {
             if(passesQC)
             {
@@ -210,25 +223,13 @@ public class FlagStats
         return mMappedQCFailed;
     }
 
-    @Nullable
-    public Float getProportionMappedQCPassed()
+    public int getPrimaryMappedQCPassed()
     {
-        if(mTotalQCPassed == 0)
-        {
-            return null;
-        }
-
-        return 1.0f * mMappedQCPassed / mTotalQCPassed;
+        return mPrimaryMappedQCPassed;
     }
 
-    @Nullable
-    public Float getProportionMappedQCFailed()
+    public int getPrimaryMappedQCFailed()
     {
-        if(mTotalQCFailed == 0)
-        {
-            return null;
-        }
-
-        return 1.0f * mMappedQCFailed / mTotalQCFailed;
+        return mPrimaryMappedQCFailed;
     }
 }

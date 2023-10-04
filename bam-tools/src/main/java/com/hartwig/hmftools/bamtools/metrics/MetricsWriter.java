@@ -219,10 +219,14 @@ public final class MetricsWriter
             String filename = config.formFilename("flagstats");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write(String.format("%d + %d in total (QC-passed reads + QC-failed reads)", flagStats.getTotalQCPassed(), flagStats.getTotalQCFailed()));
+            final int totalQCPassed = flagStats.getTotalQCPassed();
+            final int totalQCFailed = flagStats.getTotalQCFailed();
+            writer.write(String.format("%d + %d in total (QC-passed reads + QC-failed reads)", totalQCPassed, totalQCFailed));
             writer.newLine();
 
-            writer.write(String.format("%d + %d primary", flagStats.getPrimaryQCPassed(), flagStats.getPrimaryQCFailed()));
+            final int primaryQCPassed = flagStats.getPrimaryQCPassed();
+            final int primaryQCFailed = flagStats.getPrimaryQCFailed();
+            writer.write(String.format("%d + %d primary", primaryQCPassed, primaryQCFailed));
             writer.newLine();
 
             writer.write(String.format("%d + %d secondary", flagStats.getSecondaryQCPassed(), flagStats.getSecondaryQCFailed()));
@@ -238,11 +242,22 @@ public final class MetricsWriter
             writer.newLine();
 
             // TODO(m_cooper): Repetitive?
-            final Float propMappedQCPassed = flagStats.getProportionMappedQCPassed();
-            final String propMatchedQCPassedStr = (propMappedQCPassed == null) ? "N/A" : String.format("%.2f%%", 100 * propMappedQCPassed);
-            final Float propMappedQCFailed = flagStats.getProportionMappedQCFailed();
-            final String propMatchedQCFailedStr = (propMappedQCFailed == null) ? "N/A" : String.format("%.2f%%", 100 * propMappedQCFailed);
-            writer.write(String.format("%d + %d mapped (%s : %s)", flagStats.getMappedQCPassed(), flagStats.getMappedQCFailed(), propMatchedQCPassedStr, propMatchedQCFailedStr));
+            final int mappedQCPassed = flagStats.getMappedQCPassed();
+            final int mappedQCFailed = flagStats.getMappedQCFailed();
+            final String propMatchedQCPassedStr =
+                    (totalQCPassed == 0) ? "N/A" : String.format("%.2f%%", 100.0f * mappedQCPassed / totalQCPassed);
+            final String propMatchedQCFailedStr =
+                    (totalQCFailed == 0) ? "N/A" : String.format("%.2f%%", 100.0f * mappedQCFailed / totalQCFailed);
+            writer.write(String.format("%d + %d mapped (%s : %s)", mappedQCPassed, mappedQCFailed, propMatchedQCPassedStr, propMatchedQCFailedStr));
+            writer.newLine();
+
+            final int primaryMappedQCPassed = flagStats.getPrimaryMappedQCPassed();
+            final int primaryMappedQCFailed = flagStats.getPrimaryMappedQCFailed();
+            final String propPrimaryMatchedQCPassedStr =
+                    (primaryQCPassed == 0) ? "N/A" : String.format("%.2f%%", 100.0f * primaryMappedQCPassed / primaryQCPassed);
+            final String propPrimaryMatchedQCFailedStr =
+                    (primaryQCFailed == 0) ? "N/A" : String.format("%.2f%%", 100.0f * primaryMappedQCFailed / primaryQCFailed);
+            writer.write(String.format("%d + %d primary mapped (%s : %s)", primaryMappedQCPassed, primaryMappedQCFailed, propPrimaryMatchedQCPassedStr, propPrimaryMatchedQCFailedStr));
             writer.newLine();
 
             writer.close();
