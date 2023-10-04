@@ -221,6 +221,8 @@ public final class MetricsWriter
 
             writer.write(String.format("%d + %d in total (QC-passed reads + QC-failed reads)", flagStats.getTotalQCPassed(), flagStats.getTotalQCFailed()));
             writer.newLine();
+            writer.write(String.format("%d + %d primary", flagStats.getPrimaryQCPassed(), flagStats.getPrimaryQCFailed()));
+            writer.newLine();
 
             writer.close();
         }

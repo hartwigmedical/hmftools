@@ -6,28 +6,48 @@ public class FlagStats
 {
     private int mTotalQCPassed;
     private int mTotalQCFailed;
+    private int mPrimaryQCPassed;
+    private int mPrimaryQCFailed;
 
     public FlagStats()
     {
         mTotalQCPassed = 0;
         mTotalQCFailed = 0;
+        mPrimaryQCPassed = 0;
+        mPrimaryQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
     {
         mTotalQCPassed += other.mTotalQCPassed;
         mTotalQCFailed += other.mTotalQCFailed;
+        mPrimaryQCPassed += other.mPrimaryQCPassed;
+        mPrimaryQCFailed += other.mPrimaryQCFailed;
     }
 
     public void processRead(final SAMRecord read)
     {
-        if(read.getReadFailsVendorQualityCheckFlag())
+        boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
+
+        if(passesQC)
         {
-            mTotalQCFailed++;
+            mTotalQCPassed++;
         }
         else
         {
-            mTotalQCPassed++;
+            mTotalQCFailed++;
+        }
+
+        if (!read.isSecondaryOrSupplementary())
+        {
+            if(passesQC)
+            {
+                mPrimaryQCPassed++;
+            }
+            else
+            {
+                mPrimaryQCFailed++;
+            }
         }
     }
 
@@ -39,5 +59,15 @@ public class FlagStats
     public int getTotalQCFailed()
     {
         return mTotalQCFailed;
+    }
+
+    public int getPrimaryQCPassed()
+    {
+        return mPrimaryQCPassed;
+    }
+
+    public int getPrimaryQCFailed()
+    {
+        return mPrimaryQCFailed;
     }
 }
