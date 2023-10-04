@@ -283,6 +283,15 @@ public final class MetricsWriter
             writer.write(String.format("%d + %d with itself and mate mapped", flagStats.getPairMappedQCPassed(), flagStats.getPairMappedQCFailed()));
             writer.newLine();
 
+            final int singletonQCPassed = flagStats.getSingletonQCPassed();
+            final int singletonQCFailed = flagStats.getSingletonQCFailed();
+            final String propSingletonQCPassedStr =
+                    (pairedQCPassed == 0) ? "N/A" : String.format("%.2f%%", 100.0f * singletonQCPassed / pairedQCPassed);
+            final String propSingletonQCFailedStr =
+                    (pairedQCFailed == 0) ? "N/A" : String.format("%.2f%%", 100.0f * singletonQCFailed / pairedQCFailed);
+            writer.write(String.format("%d + %d singletons (%s : %s)", singletonQCPassed, singletonQCFailed, propSingletonQCPassedStr, propSingletonQCFailedStr));
+            writer.newLine();
+
             writer.close();
         }
         catch(IOException e)

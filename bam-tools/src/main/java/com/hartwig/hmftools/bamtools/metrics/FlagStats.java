@@ -30,6 +30,8 @@ public class FlagStats
     private int mProperlyPairedQCFailed;
     private int mPairMappedQCPassed;
     private int mPairMappedQCFailed;
+    private int mSingletonQCPassed;
+    private int mSingletonQCFailed;
 
     public FlagStats()
     {
@@ -59,6 +61,8 @@ public class FlagStats
         mProperlyPairedQCFailed = 0;
         mPairMappedQCPassed = 0;
         mPairMappedQCFailed = 0;
+        mSingletonQCPassed = 0;
+        mSingletonQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -89,6 +93,8 @@ public class FlagStats
         mProperlyPairedQCFailed += other.mProperlyPairedQCFailed;
         mPairMappedQCPassed += other.mPairMappedQCPassed;
         mPairMappedQCFailed += other.mPairMappedQCFailed;
+        mSingletonQCPassed += other.mSingletonQCPassed;
+        mSingletonQCFailed += other.mSingletonQCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -217,6 +223,18 @@ public class FlagStats
                     else
                     {
                         mPairMappedQCFailed++;
+                    }
+                }
+
+                if(isMapped && read.getMateUnmappedFlag())
+                {
+                    if(passesQC)
+                    {
+                        mSingletonQCPassed++;
+                    }
+                    else
+                    {
+                        mSingletonQCFailed++;
                     }
                 }
             }
@@ -375,5 +393,15 @@ public class FlagStats
     public int getPairMappedQCFailed()
     {
         return mPairMappedQCFailed;
+    }
+
+    public int getSingletonQCPassed()
+    {
+        return mSingletonQCPassed;
+    }
+
+    public int getSingletonQCFailed()
+    {
+        return mSingletonQCFailed;
     }
 }
