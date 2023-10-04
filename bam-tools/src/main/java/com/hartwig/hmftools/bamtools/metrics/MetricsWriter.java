@@ -34,6 +34,7 @@ public final class MetricsWriter
             writeMetrics(combinedStats.coverageMetrics(), config);
             writeCoverageFrequency(combinedStats.coverageMetrics(), config);
             writeFragmentLengths(combinedStats.fragmentLengths(), config);
+            writeFlagStats(combinedStats.flagStats(), config);
         }
     }
 
@@ -206,6 +207,26 @@ public final class MetricsWriter
         catch(IOException e)
         {
             BT_LOGGER.error("failed to write frag lengths file: {}", e.toString());
+        }
+    }
+
+    private static void writeFlagStats(final FlagStats flagStats, final MetricsConfig config)
+    {
+        try
+        {
+            // write flag stats
+            // TODO(m_cooper): Different filename?
+            String filename = config.formFilename("flagstats");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(String.format("%d + %d in total (QC-passed reads + QC-failed reads)", flagStats.getTotalQCPassed(), flagStats.getTotalQCFailed()));
+            writer.newLine();
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            BT_LOGGER.error("failed to write flag stats file: {}", e.toString());
         }
     }
 

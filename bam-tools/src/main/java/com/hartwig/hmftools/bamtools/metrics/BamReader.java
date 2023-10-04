@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.util.List;
 import java.util.Map;
@@ -12,10 +12,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bamtools.common.ReadGroup;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -34,6 +34,7 @@ public class BamReader
     private final FragmentLengths mFragmentLengths;
     private final Map<String, ReadGroup> mReadGroupMap; // keyed by readId
     private final CombinedStats mCombinedStats;
+    private final FlagStats mFlagStats;
 
     private int mTotalReads;
     private final PerformanceCounter mPerfCounter;
@@ -55,6 +56,8 @@ public class BamReader
         List<ChrBaseRegion> unmappableRegions = mConfig.UnmappableRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());
 
         mBaseCoverage = new BaseCoverage(mConfig, mRegion.start(), mRegion.end(), unmappableRegions);
+
+        mFlagStats = new FlagStats();
 
         mFragmentLengths = new FragmentLengths();
 
@@ -82,7 +85,7 @@ public class BamReader
         }
 
         CoverageMetrics metrics = mBaseCoverage.createMetrics();
-        mCombinedStats.addStats(metrics, mFragmentLengths, mTotalReads, mPerfCounter);
+        mCombinedStats.addStats(metrics, mFragmentLengths, mTotalReads, mPerfCounter, mFlagStats);
     }
 
     private void processSamRecord(final SAMRecord read)
@@ -103,6 +106,12 @@ public class BamReader
             {
                 BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
             }
+        }
+
+        // TODO(m_cooper): What if read is unmapped?
+        if(mRegion.containsPosition(readStart))
+        {
+            mFlagStats.processRead(read);
         }
 
         mFragmentLengths.processRead(read);

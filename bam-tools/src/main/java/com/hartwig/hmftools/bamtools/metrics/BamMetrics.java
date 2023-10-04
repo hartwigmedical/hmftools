@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.jetbrains.annotations.NotNull;
 

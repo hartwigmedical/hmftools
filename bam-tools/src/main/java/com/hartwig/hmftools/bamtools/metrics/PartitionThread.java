@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Queue;
-
-import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 
 import com.hartwig.hmftools.bamtools.common.PartitionTask;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
@@ -41,6 +41,7 @@ public class PartitionThread extends Thread
         start();
     }
 
+    @Override
     public void run()
     {
         while(true)
