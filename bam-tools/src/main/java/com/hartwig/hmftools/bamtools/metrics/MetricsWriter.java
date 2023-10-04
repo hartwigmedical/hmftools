@@ -292,6 +292,9 @@ public final class MetricsWriter
             writer.write(String.format("%d + %d singletons (%s : %s)", singletonQCPassed, singletonQCFailed, propSingletonQCPassedStr, propSingletonQCFailedStr));
             writer.newLine();
 
+            writer.write(String.format("%d + %d with mate mapped to a different chr", flagStats.getInterChrPairMappedQCPassed(), flagStats.getInterChrPairMappedQCFailed()));
+            writer.newLine();
+
             writer.close();
         }
         catch(IOException e)

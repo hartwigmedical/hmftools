@@ -32,6 +32,8 @@ public class FlagStats
     private int mPairMappedQCFailed;
     private int mSingletonQCPassed;
     private int mSingletonQCFailed;
+    private int mInterChrPairMappedQCPassed;
+    private int mInterChrPairMappedQCFailed;
 
     public FlagStats()
     {
@@ -63,6 +65,8 @@ public class FlagStats
         mPairMappedQCFailed = 0;
         mSingletonQCPassed = 0;
         mSingletonQCFailed = 0;
+        mInterChrPairMappedQCPassed = 0;
+        mInterChrPairMappedQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -95,6 +99,8 @@ public class FlagStats
         mPairMappedQCFailed += other.mPairMappedQCFailed;
         mSingletonQCPassed += other.mSingletonQCPassed;
         mSingletonQCFailed += other.mSingletonQCFailed;
+        mInterChrPairMappedQCPassed += other.mInterChrPairMappedQCPassed;
+        mInterChrPairMappedQCFailed += other.mInterChrPairMappedQCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -223,6 +229,18 @@ public class FlagStats
                     else
                     {
                         mPairMappedQCFailed++;
+                    }
+
+                    if(!read.getReferenceName().equals(read.getMateReferenceName()))
+                    {
+                        if(passesQC)
+                        {
+                            mInterChrPairMappedQCPassed++;
+                        }
+                        else
+                        {
+                            mInterChrPairMappedQCFailed++;
+                        }
                     }
                 }
 
@@ -403,5 +421,15 @@ public class FlagStats
     public int getSingletonQCFailed()
     {
         return mSingletonQCFailed;
+    }
+
+    public int getInterChrPairMappedQCPassed()
+    {
+        return mInterChrPairMappedQCPassed;
+    }
+
+    public int getInterChrPairMappedQCFailed()
+    {
+        return mInterChrPairMappedQCFailed;
     }
 }
