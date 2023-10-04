@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.time.LocalDate;
 import java.util.ServiceLoader;
 
 import com.google.gson.Gson;
@@ -36,7 +37,9 @@ public class OrangeJson {
         for (TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class)) {
             gsonBuilder.registerTypeAdapterFactory(factory);
         }
-        gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues().create();
+        gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues()
+                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+                .create();
     }
 
     @NotNull
