@@ -260,6 +260,10 @@ public final class MetricsWriter
             writer.write(String.format("%d + %d primary mapped (%s : %s)", primaryMappedQCPassed, primaryMappedQCFailed, propPrimaryMatchedQCPassedStr, propPrimaryMatchedQCFailedStr));
             writer.newLine();
 
+            // TODO(m_cooper): Counts are wrong.
+            writer.write(String.format("%d + %d paired in sequencing", flagStats.getPairedQCPassed(), flagStats.getPairedQCFailed()));
+            writer.newLine();
+
             writer.close();
         }
         catch(IOException e)

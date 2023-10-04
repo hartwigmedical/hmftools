@@ -20,6 +20,8 @@ public class FlagStats
     private int mMappedQCFailed;
     private int mPrimaryMappedQCPassed;
     private int mPrimaryMappedQCFailed;
+    private int mPairedQCPassed;
+    private int mPairedQCFailed;
 
     public FlagStats()
     {
@@ -39,6 +41,8 @@ public class FlagStats
         mMappedQCFailed = 0;
         mPrimaryMappedQCPassed = 0;
         mPrimaryMappedQCFailed = 0;
+        mPairedQCPassed = 0;
+        mPairedQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -59,6 +63,8 @@ public class FlagStats
         mMappedQCFailed += other.mMappedQCFailed;
         mPrimaryMappedQCPassed += other.mPrimaryMappedQCPassed;
         mPrimaryMappedQCFailed += other.mPrimaryMappedQCFailed;
+        mPairedQCPassed += other.mPairedQCPassed;
+        mPairedQCFailed += other.mPairedQCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -68,6 +74,7 @@ public class FlagStats
         final boolean isSupp = read.getSupplementaryAlignmentFlag();
         final boolean isDuplicate = read.getDuplicateReadFlag();
         final boolean isMapped = !read.getReadUnmappedFlag();
+        final boolean isPaired = read.getReadPairedFlag();
 
         if(passesQC)
         {
@@ -151,6 +158,18 @@ public class FlagStats
                 mMappedQCFailed++;
             }
         }
+
+        if(isPaired)
+        {
+            if(passesQC)
+            {
+                mPairedQCPassed++;
+            }
+            else
+            {
+                mPairedQCFailed++;
+            }
+        }
     }
 
     public int getTotalQCPassed()
@@ -231,5 +250,15 @@ public class FlagStats
     public int getPrimaryMappedQCFailed()
     {
         return mPrimaryMappedQCFailed;
+    }
+
+    public int getPairedQCPassed()
+    {
+        return mPairedQCPassed;
+    }
+
+    public int getPairedQCFailed()
+    {
+        return mPairedQCFailed;
     }
 }
