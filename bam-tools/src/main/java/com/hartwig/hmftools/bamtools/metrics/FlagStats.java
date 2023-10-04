@@ -22,6 +22,10 @@ public class FlagStats
     private int mPrimaryMappedQCFailed;
     private int mPairedQCPassed;
     private int mPairedQCFailed;
+    private int mRead1QCPassed;
+    private int mRead1QCFailed;
+    private int mRead2QCPassed;
+    private int mRead2QCFailed;
 
     public FlagStats()
     {
@@ -43,6 +47,10 @@ public class FlagStats
         mPrimaryMappedQCFailed = 0;
         mPairedQCPassed = 0;
         mPairedQCFailed = 0;
+        mRead1QCPassed = 0;
+        mRead1QCFailed = 0;
+        mRead2QCPassed = 0;
+        mRead2QCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -65,6 +73,10 @@ public class FlagStats
         mPrimaryMappedQCFailed += other.mPrimaryMappedQCFailed;
         mPairedQCPassed += other.mPairedQCPassed;
         mPairedQCFailed += other.mPairedQCFailed;
+        mRead1QCPassed += other.mRead1QCPassed;
+        mRead1QCFailed += other.mRead1QCFailed;
+        mRead2QCPassed += other.mRead2QCPassed;
+        mRead2QCFailed += other.mRead2QCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -169,6 +181,31 @@ public class FlagStats
             {
                 mPairedQCFailed++;
             }
+
+            // TODO(m_cooper): unchecked in SAM record member functions?
+            if(read.getFirstOfPairFlag())
+            {
+                if(passesQC)
+                {
+                    mRead1QCPassed++;
+                }
+                else
+                {
+                    mRead1QCFailed++;
+                }
+            }
+
+            if(read.getSecondOfPairFlag())
+            {
+                if(passesQC)
+                {
+                    mRead2QCPassed++;
+                }
+                else
+                {
+                    mRead2QCFailed++;
+                }
+            }
         }
     }
 
@@ -260,5 +297,25 @@ public class FlagStats
     public int getPairedQCFailed()
     {
         return mPairedQCFailed;
+    }
+
+    public int getRead1QCPassed()
+    {
+        return mRead1QCPassed;
+    }
+
+    public int getRead1QCFailed()
+    {
+        return mRead1QCFailed;
+    }
+
+    public int getRead2QCPassed()
+    {
+        return mRead2QCPassed;
+    }
+
+    public int getRead2QCFailed()
+    {
+        return mRead2QCFailed;
     }
 }

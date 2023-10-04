@@ -264,6 +264,14 @@ public final class MetricsWriter
             writer.write(String.format("%d + %d paired in sequencing", flagStats.getPairedQCPassed(), flagStats.getPairedQCFailed()));
             writer.newLine();
 
+            // TODO(m_cooper): Counts are wrong.
+            writer.write(String.format("%d + %d read1", flagStats.getRead1QCPassed(), flagStats.getRead1QCFailed()));
+            writer.newLine();
+
+            // TODO(m_cooper): Counts are wrong.
+            writer.write(String.format("%d + %d read2", flagStats.getRead2QCPassed(), flagStats.getRead2QCFailed()));
+            writer.newLine();
+
             writer.close();
         }
         catch(IOException e)
