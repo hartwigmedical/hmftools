@@ -28,6 +28,8 @@ public class FlagStats
     private int mRead2QCFailed;
     private int mProperlyPairedQCPassed;
     private int mProperlyPairedQCFailed;
+    private int mPairMappedQCPassed;
+    private int mPairMappedQCFailed;
 
     public FlagStats()
     {
@@ -55,6 +57,8 @@ public class FlagStats
         mRead2QCFailed = 0;
         mProperlyPairedQCPassed = 0;
         mProperlyPairedQCFailed = 0;
+        mPairMappedQCPassed = 0;
+        mPairMappedQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -83,6 +87,8 @@ public class FlagStats
         mRead2QCFailed += other.mRead2QCFailed;
         mProperlyPairedQCPassed += other.mProperlyPairedQCPassed;
         mProperlyPairedQCFailed += other.mProperlyPairedQCFailed;
+        mPairMappedQCPassed += other.mPairMappedQCPassed;
+        mPairMappedQCFailed += other.mPairMappedQCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -95,6 +101,7 @@ public class FlagStats
         final boolean isPaired = read.getReadPairedFlag();
         final boolean isProperPair = read.getProperPairFlag();
 
+        // TODO(m_cooper): Reduce nesting.
         if(passesQC)
         {
             mTotalQCPassed++;
@@ -198,6 +205,18 @@ public class FlagStats
                     else
                     {
                         mProperlyPairedQCFailed++;
+                    }
+                }
+
+                if(isMapped && !read.getMateUnmappedFlag())
+                {
+                    if(passesQC)
+                    {
+                        mPairMappedQCPassed++;
+                    }
+                    else
+                    {
+                        mPairMappedQCFailed++;
                     }
                 }
             }
@@ -346,5 +365,15 @@ public class FlagStats
     public int getProperlyPairedQCFailed()
     {
         return mProperlyPairedQCFailed;
+    }
+
+    public int getPairMappedQCPassed()
+    {
+        return mPairMappedQCPassed;
+    }
+
+    public int getPairMappedQCFailed()
+    {
+        return mPairMappedQCFailed;
     }
 }

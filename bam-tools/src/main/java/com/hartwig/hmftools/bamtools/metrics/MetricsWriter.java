@@ -280,6 +280,9 @@ public final class MetricsWriter
             writer.write(String.format("%d + %d properly paired (%s : %s)", properlyPairedQCPassed, properlyPairedQCFailed, propProperlyPairedQCPassedStr, propProperlyPairedQCFailedStr));
             writer.newLine();
 
+            writer.write(String.format("%d + %d with itself and mate mapped", flagStats.getPairMappedQCPassed(), flagStats.getPairMappedQCFailed()));
+            writer.newLine();
+
             writer.close();
         }
         catch(IOException e)
