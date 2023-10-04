@@ -370,7 +370,8 @@ public class PurpleInterpreter
                 .qc(PurpleConversion.convert(purple.purityContext().qc()))
                 .hasSufficientQuality(purple.purityContext().qc().pass())
                 .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
-                .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR)
+                .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR
+                        && !purple.purityContext().qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR))
                 .purity(purple.purityContext().bestFit().purity())
                 .minPurity(purple.purityContext().score().minPurity())
                 .maxPurity(purple.purityContext().score().maxPurity())
