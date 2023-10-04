@@ -19,7 +19,7 @@ from xml.etree import ElementTree
 from argparse import ArgumentParser
 
 SEMVER_REGEX = re.compile(
-    r'^([a-z-]+)-(v?[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-(?:alpha|beta)\.[0-9]+)?(?:_(?:[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?)$')
+    r'^([a-z-]+)-v?([0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-(?:alpha|beta)\.[0-9]+)?(?:_(?:[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?)$')
 
 
 class Maven:
@@ -68,14 +68,16 @@ def main():
     build_and_release(args.tag)
 
 
-def build_and_release(tag: str):
-    match = SEMVER_REGEX.match(tag)
+def build_and_release(raw_tag: str):
+    match = SEMVER_REGEX.match(raw_tag)
     if not match:
-        print(f'Invalid tag (it does not match the regex pattern): {tag}')
+        print(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern): '{SEMVER_REGEX.pattern}'")
         exit(1)
-
     module = match.group(1)
     version = match.group(2)
+    # Clean the raw_tag such that it only includes the groups captured by the regex
+    # For example: raw_tag = orange-v1.0.0 then tag = orange-1.1.0
+    tag = f'{module}-{version}'
 
     # parse all the hmftools modules the project depends on from the pom.xml
     hmftools_dependencies = extract_hmftools_dependencies(f'{module}/pom.xml')
