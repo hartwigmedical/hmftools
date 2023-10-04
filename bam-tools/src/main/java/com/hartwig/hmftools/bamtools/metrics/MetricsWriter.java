@@ -295,6 +295,9 @@ public final class MetricsWriter
             writer.write(String.format("%d + %d with mate mapped to a different chr", flagStats.getInterChrPairMappedQCPassed(), flagStats.getInterChrPairMappedQCFailed()));
             writer.newLine();
 
+            writer.write(String.format("%d + %d with mate mapped to a different chr (mapQ>=5)", flagStats.getInterChrPairMapQGE5QCPassed(), flagStats.getInterChrPairMapQGE5QCFailed()));
+            writer.newLine();
+
             writer.close();
         }
         catch(IOException e)

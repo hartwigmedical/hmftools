@@ -34,6 +34,8 @@ public class FlagStats
     private int mSingletonQCFailed;
     private int mInterChrPairMappedQCPassed;
     private int mInterChrPairMappedQCFailed;
+    private int mInterChrPairMapQGE5QCPassed;
+    private int mInterChrPairMapQGE5QCFailed;
 
     public FlagStats()
     {
@@ -67,6 +69,8 @@ public class FlagStats
         mSingletonQCFailed = 0;
         mInterChrPairMappedQCPassed = 0;
         mInterChrPairMappedQCFailed = 0;
+        mInterChrPairMapQGE5QCPassed = 0;
+        mInterChrPairMapQGE5QCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -101,6 +105,8 @@ public class FlagStats
         mSingletonQCFailed += other.mSingletonQCFailed;
         mInterChrPairMappedQCPassed += other.mInterChrPairMappedQCPassed;
         mInterChrPairMappedQCFailed += other.mInterChrPairMappedQCFailed;
+        mInterChrPairMapQGE5QCPassed += other.mInterChrPairMapQGE5QCPassed;
+        mInterChrPairMapQGE5QCFailed += other.mInterChrPairMapQGE5QCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -240,6 +246,18 @@ public class FlagStats
                         else
                         {
                             mInterChrPairMappedQCFailed++;
+                        }
+
+                        if(read.getMappingQuality() >= 5)
+                        {
+                            if(passesQC)
+                            {
+                                mInterChrPairMapQGE5QCPassed++;
+                            }
+                            else
+                            {
+                                mInterChrPairMapQGE5QCFailed++;
+                            }
                         }
                     }
                 }
@@ -431,5 +449,15 @@ public class FlagStats
     public int getInterChrPairMappedQCFailed()
     {
         return mInterChrPairMappedQCFailed;
+    }
+
+    public int getInterChrPairMapQGE5QCPassed()
+    {
+        return mInterChrPairMapQGE5QCPassed;
+    }
+
+    public int getInterChrPairMapQGE5QCFailed()
+    {
+        return mInterChrPairMapQGE5QCFailed;
     }
 }
