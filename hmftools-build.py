@@ -72,7 +72,7 @@ def main():
 def build_and_release(raw_tag: str):
     match = SEMVER_REGEX.match(raw_tag)
     if not match:
-        print(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern): '{SEMVER_REGEX.pattern}'")
+        print(f"Invalid tag: '{raw_tag}' (it does not match the regex pattern: '{SEMVER_REGEX.pattern}')")
         exit(1)
     module = match.group(1)
     version = match.group(2)
