@@ -145,6 +145,43 @@ public class FlagStats
                     mPrimaryMappedQCFailed++;
                 }
             }
+
+            if(isPaired)
+            {
+                if(passesQC)
+                {
+                    mPairedQCPassed++;
+                }
+                else
+                {
+                    mPairedQCFailed++;
+                }
+
+                // TODO(m_cooper): unchecked in SAM record member functions?
+                if(read.getFirstOfPairFlag())
+                {
+                    if(passesQC)
+                    {
+                        mRead1QCPassed++;
+                    }
+                    else
+                    {
+                        mRead1QCFailed++;
+                    }
+                }
+
+                if(read.getSecondOfPairFlag())
+                {
+                    if(passesQC)
+                    {
+                        mRead2QCPassed++;
+                    }
+                    else
+                    {
+                        mRead2QCFailed++;
+                    }
+                }
+            }
         }
 
         if(isDuplicate)
@@ -168,43 +205,6 @@ public class FlagStats
             else
             {
                 mMappedQCFailed++;
-            }
-        }
-
-        if(isPaired)
-        {
-            if(passesQC)
-            {
-                mPairedQCPassed++;
-            }
-            else
-            {
-                mPairedQCFailed++;
-            }
-
-            // TODO(m_cooper): unchecked in SAM record member functions?
-            if(read.getFirstOfPairFlag())
-            {
-                if(passesQC)
-                {
-                    mRead1QCPassed++;
-                }
-                else
-                {
-                    mRead1QCFailed++;
-                }
-            }
-
-            if(read.getSecondOfPairFlag())
-            {
-                if(passesQC)
-                {
-                    mRead2QCPassed++;
-                }
-                else
-                {
-                    mRead2QCFailed++;
-                }
             }
         }
     }
