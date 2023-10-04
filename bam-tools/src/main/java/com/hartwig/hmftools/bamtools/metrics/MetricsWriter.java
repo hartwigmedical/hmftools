@@ -260,13 +260,24 @@ public final class MetricsWriter
             writer.write(String.format("%d + %d primary mapped (%s : %s)", primaryMappedQCPassed, primaryMappedQCFailed, propPrimaryMatchedQCPassedStr, propPrimaryMatchedQCFailedStr));
             writer.newLine();
 
-            writer.write(String.format("%d + %d paired in sequencing", flagStats.getPairedQCPassed(), flagStats.getPairedQCFailed()));
+            final int pairedQCPassed = flagStats.getPairedQCPassed();
+            final int pairedQCFailed = flagStats.getPairedQCFailed();
+            writer.write(String.format("%d + %d paired in sequencing", pairedQCPassed, pairedQCFailed));
             writer.newLine();
 
             writer.write(String.format("%d + %d read1", flagStats.getRead1QCPassed(), flagStats.getRead1QCFailed()));
             writer.newLine();
 
             writer.write(String.format("%d + %d read2", flagStats.getRead2QCPassed(), flagStats.getRead2QCFailed()));
+            writer.newLine();
+
+            final int properlyPairedQCPassed = flagStats.getProperlyPairedQCPassed();
+            final int properlyPairedQCFailed = flagStats.getProperlyPairedQCFailed();
+            final String propProperlyPairedQCPassedStr =
+                    (pairedQCPassed == 0) ? "N/A" : String.format("%.2f%%", 100.0f * properlyPairedQCPassed / pairedQCPassed);
+            final String propProperlyPairedQCFailedStr =
+                    (pairedQCFailed == 0) ? "N/A" : String.format("%.2f%%", 100.0f * properlyPairedQCFailed / pairedQCFailed);
+            writer.write(String.format("%d + %d properly paired (%s : %s)", properlyPairedQCPassed, properlyPairedQCFailed, propProperlyPairedQCPassedStr, propProperlyPairedQCFailedStr));
             writer.newLine();
 
             writer.close();

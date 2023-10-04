@@ -26,6 +26,8 @@ public class FlagStats
     private int mRead1QCFailed;
     private int mRead2QCPassed;
     private int mRead2QCFailed;
+    private int mProperlyPairedQCPassed;
+    private int mProperlyPairedQCFailed;
 
     public FlagStats()
     {
@@ -51,6 +53,8 @@ public class FlagStats
         mRead1QCFailed = 0;
         mRead2QCPassed = 0;
         mRead2QCFailed = 0;
+        mProperlyPairedQCPassed = 0;
+        mProperlyPairedQCFailed = 0;
     }
 
     public void merge(final FlagStats other)
@@ -77,6 +81,8 @@ public class FlagStats
         mRead1QCFailed += other.mRead1QCFailed;
         mRead2QCPassed += other.mRead2QCPassed;
         mRead2QCFailed += other.mRead2QCFailed;
+        mProperlyPairedQCPassed += other.mProperlyPairedQCPassed;
+        mProperlyPairedQCFailed += other.mProperlyPairedQCFailed;
     }
 
     public void processRead(final SAMRecord read)
@@ -87,6 +93,7 @@ public class FlagStats
         final boolean isDuplicate = read.getDuplicateReadFlag();
         final boolean isMapped = !read.getReadUnmappedFlag();
         final boolean isPaired = read.getReadPairedFlag();
+        final boolean isProperPair = read.getProperPairFlag();
 
         if(passesQC)
         {
@@ -146,6 +153,7 @@ public class FlagStats
                 }
             }
 
+            // TODO(m_cooper): This is different than spec.
             if(isPaired)
             {
                 if(passesQC)
@@ -157,7 +165,6 @@ public class FlagStats
                     mPairedQCFailed++;
                 }
 
-                // TODO(m_cooper): unchecked in SAM record member functions?
                 if(read.getFirstOfPairFlag())
                 {
                     if(passesQC)
@@ -179,6 +186,18 @@ public class FlagStats
                     else
                     {
                         mRead2QCFailed++;
+                    }
+                }
+
+                if(isProperPair && isMapped)
+                {
+                    if(passesQC)
+                    {
+                        mProperlyPairedQCPassed++;
+                    }
+                    else
+                    {
+                        mProperlyPairedQCFailed++;
                     }
                 }
             }
@@ -317,5 +336,15 @@ public class FlagStats
     public int getRead2QCFailed()
     {
         return mRead2QCFailed;
+    }
+
+    public int getProperlyPairedQCPassed()
+    {
+        return mProperlyPairedQCPassed;
+    }
+
+    public int getProperlyPairedQCFailed()
+    {
+        return mProperlyPairedQCFailed;
     }
 }
