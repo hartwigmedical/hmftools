@@ -14,6 +14,12 @@ public interface RnaFusion
     String name();
 
     @NotNull
+    String geneStart();
+
+    @NotNull
+    String geneEnd();
+
+    @NotNull
     String chromosomeUp();
 
     @NotNull

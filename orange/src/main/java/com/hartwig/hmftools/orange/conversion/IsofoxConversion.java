@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.orange.conversion;
 
+import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneDown;
+import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneUp;
+
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.rna.RnaQcFilter;
@@ -53,6 +56,8 @@ public final class IsofoxConversion
     {
         return ImmutableRnaFusion.builder()
                 .name(rnaFusion.name())
+                .geneStart(geneUp(rnaFusion))
+                .geneEnd(geneDown(rnaFusion))
                 .chromosomeUp(rnaFusion.chromosomeUp())
                 .chromosomeDown(rnaFusion.chromosomeDown())
                 .positionUp(rnaFusion.positionUp())

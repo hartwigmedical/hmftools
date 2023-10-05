@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
+import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneDown;
+import static com.hartwig.hmftools.orange.algo.isofox.FusionNameUtil.geneUp;
+
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
@@ -13,11 +15,9 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.orange.algo.linx.DNAFusionEvaluator;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 final class RNAFusionSelector
 {
-    private static final String RNA_FUSION_NAME_DELIMITER = "_";
     private static final Set<StructuralVariantType> ALWAYS_VALID_FOR_PROMISCUOUS = Sets.newHashSet();
 
     static
@@ -75,21 +75,5 @@ final class RNAFusionSelector
         }
 
         return result;
-    }
-
-    @VisibleForTesting
-    @Nullable
-    static String geneUp(@NotNull RnaFusion rnaFusion)
-    {
-        int split = rnaFusion.name().indexOf(RNA_FUSION_NAME_DELIMITER);
-        return split > 0 ? rnaFusion.name().substring(0, split) : null;
-    }
-
-    @VisibleForTesting
-    @Nullable
-    static String geneDown(@NotNull RnaFusion rnaFusion)
-    {
-        int split = rnaFusion.name().indexOf(RNA_FUSION_NAME_DELIMITER);
-        return split >= 0 && split < rnaFusion.name().length() - 1 ? rnaFusion.name().substring(split + 1) : null;
     }
 }
