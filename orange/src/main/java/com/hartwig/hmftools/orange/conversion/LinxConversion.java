@@ -4,16 +4,16 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptCodingType;
 import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
-import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -77,6 +77,8 @@ public final class LinxConversion
                 .id(linxBreakend.id())
                 .svId(linxBreakend.svId())
                 .gene(linxBreakend.gene())
+                .chromosome(linxBreakend.chromosome())
+                .chromosomeBand(linxBreakend.chrBand())
                 .transcriptId(linxBreakend.transcriptId())
                 .canonical(linxBreakend.canonical())
                 .geneOrientation(linxBreakend.geneOrientation())
@@ -85,14 +87,12 @@ public final class LinxConversion
                 .disruptive(linxBreakend.disruptive())
                 .reported(linxBreakend.reportedDisruption())
                 .undisruptedCopyNumber(linxBreakend.undisruptedCopyNumber())
+                .type(LinxBreakendType.valueOf(linxBreakend.type().name()))
                 .regionType(TranscriptRegionType.valueOf(linxBreakend.regionType().name()))
                 .codingType(TranscriptCodingType.valueOf(linxBreakend.codingType().name()))
                 .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())
-                .type(LinxBreakendType.valueOf(linxBreakend.type().name()))
-                .chromosome(linxBreakend.chromosome())
                 .orientation(linxBreakend.orientation())
                 .strand(linxBreakend.strand())
-                .chrBand(linxBreakend.chrBand())
                 .exonUp(linxBreakend.exonUp())
                 .exonDown(linxBreakend.exonDown())
                 .junctionCopyNumber(linxBreakend.junctionCopyNumber())

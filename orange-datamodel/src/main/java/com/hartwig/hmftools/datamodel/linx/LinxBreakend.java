@@ -21,6 +21,12 @@ public interface LinxBreakend
     String gene();
 
     @NotNull
+    String chromosome();
+
+    @NotNull
+    String chromosomeBand();
+
+    @NotNull
     String transcriptId();
 
     boolean canonical();
@@ -35,6 +41,9 @@ public interface LinxBreakend
     double undisruptedCopyNumber();
 
     @NotNull
+    LinxBreakendType type();
+
+    @NotNull
     TranscriptRegionType regionType();
 
     @NotNull
@@ -42,19 +51,9 @@ public interface LinxBreakend
 
     int nextSpliceExonRank();
 
-    // additional fields for patient report
-    @NotNull
-    LinxBreakendType type();
-
-    @NotNull
-    String chromosome();
-
     int orientation();
 
     int strand();
-
-    @NotNull
-    String chrBand();
 
     int exonUp();
 

@@ -11,13 +11,13 @@ import org.jetbrains.annotations.Nullable;
 public interface PurpleGeneCopyNumber
 {
     @NotNull
+    String gene();
+
+    @NotNull
     String chromosome();
 
     @NotNull
     String chromosomeBand();
-
-    @NotNull
-    String gene();
 
     double minCopyNumber();
 

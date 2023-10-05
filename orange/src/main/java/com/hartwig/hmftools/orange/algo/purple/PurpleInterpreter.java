@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +49,6 @@ import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.apache.commons.lang3.tuple.Pair;
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -214,7 +215,7 @@ public class PurpleInterpreter
             {
                 impliedDeletions.add(new GermlineDeletion(first.gene(),
                         first.chromosome(),
-                        first.chrBand(),
+                        first.chromosomeBand(),
                         0,
                         0,
                         0,

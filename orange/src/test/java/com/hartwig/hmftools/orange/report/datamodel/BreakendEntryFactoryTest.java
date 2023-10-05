@@ -24,9 +24,9 @@ public class BreakendEntryFactoryTest
     {
         LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder()
                 .svId(1)
-                .chromosome("1")
-                .chrBand("p12.1")
                 .gene("gene")
+                .chromosome("1")
+                .chromosomeBand("p12.1")
                 .canonical(true)
                 .exonUp(12)
                 .exonDown(12)

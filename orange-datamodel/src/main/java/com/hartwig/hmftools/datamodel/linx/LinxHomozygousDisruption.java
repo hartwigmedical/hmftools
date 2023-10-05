@@ -11,13 +11,13 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxHomozygousDisruption
 {
     @NotNull
+    String gene();
+
+    @NotNull
     String chromosome();
 
     @NotNull
     String chromosomeBand();
-
-    @NotNull
-    String gene();
 
     @NotNull
     String transcript();
