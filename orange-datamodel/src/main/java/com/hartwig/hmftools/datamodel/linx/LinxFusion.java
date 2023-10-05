@@ -28,9 +28,11 @@ public interface LinxFusion
     @NotNull
     String geneTranscriptEnd();
 
-    // TODO (ACTIN-100): Either add default implementation (geneStart_geneEnd) or remove
     @NotNull
-    String name();
+    default String name()
+    {
+        return String.format("%s-%s", geneStart(), geneEnd());
+    }
 
     boolean reported();
 

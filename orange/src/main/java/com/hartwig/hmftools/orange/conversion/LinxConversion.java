@@ -49,7 +49,6 @@ public final class LinxConversion
     public static LinxFusion convert(@NotNull com.hartwig.hmftools.common.linx.LinxFusion linxFusion)
     {
         return ImmutableLinxFusion.builder()
-                .name(linxFusion.name())
                 .reported(linxFusion.reported())
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
