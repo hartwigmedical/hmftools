@@ -4,109 +4,62 @@ import htsjdk.samtools.SAMRecord;
 
 public class FlagStats
 {
-    private int mTotalQCPassed;
-    private int mTotalQCFailed;
-    private int mPrimaryQCPassed;
-    private int mPrimaryQCFailed;
-    private int mSecondaryQCPassed;
-    private int mSecondaryQCFailed;
-    private int mSuppQCPassed;
-    private int mSuppQCFailed;
-    private int mDuplicateQCPassed;
-    private int mDuplicateQCFailed;
-    private int mPrimaryDuplicateQCPassed;
-    private int mPrimaryDuplicateQCFailed;
-    private int mMappedQCPassed;
-    private int mMappedQCFailed;
-    private int mPrimaryMappedQCPassed;
-    private int mPrimaryMappedQCFailed;
-    private int mPairedQCPassed;
-    private int mPairedQCFailed;
-    private int mRead1QCPassed;
-    private int mRead1QCFailed;
-    private int mRead2QCPassed;
-    private int mRead2QCFailed;
-    private int mProperlyPairedQCPassed;
-    private int mProperlyPairedQCFailed;
-    private int mPairMappedQCPassed;
-    private int mPairMappedQCFailed;
-    private int mSingletonQCPassed;
-    private int mSingletonQCFailed;
-    private int mInterChrPairMappedQCPassed;
-    private int mInterChrPairMappedQCFailed;
-    private int mInterChrPairMapQGE5QCPassed;
-    private int mInterChrPairMapQGE5QCFailed;
+    private final FlagQCStats mTotal;
+    private final FlagQCStats mPrimary;
+    // TODO(m_cooper): Do we actually get the secondaries through the readers?
+    private final FlagQCStats mSecondary;
+    private final FlagQCStats mSupp;
+    private final FlagQCStats mDuplicate;
+    private final FlagQCStats mPrimaryDuplicate;
+    private final FlagQCStats mMapped;
+    private final FlagQCStats mPrimaryMapped;
+    private final FlagQCStats mPaired;
+    private final FlagQCStats mRead1;
+    private final FlagQCStats mRead2;
+    private final FlagQCStats mProperlyPaired;
+    private final FlagQCStats mPairMapped;
+    private final FlagQCStats mSingleton;
+    private final FlagQCStats mInterChrPairMapped;
+    private final FlagQCStats mInterChrPairMapQGE5;
 
     public FlagStats()
     {
-        mTotalQCPassed = 0;
-        mTotalQCFailed = 0;
-        mPrimaryQCPassed = 0;
-        mPrimaryQCFailed = 0;
-        mSecondaryQCPassed = 0;
-        mSecondaryQCFailed = 0;
-        mSuppQCPassed = 0;
-        mSuppQCFailed = 0;
-        mDuplicateQCPassed = 0;
-        mDuplicateQCFailed = 0;
-        mPrimaryDuplicateQCPassed = 0;
-        mPrimaryDuplicateQCFailed = 0;
-        mMappedQCPassed = 0;
-        mMappedQCFailed = 0;
-        mPrimaryMappedQCPassed = 0;
-        mPrimaryMappedQCFailed = 0;
-        mPairedQCPassed = 0;
-        mPairedQCFailed = 0;
-        mRead1QCPassed = 0;
-        mRead1QCFailed = 0;
-        mRead2QCPassed = 0;
-        mRead2QCFailed = 0;
-        mProperlyPairedQCPassed = 0;
-        mProperlyPairedQCFailed = 0;
-        mPairMappedQCPassed = 0;
-        mPairMappedQCFailed = 0;
-        mSingletonQCPassed = 0;
-        mSingletonQCFailed = 0;
-        mInterChrPairMappedQCPassed = 0;
-        mInterChrPairMappedQCFailed = 0;
-        mInterChrPairMapQGE5QCPassed = 0;
-        mInterChrPairMapQGE5QCFailed = 0;
+        mTotal = new FlagQCStats();
+        mPrimary = new FlagQCStats();
+        mSecondary = new FlagQCStats();
+        mSupp = new FlagQCStats();
+        mDuplicate = new FlagQCStats();
+        mPrimaryDuplicate = new FlagQCStats();
+        mMapped = new FlagQCStats();
+        mPrimaryMapped = new FlagQCStats();
+        mPaired = new FlagQCStats();
+        mRead1 = new FlagQCStats();
+        mRead2 = new FlagQCStats();
+        mProperlyPaired = new FlagQCStats();
+        mPairMapped = new FlagQCStats();
+        mSingleton = new FlagQCStats();
+        mInterChrPairMapped = new FlagQCStats();
+        mInterChrPairMapQGE5 = new FlagQCStats();
     }
 
     public void merge(final FlagStats other)
     {
-        mTotalQCPassed += other.mTotalQCPassed;
-        mTotalQCFailed += other.mTotalQCFailed;
-        mPrimaryQCPassed += other.mPrimaryQCPassed;
-        mPrimaryQCFailed += other.mPrimaryQCFailed;
-        mSecondaryQCPassed += other.mSecondaryQCPassed;
-        mSecondaryQCFailed += other.mSecondaryQCFailed;
-        mSuppQCPassed += other.mSuppQCPassed;
-        mSuppQCFailed += other.mSuppQCFailed;
-        mDuplicateQCPassed += other.mDuplicateQCPassed;
-        mDuplicateQCFailed += other.mDuplicateQCFailed;
-        mPrimaryDuplicateQCPassed += other.mPrimaryDuplicateQCPassed;
-        mPrimaryDuplicateQCFailed += other.mPrimaryDuplicateQCFailed;
-        mMappedQCPassed += other.mMappedQCPassed;
-        mMappedQCFailed += other.mMappedQCFailed;
-        mPrimaryMappedQCPassed += other.mPrimaryMappedQCPassed;
-        mPrimaryMappedQCFailed += other.mPrimaryMappedQCFailed;
-        mPairedQCPassed += other.mPairedQCPassed;
-        mPairedQCFailed += other.mPairedQCFailed;
-        mRead1QCPassed += other.mRead1QCPassed;
-        mRead1QCFailed += other.mRead1QCFailed;
-        mRead2QCPassed += other.mRead2QCPassed;
-        mRead2QCFailed += other.mRead2QCFailed;
-        mProperlyPairedQCPassed += other.mProperlyPairedQCPassed;
-        mProperlyPairedQCFailed += other.mProperlyPairedQCFailed;
-        mPairMappedQCPassed += other.mPairMappedQCPassed;
-        mPairMappedQCFailed += other.mPairMappedQCFailed;
-        mSingletonQCPassed += other.mSingletonQCPassed;
-        mSingletonQCFailed += other.mSingletonQCFailed;
-        mInterChrPairMappedQCPassed += other.mInterChrPairMappedQCPassed;
-        mInterChrPairMappedQCFailed += other.mInterChrPairMappedQCFailed;
-        mInterChrPairMapQGE5QCPassed += other.mInterChrPairMapQGE5QCPassed;
-        mInterChrPairMapQGE5QCFailed += other.mInterChrPairMapQGE5QCFailed;
+        mTotal.merge(other.mTotal);
+        mPrimary.merge(other.mPrimary);
+        mSecondary.merge(other.mSecondary);
+        mSupp.merge(other.mSupp);
+        mDuplicate.merge(other.mDuplicate);
+        mPrimaryDuplicate.merge(other.mPrimaryDuplicate);
+        mMapped.merge(other.mMapped);
+        mPrimaryMapped.merge(other.mPrimaryMapped);
+        mPaired.merge(other.mPaired);
+        mRead1.merge(other.mRead1);
+        mRead2.merge(other.mRead2);
+        mProperlyPaired.merge(other.mProperlyPaired);
+        mPairMapped.merge(other.mPairMapped);
+        mSingleton.merge(other.mSingleton);
+        mInterChrPairMapped.merge(other.mInterChrPairMapped);
+        mInterChrPairMapQGE5.merge(other.mInterChrPairMapQGE5);
     }
 
     public void processRead(final SAMRecord read)
@@ -120,344 +73,155 @@ public class FlagStats
         final boolean isProperPair = read.getProperPairFlag();
 
         // TODO(m_cooper): Reduce nesting.
-        if(passesQC)
-        {
-            mTotalQCPassed++;
-        }
-        else
-        {
-            mTotalQCFailed++;
-        }
-
+        mTotal.record(passesQC);
         if(isSecondary)
         {
-            if(passesQC)
-            {
-                mSecondaryQCPassed++;
-            }
-            else
-            {
-                mSecondaryQCFailed++;
-            }
+            mSecondary.record(passesQC);
         }
         else if(isSupp)
         {
-            if(passesQC)
-            {
-                mSuppQCPassed++;
-            }
-            else
-            {
-                mSuppQCFailed++;
-            }
+            mSupp.record(passesQC);
         }
         else
         {
-            if(passesQC)
+            mPrimary.record(passesQC);
+            if(isDuplicate)
             {
-                mPrimaryQCPassed++;
-                if(isDuplicate)
-                {
-                    mPrimaryDuplicateQCPassed++;
-                }
-                if(isMapped)
-                {
-                    mPrimaryMappedQCPassed++;
-                }
+                mPrimaryDuplicate.record(passesQC);
             }
-            else
+            if(isMapped)
             {
-                mPrimaryQCFailed++;
-                if(isDuplicate)
-                {
-                    mPrimaryDuplicateQCFailed++;
-                }
-                if(isMapped)
-                {
-                    mPrimaryMappedQCFailed++;
-                }
+                mPrimaryMapped.record(passesQC);
             }
 
             // TODO(m_cooper): This is different than spec.
             if(isPaired)
             {
-                if(passesQC)
-                {
-                    mPairedQCPassed++;
-                }
-                else
-                {
-                    mPairedQCFailed++;
-                }
+                mPaired.record(passesQC);
 
                 if(read.getFirstOfPairFlag())
                 {
-                    if(passesQC)
-                    {
-                        mRead1QCPassed++;
-                    }
-                    else
-                    {
-                        mRead1QCFailed++;
-                    }
+                    mRead1.record(passesQC);
                 }
 
                 if(read.getSecondOfPairFlag())
                 {
-                    if(passesQC)
-                    {
-                        mRead2QCPassed++;
-                    }
-                    else
-                    {
-                        mRead2QCFailed++;
-                    }
+                    mRead2.record(passesQC);
                 }
 
                 if(isProperPair && isMapped)
                 {
-                    if(passesQC)
-                    {
-                        mProperlyPairedQCPassed++;
-                    }
-                    else
-                    {
-                        mProperlyPairedQCFailed++;
-                    }
+                    mProperlyPaired.record(passesQC);
                 }
 
                 if(isMapped && !read.getMateUnmappedFlag())
                 {
-                    if(passesQC)
-                    {
-                        mPairMappedQCPassed++;
-                    }
-                    else
-                    {
-                        mPairMappedQCFailed++;
-                    }
-
+                    mPairMapped.record(passesQC);
                     if(!read.getReferenceName().equals(read.getMateReferenceName()))
                     {
-                        if(passesQC)
-                        {
-                            mInterChrPairMappedQCPassed++;
-                        }
-                        else
-                        {
-                            mInterChrPairMappedQCFailed++;
-                        }
-
+                        mInterChrPairMapped.record(passesQC);
                         if(read.getMappingQuality() >= 5)
                         {
-                            if(passesQC)
-                            {
-                                mInterChrPairMapQGE5QCPassed++;
-                            }
-                            else
-                            {
-                                mInterChrPairMapQGE5QCFailed++;
-                            }
+                            mInterChrPairMapQGE5.record(passesQC);
                         }
                     }
                 }
 
                 if(isMapped && read.getMateUnmappedFlag())
                 {
-                    if(passesQC)
-                    {
-                        mSingletonQCPassed++;
-                    }
-                    else
-                    {
-                        mSingletonQCFailed++;
-                    }
+                    mSingleton.record(passesQC);
                 }
             }
         }
 
         if(isDuplicate)
         {
-            if(passesQC)
-            {
-                mDuplicateQCPassed++;
-            }
-            else
-            {
-                mDuplicateQCFailed++;
-            }
+            mDuplicate.record(passesQC);
         }
 
         if(isMapped)
         {
-            if(passesQC)
-            {
-                mMappedQCPassed++;
-            }
-            else
-            {
-                mMappedQCFailed++;
-            }
+            mMapped.record(passesQC);
         }
     }
 
-    public int getTotalQCPassed()
+    public FlagQCStats getTotal()
     {
-        return mTotalQCPassed;
+        return mTotal;
     }
 
-    public int getTotalQCFailed()
+    public FlagQCStats getPrimary()
     {
-        return mTotalQCFailed;
+        return mPrimary;
     }
 
-    public int getPrimaryQCPassed()
+    public FlagQCStats getSecondary()
     {
-        return mPrimaryQCPassed;
+        return mSecondary;
     }
 
-    public int getPrimaryQCFailed()
+    public FlagQCStats getSupp()
     {
-        return mPrimaryQCFailed;
+        return mSupp;
     }
 
-    public int getSecondaryQCPassed()
+    public FlagQCStats getDuplicate()
     {
-        return mSecondaryQCPassed;
+        return mDuplicate;
     }
 
-    public int getSecondaryQCFailed()
+    public FlagQCStats getPrimaryDuplicate()
     {
-        return mSecondaryQCFailed;
+        return mPrimaryDuplicate;
     }
 
-    public int getSuppQCPassed()
+    public FlagQCStats getMapped()
     {
-        return mSuppQCPassed;
+        return mMapped;
     }
 
-    public int getSuppQCFailed()
+    public FlagQCStats getPrimaryMapped()
     {
-        return mSuppQCFailed;
+        return mPrimaryMapped;
     }
 
-    public int getDuplicateQCPassed()
+    public FlagQCStats getPaired()
     {
-        return mDuplicateQCPassed;
+        return mPaired;
     }
 
-    public int getDuplicateQCFailed()
+    public FlagQCStats getRead1()
     {
-        return mDuplicateQCFailed;
+        return mRead1;
     }
 
-    public int getPrimaryDuplicateQCPassed()
+    public FlagQCStats getRead2()
     {
-        return mPrimaryDuplicateQCPassed;
+        return mRead2;
     }
 
-    public int getPrimaryDuplicateQCFailed()
+    public FlagQCStats getProperlyPaired()
     {
-        return mPrimaryDuplicateQCFailed;
+        return mProperlyPaired;
     }
 
-    public int getMappedQCPassed()
+    public FlagQCStats getPairMapped()
     {
-        return mMappedQCPassed;
+        return mPairMapped;
     }
 
-    public int getMappedQCFailed()
+    public FlagQCStats getSingleton()
     {
-        return mMappedQCFailed;
+        return mSingleton;
     }
 
-    public int getPrimaryMappedQCPassed()
+    public FlagQCStats getInterChrPairMapped()
     {
-        return mPrimaryMappedQCPassed;
+        return mInterChrPairMapped;
     }
 
-    public int getPrimaryMappedQCFailed()
+    public FlagQCStats getInterChrPairMapQGE5()
     {
-        return mPrimaryMappedQCFailed;
-    }
-
-    public int getPairedQCPassed()
-    {
-        return mPairedQCPassed;
-    }
-
-    public int getPairedQCFailed()
-    {
-        return mPairedQCFailed;
-    }
-
-    public int getRead1QCPassed()
-    {
-        return mRead1QCPassed;
-    }
-
-    public int getRead1QCFailed()
-    {
-        return mRead1QCFailed;
-    }
-
-    public int getRead2QCPassed()
-    {
-        return mRead2QCPassed;
-    }
-
-    public int getRead2QCFailed()
-    {
-        return mRead2QCFailed;
-    }
-
-    public int getProperlyPairedQCPassed()
-    {
-        return mProperlyPairedQCPassed;
-    }
-
-    public int getProperlyPairedQCFailed()
-    {
-        return mProperlyPairedQCFailed;
-    }
-
-    public int getPairMappedQCPassed()
-    {
-        return mPairMappedQCPassed;
-    }
-
-    public int getPairMappedQCFailed()
-    {
-        return mPairMappedQCFailed;
-    }
-
-    public int getSingletonQCPassed()
-    {
-        return mSingletonQCPassed;
-    }
-
-    public int getSingletonQCFailed()
-    {
-        return mSingletonQCFailed;
-    }
-
-    public int getInterChrPairMappedQCPassed()
-    {
-        return mInterChrPairMappedQCPassed;
-    }
-
-    public int getInterChrPairMappedQCFailed()
-    {
-        return mInterChrPairMappedQCFailed;
-    }
-
-    public int getInterChrPairMapQGE5QCPassed()
-    {
-        return mInterChrPairMapQGE5QCPassed;
-    }
-
-    public int getInterChrPairMapQGE5QCFailed()
-    {
-        return mInterChrPairMapQGE5QCFailed;
+        return mInterChrPairMapQGE5;
     }
 }
