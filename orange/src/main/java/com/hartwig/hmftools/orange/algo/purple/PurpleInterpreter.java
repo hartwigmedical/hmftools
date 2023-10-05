@@ -21,7 +21,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
-import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
@@ -369,10 +368,7 @@ public class PurpleInterpreter
     {
         return ImmutablePurpleFit.builder()
                 .qc(PurpleConversion.convert(purple.purityContext().qc()))
-                .hasSufficientQuality(purple.purityContext().qc().pass())
                 .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
-                .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR
-                        && !purple.purityContext().qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR))
                 .purity(purple.purityContext().bestFit().purity())
                 .minPurity(purple.purityContext().score().minPurity())
                 .maxPurity(purple.purityContext().score().maxPurity())

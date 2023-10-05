@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.util;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,11 +13,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
@@ -27,12 +29,13 @@ import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
+import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleLikelihoodMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,7 +44,7 @@ public final class GermlineConversion
     @NotNull
     public static OrangeRecord convertGermlineToSomatic(@NotNull OrangeRecord report)
     {
-        boolean containsTumorCells = report.purple().fit().containsTumorCells();
+        boolean containsTumorCells = containsTumorCells(report.purple().fit());
 
         return ImmutableOrangeRecord.builder()
                 .from(report)
@@ -49,6 +52,12 @@ public final class GermlineConversion
                 .purple(convertPurpleGermline(containsTumorCells, report.purple()))
                 .linx(convertLinxGermline(containsTumorCells, report.linx()))
                 .build();
+    }
+
+    private static boolean containsTumorCells(@NotNull PurpleFit purpleFit)
+    {
+        return purpleFit.fittedPurityMethod() != PurpleFittedPurityMethod.NO_TUMOR
+                && !purpleFit.qc().status().contains(PurpleQCStatus.FAIL_NO_TUMOR);
     }
 
     @NotNull

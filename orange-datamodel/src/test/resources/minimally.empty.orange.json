@@ -50,8 +50,6 @@
         "amberMeanDepth": 0
       },
       "fittedPurityMethod": "NORMAL",
-      "hasSufficientQuality": false,
-      "containsTumorCells": false,
       "purity": 0,
       "minPurity": 0,
       "maxPurity": 0,

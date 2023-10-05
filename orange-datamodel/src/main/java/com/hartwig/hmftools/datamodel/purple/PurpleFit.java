@@ -13,12 +13,8 @@ public interface PurpleFit
     @NotNull
     PurpleQC qc();
 
-    boolean hasSufficientQuality();
-
     @NotNull
     PurpleFittedPurityMethod fittedPurityMethod();
-
-    boolean containsTumorCells();
 
     double purity();
 
