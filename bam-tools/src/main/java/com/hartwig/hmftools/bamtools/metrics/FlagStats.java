@@ -72,67 +72,7 @@ public class FlagStats
         final boolean isPaired = read.getReadPairedFlag();
         final boolean isProperPair = read.getProperPairFlag();
 
-        // TODO(m_cooper): Reduce nesting.
         mTotal.record(passesQC);
-        if(isSecondary)
-        {
-            mSecondary.record(passesQC);
-        }
-        else if(isSupp)
-        {
-            mSupp.record(passesQC);
-        }
-        else
-        {
-            mPrimary.record(passesQC);
-            if(isDuplicate)
-            {
-                mPrimaryDuplicate.record(passesQC);
-            }
-            if(isMapped)
-            {
-                mPrimaryMapped.record(passesQC);
-            }
-
-            // TODO(m_cooper): This is different than spec.
-            if(isPaired)
-            {
-                mPaired.record(passesQC);
-
-                if(read.getFirstOfPairFlag())
-                {
-                    mRead1.record(passesQC);
-                }
-
-                if(read.getSecondOfPairFlag())
-                {
-                    mRead2.record(passesQC);
-                }
-
-                if(isProperPair && isMapped)
-                {
-                    mProperlyPaired.record(passesQC);
-                }
-
-                if(isMapped && !read.getMateUnmappedFlag())
-                {
-                    mPairMapped.record(passesQC);
-                    if(!read.getReferenceName().equals(read.getMateReferenceName()))
-                    {
-                        mInterChrPairMapped.record(passesQC);
-                        if(read.getMappingQuality() >= 5)
-                        {
-                            mInterChrPairMapQGE5.record(passesQC);
-                        }
-                    }
-                }
-
-                if(isMapped && read.getMateUnmappedFlag())
-                {
-                    mSingleton.record(passesQC);
-                }
-            }
-        }
 
         if(isDuplicate)
         {
@@ -142,6 +82,80 @@ public class FlagStats
         if(isMapped)
         {
             mMapped.record(passesQC);
+        }
+
+        if(isSecondary)
+        {
+            mSecondary.record(passesQC);
+            return;
+        }
+
+        if(isSupp)
+        {
+            mSupp.record(passesQC);
+            return;
+        }
+
+        // It is a primary read.
+        mPrimary.record(passesQC);
+        if(isDuplicate)
+        {
+            mPrimaryDuplicate.record(passesQC);
+        }
+
+        if(isMapped)
+        {
+            mPrimaryMapped.record(passesQC);
+        }
+
+        if(!isPaired)
+        {
+            return;
+        }
+
+        // TODO(m_cooper): This is different than spec.
+        // It is a paired primary read.
+        mPaired.record(passesQC);
+
+        if(read.getFirstOfPairFlag())
+        {
+            mRead1.record(passesQC);
+        }
+
+        if(read.getSecondOfPairFlag())
+        {
+            mRead2.record(passesQC);
+        }
+
+        if(!isMapped)
+        {
+            return;
+        }
+
+        // It is a mapped paired primary read.
+        if(isProperPair)
+        {
+            mProperlyPaired.record(passesQC);
+        }
+
+        if(read.getMateUnmappedFlag())
+        {
+            mSingleton.record(passesQC);
+            return;
+        }
+
+        // It is a mapped paired primary read with a mapped mate.
+        mPairMapped.record(passesQC);
+        if(read.getReferenceName().equals(read.getMateReferenceName()))
+        {
+            return;
+        }
+
+        // It is a mapped paired primary read with a mapped mate toa different chromosome.
+        mInterChrPairMapped.record(passesQC);
+        if(read.getMappingQuality() >= 5)
+        {
+            mInterChrPairMapQGE5.record(passesQC);
         }
     }
 
