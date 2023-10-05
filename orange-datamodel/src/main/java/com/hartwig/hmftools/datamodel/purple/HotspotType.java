@@ -4,6 +4,5 @@ public enum HotspotType
 {
     HOTSPOT,
     NEAR_HOTSPOT,
-    NON_HOTSPOT;
-
+    NON_HOTSPOT
 }

@@ -3,8 +3,8 @@ package com.hartwig.hmftools.datamodel.purple;
 import org.jetbrains.annotations.NotNull;
 
 // TODO: remove this redundant interface after refactoring `ReportableVariant` in OncoAct.
-public interface Variant {
-
+public interface Variant
+{
     @NotNull
     PurpleVariantType type();
 

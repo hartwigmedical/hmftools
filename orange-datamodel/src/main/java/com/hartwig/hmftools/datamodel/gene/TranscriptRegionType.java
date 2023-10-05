@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.gene;
 
-public enum TranscriptRegionType {
+public enum TranscriptRegionType
+{
     UNKNOWN,
     UPSTREAM,
     EXONIC,

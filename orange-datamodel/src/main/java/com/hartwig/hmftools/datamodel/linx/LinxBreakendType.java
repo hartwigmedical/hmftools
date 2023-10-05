@@ -7,5 +7,5 @@ public enum LinxBreakendType {
     INF,
     INS,
     INV,
-    SGL;
+    SGL
 }

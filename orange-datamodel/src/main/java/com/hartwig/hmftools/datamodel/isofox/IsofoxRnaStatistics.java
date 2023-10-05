@@ -7,9 +7,9 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class })
-public interface IsofoxRnaStatistics {
-
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface IsofoxRnaStatistics
+{
     long totalFragments();
 
     long duplicateFragments();

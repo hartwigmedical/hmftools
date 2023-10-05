@@ -8,8 +8,8 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface RnaFusion {
-
+public interface RnaFusion
+{
     @NotNull
     String name();
 

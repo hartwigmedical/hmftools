@@ -10,8 +10,8 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangePlots {
-
+public interface OrangePlots
+{
     @Nullable
     String sageReferenceBQRPlot();
 

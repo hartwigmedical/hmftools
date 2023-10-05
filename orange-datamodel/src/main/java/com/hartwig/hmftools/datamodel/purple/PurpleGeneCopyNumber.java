@@ -7,9 +7,9 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public interface PurpleGeneCopyNumber {
-
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface PurpleGeneCopyNumber
+{
     @NotNull
     String chromosome();
 
@@ -22,5 +22,4 @@ public interface PurpleGeneCopyNumber {
     double minCopyNumber();
 
     double minMinorAlleleCopyNumber();
-
 }

@@ -10,9 +10,9 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class })
-public interface LinxBreakend {
-
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface LinxBreakend
+{
     int id();
 
     int svId();
@@ -59,6 +59,6 @@ public interface LinxBreakend {
     int exonUp();
 
     int exonDown();
-    
+
     double junctionCopyNumber();
 }
