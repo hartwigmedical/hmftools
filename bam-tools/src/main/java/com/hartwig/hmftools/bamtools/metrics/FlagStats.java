@@ -113,7 +113,6 @@ public class FlagStats
             return;
         }
 
-        // TODO(m_cooper): This is different than spec.
         // It is a paired primary read.
         mPaired.record(passesQC);
 
