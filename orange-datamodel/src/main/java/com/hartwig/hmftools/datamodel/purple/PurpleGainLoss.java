@@ -14,13 +14,13 @@ public interface PurpleGainLoss
     CopyNumberInterpretation interpretation();
 
     @NotNull
+    String gene();
+
+    @NotNull
     String chromosome();
 
     @NotNull
     String chromosomeBand();
-
-    @NotNull
-    String gene();
 
     @NotNull
     String transcript();
