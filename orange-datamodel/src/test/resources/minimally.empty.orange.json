@@ -121,6 +121,7 @@
     "purpleClonalityPlot": "",
     "purpleCopyNumberPlot": "",
     "purpleVariantCopyNumberPlot": "",
-    "purplePurityRangePlot": ""
+    "purplePurityRangePlot": "",
+    "purpleKataegisPlot": "plot/tumor_sample.somatic.rainfall.png"
   }
 }
