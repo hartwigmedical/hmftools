@@ -224,8 +224,7 @@ public final class MetricsWriter
         try
         {
             // write flag stats
-            // TODO(m_cooper): Different filename?
-            String filename = config.formFilename("flagstats");
+            String filename = config.formFilename("flagstat");
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write(String.format("%s in total (QC-passed reads + QC-failed reads)", flagStats.getTotal().toString()));
