@@ -283,7 +283,7 @@ public class OrangeJsonTest {
         assertEquals("NF1", breakend.gene());
         assertEquals("1", breakend.chromosome());
         assertEquals("p12", breakend.chromosomeBand());
-        assertEquals("trans", breakend.transcriptId());
+        assertEquals("trans", breakend.transcript());
         assertEquals(LinxBreakendType.DUP, breakend.type());
         assertEquals(1.1, breakend.junctionCopyNumber(), EPSILON);
         assertEquals(1.0, breakend.undisruptedCopyNumber(), EPSILON);

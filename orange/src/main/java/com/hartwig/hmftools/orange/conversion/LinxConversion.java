@@ -79,7 +79,7 @@ public final class LinxConversion
                 .gene(linxBreakend.gene())
                 .chromosome(linxBreakend.chromosome())
                 .chromosomeBand(linxBreakend.chrBand())
-                .transcriptId(linxBreakend.transcriptId())
+                .transcript(linxBreakend.transcriptId())
                 .canonical(linxBreakend.canonical())
                 .geneOrientation(linxBreakend.geneOrientation())
                 .canonical(linxBreakend.canonical())

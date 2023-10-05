@@ -27,7 +27,7 @@ public interface LinxBreakend
     String chromosomeBand();
 
     @NotNull
-    String transcriptId();
+    String transcript();
 
     boolean canonical();
 

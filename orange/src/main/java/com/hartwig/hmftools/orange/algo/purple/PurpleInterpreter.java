@@ -198,7 +198,7 @@ public class PurpleInterpreter
             boolean bothReported = first.reported() && second.reported();
             boolean bothDel = first.type() == LinxBreakendType.DEL && second.type() == LinxBreakendType.DEL;
             boolean sameGene = first.gene().equals(second.gene());
-            boolean sameTranscript = first.transcriptId().equals(second.transcriptId());
+            boolean sameTranscript = first.transcript().equals(second.transcript());
             boolean noWildTypeRemaining = first.undisruptedCopyNumber() < 0.5 && second.undisruptedCopyNumber() < 0.5;
 
             StructuralVariant sv = findBySvId(allPurpleGermlineSvs, allLinxGermlineSvAnnotations, first.svId());
