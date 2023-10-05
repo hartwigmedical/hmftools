@@ -3,12 +3,14 @@ package com.hartwig.hmftools.orange.report.chapters;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
 
 import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.rna.RnaQcFilter;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
+import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
@@ -28,8 +30,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class RNAFindingsChapter implements ReportChapter
 {
-    private static final String RNA_PASS = RnaQcFilter.PASS.toString();
-
     @NotNull
     private final IsofoxRecord isofox;
     @NotNull
@@ -84,7 +84,7 @@ public class RNAFindingsChapter implements ReportChapter
         }
         else
         {
-            table.addCell(cells.createContent(isofox.summary().qcStatus()));
+            table.addCell(cells.createContent(qcValue(isofox.summary().qcStatus())));
             table.addCell(cells.createContent(String.valueOf(isofox.summary().totalFragments())));
 
             long nonDuplicates = isofox.summary().totalFragments() - isofox.summary().duplicateFragments();
@@ -99,9 +99,20 @@ public class RNAFindingsChapter implements ReportChapter
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
+    @NotNull
+    private static String qcValue(@NotNull Set<RnaQCStatus> qcStatus)
+    {
+        StringJoiner joiner = new StringJoiner(", ");
+        for(RnaQCStatus status : qcStatus)
+        {
+            joiner.add(status.name());
+        }
+        return joiner.toString();
+    }
+
     private void addQCWarningInCaseOfFail(@NotNull Table table, @NotNull Cells cells)
     {
-        boolean isRNAFail = !isofox.summary().qcStatus().equalsIgnoreCase(RNA_PASS);
+        boolean isRNAFail = !isofox.summary().qcStatus().contains(RnaQCStatus.PASS);
         boolean isDNAFailNoTumor = PurpleQCInterpretation.isFailNoTumor(purple.fit().qc());
 
         if(isRNAFail || isDNAFailNoTumor)

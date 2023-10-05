@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.datamodel.isofox;
 
+import java.util.Set;
+
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -15,5 +17,5 @@ public interface IsofoxRnaStatistics
     long duplicateFragments();
 
     @NotNull
-    String qcStatus();
+    Set<RnaQCStatus> qcStatus();
 }

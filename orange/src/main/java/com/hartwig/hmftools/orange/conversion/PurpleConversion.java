@@ -88,7 +88,7 @@ public final class PurpleConversion
     }
 
     @NotNull
-    public static PurpleAllelicDepth convert(AllelicDepth allelicDepth)
+    public static PurpleAllelicDepth convert(@NotNull AllelicDepth allelicDepth)
     {
         return ImmutablePurpleAllelicDepth.builder()
                 .alleleReadCount(allelicDepth.alleleReadCount())
@@ -97,7 +97,7 @@ public final class PurpleConversion
     }
 
     @NotNull
-    public static PurpleGermlineDeletion convert(GermlineDeletion germlineDeletion)
+    public static PurpleGermlineDeletion convert(@NotNull GermlineDeletion germlineDeletion)
     {
         return ImmutablePurpleGermlineDeletion.builder()
                 .gene(germlineDeletion.GeneName)
@@ -120,13 +120,13 @@ public final class PurpleConversion
     }
 
     @NotNull
-    public static PurpleGermlineAberration convert(GermlineAberration aberration)
+    public static PurpleGermlineAberration convert(@NotNull GermlineAberration aberration)
     {
         return PurpleGermlineAberration.valueOf(aberration.name());
     }
 
     @NotNull
-    public static PurpleQCStatus convert(com.hartwig.hmftools.common.purple.PurpleQCStatus qcStatus)
+    public static PurpleQCStatus convert(@NotNull com.hartwig.hmftools.common.purple.PurpleQCStatus qcStatus)
     {
         return PurpleQCStatus.valueOf(qcStatus.name());
     }

@@ -13,12 +13,13 @@ import com.hartwig.hmftools.common.lilac.LilacTestFactory;
 import com.hartwig.hmftools.common.metrics.WGSMetricsTestFactory;
 import com.hartwig.hmftools.common.peach.PeachTestFactory;
 import com.hartwig.hmftools.common.sigs.SignatureTestFactory;
-import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusTestFactory;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class OrangeConversionTest
@@ -58,13 +59,15 @@ public class OrangeConversionTest
         }
     }
 
-    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.VirusInterpreterData input, VirusInterpreterData converted)
+    private static void assertEqualsValue(@NotNull com.hartwig.hmftools.common.virus.VirusInterpreterData input,
+            @NotNull VirusInterpreterData converted)
     {
         assertEqualsValue(input.allViruses(), converted.allViruses());
         assertEqualsValue(input.reportableViruses(), converted.reportableViruses());
     }
 
-    private static void assertEqualsValue(List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input, List<VirusInterpreterEntry> converted)
+    private static void assertEqualsValue(@NotNull List<com.hartwig.hmftools.common.virus.AnnotatedVirus> input,
+            @NotNull List<VirusInterpreterEntry> converted)
     {
         assertEquals(converted.size(), input.size());
         for(int i = 0; i < input.size(); i++)
@@ -73,7 +76,8 @@ public class OrangeConversionTest
         }
     }
 
-    private static void assertEqualsValue(com.hartwig.hmftools.common.virus.AnnotatedVirus input, VirusInterpreterEntry converted)
+    private static void assertEqualsValue(@NotNull com.hartwig.hmftools.common.virus.AnnotatedVirus input,
+            @NotNull VirusInterpreterEntry converted)
     {
         assertEquals(input.name(), converted.name());
         assertEquals(input.qcStatus().name(), converted.qcStatus().name());
