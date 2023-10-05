@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
-import static com.hartwig.hmftools.bamtools.common.PartitionTask.partitionChromosome;
+import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.util.ArrayList;
