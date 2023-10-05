@@ -11,6 +11,25 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxFusion
 {
     @NotNull
+    String geneStart();
+
+    @NotNull
+    String geneContextStart();
+
+    @NotNull
+    String geneTranscriptStart();
+
+    @NotNull
+    String geneEnd();
+
+    @NotNull
+    String geneContextEnd();
+
+    @NotNull
+    String geneTranscriptEnd();
+
+    // TODO (ACTIN-100): Either add default implementation (geneStart_geneEnd) or remove
+    @NotNull
     String name();
 
     boolean reported();
@@ -28,7 +47,6 @@ public interface LinxFusion
 
     int fusedExonDown();
 
-    // for orange report
     int chainLinks();
 
     boolean chainTerminated();
@@ -38,25 +56,6 @@ public interface LinxFusion
 
     @NotNull
     String domainsLost();
-
-    // for patient report
-    @NotNull
-    String geneStart();
-
-    @NotNull
-    String geneContextStart();
-
-    @NotNull
-    String geneTranscriptStart();
-
-    @NotNull
-    String geneEnd();
-
-    @NotNull
-    String geneContextEnd();
-
-    @NotNull
-    String geneTranscriptEnd();
 
     double junctionCopyNumber();
 }
