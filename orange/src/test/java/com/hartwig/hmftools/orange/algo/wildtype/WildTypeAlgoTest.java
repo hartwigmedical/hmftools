@@ -11,9 +11,9 @@ import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
@@ -274,7 +274,7 @@ public class WildTypeAlgoTest
     @NotNull
     public static LinxBreakend createBreakend(@NotNull String gene)
     {
-        return LinxOrangeTestFactory.breakendBuilder().gene(gene).canonical(true).build();
+        return LinxOrangeTestFactory.breakendBuilder().gene(gene).isCanonical(true).build();
     }
 
     @NotNull

@@ -23,7 +23,7 @@ public final class BreakendEntryFactory
             entries.add(ImmutableBreakendEntry.builder()
                     .location(breakend.chromosome() + breakend.chromosomeBand())
                     .gene(breakend.gene())
-                    .canonical(breakend.canonical())
+                    .canonical(breakend.isCanonical())
                     .exonUp(breakend.exonUp())
                     .type(breakend.type())
                     .range(range(breakend))

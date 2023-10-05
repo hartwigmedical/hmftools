@@ -27,7 +27,7 @@ public class BreakendEntryFactoryTest
                 .gene("gene")
                 .chromosome("1")
                 .chromosomeBand("p12.1")
-                .canonical(true)
+                .isCanonical(true)
                 .exonUp(12)
                 .exonDown(12)
                 .geneOrientation("Upstream")

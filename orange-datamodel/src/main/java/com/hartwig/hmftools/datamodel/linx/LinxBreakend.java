@@ -29,7 +29,7 @@ public interface LinxBreakend
     @NotNull
     String transcript();
 
-    boolean canonical();
+    boolean isCanonical();
 
     @NotNull
     String geneOrientation();
