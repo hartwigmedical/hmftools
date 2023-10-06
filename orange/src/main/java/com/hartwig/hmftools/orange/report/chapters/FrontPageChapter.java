@@ -15,8 +15,8 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
@@ -26,9 +26,9 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
@@ -443,7 +443,7 @@ public class FrontPageChapter implements ReportChapter
         Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
         for(LinxFusion fusion : report.linx().reportableSomaticFusions())
         {
-            fusions.add(fusion.name());
+            fusions.add(fusion.display());
         }
         return report.linx().reportableSomaticFusions().size() + " (" + concat(fusions) + ")";
     }

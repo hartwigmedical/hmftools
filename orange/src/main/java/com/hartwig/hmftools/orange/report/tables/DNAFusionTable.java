@@ -47,7 +47,7 @@ public final class DNAFusionTable
 
         for(LinxFusion fusion : sortLinxFusions(fusions))
         {
-            table.addCell(cells.createContent(fusion.name()));
+            table.addCell(cells.createContent(fusion.display()));
 
             Table details = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
             Stream.of(Maps.immutableEntry("5' End", cells.createValue(fiveEndString(fusion))),
@@ -201,7 +201,7 @@ public final class DNAFusionTable
         List<RnaFusion> matches = Lists.newArrayList();
         for(RnaFusion rnaFusion : isofox.allFusions())
         {
-            if(rnaFusion.display().equals(fusion.name()))
+            if(rnaFusion.display().equals(fusion.display()))
             {
                 matches.add(rnaFusion);
             }

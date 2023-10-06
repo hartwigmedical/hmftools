@@ -29,7 +29,7 @@ public interface LinxFusion
     String geneTranscriptEnd();
 
     @NotNull
-    default String name()
+    default String display()
     {
         return String.format("%s-%s", geneStart(), geneEnd());
     }
