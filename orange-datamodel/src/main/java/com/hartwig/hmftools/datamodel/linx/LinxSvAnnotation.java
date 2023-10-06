@@ -8,8 +8,8 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface LinxSvAnnotation {
-
+public interface LinxSvAnnotation
+{
     @NotNull
     String vcfId();
 

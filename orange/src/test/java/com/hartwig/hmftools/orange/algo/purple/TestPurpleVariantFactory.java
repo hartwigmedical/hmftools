@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleTranscriptImpact;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleVariant;
@@ -25,7 +25,7 @@ public final class TestPurpleVariantFactory
                 .alt(Strings.EMPTY)
                 .worstCodingEffect(PurpleCodingEffect.UNDEFINED)
                 .canonicalImpact(impactBuilder().build())
-                .hotspot(Hotspot.NON_HOTSPOT)
+                .hotspot(HotspotType.NON_HOTSPOT)
                 .reported(false)
                 .tumorDepth(depthBuilder().build())
                 .rnaDepth(null)
@@ -55,7 +55,7 @@ public final class TestPurpleVariantFactory
                 .hgvsProteinImpact(Strings.EMPTY)
                 .affectedCodon(null)
                 .affectedExon(null)
-                .spliceRegion(false)
+                .inSpliceRegion(false)
                 .codingEffect(PurpleCodingEffect.UNDEFINED);
     }
 }

@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.datamodel.purple;
 
-public enum PurpleVariantType {
+public enum PurpleVariantType
+{
     MNP,
     SNP,
     INDEL,
-    UNDEFINED;
+    UNDEFINED
 }

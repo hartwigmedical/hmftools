@@ -24,16 +24,16 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public interface OrangeRecord {
-
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface OrangeRecord
+{
     @NotNull
     String sampleId();
 
     @NotNull
-    LocalDate experimentDate();
+    LocalDate samplingDate();
 
-    @Nullable
+    @NotNull
     ExperimentType experimentType();
 
     @NotNull
@@ -90,5 +90,8 @@ public interface OrangeRecord {
     @NotNull
     OrangePlots plots();
 
-    default boolean tumorOnlyMode() { return refSample() == null; }
+    default boolean tumorOnlyMode()
+    {
+        return refSample() == null;
+    }
 }

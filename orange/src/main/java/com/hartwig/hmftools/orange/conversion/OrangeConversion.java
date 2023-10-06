@@ -22,12 +22,12 @@ import com.hartwig.hmftools.datamodel.peach.ImmutablePeachGenotype;
 import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.sigs.ImmutableSignatureAllocation;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
-import com.hartwig.hmftools.datamodel.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.ImmutableVirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusBreakendQCStatus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +35,7 @@ import org.jetbrains.annotations.NotNull;
 public final class OrangeConversion
 {
     @NotNull
-    public static com.hartwig.hmftools.datamodel.flagstat.Flagstat convert(Flagstat flagstat)
+    public static com.hartwig.hmftools.datamodel.flagstat.Flagstat convert(@NotNull Flagstat flagstat)
     {
         return ImmutableFlagstat.builder()
                 .uniqueReadCount(flagstat.uniqueReadCount())
@@ -46,7 +46,7 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(WGSMetrics wgsMetrics)
+    public static com.hartwig.hmftools.datamodel.metrics.WGSMetrics convert(@NotNull WGSMetrics wgsMetrics)
     {
         return ImmutableWGSMetrics.builder()
                 .meanCoverage(wgsMetrics.meanCoverage())
@@ -71,7 +71,7 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static LilacRecord convert(LilacSummaryData lilacSummaryData)
+    public static LilacRecord convert(@NotNull LilacSummaryData lilacSummaryData)
     {
         return ImmutableLilacRecord.builder()
                 .qc(lilacSummaryData.qc())
@@ -80,24 +80,24 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static LilacAllele convert(com.hartwig.hmftools.common.hla.LilacAllele allele)
+    public static LilacAllele convert(@NotNull com.hartwig.hmftools.common.hla.LilacAllele allele)
     {
         return ImmutableLilacAllele.builder()
                 .allele(allele.allele())
                 .tumorCopyNumber(allele.tumorCopyNumber())
+                .refFragments(allele.refFragments())
+                .tumorFragments(allele.tumorFragments())
+                .rnaFragments(allele.rnaFragments())
                 .somaticMissense(allele.somaticMissense())
                 .somaticNonsenseOrFrameshift(allele.somaticNonsenseOrFrameshift())
                 .somaticSplice(allele.somaticSplice())
                 .somaticSynonymous(allele.somaticSynonymous())
                 .somaticInframeIndel(allele.somaticInframeIndel())
-                .refFragments(allele.refFragments())
-                .tumorFragments(allele.tumorFragments())
-                .rnaFragments(allele.rnaFragments())
                 .build();
     }
 
     @NotNull
-    public static VirusInterpreterData convert(com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData)
+    public static VirusInterpreterData convert(@NotNull com.hartwig.hmftools.common.virus.VirusInterpreterData interpreterData)
     {
         return ImmutableVirusInterpreterData.builder()
                 .allViruses(ConversionUtil.mapToIterable(interpreterData.allViruses(), OrangeConversion::convert))
@@ -107,24 +107,24 @@ public final class OrangeConversion
 
     @NotNull
     @VisibleForTesting
-    static AnnotatedVirus convert(com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
+    static VirusInterpreterEntry convert(@NotNull com.hartwig.hmftools.common.virus.AnnotatedVirus annotatedVirus)
     {
         VirusType interpretation = annotatedVirus.interpretation();
-        return ImmutableAnnotatedVirus.builder()
+        return ImmutableVirusInterpreterEntry.builder()
                 .name(annotatedVirus.name())
                 .qcStatus(VirusBreakendQCStatus.valueOf(annotatedVirus.qcStatus().name()))
                 .integrations(annotatedVirus.integrations())
                 .interpretation(interpretation != null ? VirusInterpretation.valueOf(interpretation.name()) : null)
                 .percentageCovered(annotatedVirus.percentageCovered())
-                .reported(annotatedVirus.reported())
                 .meanCoverage(annotatedVirus.meanCoverage())
-                .virusDriverLikelihoodType(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
                 .expectedClonalCoverage(annotatedVirus.expectedClonalCoverage())
+                .reported(annotatedVirus.reported())
+                .driverLikelihood(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
                 .build();
     }
 
     @NotNull
-    public static ChordRecord convert(ChordData chordData)
+    public static ChordRecord convert(@NotNull ChordData chordData)
     {
         return ImmutableChordRecord.builder()
                 .brca1Value(chordData.BRCA1Value())
@@ -136,7 +136,7 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static PeachGenotype convert(com.hartwig.hmftools.common.peach.PeachGenotype peachGenotype)
+    public static PeachGenotype convert(@NotNull com.hartwig.hmftools.common.peach.PeachGenotype peachGenotype)
     {
         return ImmutablePeachGenotype.builder()
                 .gene(peachGenotype.gene())
@@ -150,7 +150,7 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static SignatureAllocation convert(com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation)
+    public static SignatureAllocation convert(@NotNull com.hartwig.hmftools.common.sigs.SignatureAllocation signatureAllocation)
     {
         return ImmutableSignatureAllocation.builder()
                 .signature(signatureAllocation.signature())

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.purple;
 
-public enum PurpleGermlineAberration {
+public enum PurpleGermlineAberration
+{
     NONE,
     MOSAIC_X,
     KLINEFELTER,

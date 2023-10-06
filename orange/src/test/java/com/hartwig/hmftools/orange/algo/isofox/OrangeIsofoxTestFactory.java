@@ -40,7 +40,7 @@ public class OrangeIsofoxTestFactory
     @NotNull
     public static ImmutableRnaFusion.Builder rnaFusionBuilder()
     {
-        com.hartwig.hmftools.common.rna.RnaFusion common = IsofoxTestFactory.rnaFusionBuilder().build();
+        com.hartwig.hmftools.common.rna.RnaFusion common = IsofoxTestFactory.rnaFusionBuilder().name("START_END").build();
         RnaFusion converted = IsofoxConversion.convert(common);
         return ImmutableRnaFusion.builder().from(converted);
     }

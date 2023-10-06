@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
@@ -28,7 +28,7 @@ public final class WildTypeAlgo
     public static List<WildTypeGene> determineWildTypeGenes(@NotNull List<DriverGene> driverGenes,
             @NotNull List<PurpleVariant> reportableSomaticVariants, @Nullable List<PurpleVariant> reportableGermlineVariants,
             @NotNull List<PurpleGainLoss> reportableSomaticGainsLosses, @NotNull List<LinxFusion> reportableFusions,
-            @NotNull List<HomozygousDisruption> homozygousDisruptions, @NotNull List<LinxBreakend> reportableBreakends)
+            @NotNull List<LinxHomozygousDisruption> homozygousDisruptions, @NotNull List<LinxBreakend> reportableBreakends)
     {
         List<WildTypeGene> wildTypeGenes = Lists.newArrayList();
 
@@ -74,7 +74,7 @@ public final class WildTypeAlgo
             }
 
             boolean hasHomozygousDisruption = false;
-            for(HomozygousDisruption homozygousDisruption : homozygousDisruptions)
+            for(LinxHomozygousDisruption homozygousDisruption : homozygousDisruptions)
             {
                 if(driverGene.gene().equals(homozygousDisruption.gene()))
                 {

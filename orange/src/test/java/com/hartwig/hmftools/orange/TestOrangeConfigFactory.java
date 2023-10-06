@@ -124,7 +124,7 @@ public final class TestOrangeConfigFactory
         // We use tumor_sample as rnaSampleId since we have no real ISOFOX test data for our test_run
         return ImmutableOrangeConfig.builder()
                 .from(createWGSConfigTumorNormal())
-                .rnaConfig(ImmutableOrangeRNAConfig.builder()
+                .rnaConfig(ImmutableOrangeRnaConfig.builder()
                         .rnaSampleId("tumor_sample")
                         .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)
                         .isofoxAltSjCohortCsv(ISOFOX_ALT_SJ_COHORT_CSV)

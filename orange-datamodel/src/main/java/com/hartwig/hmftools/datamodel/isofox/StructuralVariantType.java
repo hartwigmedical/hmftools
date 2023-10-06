@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.isofox;
 
-public enum StructuralVariantType {
+public enum StructuralVariantType
+{
     BND,
     DEL,
     DUP,

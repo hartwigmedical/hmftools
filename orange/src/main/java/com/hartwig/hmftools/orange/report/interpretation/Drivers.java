@@ -22,7 +22,7 @@ public final class Drivers
         List<PurpleDriver> nonCanonicalVariantEntries = Lists.newArrayList();
         for(PurpleDriver driver : drivers)
         {
-            if(MUTATION_DRIVER_TYPES.contains(driver.driver()) && !driver.isCanonical())
+            if(MUTATION_DRIVER_TYPES.contains(driver.type()) && !driver.isCanonical())
             {
                 nonCanonicalVariantEntries.add(driver);
             }
@@ -36,7 +36,7 @@ public final class Drivers
         PurpleDriver highest = null;
         for(PurpleDriver driver : drivers)
         {
-            if(MUTATION_DRIVER_TYPES.contains(driver.driver()) && driver.gene().equals(geneToFind) && driver.isCanonical())
+            if(MUTATION_DRIVER_TYPES.contains(driver.type()) && driver.gene().equals(geneToFind) && driver.isCanonical())
             {
                 if(highest == null || driver.driverLikelihood() > highest.driverLikelihood())
                 {

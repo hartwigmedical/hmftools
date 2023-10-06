@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeRNAConfig
+public interface OrangeRnaConfig
 {
     String RNA_SAMPLE_ID = "rna_sample_id";
 
@@ -61,7 +61,7 @@ public interface OrangeRNAConfig
     String isofoxAltSpliceJunctionCsv();
 
     @Nullable
-    static OrangeRNAConfig createConfig(final ConfigBuilder configBuilder)
+    static OrangeRnaConfig createConfig(final ConfigBuilder configBuilder)
     {
         boolean hasRnaSampleId = configBuilder.hasValue(RNA_SAMPLE_ID);
         boolean hasIsofoxDir = configBuilder.hasValue(ISOFOX_DIR_CFG);
@@ -106,7 +106,7 @@ public interface OrangeRNAConfig
         String altSpliceJuncFile = Config.fileIfExists(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
         String fusionsFile = Config.fileIfExists(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
 
-        return ImmutableOrangeRNAConfig.builder()
+        return ImmutableOrangeRnaConfig.builder()
                 .rnaSampleId(rnaSampleId)
                 .isofoxGeneDistributionCsv(geneDistributionFile)
                 .isofoxAltSjCohortCsv(altSpliceJuncCohortFile)

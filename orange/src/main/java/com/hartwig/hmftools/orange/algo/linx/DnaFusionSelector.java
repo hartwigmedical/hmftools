@@ -12,7 +12,7 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class DNAFusionSelector
+final class DnaFusionSelector
 {
     @NotNull
     public static List<LinxFusion> selectInterestingUnreportedFusions(@NotNull List<LinxFusion> allFusions,

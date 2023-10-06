@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +21,6 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporti
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.ImmutableDriverGenePanel;
-import com.hartwig.hmftools.common.purple.FittedPurityMethod;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GermlineDeletion;
 import com.hartwig.hmftools.common.purple.GermlineDetectionMethod;
@@ -47,7 +48,6 @@ import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.PurpleConversion;
 
 import org.apache.commons.lang3.tuple.Pair;
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -194,10 +194,10 @@ public class PurpleInterpreter
             LinxBreakend first = breakendPair.getLeft();
             LinxBreakend second = breakendPair.getRight();
 
-            boolean bothReported = first.reportedDisruption() && second.reportedDisruption();
+            boolean bothReported = first.reported() && second.reported();
             boolean bothDel = first.type() == LinxBreakendType.DEL && second.type() == LinxBreakendType.DEL;
             boolean sameGene = first.gene().equals(second.gene());
-            boolean sameTranscript = first.transcriptId().equals(second.transcriptId());
+            boolean sameTranscript = first.transcript().equals(second.transcript());
             boolean noWildTypeRemaining = first.undisruptedCopyNumber() < 0.5 && second.undisruptedCopyNumber() < 0.5;
 
             StructuralVariant sv = findBySvId(allPurpleGermlineSvs, allLinxGermlineSvAnnotations, first.svId());
@@ -214,7 +214,7 @@ public class PurpleInterpreter
             {
                 impliedDeletions.add(new GermlineDeletion(first.gene(),
                         first.chromosome(),
-                        first.chrBand(),
+                        first.chromosomeBand(),
                         0,
                         0,
                         0,
@@ -368,9 +368,7 @@ public class PurpleInterpreter
     {
         return ImmutablePurpleFit.builder()
                 .qc(PurpleConversion.convert(purple.purityContext().qc()))
-                .hasSufficientQuality(purple.purityContext().qc().pass())
                 .fittedPurityMethod(PurpleFittedPurityMethod.valueOf(purple.purityContext().method().name()))
-                .containsTumorCells(purple.purityContext().method() != FittedPurityMethod.NO_TUMOR)
                 .purity(purple.purityContext().bestFit().purity())
                 .minPurity(purple.purityContext().score().minPurity())
                 .maxPurity(purple.purityContext().score().maxPurity())

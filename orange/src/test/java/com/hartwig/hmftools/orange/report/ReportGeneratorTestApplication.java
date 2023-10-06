@@ -189,9 +189,9 @@ public class ReportGeneratorTestApplication
         List<String> copyNumberDriverGenes = Lists.newArrayList();
         for(PurpleDriver driver : drivers)
         {
-            if(driver.driver() == PurpleDriverType.AMP || driver.driver() == PurpleDriverType.PARTIAL_AMP
-                    || driver.driver() == PurpleDriverType.DEL
-                    || driver.driver() == PurpleDriverType.GERMLINE_DELETION)
+            if(driver.type() == PurpleDriverType.AMP || driver.type() == PurpleDriverType.PARTIAL_AMP
+                    || driver.type() == PurpleDriverType.DEL
+                    || driver.type() == PurpleDriverType.GERMLINE_DELETION)
             {
                 copyNumberDriverGenes.add(driver.gene());
             }
@@ -200,7 +200,7 @@ public class ReportGeneratorTestApplication
         List<PurpleGeneCopyNumber> reportable = Lists.newArrayList();
         for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
-            if(copyNumberDriverGenes.contains(geneCopyNumber.geneName()))
+            if(copyNumberDriverGenes.contains(geneCopyNumber.gene()))
             {
                 reportable.add(geneCopyNumber);
             }
