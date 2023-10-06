@@ -206,7 +206,7 @@ public final class TestOrangeReportFactory
         GeneExpression highExpression = OrangeIsofoxTestFactory.geneExpressionBuilder()
                 .gene("MYC")
                 .tpm(126.27)
-                .medianTpmCancer(41)
+                .medianTpmCancer(41D)
                 .percentileCancer(0.91)
                 .medianTpmCohort(37D)
                 .percentileCohort(0.93)

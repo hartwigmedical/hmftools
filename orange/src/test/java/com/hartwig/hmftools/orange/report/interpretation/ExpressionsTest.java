@@ -19,11 +19,11 @@ public class ExpressionsTest
     @Test
     public void canCalcFoldChange()
     {
-        GeneExpression normal = builder().tpm(1).medianTpmCancer(2).medianTpmCohort(3D).build();
+        GeneExpression normal = builder().tpm(1).medianTpmCancer(2D).medianTpmCohort(3D).build();
         assertEquals("0.5", Expressions.foldChangeType(normal));
         assertEquals("0.3", Expressions.foldChangeDatabase(normal));
 
-        GeneExpression zeroMedian = builder().tpm(0).medianTpmCancer(0).medianTpmCohort(0D).build();
+        GeneExpression zeroMedian = builder().tpm(0).medianTpmCancer(0D).medianTpmCohort(0D).build();
         assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeType(zeroMedian));
         assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeDatabase(zeroMedian));
     }

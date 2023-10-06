@@ -15,13 +15,13 @@ public interface GeneExpression
 
     double tpm();
 
-    double medianTpmCancer();
-
-    double percentileCancer();
+    @Nullable
+    Double medianTpmCancer();
 
     @Nullable
-    Double medianTpmCohort();
+    Double percentileCancer();
 
-    @Nullable
-    Double percentileCohort();
+    double medianTpmCohort();
+
+    double percentileCohort();
 }
