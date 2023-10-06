@@ -55,7 +55,6 @@ public final class IsofoxConversion
     public static com.hartwig.hmftools.datamodel.isofox.RnaFusion convert(@NotNull RnaFusion rnaFusion)
     {
         return ImmutableRnaFusion.builder()
-                .name(rnaFusion.name())
                 .geneStart(geneUp(rnaFusion))
                 .geneEnd(geneDown(rnaFusion))
                 .chromosomeUp(rnaFusion.chromosomeUp())

@@ -222,7 +222,6 @@ public final class TestOrangeReportFactory
                 .build();
 
         RnaFusion novelKnownFusion = OrangeIsofoxTestFactory.rnaFusionBuilder()
-                .name("PTPRK_RSPO3")
                 .geneStart("PTPRK")
                 .geneEnd("RSPO3")
                 .chromosomeUp("6")
@@ -241,7 +240,6 @@ public final class TestOrangeReportFactory
                 .build();
 
         RnaFusion novelPromiscuousFusion = OrangeIsofoxTestFactory.rnaFusionBuilder()
-                .name("NAP1L4_BRAF")
                 .geneStart("NAP1L4")
                 .geneEnd("BRAF")
                 .chromosomeUp("11")

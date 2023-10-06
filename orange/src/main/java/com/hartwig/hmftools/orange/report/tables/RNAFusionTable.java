@@ -33,7 +33,7 @@ public final class RNAFusionTable
 
         for(RnaFusion fusion : sort(fusions))
         {
-            table.addCell(cells.createContent(fusion.name()));
+            table.addCell(cells.createContent(fusion.display()));
             table.addCell(cells.createContent(fusion.chromosomeUp() + ":" + fusion.positionUp()));
             table.addCell(cells.createContent(fusion.chromosomeDown() + ":" + fusion.positionDown()));
             table.addCell(cells.createContent(fusion.svType().toString()));

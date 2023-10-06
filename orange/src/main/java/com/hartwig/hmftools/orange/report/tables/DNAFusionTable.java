@@ -7,14 +7,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
+import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
-import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
-import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -201,7 +201,7 @@ public final class DNAFusionTable
         List<RnaFusion> matches = Lists.newArrayList();
         for(RnaFusion rnaFusion : isofox.allFusions())
         {
-            if(rnaFusion.name().equals(fusion.name()))
+            if(rnaFusion.display().equals(fusion.name()))
             {
                 matches.add(rnaFusion);
             }

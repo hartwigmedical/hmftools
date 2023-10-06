@@ -11,7 +11,10 @@ import org.jetbrains.annotations.Nullable;
 public interface RnaFusion
 {
     @NotNull
-    String name();
+    default String display()
+    {
+        return String.format("%s_%s", geneStart(), geneEnd());
+    }
 
     @NotNull
     String geneStart();
