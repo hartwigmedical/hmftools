@@ -23,20 +23,20 @@ public interface RnaFusion
     String geneEnd();
 
     @NotNull
-    String chromosomeUp();
+    String chromosomeStart();
 
     @NotNull
-    String chromosomeDown();
+    String chromosomeEnd();
 
-    int positionUp();
+    int positionStart();
 
-    int positionDown();
-
-    @NotNull
-    String junctionTypeUp();
+    int positionEnd();
 
     @NotNull
-    String junctionTypeDown();
+    String junctionTypeStart();
+
+    @NotNull
+    String junctionTypeEnd();
 
     @NotNull
     StructuralVariantType svType();
@@ -47,9 +47,9 @@ public interface RnaFusion
 
     int discordantFrags();
 
-    int depthUp();
+    int depthStart();
 
-    int depthDown();
+    int depthEnd();
 
     int cohortFrequency();
 }

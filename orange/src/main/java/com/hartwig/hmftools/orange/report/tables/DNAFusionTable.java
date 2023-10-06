@@ -215,8 +215,8 @@ public final class DNAFusionTable
         Table fragmentSupportTable = new Table(UnitValue.createPercentArray(new float[] { 1 }));
         for(RnaFusion rnaFusion : max5(sortRnaFusions(matches)))
         {
-            String up = rnaFusion.chromosomeUp() + ":" + rnaFusion.positionUp();
-            String down = rnaFusion.chromosomeDown() + ":" + rnaFusion.positionDown();
+            String up = rnaFusion.chromosomeStart() + ":" + rnaFusion.positionStart();
+            String down = rnaFusion.chromosomeEnd() + ":" + rnaFusion.positionEnd();
             String position = up + "-" + down;
 
             String split = rnaFusion.splitFragments() + " split";
@@ -224,7 +224,7 @@ public final class DNAFusionTable
             String discord = rnaFusion.discordantFrags() + " discord.";
             String fragments = split + " / " + realigned + " / " + discord + " fragments";
 
-            String depth = rnaFusion.depthUp() + " / " + rnaFusion.depthDown() + " depth";
+            String depth = rnaFusion.depthStart() + " / " + rnaFusion.depthEnd() + " depth";
             fragmentSupportTable.addCell(cells.createValue(position + ", " + fragments + ", " + depth));
         }
 
