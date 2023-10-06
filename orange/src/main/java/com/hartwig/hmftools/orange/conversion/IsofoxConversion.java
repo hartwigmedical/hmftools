@@ -44,8 +44,8 @@ public final class IsofoxConversion
         return ImmutableGeneExpression.builder()
                 .gene(geneExpression.geneName())
                 .tpm(geneExpression.tpm())
-                .medianTpmCancer(geneExpression.medianTpmCancer())
-                .percentileCancer(geneExpression.percentileCancer())
+                .medianTpmCancer(geneExpression.medianTpmCancer() >= 0 ? geneExpression.medianTpmCancer() : null)
+                .percentileCancer(geneExpression.percentileCancer() >= 0 ? geneExpression.percentileCancer() : null)
                 .medianTpmCohort(geneExpression.medianTpmCohort())
                 .percentileCohort(geneExpression.percentileCohort())
                 .build();
