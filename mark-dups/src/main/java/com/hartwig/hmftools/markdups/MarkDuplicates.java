@@ -69,14 +69,16 @@ public class MarkDuplicates
         List<PartitionThread> partitionTasks = Lists.newArrayList();
         List<Thread> workers = new ArrayList<>();
 
-        for(int i = 0; i < min(partitions.size(), mConfig.Threads); ++i)
+        int partitionCount = partitions.size();
+
+        for(int i = 0; i < min(partitionCount, mConfig.Threads); ++i)
         {
             PartitionThread partitionThread = new PartitionThread(i, mConfig, partitions, fileWriterCache, partitionDataStore);
             partitionTasks.add(partitionThread);
             workers.add(partitionThread);
         }
 
-        MD_LOGGER.debug("splitting {} partitions across {} threads", partitions.size(), partitionTasks.size());
+        MD_LOGGER.debug("splitting {} partitions across {} threads", partitionCount, partitionTasks.size());
 
         for(Thread worker : workers)
         {
@@ -115,6 +117,9 @@ public class MarkDuplicates
         }
 
         fileWriterCache.close();
+
+        if(mConfig.SamToolsPath != null)
+            fileWriterCache.sortAndIndexBams();
 
         Statistics combinedStats = new Statistics();
         partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));

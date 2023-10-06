@@ -33,6 +33,7 @@ public class BamWriter
 {
     private final MarkDupsConfig mConfig;
 
+    private final String mFilename;
     private final SAMFileWriter mBamWriter;
     private int mWriteCount;
 
@@ -45,8 +46,9 @@ public class BamWriter
 
     private int mExpectedReadsSize;
 
-    public BamWriter(final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter)
+    public BamWriter(final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter)
     {
+        mFilename = filename;
         mConfig = config;
         mBamWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
@@ -57,6 +59,8 @@ public class BamWriter
         mExpectedReadsSize = 0;
         mExpectedReads = Sets.newHashSet();
     }
+
+    public String filename() { return mFilename; }
 
     public int recordWriteCount() { return mNonConsensusReadCount; }
     public int recordWriteCountConsensus() { return mConsensusReadCount; }
@@ -146,7 +150,7 @@ public class BamWriter
     {
         if(mBamWriter != null)
         {
-            MD_LOGGER.info("{} records written to BAM", mWriteCount);
+            MD_LOGGER.debug("{} records written to BAM({})", mWriteCount, mFilename);
             mBamWriter.close();
         }
     }

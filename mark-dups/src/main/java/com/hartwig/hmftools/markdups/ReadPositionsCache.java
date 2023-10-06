@@ -161,7 +161,7 @@ public class ReadPositionsCache
 
             if(index < 0 || index >= mCapacity)
             {
-                MD_LOGGER.error("fragment({}) outside forward strand array bounds", fragment);
+                MD_LOGGER.error("fragment({}) outside forward strand array bounds, capacity({})", fragment, mCapacity);
                 return;
             }
 
