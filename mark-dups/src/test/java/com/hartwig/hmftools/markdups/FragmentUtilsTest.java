@@ -191,6 +191,6 @@ public class FragmentUtilsTest
     {
         assertEquals("1_0", formChromosomePartition(CHR_1, 1, 1000));
         assertEquals("1_0", formChromosomePartition(CHR_1, 999, 1000));
-        assertEquals("1_0", formChromosomePartition(CHR_1, 1000, 1000));
+        assertEquals("1_1", formChromosomePartition(CHR_1, 1000, 1000));
     }
 }

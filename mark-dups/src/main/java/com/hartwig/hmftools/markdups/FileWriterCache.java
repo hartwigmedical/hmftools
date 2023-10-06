@@ -43,6 +43,17 @@ public class FileWriterCache
         return createBamWriter(fileId);
     }
 
+    public int totalWrittenReads()
+    {
+        return mSharedBamWriter.recordWriteCount() + mBamWriters.stream().mapToInt(x -> x.recordWriteCount()).sum();
+    }
+
+    public void logUnwrittenReads()
+    {
+        mSharedBamWriter.logUnwrittenReads();
+        mBamWriters.forEach(x -> x.logUnwrittenReads());
+    }
+
     public void close()
     {
         mReadDataWriter.close();

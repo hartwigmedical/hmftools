@@ -12,18 +12,14 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
 import static com.hartwig.hmftools.markdups.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.common.PartitionData;
@@ -80,6 +76,8 @@ public class MarkDuplicates
             workers.add(partitionThread);
         }
 
+        MD_LOGGER.debug("splitting {} partitions across {} threads", partitions.size(), partitionTasks.size());
+
         for(Thread worker : workers)
         {
             try
@@ -92,30 +90,6 @@ public class MarkDuplicates
                 e.printStackTrace();
             }
         }
-
-        /*
-        List<ChromosomeReader> chromosomeReaders = Lists.newArrayList();
-        RefGenomeCoordinates refGenomeCoordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-
-        final List<Callable> callableList = Lists.newArrayList();
-
-        for(HumanChromosome chromosome : HumanChromosome.values())
-        {
-            String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
-
-            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
-                continue;
-
-            ChrBaseRegion chrBaseRegion = new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome));
-
-            ChromosomeReader chromosomeReader = new ChromosomeReader(chrBaseRegion, mConfig, fileWriterCache, partitionDataStore);
-            chromosomeReaders.add(chromosomeReader);
-            callableList.add(chromosomeReader);
-        }
-
-        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
-            System.exit(1);
-        */
 
         MD_LOGGER.info("all partition tasks complete");
 
@@ -148,7 +122,7 @@ public class MarkDuplicates
 
         combinedStats.logStats();
 
-        int totalWrittenReads = partitionTasks.stream().mapToInt(x -> x.bamWriter().recordWriteCount()).sum();
+        int totalWrittenReads = fileWriterCache.totalWrittenReads();
         int unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
 
         if(mConfig.UnmapRegions.enabled())
@@ -160,7 +134,7 @@ public class MarkDuplicates
         {
             MD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
                     combinedStats.TotalReads, totalWrittenReads, combinedStats.TotalReads - totalWrittenReads - unmappedDroppedReads);
-            partitionTasks.forEach(x -> x.bamWriter().logUnwrittenReads());
+            fileWriterCache.logUnwrittenReads();
         }
 
         if(mConfig.WriteStats)

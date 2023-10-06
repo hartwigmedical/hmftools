@@ -17,6 +17,7 @@ public class PartitionThread extends Thread
 
     private final BamWriter mBamWriter;
     private final Queue<ChrBaseRegion> mPartitions;
+    private final int mPartitionCount;
 
     private final PartitionReader mPartitionReader;
 
@@ -27,6 +28,7 @@ public class PartitionThread extends Thread
         mConfig = config;
 
         mPartitions = partitions;
+        mPartitionCount = partitions.size();
 
         mBamWriter = fileWriterCache.getBamWriter(String.valueOf(threadId));
 
@@ -47,22 +49,18 @@ public class PartitionThread extends Thread
         {
             try
             {
+                int remainingCount = mPartitions.size();
+                int processedCount = mPartitionCount - remainingCount;
+
                 ChrBaseRegion partition = mPartitions.remove();
 
-                /*
-                PartitionReader reader = new PartitionReader(partition.Region, mConfig, mRefSamReader, mNewSamReader, mReadWriter);
-
-                if(partition.TaskId > 0 && (partition.TaskId % 100) == 0)
+                if(processedCount > 0 && (processedCount % 100) == 0)
                 {
-                    BT_LOGGER.info("processing partition({}), remaining({})", partition.TaskId, mPartitions.size());
+                    MD_LOGGER.info("processed {} partitions, remaining({})", processedCount, remainingCount);
                 }
-                */
 
                 mPartitionReader.setupRegion(partition);
                 mPartitionReader.processRegion();
-
-                // reader.run();
-                // mStats.merge(reader.stats());
             }
             catch(NoSuchElementException e)
             {

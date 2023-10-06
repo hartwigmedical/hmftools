@@ -103,13 +103,11 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     public Statistics statistics() { return mStats; }
 
-    // public BamWriter recordWriter() { return mBamWriter; }
-
     public void setupRegion(final ChrBaseRegion region)
     {
-        perfCountersStart();
-
         mCurrentRegion = region;
+
+        perfCountersStart();
 
         setUnmappedRegions();
 
@@ -148,108 +146,6 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         mPartitionRecordCount = 0;
     }
-
-    /*
-    public void processRegion(final ChrBaseRegion region)
-    {
-        perfCountersStart();
-
-        mCurrentRegion = region;
-
-        setUnmappedRegions();
-
-        mCurrentStrPartition = formChromosomePartition(region.Chromosome, mCurrentRegion.start(), mConfig.PartitionSize);
-        mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-
-
-        if(mSamReader == null)
-            return;
-
-        mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
-
-        // post-slice clean-up
-        mReadPositions.evictAll();
-
-        processPendingIncompletes();
-
-        perfCountersStop();
-
-        MD_LOGGER.debug("partition({}) complete, reads({})", mCurrentRegion, mPartitionRecordCount);
-
-        if(mConfig.PerfDebug)
-            mCurrentPartitionData.logCacheCounts();
-
-        mPartitionRecordCount = 0;
-    }
-    */
-
-    /*
-    public void run()
-    {
-        perfCountersStart();
-
-        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
-        {
-            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
-            {
-                if(!region.Chromosome.equals(mRegion.Chromosome))
-                    continue;
-
-                MD_LOGGER.debug("processing specific region({})", region);
-                mBamSlicer.slice(mSamReader, region, this::processSamRecord);
-            }
-        }
-        else
-        {
-            MD_LOGGER.info("processing chromosome({})", mRegion.Chromosome);
-            mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
-        }
-
-        onPartitionComplete(false);
-
-        MD_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mStats.TotalReads);
-
-        mConsensusReads.logStats(mRegion.Chromosome);
-    }
-
-    private void onPartitionComplete(boolean setupNext)
-    {
-        mReadPositions.evictAll();
-
-        processPendingIncompletes();
-
-        perfCountersStop();
-
-        MD_LOGGER.debug("partition({}:{}) complete, reads({})", mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount);
-
-        if(mConfig.PerfDebug)
-            mCurrentPartitionData.logCacheCounts();
-
-        mPartitionRecordCount = 0;
-
-        if(setupNext)
-        {
-            // move ahead to the next partition, until the end of the chromosome is reached
-            int regionStart = mCurrentPartition.end() + 1;
-
-            if(regionStart > mRegion.end())
-            {
-                mCurrentPartition = null;
-                return;
-            }
-
-            mCurrentPartition.setStart(regionStart);
-            mCurrentPartition.setEnd(regionStart + mConfig.PartitionSize - 1);
-
-            mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
-            mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-            setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
-            setUnmappedRegions();
-
-            perfCountersStart();
-        }
-    }
-    */
 
     private void processSamRecord(final SAMRecord read)
     {
@@ -526,4 +422,72 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     @VisibleForTesting
     public ConsensusReads consensusReads() { return mConsensusReads; }
+
+        /*
+    public void run()
+    {
+        perfCountersStart();
+
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
+        {
+            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
+            {
+                if(!region.Chromosome.equals(mRegion.Chromosome))
+                    continue;
+
+                MD_LOGGER.debug("processing specific region({})", region);
+                mBamSlicer.slice(mSamReader, region, this::processSamRecord);
+            }
+        }
+        else
+        {
+            MD_LOGGER.info("processing chromosome({})", mRegion.Chromosome);
+            mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
+        }
+
+        onPartitionComplete(false);
+
+        MD_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mStats.TotalReads);
+
+        mConsensusReads.logStats(mRegion.Chromosome);
+    }
+
+    private void onPartitionComplete(boolean setupNext)
+    {
+        mReadPositions.evictAll();
+
+        processPendingIncompletes();
+
+        perfCountersStop();
+
+        MD_LOGGER.debug("partition({}:{}) complete, reads({})", mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount);
+
+        if(mConfig.PerfDebug)
+            mCurrentPartitionData.logCacheCounts();
+
+        mPartitionRecordCount = 0;
+
+        if(setupNext)
+        {
+            // move ahead to the next partition, until the end of the chromosome is reached
+            int regionStart = mCurrentPartition.end() + 1;
+
+            if(regionStart > mRegion.end())
+            {
+                mCurrentPartition = null;
+                return;
+            }
+
+            mCurrentPartition.setStart(regionStart);
+            mCurrentPartition.setEnd(regionStart + mConfig.PartitionSize - 1);
+
+            mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
+            mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
+            setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
+            setUnmappedRegions();
+
+            perfCountersStart();
+        }
+    }
+    */
 }

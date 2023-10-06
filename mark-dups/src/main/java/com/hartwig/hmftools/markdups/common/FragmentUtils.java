@@ -157,10 +157,7 @@ public class FragmentUtils
     public static String formChromosomePartition(final String chromosome, int position, int partitionSize)
     {
         int partition = position / partitionSize;
-        int mod = position % partitionSize;
-
-        // positons at the end of a region are given that region, not the next
-        return mod == 0 ? chromosomeIndicator(chromosome) + (partition - 1) : chromosomeIndicator(chromosome) + partition;
+        return chromosomeIndicator(chromosome) + partition;
     }
 
     public static String chromosomeIndicator(final String chromosome)
