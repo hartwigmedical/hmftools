@@ -558,6 +558,6 @@
     "purpleCopyNumberPlot": "",
     "purpleVariantCopyNumberPlot": "",
     "purplePurityRangePlot": "",
-    "purpleKataegisPlot": "plot/tumor_sample.somatic.rainfall.png"
+    "purpleKataegisPlot": ""
   }
 }
