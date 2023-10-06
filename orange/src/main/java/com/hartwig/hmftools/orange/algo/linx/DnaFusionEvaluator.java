@@ -6,7 +6,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class DNAFusionEvaluator
+public final class DnaFusionEvaluator
 {
     public static boolean hasFusion(@NotNull List<LinxFusion> linxFusions, @NotNull String geneUp, @NotNull String geneDown)
     {

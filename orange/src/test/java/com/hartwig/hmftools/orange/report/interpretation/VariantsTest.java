@@ -79,10 +79,10 @@ public class VariantsTest
     }
 
     @Test
-    public void canRenderRNADepthField()
+    public void canRenderRnaDepthField()
     {
-        VariantEntry missingRNA = TestVariantEntryFactory.builder().rnaDepth(null).build();
-        assertEquals(ReportResources.NOT_AVAILABLE, Variants.rnaDepthField(missingRNA));
+        VariantEntry missingRna = TestVariantEntryFactory.builder().rnaDepth(null).build();
+        assertEquals(ReportResources.NOT_AVAILABLE, Variants.rnaDepthField(missingRna));
 
         VariantEntry proper = TestVariantEntryFactory.builder()
                 .rnaDepth(TestPurpleVariantFactory.depthBuilder().alleleReadCount(10).totalReadCount(20).build())

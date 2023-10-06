@@ -17,7 +17,7 @@ import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
-import com.hartwig.hmftools.orange.report.tables.RNAFusionTable;
+import com.hartwig.hmftools.orange.report.tables.RnaFusionTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
@@ -28,7 +28,7 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RNAFindingsChapter implements ReportChapter
+public class RnaFindingsChapter implements ReportChapter
 {
     @NotNull
     private final IsofoxRecord isofox;
@@ -37,7 +37,7 @@ public class RNAFindingsChapter implements ReportChapter
     @NotNull
     private final ReportResources reportResources;
 
-    public RNAFindingsChapter(@NotNull final IsofoxRecord isofox, @NotNull final PurpleRecord purple,
+    public RnaFindingsChapter(@NotNull final IsofoxRecord isofox, @NotNull final PurpleRecord purple,
             @NotNull final ReportResources reportResources)
     {
         this.isofox = isofox;
@@ -66,7 +66,7 @@ public class RNAFindingsChapter implements ReportChapter
 
         addKeyQC(document);
         addExpressionTables(document);
-        addRNAFusionTables(document);
+        addRnaFusionTables(document);
         addNovelSpliceJunctionTables(document);
     }
 
@@ -112,12 +112,12 @@ public class RNAFindingsChapter implements ReportChapter
 
     private void addQCWarningInCaseOfFail(@NotNull Table table, @NotNull Cells cells)
     {
-        boolean isRNAFail = !isofox.summary().qcStatus().contains(RnaQCStatus.PASS);
-        boolean isDNAFailNoTumor = PurpleQCInterpretation.isFailNoTumor(purple.fit().qc());
+        boolean isRnaFail = !isofox.summary().qcStatus().contains(RnaQCStatus.PASS);
+        boolean isDnaFailNoTumor = PurpleQCInterpretation.isFailNoTumor(purple.fit().qc());
 
-        if(isRNAFail || isDNAFailNoTumor)
+        if(isRnaFail || isDnaFailNoTumor)
         {
-            String warning = isRNAFail ?
+            String warning = isRnaFail ?
                     "The RNA QC status of this sample is not a pass. All presented RNA data should be interpreted with caution"
                     : "The DNA QC status of this sample is fail (no tumor). "
                             + "In addition to DNA findings, all RNA findings should be interpreted with caution";
@@ -153,7 +153,7 @@ public class RNAFindingsChapter implements ReportChapter
         }
     }
 
-    private void addRNAFusionTables(@NotNull Document document)
+    private void addRnaFusionTables(@NotNull Document document)
     {
         String knownFusionsTitle = "Known fusions detected in RNA and not in DNA";
         String promiscuousFusionsTitle = "Promiscuous fusions detected in RNA and not in DNA";
@@ -168,11 +168,11 @@ public class RNAFindingsChapter implements ReportChapter
         {
             List<RnaFusion> reportableNovelKnownFusions = isofox.reportableNovelKnownFusions();
             String titleKnownFusions = knownFusionsTitle + " (" + reportableNovelKnownFusions.size() + ")";
-            document.add(RNAFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, reportResources));
+            document.add(RnaFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, reportResources));
 
             List<RnaFusion> reportableNovelPromiscuous = isofox.reportableNovelPromiscuousFusions();
             String titlePromiscuousFusions = promiscuousFusionsTitle + " (" + reportableNovelPromiscuous.size() + ")";
-            document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
+            document.add(RnaFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
         }
     }
 

@@ -15,7 +15,7 @@ import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 
 import org.junit.Test;
 
-public class RNAFusionSelectorTest
+public class RnaFusionSelectorTest
 {
     @Test
     public void canSelectNovelKnownFusions()
@@ -31,7 +31,7 @@ public class RNAFusionSelectorTest
 
         List<LinxFusion> linxFusions = Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneStart("C").geneEnd("D").build());
 
-        List<RnaFusion> novelFusions = RNAFusionSelector.selectNovelKnownFusions(rnaFusions, linxFusions, knownFusionCache);
+        List<RnaFusion> novelFusions = RnaFusionSelector.selectNovelKnownFusions(rnaFusions, linxFusions, knownFusionCache);
         assertEquals(1, novelFusions.size());
         assertEquals(match, novelFusions.get(0));
     }
@@ -56,7 +56,7 @@ public class RNAFusionSelectorTest
         knownFusionCache.addData(KnownFusionCacheTestFactory.createKnownPair("E", "F"));
 
         List<RnaFusion> novelPromiscuous =
-                RNAFusionSelector.selectNovelPromiscuousFusions(rnaFusions, Lists.newArrayList(), knownFusionCache);
+                RnaFusionSelector.selectNovelPromiscuousFusions(rnaFusions, Lists.newArrayList(), knownFusionCache);
 
         assertEquals(1, novelPromiscuous.size());
         assertEquals(match, novelPromiscuous.get(0));

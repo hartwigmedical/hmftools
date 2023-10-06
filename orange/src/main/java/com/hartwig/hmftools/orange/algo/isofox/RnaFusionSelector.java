@@ -12,11 +12,11 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.rna.RnaFusion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.orange.algo.linx.DNAFusionEvaluator;
+import com.hartwig.hmftools.orange.algo.linx.DnaFusionEvaluator;
 
 import org.jetbrains.annotations.NotNull;
 
-final class RNAFusionSelector
+final class RnaFusionSelector
 {
     private static final Set<StructuralVariantType> ALWAYS_VALID_FOR_PROMISCUOUS = Sets.newHashSet();
 
@@ -39,7 +39,7 @@ final class RNAFusionSelector
             String geneDown = geneDown(rnaFusion);
             if(geneUp != null && geneDown != null)
             {
-                if(knownFusionCache.hasKnownFusion(geneUp, geneDown) && !DNAFusionEvaluator.hasFusion(linxFusions, geneUp, geneDown))
+                if(knownFusionCache.hasKnownFusion(geneUp, geneDown) && !DnaFusionEvaluator.hasFusion(linxFusions, geneUp, geneDown))
                 {
                     result.add(rnaFusion);
                 }
@@ -67,7 +67,7 @@ final class RNAFusionSelector
                 boolean isPromiscuous =
                         knownFusionCache.hasPromiscuousFiveGene(geneUp) || knownFusionCache.hasPromiscuousThreeGene(geneDown);
                 boolean isKnown = knownFusionCache.hasKnownFusion(geneUp, geneDown);
-                if(isPromiscuous && !isKnown && !DNAFusionEvaluator.hasFusion(linxFusions, geneUp, geneDown))
+                if(isPromiscuous && !isKnown && !DnaFusionEvaluator.hasFusion(linxFusions, geneUp, geneDown))
                 {
                     result.add(rnaFusion);
                 }

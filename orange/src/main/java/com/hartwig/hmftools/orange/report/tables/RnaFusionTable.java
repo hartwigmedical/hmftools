@@ -13,7 +13,7 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class RNAFusionTable
+public final class RnaFusionTable
 {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<RnaFusion> fusions,

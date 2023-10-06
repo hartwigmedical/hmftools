@@ -10,7 +10,7 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
-import com.hartwig.hmftools.orange.algo.linx.DNAFusionEvaluator;
+import com.hartwig.hmftools.orange.algo.linx.DnaFusionEvaluator;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +29,7 @@ final class NovelSpliceJunctionSelector
                 boolean isTypeMatch = junction.type() == AltSpliceJunctionType.SKIPPED_EXONS;
                 boolean hasSufficientFragments = junction.fragmentCount() > 5;
                 boolean hasLimitedCohortFreq = junction.cohortFrequency() < 30;
-                boolean hasReportedLinxFusion = DNAFusionEvaluator.hasFusion(linxFusions, junction.geneName(), junction.geneName());
+                boolean hasReportedLinxFusion = DnaFusionEvaluator.hasFusion(linxFusions, junction.geneName(), junction.geneName());
                 if(isTypeMatch && hasSufficientFragments && hasLimitedCohortFreq && !hasReportedLinxFusion)
                 {
                     result.add(junction);

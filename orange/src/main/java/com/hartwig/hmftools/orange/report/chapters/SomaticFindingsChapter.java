@@ -9,8 +9,8 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
-import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
@@ -20,7 +20,7 @@ import com.hartwig.hmftools.orange.report.datamodel.VariantEntryFactory;
 import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.interpretation.VariantDedup;
 import com.hartwig.hmftools.orange.report.tables.BreakendTable;
-import com.hartwig.hmftools.orange.report.tables.DNAFusionTable;
+import com.hartwig.hmftools.orange.report.tables.DnaFusionTable;
 import com.hartwig.hmftools.orange.report.tables.GainLossTable;
 import com.hartwig.hmftools.orange.report.tables.HomozygousDisruptionTable;
 import com.hartwig.hmftools.orange.report.tables.LossOfHeterozygosityTable;
@@ -233,11 +233,11 @@ public class SomaticFindingsChapter implements ReportChapter
         else
         {
             String titleDrivers = driverFusionsTitle + " (" + report.linx().reportableSomaticFusions().size() + ")";
-            document.add(DNAFusionTable.build(titleDrivers, contentWidth(), report.linx().reportableSomaticFusions(), report.isofox(),
+            document.add(DnaFusionTable.build(titleDrivers, contentWidth(), report.linx().reportableSomaticFusions(), report.isofox(),
                     reportResources));
 
             String titleNonDrivers = nonDriverFusionsTitle + " (" + report.linx().additionalSuspectSomaticFusions().size() + ")";
-            document.add(DNAFusionTable.build(titleNonDrivers,
+            document.add(DnaFusionTable.build(titleNonDrivers,
                     contentWidth(),
                     max10(report.linx().additionalSuspectSomaticFusions()),
                     report.isofox(), reportResources));

@@ -15,7 +15,7 @@ import org.junit.Test;
 public class FusionNameUtilTest
 {
     @Test
-    public void canExtractGeneUpDownFromRNAFusion()
+    public void canExtractGeneUpDownFromRnaFusion()
     {
         RnaFusion proper = IsofoxTestFactory.rnaFusionBuilder().name("X_Y").build();
         assertEquals("X", geneUp(proper));

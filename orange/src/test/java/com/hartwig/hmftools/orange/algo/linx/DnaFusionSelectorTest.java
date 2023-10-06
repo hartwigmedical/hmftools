@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class DNAFusionSelectorTest
+public class DnaFusionSelectorTest
 {
     @Test
     public void canSelectFusionsWithReportedType()
@@ -35,7 +35,7 @@ public class DNAFusionSelectorTest
                 .build();
 
         List<LinxFusion> fusions =
-                DNAFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(withReportedType, withoutReportedType),
+                DnaFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(withReportedType, withoutReportedType),
                         Lists.newArrayList());
 
         assertEquals(1, fusions.size());
@@ -85,7 +85,7 @@ public class DNAFusionSelectorTest
                 .geneEnd(tsg.gene())
                 .build();
 
-        List<LinxFusion> fusions = DNAFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(outOfFrameOnco,
+        List<LinxFusion> fusions = DnaFusionSelector.selectInterestingUnreportedFusions(Lists.newArrayList(outOfFrameOnco,
                 noDriver,
                 withFiveOncogene,
                 withThreeOncogene,

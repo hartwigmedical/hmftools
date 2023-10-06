@@ -63,7 +63,7 @@ import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
-import com.hartwig.hmftools.orange.OrangeRNAConfig;
+import com.hartwig.hmftools.orange.OrangeRnaConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
@@ -490,7 +490,7 @@ public class OrangeAlgo
     @Nullable
     private IsofoxData loadIsofoxData(@NotNull OrangeConfig config) throws IOException
     {
-        OrangeRNAConfig rna = config.rnaConfig();
+        OrangeRnaConfig rna = config.rnaConfig();
         if(rna == null)
         {
             LOGGER.info("Skipping ISOFOX data loading as RNA is not configured");
@@ -690,7 +690,7 @@ public class OrangeAlgo
         String purpleVariantCopyNumberPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
         String purplePurityRangePlot = plotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
         String purpleKataegisPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
-        
+
         String cuppaSummaryPlot = null;
         if(config.cuppaSummaryPlot() != null)
         {
