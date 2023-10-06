@@ -689,18 +689,8 @@ public class OrangeAlgo
         String purpleCopyNumberPlot = plotManager.processPlotFile(purplePlotBasePath + ".copynumber.png");
         String purpleVariantCopyNumberPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.png");
         String purplePurityRangePlot = plotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
-
-        String purpleKataegisPlot = purplePlotBasePath + ".somatic.rainfall.png";
-        if(!new File(purpleKataegisPlot).exists())
-        {
-            LOGGER.debug(" Could not locate kataegis plot '{}'", purpleKataegisPlot);
-            purpleKataegisPlot = null;
-        }
-        else
-        {
-            purpleKataegisPlot = plotManager.processPlotFile(purpleKataegisPlot);
-        }
-
+        String purpleKataegisPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
+        
         String cuppaSummaryPlot = null;
         if(config.cuppaSummaryPlot() != null)
         {
