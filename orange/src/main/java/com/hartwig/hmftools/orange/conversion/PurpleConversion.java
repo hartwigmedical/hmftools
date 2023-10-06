@@ -154,7 +154,7 @@ public final class PurpleConversion
                 .transcript(impact.Transcript)
                 .hgvsCodingImpact(impact.HgvsCoding)
                 .hgvsProteinImpact(impact.HgvsProtein)
-                .spliceRegion(impact.SpliceRegion)
+                .inSpliceRegion(impact.SpliceRegion)
                 .effects(purpleEffects)
                 .codingEffect(purpleCodingEffect)
                 .build();

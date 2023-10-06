@@ -27,7 +27,7 @@ public interface PurpleTranscriptImpact
     @Nullable
     Integer affectedExon();
 
-    boolean spliceRegion();
+    boolean inSpliceRegion();
 
     @NotNull
     Set<PurpleVariantEffect> effects();

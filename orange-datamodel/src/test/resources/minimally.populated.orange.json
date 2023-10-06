@@ -113,7 +113,7 @@
           "hgvsProteinImpact": "p.Pro718Leu",
           "affectedCodon": 2153,
           "affectedExon": 12,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -152,7 +152,7 @@
           "hgvsProteinImpact": "p.Pro718Leu",
           "affectedCodon": 2153,
           "affectedExon": 12,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -191,7 +191,7 @@
           "hgvsProteinImpact": "p.?",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": true,
+          "inSpliceRegion": true,
           "effects": [
             "SPLICE_DONOR",
             "INTRONIC"
@@ -234,7 +234,7 @@
           "hgvsProteinImpact": "p.?",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": true,
+          "inSpliceRegion": true,
           "effects": [
             "SPLICE_DONOR",
             "INTRONIC"

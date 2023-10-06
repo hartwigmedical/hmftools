@@ -152,7 +152,7 @@ public class OrangeJsonTest
         assertEquals("p.Pro718Leu", somaticVariant.canonicalImpact().hgvsProteinImpact());
         assertEquals(2153, (int) somaticVariant.canonicalImpact().affectedCodon());
         assertEquals(12, (int) somaticVariant.canonicalImpact().affectedExon());
-        assertFalse(somaticVariant.canonicalImpact().spliceRegion());
+        assertFalse(somaticVariant.canonicalImpact().inSpliceRegion());
         assertEquals(1, somaticVariant.canonicalImpact().effects().size());
         assertTrue(somaticVariant.canonicalImpact().effects().contains(PurpleVariantEffect.MISSENSE));
         assertEquals(PurpleCodingEffect.MISSENSE, somaticVariant.canonicalImpact().codingEffect());
@@ -186,7 +186,7 @@ public class OrangeJsonTest
         assertEquals("p.?", germlineVariant.canonicalImpact().hgvsProteinImpact());
         assertNull(germlineVariant.canonicalImpact().affectedCodon());
         assertNull(germlineVariant.canonicalImpact().affectedExon());
-        assertTrue(germlineVariant.canonicalImpact().spliceRegion());
+        assertTrue(germlineVariant.canonicalImpact().inSpliceRegion());
         assertEquals(2, germlineVariant.canonicalImpact().effects().size());
         assertTrue(germlineVariant.canonicalImpact().effects().contains(PurpleVariantEffect.SPLICE_DONOR));
         assertTrue(germlineVariant.canonicalImpact().effects().contains(PurpleVariantEffect.INTRONIC));

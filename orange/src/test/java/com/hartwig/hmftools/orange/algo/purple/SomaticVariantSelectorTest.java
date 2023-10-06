@@ -127,17 +127,17 @@ public class SomaticVariantSelectorTest
 
         PurpleVariant reportedGene = TestPurpleVariantFactory.builder()
                 .gene(driverGeneYes.gene())
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().inSpliceRegion(true).build())
                 .build();
 
         PurpleVariant nonReportedGene = TestPurpleVariantFactory.builder()
                 .gene(driverGeneNo.gene())
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().inSpliceRegion(true).build())
                 .build();
 
         PurpleVariant otherGene = TestPurpleVariantFactory.builder()
                 .gene("other gene")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().inSpliceRegion(true).build())
                 .build();
 
         List<PurpleVariant> variants =

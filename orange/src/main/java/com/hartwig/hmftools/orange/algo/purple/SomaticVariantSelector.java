@@ -103,7 +103,7 @@ final class SomaticVariantSelector
 
     private static boolean isUnreportedSpliceVariant(@NotNull PurpleVariant variant, @NotNull List<DriverGene> driverGenes)
     {
-        if(variant.canonicalImpact().spliceRegion())
+        if(variant.canonicalImpact().inSpliceRegion())
         {
             DriverGene driverGene = findDriverGene(driverGenes, variant.gene());
             if(driverGene != null)

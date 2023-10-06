@@ -89,7 +89,7 @@ public class PurpleVariantFactoryTest
         assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
         assertNull(canonicalImpact.affectedCodon());
         assertNull(canonicalImpact.affectedExon());
-        assertTrue(canonicalImpact.spliceRegion());
+        assertTrue(canonicalImpact.inSpliceRegion());
         assertEquals(Set.of(PurpleVariantEffect.FRAMESHIFT, PurpleVariantEffect.MISSENSE), canonicalImpact.effects());
 
         List<PurpleTranscriptImpact> purpleOtherImpacts = purpleVariant.otherImpacts();
@@ -100,7 +100,7 @@ public class PurpleVariantFactoryTest
         assertEquals("p.Ser729=", purpleOtherImpact.hgvsProteinImpact());
         assertEquals(Set.of(PurpleVariantEffect.SYNONYMOUS), purpleOtherImpact.effects());
         assertEquals(PurpleCodingEffect.SYNONYMOUS, purpleOtherImpact.codingEffect());
-        assertFalse(purpleOtherImpact.spliceRegion());
+        assertFalse(purpleOtherImpact.inSpliceRegion());
         assertNull(purpleOtherImpact.affectedCodon());
         assertNull(purpleOtherImpact.affectedExon());
 

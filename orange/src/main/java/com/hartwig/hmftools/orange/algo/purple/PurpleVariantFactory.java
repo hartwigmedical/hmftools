@@ -86,7 +86,7 @@ public class PurpleVariantFactory
                 .hgvsProteinImpact(purpleContext.canonicalHgvsProteinImpact())
                 .affectedCodon(paveEntry != null ? paveEntry.affectedCodon() : null)
                 .affectedExon(paveEntry != null ? paveEntry.affectedExon() : null)
-                .spliceRegion(purpleContext.spliceRegion())
+                .inSpliceRegion(purpleContext.spliceRegion())
                 .effects(purpleVariantEffects)
                 .codingEffect(PurpleConversion.convert(purpleContext.canonicalCodingEffect()))
                 .build();

@@ -55,7 +55,7 @@ public final class TestPurpleVariantFactory
                 .hgvsProteinImpact(Strings.EMPTY)
                 .affectedCodon(null)
                 .affectedExon(null)
-                .spliceRegion(false)
+                .inSpliceRegion(false)
                 .codingEffect(PurpleCodingEffect.UNDEFINED);
     }
 }
