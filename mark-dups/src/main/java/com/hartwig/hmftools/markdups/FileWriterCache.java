@@ -35,12 +35,12 @@ public class FileWriterCache
         mSharedBamWriter = mConfig.MultiBam ? null : createBamWriter(null);
     }
 
-    public BamWriter getBamWriter(final String chromosome)
+    public BamWriter getBamWriter(final String fileId)
     {
         if(mSharedBamWriter != null)
             return mSharedBamWriter;
 
-        return createBamWriter(chromosome);
+        return createBamWriter(fileId);
     }
 
     public void close()

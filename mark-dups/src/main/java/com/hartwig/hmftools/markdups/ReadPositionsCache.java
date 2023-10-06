@@ -23,7 +23,7 @@ import htsjdk.samtools.SAMRecord;
 public class ReadPositionsCache
 {
     // a ring buffer to store reads at each read starting position
-    private final String mChromosome;
+    private String mChromosome;
     private final FragmentGroup[] mForwardPositions;
     private final Map<Integer,FragmentGroup> mReversePositions;
     private final Map<String, Fragment> mFragments;
@@ -51,10 +51,8 @@ public class ReadPositionsCache
         }
     }
 
-    public ReadPositionsCache(
-            final String chromosome, int capacity, boolean useMateCigar, final Consumer<List<Fragment>> evictionHandler)
+    public ReadPositionsCache(int capacity, boolean useMateCigar, final Consumer<List<Fragment>> evictionHandler)
     {
-        mChromosome = chromosome;
         mReadGroupHandler = evictionHandler;
         mCapacity = capacity;
         mForwardPositions = new FragmentGroup[mCapacity];
@@ -69,6 +67,15 @@ public class ReadPositionsCache
         mFragmemtCacheCount = 0;
         mFragmemtUnmatchedCount = 0;
         mFragmemtNoCacheCount = 0;
+    }
+
+    public void setCurrentChromosome(final String chromosome)
+    {
+        if(mChromosome == null || !mChromosome.equals(chromosome))
+        {
+            mChromosome = chromosome;
+            resetMinPosition(0);
+        }
     }
 
     public boolean processRead(final SAMRecord read)
@@ -92,6 +99,10 @@ public class ReadPositionsCache
         // if the mate has a lower position or is on a lower chromosome, don't add it to a position group
         boolean mateUnmapped = read.getMateUnmappedFlag();
         boolean readUnmapped = read.getReadUnmappedFlag();
+
+        if(readUnmapped && mateUnmapped) // shouldn't occur since is handled prior
+            return false;
+
         boolean sameChromosome = !mateUnmapped && read.getMateReferenceName().equals(mChromosome);
 
         // skip if mate is on a lower chromosome

@@ -1,17 +1,23 @@
 package com.hartwig.hmftools.markdups;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.APP_NAME;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
 import static com.hartwig.hmftools.markdups.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -44,13 +50,53 @@ public class MarkDuplicates
 
         long startTimeMs = System.currentTimeMillis();
 
-        List<ChromosomeReader> chromosomeReaders = Lists.newArrayList();
-
-        RefGenomeCoordinates refGenomeCoordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig);
 
         PartitionDataStore partitionDataStore = new PartitionDataStore(mConfig);
+
+        // partition all chromosomes
+        Queue<ChrBaseRegion> partitions = new ConcurrentLinkedQueue<>();
+
+        for(HumanChromosome chromosome : HumanChromosome.values())
+        {
+            String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
+                continue;
+
+            List<ChrBaseRegion> chrPartitions = partitionChromosome(
+                    chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize);
+
+            partitions.addAll(chrPartitions);
+        }
+
+        List<PartitionThread> partitionTasks = Lists.newArrayList();
+        List<Thread> workers = new ArrayList<>();
+
+        for(int i = 0; i < min(partitions.size(), mConfig.Threads); ++i)
+        {
+            PartitionThread partitionThread = new PartitionThread(i, mConfig, partitions, fileWriterCache, partitionDataStore);
+            partitionTasks.add(partitionThread);
+            workers.add(partitionThread);
+        }
+
+        for(Thread worker : workers)
+        {
+            try
+            {
+                worker.join();
+            }
+            catch(InterruptedException e)
+            {
+                MD_LOGGER.error("task execution error: {}", e.toString());
+                e.printStackTrace();
+            }
+        }
+
+        /*
+        List<ChromosomeReader> chromosomeReaders = Lists.newArrayList();
+        RefGenomeCoordinates refGenomeCoordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+
         final List<Callable> callableList = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
@@ -69,13 +115,18 @@ public class MarkDuplicates
 
         if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
             System.exit(1);
+        */
+
+        MD_LOGGER.info("all partition tasks complete");
+
+        List<PartitionReader> partitionReaders = partitionTasks.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
         int totalUnwrittenFragments = 0;
         ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
         consensusReads.setDebugOptions(mConfig.RunChecks);
 
-        BamWriter recordWriter = chromosomeReaders.get(0).recordWriter();
+        BamWriter recordWriter = partitionTasks.get(0).bamWriter();
 
         for(PartitionData partitionData : partitionDataStore.partitions())
         {
@@ -91,15 +142,13 @@ public class MarkDuplicates
 
         fileWriterCache.close();
 
-        MD_LOGGER.debug("all chromosome tasks complete");
-
         Statistics combinedStats = new Statistics();
-        chromosomeReaders.forEach(x -> combinedStats.merge(x.statistics()));
+        partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
         partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
 
         combinedStats.logStats();
 
-        int totalWrittenReads = chromosomeReaders.stream().mapToInt(x -> x.recordWriter().recordWriteCount()).sum();
+        int totalWrittenReads = partitionTasks.stream().mapToInt(x -> x.bamWriter().recordWriteCount()).sum();
         int unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
 
         if(mConfig.UnmapRegions.enabled())
@@ -111,7 +160,7 @@ public class MarkDuplicates
         {
             MD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
                     combinedStats.TotalReads, totalWrittenReads, combinedStats.TotalReads - totalWrittenReads - unmappedDroppedReads);
-            chromosomeReaders.forEach(x -> x.recordWriter().logUnwrittenReads());
+            partitionTasks.forEach(x -> x.bamWriter().logUnwrittenReads());
         }
 
         if(mConfig.WriteStats)
@@ -130,11 +179,11 @@ public class MarkDuplicates
             }
         }
 
-        List<PerformanceCounter> combinedPerfCounters = chromosomeReaders.get(0).perfCounters();
+        List<PerformanceCounter> combinedPerfCounters = partitionReaders.get(0).perfCounters();
 
-        for(int i = 1; i < chromosomeReaders.size(); ++i)
+        for(int i = 1; i < partitionReaders.size(); ++i)
         {
-            List<PerformanceCounter> chrPerfCounters = chromosomeReaders.get(i).perfCounters();
+            List<PerformanceCounter> chrPerfCounters = partitionReaders.get(i).perfCounters();
 
             for(int j = 0; j < chrPerfCounters.size(); ++j)
             {
