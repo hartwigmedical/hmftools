@@ -28,7 +28,6 @@ import org.junit.Test;
 
 public class WildTypeAlgoTest
 {
-
     @Test
     public void canDetermineWildTypeSomatic()
     {
