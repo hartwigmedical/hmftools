@@ -85,14 +85,14 @@ public final class OrangeConversion
         return ImmutableLilacAllele.builder()
                 .allele(allele.allele())
                 .tumorCopyNumber(allele.tumorCopyNumber())
+                .refFragments(allele.refFragments())
+                .tumorFragments(allele.tumorFragments())
+                .rnaFragments(allele.rnaFragments())
                 .somaticMissense(allele.somaticMissense())
                 .somaticNonsenseOrFrameshift(allele.somaticNonsenseOrFrameshift())
                 .somaticSplice(allele.somaticSplice())
                 .somaticSynonymous(allele.somaticSynonymous())
                 .somaticInframeIndel(allele.somaticInframeIndel())
-                .refFragments(allele.refFragments())
-                .tumorFragments(allele.tumorFragments())
-                .rnaFragments(allele.rnaFragments())
                 .build();
     }
 
@@ -116,10 +116,10 @@ public final class OrangeConversion
                 .integrations(annotatedVirus.integrations())
                 .interpretation(interpretation != null ? VirusInterpretation.valueOf(interpretation.name()) : null)
                 .percentageCovered(annotatedVirus.percentageCovered())
-                .reported(annotatedVirus.reported())
                 .meanCoverage(annotatedVirus.meanCoverage())
-                .driverLikelihood(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
                 .expectedClonalCoverage(annotatedVirus.expectedClonalCoverage())
+                .reported(annotatedVirus.reported())
+                .driverLikelihood(VirusLikelihoodType.valueOf(annotatedVirus.virusDriverLikelihoodType().name()))
                 .build();
     }
 

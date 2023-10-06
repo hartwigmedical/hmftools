@@ -62,14 +62,14 @@ public final class IsofoxConversion
                 .chromosomeDown(rnaFusion.chromosomeDown())
                 .positionUp(rnaFusion.positionUp())
                 .positionDown(rnaFusion.positionDown())
+                .junctionTypeUp(rnaFusion.junctionTypeUp())
+                .junctionTypeDown(rnaFusion.junctionTypeDown())
+                .svType(StructuralVariantType.valueOf(rnaFusion.svType().name()))
                 .splitFragments(rnaFusion.splitFragments())
                 .realignedFrags(rnaFusion.realignedFrags())
                 .discordantFrags(rnaFusion.discordantFrags())
                 .depthUp(rnaFusion.depthUp())
                 .depthDown(rnaFusion.depthDown())
-                .junctionTypeUp(rnaFusion.junctionTypeUp())
-                .junctionTypeDown(rnaFusion.junctionTypeDown())
-                .svType(StructuralVariantType.valueOf(rnaFusion.svType().name()))
                 .cohortFrequency(rnaFusion.cohortFrequency())
                 .build();
     }

@@ -39,7 +39,7 @@ import org.jetbrains.annotations.NotNull;
 public final class PurpleConversion
 {
     @NotNull
-    public static PurpleCopyNumber convert(com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber)
+    public static PurpleCopyNumber convert(@NotNull com.hartwig.hmftools.common.purple.PurpleCopyNumber copyNumber)
     {
         return ImmutablePurpleCopyNumber.builder()
                 .chromosome(copyNumber.chromosome())
@@ -50,19 +50,19 @@ public final class PurpleConversion
     }
 
     @NotNull
-    public static PurpleGeneCopyNumber convert(GeneCopyNumber geneCopyNumber)
+    public static PurpleGeneCopyNumber convert(@NotNull GeneCopyNumber geneCopyNumber)
     {
         return ImmutablePurpleGeneCopyNumber.builder()
+                .gene(geneCopyNumber.geneName())
                 .chromosome(geneCopyNumber.chromosome())
                 .chromosomeBand(geneCopyNumber.chromosomeBand())
-                .gene(geneCopyNumber.geneName())
                 .minCopyNumber(geneCopyNumber.minCopyNumber())
                 .minMinorAlleleCopyNumber(geneCopyNumber.minMinorAlleleCopyNumber())
                 .build();
     }
 
     @NotNull
-    public static PurpleDriver convert(DriverCatalog catalog)
+    public static PurpleDriver convert(@NotNull DriverCatalog catalog)
     {
         return ImmutablePurpleDriver.builder()
                 .gene(catalog.gene())
@@ -91,8 +91,8 @@ public final class PurpleConversion
     public static PurpleAllelicDepth convert(@NotNull AllelicDepth allelicDepth)
     {
         return ImmutablePurpleAllelicDepth.builder()
-                .alleleReadCount(allelicDepth.alleleReadCount())
                 .totalReadCount(allelicDepth.totalReadCount())
+                .alleleReadCount(allelicDepth.alleleReadCount())
                 .build();
     }
 
@@ -132,19 +132,19 @@ public final class PurpleConversion
     }
 
     @NotNull
-    public static PurpleCodingEffect convert(CodingEffect effect)
+    public static PurpleCodingEffect convert(@NotNull CodingEffect effect)
     {
         return PurpleCodingEffect.valueOf(effect.name());
     }
 
     @NotNull
-    public static PurpleVariantEffect convert(VariantEffect effect)
+    public static PurpleVariantEffect convert(@NotNull VariantEffect effect)
     {
         return PurpleVariantEffect.valueOf(effect.name());
     }
 
     @NotNull
-    public static PurpleTranscriptImpact convert(VariantTranscriptImpact impact)
+    public static PurpleTranscriptImpact convert(@NotNull VariantTranscriptImpact impact)
     {
         List<VariantEffect> effectsList = VariantEffect.effectsToList(impact.Effects);
         List<PurpleVariantEffect> purpleEffects = ConversionUtil.mapToList(effectsList, PurpleConversion::convert);
@@ -154,9 +154,9 @@ public final class PurpleConversion
                 .transcript(impact.Transcript)
                 .hgvsCodingImpact(impact.HgvsCoding)
                 .hgvsProteinImpact(impact.HgvsProtein)
+                .spliceRegion(impact.SpliceRegion)
                 .effects(purpleEffects)
                 .codingEffect(purpleCodingEffect)
-                .spliceRegion(impact.SpliceRegion)
                 .build();
     }
 }

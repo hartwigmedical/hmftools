@@ -49,6 +49,12 @@ public final class LinxConversion
     public static LinxFusion convert(@NotNull com.hartwig.hmftools.common.linx.LinxFusion linxFusion)
     {
         return ImmutableLinxFusion.builder()
+                .geneStart(linxFusion.geneStart())
+                .geneContextStart(linxFusion.geneContextStart())
+                .geneTranscriptStart(linxFusion.geneTranscriptStart())
+                .geneEnd(linxFusion.geneEnd())
+                .geneContextEnd(linxFusion.geneContextEnd())
+                .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
                 .reported(linxFusion.reported())
                 .reportedType(LinxFusionType.valueOf(linxFusion.reportedType()))
                 .phased(FusionPhasedType.valueOf(linxFusion.phased().name()))
@@ -59,12 +65,6 @@ public final class LinxConversion
                 .chainTerminated(linxFusion.chainTerminated())
                 .domainsKept(linxFusion.domainsKept())
                 .domainsLost(linxFusion.domainsLost())
-                .geneStart(linxFusion.geneStart())
-                .geneContextStart(linxFusion.geneContextStart())
-                .geneTranscriptStart(linxFusion.geneTranscriptStart())
-                .geneEnd(linxFusion.geneEnd())
-                .geneContextEnd(linxFusion.geneContextEnd())
-                .geneTranscriptEnd(linxFusion.geneTranscriptEnd())
                 .junctionCopyNumber(linxFusion.junctionCopyNumber())
                 .build();
     }
@@ -102,9 +102,9 @@ public final class LinxConversion
     public static LinxHomozygousDisruption convert(@NotNull com.hartwig.hmftools.common.linx.HomozygousDisruption homozygousDisruption)
     {
         return ImmutableLinxHomozygousDisruption.builder()
+                .gene(homozygousDisruption.gene())
                 .chromosome(homozygousDisruption.chromosome())
                 .chromosomeBand(homozygousDisruption.chromosomeBand())
-                .gene(homozygousDisruption.gene())
                 .transcript(homozygousDisruption.transcript())
                 .isCanonical(homozygousDisruption.isCanonical())
                 .build();
