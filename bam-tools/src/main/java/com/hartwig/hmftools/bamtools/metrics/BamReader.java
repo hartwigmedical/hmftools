@@ -108,10 +108,14 @@ public class BamReader
             }
         }
 
-        // TODO(m_cooper): What if read is unmapped?
         if(mRegion.containsPosition(readStart))
         {
             mFlagStats.processRead(read);
+        }
+
+        if(read.isSecondaryAlignment())
+        {
+            return;
         }
 
         mFragmentLengths.processRead(read);

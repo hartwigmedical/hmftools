@@ -35,7 +35,7 @@ public class PartitionThread extends Thread
                         .validationStringency(ValidationStringency.SILENT)
                         .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(0, true, true, false);
+        mBamSlicer = new BamSlicer(0, true, true, true);
         mBamSlicer.setKeepUnmapped();
 
         start();
