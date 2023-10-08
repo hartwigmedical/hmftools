@@ -36,6 +36,8 @@ public class PerformanceCounter
     private String mCurrentIntervalName;
 
     public static final double NANOS_IN_SECOND = 1000000000;
+    public static final double NANO_IN_MILLISECOND = 1000000;
+    public static final double MS_IN_SECOND = 1000;
 
     public PerformanceCounter(final String name)
     {
@@ -235,6 +237,11 @@ public class PerformanceCounter
         {
             return first.Time < second.Time ? 1 : -1;
         }
+    }
+
+    public static double secondsSinceNow(long startTimeMs)
+    {
+        return (System.currentTimeMillis() - startTimeMs) / MS_IN_SECOND;
     }
 
     public static double nanosToSeconds(long nanoStartTime, long nanosEndTime)

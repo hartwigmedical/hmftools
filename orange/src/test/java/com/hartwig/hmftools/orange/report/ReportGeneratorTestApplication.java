@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -17,10 +18,13 @@ import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
@@ -42,6 +46,7 @@ public class ReportGeneratorTestApplication
 
     private static final boolean USE_MOCK_DATA_FOR_REPORT = false;
     private static final boolean REMOVE_UNREPORTED_VARIANTS = false;
+    private static final Set<PurpleQCStatus> OVERRIDE_QC_STATUS = null;
 
     public static void main(String[] args) throws IOException
     {
@@ -68,10 +73,16 @@ public class ReportGeneratorTestApplication
     {
         if(USE_MOCK_DATA_FOR_REPORT)
         {
+            LOGGER.info("Using mock data for report");
             return TestOrangeReportFactory.createProperTestReport();
         }
 
         OrangeRecord report = OrangeAlgo.fromConfig(config).run(config);
+        if (OVERRIDE_QC_STATUS != null)
+        {
+            LOGGER.info("Overriding QC status to {}", OVERRIDE_QC_STATUS);
+            report = overwritePurpleQCStatus(report, OVERRIDE_QC_STATUS);
+        }
 
         OrangeRecord withPercentiles = overwriteCohortPercentiles(report);
 
@@ -88,6 +99,22 @@ public class ReportGeneratorTestApplication
         OrangeRecord finalReport = ImmutableOrangeRecord.builder().from(filtered).sampleId("Test").build();
 
         return finalReport;
+    }
+
+    @NotNull
+    private static OrangeRecord overwritePurpleQCStatus(@NotNull OrangeRecord report, @NotNull Set<PurpleQCStatus> newStatus)
+    {
+        return ImmutableOrangeRecord.builder().from(report)
+                .purple(ImmutablePurpleRecord.builder().from(report.purple())
+                        .fit(ImmutablePurpleFit.builder()
+                                .from(report.purple().fit())
+                                .qc(ImmutablePurpleQC.builder()
+                                        .from(report.purple().fit().qc())
+                                        .status(newStatus)
+                                        .build())
+                                .build())
+                        .build())
+                .build();
     }
 
     @NotNull
@@ -162,9 +189,9 @@ public class ReportGeneratorTestApplication
         List<String> copyNumberDriverGenes = Lists.newArrayList();
         for(PurpleDriver driver : drivers)
         {
-            if(driver.driver() == PurpleDriverType.AMP || driver.driver() == PurpleDriverType.PARTIAL_AMP
-                    || driver.driver() == PurpleDriverType.DEL
-                    || driver.driver() == PurpleDriverType.GERMLINE_DELETION)
+            if(driver.type() == PurpleDriverType.AMP || driver.type() == PurpleDriverType.PARTIAL_AMP
+                    || driver.type() == PurpleDriverType.DEL
+                    || driver.type() == PurpleDriverType.GERMLINE_DELETION)
             {
                 copyNumberDriverGenes.add(driver.gene());
             }
@@ -173,7 +200,7 @@ public class ReportGeneratorTestApplication
         List<PurpleGeneCopyNumber> reportable = Lists.newArrayList();
         for(PurpleGeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {
-            if(copyNumberDriverGenes.contains(geneCopyNumber.geneName()))
+            if(copyNumberDriverGenes.contains(geneCopyNumber.gene()))
             {
                 reportable.add(geneCopyNumber);
             }

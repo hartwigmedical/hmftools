@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.isofox;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -7,14 +9,13 @@ import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.isofox.IsofoxData;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.RnaFusion;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
-import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.IsofoxConversion;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
 public class IsofoxInterpreter
@@ -45,11 +46,11 @@ public class IsofoxInterpreter
         LOGGER.info(" Found {} genes with low expression", lowExpressionGenes.size());
 
         List<RnaFusion> novelKnownFusions =
-                RNAFusionSelector.selectNovelKnownFusions(isofox.fusions(), linx.allSomaticFusions(), knownFusionCache);
+                RnaFusionSelector.selectNovelKnownFusions(isofox.fusions(), linx.allSomaticFusions(), knownFusionCache);
         LOGGER.info(" Found {} novel known fusions in RNA", novelKnownFusions.size());
 
         List<RnaFusion> novelPromiscuousFusions =
-                RNAFusionSelector.selectNovelPromiscuousFusions(isofox.fusions(), linx.allSomaticFusions(), knownFusionCache);
+                RnaFusionSelector.selectNovelPromiscuousFusions(isofox.fusions(), linx.allSomaticFusions(), knownFusionCache);
         LOGGER.info(" Found {} novel promiscuous fusions in RNA", novelPromiscuousFusions.size());
 
         List<NovelSpliceJunction> suspiciousSkippedExons =

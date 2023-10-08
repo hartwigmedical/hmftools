@@ -1,20 +1,23 @@
 package com.hartwig.hmftools.orange.report;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.datamodel.OrangeJson;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.orange.report.chapters.CohortComparisonChapter;
 import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.ImmunologyChapter;
 import com.hartwig.hmftools.orange.report.chapters.QualityControlChapter;
-import com.hartwig.hmftools.orange.report.chapters.RNAFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
+import com.hartwig.hmftools.orange.report.chapters.RnaFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
@@ -26,7 +29,6 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.property.AreaBreakType;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -63,15 +65,22 @@ public class ReportWriter
         chapters.add(new SomaticFindingsChapter(report, plotPathResolver, reportResources));
 
         if(!report.tumorOnlyMode())
+        {
             chapters.add(new GermlineFindingsChapter(report, reportResources));
+        }
 
         chapters.add(new ImmunologyChapter(report, reportResources));
 
-        if(report.isofox() != null)
-            chapters.add(new RNAFindingsChapter(report, reportResources));
+        IsofoxRecord isofox = report.isofox();
+        if(isofox != null)
+        {
+            chapters.add(new RnaFindingsChapter(isofox, report.purple(), reportResources));
+        }
 
         if(!report.tumorOnlyMode())
+        {
             chapters.add(new CohortComparisonChapter(report, plotPathResolver, reportResources));
+        }
 
         chapters.add(new QualityControlChapter(report, plotPathResolver, reportResources));
 
@@ -83,7 +92,8 @@ public class ReportWriter
     {
         if(writeToDisk && outputDir != null)
         {
-            String outputFilePath = outputDir + File.separator + report.sampleId() + ".orange.json";
+            String basePath = FileWriterUtils.checkAddDirSeparator(outputDir);
+            String outputFilePath = basePath + report.sampleId() + ".orange.json";
             LOGGER.info("Writing JSON report to {} ", outputFilePath);
 
             OrangeJson.getInstance().write(report, outputFilePath);
@@ -133,7 +143,8 @@ public class ReportWriter
                 .useSmartMode();
         if(writeToDisk)
         {
-            String outputFilePath = outputDir + File.separator + sampleId + ".orange.pdf";
+            String basePath = FileWriterUtils.checkAddDirSeparator(outputDir);
+            String outputFilePath = basePath + sampleId + ".orange.pdf";
             LOGGER.info("Writing PDF report to {}", outputFilePath);
             writer = new PdfWriter(outputFilePath, properties);
         }

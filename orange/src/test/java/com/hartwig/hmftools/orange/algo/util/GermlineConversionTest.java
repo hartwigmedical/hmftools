@@ -9,13 +9,12 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
-import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleQC;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.datamodel.purple.PurpleFit;
@@ -29,6 +28,7 @@ import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 import com.hartwig.hmftools.orange.algo.linx.TestLinxInterpretationFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleGainLossFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleInterpretationFactory;
+import com.hartwig.hmftools.orange.algo.purple.TestPurpleQCFactory;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
 import org.jetbrains.annotations.NotNull;
@@ -97,9 +97,9 @@ public class GermlineConversionTest
         PurpleGainLoss reportableSomaticGainLoss = TestPurpleGainLossFactory.builder().build();
         PurpleGainLoss reportableGermlineFullLoss = TestPurpleGainLossFactory.builder().build();
 
-        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder().driver(PurpleDriverType.AMP).build();
-        PurpleDriver germlineMutationDriver = PurpleDriverTestFactory.builder().driver(PurpleDriverType.GERMLINE_MUTATION).build();
-        PurpleDriver germlineDisruptionDriver = PurpleDriverTestFactory.builder().driver(PurpleDriverType.GERMLINE_DISRUPTION).build();
+        PurpleDriver somaticDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.AMP).build();
+        PurpleDriver germlineMutationDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_MUTATION).build();
+        PurpleDriver germlineDisruptionDriver = PurpleDriverTestFactory.builder().type(PurpleDriverType.GERMLINE_DISRUPTION).build();
 
         PurpleRecord purple = TestPurpleInterpretationFactory.builder()
                 .fit(createWithGermlineAberration())
@@ -159,7 +159,7 @@ public class GermlineConversionTest
         PurpleFit base = TestPurpleInterpretationFactory.createMinimalTestFitData();
         return ImmutablePurpleFit.builder()
                 .from(base)
-                .qc(ImmutablePurpleQC.builder().from(base.qc()).addGermlineAberrations(PurpleGermlineAberration.MOSAIC_X).build())
+                .qc(TestPurpleQCFactory.builder().from(base.qc()).addGermlineAberrations(PurpleGermlineAberration.MOSAIC_X).build())
                 .build();
     }
 
@@ -168,7 +168,7 @@ public class GermlineConversionTest
     {
         for(PurpleDriver driver : drivers)
         {
-            if(driver.driver() == driverTypeToFind)
+            if(driver.type() == driverTypeToFind)
             {
                 return driver;
             }
@@ -181,7 +181,7 @@ public class GermlineConversionTest
     public void canMergeMutationDrivers()
     {
         PurpleDriver somaticDriver1 = PurpleDriverTestFactory.builder()
-                .driver(PurpleDriverType.MUTATION)
+                .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
                 .driverLikelihood(0.5)
@@ -189,10 +189,10 @@ public class GermlineConversionTest
                 .build();
 
         PurpleDriver somaticDriver2 =
-                PurpleDriverTestFactory.builder().driver(PurpleDriverType.MUTATION).gene("gene 1").transcript("transcript 2").build();
+                PurpleDriverTestFactory.builder().type(PurpleDriverType.MUTATION).gene("gene 1").transcript("transcript 2").build();
 
         PurpleDriver germlineDriver1 = PurpleDriverTestFactory.builder()
-                .driver(PurpleDriverType.GERMLINE_MUTATION)
+                .type(PurpleDriverType.GERMLINE_MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
                 .driverLikelihood(0.8)
@@ -201,7 +201,7 @@ public class GermlineConversionTest
 
         PurpleDriver germlineDriver2 =
                 PurpleDriverTestFactory.builder()
-                        .driver(PurpleDriverType.GERMLINE_MUTATION)
+                        .type(PurpleDriverType.GERMLINE_MUTATION)
                         .gene("gene 2")
                         .transcript("transcript 1")
                         .build();
@@ -212,7 +212,7 @@ public class GermlineConversionTest
         assertEquals(3, merged.size());
         PurpleDriver driver1 = findByGeneTranscript(merged, "gene 1", "transcript 1");
         assertNotNull(driver1);
-        assertEquals(PurpleDriverType.MUTATION, driver1.driver());
+        assertEquals(PurpleDriverType.MUTATION, driver1.type());
         assertEquals(PurpleLikelihoodMethod.HOTSPOT, driver1.likelihoodMethod());
         assertEquals(0.8, driver1.driverLikelihood(), EPSILON);
 
@@ -220,7 +220,7 @@ public class GermlineConversionTest
         assertEquals(somaticDriver2, driver2);
 
         PurpleDriver driver3 = findByGeneTranscript(merged, "gene 2", "transcript 1");
-        assertEquals(PurpleDriverType.MUTATION, driver3.driver());
+        assertEquals(PurpleDriverType.MUTATION, driver3.type());
         assertEquals(PurpleLikelihoodMethod.HOTSPOT, driver3.likelihoodMethod());
     }
 
@@ -228,7 +228,7 @@ public class GermlineConversionTest
     public void canConvertAllTypesOfGermlineDrivers()
     {
         PurpleDriver somaticDriver =
-                PurpleDriverTestFactory.builder().gene("gene 1").transcript("transcript 1").driver(PurpleDriverType.DEL).build();
+                PurpleDriverTestFactory.builder().gene("gene 1").transcript("transcript 1").type(PurpleDriverType.DEL).build();
 
         List<PurpleDriver> mergedNoGermline = GermlineConversion.mergeGermlineDriversIntoSomatic(Lists.newArrayList(somaticDriver), null);
         assertEquals(1, mergedNoGermline.size());
@@ -238,34 +238,34 @@ public class GermlineConversionTest
                 PurpleDriverTestFactory.builder()
                         .gene("gene 1")
                         .transcript("transcript 1")
-                        .driver(PurpleDriverType.GERMLINE_DELETION)
+                        .type(PurpleDriverType.GERMLINE_DELETION)
                         .build();
 
         PurpleDriver germlineDriver2 =
                 PurpleDriverTestFactory.builder()
                         .gene("gene 2")
                         .transcript("transcript 2")
-                        .driver(PurpleDriverType.GERMLINE_DELETION)
+                        .type(PurpleDriverType.GERMLINE_DELETION)
                         .build();
 
         PurpleDriver germlineDriver3 =
                 PurpleDriverTestFactory.builder()
                         .gene("gene 3")
                         .transcript("transcript 3")
-                        .driver(PurpleDriverType.GERMLINE_MUTATION)
+                        .type(PurpleDriverType.GERMLINE_MUTATION)
                         .build();
 
         PurpleDriver germlineDriver4 = PurpleDriverTestFactory.builder()
                 .gene("gene 4")
                 .transcript("transcript 4")
-                .driver(PurpleDriverType.GERMLINE_DISRUPTION)
+                .type(PurpleDriverType.GERMLINE_DISRUPTION)
                 .driverLikelihood(1D)
                 .build();
 
         PurpleDriver germlineDriver5 = PurpleDriverTestFactory.builder()
                 .gene("gene 5")
                 .transcript("transcript 5")
-                .driver(PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION)
+                .type(PurpleDriverType.GERMLINE_HOM_DUP_DISRUPTION)
                 .driverLikelihood(0D)
                 .build();
 
@@ -276,17 +276,17 @@ public class GermlineConversionTest
         assertTrue(mergedNoGermline.contains(somaticDriver));
 
         PurpleDriver germlineDeletionDriver = findByGeneTranscript(merged, germlineDriver2.gene(), germlineDriver2.transcript());
-        assertEquals(PurpleDriverType.DEL, germlineDeletionDriver.driver());
+        assertEquals(PurpleDriverType.DEL, germlineDeletionDriver.type());
 
         PurpleDriver germlineMutationDriver = findByGeneTranscript(merged, germlineDriver3.gene(), germlineDriver3.transcript());
-        assertEquals(PurpleDriverType.MUTATION, germlineMutationDriver.driver());
+        assertEquals(PurpleDriverType.MUTATION, germlineMutationDriver.type());
 
         PurpleDriver germlineDisruptionDriver = findByGeneTranscript(merged, germlineDriver4.gene(), germlineDriver4.transcript());
-        assertEquals(PurpleDriverType.DISRUPTION, germlineDisruptionDriver.driver());
+        assertEquals(PurpleDriverType.DISRUPTION, germlineDisruptionDriver.type());
         assertEquals(0D, germlineDisruptionDriver.driverLikelihood(), EPSILON);
 
         PurpleDriver germlineHomDisruptionDriver = findByGeneTranscript(merged, germlineDriver5.gene(), germlineDriver5.transcript());
-        assertEquals(PurpleDriverType.HOM_DUP_DISRUPTION, germlineHomDisruptionDriver.driver());
+        assertEquals(PurpleDriverType.HOM_DUP_DISRUPTION, germlineHomDisruptionDriver.type());
         assertEquals(1D, germlineHomDisruptionDriver.driverLikelihood(), EPSILON);
     }
 
@@ -318,7 +318,7 @@ public class GermlineConversionTest
         LinxBreakend germlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(8).svId(1).build();
         LinxBreakend reportableGermlineBreakend = LinxOrangeTestFactory.breakendBuilder().id(9).svId(2).build();
 
-        HomozygousDisruption germlineHomozygousDisruption = LinxOrangeTestFactory.homozygousDisruptionBuilder().build();
+        LinxHomozygousDisruption germlineHomozygousDisruption = LinxOrangeTestFactory.homozygousDisruptionBuilder().build();
 
         LinxRecord linx = TestLinxInterpretationFactory.builder()
                 .addAllSomaticStructuralVariants(somaticStructuralVariant1, somaticStructuralVariant2)

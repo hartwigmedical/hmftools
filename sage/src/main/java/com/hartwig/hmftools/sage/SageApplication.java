@@ -56,7 +56,8 @@ public class SageApplication implements AutoCloseable
 
         mPhaseSetCounter = new PhaseSetCounter();
 
-        mVcfWriter = new VcfWriter(mConfig.Common.Version, mConfig.Common.OutputFile, mConfig.TumorIds, mConfig.Common.ReferenceIds, mRefData);
+        mVcfWriter = new VcfWriter(
+                mConfig.Common.Version, mConfig.Common.OutputFile, mConfig.TumorIds, mConfig.Common.ReferenceIds, mRefData.RefGenome);
 
         SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
     }

@@ -94,6 +94,11 @@ public class ReadContextCounter implements VariantHotspot
     private int mRawRefBaseQuality;
     private double mSupportAltBaseQualityTotal;
 
+    private long mTotalMapQuality;
+    private long mTotalAltMapQuality;
+    private int mTotalNmCount;
+    private int mTotalAltNmCount;
+
     private int mSoftClipInsertSupport;
     private int mMaxCandidateDeleteLength;
 
@@ -140,6 +145,10 @@ public class ReadContextCounter implements VariantHotspot
         mSupportAltBaseQualityTotal = 0;
         mSoftClipInsertSupport = 0;
         mMaxCandidateDeleteLength = 0;
+        mTotalMapQuality = 0;
+        mTotalAltMapQuality = 0;
+        mTotalNmCount = 0;
+        mTotalAltNmCount = 0;
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
@@ -204,6 +213,12 @@ public class ReadContextCounter implements VariantHotspot
     public int rawRefSupport() { return mRawRefSupport; }
     public int rawAltBaseQuality() { return mRawAltBaseQuality; }
     public int rawRefBaseQuality() { return mRawRefBaseQuality; }
+
+    public long totalMapQuality() { return mTotalMapQuality; }
+    public long altMapQuality() { return mTotalAltMapQuality; }
+
+    public long totalNmCount() { return mTotalNmCount; }
+    public long altNmCount() { return mTotalAltNmCount; }
 
     public double averageAltBaseQuality()
     {
@@ -348,6 +363,11 @@ public class ReadContextCounter implements VariantHotspot
                 ++mCounts[RC_TOTAL];
                 mQualities[RC_TOTAL] += quality;
 
+                mTotalMapQuality += record.getMappingQuality();
+                mTotalAltMapQuality += record.getMappingQuality();
+                mTotalNmCount += numberOfEvents;
+                mTotalAltNmCount += numberOfEvents;
+
                 double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readIndex, record);
                 mSupportAltBaseQualityTotal += rawBaseQuality;
 
@@ -388,6 +408,11 @@ public class ReadContextCounter implements VariantHotspot
             mCounts[RC_TOTAL]++;
             mQualities[RC_TOTAL] += quality;
 
+            mTotalMapQuality += record.getMappingQuality();
+            mTotalAltMapQuality += record.getMappingQuality();
+            mTotalNmCount += numberOfEvents;
+            mTotalAltNmCount += numberOfEvents;
+
             logReadEvidence(record, MatchType.REALIGNED, readIndex,quality);
             rawContext.updateSupport(false, rawContext.AltSupport);
             registerRawSupport(rawContext);
@@ -419,6 +444,9 @@ public class ReadContextCounter implements VariantHotspot
         mCounts[RC_TOTAL]++;
         mQualities[RC_TOTAL] += quality;
 
+        mTotalMapQuality += record.getMappingQuality();
+        mTotalNmCount += numberOfEvents;
+
         if(rawContext.RefSupport)
         {
             mCounts[RC_REF]++;
@@ -432,6 +460,10 @@ public class ReadContextCounter implements VariantHotspot
         {
             mCounts[RC_ALT]++;
             mQualities[RC_ALT] += quality;
+
+            mTotalAltMapQuality += record.getMappingQuality();
+            mTotalAltNmCount += numberOfEvents;
+
             countStrandedness(record);
         }
 

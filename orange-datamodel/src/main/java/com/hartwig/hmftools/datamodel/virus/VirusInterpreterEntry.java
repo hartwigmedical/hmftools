@@ -7,9 +7,9 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class })
-public interface AnnotatedVirus {
-
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface VirusInterpreterEntry
+{
     @NotNull
     String name();
 
@@ -31,5 +31,5 @@ public interface AnnotatedVirus {
     boolean reported();
 
     @NotNull
-    VirusLikelihoodType virusDriverLikelihoodType();
+    VirusLikelihoodType driverLikelihood();
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.purple;
 
-public enum PurpleVariantEffect {
+public enum PurpleVariantEffect
+{
     STOP_GAINED,
     STOP_LOST,
     START_LOST,

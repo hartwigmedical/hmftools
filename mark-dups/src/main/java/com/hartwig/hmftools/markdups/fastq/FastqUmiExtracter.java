@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.markdups.fastq;
 
+import static java.lang.Math.max;
+
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -18,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigItemType;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
@@ -30,6 +33,9 @@ public class FastqUmiExtracter
     private final String mOutputDir;
     private final String mOutputId;
     private final int mUmiLength;
+    private final int mAdapterUmiLength;
+    private final String mAdapterSequence;
+    private final String mAdapterSequenceReversed;
 
     private BufferedWriter mWriterR1;
     private BufferedWriter mWriterR2;
@@ -37,6 +43,7 @@ public class FastqUmiExtracter
     // config
     private static final String FASTQ_FILES = "fastq_files";
     private static final String UMI_LENGTH = "umi_length";
+    private static final String ADAPTER_SEQUENCE = "adapter_seq";
 
     private static final String FASTQ_FILES_DELIM = ";";
     private static final int LINE_LOG_COUNT = 1000000;
@@ -47,6 +54,10 @@ public class FastqUmiExtracter
         mOutputDir = parseOutputDir(configBuilder);
         mOutputId = configBuilder.getValue(OUTPUT_ID);
         mUmiLength = configBuilder.getInteger(UMI_LENGTH);
+        mAdapterSequence = configBuilder.getValue(ADAPTER_SEQUENCE);
+
+        mAdapterUmiLength = mAdapterSequence != null ? mAdapterSequence.length() + mUmiLength : 0;
+        mAdapterSequenceReversed = mAdapterSequence != null ? Nucleotides.reverseStrandBases(mAdapterSequence) : null;
     }
 
     public void run()
@@ -78,19 +89,21 @@ public class FastqUmiExtracter
             System.exit(1);
         }
 
-        MD_LOGGER.info("Starting Fastq UMI extractions with files: {}", mFastqFiles);
+        MD_LOGGER.info("starting Fastq UMI extractions with files: {}", mFastqFiles);
 
         long startTimeMs = System.currentTimeMillis();
 
         processFiles(fastqFiles[0], fastqFiles[1]);
 
-        MD_LOGGER.info("Extraction complete, mins({})", runTimeMinsStr(startTimeMs));
+        MD_LOGGER.info("extraction complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private static final int READ_ITEM_ID = 0;
     private static final int READ_ITEM_BASES = 1;
     private static final int READ_ITEM_SPARE = 2;
     private static final int READ_ITEM_QUALS = 3;
+    private static final int READ_LINE_COUNT = 4;
+
     private static final char READ_ID_START = '@';
     private static final char READ_ID_BREAK = ' ';
     private static final char READ_ID_DELIM = ':';
@@ -139,7 +152,7 @@ public class FastqUmiExtracter
 
                 ++readLineCount;
 
-                if(readLineCount == 4)
+                if(readLineCount == READ_LINE_COUNT)
                 {
                     if(!processReadBases(r1ReadBuffer, r2ReadBuffer))
                     {
@@ -188,8 +201,10 @@ public class FastqUmiExtracter
         // data validation
         if(r1ReadBuffer[READ_ITEM_ID].charAt(0) != READ_ID_START || r2ReadBuffer[READ_ITEM_ID].charAt(0) != READ_ID_START)
             return false;
+        
+        int minReadLength = max(mAdapterUmiLength, mUmiLength);
 
-        if(r1ReadBuffer[READ_ITEM_BASES].length() <= mUmiLength || r1ReadBuffer[READ_ITEM_QUALS].length() <= mUmiLength)
+        if(r1ReadBuffer[READ_ITEM_BASES].length() <= minReadLength || r1ReadBuffer[READ_ITEM_QUALS].length() <= minReadLength)
             return false;
 
         int delimIndex = r1ReadBuffer[READ_ITEM_ID].indexOf(READ_ID_BREAK);
@@ -203,19 +218,62 @@ public class FastqUmiExtracter
         if(!readId1.equals(readId2))
             return false;
 
-        String umiBases1 = r1ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
-        String umiBases2 = r2ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
+        if(mAdapterUmiLength > 0)
+        {
+            String adapterUmiBases1 = r1ReadBuffer[READ_ITEM_BASES].substring(0, mAdapterUmiLength);
 
-        // append UMIs to read Id and remove from bases and quals
-        String duplexUmiId = umiBases1 + DEFAULT_DUPLEX_UMI_DELIM + umiBases2;
-        String newReadId = readId1 + READ_ID_DELIM + duplexUmiId;
-        r1ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r1ReadBuffer[READ_ITEM_ID].substring(delimIndex);
-        r2ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r2ReadBuffer[READ_ITEM_ID].substring(delimIndex);
+            String umiBases1 = adapterUmiBases1.substring(0, mUmiLength);
 
-        r1ReadBuffer[READ_ITEM_BASES] = r1ReadBuffer[READ_ITEM_BASES].substring(mUmiLength);
-        r2ReadBuffer[READ_ITEM_BASES] = r2ReadBuffer[READ_ITEM_BASES].substring(mUmiLength);
-        r1ReadBuffer[READ_ITEM_QUALS] = r1ReadBuffer[READ_ITEM_QUALS].substring(mUmiLength);
-        r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(mUmiLength);
+            // append UMIs to read Id and remove from bases and quals
+            String newReadId = readId1 + READ_ID_DELIM + umiBases1;
+            r1ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r1ReadBuffer[READ_ITEM_ID].substring(delimIndex);
+            r2ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r2ReadBuffer[READ_ITEM_ID].substring(delimIndex);
+
+            r1ReadBuffer[READ_ITEM_BASES] = r1ReadBuffer[READ_ITEM_BASES].substring(mAdapterUmiLength);
+            r1ReadBuffer[READ_ITEM_QUALS] = r1ReadBuffer[READ_ITEM_QUALS].substring(mAdapterUmiLength);
+
+            // the R2 read may have the reversed adapter+UMI sequence at the end
+            String adapterUmiBases2Start = r2ReadBuffer[READ_ITEM_BASES].substring(0, mAdapterUmiLength);
+            int read2Length = r2ReadBuffer[READ_ITEM_BASES].length();
+            String adapterUmiBases2End = r2ReadBuffer[READ_ITEM_BASES].substring(read2Length - mAdapterUmiLength);
+
+            int adapterSeqIndex = adapterUmiBases2Start.indexOf(mAdapterSequence);
+
+            if(adapterSeqIndex >= 0)
+            {
+                // trim from start
+                int trimIndex = adapterSeqIndex + mAdapterSequence.length();
+                r2ReadBuffer[READ_ITEM_BASES] = r2ReadBuffer[READ_ITEM_BASES].substring(trimIndex);
+                r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(trimIndex);
+            }
+            else
+            {
+                adapterSeqIndex = adapterUmiBases2End.indexOf(mAdapterSequenceReversed);
+
+                if(adapterSeqIndex >= 0)
+                {
+                    int trimIndex = read2Length - mAdapterUmiLength + adapterSeqIndex;
+                    r2ReadBuffer[READ_ITEM_BASES] = r2ReadBuffer[READ_ITEM_BASES].substring(0, trimIndex);
+                    r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(0, trimIndex);
+                }
+            }
+        }
+        else
+        {
+            String umiBases1 = r1ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
+            String umiBases2 = r2ReadBuffer[READ_ITEM_BASES].substring(0, mUmiLength);
+
+            // append UMIs to read Id and remove from bases and quals
+            String duplexUmiId = umiBases1 + DEFAULT_DUPLEX_UMI_DELIM + umiBases2;
+            String newReadId = readId1 + READ_ID_DELIM + duplexUmiId;
+            r1ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r1ReadBuffer[READ_ITEM_ID].substring(delimIndex);
+            r2ReadBuffer[READ_ITEM_ID] = READ_ID_START + newReadId + r2ReadBuffer[READ_ITEM_ID].substring(delimIndex);
+
+            r1ReadBuffer[READ_ITEM_BASES] = r1ReadBuffer[READ_ITEM_BASES].substring(mUmiLength);
+            r2ReadBuffer[READ_ITEM_BASES] = r2ReadBuffer[READ_ITEM_BASES].substring(mUmiLength);
+            r1ReadBuffer[READ_ITEM_QUALS] = r1ReadBuffer[READ_ITEM_QUALS].substring(mUmiLength);
+            r2ReadBuffer[READ_ITEM_QUALS] = r2ReadBuffer[READ_ITEM_QUALS].substring(mUmiLength);
+        }
 
         try
         {
@@ -243,6 +301,7 @@ public class FastqUmiExtracter
 
         configBuilder.addConfigItem(FASTQ_FILES, true, "Fastq file-pair path, separated by delim ','");
         configBuilder.addConfigItem(ConfigItemType.INTEGER, UMI_LENGTH, true, "UMI length", null);
+        configBuilder.addConfigItem(ADAPTER_SEQUENCE, "Adapter sequence (optional)");
         addOutputOptions(configBuilder);
         ConfigUtils.addLoggingOptions(configBuilder);
 

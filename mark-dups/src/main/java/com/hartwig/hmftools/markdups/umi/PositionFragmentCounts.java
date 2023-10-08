@@ -4,11 +4,13 @@ import static java.lang.String.format;
 
 public class PositionFragmentCounts
 {
+    // counts are keyed by the first 2 elements:
     public final int UniqueCoordCount;
     public final int UniqueFragmentCount;
+
     public int Frequency;
     public int MaxCoordUmiCount;
-    public int MaxUmiReadsCount; // max reads collapsed into a UMI group
+    public int MaxUmiReadsCount; // max (primary) reads collapsed into a UMI group
     public String UmiGroupDetails;
 
     public PositionFragmentCounts(final int uniqueCoordCount, final int uniqueFragmentCount)

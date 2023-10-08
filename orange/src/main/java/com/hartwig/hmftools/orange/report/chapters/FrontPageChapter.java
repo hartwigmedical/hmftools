@@ -15,8 +15,8 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
@@ -24,19 +24,18 @@ import com.hartwig.hmftools.datamodel.peach.PeachGenotype;
 import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
-import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
-import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 import com.hartwig.hmftools.orange.report.PlotPathResolver;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Drivers;
+import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Images;
 import com.hartwig.hmftools.orange.report.util.Tables;
@@ -106,22 +105,39 @@ public class FrontPageChapter implements ReportChapter
         Table table = Tables.createContent(contentWidth(), headerComponents, headerCells);
 
         table.addCell(cells.createContent(configuredPrimaryTumor(report.configuredPrimaryTumor())));
-        table.addCell(cells.createContent(!report.tumorOnlyMode() ? cuppaCancerType(report.cuppa()) : ""));
+        table.addCell(cells.createContent(cuppaCancerTypeString()));
         table.addCell(cells.createContent(purpleQCString()));
+
+        addQCWarningInCaseOfFail(table, cells);
 
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
-    @NotNull
-    private static String cuppaCancerType(@Nullable CuppaData cuppa)
+    private void addQCWarningInCaseOfFail(@NotNull Table table, @NotNull Cells cells)
     {
-        if(cuppa == null)
-        {
-            return ReportResources.NOT_AVAILABLE;
-        }
+        boolean isFailNoTumor = PurpleQCInterpretation.isFailNoTumor(report.purple().fit().qc());
+        boolean isContaminated = PurpleQCInterpretation.isContaminated(report.purple().fit().qc());
 
-        CuppaPrediction best = CuppaInterpretation.best(cuppa);
-        return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
+        if(isFailNoTumor || isContaminated)
+        {
+            String reason;
+            if(isFailNoTumor && isContaminated)
+            {
+                reason = "no tumor and contamination";
+            }
+            else if(isFailNoTumor)
+            {
+                reason = "no tumor";
+            }
+            else
+            {
+                reason = "contamination";
+            }
+
+            String warning = "The QC status of this sample is fail (" + reason + ")" +
+                    ": all presented data in this report should be interpreted with caution";
+            table.addCell(cells.createSpanningWarning(table, warning));
+        }
     }
 
     @NotNull
@@ -134,6 +150,33 @@ public class FrontPageChapter implements ReportChapter
         }
 
         return concat(configured);
+    }
+
+    private String cuppaCancerTypeString()
+    {
+        if(report.tumorOnlyMode())
+        {
+            return "";
+        }
+
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        return cuppaCancerType(report.cuppa());
+    }
+
+    @NotNull
+    private static String cuppaCancerType(@Nullable CuppaData cuppa)
+    {
+        if(cuppa == null)
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        CuppaPrediction best = CuppaInterpretation.best(cuppa);
+        return best.cancerType() + " (" + formatPercentage(best.likelihood()) + ")";
     }
 
     @NotNull
@@ -161,34 +204,42 @@ public class FrontPageChapter implements ReportChapter
         addCellEntry(summary, cells, "Somatic variant drivers:", somaticVariantDriverString());
 
         if(includeGermline)
+        {
             addCellEntry(summary, cells, "Germline variant drivers:", germlineVariantDriverString());
+        }
 
         addCellEntry(summary, cells, "Somatic copy number drivers:", somaticCopyNumberDriverString());
 
         if(includeGermline)
+        {
             addCellEntry(summary, cells, "Germline copy number drivers:", germlineCopyNumberDriverString());
+        }
 
         addCellEntry(summary, cells, "Somatic disruption drivers:", somaticDisruptionDriverString());
 
         if(includeGermline)
+        {
             addCellEntry(summary, cells, "Germline disruption drivers:", germlineDisruptionDriverString());
+        }
 
         addCellEntry(summary, cells, "Fusion drivers:", fusionDriverString());
 
         if(includeGermline)
+        {
             addCellEntry(summary, cells, "Viral presence:", virusString());
+        }
 
-        addCellEntry(summary, cells, "Whole genome duplicated:", report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No");
+        addCellEntry(summary, cells, "Whole genome duplicated:", wgdString());
         addCellEntry(summary, cells, "Microsatellite indels per Mb:", msiString());
-        addCellEntry(summary, cells, "Tumor mutations per Mb:",
-                formatSingleDigitDecimal(report.purple().characteristics().tumorMutationalBurdenPerMb()));
+        addCellEntry(summary, cells, "Tumor mutations per Mb:", tmbString());
         addCellEntry(summary, cells, "Tumor mutational load:", tmlString());
 
         if(includeGermline) // will change once we solve HRD for panel
         {
             addCellEntry(summary, cells, "HR deficiency score:", hrDeficiencyString());
 
-            addCellEntry(summary, cells, "DPYD status:", dpydStatus());
+            addCellEntry(summary, cells, "DPYD status:", geneStatus("DPYD"));
+            addCellEntry(summary, cells, "UGT1A1 status:", geneStatus("UGT1A1"));
 
             addCellEntry(summary, cells, "Number of SVs:", svTmbString());
             addCellEntry(summary, cells, "Max complex cluster size:", maxComplexSizeString());
@@ -241,12 +292,22 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String somaticVariantDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         return variantDriverString(report.purple().reportableSomaticVariants(), report.purple().somaticDrivers());
     }
 
     @NotNull
     private String germlineVariantDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         List<PurpleVariant> reportableGermlineVariants = report.purple().reportableGermlineVariants();
         List<PurpleDriver> germlineDrivers = report.purple().germlineDrivers();
         if(reportableGermlineVariants != null && germlineDrivers != null)
@@ -283,12 +344,22 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String somaticCopyNumberDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         return copyNumberDriverString(report.purple().reportableSomaticGainsLosses());
     }
 
     @NotNull
     private String germlineCopyNumberDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         List<PurpleGainLoss> germlineGainsLosses = report.purple().reportableGermlineFullLosses();
         if(germlineGainsLosses == null)
         {
@@ -316,13 +387,23 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String somaticDisruptionDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         return disruptionDriverString(report.linx().somaticHomozygousDisruptions());
     }
 
     @NotNull
     private String germlineDisruptionDriverString()
     {
-        List<HomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
         if(germlineHomozygousDisruptions == null)
         {
             return ReportResources.NOT_AVAILABLE;
@@ -331,7 +412,7 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
-    private static String disruptionDriverString(@NotNull List<HomozygousDisruption> homozygousDisruptions)
+    private static String disruptionDriverString(@NotNull List<LinxHomozygousDisruption> homozygousDisruptions)
     {
         if(homozygousDisruptions.isEmpty())
         {
@@ -339,7 +420,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for(HomozygousDisruption homozygousDisruption : homozygousDisruptions)
+        for(LinxHomozygousDisruption homozygousDisruption : homozygousDisruptions)
         {
             genes.add(homozygousDisruption.gene());
         }
@@ -349,6 +430,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String fusionDriverString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         if(report.linx().reportableSomaticFusions().isEmpty())
         {
             return NONE;
@@ -357,7 +443,7 @@ public class FrontPageChapter implements ReportChapter
         Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
         for(LinxFusion fusion : report.linx().reportableSomaticFusions())
         {
-            fusions.add(fusion.name());
+            fusions.add(fusion.display());
         }
         return report.linx().reportableSomaticFusions().size() + " (" + concat(fusions) + ")";
     }
@@ -365,6 +451,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String virusString()
     {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         VirusInterpreterData virusInterpreter = report.virusInterpreter();
         if(virusInterpreter == null)
         {
@@ -377,7 +468,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
-        for(AnnotatedVirus virus : virusInterpreter.reportableViruses())
+        for(VirusInterpreterEntry virus : virusInterpreter.reportableViruses())
         {
             VirusInterpretation interpretation = virus.interpretation();
             if(interpretation != null)
@@ -394,51 +485,62 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
+    private String wgdString()
+    {
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        return report.purple().characteristics().wholeGenomeDuplication() ? "Yes" : "No";
+    }
+
+    @NotNull
     private String msiString()
     {
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         PurpleCharacteristics characteristics = report.purple().characteristics();
         return formatSingleDigitDecimal(characteristics.microsatelliteIndelsPerMb()) + " ("
-                + display(characteristics.microsatelliteStatus()) + ")";
+                + characteristics.microsatelliteStatus().display() + ")";
+    }
+
+    @NotNull
+    private String tmbString()
+    {
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
+        PurpleCharacteristics characteristics = report.purple().characteristics();
+        return formatSingleDigitDecimal(characteristics.tumorMutationalBurdenPerMb()) +
+                " (" + characteristics.tumorMutationalBurdenStatus().display() + ")";
     }
 
     @NotNull
     private String tmlString()
     {
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         PurpleCharacteristics characteristics = report.purple().characteristics();
-        return characteristics.tumorMutationalLoad() + " (" + display(characteristics.tumorMutationalLoadStatus()) + ")";
-    }
-
-    private static String display(PurpleMicrosatelliteStatus microsatelliteStatus)
-    {
-        switch(microsatelliteStatus)
-        {
-            case MSI:
-                return "Unstable";
-            case MSS:
-                return "Stable";
-            case UNKNOWN:
-                return "Unknown";
-        }
-        throw new IllegalStateException();
-    }
-
-    private static String display(@NotNull PurpleTumorMutationalStatus tumorMutationalStatus)
-    {
-        switch(tumorMutationalStatus)
-        {
-            case HIGH:
-                return "High";
-            case LOW:
-                return "Low";
-            case UNKNOWN:
-                return "Unknown";
-        }
-        throw new IllegalStateException();
+        return characteristics.tumorMutationalLoad() + " (" + characteristics.tumorMutationalLoadStatus().display() + ")";
     }
 
     @NotNull
     private String hrDeficiencyString()
     {
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         ChordRecord chord = report.chord();
         if(chord == null)
         {
@@ -447,7 +549,7 @@ public class FrontPageChapter implements ReportChapter
 
         if(chord.hrStatus() == ChordStatus.CANNOT_BE_DETERMINED)
         {
-            return displayChordStatus(ChordStatus.CANNOT_BE_DETERMINED);
+            return chord.hrStatus().display();
         }
 
         String addon = Strings.EMPTY;
@@ -470,26 +572,11 @@ public class FrontPageChapter implements ReportChapter
                 addon = " - " + chord.hrdType();
             }
         }
-        return formatSingleDigitDecimal(chord.hrdValue()) + " (" + displayChordStatus(chord.hrStatus()) + addon + ")";
-    }
-
-    private static String displayChordStatus(ChordStatus chordStatus)
-    {
-        switch(chordStatus)
-        {
-            case CANNOT_BE_DETERMINED:
-                return "Cannot be determined";
-            case HR_PROFICIENT:
-                return "Proficient";
-            case HR_DEFICIENT:
-                return "Deficient";
-            default:
-                return "Unknown";
-        }
+        return formatSingleDigitDecimal(chord.hrdValue()) + " (" + chord.hrStatus().display() + addon + ")";
     }
 
     @NotNull
-    private String dpydStatus()
+    private String geneStatus(@NotNull String gene)
     {
         Set<PeachGenotype> genotypes = report.peach();
         if(genotypes == null)
@@ -500,7 +587,7 @@ public class FrontPageChapter implements ReportChapter
         Set<String> haplotypes = Sets.newHashSet();
         for(PeachGenotype genotype : genotypes)
         {
-            if(genotype.gene().equals("DPYD"))
+            if(genotype.gene().equals(gene))
             {
                 haplotypes.add(genotype.haplotype() + " (" + genotype.function() + ")");
             }
@@ -511,6 +598,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String svTmbString()
     {
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         String svTmb = String.valueOf(report.purple().characteristics().svTumorMutationalBurden());
 
         Evaluation evaluation = report.cohortEvaluations().get(PercentileType.SV_TMB);
@@ -536,6 +628,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String maxComplexSizeString()
     {
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         CuppaData cuppa = report.cuppa();
         return cuppa != null ? Integer.toString(cuppa.maxComplexSize()) : ReportResources.NOT_AVAILABLE;
     }
@@ -543,6 +640,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String telomericSGLString()
     {
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         CuppaData cuppa = report.cuppa();
         return cuppa != null ? Integer.toString(cuppa.telomericSGLs()) : ReportResources.NOT_AVAILABLE;
     }
@@ -550,6 +652,11 @@ public class FrontPageChapter implements ReportChapter
     @NotNull
     private String lineCountString()
     {
+        if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         CuppaData cuppa = report.cuppa();
         return cuppa != null ? Integer.toString(cuppa.lineCount()) : ReportResources.NOT_AVAILABLE;
     }

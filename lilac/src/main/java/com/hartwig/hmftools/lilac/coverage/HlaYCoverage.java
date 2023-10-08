@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
+import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFEFENCE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.lilac.LilacConfig;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
+import com.hartwig.hmftools.lilac.fragment.FragmentSource;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.seq.HlaSequenceLoci;
 import com.hartwig.hmftools.lilac.seq.SequenceMatchType;
@@ -35,8 +37,8 @@ public class HlaYCoverage
 
     private boolean mExceedsThreshold;
 
-    private final Map<String,Map<HlaAllele,int[]>> mSourceAlleleFragmentCounts;
-    private final Map<String,int[]> mSourceMiscCounts;
+    private final Map<FragmentSource,Map<HlaAllele,int[]>> mSourceAlleleFragmentCounts;
+    private final Map<FragmentSource,int[]> mSourceMiscCounts;
 
     private BufferedWriter mWriter;
     private final LilacConfig mConfig;
@@ -48,8 +50,6 @@ public class HlaYCoverage
 
     private static final int Y0101_X = 0;
     private static final int EXON_3 = 1;
-
-    private static final String REF_SOURCE = "REF";
 
     public HlaYCoverage(
             final List<HlaSequenceLoci> hlaYSequences, final Map<String,Map<Integer,Set<String>>> geneAminoAcidHetLociMap,
@@ -72,7 +72,7 @@ public class HlaYCoverage
         if(!mExceedsThreshold)
             return null;
 
-        Map<HlaAllele,int[]> alleleCounts = mSourceAlleleFragmentCounts.get(REF_SOURCE);
+        Map<HlaAllele,int[]> alleleCounts = mSourceAlleleFragmentCounts.get(REFEFENCE);
 
         if(alleleCounts == null)
             return null;
@@ -179,11 +179,11 @@ public class HlaYCoverage
         List<FragmentAlleles> allFragAlleles = Lists.newArrayList(fragAlleles);
         allFragAlleles.addAll(mRemovedRefFragAlleles);
 
-        assignFragments(alleles, allFragAlleles, fragments, REF_SOURCE);
+        assignFragments(alleles, allFragAlleles, fragments, REFEFENCE);
     }
 
     public void assignFragments(
-            final List<HlaAllele> alleles, final List<FragmentAlleles> fragAlleles, final List<Fragment> fragments, final String source)
+            final List<HlaAllele> alleles, final List<FragmentAlleles> fragAlleles, final List<Fragment> fragments, final FragmentSource source)
     {
         Map<HlaAllele,int[]> sourceAlleleCounts = Maps.newHashMap();
         mSourceAlleleFragmentCounts.put(source, sourceAlleleCounts);
@@ -258,7 +258,7 @@ public class HlaYCoverage
             }
         }
 
-        if(!source.equals(REF_SOURCE))
+        if(!source.equals(REFEFENCE))
         {
             LL_LOGGER.info("HLA-Y src({}) fragments({} unique={}) shared={})",
                     source, uniqueHlaY + matchedFragmentAlleles.size(), uniqueHlaY, matchedFragmentAlleles.size());
@@ -292,9 +292,9 @@ public class HlaYCoverage
         if(mConfig.OutputDir.isEmpty() || !mExceedsThreshold)
             return;
 
-        for(Map.Entry<String,int[]> entry : mSourceMiscCounts.entrySet())
+        for(Map.Entry<FragmentSource,int[]> entry : mSourceMiscCounts.entrySet())
         {
-            final String source = entry.getKey();
+            FragmentSource source = entry.getKey();
             final int[] miscCounts = entry.getValue();
 
             String outcome = (miscCounts[Y0101_X] == 0 && miscCounts[EXON_3] > 0) ? "NOVEL" : "REF";
@@ -312,9 +312,9 @@ public class HlaYCoverage
             writer.write("Source\tAllele\tTotal\tShared\tHlaYShared\tUnique");
             writer.newLine();
 
-            for(Map.Entry<String,Map<HlaAllele,int[]>> sourceEntry : mSourceAlleleFragmentCounts.entrySet())
+            for(Map.Entry<FragmentSource,Map<HlaAllele,int[]>> sourceEntry : mSourceAlleleFragmentCounts.entrySet())
             {
-                final String source = sourceEntry.getKey();
+                FragmentSource source = sourceEntry.getKey();
                 for(Map.Entry<HlaAllele,int[]> alleleEntry : sourceEntry.getValue().entrySet())
                 {
                     final HlaAllele allele = alleleEntry.getKey();

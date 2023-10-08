@@ -2,49 +2,43 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.findDuplicateFragments;
 import static com.hartwig.hmftools.markdups.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.region.ExcludedRegions;
-import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.markdups.common.CandidateDuplicates;
+import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
-import com.hartwig.hmftools.markdups.common.FragmentUtils;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
-import com.hartwig.hmftools.markdups.common.UnmapStats;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
-import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
-public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
+public class PartitionReader implements Consumer<List<Fragment>>
 {
     private final MarkDupsConfig mConfig;
-    private final ChrBaseRegion mRegion;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
@@ -54,10 +48,10 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final DuplicateGroupBuilder mDuplicateGroupBuilder;
     private final ConsensusReads mConsensusReads;
 
-    private BaseRegion mCurrentPartition;
+    private ChrBaseRegion mCurrentRegion;
+
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
-    private ChrBaseRegion mExcludedRegion;
     private final List<BaseRegion> mUnmapRegions;
 
     private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
@@ -69,47 +63,26 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     private final PerformanceCounter mPcAcceptPositions;
     private final PerformanceCounter mPcPendingIncompletes;
 
-    public ChromosomeReader(
-            final ChrBaseRegion region, final MarkDupsConfig config, FileWriterCache fileWriterCache,
-            final PartitionDataStore partitionDataStore)
+    public PartitionReader(
+            final MarkDupsConfig config, final SamReader samReader,
+            final BamWriter bamWriter, final PartitionDataStore partitionDataStore)
     {
         mConfig = config;
-        mRegion = region;
+        mCurrentRegion = null;
         mPartitionDataStore = partitionDataStore;
-        mBamWriter = fileWriterCache.getBamWriter(mRegion.Chromosome);
+        mBamWriter = bamWriter;
 
-        mSamReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
+        mSamReader = samReader;
 
         mBamSlicer = new BamSlicer(0, true, true, false);
         mBamSlicer.setKeepUnmapped();
 
-        mReadPositions = new ReadPositionsCache(region.Chromosome, config.BufferSize, !config.NoMateCigar, this);
+        mReadPositions = new ReadPositionsCache(config.BufferSize, !config.NoMateCigar, this);
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mConsensusReads = new ConsensusReads(config.RefGenome);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
         mUnmapRegions = Lists.newArrayList();
-
-        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
-        {
-            // NOTE: doesn't currently handle multiple regions on the same chromosome
-            ChrBaseRegion firstRegion = mConfig.SpecificChrRegions.Regions.stream()
-                    .filter(x -> x.Chromosome.equals(mRegion.Chromosome)).findFirst().orElse(mRegion);
-
-            int partitionStart = (firstRegion.start() / mConfig.PartitionSize) * mConfig.PartitionSize;
-            mCurrentPartition = new BaseRegion(partitionStart, partitionStart + mConfig.PartitionSize - 1);
-        }
-        else
-        {
-            mCurrentPartition = new BaseRegion(1, mConfig.PartitionSize - 1);
-        }
-
-        setUnmappedRegions();
-
-        mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
-        mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-        setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
 
         mPendingIncompleteReads = Maps.newHashMap();
 
@@ -123,90 +96,62 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mPcPendingIncompletes = new PerformanceCounter("PendingIncompletes");
     }
 
-    // public PerformanceCounter perfCounter() { return mPcTotal; }
     public List<PerformanceCounter> perfCounters()
     {
         return List.of(mPcTotal, mPcAcceptPositions, mPcPendingIncompletes);
     }
 
     public Statistics statistics() { return mStats; }
-    public BamWriter recordWriter() { return mBamWriter; }
 
-    @Override
-    public Long call()
+    public void setupRegion(final ChrBaseRegion region)
     {
-        run();
-        return (long)1;
-    }
+        mCurrentRegion = region;
 
-    public void run()
-    {
         perfCountersStart();
 
-        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
-        {
-            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
-            {
-                if(!region.Chromosome.equals(mRegion.Chromosome))
-                    continue;
+        setUnmappedRegions();
 
-                MD_LOGGER.debug("processing specific region({})", region);
-                mBamSlicer.slice(mSamReader, region, this::processSamRecord);
-            }
-        }
-        else
-        {
-            MD_LOGGER.info("processing chromosome({})", mRegion.Chromosome);
-            mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
-        }
+        mCurrentStrPartition = formChromosomePartition(region.Chromosome, mCurrentRegion.start(), mConfig.PartitionSize);
+        mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
 
-        onPartitionComplete(false);
+        mReadPositions.setCurrentChromosome(region.Chromosome);
 
-        MD_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mStats.TotalReads);
-
-        mConsensusReads.logStats(mRegion.Chromosome);
+        // setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
     }
 
-    private void onPartitionComplete(boolean setupNext)
+    public void processRegion()
     {
+        if(mSamReader != null)
+        {
+            mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
+        }
+
+        postProcessRegion();
+    }
+
+    @VisibleForTesting
+    public void postProcessRegion()
+    {
+        // post-slice clean-up
         mReadPositions.evictAll();
 
         processPendingIncompletes();
 
         perfCountersStop();
 
-        MD_LOGGER.debug("partition({}:{}) complete, reads({})", mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount);
+        MD_LOGGER.debug("partition({}) complete, reads({})", mCurrentRegion, mPartitionRecordCount);
 
         if(mConfig.PerfDebug)
             mCurrentPartitionData.logCacheCounts();
 
         mPartitionRecordCount = 0;
-
-        if(setupNext)
-        {
-            // move ahead to the next partition, until the end of the chromosome is reached
-            int regionStart = mCurrentPartition.end() + 1;
-
-            if(regionStart > mRegion.end())
-            {
-                mCurrentPartition = null;
-                return;
-            }
-
-            mCurrentPartition.setStart(regionStart);
-            mCurrentPartition.setEnd(regionStart + mConfig.PartitionSize - 1);
-
-            mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
-            mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-            setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
-            setUnmappedRegions();
-
-            perfCountersStart();
-        }
     }
 
     private void processSamRecord(final SAMRecord read)
     {
+        if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
+            return;
+
         if(readOutsideSpecifiedRegions(
                 read, mConfig.SpecificChrRegions.Regions, mConfig.SpecificChrRegions.Chromosomes, mConfig.SpecificRegionsFilterType))
         {
@@ -218,19 +163,6 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(mConfig.RunChecks)
             mBamWriter.registerRead(read);
-
-        int readStart = read.getAlignmentStart();
-
-        while(mCurrentPartition != null && readStart > mCurrentPartition.end())
-        {
-            onPartitionComplete(true);
-
-            if(mCurrentPartition == null)
-            {
-                mBamWriter.writeFragment(new Fragment(read));
-                return;
-            }
-        }
 
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
         {
@@ -329,8 +261,8 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(mPendingIncompleteReads.size() > 100)
         {
-            MD_LOGGER.debug("partition({}:{}) processing {} pending incomplete fragments",
-                    mRegion.Chromosome, mCurrentPartition, mPendingIncompleteReads.values().stream().mapToInt(x -> x.size()).sum());
+            MD_LOGGER.debug("partition({}) processing {} pending incomplete fragments",
+                    mCurrentRegion, mPendingIncompleteReads.values().stream().mapToInt(x -> x.size()).sum());
         }
 
         mPcPendingIncompletes.resume();
@@ -363,6 +295,9 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mBamWriter.writeDuplicateGroup(duplicateGroup, completeReads);
     }
 
+    private static final double LOG_PERF_TIME_SEC = 1;
+    private static final int LOG_PERF_FRAG_COUNT = 3000;
+
     public void accept(final List<Fragment> positionFragments)
     {
         if(positionFragments.isEmpty())
@@ -374,13 +309,14 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         List<List<Fragment>> positionDuplicateGroups = Lists.newArrayList();
 
         int posFragmentCount = positionFragments.size();
-        boolean logDetails = mConfig.PerfDebug && posFragmentCount > 10000;
+        int position = positionFragments.get(0).initialPosition();
+        boolean logDetails = mConfig.PerfDebug && posFragmentCount > LOG_PERF_FRAG_COUNT; // was 10000
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
-        int position = positionFragments.get(0).initialPosition();
+        boolean inExcludedRegion = false; // dropped logic since added region unmapping logic
 
-        boolean inExcludedRegion = mExcludedRegion != null && positionFragments.stream()
-                .anyMatch(x -> x.reads().stream().anyMatch(y -> FragmentUtils.overlapsExcludedRegion(mExcludedRegion, y)));
+        //boolean inExcludedRegion = mExcludedRegion != null && positionFragments.stream()
+        //        .anyMatch(x -> x.reads().stream().anyMatch(y -> FragmentUtils.overlapsExcludedRegion(mExcludedRegion, y)));
 
         findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList, mConfig.UMIs.Enabled);
 
@@ -392,15 +328,12 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(logDetails)
         {
-            double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
+            double timeTakenSec = secondsSinceNow(startTimeMs);
 
-            if(timeTakenSec >= 1.0)
-            {
-                MD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) candidates({}) processing time({})",
-                        mRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(),
-                        candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
-                        format("%.1fs", timeTakenSec));
-            }
+            MD_LOGGER.debug("position({}:{}) fragments({}) resolved({}) dupGroups({}) candidates({}) processing time({})",
+                    mCurrentRegion.Chromosome, position, posFragmentCount, resolvedFragments.size(), duplicateGroups.size(),
+                    candidateDuplicatesList.stream().mapToInt(x -> x.fragmentCount()).sum(),
+                    format("%.1fs", timeTakenSec));
         }
 
         startTimeMs = logDetails ? System.currentTimeMillis() : 0;
@@ -409,12 +342,12 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
 
         if(logDetails)
         {
-            double timeTakenSec = (System.currentTimeMillis() - startTimeMs) / 1000.0;
+            double timeTakenSec = secondsSinceNow(startTimeMs);
 
-            if(timeTakenSec >= 1.0)
+            if(timeTakenSec >= LOG_PERF_TIME_SEC)
             {
                 MD_LOGGER.debug("position({}:{}) fragments({}) partition processing time({})",
-                        mRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
+                        mCurrentRegion.Chromosome, position, posFragmentCount, format("%.1fs", timeTakenSec));
             }
         }
 
@@ -431,6 +364,7 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
         mPcAcceptPositions.pause();
     }
 
+    /*
     @VisibleForTesting
     public void setExcludedRegion(final ChrBaseRegion excludedRegion)
     {
@@ -444,21 +378,22 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
             mExcludedRegion = null;
         }
     }
+    */
 
     private void setUnmappedRegions()
     {
         mUnmapRegions.clear();
 
-        List<BaseRegion> chrRegions = mConfig.UnmapRegions.getRegions(mRegion.Chromosome);
+        List<BaseRegion> chrRegions = mConfig.UnmapRegions.getRegions(mCurrentRegion.Chromosome);
 
         if(chrRegions != null)
-            chrRegions.stream().filter(x -> x.overlaps(mCurrentPartition)).forEach(x -> mUnmapRegions.add(x));
+            chrRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).forEach(x -> mUnmapRegions.add(x));
     }
 
     private void perfCountersStart()
     {
         if(mConfig.PerfDebug)
-            mPcTotal.start(format("%s:%s", mRegion.Chromosome, mCurrentPartition));
+            mPcTotal.start(format("%s", mCurrentRegion));
         else
             mPcTotal.start();
 
@@ -483,11 +418,76 @@ public class ChromosomeReader implements Consumer<List<Fragment>>, Callable
     public void flushPendingIncompletes() { processPendingIncompletes(); }
 
     @VisibleForTesting
-    public void onChromosomeComplete() { onPartitionComplete(false); }
-
-    @VisibleForTesting
     public PartitionDataStore partitionDataStore() { return mPartitionDataStore; }
 
     @VisibleForTesting
     public ConsensusReads consensusReads() { return mConsensusReads; }
+
+        /*
+    public void run()
+    {
+        perfCountersStart();
+
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
+        {
+            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
+            {
+                if(!region.Chromosome.equals(mRegion.Chromosome))
+                    continue;
+
+                MD_LOGGER.debug("processing specific region({})", region);
+                mBamSlicer.slice(mSamReader, region, this::processSamRecord);
+            }
+        }
+        else
+        {
+            MD_LOGGER.info("processing chromosome({})", mRegion.Chromosome);
+            mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
+        }
+
+        onPartitionComplete(false);
+
+        MD_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mStats.TotalReads);
+
+        mConsensusReads.logStats(mRegion.Chromosome);
+    }
+
+    private void onPartitionComplete(boolean setupNext)
+    {
+        mReadPositions.evictAll();
+
+        processPendingIncompletes();
+
+        perfCountersStop();
+
+        MD_LOGGER.debug("partition({}:{}) complete, reads({})", mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount);
+
+        if(mConfig.PerfDebug)
+            mCurrentPartitionData.logCacheCounts();
+
+        mPartitionRecordCount = 0;
+
+        if(setupNext)
+        {
+            // move ahead to the next partition, until the end of the chromosome is reached
+            int regionStart = mCurrentPartition.end() + 1;
+
+            if(regionStart > mRegion.end())
+            {
+                mCurrentPartition = null;
+                return;
+            }
+
+            mCurrentPartition.setStart(regionStart);
+            mCurrentPartition.setEnd(regionStart + mConfig.PartitionSize - 1);
+
+            mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
+            mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
+            setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
+            setUnmappedRegions();
+
+            perfCountersStart();
+        }
+    }
+    */
 }

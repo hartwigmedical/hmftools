@@ -13,7 +13,7 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class RNAFusionTable
+public final class RnaFusionTable
 {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<RnaFusion> fusions,
@@ -33,12 +33,12 @@ public final class RNAFusionTable
 
         for(RnaFusion fusion : sort(fusions))
         {
-            table.addCell(cells.createContent(fusion.name()));
-            table.addCell(cells.createContent(fusion.chromosomeUp() + ":" + fusion.positionUp()));
-            table.addCell(cells.createContent(fusion.chromosomeDown() + ":" + fusion.positionDown()));
+            table.addCell(cells.createContent(fusion.display()));
+            table.addCell(cells.createContent(fusion.chromosomeStart() + ":" + fusion.positionStart()));
+            table.addCell(cells.createContent(fusion.chromosomeEnd() + ":" + fusion.positionEnd()));
             table.addCell(cells.createContent(fusion.svType().toString()));
-            table.addCell(cells.createContent(fusion.junctionTypeUp() + "/" + fusion.junctionTypeDown()));
-            table.addCell(cells.createContent(fusion.depthUp() + "/" + fusion.depthDown()));
+            table.addCell(cells.createContent(fusion.junctionTypeStart() + "/" + fusion.junctionTypeEnd()));
+            table.addCell(cells.createContent(fusion.depthStart() + "/" + fusion.depthEnd()));
             table.addCell(cells.createContent(fusion.splitFragments() + "/" + fusion.realignedFrags() + "/" + fusion.discordantFrags()));
             table.addCell(cells.createContent(String.valueOf(fusion.cohortFrequency())));
         }
@@ -51,12 +51,12 @@ public final class RNAFusionTable
     {
         return fusions.stream().sorted((fusion1, fusion2) ->
         {
-            String locationUp1 = Chromosomes.zeroPrefixed(fusion1.chromosomeUp());
-            String locationUp2 = Chromosomes.zeroPrefixed(fusion2.chromosomeUp());
+            String locationUp1 = Chromosomes.zeroPrefixed(fusion1.chromosomeStart());
+            String locationUp2 = Chromosomes.zeroPrefixed(fusion2.chromosomeStart());
 
             if(locationUp1.equals(locationUp2))
             {
-                return Integer.compare(fusion1.positionUp(), fusion2.positionUp());
+                return Integer.compare(fusion1.positionStart(), fusion2.positionStart());
             }
             else
             {

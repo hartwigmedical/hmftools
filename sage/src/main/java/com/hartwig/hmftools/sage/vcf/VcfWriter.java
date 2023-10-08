@@ -3,9 +3,9 @@ package com.hartwig.hmftools.sage.vcf;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.sage.ReferenceData;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SageVariant;
+
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class VcfWriter
 {
@@ -19,11 +19,11 @@ public class VcfWriter
 
     public VcfWriter(
             final String version, final String outputFile, final List<String> tumorIds, final List<String> referenceIds,
-            final ReferenceData refData)
+            final IndexedFastaSequenceFile refGenome)
     {
         mTumorIds = tumorIds;
         mReferenceIds = referenceIds;
-        mVcfFile = new VariantVCF(refData.RefGenome, version, outputFile, tumorIds, referenceIds);
+        mVcfFile = new VariantVCF(refGenome, version, outputFile, tumorIds, referenceIds);
         mCompletedVariants = Lists.newArrayList();
         mLastWrittenIndex = -1;
     }

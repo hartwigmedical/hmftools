@@ -21,7 +21,7 @@ public final class HLAAlleleTable
 {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<LilacAllele> alleles,
-            @NotNull ReportResources reportResources)
+            @NotNull ReportResources reportResources, boolean isTumorFail)
     {
         if(alleles.isEmpty())
         {
@@ -38,10 +38,10 @@ public final class HLAAlleleTable
         {
             table.addCell(cells.createContent(allele.allele()));
             table.addCell(cells.createContent(String.valueOf(allele.refFragments())));
-            table.addCell(cells.createContent(String.valueOf(allele.tumorFragments())));
-            table.addCell(cells.createContent(String.valueOf(allele.rnaFragments())));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(allele.tumorCopyNumber())));
-            table.addCell(cells.createContent(mutationString(allele)));
+            table.addCell(cells.createContent(fragmentString(allele.tumorFragments(), isTumorFail)));
+            table.addCell(cells.createContent(fragmentString(allele.rnaFragments(), isTumorFail)));
+            table.addCell(cells.createContent(copyNumberString(allele.tumorCopyNumber(), isTumorFail)));
+            table.addCell(cells.createContent(mutationString(allele, isTumorFail)));
         }
 
         return new Tables(reportResources).createWrapping(table, title);
@@ -56,8 +56,25 @@ public final class HLAAlleleTable
     }
 
     @NotNull
-    private static String mutationString(@NotNull LilacAllele allele)
+    private static String fragmentString(int fragments, boolean isTumorFail)
     {
+        return !isTumorFail ? String.valueOf(fragments) : ReportResources.NOT_AVAILABLE;
+    }
+
+    @NotNull
+    private static String copyNumberString(double tumorCopyNumber, boolean isTumorFail)
+    {
+        return !isTumorFail ? ReportResources.formatSingleDigitDecimal(tumorCopyNumber) : ReportResources.NOT_AVAILABLE;
+    }
+
+    @NotNull
+    private static String mutationString(@NotNull LilacAllele allele, boolean isTumorFail)
+    {
+        if(isTumorFail)
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+
         StringJoiner joiner = new StringJoiner(", ");
         if(Doubles.positive(allele.somaticMissense()))
         {

@@ -91,6 +91,8 @@ public class SageAppendApplication
             System.exit(1);
         }
 
+        SG_LOGGER.info("appending variants with {} sample BAM(s)", mConfig.Common.ReferenceBams.size());
+
         SG_LOGGER.info("reading and validating file: {}", mConfig.InputVcf);
 
         long startTimeMs = System.currentTimeMillis();

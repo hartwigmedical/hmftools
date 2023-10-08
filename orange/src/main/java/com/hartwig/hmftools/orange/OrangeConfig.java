@@ -54,7 +54,10 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOpt
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+import static com.hartwig.hmftools.orange.util.Config.fileIfExists;
+import static com.hartwig.hmftools.orange.util.Config.optionalFileIfExists;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -76,10 +79,6 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
-
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.orange.util.Config.fileIfExists;
-import static com.hartwig.hmftools.orange.util.Config.optionalFileIfExists;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -167,7 +166,7 @@ public interface OrangeConfig
         configBuilder.addFlag(ADD_DISCLAIMER, "If set, prints a disclaimer on each page.");
         addLoggingOptions(configBuilder);
 
-        OrangeRNAConfig.registerConfig(configBuilder);
+        OrangeRnaConfig.registerConfig(configBuilder);
     }
 
     @NotNull
@@ -177,7 +176,7 @@ public interface OrangeConfig
     String referenceSampleId();
 
     @Nullable
-    OrangeRNAConfig rnaConfig();
+    OrangeRnaConfig rnaConfig();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -341,7 +340,7 @@ public interface OrangeConfig
 
         builder.tumorSampleId(tumorSampleId)
                 .referenceSampleId(refSampleId)
-                .rnaConfig(OrangeRNAConfig.createConfig(configBuilder))
+                .rnaConfig(OrangeRnaConfig.createConfig(configBuilder))
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .experimentDate(experimentDate)
                 .refGenomeVersion(OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name()))
@@ -387,11 +386,15 @@ public interface OrangeConfig
             String virusDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
 
             if(virusDir != null)
+            {
                 builder.annotatedVirusTsv(fileIfExists(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)));
+            }
 
             String chordDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CHORD_DIR_CFG, CHORD_DIR);
             if(chordDir != null)
+            {
                 builder.chordPredictionTxt(fileIfExists(ChordDataFile.generateFilename(chordDir, tumorSampleId)));
+            }
 
             String cuppaDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CUPPA_DIR_CFG, CUPPA_DIR);
 
@@ -406,11 +409,15 @@ public interface OrangeConfig
             String sigsDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SIGS_DIR_CFG, SIGS_DIR);
 
             if(sigsDir != null)
+            {
                 builder.sigsAllocationTsv(fileIfExists(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)));
+            }
 
             String peachDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PEACH_DIR_CFG, PEACH_DIR);
             if(peachDir != null)
+            {
                 builder.peachGenotypeTsv(fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv"));
+            }
 
             builder.refSampleWGSMetricsFile(getMetricsFile(
                     configBuilder, REF_SAMPLE_WGS_METRICS_FILE, refSampleId, pipelineSampleRootDir, METRICS_DIR));
@@ -423,10 +430,13 @@ public interface OrangeConfig
     }
 
     private static String getMetricsFile(
-            final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir, final String toolDir)
+            final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir,
+            final String toolDir)
     {
         if(configBuilder.hasValue(configStr))
+        {
             return configBuilder.getValue(configStr);
+        }
 
         String directory = getMetricsDirectory(configBuilder, configStr, sampleId, pipelineDir, toolDir);
 
@@ -440,10 +450,14 @@ public interface OrangeConfig
             @Nullable String sampleDataDir, final String toolDirConfig, final String pipelineToolDir)
     {
         if(configBuilder.hasValue(toolDirConfig))
+        {
             return configBuilder.getValue(toolDirConfig);
+        }
 
         if(pipelineSampleRootDir != null)
+        {
             return pipelineSampleRootDir + pipelineToolDir;
+        }
 
         return sampleDataDir;
     }
@@ -467,17 +481,21 @@ public interface OrangeConfig
     }
 
     private static String getMetricsDirectory(
-            final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir, final String toolDir)
+            final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir,
+            final String toolDir)
     {
         if(configBuilder.hasValue(configStr))
+        {
             return configBuilder.getValue(configStr);
+        }
 
         if(pipelineDir == null || sampleId == null)
+        {
             return null;
+        }
 
         return pipelineDir + sampleId + File.separator + toolDir;
     }
-
 
     @NotNull
     static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator)

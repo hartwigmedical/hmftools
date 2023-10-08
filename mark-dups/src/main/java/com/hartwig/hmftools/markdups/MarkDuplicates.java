@@ -1,22 +1,25 @@
 package com.hartwig.hmftools.markdups;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromosome;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.APP_NAME;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
+import static com.hartwig.hmftools.markdups.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.common.PartitionData;
@@ -43,14 +46,12 @@ public class MarkDuplicates
 
         long startTimeMs = System.currentTimeMillis();
 
-        List<ChromosomeReader> chromosomeReaders = Lists.newArrayList();
-
-        RefGenomeCoordinates refGenomeCoordinates = mConfig.RefGenVersion.is37() ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
-
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig);
 
         PartitionDataStore partitionDataStore = new PartitionDataStore(mConfig);
-        final List<Callable> callableList = Lists.newArrayList();
+
+        // partition all chromosomes
+        Queue<ChrBaseRegion> partitions = new ConcurrentLinkedQueue<>();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -59,22 +60,49 @@ public class MarkDuplicates
             if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
-            ChrBaseRegion chrBaseRegion = new ChrBaseRegion(chromosomeStr, 1, refGenomeCoordinates.Lengths.get(chromosome));
+            List<ChrBaseRegion> chrPartitions = partitionChromosome(
+                    chromosomeStr, mConfig.RefGenVersion, mConfig.SpecificChrRegions.Regions, mConfig.PartitionSize);
 
-            ChromosomeReader chromosomeReader = new ChromosomeReader(chrBaseRegion, mConfig, fileWriterCache, partitionDataStore);
-            chromosomeReaders.add(chromosomeReader);
-            callableList.add(chromosomeReader);
+            partitions.addAll(chrPartitions);
         }
 
-        if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
-            System.exit(1);
+        List<PartitionThread> partitionTasks = Lists.newArrayList();
+        List<Thread> workers = new ArrayList<>();
+
+        int partitionCount = partitions.size();
+
+        for(int i = 0; i < min(partitionCount, mConfig.Threads); ++i)
+        {
+            PartitionThread partitionThread = new PartitionThread(i, mConfig, partitions, fileWriterCache, partitionDataStore);
+            partitionTasks.add(partitionThread);
+            workers.add(partitionThread);
+        }
+
+        MD_LOGGER.debug("splitting {} partitions across {} threads", partitionCount, partitionTasks.size());
+
+        for(Thread worker : workers)
+        {
+            try
+            {
+                worker.join();
+            }
+            catch(InterruptedException e)
+            {
+                MD_LOGGER.error("task execution error: {}", e.toString());
+                e.printStackTrace();
+            }
+        }
+
+        MD_LOGGER.info("all partition tasks complete");
+
+        List<PartitionReader> partitionReaders = partitionTasks.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
         int totalUnwrittenFragments = 0;
         ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
         consensusReads.setDebugOptions(mConfig.RunChecks);
 
-        BamWriter recordWriter = chromosomeReaders.get(0).recordWriter();
+        BamWriter recordWriter = partitionTasks.get(0).bamWriter();
 
         for(PartitionData partitionData : partitionDataStore.partitions())
         {
@@ -90,20 +118,28 @@ public class MarkDuplicates
 
         fileWriterCache.close();
 
-        MD_LOGGER.debug("all chromosome tasks complete");
+        if(mConfig.SamToolsPath != null)
+            fileWriterCache.sortAndIndexBams();
 
         Statistics combinedStats = new Statistics();
-        chromosomeReaders.forEach(x -> combinedStats.merge(x.statistics()));
+        partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
         partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
-
-        int totalWrittenReads = chromosomeReaders.stream().mapToInt(x -> x.recordWriter().recordWriteCount()).sum();
 
         combinedStats.logStats();
 
-        if(combinedStats.TotalReads != totalWrittenReads)
+        int totalWrittenReads = fileWriterCache.totalWrittenReads();
+        int unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
+
+        if(mConfig.UnmapRegions.enabled())
         {
-            MD_LOGGER.warn("reads processed({}) vs written({}) mismatch", combinedStats.TotalReads, totalWrittenReads);
-            chromosomeReaders.forEach(x -> x.recordWriter().logUnwrittenReads());
+            MD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
+        }
+
+        if(combinedStats.TotalReads != totalWrittenReads + unmappedDroppedReads)
+        {
+            MD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
+                    combinedStats.TotalReads, totalWrittenReads, combinedStats.TotalReads - totalWrittenReads - unmappedDroppedReads);
+            fileWriterCache.logUnwrittenReads();
         }
 
         if(mConfig.WriteStats)
@@ -122,16 +158,11 @@ public class MarkDuplicates
             }
         }
 
-        if(mConfig.UnmapRegions.enabled())
-        {
-            MD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
-        }
+        List<PerformanceCounter> combinedPerfCounters = partitionReaders.get(0).perfCounters();
 
-        List<PerformanceCounter> combinedPerfCounters = chromosomeReaders.get(0).perfCounters();
-
-        for(int i = 1; i < chromosomeReaders.size(); ++i)
+        for(int i = 1; i < partitionReaders.size(); ++i)
         {
-            List<PerformanceCounter> chrPerfCounters = chromosomeReaders.get(i).perfCounters();
+            List<PerformanceCounter> chrPerfCounters = partitionReaders.get(i).perfCounters();
 
             for(int j = 0; j < chrPerfCounters.size(); ++j)
             {
@@ -151,20 +182,26 @@ public class MarkDuplicates
                     perfCounter.logStats();
             }
 
-            List<Double> partitionLockTimes = Lists.newArrayList();
-            partitionDataStore.partitions().forEach(x -> partitionLockTimes.add(x.totalLockTime()));
-            Collections.sort(partitionLockTimes, Collections.reverseOrder());
-            double nthTime = partitionLockTimes.size() >= 5 ? partitionLockTimes.get(4) : partitionLockTimes.get(partitionLockTimes.size() - 1);
+            // check partition store locking times
+            double totalLockTimeMs = 0;
 
             for(PartitionData partitionData : partitionDataStore.partitions())
             {
-                double lockTime = partitionData.totalLockTime();
+                double lockTime = partitionData.totalLockTimeMs();
 
-                if(lockTime > 0 && lockTime >= nthTime)
+                totalLockTimeMs += lockTime;
+
+                if(lockTime > LOCK_ACQUIRE_LONG_TIME_MS)
                 {
-                    MD_LOGGER.debug("partition({}) total lock-acquisition time({})",
-                            partitionData.partitionStr(), format("%.3f", lockTime));
+                    MD_LOGGER.debug("partition({}) lock-acquisition time({}ms)",
+                            partitionData.partitionStr(), format("%.1f", lockTime));
                 }
+            }
+
+            if(totalLockTimeMs > LOCK_ACQUIRE_LONG_TIME_MS)
+            {
+                MD_LOGGER.debug("partition cache total lock-acquisition time({}s)",
+                        format("%.3f", totalLockTimeMs / 1000));
             }
         }
         else

@@ -101,6 +101,7 @@ public class ReadUnmapper
         {
             // these will be dropped from the BAM
             read.setReadUnmappedFlag(true);
+            read.setMappingQuality(0);
             mStats.SupplementaryCount.incrementAndGet();
             return true;
         }
@@ -152,6 +153,7 @@ public class ReadUnmapper
     {
         // set flag unmapped
         read.setReadUnmappedFlag(true);
+        read.setMappingQuality(0);
         read.setProperPairFlag(false);
 
         // clear insert size

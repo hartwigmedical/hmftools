@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.findPrimaryFragment;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
@@ -183,5 +184,13 @@ public class FragmentUtilsTest
 
         Fragment primary = findPrimaryFragment(fragments, false);
         assertEquals(primary, fragment);
+    }
+
+    @Test
+    public void testReadChromosomePartition()
+    {
+        assertEquals("1_0", formChromosomePartition(CHR_1, 1, 1000));
+        assertEquals("1_0", formChromosomePartition(CHR_1, 999, 1000));
+        assertEquals("1_1", formChromosomePartition(CHR_1, 1000, 1000));
     }
 }

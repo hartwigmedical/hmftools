@@ -36,7 +36,7 @@ public final class LossOfHeterozygosityTable
         for(PurpleGeneCopyNumber lohGene : sort(lohGenes))
         {
             table.addCell(cells.createContent(lohGene.chromosome() + lohGene.chromosomeBand()));
-            table.addCell(cells.createContent(lohGene.geneName()));
+            table.addCell(cells.createContent(lohGene.gene()));
             table.addCell(cells.createContent(formatSingleDigitDecimal(Math.max(0, lohGene.minMinorAlleleCopyNumber()))));
             table.addCell(cells.createContent(formatSingleDigitDecimal(Math.max(0, lohGene.minCopyNumber()))));
             table.addCell(cells.createContent(Strings.EMPTY));
@@ -55,7 +55,7 @@ public final class LossOfHeterozygosityTable
 
             if(location1.equals(location2))
             {
-                return geneCopyNumber1.geneName().compareTo(geneCopyNumber2.geneName());
+                return geneCopyNumber1.gene().compareTo(geneCopyNumber2.gene());
             }
             else
             {

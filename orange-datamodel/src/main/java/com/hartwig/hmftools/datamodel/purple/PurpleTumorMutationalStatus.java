@@ -1,19 +1,24 @@
 package com.hartwig.hmftools.datamodel.purple;
 
-public enum PurpleTumorMutationalStatus {
+import org.jetbrains.annotations.NotNull;
+
+public enum PurpleTumorMutationalStatus
+{
     HIGH("High"),
     LOW("Low"),
     UNKNOWN("Unknown");
 
-    private final String mDisplay;
+    @NotNull
+    private final String display;
 
-    PurpleTumorMutationalStatus(final String display)
+    PurpleTumorMutationalStatus(@NotNull final String display)
     {
-        mDisplay = display;
+        this.display = display;
     }
 
+    @NotNull
     public String display()
     {
-        return mDisplay;
+        return display;
     }
 }

@@ -74,6 +74,9 @@ public class VariantVCF implements AutoCloseable
     public static final String RAW_ALLELIC_DEPTH = "RAD";
     public static final String RAW_ALLELIC_BASE_QUALITY = "RABQ";
 
+    public static final String AVG_MAP_QUALITY = "AMQ";
+    public static final String AVG_NM_COUNT = "ANM";
+
     public static final String STRAND_BIAS = "SB";
     public static final String STRAND_BIAS_DESC = "Strand bias - percentage of first-in-pair reads";
 
@@ -148,7 +151,7 @@ public class VariantVCF implements AutoCloseable
         return header(version, samples);
     }
 
-    private static VCFHeader header(final String version, final List<String> allSamples)
+    public static VCFHeader header(final String version, final List<String> allSamples)
     {
         VCFHeader header = SageVcfTags.addMetaData(new VCFHeader(Collections.emptySet(), allSamples));
 
@@ -163,6 +166,8 @@ public class VariantVCF implements AutoCloseable
                 VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESCRIPTION));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, "Average map quality count (all,alt)"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, "Average NM count (all,alt)"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
