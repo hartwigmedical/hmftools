@@ -6,7 +6,6 @@ public class FlagStats
 {
     private final FlagQCStats mTotal;
     private final FlagQCStats mPrimary;
-    // TODO(m_cooper): Do we actually get the secondaries through the readers?
     private final FlagQCStats mSecondary;
     private final FlagQCStats mSupp;
     private final FlagQCStats mDuplicate;
