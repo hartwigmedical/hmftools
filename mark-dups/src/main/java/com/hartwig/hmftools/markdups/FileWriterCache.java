@@ -1,11 +1,20 @@
 package com.hartwig.hmftools.markdups;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.StringJoiner;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -24,6 +33,8 @@ public class FileWriterCache
     private final List<BamWriter> mBamWriters;
 
     private static final String BAM_FILE_ID = "mark_dups";
+    private static final String SORTED_ID = "sorted";
+    private static final String UNSORTED_ID = "unsorted";
 
     public FileWriterCache(final MarkDupsConfig config)
     {
@@ -35,12 +46,28 @@ public class FileWriterCache
         mSharedBamWriter = mConfig.MultiBam ? null : createBamWriter(null);
     }
 
-    public BamWriter getBamWriter(final String chromosome)
+    public BamWriter getBamWriter(final String fileId)
     {
         if(mSharedBamWriter != null)
             return mSharedBamWriter;
 
-        return createBamWriter(chromosome);
+        return createBamWriter(fileId);
+    }
+
+    public int totalWrittenReads()
+    {
+        if(mSharedBamWriter != null)
+            return mSharedBamWriter.recordWriteCount();
+        else
+            return mBamWriters.stream().mapToInt(x -> x.recordWriteCount()).sum();
+    }
+
+    public void logUnwrittenReads()
+    {
+        if(mSharedBamWriter != null)
+            mSharedBamWriter.logUnwrittenReads();
+        else
+            mBamWriters.forEach(x -> x.logUnwrittenReads());
     }
 
     public void close()
@@ -52,14 +79,15 @@ public class FileWriterCache
     public BamWriter createBamWriter(@Nullable final String multiId)
     {
         SAMFileWriter samFileWriter = null;
+        String filename = null;
 
         if(mConfig.WriteBam)
         {
-            String filename = formBamFilename(multiId);
+            filename = formBamFilename(mConfig.SortedBam ? SORTED_ID : UNSORTED_ID, multiId);
 
             if(multiId == null)
             {
-                MD_LOGGER.info("writing BAM file: {}", filename);
+                MD_LOGGER.debug("writing BAM file: {}", filename);
 
             }
             else
@@ -70,7 +98,7 @@ public class FileWriterCache
             samFileWriter = initialiseSamFileWriter(filename);
         }
 
-        BamWriter bamWriter = new BamWriter(mConfig, mReadDataWriter, samFileWriter);
+        BamWriter bamWriter = new BamWriter(filename, mConfig, mReadDataWriter, samFileWriter);
         mBamWriters.add(bamWriter);
         return bamWriter;
     }
@@ -89,7 +117,7 @@ public class FileWriterCache
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(filename));
     }
 
-    private String formBamFilename(@Nullable final String multiId)
+    private String formBamFilename(@Nullable final String sorted, @Nullable final String multiId)
     {
         String filename = mConfig.OutputDir + mConfig.SampleId + "." + BAM_FILE_ID;
 
@@ -99,8 +127,211 @@ public class FileWriterCache
         if(multiId != null)
             filename += "." + multiId;
 
+        if(sorted != null)
+            filename += "." + sorted;
+
         filename += ".bam";
+
         return filename;
     }
 
+    public void sortAndIndexBams()
+    {
+        if(mConfig.SamToolsPath == null)
+            return;
+
+        String finalBamFilename = formBamFilename(null, null);
+
+        List<String> interimBams = Lists.newArrayList();
+        List<String> sortedThreadBams = Lists.newArrayList();
+
+        if(!mConfig.SortedBam)
+        {
+            if(mSharedBamWriter != null)
+            {
+                SortBamTask sortBamTask = new SortBamTask(mSharedBamWriter.filename(), finalBamFilename, mConfig.Threads);
+
+                MD_LOGGER.debug("sorting bam");
+                sortBamTask.call();
+
+                interimBams.add(mSharedBamWriter.filename());
+            }
+            else
+            {
+                List<SortBamTask> sortTasks = Lists.newArrayList();
+
+                for(BamWriter bamWriter : mBamWriters)
+                {
+                    String sortedBamFile = bamWriter.filename().replaceAll(UNSORTED_ID, SORTED_ID);
+
+                    sortTasks.add(new SortBamTask(bamWriter.filename(), sortedBamFile, 1));
+
+                    interimBams.add(bamWriter.filename());
+                    interimBams.add(sortedBamFile);
+                    sortedThreadBams.add(sortedBamFile);
+                }
+
+                List<Callable> callableTasks = sortTasks.stream().collect(Collectors.toList());
+
+                MD_LOGGER.debug("sorting {} bam file(s)", sortTasks.size());
+
+                if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
+                    System.exit(1);
+            }
+
+            MD_LOGGER.debug("sort complete");
+        }
+
+        if(mBamWriters.size() > 1)
+        {
+            mergeBams(finalBamFilename, sortedThreadBams);
+        }
+
+        deleteInterimBams(interimBams);
+
+        indexFinalBam(finalBamFilename);
+    }
+
+    private void mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
+    {
+        MD_LOGGER.debug("merging {} bams", mBamWriters.size());
+
+        // String inputBamStr = sortedThreadBams.stream().collect(Collectors.joining(" "));
+
+        final String[] command = new String[5 + sortedThreadBams.size()];
+
+        int index = 0;
+
+        if(mConfig.SambambaPath != null)
+        {
+            command[index++] = mConfig.SambambaPath;
+            command[index++] = "merge";
+            command[index++] = "-t";
+        }
+        else
+        {
+            command[index++] = mConfig.SamToolsPath;
+            command[index++] = "merge";
+            command[index++] = "-@";
+        }
+
+        command[index++] = String.valueOf(mConfig.Threads);
+        command[index++] = finalBamFilename;
+
+        for(String threadBam : sortedThreadBams)
+        {
+            command[index++] = threadBam;
+        }
+
+        executeCommand(command, finalBamFilename);
+
+        MD_LOGGER.debug("merge complete");
+    }
+
+    private void deleteInterimBams(final List<String> interimBams)
+    {
+        try
+        {
+            for(String filename : interimBams)
+            {
+                Files.deleteIfExists(Paths.get(filename));
+            }
+        }
+        catch(IOException e)
+        {
+            MD_LOGGER.error("error deleting interim bams: {}", e.toString());
+        }
+    }
+
+    private void indexFinalBam(String finalBamFilename)
+    {
+        MD_LOGGER.debug("indexing final bam");
+
+        final String[] command = new String[5];
+
+        int index = 0;
+        command[index++] = mConfig.SamToolsPath;
+        command[index++] = "index";
+        command[index++] = "-@";
+        command[index++] = String.valueOf(mConfig.Threads);
+        command[index++] = finalBamFilename;
+
+        executeCommand(command, finalBamFilename);
+
+        MD_LOGGER.debug("index complete");
+    }
+
+    private class SortBamTask implements Callable
+    {
+        private final String mBamfile;
+        private final String mSortedBamfile;
+        private final int mThreadCount;
+
+        public SortBamTask(final String bamfile, final String sortedBamfile, final int threadCount)
+        {
+            mBamfile = bamfile;
+            mThreadCount = threadCount;
+            mSortedBamfile = sortedBamfile;
+        }
+
+        @Override
+        public Long call()
+        {
+            if(mSortedBamfile == null)
+            {
+                MD_LOGGER.error("invalid bam filename({})", mBamfile);
+                return (long)0;
+            }
+
+            // String sortArgs = format("sort -@ %s -m %dG -T tmp -O bam %s -o %s", Bash.allCpus(), SORT_MEMORY_PER_CORE, inputBam, outputBam);
+
+            final String[] command = new String[9];
+
+            int index = 0;
+            command[index++] = mConfig.SamToolsPath;
+            command[index++] = "sort";
+            command[index++] = "-@";
+            command[index++] = String.valueOf(mThreadCount);
+            command[index++] = "-O";
+            command[index++] = "bam";
+            command[index++] = mBamfile;
+            command[index++] = "-o";
+            command[index++] = mSortedBamfile;
+
+            executeCommand(command, mSortedBamfile);
+
+            return (long)0;
+        }
+    }
+
+    private static boolean executeCommand(final String[] command, final String outputPrefix)
+    {
+        String redirectOutputFile = outputPrefix + ".out";
+        String redirectErrFile = outputPrefix + ".err";
+
+        try
+        {
+            int result = new ProcessBuilder(command)
+                    .redirectOutput(new File(redirectOutputFile))
+                    .redirectError(new File(redirectErrFile))
+                    .start().waitFor();
+
+            if(result != 0)
+            {
+                MD_LOGGER.error("error running command({}:{}) for file({})", command[0], command[1], outputPrefix);
+                return false;
+            }
+
+            // clean-up process log files
+            Files.deleteIfExists(Paths.get(redirectOutputFile));
+            Files.deleteIfExists(Paths.get(redirectErrFile));
+        }
+        catch(Exception e)
+        {
+            MD_LOGGER.error("error running command({}:{}) for file({}): {}", command[0], command[1], outputPrefix, e.toString());
+            return false;
+        }
+
+        return true;
+    }
 }

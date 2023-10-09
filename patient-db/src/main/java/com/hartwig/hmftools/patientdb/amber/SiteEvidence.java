@@ -2,6 +2,8 @@ package com.hartwig.hmftools.patientdb.amber;
 
 import static java.lang.String.format;
 
+import static htsjdk.variant.variantcontext.Allele.NO_CALL;
+
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
 import htsjdk.variant.variantcontext.Allele;
@@ -49,9 +51,9 @@ public class SiteEvidence implements GenomePosition
     public static SiteEvidence fromVariantContext(final VariantContext context)
     {
         final Allele refAllele = context.getReference();
-        final Allele altAllele = context.getAlternateAllele(0);
-
         final Genotype normal = context.getGenotype(0);
+
+        final Allele altAllele = context.getAlternateAllele(0);
 
         return new SiteEvidence(
                 context.getContig(), context.getStart(), refAllele.getBaseString(), altAllele.getBaseString(),

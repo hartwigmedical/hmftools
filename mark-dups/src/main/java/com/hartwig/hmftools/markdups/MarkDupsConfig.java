@@ -82,6 +82,9 @@ public class MarkDupsConfig
     public final boolean NoMateCigar;
     public final int Threads;
 
+    public final String SamToolsPath;
+    public final String SambambaPath;
+
     // debug
     public final SpecificRegions SpecificChrRegions;
     public final List<String> LogReadIds;
@@ -108,6 +111,8 @@ public class MarkDupsConfig
     private static final String NO_WRITE_BAM = "no_write_bam";
     private static final String SORTED_BAM = "sorted_bam";
     private static final String MULTI_BAM = "multi_bam";
+    private static final String SAMTOOLS_PATH = "samtools";
+    private static final String SAMBAMBA_PATH = "sambamba";
 
     private static final String UNMAP_REGIONS = "unmap_regions";
 
@@ -150,6 +155,9 @@ public class MarkDupsConfig
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         BufferSize = configBuilder.getInteger(BUFFER_SIZE);
         BamStringency = BamUtils.validationStringency(configBuilder);
+
+        SambambaPath = configBuilder.getValue(SAMBAMBA_PATH);
+        SamToolsPath = configBuilder.getValue(SAMTOOLS_PATH);
 
         NoMateCigar = configBuilder.hasFlag(NO_MATE_CIGAR);
         UMIs = UmiConfig.from(configBuilder);
@@ -235,6 +243,9 @@ public class MarkDupsConfig
         configBuilder.addFlag(NO_WRITE_BAM, "BAM not written");
         configBuilder.addFlag(SORTED_BAM, "Write sorted BAM");
         configBuilder.addFlag(MULTI_BAM, "Write temporary BAMs with multi-threading");
+        configBuilder.addPath(SAMTOOLS_PATH, false, "Path to samtools for sort");
+        configBuilder.addPath(SAMBAMBA_PATH, false, "Path to sambamba for merge");
+
         configBuilder.addFlag(FORM_CONSENSUS, "Form consensus reads from duplicate groups without UMIs");
         configBuilder.addFlag(NO_MATE_CIGAR, "Mate CIGAR not set by aligner, make no attempt to use it");
         configBuilder.addFlag(WRITE_STATS, "Write duplicate and UMI-group stats");
@@ -276,6 +287,9 @@ public class MarkDupsConfig
 
         SpecificChrRegions = new SpecificRegions();
         SpecificRegionsFilterType = FilterReadsType.MATE_AND_SUPP;
+
+        SamToolsPath = null;
+        SambambaPath = null;
 
         UnmapRegions = new ReadUnmapper(Collections.emptyMap(), DEFAULT_READ_LENGTH);
 

@@ -9,9 +9,9 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(passAnnotations = {NotNull.class, Nullable.class})
-public interface LilacRecord {
-
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface LilacRecord
+{
     @NotNull
     String qc();
 

@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.time.LocalDate;
 import java.util.ServiceLoader;
 
 import com.google.gson.Gson;
@@ -32,11 +33,14 @@ public class OrangeJson {
     }
 
     private OrangeJson() {
-        var gsonBuilder = new GsonBuilder();
+        GsonBuilder gsonBuilder = new GsonBuilder();
         for (TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class)) {
             gsonBuilder.registerTypeAdapterFactory(factory);
         }
-        gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues().create();
+
+        gson = gsonBuilder.serializeNulls().serializeSpecialFloatingPointValues()
+                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+                .create();
     }
 
     @NotNull
@@ -46,13 +50,13 @@ public class OrangeJson {
 
     @NotNull
     public OrangeRecord read(@NotNull Reader reader) throws IOException {
-        try (var bufferedReader = new BufferedReader(reader)) {
+        try (BufferedReader bufferedReader = new BufferedReader(reader)) {
             return gson.fromJson(bufferedReader, OrangeRecord.class);
         }
     }
 
     public void write(@NotNull OrangeRecord orangeRecord, @NotNull String outputFilePath) throws IOException {
-        try (var writer = new BufferedWriter(new FileWriter(outputFilePath))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath))) {
             gson.toJson(orangeRecord, OrangeRecord.class, writer);
         }
     }

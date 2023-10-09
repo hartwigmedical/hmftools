@@ -7,39 +7,15 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class })
-public interface LinxFusion {
-
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface LinxFusion
+{
     @NotNull
-    String name();
+    default String display()
+    {
+        return String.format("%s-%s", geneStart(), geneEnd());
+    }
 
-    boolean reported();
-
-    @NotNull
-    LinxFusionType reportedType();
-
-    @NotNull
-    FusionPhasedType phased();
-
-    @NotNull
-    FusionLikelihoodType likelihood();
-
-    int fusedExonUp();
-
-    int fusedExonDown();
-
-    // for orange report
-    int chainLinks();
-
-    boolean chainTerminated();
-
-    @NotNull
-    String domainsKept();
-
-    @NotNull
-    String domainsLost();
-
-    // for patient report
     @NotNull
     String geneStart();
 
@@ -57,6 +33,32 @@ public interface LinxFusion {
 
     @NotNull
     String geneTranscriptEnd();
+
+
+    boolean reported();
+
+    @NotNull
+    LinxFusionType reportedType();
+
+    @NotNull
+    FusionPhasedType phased();
+
+    @NotNull
+    FusionLikelihoodType driverLikelihood();
+
+    int fusedExonUp();
+
+    int fusedExonDown();
+
+    int chainLinks();
+
+    boolean chainTerminated();
+
+    @NotNull
+    String domainsKept();
+
+    @NotNull
+    String domainsLost();
 
     double junctionCopyNumber();
 }

@@ -372,6 +372,7 @@ nucleotide matches are permitted.
  </pre>
 
 ## Version History and Download Links
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.5.2)
 - [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4.2)
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.3)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)

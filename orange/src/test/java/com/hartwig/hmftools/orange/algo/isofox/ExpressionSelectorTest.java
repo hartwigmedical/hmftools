@@ -81,7 +81,7 @@ public class ExpressionSelectorTest
     private static GeneExpression create(@NotNull String gene, double percentileCohort, double percentileCancer)
     {
         return OrangeIsofoxTestFactory.geneExpressionBuilder()
-                .geneName(gene)
+                .gene(gene)
                 .percentileCohort(percentileCohort)
                 .percentileCancer(percentileCancer)
                 .build();

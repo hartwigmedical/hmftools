@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANO_IN_MILLISECOND;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.NONE;
@@ -59,7 +59,7 @@ public class PartitionData
     private Set<CandidateDuplicates> mUpdatedCandidateDuplicates;
     private ChrBaseRegion mExcludedRegion;
 
-    private static final int LOG_CACHE_COUNT = 10000;
+    private static final int LOG_CACHE_COUNT = 50000;
 
     public PartitionData(final String chrPartition, final MarkDupsConfig config)
     {
@@ -82,7 +82,7 @@ public class PartitionData
     public Statistics statistics() { return mDuplicateGroupBuilder.statistics(); }
 
     public void togglePerfChecks() { mPerfChecks = true; }
-    public double totalLockTime() { return mLockAcquireTime / NANOS_IN_SECOND; }
+    public double totalLockTimeMs() { return mLockAcquireTime / NANO_IN_MILLISECOND; }
 
     public synchronized void setExcludedRegion(final ChrBaseRegion excludedRegion) { mExcludedRegion = excludedRegion; }
 
