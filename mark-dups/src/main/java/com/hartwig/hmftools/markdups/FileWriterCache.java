@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.markdups;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.io.File;
@@ -9,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -29,7 +26,6 @@ public class FileWriterCache
     private final MarkDupsConfig mConfig;
     private final ReadDataWriter mReadDataWriter;
 
-    private final BamWriter mSharedBamWriter;
     private final List<BamWriter> mBamWriters;
 
     private static final String BAM_FILE_ID = "mark_dups";
@@ -43,37 +39,52 @@ public class FileWriterCache
         mReadDataWriter = new ReadDataWriter(mConfig);
 
         mBamWriters = Lists.newArrayList();
-        mSharedBamWriter = mConfig.MultiBam ? null : createBamWriter(null);
+
+
+        if(!mConfig.MultiBam)
+            createBamWriter(null);
     }
 
     public BamWriter getBamWriter(final String fileId)
     {
-        if(mSharedBamWriter != null)
-            return mSharedBamWriter;
+        if(!mConfig.MultiBam)
+            return mBamWriters.get(0);
 
         return createBamWriter(fileId);
     }
 
     public int totalWrittenReads()
     {
-        if(mSharedBamWriter != null)
-            return mSharedBamWriter.recordWriteCount();
-        else
-            return mBamWriters.stream().mapToInt(x -> x.recordWriteCount()).sum();
+        return mBamWriters.stream().mapToInt(x -> x.recordWriteCount()).sum();
     }
 
     public void logUnwrittenReads()
     {
-        if(mSharedBamWriter != null)
-            mSharedBamWriter.logUnwrittenReads();
-        else
-            mBamWriters.forEach(x -> x.logUnwrittenReads());
+        mBamWriters.forEach(x -> x.logUnwrittenReads());
     }
 
     public void close()
     {
         mReadDataWriter.close();
-        mBamWriters.forEach(x -> x.close());
+
+        // closing a sorted BAM involves a final sort, so ensure this is also multi-threaded
+        if(mConfig.SortedBam && mBamWriters.size() > 1)
+        {
+            List<SortBamCloseTask> closedSortedBamTasks = mBamWriters.stream().map(x -> new SortBamCloseTask(x)).collect(Collectors.toList());
+
+            List<Callable> callableTasks = closedSortedBamTasks.stream().collect(Collectors.toList());
+
+            MD_LOGGER.debug("closing {} sorted bam(s)", callableTasks.size());
+
+            if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
+                System.exit(1);
+
+            MD_LOGGER.debug("sorted BAM close complete");
+        }
+        else
+        {
+            mBamWriters.forEach(x -> x.close());
+        }
     }
 
     public BamWriter createBamWriter(@Nullable final String multiId)
@@ -137,7 +148,7 @@ public class FileWriterCache
 
     public void sortAndIndexBams()
     {
-        if(mConfig.SamToolsPath == null)
+        if(mConfig.SamToolsPath == null && mConfig.SambambaPath == null)
             return;
 
         String finalBamFilename = formBamFilename(null, null);
@@ -147,14 +158,21 @@ public class FileWriterCache
 
         if(!mConfig.SortedBam)
         {
-            if(mSharedBamWriter != null)
+            if(mConfig.SamToolsPath == null)
             {
-                SortBamTask sortBamTask = new SortBamTask(mSharedBamWriter.filename(), finalBamFilename, mConfig.Threads);
+                MD_LOGGER.error("samtools required for sort");
+                return;
+            }
+
+            if(mBamWriters.size() == 1)
+            {
+                String unsortedBamFilename = mBamWriters.get(0).filename();
+                SortBamTask sortBamTask = new SortBamTask(unsortedBamFilename, finalBamFilename, mConfig.Threads);
 
                 MD_LOGGER.debug("sorting bam");
                 sortBamTask.call();
 
-                interimBams.add(mSharedBamWriter.filename());
+                interimBams.add(unsortedBamFilename);
             }
             else
             {
@@ -181,13 +199,20 @@ public class FileWriterCache
 
             MD_LOGGER.debug("sort complete");
         }
-
-        if(mBamWriters.size() > 1)
+        else
         {
-            mergeBams(finalBamFilename, sortedThreadBams);
+            for(BamWriter bamWriter : mBamWriters)
+            {
+                interimBams.add(bamWriter.filename());
+                sortedThreadBams.add(bamWriter.filename());
+            }
         }
 
-        deleteInterimBams(interimBams);
+        if(mBamWriters.size() > 1)
+            mergeBams(finalBamFilename, sortedThreadBams);
+
+        if(!mConfig.KeepInterimBams)
+            deleteInterimBams(interimBams);
 
         indexFinalBam(finalBamFilename);
     }
@@ -195,8 +220,6 @@ public class FileWriterCache
     private void mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
     {
         MD_LOGGER.debug("merging {} bams", mBamWriters.size());
-
-        // String inputBamStr = sortedThreadBams.stream().collect(Collectors.joining(" "));
 
         final String[] command = new String[5 + sortedThreadBams.size()];
 
@@ -245,6 +268,10 @@ public class FileWriterCache
 
     private void indexFinalBam(String finalBamFilename)
     {
+        // no need to index if Sambamba merge was used
+        if(mConfig.SambambaPath != null && mBamWriters.size() > 1)
+            return;
+
         MD_LOGGER.debug("indexing final bam");
 
         final String[] command = new String[5];
@@ -299,6 +326,30 @@ public class FileWriterCache
             command[index++] = mSortedBamfile;
 
             executeCommand(command, mSortedBamfile);
+
+            return (long)0;
+        }
+    }
+
+    private class SortBamCloseTask implements Callable
+    {
+        private final BamWriter mBamWriter;
+
+        public SortBamCloseTask(final BamWriter bamWriter)
+        {
+            mBamWriter = bamWriter;
+        }
+
+        @Override
+        public Long call()
+        {
+            if(mBamWriter == null)
+            {
+                MD_LOGGER.error("invalid bam writer");
+                return (long)0;
+            }
+
+            mBamWriter.close();
 
             return (long)0;
         }

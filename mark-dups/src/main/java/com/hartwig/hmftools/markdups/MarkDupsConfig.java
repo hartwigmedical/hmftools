@@ -79,6 +79,8 @@ public class MarkDupsConfig
     public final boolean WriteBam;
     public final boolean SortedBam;
     public final boolean MultiBam;
+    public final boolean KeepInterimBams;
+
     public final boolean NoMateCigar;
     public final int Threads;
 
@@ -111,6 +113,7 @@ public class MarkDupsConfig
     private static final String NO_WRITE_BAM = "no_write_bam";
     private static final String SORTED_BAM = "sorted_bam";
     private static final String MULTI_BAM = "multi_bam";
+    private static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
     private static final String SAMTOOLS_PATH = "samtools";
     private static final String SAMBAMBA_PATH = "sambamba";
 
@@ -195,6 +198,7 @@ public class MarkDupsConfig
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM);
         MultiBam = WriteBam && Threads > 1 && configBuilder.hasFlag(MULTI_BAM);
         SortedBam = configBuilder.hasFlag(SORTED_BAM);
+        KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
         LogReadIds = parseLogReadIds(configBuilder);
 
@@ -243,6 +247,7 @@ public class MarkDupsConfig
         configBuilder.addFlag(NO_WRITE_BAM, "BAM not written");
         configBuilder.addFlag(SORTED_BAM, "Write sorted BAM");
         configBuilder.addFlag(MULTI_BAM, "Write temporary BAMs with multi-threading");
+        configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
         configBuilder.addPath(SAMTOOLS_PATH, false, "Path to samtools for sort");
         configBuilder.addPath(SAMBAMBA_PATH, false, "Path to sambamba for merge");
 
@@ -296,6 +301,7 @@ public class MarkDupsConfig
         WriteBam = false;
         SortedBam = false;
         MultiBam = false;
+        KeepInterimBams = false;
         LogReadType = NONE;
 
         LogReadIds = Lists.newArrayList();
