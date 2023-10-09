@@ -225,12 +225,13 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming
+    - Disclaimer (if enabled) has bigger font size in footer, and a disclaimer is now also present in header.
     - New ORANGE-datamodel (v2.0.0) with lots of datamodel renames and clean-ups.
       - Parameter `experimentDate` has been renamed to `samplingDate`
       - Kataegis plots are now mandatory and expected to be produced in every situation by PURPLE.
-    - Data is displayed in the report as "NA" in case of purple QC failure, in case the data by itself is not interpretable (e.g. TML)
-    - The TMB status (high vs low) is displayed on the front page along with the actual TMB
-    - The status of UGT1A1 is displayed on the front page
+    - Data is displayed in the report as "NA" in case of purple QC failure, in case the data by itself is not interpretable (e.g. TML).
+    - The TMB status (high vs low) is displayed on the front page along with the actual TMB.
+    - The status of UGT1A1 is displayed on the front page.
 - [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
     - Supports targeted tumor-only mode:
         - Omits Cuppa, Chord, Sigs and VirusBreakends
