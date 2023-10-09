@@ -18,8 +18,6 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.jetbrains.annotations.NotNull;
-
 public class BamMetrics
 {
     private final MetricsConfig mConfig;
@@ -99,7 +97,7 @@ public class BamMetrics
         BT_LOGGER.info("BamMetrics complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    public static void main(@NotNull final String[] args)
+    public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         MetricsConfig.addConfig(configBuilder);
