@@ -135,7 +135,8 @@ public class PurityConfig
                     ctDnaSamplesFromStr(configBuilder.getValue(CTDNA_SAMPLES)), ""));
         }
 
-        CT_LOGGER.info("loaded {} samples:", Samples.size());
+        CT_LOGGER.info("loaded {} patients and {} ctDNA samples",
+                Samples.size(), Samples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum());
     }
 
     public boolean multipleSamples() { return Samples.size() > 1; }
