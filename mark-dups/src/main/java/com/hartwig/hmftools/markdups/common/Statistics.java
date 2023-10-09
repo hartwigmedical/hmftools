@@ -25,9 +25,11 @@ public class Statistics
 
     // technical metrics
     public long LocalComplete; // fragments where all reads are in the same partition
-    public long Incomplete; // count of mates and secondaries where lower coord reads wasn't cached
+    public long Incomplete; // read in same partition as base partition but not resolved immediately (eg an earlier supplementary)
     public long InterPartition; // reads where base partition (lower of mate or supplementary's primary) isn't the current partition
     public long MissingMateCigar;
+    public long Unmapped; // fully, ie primary and mate
+    public long PairedNonHuman; // paired with a non-human chromosome
 
     public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
 
@@ -42,6 +44,8 @@ public class Statistics
         LocalComplete = 0;
         Incomplete = 0;
         MissingMateCigar = 0;
+        Unmapped = 0;
+        PairedNonHuman = 0;
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
     }
@@ -55,6 +59,8 @@ public class Statistics
         Incomplete += other.Incomplete;
         InterPartition += other.InterPartition;
         MissingMateCigar += other.MissingMateCigar;
+        Unmapped += other.Unmapped;
+        PairedNonHuman += other.PairedNonHuman;
 
         for(DuplicateFrequency dupFreq : other.DuplicateFrequencies.values())
         {
@@ -105,8 +111,8 @@ public class Statistics
 
         if(MD_LOGGER.isDebugEnabled())
         {
-            MD_LOGGER.debug("stats: fragments(complete={} incomplete={} interPartition={}) missingMateCigar({})",
-                    LocalComplete, Incomplete, InterPartition, MissingMateCigar);
+            MD_LOGGER.debug("stats: fragments(complete={} incomplete={} interPartition={} unmapped={} pnh={}) missingMateCigar({})",
+                    LocalComplete, Incomplete, InterPartition, Unmapped, PairedNonHuman, MissingMateCigar);
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);

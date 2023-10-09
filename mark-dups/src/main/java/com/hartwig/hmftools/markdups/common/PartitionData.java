@@ -84,8 +84,6 @@ public class PartitionData
     public void togglePerfChecks() { mPerfChecks = true; }
     public double totalLockTimeMs() { return mLockAcquireTime / NANO_IN_MILLISECOND; }
 
-    public synchronized void setExcludedRegion(final ChrBaseRegion excludedRegion) { mExcludedRegion = excludedRegion; }
-
     public void processPrimaryFragments(
             final List<Fragment> resolvedFragments, final List<CandidateDuplicates> candidateDuplicatesList, final List<DuplicateGroup> duplicateGroups)
     {

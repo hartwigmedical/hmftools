@@ -180,6 +180,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
             if(read.getReadUnmappedFlag() && read.getMateUnmappedFlag())
             {
                 mBamWriter.writeFragment(new Fragment(read));
+                ++mStats.Unmapped;
                 return;
             }
         }
@@ -188,14 +189,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
         {
             if(!mReadPositions.processRead(read))
             {
-                ++mStats.Incomplete;
-
                 String basePartition = Fragment.getBasePartition(read, mConfig.PartitionSize);
 
                 if(basePartition == null)
                 {
                     // mate or supp is on a non-human chromsome, meaning it won't be retrieved - so write this immediately
                     mBamWriter.writeRead(read, FragmentStatus.UNSET);
+                    ++mStats.LocalComplete;
                     return;
                 }
 
@@ -236,6 +236,12 @@ public class PartitionReader implements Consumer<List<Fragment>>
                 {
                     mBamWriter.writeRead(read, partitionResults.fragmentStatus());
                 }
+
+                ++mStats.LocalComplete;
+            }
+            else
+            {
+                ++mStats.Incomplete;
             }
         }
         else
@@ -359,27 +365,11 @@ public class PartitionReader implements Consumer<List<Fragment>>
         {
             mBamWriter.writeFragments(resolvedFragments, true);
 
-            mStats.LocalComplete += (int)resolvedFragments.stream().filter(x -> x.allReadsPresent()).count();
+            mStats.LocalComplete += resolvedFragments.stream().mapToInt(x -> x.readCount()).sum();
         }
 
         mPcAcceptPositions.pause();
     }
-
-    /*
-    @VisibleForTesting
-    public void setExcludedRegion(final ChrBaseRegion excludedRegion)
-    {
-        if(excludedRegion.overlaps(mRegion) && mCurrentPartition.overlaps(excludedRegion))
-        {
-            mExcludedRegion = excludedRegion;
-            mCurrentPartitionData.setExcludedRegion(excludedRegion);
-        }
-        else
-        {
-            mExcludedRegion = null;
-        }
-    }
-    */
 
     private void setUnmappedRegions()
     {
@@ -423,72 +413,4 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     @VisibleForTesting
     public ConsensusReads consensusReads() { return mConsensusReads; }
-
-        /*
-    public void run()
-    {
-        perfCountersStart();
-
-        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
-        {
-            for(ChrBaseRegion region : mConfig.SpecificChrRegions.Regions)
-            {
-                if(!region.Chromosome.equals(mRegion.Chromosome))
-                    continue;
-
-                MD_LOGGER.debug("processing specific region({})", region);
-                mBamSlicer.slice(mSamReader, region, this::processSamRecord);
-            }
-        }
-        else
-        {
-            MD_LOGGER.info("processing chromosome({})", mRegion.Chromosome);
-            mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
-        }
-
-        onPartitionComplete(false);
-
-        MD_LOGGER.info("chromosome({}) complete, reads({})", mRegion.Chromosome, mStats.TotalReads);
-
-        mConsensusReads.logStats(mRegion.Chromosome);
-    }
-
-    private void onPartitionComplete(boolean setupNext)
-    {
-        mReadPositions.evictAll();
-
-        processPendingIncompletes();
-
-        perfCountersStop();
-
-        MD_LOGGER.debug("partition({}:{}) complete, reads({})", mRegion.Chromosome, mCurrentPartition, mPartitionRecordCount);
-
-        if(mConfig.PerfDebug)
-            mCurrentPartitionData.logCacheCounts();
-
-        mPartitionRecordCount = 0;
-
-        if(setupNext)
-        {
-            // move ahead to the next partition, until the end of the chromosome is reached
-            int regionStart = mCurrentPartition.end() + 1;
-
-            if(regionStart > mRegion.end())
-            {
-                mCurrentPartition = null;
-                return;
-            }
-
-            mCurrentPartition.setStart(regionStart);
-            mCurrentPartition.setEnd(regionStart + mConfig.PartitionSize - 1);
-
-            mCurrentStrPartition = formChromosomePartition(mRegion.Chromosome, mCurrentPartition.start(), mConfig.PartitionSize);
-            mCurrentPartitionData = mPartitionDataStore.getOrCreatePartitionData(mCurrentStrPartition);
-            setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
-            setUnmappedRegions();
-
-            perfCountersStart();
-        }
-    }
-    */
 }
