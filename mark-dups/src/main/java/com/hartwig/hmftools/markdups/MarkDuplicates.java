@@ -117,9 +117,7 @@ public class MarkDuplicates
         }
 
         fileWriterCache.close();
-
-        if(mConfig.SamToolsPath != null)
-            fileWriterCache.sortAndIndexBams();
+        fileWriterCache.sortAndIndexBams();
 
         Statistics combinedStats = new Statistics();
         partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));

@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATT
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.findDuplicateFragments;
+import static com.hartwig.hmftools.markdups.common.FilterReadsType.NONE;
 import static com.hartwig.hmftools.markdups.common.FilterReadsType.readOutsideSpecifiedRegions;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
@@ -152,7 +153,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
             return;
 
-        if(readOutsideSpecifiedRegions(
+        if(mConfig.SpecificRegionsFilterType != NONE && readOutsideSpecifiedRegions(
                 read, mConfig.SpecificChrRegions.Regions, mConfig.SpecificChrRegions.Chromosomes, mConfig.SpecificRegionsFilterType))
         {
             return;
