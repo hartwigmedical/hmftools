@@ -58,7 +58,6 @@ import org.junit.Test;
 
 public class OrangeJsonTest
 {
-
     private static final String MINIMALLY_EMPTY_ORANGE_JSON =
             Thread.currentThread().getContextClassLoader().getResource("minimally.empty.orange.json").getPath();
     private static final String MINIMALLY_POPULATED_ORANGE_JSON =

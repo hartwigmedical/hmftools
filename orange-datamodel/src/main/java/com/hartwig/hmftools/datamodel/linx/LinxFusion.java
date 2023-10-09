@@ -11,6 +11,12 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxFusion
 {
     @NotNull
+    default String display()
+    {
+        return String.format("%s-%s", geneStart(), geneEnd());
+    }
+
+    @NotNull
     String geneStart();
 
     @NotNull
@@ -28,11 +34,6 @@ public interface LinxFusion
     @NotNull
     String geneTranscriptEnd();
 
-    @NotNull
-    default String display()
-    {
-        return String.format("%s-%s", geneStart(), geneEnd());
-    }
 
     boolean reported();
 

@@ -14,9 +14,9 @@ import org.junit.Test;
 public class ReportWriterTest
 {
     @Test
-    public void canGenerateTestReportForPanelFromTestResources() throws IOException
+    public void canGenerateTestReportForTargetedFromTestResources() throws IOException
     {
-        run(TestOrangeConfigFactory.createPanelConfig());
+        run(TestOrangeConfigFactory.createTargetedConfig());
     }
 
     @Test

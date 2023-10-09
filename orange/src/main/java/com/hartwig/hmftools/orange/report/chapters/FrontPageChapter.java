@@ -234,7 +234,7 @@ public class FrontPageChapter implements ReportChapter
         addCellEntry(summary, cells, "Tumor mutations per Mb:", tmbString());
         addCellEntry(summary, cells, "Tumor mutational load:", tmlString());
 
-        if(includeGermline) // will change once we solve HRD for panel
+        if(includeGermline) // will change once we solve HRD for targeted mode
         {
             addCellEntry(summary, cells, "HR deficiency score:", hrDeficiencyString());
 
