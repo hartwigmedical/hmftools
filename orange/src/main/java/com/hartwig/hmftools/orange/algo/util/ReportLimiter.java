@@ -76,9 +76,9 @@ public final class ReportLimiter
     @NotNull
     private static LinxRecord limitLinxDataToOne(@NotNull LinxRecord linx)
     {
+        // TODO Should also limit all structural variants but we have to include the ones included in reportableBreakend.
         return ImmutableLinxRecord.builder()
                 .from(linx)
-                .allSomaticStructuralVariants(max1(linx.allSomaticStructuralVariants()))
                 .allSomaticFusions(max1(linx.allSomaticFusions()))
                 .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
                 .additionalSuspectSomaticFusions(max1(linx.additionalSuspectSomaticFusions()))

@@ -46,6 +46,7 @@ public class ReportGeneratorTestApplication
 
     private static final boolean USE_MOCK_DATA_FOR_REPORT = false;
     private static final boolean REMOVE_UNREPORTED_VARIANTS = false;
+    private static final boolean LIMIT_JSON_OUTPUT = false;
     private static final Set<PurpleQCStatus> OVERRIDE_QC_STATUS = null;
 
     public static void main(String[] args) throws IOException
@@ -133,6 +134,7 @@ public class ReportGeneratorTestApplication
     {
         return ImmutableOrangeConfig.builder()
                 .from(TestOrangeConfigFactory.createWGSConfigTumorNormal())
+                .limitJsonOutput(LIMIT_JSON_OUTPUT)
                 .outputDir(REPORT_BASE_DIR)
                 .build();
     }
