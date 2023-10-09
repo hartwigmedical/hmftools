@@ -2,7 +2,6 @@ package com.hartwig.hmftools.svprep.tools;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
-import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -14,8 +13,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.ParseException;
 
@@ -27,15 +26,18 @@ public class HighDepthConfig
     public final RefGenomeVersion RefGenVersion;
     public final List<ChrBaseRegion> SpecificRegions;
     public final int PartitionSize;
-    public final int HighDepthThreshold;
+    public final int InitHighDepthThreshold;
+    public final int FinalHighDepthThreshold;
     public final int Threads;
 
     private static final String BAM_FILE = "bam_file";
     private static final String OUTPUT_FILE = "output_file";
     private static final String PARTITION_SIZE = "partition_size";
-    private static final String HIGH_DEPTH_THRESHOLD = "high_depth_threshold";
+    private static final String INIT_HIGH_DEPTH_THRESHOLD = "init_high_depth_threshold";
+    private static final String FINAL_HIGH_DEPTH_THRESHOLD = "final_high_depth_threshold";
 
-    public static final int DEFAULT_HIGH_DEPTH_THRESHOLD = 200;
+    public static final int DEFAULT_INIT_HIGH_DEPTH_THRESHOLD = 200;
+    public static final int DEFAULT_FINAL_HIGH_DEPTH_THRESHOLD = 120;
     public static final int HIGH_DEPTH_REGION_MAX_GAP = 100;
 
     public HighDepthConfig(final ConfigBuilder configBuilder)
@@ -46,7 +48,8 @@ public class HighDepthConfig
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         Threads = parseThreads(configBuilder);
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
-        HighDepthThreshold = configBuilder.getInteger(HIGH_DEPTH_THRESHOLD);
+        InitHighDepthThreshold = configBuilder.getInteger(INIT_HIGH_DEPTH_THRESHOLD);
+        FinalHighDepthThreshold = configBuilder.getInteger(FINAL_HIGH_DEPTH_THRESHOLD);
 
         SpecificRegions = Lists.newArrayList();
 
@@ -67,7 +70,9 @@ public class HighDepthConfig
         addRefGenomeConfig(configBuilder, true);
 
         configBuilder.addInteger(
-                HIGH_DEPTH_THRESHOLD, "Level for indicating high-depth", DEFAULT_HIGH_DEPTH_THRESHOLD);
+                INIT_HIGH_DEPTH_THRESHOLD, "Threshold used for creating a high-depth region", DEFAULT_INIT_HIGH_DEPTH_THRESHOLD);
+        configBuilder.addInteger(
+                FINAL_HIGH_DEPTH_THRESHOLD, "Threshold used for finalising a high-depth region", DEFAULT_FINAL_HIGH_DEPTH_THRESHOLD);
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
         addThreadOptions(configBuilder);

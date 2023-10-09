@@ -71,7 +71,7 @@ public class HighDepthFinder
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome\tPosStart\tPosEnd\tBaseDepthMin\tBaseDepthMax");
+            writer.write("Chromosome\tPosStart\tPosEnd\tBaseDepthMin\tBaseDepthMax\tBaseDepthAvg");
             writer.newLine();
 
             return writer;
@@ -93,8 +93,8 @@ public class HighDepthFinder
         {
             for(HighDepthRegion region : regions)
             {
-                writer.write(format("%s\t%d\t%d\t%d\t%d",
-                        region.Chromosome, region.start(), region.end(), region.DepthMin, region.DepthMax));
+                writer.write(format("%s\t%d\t%d\t%d\t%d\t%f",
+                        region.Chromosome, region.start(), region.end(), region.DepthMin, region.DepthMax, region.depthAvg()));
                 writer.newLine();
             }
         }
@@ -104,7 +104,7 @@ public class HighDepthFinder
         }
     }
 
-    public static void main(@NotNull final String[] args)
+    public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         HighDepthConfig.addConfig(configBuilder);
