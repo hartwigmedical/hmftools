@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.purple;
 
-public enum PurpleDriverType {
+public enum PurpleDriverType
+{
     AMP,
     PARTIAL_AMP,
     DEL,

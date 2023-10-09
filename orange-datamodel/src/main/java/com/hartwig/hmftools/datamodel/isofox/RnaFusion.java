@@ -8,26 +8,35 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface RnaFusion {
+public interface RnaFusion
+{
+    @NotNull
+    default String display()
+    {
+        return String.format("%s_%s", geneStart(), geneEnd());
+    }
 
     @NotNull
-    String name();
+    String geneStart();
 
     @NotNull
-    String chromosomeUp();
+    String geneEnd();
 
     @NotNull
-    String chromosomeDown();
-
-    int positionUp();
-
-    int positionDown();
+    String chromosomeStart();
 
     @NotNull
-    String junctionTypeUp();
+    String chromosomeEnd();
+
+    int positionStart();
+
+    int positionEnd();
 
     @NotNull
-    String junctionTypeDown();
+    String junctionTypeStart();
+
+    @NotNull
+    String junctionTypeEnd();
 
     @NotNull
     StructuralVariantType svType();
@@ -38,9 +47,9 @@ public interface RnaFusion {
 
     int discordantFrags();
 
-    int depthUp();
+    int depthStart();
 
-    int depthDown();
+    int depthEnd();
 
     int cohortFrequency();
 }

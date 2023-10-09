@@ -2,7 +2,7 @@ package com.hartwig.hmftools.orange.report.datamodel;
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleAllelicDepth;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 
@@ -34,7 +34,7 @@ public abstract class VariantEntry
     public abstract boolean biallelic();
 
     @NotNull
-    public abstract Hotspot hotspot();
+    public abstract HotspotType hotspot();
 
     @Nullable
     public abstract Double driverLikelihood();

@@ -12,4 +12,7 @@ public class Constants
     public static final int DEFAULT_MAX_UMI_BASE_DIFF = 1;
 
     public static final char DEFAULT_DUPLEX_UMI_DELIM = '_';
+
+    // performance
+    public static final double LOCK_ACQUIRE_LONG_TIME_MS = 100;
 }

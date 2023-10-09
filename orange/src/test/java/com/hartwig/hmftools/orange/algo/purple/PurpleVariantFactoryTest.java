@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleGenotypeStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleTranscriptImpact;
@@ -88,7 +89,7 @@ public class PurpleVariantFactoryTest
         assertEquals("p.Ser729=", canonicalImpact.hgvsProteinImpact());
         assertNull(canonicalImpact.affectedCodon());
         assertNull(canonicalImpact.affectedExon());
-        assertTrue(canonicalImpact.spliceRegion());
+        assertTrue(canonicalImpact.inSpliceRegion());
         assertEquals(Set.of(PurpleVariantEffect.FRAMESHIFT, PurpleVariantEffect.MISSENSE), canonicalImpact.effects());
 
         List<PurpleTranscriptImpact> purpleOtherImpacts = purpleVariant.otherImpacts();
@@ -99,11 +100,11 @@ public class PurpleVariantFactoryTest
         assertEquals("p.Ser729=", purpleOtherImpact.hgvsProteinImpact());
         assertEquals(Set.of(PurpleVariantEffect.SYNONYMOUS), purpleOtherImpact.effects());
         assertEquals(PurpleCodingEffect.SYNONYMOUS, purpleOtherImpact.codingEffect());
-        assertFalse(purpleOtherImpact.spliceRegion());
+        assertFalse(purpleOtherImpact.inSpliceRegion());
         assertNull(purpleOtherImpact.affectedCodon());
         assertNull(purpleOtherImpact.affectedExon());
 
-        assertEquals(com.hartwig.hmftools.datamodel.purple.Hotspot.HOTSPOT, purpleVariant.hotspot());
+        assertEquals(HotspotType.HOTSPOT, purpleVariant.hotspot());
         assertTrue(purpleVariant.reported());
         assertEquals(80, purpleVariant.tumorDepth().alleleReadCount());
         assertEquals(153, purpleVariant.tumorDepth().totalReadCount());

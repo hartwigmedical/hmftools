@@ -10,11 +10,11 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface VirusInterpreterData {
+public interface VirusInterpreterData
+{
+    @NotNull
+    List<VirusInterpreterEntry> allViruses();
 
     @NotNull
-    List<AnnotatedVirus> allViruses();
-
-    @NotNull
-    List<AnnotatedVirus> reportableViruses();
+    List<VirusInterpreterEntry> reportableViruses();
 }

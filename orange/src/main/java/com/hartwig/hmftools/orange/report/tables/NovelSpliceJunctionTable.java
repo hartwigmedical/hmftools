@@ -34,7 +34,7 @@ public final class NovelSpliceJunctionTable
 
         for(NovelSpliceJunction junction : sort(junctions))
         {
-            table.addCell(cells.createContent(junction.geneName()));
+            table.addCell(cells.createContent(junction.gene()));
             table.addCell(cells.createContent(junction.chromosome()));
             table.addCell(cells.createContent(String.valueOf(junction.junctionStart())));
             table.addCell(cells.createContent(String.valueOf(junction.junctionEnd())));

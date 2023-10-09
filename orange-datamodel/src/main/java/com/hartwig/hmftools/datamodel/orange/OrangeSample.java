@@ -11,8 +11,8 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeSample {
-
+public interface OrangeSample
+{
     @NotNull
     WGSMetrics metrics();
 

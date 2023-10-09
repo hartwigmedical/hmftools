@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.report.datamodel;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -7,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,9 +21,9 @@ public final class BreakendEntryFactory
         for(LinxBreakend breakend : breakends)
         {
             entries.add(ImmutableBreakendEntry.builder()
-                    .location(breakend.chromosome() + breakend.chrBand())
+                    .location(breakend.chromosome() + breakend.chromosomeBand())
                     .gene(breakend.gene())
-                    .canonical(breakend.canonical())
+                    .canonical(breakend.isCanonical())
                     .exonUp(breakend.exonUp())
                     .type(breakend.type())
                     .range(range(breakend))

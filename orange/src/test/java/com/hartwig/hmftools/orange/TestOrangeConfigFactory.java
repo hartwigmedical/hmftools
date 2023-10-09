@@ -58,12 +58,12 @@ public final class TestOrangeConfigFactory
     }
 
     @NotNull
-    public static OrangeConfig createPanelConfig()
+    public static OrangeConfig createTargetedConfig()
     {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
-                .experimentDate(LocalDate.now())
+                .samplingDate(LocalDate.now())
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)
@@ -92,7 +92,7 @@ public final class TestOrangeConfigFactory
     public static OrangeConfig createWGSConfigTumorOnly()
     {
         return ImmutableOrangeConfig.builder()
-                .from(createPanelConfig())
+                .from(createTargetedConfig())
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
@@ -124,7 +124,7 @@ public final class TestOrangeConfigFactory
         // We use tumor_sample as rnaSampleId since we have no real ISOFOX test data for our test_run
         return ImmutableOrangeConfig.builder()
                 .from(createWGSConfigTumorNormal())
-                .rnaConfig(ImmutableOrangeRNAConfig.builder()
+                .rnaConfig(ImmutableOrangeRnaConfig.builder()
                         .rnaSampleId("tumor_sample")
                         .isofoxGeneDistributionCsv(ISOFOX_GENE_DISTRIBUTION_CSV)
                         .isofoxAltSjCohortCsv(ISOFOX_ALT_SJ_COHORT_CSV)

@@ -5,7 +5,7 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDig
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.datamodel.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 public final class ViralPresenceTable
 {
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<AnnotatedVirus> viruses,
+    public static Table build(@NotNull String title, float width, @NotNull List<VirusInterpreterEntry> viruses,
             @NotNull ReportResources reportResources)
     {
         if(viruses.isEmpty())
@@ -34,7 +34,7 @@ public final class ViralPresenceTable
                         cells.createHeader("Int"), cells.createHeader("% Covered"), cells.createHeader("Mean Cov"),
                         cells.createHeader("Exp Clon Cov"), cells.createHeader("Driver") });
 
-        for(AnnotatedVirus virus : viruses)
+        for(VirusInterpreterEntry virus : viruses)
         {
             table.addCell(cells.createContent(virus.name()));
             table.addCell(cells.createContent(virus.qcStatus().toString()));
@@ -43,7 +43,7 @@ public final class ViralPresenceTable
             table.addCell(cells.createContent(formatPercentage(virus.percentageCovered(), false)));
             table.addCell(cells.createContent(formatSingleDigitDecimal(virus.meanCoverage())));
             table.addCell(cells.createContent(expectedClonalCoverageField(virus)));
-            table.addCell(cells.createContent(display(virus.virusDriverLikelihoodType())));
+            table.addCell(cells.createContent(display(virus.driverLikelihood())));
         }
 
         return new Tables(reportResources).createWrapping(table, title);
@@ -64,7 +64,7 @@ public final class ViralPresenceTable
     }
 
     @NotNull
-    private static String expectedClonalCoverageField(@NotNull AnnotatedVirus virus)
+    private static String expectedClonalCoverageField(@NotNull VirusInterpreterEntry virus)
     {
         Double expectedClonalCoverage = virus.expectedClonalCoverage();
         return expectedClonalCoverage != null ? formatSingleDigitDecimal(expectedClonalCoverage) : Strings.EMPTY;

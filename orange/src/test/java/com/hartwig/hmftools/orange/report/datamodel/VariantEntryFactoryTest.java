@@ -8,7 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
@@ -37,7 +37,7 @@ public class VariantEntryFactoryTest
                 .adjustedVAF(1.3)
                 .minorAlleleCopyNumber(1.2)
                 .biallelic(false)
-                .hotspot(Hotspot.NEAR_HOTSPOT)
+                .hotspot(HotspotType.NEAR_HOTSPOT)
                 .subclonalLikelihood(0.3)
                 .localPhaseSets(Lists.newArrayList(1))
                 .build();
@@ -48,7 +48,7 @@ public class VariantEntryFactoryTest
                 .build();
 
         PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
-                .driver(PurpleDriverType.MUTATION)
+                .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 1")
                 .isCanonical(true)
@@ -56,7 +56,7 @@ public class VariantEntryFactoryTest
                 .build();
 
         PurpleDriver nonCanonicalDriver = PurpleDriverTestFactory.builder()
-                .driver(PurpleDriverType.MUTATION)
+                .type(PurpleDriverType.MUTATION)
                 .gene("gene 1")
                 .transcript("transcript 2")
                 .isCanonical(false)
@@ -75,7 +75,7 @@ public class VariantEntryFactoryTest
         assertEquals(2D, entry1.totalCopyNumber(), EPSILON);
         assertEquals(1.2, entry1.minorAlleleCopyNumber(), EPSILON);
         assertFalse(entry1.biallelic());
-        assertEquals(Hotspot.NEAR_HOTSPOT, entry1.hotspot());
+        assertEquals(HotspotType.NEAR_HOTSPOT, entry1.hotspot());
         assertEquals(0.5, entry1.driverLikelihood(), EPSILON);
         assertEquals(0.7, entry1.clonalLikelihood(), EPSILON);
 

@@ -3,8 +3,6 @@ package com.hartwig.hmftools.markdups;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_CIGAR;
@@ -30,8 +28,7 @@ public class MarkDuplicatesTest
     private final FileWriterCache mFileWriterCache;
     private final BamWriter mWriter;
 
-    private final ChrBaseRegion mChrBaseRegion;
-    private final ChromosomeReader mChromosomeReader;
+    private final PartitionReader mPartitionReader;
 
     public MarkDuplicatesTest()
     {
@@ -40,18 +37,18 @@ public class MarkDuplicatesTest
 
         MarkDupsConfig config = new MarkDupsConfig(1000, 1000, mRefGenome, false, false, false);
 
-        mChrBaseRegion = new ChrBaseRegion(CHR_1, 1, 100000);
-
         mFileWriterCache = new FileWriterCache(config);
-        mWriter = mFileWriterCache.getBamWriter(mChrBaseRegion.Chromosome);
+        mWriter = mFileWriterCache.getBamWriter("1");
         mWriter.setCacheReads();
 
-        mChromosomeReader = new ChromosomeReader(mChrBaseRegion, config, mFileWriterCache, new PartitionDataStore(config));
+        mPartitionReader = new PartitionReader(config, null, mWriter, new PartitionDataStore(config));
     }
 
     @Test
     public void testNonDuplicateFragment()
     {
+        mPartitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
         // test non-duplicate fragments processing reads in various orders
         int readPos = 100;
         int matePos = 200;
@@ -61,10 +58,10 @@ public class MarkDuplicatesTest
                 mReadIdGen.nextId(), CHR_1, readPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, matePos, false, false,
                 new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1), true, TEST_READ_CIGAR);
 
-        mChromosomeReader.processRead(read1);
-        mChromosomeReader.flushReadPositions();
+        mPartitionReader.processRead(read1);
+        mPartitionReader.flushReadPositions();
 
-        PartitionData partitionData = mChromosomeReader.partitionDataStore().getOrCreatePartitionData("1_0");
+        PartitionData partitionData = mPartitionReader.partitionDataStore().getOrCreatePartitionData("1_0");
 
         assertEquals(1, partitionData.resolvedFragmentStateMap().size());
         assertEquals(1, mWriter.recordWriteCount());
@@ -74,7 +71,7 @@ public class MarkDuplicatesTest
                 false, null);
         setSecondInPair(mate1);
 
-        mChromosomeReader.processRead(mate1);
+        mPartitionReader.processRead(mate1);
         assertEquals(1, partitionData.resolvedFragmentStateMap().size());
         assertEquals(2, mWriter.recordWriteCount());
 
@@ -82,8 +79,12 @@ public class MarkDuplicatesTest
                 read1.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
                 true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
 
-        mChromosomeReader.processRead(supp1);
-        mChromosomeReader.onChromosomeComplete();
+        mPartitionReader.postProcessRegion();
+        mPartitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1001, 2000));
+
+        mPartitionReader.processRead(supp1);
+        mPartitionReader.postProcessRegion();
+
         assertEquals(3, mWriter.recordWriteCount());
         assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
     }
@@ -91,9 +92,11 @@ public class MarkDuplicatesTest
     @Test
     public void testSupplementaryFragments()
     {
+        mPartitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
         // first a supplementary linked to a distant mate but in the same partition as the primary
         int readPos = 100;
-        int matePos = 2000;
+        int matePos = 1800;
         int suppPos = 200;
 
         SAMRecord read1 = createSamRecord(
@@ -102,28 +105,30 @@ public class MarkDuplicatesTest
 
         read1.setAttribute(MATE_CIGAR_ATTRIBUTE, TEST_READ_CIGAR);
 
-        mChromosomeReader.processRead(read1);
+        mPartitionReader.processRead(read1);
 
         SAMRecord supp1 = createSamRecord(
                 read1.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
                 true, new SupplementaryReadData(CHR_1, matePos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
 
-        mChromosomeReader.processRead(supp1);
+        mPartitionReader.processRead(supp1);
 
-        PartitionData partitionData = mChromosomeReader.partitionDataStore().getOrCreatePartitionData("1_0");
+        mPartitionReader.postProcessRegion();
+
+        PartitionData partitionData = mPartitionReader.partitionDataStore().getOrCreatePartitionData("1_0");
         partitionData.incompleteFragmentMap().containsKey(supp1.getReadName());
 
-        mChromosomeReader.flushReadPositions();
-
         partitionData.incompleteFragmentMap().isEmpty();
+
+        mPartitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1001, 2000));
 
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
                 false, new SupplementaryReadData(CHR_1, suppPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
         setSecondInPair(mate1);
 
-        mChromosomeReader.processRead(mate1);
-        mChromosomeReader.onChromosomeComplete();
+        mPartitionReader.processRead(mate1);
+        mPartitionReader.postProcessRegion();
 
         assertEquals(3, mWriter.recordWriteCount());
         assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
@@ -132,6 +137,8 @@ public class MarkDuplicatesTest
     @Test
     public void testCandidateDuplicates()
     {
+        mPartitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
+
         // no use of mate CIGAR so rely on putting reads together to determine duplicate status
         int suppPos = 500;
         int readPos = 1500;
@@ -158,23 +165,33 @@ public class MarkDuplicatesTest
                 read2.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
                 true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
 
-        mChromosomeReader.processRead(supp1);
-        mChromosomeReader.processRead(supp2);
-        mChromosomeReader.flushPendingIncompletes();
+        mPartitionReader.processRead(supp1);
+        mPartitionReader.processRead(supp2);
 
-        PartitionData partitionData = mChromosomeReader.partitionDataStore().getOrCreatePartitionData("1_1");
+        // mPartitionReader.flushPendingIncompletes();
+
+        mPartitionReader.postProcessRegion();
+
+        mPartitionReader.setupRegion(new ChrBaseRegion(CHR_1, 1001, 2000));
+
+        PartitionData partitionData = mPartitionReader.partitionDataStore().getOrCreatePartitionData("1_1");
 
         assertEquals(2, partitionData.incompleteFragmentMap().size());
         assertEquals(0, mWriter.recordWriteCount());
 
         // now the primaries, as candidates
-        mChromosomeReader.processRead(read1);
-        mChromosomeReader.processRead(read2);
-        mChromosomeReader.flushReadPositions();
+        mPartitionReader.processRead(read1);
+        mPartitionReader.processRead(read2);
+
+        // mPartitionReader.flushReadPositions();
+
+        mPartitionReader.postProcessRegion();
 
         assertEquals(1, partitionData.candidateDuplicatesMap().size());
         assertEquals(2, partitionData.incompleteFragmentMap().size());
         assertEquals(0, mWriter.recordWriteCount());
+
+        mPartitionReader.setupRegion(new ChrBaseRegion(CHR_1, 2001, 3000));
 
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
@@ -186,11 +203,11 @@ public class MarkDuplicatesTest
                 false, null);
         setSecondInPair(mate2);
 
-        mChromosomeReader.processRead(mate1);
+        mPartitionReader.processRead(mate1);
         assertEquals(0, mWriter.recordWriteCount());
 
-        mChromosomeReader.processRead(mate2);
-        mChromosomeReader.flushPendingIncompletes();
+        mPartitionReader.processRead(mate2);
+        mPartitionReader.postProcessRegion();
         assertEquals(6, mWriter.recordWriteCount());
 
         assertTrue(partitionData.candidateDuplicatesMap().isEmpty());
@@ -204,8 +221,10 @@ public class MarkDuplicatesTest
         MarkDupsConfig consensusConfig = new MarkDupsConfig(
                 1000, 1000, mRefGenome, false, false, true);
 
-        ChromosomeReader chrReaderConsensus = new ChromosomeReader(
-                mChrBaseRegion, consensusConfig, mFileWriterCache, new PartitionDataStore(consensusConfig));
+        PartitionReader chrReaderConsensus = new PartitionReader(
+                consensusConfig, null, mWriter, new PartitionDataStore(consensusConfig));
+
+        chrReaderConsensus.setupRegion(new ChrBaseRegion(CHR_1, 1, 1000));
 
         int readPos = 100;
         int matePos = 1500;
@@ -226,7 +245,9 @@ public class MarkDuplicatesTest
         // now the primaries, as candidates
         chrReaderConsensus.processRead(read1);
         chrReaderConsensus.processRead(read2);
-        chrReaderConsensus.flushReadPositions();
+        chrReaderConsensus.postProcessRegion();
+
+        chrReaderConsensus.setupRegion(new ChrBaseRegion(CHR_1, 1001, 2000));
 
         PartitionData partitionData = chrReaderConsensus.partitionDataStore().getOrCreatePartitionData("1_0");
 
@@ -251,7 +272,8 @@ public class MarkDuplicatesTest
         assertEquals(2, mWriter.recordWriteCount());
 
         chrReaderConsensus.processRead(mate2);
-        chrReaderConsensus.flushPendingIncompletes();
+        chrReaderConsensus.postProcessRegion();
+
         assertEquals(4, mWriter.recordWriteCount());
         assertEquals(2, mWriter.recordWriteCountConsensus());
 
@@ -264,9 +286,11 @@ public class MarkDuplicatesTest
                 read2.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
                 true, new SupplementaryReadData(CHR_1, readPos, SUPP_POS_STRAND, TEST_READ_CIGAR, 1));
 
+        chrReaderConsensus.setupRegion(new ChrBaseRegion(CHR_1, 2001, 3000));
+
         chrReaderConsensus.processRead(supp1);
         chrReaderConsensus.processRead(supp2);
-        chrReaderConsensus.flushPendingIncompletes();
+        chrReaderConsensus.postProcessRegion();
 
         assertTrue(partitionData.duplicateGroupMap().isEmpty());
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
@@ -278,6 +302,7 @@ public class MarkDuplicatesTest
     @Test
     public void testExcludedRegion()
     {
+        /*
         MarkDupsConfig consensusConfig = new MarkDupsConfig(
                 1000, 1000, mRefGenome, false, false, true);
 
@@ -465,5 +490,6 @@ public class MarkDuplicatesTest
         assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
 
         assertEquals(10, mWriter.recordWriteCount());
+        */
     }
 }

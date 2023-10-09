@@ -2,7 +2,7 @@ package com.hartwig.hmftools.orange.algo.purple;
 
 import java.util.List;
 
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
 import org.apache.commons.compress.utils.Lists;
@@ -23,7 +23,7 @@ final class GermlineVariantSelector
         {
             if(!variant.reported())
             {
-                boolean isHotspot = variant.hotspot() == Hotspot.HOTSPOT;
+                boolean isHotspot = variant.hotspot() == HotspotType.HOTSPOT;
 
                 // TODO: Add pathogenic variants that were not reported
                 // TODO: Add variants with conflicting evidence in ClinVar

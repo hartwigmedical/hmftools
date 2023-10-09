@@ -41,7 +41,7 @@ final class ExpressionSelector
     {
         return expressions.stream().filter(expression ->
         {
-            boolean geneMatchesType = genesOfType.contains(expression.geneName());
+            boolean geneMatchesType = genesOfType.contains(expression.gene());
             boolean percentileCancerMeetsThreshold = evaluatePercentileThreshold.test(expression.percentileCancer());
             boolean percentileCohortMeetsThreshold =
                     expression.percentileCohort() == GeneExpressionDistributionData.NOT_AVAILABLE || evaluatePercentileThreshold.test(
