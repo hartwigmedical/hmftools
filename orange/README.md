@@ -4,18 +4,18 @@ ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into 
 
 1. The algo depends exclusively on config and data produced by the [Hartwig platinum pipeline](https://github.com/hartwigmedical/platinum)
    and hence can always be run as final step without any additional local data or config required.
-2. ORANGE respects the mode in which the pipeline has been run (tumor-only, panel, whole genome).
+2. ORANGE respects the mode in which the pipeline has been run (tumor-only vs tumor-reference, targeted vs whole genome).
    In case RNA data is provided, the algo combines the RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample.
 3. ORANGE can be configured to convert all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part
    of the analysis without actually loosing this data.
-4. Everything that is labeled as a driver by any of the Hartwig algorithms is displayed in the PDF along with the driver likelihood.
+4. Every event that is labeled as a driver by any of the Hartwig algorithms is displayed in the PDF along with the driver likelihood.
 5. An additional exhaustive WGS and WTS scan is performed for anything interesting that may be potentially relevant but not picked up as a
    driver. Details of what is considered interesting are described in below.
 6. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the samples
    provided.
 
-An example tumor + reference report based on the publicly available melanoma cell line COLO829 can be
-found [here](src/main/resources/Test.orange.pdf).
+An example tumor-reference whole genome report based on the publicly available melanoma cell line COLO829 can be
+found [here](src/main/resources/COLO829_WGS_TumorReference.orange.pdf).
 
 Note that neither this readme nor the report itself contains any documentation about the Hartwig algorithms and output. For questions in
 this area please refer to the specific algorithm documentation present
@@ -215,7 +215,7 @@ investigate potential causes for QC failure.
     - The TMB status (high vs low) is displayed on the front page along with the actual TMB
     - The status of UGT1A1 is displayed on the front page
 - [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
-    - Supports panel tumor-only mode:
+    - Supports targeted tumor-only mode:
         - Omits Cuppa, Chord, Sigs and VirusBreakends
         - Omits Germline annotations
     - DOID cohort mapper throws exception instead of warn in case of invalid DOID combinations
@@ -251,7 +251,7 @@ investigate potential causes for QC failure.
         - This includes extended linx & purple datamodels with various germline findings
         - All somatic fields now have explicit "somatic" in their property name.
     - Added `-cuppa_chart_plot` parameter to hold the output of cuppa-chart
-    - Cuppa, VirusInterpreter, Sigs and Chord are made optional to support pipeline running in panel-mode
+    - Cuppa, VirusInterpreter, Sigs and Chord are made optional to support pipeline running in targeted-mode
     - Add `experimentType` to ORANGE output which is either `TARGETED` or `FULL_GENOME` based on purple's targeted property.
     - Removed warning in case a variant potentially falls in the splice region of 2 neighbouring exons
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.2)

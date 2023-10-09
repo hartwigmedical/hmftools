@@ -132,7 +132,7 @@ public class ReportGeneratorTestApplication
     private static OrangeConfig buildConfig()
     {
         return ImmutableOrangeConfig.builder()
-                .from(TestOrangeConfigFactory.createWGSConfigTumorNormal())
+                .from(TestOrangeConfigFactory.createWGSConfigTumorOnly())
                 .outputDir(REPORT_BASE_DIR)
                 .build();
     }

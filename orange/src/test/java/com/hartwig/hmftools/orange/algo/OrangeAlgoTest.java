@@ -15,9 +15,9 @@ import org.junit.Test;
 public class OrangeAlgoTest
 {
     @Test
-    public void canRunReportFromTestDirPanel() throws IOException
+    public void canRunReportFromTestDirTargeted() throws IOException
     {
-        OrangeConfig config = TestOrangeConfigFactory.createPanelConfig();
+        OrangeConfig config = TestOrangeConfigFactory.createTargetedConfig();
         OrangeAlgo algo = createOrangeAlgo(config);
 
         assertNotNull(algo.run(config));

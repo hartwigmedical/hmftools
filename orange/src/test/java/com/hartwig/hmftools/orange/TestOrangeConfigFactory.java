@@ -58,7 +58,7 @@ public final class TestOrangeConfigFactory
     }
 
     @NotNull
-    public static OrangeConfig createPanelConfig()
+    public static OrangeConfig createTargetedConfig()
     {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
@@ -92,7 +92,7 @@ public final class TestOrangeConfigFactory
     public static OrangeConfig createWGSConfigTumorOnly()
     {
         return ImmutableOrangeConfig.builder()
-                .from(createPanelConfig())
+                .from(createTargetedConfig())
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
