@@ -5,7 +5,7 @@ import com.hartwig.hmftools.common.rna.RnaFusion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final public class FusionNameUtil
+public final class FusionNameUtil
 {
     private static final String RNA_FUSION_NAME_DELIMITER = "_";
 
