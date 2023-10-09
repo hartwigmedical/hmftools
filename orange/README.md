@@ -14,8 +14,13 @@ ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into 
 6. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the samples
    provided.
 
-An example tumor-reference whole genome report based on the publicly available melanoma cell line COLO829 can be
-found [here](src/main/resources/COLO829_WGS_TumorReference.orange.pdf).
+Example reports based on the publicly available melanoma cell line COLO829 can be found here:
+
+| Type                 | File                                                                                       | Note                                   | 
+|----------------------|--------------------------------------------------------------------------------------------|----------------------------------------|
+| WGTS Tumor-reference | (please inquire at Hartwig)                                                                | We have no RNA data for COLO829        |
+| WGS Tumor-reference  | [COLO829_WGS_TumorReference.pdf](src/main/resources/COLO829_WGS_TumorReference.orange.pdf) |                                        |
+| Targeted Tumor-only  | [COLO829_Targeted.pdf](src/main/resources/COLO829_Targeted_TumorOnly.orange.pdf)           | (Derived from the tumor-reference data |                  
 
 Note that neither this readme nor the report itself contains any documentation about the Hartwig algorithms and output. For questions in
 this area please refer to the specific algorithm documentation present
@@ -211,6 +216,7 @@ investigate potential causes for QC failure.
 ### Version History and Download Links
 
 - Upcoming
+    - New ORANGE-datamodel (v2.0.0) with lots of datamodel renames and clean-ups. 
     - Data is displayed in the report as "NA" in case of purple QC failure, in case the data by itself is not interpretable (e.g. TML)
     - The TMB status (high vs low) is displayed on the front page along with the actual TMB
     - The status of UGT1A1 is displayed on the front page
