@@ -8,7 +8,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
@@ -20,9 +20,9 @@ public class SomaticVariantSelectorTest
     @Test
     public void canSelectUnreportedNearHotspots()
     {
-        PurpleVariant hotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.HOTSPOT).reported(false).build();
-        PurpleVariant nearHotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.NEAR_HOTSPOT).reported(false).build();
-        PurpleVariant nonHotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
+        PurpleVariant hotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).reported(false).build();
+        PurpleVariant nearHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.NEAR_HOTSPOT).reported(false).build();
+        PurpleVariant nonHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.NON_HOTSPOT).reported(false).build();
 
         List<PurpleVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(hotspot, nearHotspot, nonHotspot),
@@ -127,17 +127,17 @@ public class SomaticVariantSelectorTest
 
         PurpleVariant reportedGene = TestPurpleVariantFactory.builder()
                 .gene(driverGeneYes.gene())
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().inSpliceRegion(true).build())
                 .build();
 
         PurpleVariant nonReportedGene = TestPurpleVariantFactory.builder()
                 .gene(driverGeneNo.gene())
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().inSpliceRegion(true).build())
                 .build();
 
         PurpleVariant otherGene = TestPurpleVariantFactory.builder()
                 .gene("other gene")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().inSpliceRegion(true).build())
                 .build();
 
         List<PurpleVariant> variants =

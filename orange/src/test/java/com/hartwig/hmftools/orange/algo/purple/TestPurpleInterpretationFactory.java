@@ -40,8 +40,6 @@ public final class TestPurpleInterpretationFactory
                 .purity(0D)
                 .minPurity(0D)
                 .maxPurity(0D)
-                .containsTumorCells(true)
-                .hasSufficientQuality(true)
                 .ploidy(0D)
                 .minPloidy(0D)
                 .maxPloidy(0D)

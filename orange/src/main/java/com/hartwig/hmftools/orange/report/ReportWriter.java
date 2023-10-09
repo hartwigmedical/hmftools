@@ -16,8 +16,8 @@ import com.hartwig.hmftools.orange.report.chapters.FrontPageChapter;
 import com.hartwig.hmftools.orange.report.chapters.GermlineFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.ImmunologyChapter;
 import com.hartwig.hmftools.orange.report.chapters.QualityControlChapter;
-import com.hartwig.hmftools.orange.report.chapters.RNAFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.ReportChapter;
+import com.hartwig.hmftools.orange.report.chapters.RnaFindingsChapter;
 import com.hartwig.hmftools.orange.report.chapters.SomaticFindingsChapter;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
 import com.itextpdf.kernel.geom.PageSize;
@@ -74,7 +74,7 @@ public class ReportWriter
         IsofoxRecord isofox = report.isofox();
         if(isofox != null)
         {
-            chapters.add(new RNAFindingsChapter(isofox, report.purple(), reportResources));
+            chapters.add(new RnaFindingsChapter(isofox, report.purple(), reportResources));
         }
 
         if(!report.tumorOnlyMode())

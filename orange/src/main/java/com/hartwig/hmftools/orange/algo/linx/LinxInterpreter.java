@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
@@ -12,7 +14,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxRecord;
 import com.hartwig.hmftools.orange.conversion.ConversionUtil;
 import com.hartwig.hmftools.orange.conversion.LinxConversion;
 
-import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import org.jetbrains.annotations.NotNull;
 
 public class LinxInterpreter
@@ -33,7 +34,7 @@ public class LinxInterpreter
     {
         LOGGER.info("Analysing linx data");
         List<LinxFusion> additionalSuspectSomaticFusions =
-                DNAFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);
+                DnaFusionSelector.selectInterestingUnreportedFusions(linx.allSomaticFusions(), driverGenes);
         LOGGER.info(" Found an additional {} suspect somatic fusions that are potentially interesting",
                 additionalSuspectSomaticFusions.size());
 

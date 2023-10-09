@@ -10,9 +10,9 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class })
-public interface LinxBreakend {
-
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface LinxBreakend
+{
     int id();
 
     int svId();
@@ -21,18 +21,27 @@ public interface LinxBreakend {
     String gene();
 
     @NotNull
-    String transcriptId();
+    String chromosome();
 
-    boolean canonical();
+    @NotNull
+    String chromosomeBand();
+
+    @NotNull
+    String transcript();
+
+    boolean isCanonical();
 
     @NotNull
     String geneOrientation();
 
     boolean disruptive();
 
-    boolean reportedDisruption();
+    boolean reported();
 
     double undisruptedCopyNumber();
+
+    @NotNull
+    LinxBreakendType type();
 
     @NotNull
     TranscriptRegionType regionType();
@@ -42,23 +51,13 @@ public interface LinxBreakend {
 
     int nextSpliceExonRank();
 
-    // additional fields for patient report
-    @NotNull
-    LinxBreakendType type();
-
-    @NotNull
-    String chromosome();
-
     int orientation();
 
     int strand();
 
-    @NotNull
-    String chrBand();
-
     int exonUp();
 
     int exonDown();
-    
+
     double junctionCopyNumber();
 }

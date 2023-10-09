@@ -1,6 +1,7 @@
 {
   "sampleId": "TEST",
-  "experimentDate": {
+  "experimentType": "WHOLE_GENOME",
+  "samplingDate": {
     "year": 2022,
     "month": 12,
     "day": 22
@@ -495,9 +496,7 @@
           "NONE"
         ]
       },
-      "hasSufficientQuality": true,
       "fittedPurityMethod": "NORMAL",
-      "containsTumorCells": true,
       "purity": 0.99,
       "minPurity": 0.97,
       "maxPurity": 1.0,
@@ -523,7 +522,7 @@
         "transcript": "ENST00000310581",
         "isCanonical": true,
         "category": "ONCO",
-        "driver": "MUTATION",
+        "type": "MUTATION",
         "likelihoodMethod": "HOTSPOT",
         "driverLikelihood": 1.0,
         "missense": 0,
@@ -542,7 +541,7 @@
         "transcript": "ENST00000288602",
         "isCanonical": true,
         "category": "ONCO",
-        "driver": "MUTATION",
+        "type": "MUTATION",
         "likelihoodMethod": "HOTSPOT",
         "driverLikelihood": 1.0,
         "missense": 1,
@@ -561,7 +560,7 @@
         "transcript": "ENST00000335508",
         "isCanonical": true,
         "category": "ONCO",
-        "driver": "MUTATION",
+        "type": "MUTATION",
         "likelihoodMethod": "DNDS",
         "driverLikelihood": 0.1458,
         "missense": 1,
@@ -580,7 +579,7 @@
         "transcript": "ENST00000579755",
         "isCanonical": false,
         "category": "TSG",
-        "driver": "MUTATION",
+        "type": "MUTATION",
         "likelihoodMethod": "BIALLELIC",
         "driverLikelihood": 1.0,
         "missense": 0,
@@ -599,7 +598,7 @@
         "transcript": "ENST00000498124",
         "isCanonical": true,
         "category": "TSG",
-        "driver": "MUTATION",
+        "type": "MUTATION",
         "likelihoodMethod": "BIALLELIC",
         "driverLikelihood": 1.0,
         "missense": 0,
@@ -618,7 +617,7 @@
         "transcript": "ENST00000264731",
         "isCanonical": true,
         "category": "TSG",
-        "driver": "MUTATION",
+        "type": "MUTATION",
         "likelihoodMethod": "DNDS",
         "driverLikelihood": 0.0,
         "missense": 1,
@@ -637,7 +636,7 @@
         "transcript": "ENST00000371953",
         "isCanonical": true,
         "category": "TSG",
-        "driver": "DEL",
+        "type": "DEL",
         "likelihoodMethod": "DEL",
         "driverLikelihood": 1.0,
         "missense": 0,
@@ -667,7 +666,7 @@
           "hgvsProteinImpact": "p.Pro718Leu",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -720,7 +719,7 @@
           "hgvsProteinImpact": "p.Met499Ile",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -773,7 +772,7 @@
           "hgvsProteinImpact": "",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "UPSTREAM_GENE"
           ],
@@ -828,7 +827,7 @@
           "hgvsProteinImpact": "p.Val600Glu",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -881,7 +880,7 @@
           "hgvsProteinImpact": "p.Ala68fs",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "FRAMESHIFT"
           ],
@@ -894,7 +893,7 @@
             "hgvsProteinImpact": "p.Gly83fs",
             "affectedCodon": null,
             "affectedExon": null,
-            "spliceRegion": false,
+            "inSpliceRegion": false,
             "effects": [
               "FRAMESHIFT"
             ],
@@ -949,7 +948,7 @@
           "hgvsProteinImpact": "p.Pro718Leu",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -1002,7 +1001,7 @@
           "hgvsProteinImpact": "p.Met499Ile",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -1055,7 +1054,7 @@
           "hgvsProteinImpact": "",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "UPSTREAM_GENE"
           ],
@@ -1110,7 +1109,7 @@
           "hgvsProteinImpact": "p.Val600Glu",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "MISSENSE"
           ],
@@ -1163,7 +1162,7 @@
           "hgvsProteinImpact": "p.Ala68fs",
           "affectedCodon": null,
           "affectedExon": null,
-          "spliceRegion": false,
+          "inSpliceRegion": false,
           "effects": [
             "FRAMESHIFT"
           ],
@@ -1176,7 +1175,7 @@
             "hgvsProteinImpact": "p.Gly83fs",
             "affectedCodon": null,
             "affectedExon": null,
-            "spliceRegion": false,
+            "inSpliceRegion": false,
             "effects": [
               "FRAMESHIFT"
             ],
@@ -1235,7 +1234,7 @@
         "minMinorAlleleCopyNumber": 0.0,
         "transName": "ENST00000371953",
         "isCanonical": true,
-        "geneName": "PTEN",
+        "gene": "PTEN",
         "chromosomeBand": "q23.31",
         "chromosome": "10",
         "start": 89622870,
@@ -1305,11 +1304,11 @@
         "svId": 125,
         "isStart": true,
         "gene": "PTEN",
-        "transcriptId": "ENST00000371953",
-        "canonical": true,
+        "transcript": "ENST00000371953",
+        "isCanonical": true,
         "geneOrientation": "Upstream",
         "disruptive": true,
-        "reportedDisruption": true,
+        "reported": true,
         "undisruptedCopyNumber": 0.0,
         "regionType": "INTRONIC",
         "codingType": "CODING",
@@ -1323,7 +1322,7 @@
         "chromosome": "10",
         "orientation": 1,
         "strand": 1,
-        "chrBand": "q23.31",
+        "chromosomeBand": "q23.31",
         "exonUp": 5,
         "exonDown": 6,
         "junctionCopyNumber": 2.005
@@ -1333,11 +1332,11 @@
         "svId": 125,
         "isStart": false,
         "gene": "PTEN",
-        "transcriptId": "ENST00000371953",
-        "canonical": true,
+        "transcript": "ENST00000371953",
+        "isCanonical": true,
         "geneOrientation": "Downstream",
         "disruptive": true,
-        "reportedDisruption": true,
+        "reported": true,
         "undisruptedCopyNumber": 0.0,
         "regionType": "INTRONIC",
         "codingType": "CODING",
@@ -1351,7 +1350,7 @@
         "chromosome": "10",
         "orientation": -1,
         "strand": 1,
-        "chrBand": "q23.31",
+        "chromosomeBand": "q23.31",
         "exonUp": 6,
         "exonDown": 7,
         "junctionCopyNumber": 2.005
@@ -1363,11 +1362,11 @@
         "svId": 125,
         "isStart": true,
         "gene": "PTEN",
-        "transcriptId": "ENST00000371953",
-        "canonical": true,
+        "transcript": "ENST00000371953",
+        "isCanonical": true,
         "geneOrientation": "Upstream",
         "disruptive": true,
-        "reportedDisruption": true,
+        "reported": true,
         "undisruptedCopyNumber": 0.0,
         "regionType": "INTRONIC",
         "codingType": "CODING",
@@ -1381,7 +1380,7 @@
         "chromosome": "10",
         "orientation": 1,
         "strand": 1,
-        "chrBand": "q23.31",
+        "chromosomeBand": "q23.31",
         "exonUp": 5,
         "exonDown": 6,
         "junctionCopyNumber": 2.005
@@ -1391,11 +1390,11 @@
         "svId": 125,
         "isStart": false,
         "gene": "PTEN",
-        "transcriptId": "ENST00000371953",
-        "canonical": true,
+        "transcript": "ENST00000371953",
+        "isCanonical": true,
         "geneOrientation": "Downstream",
         "disruptive": true,
-        "reportedDisruption": true,
+        "reported": true,
         "undisruptedCopyNumber": 0.0,
         "regionType": "INTRONIC",
         "codingType": "CODING",
@@ -1409,7 +1408,7 @@
         "chromosome": "10",
         "orientation": -1,
         "strand": 1,
-        "chrBand": "q23.31",
+        "chromosomeBand": "q23.31",
         "exonUp": 6,
         "exonDown": 7,
         "junctionCopyNumber": 2.005

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.purple;
 
-public enum PurpleQCStatus {
+public enum PurpleQCStatus
+{
     PASS,
 
     WARN_DELETED_GENES,
@@ -9,5 +10,5 @@ public enum PurpleQCStatus {
     WARN_LOW_PURITY,
 
     FAIL_CONTAMINATION,
-    FAIL_NO_TUMOR;
+    FAIL_NO_TUMOR
 }

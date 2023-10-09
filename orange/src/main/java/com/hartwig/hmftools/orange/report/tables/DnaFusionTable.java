@@ -7,14 +7,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
+import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
-import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
-import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
-import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.Expressions;
 import com.hartwig.hmftools.orange.report.util.Cells;
@@ -29,7 +29,7 @@ import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class DNAFusionTable
+public final class DnaFusionTable
 {
     @NotNull
     public static Table build(@NotNull String title, float width, @NotNull List<LinxFusion> fusions, @Nullable IsofoxRecord isofox,
@@ -47,7 +47,7 @@ public final class DNAFusionTable
 
         for(LinxFusion fusion : sortLinxFusions(fusions))
         {
-            table.addCell(cells.createContent(fusion.name()));
+            table.addCell(cells.createContent(fusion.display()));
 
             Table details = new Table(UnitValue.createPercentArray(new float[] { 1, 3 }));
             Stream.of(Maps.immutableEntry("5' End", cells.createValue(fiveEndString(fusion))),
@@ -57,7 +57,7 @@ public final class DNAFusionTable
                                     cells.createValue(rnaFragmentSupportTable(isofox, fusion, cells)).setKeepTogether(true)),
                             Maps.immutableEntry("Phasing", cells.createValue(display(fusion.phased()))),
                             Maps.immutableEntry("Reported type (DL)",
-                                    cells.createValue(fusion.reportedType() + " (" + display(fusion.likelihood()) + ")")),
+                                    cells.createValue(fusion.reportedType() + " (" + display(fusion.driverLikelihood()) + ")")),
                             Maps.immutableEntry("Chain links (terminated?)",
                                     cells.createValue(fusion.chainLinks() + (fusion.chainTerminated() ? " (Yes)" : " (No)"))),
                             Maps.immutableEntry("Domains kept", cells.createValue(!fusion.domainsKept().isEmpty() ? fusion.domainsKept() : "-")),
@@ -154,7 +154,7 @@ public final class DNAFusionTable
         String fcDbString = "FC " + Expressions.foldChangeDatabase(geneEndExpression);
         String dbString = " DB percentile " + Expressions.percentileDatabase(geneEndExpression) + " (" + fcDbString + ")";
 
-        return new Paragraph(geneEndExpression.geneName() + " " + tpmString + ", " + typeString + ", " + dbString);
+        return new Paragraph(geneEndExpression.gene() + " " + tpmString + ", " + typeString + ", " + dbString);
     }
 
     @NotNull
@@ -164,7 +164,7 @@ public final class DNAFusionTable
         List<NovelSpliceJunction> matches = Lists.newArrayList();
         for(NovelSpliceJunction junction : isofox.allNovelSpliceJunctions())
         {
-            if(junction.geneName().equals(fusion.geneStart()) && junction.geneName().equals(fusion.geneEnd()))
+            if(junction.gene().equals(fusion.geneStart()) && junction.gene().equals(fusion.geneEnd()))
             {
                 matches.add(junction);
             }
@@ -201,7 +201,7 @@ public final class DNAFusionTable
         List<RnaFusion> matches = Lists.newArrayList();
         for(RnaFusion rnaFusion : isofox.allFusions())
         {
-            if(rnaFusion.name().equals(fusion.name()))
+            if(rnaFusion.display().equals(fusion.display()))
             {
                 matches.add(rnaFusion);
             }
@@ -215,8 +215,8 @@ public final class DNAFusionTable
         Table fragmentSupportTable = new Table(UnitValue.createPercentArray(new float[] { 1 }));
         for(RnaFusion rnaFusion : max5(sortRnaFusions(matches)))
         {
-            String up = rnaFusion.chromosomeUp() + ":" + rnaFusion.positionUp();
-            String down = rnaFusion.chromosomeDown() + ":" + rnaFusion.positionDown();
+            String up = rnaFusion.chromosomeStart() + ":" + rnaFusion.positionStart();
+            String down = rnaFusion.chromosomeEnd() + ":" + rnaFusion.positionEnd();
             String position = up + "-" + down;
 
             String split = rnaFusion.splitFragments() + " split";
@@ -224,7 +224,7 @@ public final class DNAFusionTable
             String discord = rnaFusion.discordantFrags() + " discord.";
             String fragments = split + " / " + realigned + " / " + discord + " fragments";
 
-            String depth = rnaFusion.depthUp() + " / " + rnaFusion.depthDown() + " depth";
+            String depth = rnaFusion.depthStart() + " / " + rnaFusion.depthEnd() + " depth";
             fragmentSupportTable.addCell(cells.createValue(position + ", " + fragments + ", " + depth));
         }
 
@@ -247,7 +247,7 @@ public final class DNAFusionTable
     {
         return fusions.stream().sorted((fusion1, fusion2) ->
         {
-            if(fusion1.likelihood() == fusion2.likelihood())
+            if(fusion1.driverLikelihood() == fusion2.driverLikelihood())
             {
                 if(fusion1.geneStart().equals(fusion2.geneStart()))
                 {
@@ -260,7 +260,7 @@ public final class DNAFusionTable
             }
             else
             {
-                return fusion1.likelihood() == FusionLikelihoodType.HIGH ? -1 : 1;
+                return fusion1.driverLikelihood() == FusionLikelihoodType.HIGH ? -1 : 1;
             }
         }).collect(Collectors.toList());
     }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.datamodel.virus;
 
-public enum VirusInterpretation {
+public enum VirusInterpretation
+{
     MCV,
     EBV,
     HPV,

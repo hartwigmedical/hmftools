@@ -7,17 +7,17 @@ import org.jetbrains.annotations.Nullable;
 
 @Gson.TypeAdapters
 @Value.Immutable
-@Value.Style(allParameters = true, passAnnotations = { NotNull.class, Nullable.class })
-public interface HomozygousDisruption {
+@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
+public interface LinxHomozygousDisruption
+{
+    @NotNull
+    String gene();
 
     @NotNull
     String chromosome();
 
     @NotNull
     String chromosomeBand();
-
-    @NotNull
-    String gene();
 
     @NotNull
     String transcript();

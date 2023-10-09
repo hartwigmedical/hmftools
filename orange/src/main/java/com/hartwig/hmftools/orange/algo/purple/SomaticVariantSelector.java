@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
-import com.hartwig.hmftools.datamodel.purple.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
 import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
@@ -27,7 +27,7 @@ final class SomaticVariantSelector
         {
             if(!variant.reported())
             {
-                boolean isAtLeastNearHotspot = variant.hotspot() == Hotspot.HOTSPOT || variant.hotspot() == Hotspot.NEAR_HOTSPOT;
+                boolean isAtLeastNearHotspot = variant.hotspot() == HotspotType.HOTSPOT || variant.hotspot() == HotspotType.NEAR_HOTSPOT;
                 boolean affectsGeneAndHasPhasedReportedVariant =
                         !variant.gene().isEmpty() && hasReportedVariantWithPhase(reportedSomaticVariants, variant.localPhaseSets());
                 boolean isCuppaRelevantVariant = isRelevantForCuppa(variant);
@@ -103,7 +103,7 @@ final class SomaticVariantSelector
 
     private static boolean isUnreportedSpliceVariant(@NotNull PurpleVariant variant, @NotNull List<DriverGene> driverGenes)
     {
-        if(variant.canonicalImpact().spliceRegion())
+        if(variant.canonicalImpact().inSpliceRegion())
         {
             DriverGene driverGene = findDriverGene(driverGenes, variant.gene());
             if(driverGene != null)

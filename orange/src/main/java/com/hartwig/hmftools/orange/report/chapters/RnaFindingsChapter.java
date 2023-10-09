@@ -3,19 +3,21 @@ package com.hartwig.hmftools.orange.report.chapters;
 import static com.hartwig.hmftools.orange.report.ReportResources.formatPercentage;
 
 import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
 
-import com.hartwig.hmftools.common.rna.RnaQcFilter;
 import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.isofox.NovelSpliceJunction;
 import com.hartwig.hmftools.datamodel.isofox.RnaFusion;
+import com.hartwig.hmftools.datamodel.isofox.RnaQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleGeneCopyNumber;
 import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.interpretation.PurpleQCInterpretation;
 import com.hartwig.hmftools.orange.report.tables.ExpressionTable;
 import com.hartwig.hmftools.orange.report.tables.NovelSpliceJunctionTable;
-import com.hartwig.hmftools.orange.report.tables.RNAFusionTable;
+import com.hartwig.hmftools.orange.report.tables.RnaFusionTable;
 import com.hartwig.hmftools.orange.report.util.Cells;
 import com.hartwig.hmftools.orange.report.util.Tables;
 import com.itextpdf.kernel.geom.PageSize;
@@ -26,10 +28,8 @@ import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
 
-public class RNAFindingsChapter implements ReportChapter
+public class RnaFindingsChapter implements ReportChapter
 {
-    private static final String RNA_PASS = RnaQcFilter.PASS.toString();
-
     @NotNull
     private final IsofoxRecord isofox;
     @NotNull
@@ -37,7 +37,7 @@ public class RNAFindingsChapter implements ReportChapter
     @NotNull
     private final ReportResources reportResources;
 
-    public RNAFindingsChapter(@NotNull final IsofoxRecord isofox, @NotNull final PurpleRecord purple,
+    public RnaFindingsChapter(@NotNull final IsofoxRecord isofox, @NotNull final PurpleRecord purple,
             @NotNull final ReportResources reportResources)
     {
         this.isofox = isofox;
@@ -66,7 +66,7 @@ public class RNAFindingsChapter implements ReportChapter
 
         addKeyQC(document);
         addExpressionTables(document);
-        addRNAFusionTables(document);
+        addRnaFusionTables(document);
         addNovelSpliceJunctionTables(document);
     }
 
@@ -84,7 +84,7 @@ public class RNAFindingsChapter implements ReportChapter
         }
         else
         {
-            table.addCell(cells.createContent(isofox.summary().qcStatus()));
+            table.addCell(cells.createContent(qcValue(isofox.summary().qcStatus())));
             table.addCell(cells.createContent(String.valueOf(isofox.summary().totalFragments())));
 
             long nonDuplicates = isofox.summary().totalFragments() - isofox.summary().duplicateFragments();
@@ -99,14 +99,25 @@ public class RNAFindingsChapter implements ReportChapter
         document.add(new Tables(reportResources).createWrapping(table));
     }
 
+    @NotNull
+    private static String qcValue(@NotNull Set<RnaQCStatus> qcStatus)
+    {
+        StringJoiner joiner = new StringJoiner(", ");
+        for(RnaQCStatus status : qcStatus)
+        {
+            joiner.add(status.name());
+        }
+        return joiner.toString();
+    }
+
     private void addQCWarningInCaseOfFail(@NotNull Table table, @NotNull Cells cells)
     {
-        boolean isRNAFail = !isofox.summary().qcStatus().equalsIgnoreCase(RNA_PASS);
-        boolean isDNAFailNoTumor = PurpleQCInterpretation.isFailNoTumor(purple.fit().qc());
+        boolean isRnaFail = !isofox.summary().qcStatus().contains(RnaQCStatus.PASS);
+        boolean isDnaFailNoTumor = PurpleQCInterpretation.isFailNoTumor(purple.fit().qc());
 
-        if(isRNAFail || isDNAFailNoTumor)
+        if(isRnaFail || isDnaFailNoTumor)
         {
-            String warning = isRNAFail ?
+            String warning = isRnaFail ?
                     "The RNA QC status of this sample is not a pass. All presented RNA data should be interpreted with caution"
                     : "The DNA QC status of this sample is fail (no tumor). "
                             + "In addition to DNA findings, all RNA findings should be interpreted with caution";
@@ -142,7 +153,7 @@ public class RNAFindingsChapter implements ReportChapter
         }
     }
 
-    private void addRNAFusionTables(@NotNull Document document)
+    private void addRnaFusionTables(@NotNull Document document)
     {
         String knownFusionsTitle = "Known fusions detected in RNA and not in DNA";
         String promiscuousFusionsTitle = "Promiscuous fusions detected in RNA and not in DNA";
@@ -157,11 +168,11 @@ public class RNAFindingsChapter implements ReportChapter
         {
             List<RnaFusion> reportableNovelKnownFusions = isofox.reportableNovelKnownFusions();
             String titleKnownFusions = knownFusionsTitle + " (" + reportableNovelKnownFusions.size() + ")";
-            document.add(RNAFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, reportResources));
+            document.add(RnaFusionTable.build(titleKnownFusions, contentWidth(), reportableNovelKnownFusions, reportResources));
 
             List<RnaFusion> reportableNovelPromiscuous = isofox.reportableNovelPromiscuousFusions();
             String titlePromiscuousFusions = promiscuousFusionsTitle + " (" + reportableNovelPromiscuous.size() + ")";
-            document.add(RNAFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
+            document.add(RnaFusionTable.build(titlePromiscuousFusions, contentWidth(), reportableNovelPromiscuous, reportResources));
         }
     }
 

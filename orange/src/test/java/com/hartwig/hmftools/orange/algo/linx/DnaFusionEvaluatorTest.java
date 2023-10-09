@@ -10,7 +10,7 @@ import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 
 import org.junit.Test;
 
-public class DNAFusionEvaluatorTest
+public class DnaFusionEvaluatorTest
 {
     @Test
     public void canDetermineIfFusionIsPresent()
@@ -19,8 +19,8 @@ public class DNAFusionEvaluatorTest
         LinxFusion fusion2 = LinxOrangeTestFactory.fusionBuilder().geneStart("start 2").geneEnd("end 1").build();
 
         List<LinxFusion> fusions = Lists.newArrayList(fusion1, fusion2);
-        assertTrue(DNAFusionEvaluator.hasFusion(fusions, "start 2", "end 1"));
-        assertFalse(DNAFusionEvaluator.hasFusion(fusions, "start 2", "end 2"));
-        assertFalse(DNAFusionEvaluator.hasFusion(fusions, "start 1", "end 2"));
+        assertTrue(DnaFusionEvaluator.hasFusion(fusions, "start 2", "end 1"));
+        assertFalse(DnaFusionEvaluator.hasFusion(fusions, "start 2", "end 2"));
+        assertFalse(DnaFusionEvaluator.hasFusion(fusions, "start 1", "end 2"));
     }
 }

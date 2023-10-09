@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.datamodel.orange;
 
-public enum PercentileType {
+public enum PercentileType
+{
     SV_TMB
 }

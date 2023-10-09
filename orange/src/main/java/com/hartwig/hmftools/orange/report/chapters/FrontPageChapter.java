@@ -15,8 +15,8 @@ import com.hartwig.hmftools.datamodel.chord.ChordStatus;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.linx.HomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.orange.OrangeDoidNode;
 import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
 import com.hartwig.hmftools.datamodel.orange.PercentileType;
@@ -26,9 +26,9 @@ import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
 import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
-import com.hartwig.hmftools.datamodel.virus.AnnotatedVirus;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpretation;
 import com.hartwig.hmftools.datamodel.virus.VirusInterpreterData;
+import com.hartwig.hmftools.datamodel.virus.VirusInterpreterEntry;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaInterpretation;
 import com.hartwig.hmftools.orange.algo.purple.DriverInterpretation;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
@@ -403,7 +403,7 @@ public class FrontPageChapter implements ReportChapter
             return ReportResources.NOT_AVAILABLE;
         }
 
-        List<HomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
+        List<LinxHomozygousDisruption> germlineHomozygousDisruptions = report.linx().germlineHomozygousDisruptions();
         if(germlineHomozygousDisruptions == null)
         {
             return ReportResources.NOT_AVAILABLE;
@@ -412,7 +412,7 @@ public class FrontPageChapter implements ReportChapter
     }
 
     @NotNull
-    private static String disruptionDriverString(@NotNull List<HomozygousDisruption> homozygousDisruptions)
+    private static String disruptionDriverString(@NotNull List<LinxHomozygousDisruption> homozygousDisruptions)
     {
         if(homozygousDisruptions.isEmpty())
         {
@@ -420,7 +420,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> genes = Sets.newTreeSet(Comparator.naturalOrder());
-        for(HomozygousDisruption homozygousDisruption : homozygousDisruptions)
+        for(LinxHomozygousDisruption homozygousDisruption : homozygousDisruptions)
         {
             genes.add(homozygousDisruption.gene());
         }
@@ -443,7 +443,7 @@ public class FrontPageChapter implements ReportChapter
         Set<String> fusions = Sets.newTreeSet(Comparator.naturalOrder());
         for(LinxFusion fusion : report.linx().reportableSomaticFusions())
         {
-            fusions.add(fusion.name());
+            fusions.add(fusion.display());
         }
         return report.linx().reportableSomaticFusions().size() + " (" + concat(fusions) + ")";
     }
@@ -468,7 +468,7 @@ public class FrontPageChapter implements ReportChapter
         }
 
         Set<String> viruses = Sets.newTreeSet(Comparator.naturalOrder());
-        for(AnnotatedVirus virus : virusInterpreter.reportableViruses())
+        for(VirusInterpreterEntry virus : virusInterpreter.reportableViruses())
         {
             VirusInterpretation interpretation = virus.interpretation();
             if(interpretation != null)
