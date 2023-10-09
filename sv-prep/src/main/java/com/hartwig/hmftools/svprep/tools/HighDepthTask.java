@@ -165,7 +165,7 @@ public class HighDepthTask implements Callable
                     currentRegion = new HighDepthRegion(new ChrBaseRegion(mChromosome, position, position));
                     currentRegion.DepthMin = baseDepth;
                     currentRegion.DepthMax = baseDepth;
-                    currentRegion.BaseVolume += baseDepth;
+                    currentRegion.BaseVolume = baseDepth;
                     highDepthRegions.add(currentRegion);
                 }
                 else
