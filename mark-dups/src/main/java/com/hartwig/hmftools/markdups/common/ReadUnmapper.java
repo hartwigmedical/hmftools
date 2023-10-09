@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_INDEX;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
@@ -100,8 +101,7 @@ public class ReadUnmapper
         if(unmapRead && read.getSupplementaryAlignmentFlag())
         {
             // these will be dropped from the BAM
-            read.setReadUnmappedFlag(true);
-            read.setMappingQuality(0);
+            setUnmappedAttributes(read);
             mStats.SupplementaryCount.incrementAndGet();
             return true;
         }
@@ -149,11 +149,17 @@ public class ReadUnmapper
         return unmapRead || unmapMate || unmapSuppAlignment;
     }
 
-    public static void unmapReadAlignment(final SAMRecord read, boolean mateUnmapped)
+    private static void setUnmappedAttributes(final SAMRecord read)
     {
-        // set flag unmapped
         read.setReadUnmappedFlag(true);
         read.setMappingQuality(0);
+        read.setAttribute(UNMAP_ATTRIBUTE, 1);
+    }
+
+    public static void unmapReadAlignment(final SAMRecord read, boolean mateUnmapped)
+    {
+        setUnmappedAttributes(read);
+
         read.setProperPairFlag(false);
 
         // clear insert size
@@ -221,6 +227,5 @@ public class ReadUnmapper
         {
             read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
         }
-
     }
 }

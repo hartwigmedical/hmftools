@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.bamtools.compare.MismatchType.VALUE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
 
 import static htsjdk.samtools.SAMFlag.DUPLICATE_READ;
 
@@ -327,8 +328,17 @@ public class PartitionReader
         }
     }
 
-    private static boolean excludeRead(final SAMRecord read)
+    private boolean excludeRead(final SAMRecord read)
     {
-        return read.isSecondaryAlignment() || read.hasAttribute(CONSENSUS_READ_ATTRIBUTE);
+        if(read.isSecondaryAlignment())
+            return true;
+
+        if(mConfig.IgnoreAlterations)
+        {
+            if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE) || read.hasAttribute(UNMAP_ATTRIBUTE))
+                return true;
+        }
+
+        return false;
     }
 }

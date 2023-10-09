@@ -51,7 +51,6 @@ public class UmiDuplicatesTest
 
         mFileWriterCache = new FileWriterCache(umiConfig);
         mWriter = mFileWriterCache.getBamWriter("1");
-        mWriter.setCacheReads();
 
         mPartitionReaderUMIs = new PartitionReader(umiConfig, null, mWriter, new PartitionDataStore(umiConfig));
 

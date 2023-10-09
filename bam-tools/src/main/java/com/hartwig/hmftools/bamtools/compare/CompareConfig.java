@@ -31,6 +31,7 @@ public class CompareConfig
     public final int MaxPartitionReads;
     public final boolean ExcludeRegions;
     public final boolean IgnoreDupDiffs;
+    public final boolean IgnoreAlterations; // consensus reads and internal unmappings
 
     public final int Threads;
     public final List<String> LogReadIds;
@@ -44,6 +45,7 @@ public class CompareConfig
     private static final String EXCLUDE_REGIONS = "exclude_regions";
     private static final String MAX_PARTITION_READS = "max_partition_reads";
     private static final String IGNORE_DUP_DIFFS = "ignore_dup_diffs";
+    private static final String IGNORE_ALTERATIONS = "ignore_alterations";
 
     private static final int DEFAULT_CHR_PARTITION_SIZE = 100000;
 
@@ -69,6 +71,7 @@ public class CompareConfig
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         MaxPartitionReads = configBuilder.getInteger(MAX_PARTITION_READS);
         IgnoreDupDiffs = configBuilder.hasFlag(IGNORE_DUP_DIFFS);
+        IgnoreAlterations = configBuilder.hasFlag(IGNORE_ALTERATIONS);
 
         SpecificChrRegions = SpecificRegions.from(configBuilder);
 
@@ -93,6 +96,7 @@ public class CompareConfig
         configBuilder.addConfigItem(LOG_READ_IDS, LOG_READ_IDS_DESC);
         configBuilder.addFlag(EXCLUDE_REGIONS, "Ignore excluded regions");
         configBuilder.addFlag(IGNORE_DUP_DIFFS, "Ignore duplicate diffs");
+        configBuilder.addFlag(IGNORE_ALTERATIONS, "Ignore consensus reads and internal unmappings");
 
         addRefGenomeConfig(configBuilder, true);;
         addSpecificChromosomesRegionsConfig(configBuilder);

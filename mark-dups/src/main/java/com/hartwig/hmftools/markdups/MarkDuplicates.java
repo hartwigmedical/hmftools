@@ -137,7 +137,6 @@ public class MarkDuplicates
         {
             MD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
                     combinedStats.TotalReads, totalWrittenReads, combinedStats.TotalReads - totalWrittenReads - unmappedDroppedReads);
-            fileWriterCache.logUnwrittenReads();
         }
 
         if(mConfig.WriteStats)

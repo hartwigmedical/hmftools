@@ -229,8 +229,6 @@ public class MarkDupsConfig
         return filename;
     }
 
-    public boolean runReadChecks() { return RunChecks && SpecificChrRegions.hasFilters(); }
-
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);

@@ -39,7 +39,6 @@ public class MarkDuplicatesTest
 
         mFileWriterCache = new FileWriterCache(config);
         mWriter = mFileWriterCache.getBamWriter("1");
-        mWriter.setCacheReads();
 
         mPartitionReader = new PartitionReader(config, null, mWriter, new PartitionDataStore(config));
     }

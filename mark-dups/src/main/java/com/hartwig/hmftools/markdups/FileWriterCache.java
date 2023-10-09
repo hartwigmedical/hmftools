@@ -58,11 +58,6 @@ public class FileWriterCache
         return mBamWriters.stream().mapToInt(x -> x.recordWriteCount()).sum();
     }
 
-    public void logUnwrittenReads()
-    {
-        mBamWriters.forEach(x -> x.logUnwrittenReads());
-    }
-
     public void close()
     {
         mReadDataWriter.close();

@@ -162,9 +162,6 @@ public class PartitionReader implements Consumer<List<Fragment>>
         ++mStats.TotalReads;
         ++mPartitionRecordCount;
 
-        if(mConfig.RunChecks)
-            mBamWriter.registerRead(read);
-
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
         {
             MD_LOGGER.debug("specific read: {}", readToString(read));

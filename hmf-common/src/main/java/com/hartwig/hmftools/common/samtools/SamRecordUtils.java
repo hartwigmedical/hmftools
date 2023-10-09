@@ -30,6 +30,8 @@ public final class SamRecordUtils
     public static final String UMI_ATTRIBUTE = "UI";
     public static final String SECONDARY_ATTRIBUTE = "HI";
 
+    public static final String UNMAP_ATTRIBUTE = "UM"; // a read has been unmapped (ie by MarkDups)
+
     public static final String NO_CHROMOSOME_NAME = "*";
     public static final String NO_CIGAR = "*";
     public static final int NO_CHROMOSOME_INDEX = -1;
