@@ -31,7 +31,7 @@ public class PageEventHandler implements IEventHandler
     static PageEventHandler create(@NotNull String sampleId, @NotNull String platinumVersion, @NotNull ReportResources reportResources,
             boolean addDisclaimer)
     {
-        return new PageEventHandler(new Header(Resources.getResource("orange_circos.png"), reportResources),
+        return new PageEventHandler(new Header(Resources.getResource("orange_circos.png"), reportResources, addDisclaimer),
                 new Footer(reportResources, addDisclaimer),
                 new SidePanel(sampleId, platinumVersion, reportResources));
     }
