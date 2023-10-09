@@ -29,7 +29,7 @@ public interface OrangeRnaConfig
     String ISOFOX_GENE_DISTRIBUTION_CSV = "isofox_gene_distribution";
     String ISOFOX_ALT_SJ_COHORT_CSV = "isofox_alt_sj_cohort";
 
-    static void registerConfig(final ConfigBuilder configBuilder)
+    static void registerConfig(@NotNull ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(RNA_SAMPLE_ID, false, "(Optional) The RNA sample of the tumor sample for which ORANGE will run");
 
@@ -61,7 +61,7 @@ public interface OrangeRnaConfig
     String isofoxAltSpliceJunctionCsv();
 
     @Nullable
-    static OrangeRnaConfig createConfig(final ConfigBuilder configBuilder)
+    static OrangeRnaConfig createConfig(@NotNull ConfigBuilder configBuilder)
     {
         boolean hasRnaSampleId = configBuilder.hasValue(RNA_SAMPLE_ID);
         boolean hasIsofoxDir = configBuilder.hasValue(ISOFOX_DIR_CFG);

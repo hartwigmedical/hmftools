@@ -63,7 +63,7 @@ public final class TestOrangeConfigFactory
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
-                .experimentDate(LocalDate.now())
+                .samplingDate(LocalDate.now())
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .outputDir(Strings.EMPTY)
                 .doidJsonFile(DOID_JSON)

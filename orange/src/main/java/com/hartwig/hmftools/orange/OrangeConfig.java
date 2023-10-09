@@ -94,7 +94,7 @@ public interface OrangeConfig
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
-    String EXPERIMENT_DATE = "experiment_date";
+    String SAMPLING_DATE = "sampling_date";
 
     // Input files used by the algorithm
     String DOID_JSON = "doid_json";
@@ -113,7 +113,7 @@ public interface OrangeConfig
     String LIMIT_JSON_OUTPUT = "limit_json_output";
     String ADD_DISCLAIMER = "add_disclaimer";
 
-    static void registerConfig(final ConfigBuilder configBuilder)
+    static void registerConfig(@NotNull ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
@@ -122,7 +122,7 @@ public interface OrangeConfig
         configBuilder.addConfigItem(PRIMARY_TUMOR_DOIDS,
                 true,
                 "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
-        configBuilder.addConfigItem(EXPERIMENT_DATE, false, "Optional, if provided represents the experiment date in YYMMDD format.");
+        configBuilder.addConfigItem(SAMPLING_DATE, false, "Optional, if provided represents the sampling date in YYMMDD format.");
 
         addRefGenomeVersion(configBuilder);
         addOutputDir(configBuilder);
@@ -182,7 +182,7 @@ public interface OrangeConfig
     Set<String> primaryTumorDoids();
 
     @NotNull
-    LocalDate experimentDate();
+    LocalDate samplingDate();
 
     @NotNull
     OrangeRefGenomeVersion refGenomeVersion();
@@ -289,7 +289,7 @@ public interface OrangeConfig
     }
 
     @NotNull
-    static OrangeConfig createConfig(final ConfigBuilder configBuilder)
+    static OrangeConfig createConfig(@NotNull ConfigBuilder configBuilder)
     {
         setLogLevel(configBuilder);
 
@@ -322,14 +322,14 @@ public interface OrangeConfig
             LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
         }
 
-        LocalDate experimentDate;
-        if(configBuilder.hasValue(EXPERIMENT_DATE))
+        LocalDate samplingDate;
+        if(configBuilder.hasValue(SAMPLING_DATE))
         {
-            experimentDate = interpretExperimentDateParam(configBuilder.getValue(EXPERIMENT_DATE));
+            samplingDate = interpretSamplingDateParam(configBuilder.getValue(SAMPLING_DATE));
         }
         else
         {
-            experimentDate = LocalDate.now();
+            samplingDate = LocalDate.now();
         }
 
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
@@ -342,7 +342,7 @@ public interface OrangeConfig
                 .referenceSampleId(refSampleId)
                 .rnaConfig(OrangeRnaConfig.createConfig(configBuilder))
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
-                .experimentDate(experimentDate)
+                .samplingDate(samplingDate)
                 .refGenomeVersion(OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name()))
                 .outputDir(parseOutputDir(configBuilder))
                 .doidJsonFile(configBuilder.getValue(DOID_JSON))
@@ -429,25 +429,9 @@ public interface OrangeConfig
         return builder.build();
     }
 
-    private static String getMetricsFile(
-            final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir,
-            final String toolDir)
-    {
-        if(configBuilder.hasValue(configStr))
-        {
-            return configBuilder.getValue(configStr);
-        }
-
-        String directory = getMetricsDirectory(configBuilder, configStr, sampleId, pipelineDir, toolDir);
-
-        return toolDir.equals(METRICS_DIR) ?
-                WGSMetricsFile.generateFilename(directory, sampleId) : FlagstatFile.generateFilename(directory, sampleId);
-    }
-
     @Nullable
-    static String getToolDirectory(
-            final ConfigBuilder configBuilder, final String pipelineSampleRootDir,
-            @Nullable String sampleDataDir, final String toolDirConfig, final String pipelineToolDir)
+    static String getToolDirectory(@NotNull ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
+            @Nullable String sampleDataDir, @NotNull String toolDirConfig, @NotNull String pipelineToolDir)
     {
         if(configBuilder.hasValue(toolDirConfig))
         {
@@ -462,9 +446,9 @@ public interface OrangeConfig
         return sampleDataDir;
     }
 
-    static String getToolPlotsDirectory(
-            final ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
-            final String toolDirConfig, final String pipelineToolDir)
+    @NotNull
+    static String getToolPlotsDirectory(@NotNull ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
+            @NotNull String toolDirConfig, @NotNull String pipelineToolDir)
     {
         if(configBuilder.hasValue(toolDirConfig))
         {
@@ -480,9 +464,9 @@ public interface OrangeConfig
         return plotDir;
     }
 
-    private static String getMetricsDirectory(
-            final ConfigBuilder configBuilder, final String configStr, final String sampleId, final String pipelineDir,
-            final String toolDir)
+    @Nullable
+    private static String getMetricsDirectory(@NotNull ConfigBuilder configBuilder, @NotNull String configStr, @Nullable String sampleId,
+            @Nullable String pipelineDir, @NotNull String toolDir)
     {
         if(configBuilder.hasValue(configStr))
         {
@@ -498,27 +482,42 @@ public interface OrangeConfig
     }
 
     @NotNull
+    private static String getMetricsFile(@NotNull ConfigBuilder configBuilder, @NotNull String configStr, @Nullable String sampleId,
+            @Nullable String pipelineDir, @NotNull String toolDir)
+    {
+        if(configBuilder.hasValue(configStr))
+        {
+            return configBuilder.getValue(configStr);
+        }
+
+        String directory = getMetricsDirectory(configBuilder, configStr, sampleId, pipelineDir, toolDir);
+
+        return toolDir.equals(METRICS_DIR) ?
+                WGSMetricsFile.generateFilename(directory, sampleId) : FlagstatFile.generateFilename(directory, sampleId);
+    }
+
+    @NotNull
     static Iterable<String> toStringSet(@NotNull String paramValue, @NotNull String separator)
     {
         return !paramValue.isEmpty() ? Sets.newHashSet(paramValue.split(separator)) : Sets.newHashSet();
     }
 
     @NotNull
-    private static LocalDate interpretExperimentDateParam(@NotNull String experimentDateString)
+    private static LocalDate interpretSamplingDateParam(@NotNull String samplingDateString)
     {
         String format = "yyMMdd";
 
-        LocalDate experimentDate;
+        LocalDate samplingDate;
         try
         {
-            experimentDate = LocalDate.parse(experimentDateString, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
-            LOGGER.debug("Configured experiment date to {}", experimentDate);
+            samplingDate = LocalDate.parse(samplingDateString, DateTimeFormatter.ofPattern(format, Locale.ENGLISH));
+            LOGGER.debug("Configured sampling date to {}", samplingDate);
         }
         catch(DateTimeParseException exception)
         {
-            experimentDate = LocalDate.now();
-            LOGGER.warn("Could not parse configured experiment date '{}'. Expected format is '{}'", experimentDateString, format);
+            samplingDate = LocalDate.now();
+            LOGGER.warn("Could not parse configured sampling date '{}'. Expected format is '{}'", samplingDateString, format);
         }
-        return experimentDate;
+        return samplingDate;
     }
 }
