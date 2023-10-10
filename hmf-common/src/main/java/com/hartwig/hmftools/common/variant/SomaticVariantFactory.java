@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_GERMLINE_INFO;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
@@ -196,6 +199,16 @@ public class SomaticVariantFactory implements VariantContextFilter
         final VariantContextDecorator decorator = new VariantContextDecorator(context);
         final VariantImpact variantImpact = decorator.variantImpact();
 
+        List<String> reportableTranscripts = null;
+
+        if(context.hasAttribute(REPORTABLE_TRANSCRIPTS))
+        {
+            String reportableTransStr = context.getAttributeAsString(REPORTABLE_TRANSCRIPTS, "");
+
+            reportableTranscripts = Arrays.stream(reportableTransStr.split("\\" + REPORTABLE_TRANSCRIPTS_DELIM, -1))
+                    .collect(Collectors.toList());
+        }
+
         ImmutableSomaticVariantImpl.Builder builder = ImmutableSomaticVariantImpl.builder()
                 .qual(decorator.qual())
                 .type(decorator.type())
@@ -227,6 +240,7 @@ public class SomaticVariantFactory implements VariantContextFilter
                 .canonicalHgvsProteinImpact(variantImpact.CanonicalHgvsProtein)
                 .spliceRegion(variantImpact.CanonicalSpliceRegion)
                 .otherReportedEffects(variantImpact.OtherReportableEffects)
+                .reportableTranscripts(reportableTranscripts)
                 .worstCodingEffect(variantImpact.WorstCodingEffect)
                 .genesAffected(variantImpact.GenesAffected)
                 .subclonalLikelihood(context.getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0))

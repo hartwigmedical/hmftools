@@ -98,6 +98,9 @@ public interface SomaticVariant extends Variant
     @Nullable
     List<Integer> localPhaseSets();
 
+    @Nullable
+    List<String> reportableTranscripts();
+
     default Integer topLocalPhaseSet()
     {
         return localPhaseSets() != null && !localPhaseSets().isEmpty() ? localPhaseSets().get(0) : null;
