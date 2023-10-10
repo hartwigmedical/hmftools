@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_REGIONS;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.util.List;
 
@@ -22,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class MapDropperConfig
 {
-    public static final Logger MD_LOGGER = LogManager.getLogger(MapDropperConfig.class);
     private static final String BAM_FILE = "bam_file";
     private static final String OUTPUT_BAM_FILE = "output_bam_file";
     public final String BamFile;

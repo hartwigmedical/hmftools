@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sieve.annotate;
 
-import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.sieve.annotate.Util.getNM;
 import static com.hartwig.hmftools.sieve.annotate.Util.isNotProperReadPair;
 import static com.hartwig.hmftools.sieve.annotate.Util.isSoftClipped;

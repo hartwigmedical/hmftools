@@ -13,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 
 public class AnnotateConfig
 {
-    public static final Logger MD_LOGGER = LogManager.getLogger(AnnotateConfig.class);
     private static final String BAM_FILE = "bam_file";
     private static final String BED_FILE = "bed_file";
     private static final String OUTPUT_FILE = "output_file";

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.sieve.unmap;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.sieve.unmap.MapDropperConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.util.List;
 import java.util.concurrent.Callable;

@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.sieve.annotate;
 
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
