@@ -25,7 +25,7 @@ data class BlastnMatch(
 {
     fun toGenomicLocation() : GenomicLocation?
     {
-        require(subjectTitle.contains(REF_GENOME_NAME)) { "subject title must contain $REF_GENOME_NAME" }
+        require(subjectTitle.contains(REF_GENOME_NAME)) { "error: subject title($subjectTitle) does not contain $REF_GENOME_NAME" }
 
         // parse the chromosome / assembly
         val m = CHROMOSOME_ASSEMBLY_REGEX.matchEntire(subjectTitle)

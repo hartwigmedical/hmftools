@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.cider
 
+import com.google.common.collect.ImmutableCollection
 import com.hartwig.hmftools.common.codon.Codons
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.SequenceUtil
-import org.eclipse.collections.api.collection.ImmutableCollection
 
 // We match reads to the genes, but they might not
 // match perfectly. We just match by anchor
