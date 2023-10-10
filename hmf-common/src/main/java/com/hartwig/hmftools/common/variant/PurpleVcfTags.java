@@ -50,6 +50,11 @@ public final class PurpleVcfTags
     public static final String PANEL_SOMATIC_LIKELIHOOD = "SOM_LH";
     public static final String PANEL_SOMATIC_LIKELIHOOD_DESC = "Panel somatic likelihood [HIGH,MEDIUM,LOW]";
 
+    public static final String REPORTABLE_TRANSCRIPTS = "REPORTABLE_TRANSCRIPTS";
+    public static final String REPORTABLE_TRANSCRIPTS_DESC = "List of reportable transcript when non-canonical are reportable";
+    public static final String REPORTABLE_TRANSCRIPTS_DELIM = "|";
+
+
     public static VCFHeader addGermlineHeader(@NotNull final String purpleVersion, @NotNull final VCFHeader template)
     {
         template.addMetaDataLine(new VCFHeaderLine("purpleVersion", purpleVersion));
@@ -59,6 +64,7 @@ public final class PurpleVcfTags
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_MINOR_ALLELE_CN_INFO, 1, VCFHeaderLineType.Float, PURPLE_MINOR_ALLELE_PLOIDY_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTABLE_TRANSCRIPTS, 1, VCFHeaderLineType.String, REPORTABLE_TRANSCRIPTS_DESC));
 
         return template;
     }
@@ -74,6 +80,7 @@ public final class PurpleVcfTags
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_GERMLINE_INFO, 1, VCFHeaderLineType.String, PURPLE_GERMLINE_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(PURPLE_BIALLELIC_FLAG, 0, VCFHeaderLineType.Flag, PURPLE_BIALLELIC_DESC));
         template.addMetaDataLine(new VCFInfoHeaderLine(REPORTED_FLAG, 0, VCFHeaderLineType.Flag, REPORTED_DESC));
+        template.addMetaDataLine(new VCFInfoHeaderLine(REPORTABLE_TRANSCRIPTS, 1, VCFHeaderLineType.String, REPORTABLE_TRANSCRIPTS_DESC));
 
         return template;
     }

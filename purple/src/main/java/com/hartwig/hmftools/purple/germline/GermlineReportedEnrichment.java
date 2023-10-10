@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermline
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
 
 import java.util.Collections;
 import java.util.List;
@@ -88,6 +89,8 @@ public class GermlineReportedEnrichment
             if(report(variant.decorator(), genesWithMultipleUnphasedHits))
             {
                 variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+
+                addReportableTranscriptList(variant.type(), variant.context(), variant.variantImpact());
             }
         }
 

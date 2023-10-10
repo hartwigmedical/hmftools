@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.purple.drivers;
 
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
 import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.parseAltTranscriptInfo;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,6 +21,8 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
+
+import htsjdk.variant.variantcontext.VariantContext;
 
 public class SomaticVariantDrivers
 {
@@ -113,10 +118,35 @@ public class SomaticVariantDrivers
         return topCodingEffect;
     }
 
-    private static boolean hasCodingEffect(final VariantType type, final CodingEffect codingEffect)
+    public static boolean hasCodingEffect(final VariantType type, final CodingEffect codingEffect)
     {
         DriverImpact impact = DriverImpact.select(type, codingEffect);
         return impact != DriverImpact.UNKNOWN;
+    }
+
+    public static void addReportableTranscriptList(
+            final VariantType variantType, final VariantContext variantContext, final VariantImpact variantImpact)
+    {
+        // check alt transcript status vs canonical
+        if(variantImpact.OtherReportableEffects.isEmpty())
+            return;
+
+        StringJoiner reportableTranscripts = new StringJoiner(REPORTABLE_TRANSCRIPTS_DELIM);
+
+        boolean canonicalReportable = hasCodingEffect(variantType, variantImpact.CanonicalCodingEffect);
+
+        if(canonicalReportable)
+            reportableTranscripts.add(variantImpact.CanonicalTranscript);
+
+        List<AltTranscriptReportableInfo> altTransEffects = parseAltTranscriptInfo(variantImpact.OtherReportableEffects);
+
+        for(AltTranscriptReportableInfo altTransEffect : altTransEffects)
+        {
+            if(hasCodingEffect(variantType, altTransEffect.Effect))
+                reportableTranscripts.add(altTransEffect.TransName);
+        }
+
+        variantContext.getCommonInfo().putAttribute(REPORTABLE_TRANSCRIPTS, reportableTranscripts.toString());
     }
 
     public List<DriverCatalog> buildCatalog(final Map<String,List<GeneCopyNumber>> geneCopyNumberMap)
