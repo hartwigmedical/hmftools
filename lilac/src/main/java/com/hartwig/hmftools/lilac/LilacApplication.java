@@ -173,7 +173,6 @@ public class LilacApplication
 
     public void run()
     {
-        // final VersionInfo version = new VersionInfo("lilac.version");
         long startTimeMs = System.currentTimeMillis();
 
         LL_LOGGER.info("key parameters:");
@@ -609,6 +608,15 @@ public class LilacApplication
     public void extractRnaCoverage(
             final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
     {
+        mRnaCoverage = LilacAppendRna.extractRnaCoverage(
+                mConfig.RnaBam, mConfig, mRefData, mNucleotideFragFactory, mNucleotideGeneEnrichment, mAminoAcidPipeline, mFragAlleleMapper,
+                winningAlleles, winningSequences, winningNucSequences);
+
+        /*
+        final NucleotideFragmentFactory nucleotideFragFactory, final NucleotideGeneEnrichment nucleotideGeneEnrichment,
+        final AminoAcidFragmentPipeline aminoAcidPipeline, final FragmentAlleleMapper fragAlleleMapper,
+        final List<HlaAllele> winningAlleles, final List<HlaSequenceLoci> winningSequences, final List<HlaSequenceLoci> winningNucSequences)
+
         if(mConfig.RnaBam.isEmpty())
         {
             mRnaCoverage = ComplexCoverage.create(Lists.newArrayList());
@@ -633,6 +641,7 @@ public class LilacApplication
         mRnaCoverage = ComplexBuilder.calcProteinCoverage(rnaFragAlleles, winningAlleles);
 
         mRnaCoverage.populateMissingCoverage(winningAlleles);
+        */
     }
 
     public void writeFileOutputs()
@@ -715,7 +724,6 @@ public class LilacApplication
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
         LilacConfig.addConfig(configBuilder);
-        addLoggingOptions(configBuilder);
 
         configBuilder.checkAndParseCommandLine(args);
 
