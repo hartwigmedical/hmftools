@@ -76,6 +76,9 @@ public class SageConfig
 
     private boolean mIsValid;
 
+    // allow Sage to auto-adjust to the longest observed read length - set during the BQR and candidates phase
+    private int mMaxObservedReadLength;
+
     private static final String REFERENCE = "reference";
     private static final String REFERENCE_BAM = "reference_bam";
     private static final String OUTPUT_VCF = "out";
@@ -135,7 +138,10 @@ public class SageConfig
         MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
         MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
+
         ExpectedReadLength = configBuilder.getInteger(EXPECTED_READ_LENGTH);
+        mMaxObservedReadLength = ExpectedReadLength;
+
         MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = configBuilder.hasFlag(SYNC_FRAGMENTS);
 
@@ -158,6 +164,16 @@ public class SageConfig
         Threads = parseThreads(configBuilder);
     }
 
+    public int getMaxObservedReadLength() { return mMaxObservedReadLength; }
+
+    public synchronized void setMaxObservedReadLength(int readLength)
+    {
+        if(mMaxObservedReadLength != readLength)
+        {
+            SG_LOGGER.info("max observed read length set({} -> {})", mMaxObservedReadLength, readLength);
+            mMaxObservedReadLength = readLength;
+        }
+    }
 
     public String formOutputDir()
     {

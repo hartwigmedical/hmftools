@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
+import com.hartwig.hmftools.sage.quality.BamSampler;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
@@ -66,6 +67,9 @@ public class SageApplication implements AutoCloseable
     {
         long startTimeMs = System.currentTimeMillis();
         final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values(), mConfig.Common);
+
+        BamSampler bamSampler = new BamSampler(mConfig.Common, mRefData);
+        bamSampler.setBamCharacteristics(mConfig.TumorBams.get(0));
 
         BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
                 mConfig.Common, mRefData.RefGenome, mConfig.PanelBed, mConfig.TumorIds, mConfig.TumorBams);

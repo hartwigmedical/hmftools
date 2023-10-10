@@ -180,7 +180,9 @@ public class BaseQualityRegionCounter implements CigarHandler
         CigarTraversal.traverseCigar(record, this);
 
         if(mReadCounter > 0 && (mReadCounter % 1000) == 0)
+        {
             purgeBaseDataList(record.getAlignmentStart());
+        }
     }
 
     @Override
