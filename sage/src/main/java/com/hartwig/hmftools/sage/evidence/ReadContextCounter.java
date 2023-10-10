@@ -752,10 +752,10 @@ public class ReadContextCounter implements VariantHotspot
         if(!record.getReadPairedFlag())
             return;
 
-        if(record.getFirstOfPairFlag())
-            mForwardStrand++;
-        else
+        if(record.getReadNegativeStrandFlag())
             mReverseStrand++;
+        else
+            mForwardStrand++;
     }
 
     private void countUmiType(final SAMRecord record, final boolean isRef)

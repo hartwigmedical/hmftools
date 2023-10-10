@@ -448,8 +448,11 @@ public class VariantDedupTest
                         "57M1D59M25S"));
 
         reads.get(1).setFirstOfPairFlag(false);
+        reads.get(1).setReadNegativeStrandFlag(true);
         reads.get(3).setFirstOfPairFlag(false);
+        reads.get(3).setReadNegativeStrandFlag(true);
         reads.get(5).setFirstOfPairFlag(false);
+        reads.get(5).setReadNegativeStrandFlag(true);
 
         tester.TumorSamSlicer.ReadRecords.addAll(reads);
         tester.TumorSamSlicer.ReadRecords.addAll(reads); // to get over qual thresholds
