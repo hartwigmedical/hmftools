@@ -248,6 +248,7 @@ Running with `-xmx32G`.
 # Version History and Download Links
 - [1.0.2](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.2)
   - Fix bug where blastn failure is ignored.
+  - Fix bug where a blastn match to mitochondrion DNA causes an exception
 - [1.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.1)
   - Fix errors in the genomic locations of anchors.
 - [1.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/cider-v1.0.0)
