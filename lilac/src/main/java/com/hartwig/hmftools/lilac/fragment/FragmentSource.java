@@ -2,7 +2,7 @@ package com.hartwig.hmftools.lilac.fragment;
 
 public enum FragmentSource
 {
-    REFEFENCE,
+    REFERENCE,
     TUMOR,
     RNA;
 }

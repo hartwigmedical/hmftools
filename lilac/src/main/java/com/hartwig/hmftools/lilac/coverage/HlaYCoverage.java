@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.GENE_A;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_COVERAGE;
 import static com.hartwig.hmftools.lilac.LilacConstants.LILAC_FILE_HLA_Y_FRAGMENTS;
 import static com.hartwig.hmftools.lilac.fragment.FragmentScope.HLA_Y;
-import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFEFENCE;
+import static com.hartwig.hmftools.lilac.fragment.FragmentSource.REFERENCE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -72,7 +72,7 @@ public class HlaYCoverage
         if(!mExceedsThreshold)
             return null;
 
-        Map<HlaAllele,int[]> alleleCounts = mSourceAlleleFragmentCounts.get(REFEFENCE);
+        Map<HlaAllele,int[]> alleleCounts = mSourceAlleleFragmentCounts.get(REFERENCE);
 
         if(alleleCounts == null)
             return null;
@@ -179,7 +179,7 @@ public class HlaYCoverage
         List<FragmentAlleles> allFragAlleles = Lists.newArrayList(fragAlleles);
         allFragAlleles.addAll(mRemovedRefFragAlleles);
 
-        assignFragments(alleles, allFragAlleles, fragments, REFEFENCE);
+        assignFragments(alleles, allFragAlleles, fragments, REFERENCE);
     }
 
     public void assignFragments(
@@ -258,7 +258,7 @@ public class HlaYCoverage
             }
         }
 
-        if(!source.equals(REFEFENCE))
+        if(!source.equals(REFERENCE))
         {
             LL_LOGGER.info("HLA-Y src({}) fragments({} unique={}) shared={})",
                     source, uniqueHlaY + matchedFragmentAlleles.size(), uniqueHlaY, matchedFragmentAlleles.size());

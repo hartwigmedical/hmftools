@@ -9,6 +9,7 @@ import com.hartwig.hmftools.common.hla.ImmutableLilacAllele;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
+import com.hartwig.hmftools.lilac.hla.HlaAllele;
 import com.hartwig.hmftools.lilac.variant.SomaticCodingCount;
 
 import java.io.IOException;
@@ -40,19 +41,23 @@ public class SolutionSummary
 
     private LilacAllele buildAlleleData(int index)
     {
-        AlleleCoverage ref = ReferenceCoverage.getAlleleCoverage().get(index);
+        // ref will be empty in tumor-only mode
+        HlaAllele refAllele = !ReferenceCoverage.getAlleleCoverage().isEmpty() ?
+                ReferenceCoverage.getAlleleCoverage().get(index).Allele : TumorCoverage.getAlleleCoverage().get(index).Allele;
 
-        AlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ?
-                TumorCoverage.getAlleleCoverage().get(index) : new AlleleCoverage(ref.Allele, 0, 0, 0);
+        AlleleCoverage noCoverage = new AlleleCoverage(refAllele, 0, 0, 0);
 
-        AlleleCoverage rna = !RnaCoverage.getAlleleCoverage().isEmpty() ?
-                RnaCoverage.getAlleleCoverage().get(index) : new AlleleCoverage(ref.Allele, 0, 0, 0);
+        AlleleCoverage ref = !ReferenceCoverage.getAlleleCoverage().isEmpty() ? ReferenceCoverage.getAlleleCoverage().get(index) : noCoverage;
+
+        AlleleCoverage tumor = !TumorCoverage.getAlleleCoverage().isEmpty() ? TumorCoverage.getAlleleCoverage().get(index) : noCoverage;
+
+        AlleleCoverage rna = !RnaCoverage.getAlleleCoverage().isEmpty() ? RnaCoverage.getAlleleCoverage().get(index) : noCoverage;
 
         double copyNumber = TumorCopyNumber.get(index);
         SomaticCodingCount codingCount = SomaticCodingCount.get(index);
 
         return ImmutableLilacAllele.builder()
-                .allele(ref.Allele.toString())
+                .allele(refAllele.toString())
                 .refFragments((int)round(ref.TotalCoverage))
                 .refUnique(ref.UniqueCoverage)
                 .refShared((int)round(ref.SharedCoverage))
