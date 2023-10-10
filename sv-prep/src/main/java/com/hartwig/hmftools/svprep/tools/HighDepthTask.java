@@ -46,7 +46,7 @@ public class HighDepthTask implements Callable
         mChromosome = chromosome;
         mWriter = writer;
 
-        mBamSlicer = new BamSlicer(0, false, true, false);
+        mBamSlicer = new BamSlicer(0, config.KeepDuplicates, true, false);
 
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(mConfig.BamFile));
         mBaseDepth = new int[mConfig.PartitionSize];

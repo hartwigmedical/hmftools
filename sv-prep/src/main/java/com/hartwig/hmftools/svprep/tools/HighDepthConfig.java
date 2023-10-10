@@ -28,6 +28,7 @@ public class HighDepthConfig
     public final int PartitionSize;
     public final int InitHighDepthThreshold;
     public final int FinalHighDepthThreshold;
+    public final boolean KeepDuplicates;
     public final int Threads;
 
     private static final String BAM_FILE = "bam_file";
@@ -35,6 +36,7 @@ public class HighDepthConfig
     private static final String PARTITION_SIZE = "partition_size";
     private static final String INIT_HIGH_DEPTH_THRESHOLD = "init_high_depth_threshold";
     private static final String FINAL_HIGH_DEPTH_THRESHOLD = "final_high_depth_threshold";
+    private static final String KEEP_DUPLICATES = "keep_duplicates";
 
     public static final int DEFAULT_INIT_HIGH_DEPTH_THRESHOLD = 200;
     public static final int DEFAULT_FINAL_HIGH_DEPTH_THRESHOLD = 120;
@@ -50,6 +52,7 @@ public class HighDepthConfig
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
         InitHighDepthThreshold = configBuilder.getInteger(INIT_HIGH_DEPTH_THRESHOLD);
         FinalHighDepthThreshold = configBuilder.getInteger(FINAL_HIGH_DEPTH_THRESHOLD);
+        KeepDuplicates = configBuilder.hasFlag(KEEP_DUPLICATES);
 
         SpecificRegions = Lists.newArrayList();
 
@@ -75,6 +78,7 @@ public class HighDepthConfig
                 FINAL_HIGH_DEPTH_THRESHOLD, "Threshold used for finalising a high-depth region", DEFAULT_FINAL_HIGH_DEPTH_THRESHOLD);
 
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        configBuilder.addFlag(KEEP_DUPLICATES, "Keep reads marked as duplicates");
         addThreadOptions(configBuilder);
         addSpecificChromosomesRegionsConfig(configBuilder);
     }
