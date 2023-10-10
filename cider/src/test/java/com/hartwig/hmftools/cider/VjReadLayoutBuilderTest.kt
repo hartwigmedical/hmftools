@@ -20,7 +20,7 @@ class VjReadLayoutBuilderTest
         var layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
 
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence)
+        assertEquals("AAGACACGGC", layoutRead.sequenceString)
         assertEquals(5, layoutRead.alignedPosition) // aligned at last base of anchor
 
         // now test J read
@@ -31,7 +31,7 @@ class VjReadLayoutBuilderTest
 
         layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence)
+        assertEquals("AAGACACGGC", layoutRead.sequenceString)
         assertEquals(5, layoutRead.alignedPosition) // aligned at first base of anchor
     }
 
@@ -50,7 +50,7 @@ class VjReadLayoutBuilderTest
         var layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
 
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence)
+        assertEquals("AAGACACGGC", layoutRead.sequenceString)
         assertEquals(5, layoutRead.alignedPosition) // aligned at last base of anchor
 
         // now test J read
@@ -61,7 +61,7 @@ class VjReadLayoutBuilderTest
 
         layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence)
+        assertEquals("AAGACACGGC", layoutRead.sequenceString)
         assertEquals(5, layoutRead.alignedPosition) // aligned at first base of anchor
     }
 
@@ -80,7 +80,7 @@ class VjReadLayoutBuilderTest
         var layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
 
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence)
+        assertEquals("AAGACACGGC", layoutRead.sequenceString)
         assertEquals(5, layoutRead.alignedPosition) // aligned at last base of anchor
 
         // now test J read
@@ -91,7 +91,7 @@ class VjReadLayoutBuilderTest
 
         layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence)
+        assertEquals("AAGACACGGC", layoutRead.sequenceString)
         assertEquals(5, layoutRead.alignedPosition) // aligned at first base of anchor
     }
 
@@ -110,7 +110,7 @@ class VjReadLayoutBuilderTest
         var layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
 
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence) // remove the poly C plus another 5 bases
+        assertEquals("AAGACACGGC", layoutRead.sequenceString) // remove the poly C plus another 5 bases
         assertEquals(5, layoutRead.alignedPosition) // aligned at last base of anchor
 
         // now test J read
@@ -121,7 +121,7 @@ class VjReadLayoutBuilderTest
 
         layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence) // remove poly C plus another 5 bases
+        assertEquals("AAGACACGGC", layoutRead.sequenceString) // remove poly C plus another 5 bases
         assertEquals(5, layoutRead.alignedPosition) // aligned at first base of anchor
     }
 
@@ -143,7 +143,7 @@ class VjReadLayoutBuilderTest
         var layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
 
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence) // remove poly G plus another 5 bases
+        assertEquals("AAGACACGGC", layoutRead.sequenceString) // remove poly G plus another 5 bases
         assertEquals(5, layoutRead.alignedPosition) // aligned at last base of anchor
 
         // now test J read
@@ -154,7 +154,7 @@ class VjReadLayoutBuilderTest
 
         layoutRead = layoutAdaptor.readCandidateToLayoutRead(readCandidate)
         assertNotNull(layoutRead)
-        assertEquals("AAGACACGGC", layoutRead.sequence) // remove ploy G plus another 5 bases
+        assertEquals("AAGACACGGC", layoutRead.sequenceString) // remove ploy G plus another 5 bases
         assertEquals(5, layoutRead.alignedPosition) // aligned at first base of anchor
     }
 }

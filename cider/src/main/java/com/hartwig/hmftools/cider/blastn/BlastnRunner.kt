@@ -100,6 +100,7 @@ object BlastnRunner
         if (result != 0)
         {
             sLogger.fatal("Error executing blastn")
+            throw RuntimeException("BLASTN execution failed")
         }
 
         val finish: Instant = Instant.now()

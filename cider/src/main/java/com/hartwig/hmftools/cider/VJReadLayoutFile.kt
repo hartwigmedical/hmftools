@@ -67,7 +67,7 @@ object VJReadLayoutFile
 
         val anchorRange = vjReadLayoutAdaptor.getExtrapolatedAnchorRange(geneType.vj, layout)
 
-        var sequence = layout.consensusSequence()
+        var sequence = layout.consensusSequenceString()
         var support = layout.highQualSupportString()
 
         // make sure aligned to codon
@@ -88,7 +88,7 @@ object VJReadLayoutFile
         {
             val read: VJReadCandidate = vjReadLayoutAdaptor.toReadCandidate(r)
             val readPadding = Math.max(layout.alignedPosition - r.alignedPosition, 0)
-            val paddedSeq = " ".repeat(readPadding) + r.sequence
+            val paddedSeq = " ".repeat(readPadding) + r.sequenceString
             val paddedQual = " ".repeat(readPadding) + SAMUtils.phredToFastq(r.baseQualities)
             writer.write("    read: ${read.read}\n")
             writer.write("    ${coloriseSequence(insertDashes(paddedSeq, anchorRange))}\n")

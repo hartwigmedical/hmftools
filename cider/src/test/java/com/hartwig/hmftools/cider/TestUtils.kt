@@ -1,10 +1,10 @@
 package com.hartwig.hmftools.cider
 
+import com.google.common.collect.ImmutableList
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.layout.TestLayoutRead
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SAMUtils
-import org.eclipse.collections.api.factory.Lists
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertTrue
 
@@ -21,7 +21,7 @@ object TestUtils
         val baseQual = SAMUtils.fastqToPhred(baseQualityString)
 
         // we are aligned at the T
-        return TestLayoutRead(readId, ReadKey(readId, firstOfPair), seq, baseQual, alignedPosition)
+        return TestLayoutRead(readId, ReadKey(readId, firstOfPair), seq.toByteArray(), baseQual, alignedPosition)
     }
 
     // helper function to create read candidates
@@ -37,7 +37,7 @@ object TestUtils
         record.baseQualityString = "F".repeat(seq.length)
         val vjGeneType = if (vj == VJ.V) VJGeneType.TRAV else VJGeneType.TRAJ
 
-        return VJReadCandidate(record, Lists.immutable.empty(), vjGeneType,
+        return VJReadCandidate(record, ImmutableList.of(), vjGeneType,
             "CACGTG", VJReadCandidate.MatchMethod.ALIGN,
             useReverseComplement, anchorOffsetStart, anchorOffsetEnd,
             0, 0)
@@ -65,7 +65,7 @@ object TestUtils
         if (vAnchorBoundary != null)
         {
             assertTrue(layoutStart + vAnchorBoundary < layout.length)
-            val vAnchorSeq = layout.consensusSequence().drop(layoutStart).substring(0, vAnchorBoundary)
+            val vAnchorSeq = layout.consensusSequenceString().drop(layoutStart).substring(0, vAnchorBoundary)
             // create VJ anchor
             vAnchor = VJAnchorByReadMatch(
                 vj = VJ.V,
@@ -83,7 +83,7 @@ object TestUtils
         if (jAnchorBoundary != null)
         {
             assertTrue(layoutStart + jAnchorBoundary <= layout.length)
-            val jAnchorSeq = layout.consensusSequence().substring(jAnchorBoundary)
+            val jAnchorSeq = layout.consensusSequenceString().substring(jAnchorBoundary)
             jAnchor = VJAnchorByReadMatch(
                 vj = VJ.J,
                 geneType = VJGeneType.IGHJ,
@@ -113,7 +113,7 @@ object TestUtils
 
         if (vAnchorBoundary != null)
         {
-            val vAnchorSeq = layout.consensusSequence().substring(0, vAnchorBoundary)
+            val vAnchorSeq = layout.consensusSequenceString().substring(0, vAnchorBoundary)
             // create VJ anchor
             vAnchor = VJAnchorByReadMatch(
                 vj = VJ.V,
@@ -130,7 +130,7 @@ object TestUtils
         }
         if (jAnchorBoundary != null)
         {
-            val jAnchorSeq = layout.consensusSequence().substring(jAnchorBoundary)
+            val jAnchorSeq = layout.consensusSequenceString().substring(jAnchorBoundary)
             jAnchor = VJAnchorByReadMatch(
                 vj = VJ.J,
                 geneType = VJGeneType.IGHJ,

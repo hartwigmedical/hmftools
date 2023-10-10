@@ -184,7 +184,7 @@ object VDJSequenceTsvWriter
                 Column.vPrimerMatches -> csvPrinter.print(vdjAnnotation.vPrimerMatchCount)
                 Column.jPrimerMatches -> csvPrinter.print(vdjAnnotation.jPrimerMatchCount)
                 Column.layoutId -> csvPrinter.print(vdj.layout.id)
-                Column.fullSeq -> csvPrinter.print(vdj.layout.consensusSequence())
+                Column.fullSeq -> csvPrinter.print(vdj.layout.consensusSequenceString())
                 Column.support -> csvPrinter.print(CiderUtils.countsToString(vdj.layout.highQualSupportCounts()))
             }
         }

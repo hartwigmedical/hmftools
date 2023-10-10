@@ -63,7 +63,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         val layoutReadSlice: ReadSlice,
         val readCandidate: VJReadCandidate,
         readKey: ReadKey,
-        sequence: String,
+        sequence: ByteArray,
         baseQualities: ByteArray,
         alignedPosition: Int)
         : ReadLayout.Read(readKey, sequence, baseQualities, alignedPosition)
@@ -72,7 +72,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
                 : this(layoutReadSlice,
             readCandidate,
             ReadKey(layoutReadSlice.readName, layoutReadSlice.firstOfPairFlag),
-            layoutReadSlice.readString,
+            layoutReadSlice.readString.toByteArray(),
             layoutReadSlice.baseQualities,
             alignedPosition)
 
@@ -276,7 +276,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             Collections.reverseOrder(
                 Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition })
                     .thenComparingDouble({ r: ReadLayout.Read -> r.baseQualities.average() }) // handle the highest quality ones first
-                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.length })
+                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.size })
                     .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
             ))
 

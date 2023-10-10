@@ -27,7 +27,7 @@ class LayoutForestTest
         val seq1 = "CAGGT"
         val baseQual1 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
 
-        val read1 = LayoutForest.Read("read1", seq1, baseQual1, 0)
+        val read1 = LayoutForest.Read("read1", seq1.toByteArray(), baseQual1, 0)
 
         // add it to the layout tree
         assertTrue(layoutForest.tryAddRead(read1))
@@ -39,18 +39,18 @@ class LayoutForestTest
         var layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc)
 
         assertEquals(1, layouts.size)
-        assertEquals(seq1, layouts.first().consensusSequence())
+        assertEquals(seq1, layouts.first().consensusSequenceString())
         assertEquals("11111", layouts.first().highQualSupportString())
 
         // add another read of same thing, but has 1 low qual base
         val baseQual2 = SAMUtils.fastqToPhred("FF:FF") // F is 37, : is 25
-        val read2 = LayoutForest.Read("read2", seq1, baseQual2, 0)
+        val read2 = LayoutForest.Read("read2", seq1.toByteArray(), baseQual2, 0)
 
         // add it to the layout tree
         assertTrue(layoutForest.tryAddRead(read2))
         layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc)
         assertEquals(1, layouts.size)
-        assertEquals(seq1, layouts.first().consensusSequence())
+        assertEquals(seq1, layouts.first().consensusSequenceString())
         assertEquals("22122", layouts.first().highQualSupportString())
     }
 
@@ -61,10 +61,10 @@ class LayoutForestTest
         val layoutForest = LayoutForest(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
 
         layoutForest.tryAddRead(LayoutForest.Read("r2", 
-            "CAGCT", SAMUtils.fastqToPhred("FFFFF"), 4))
+            "CAGCT".toByteArray(), SAMUtils.fastqToPhred("FFFFF"), 4))
 
         layoutForest.tryAddRead(LayoutForest.Read("r1", 
-            "GCAGCT", SAMUtils.fastqToPhred("FFFFFF"), 5))
+            "GCAGCT".toByteArray(), SAMUtils.fastqToPhred("FFFFFF"), 5))
 
         // now should have 6 levls
         assertEquals(6, layoutForest.numLevels)
@@ -73,9 +73,9 @@ class LayoutForestTest
         val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc)
 
         assertEquals(2, layouts.size)
-        assertEquals("CAGCT", layouts.first().consensusSequence())
+        assertEquals("CAGCT", layouts.first().consensusSequenceString())
         assertEquals("11111", layouts.first().highQualSupportString())
-        assertEquals("GCAGCT", layouts[1].consensusSequence())
+        assertEquals("GCAGCT", layouts[1].consensusSequenceString())
         assertEquals("111111", layouts[1].highQualSupportString())
     }
 
@@ -88,21 +88,21 @@ class LayoutForestTest
         val seq1 = "CAGGT"
         val baseQual1 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
 
-        val read1 = LayoutForest.Read("read1", seq1, baseQual1, 0)
+        val read1 = LayoutForest.Read("read1", seq1.toByteArray(), baseQual1, 0)
 
         // seq 2 is different for the middle letter
         val seq2 = "CATGT"
         val baseQual2 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
-        val read2 = LayoutForest.Read("read2", seq2, baseQual2, 0)
+        val read2 = LayoutForest.Read("read2", seq2.toByteArray(), baseQual2, 0)
 
         // add it to the layout tree
         assertTrue(layoutForest.tryAddRead(read1))
         assertTrue(layoutForest.tryAddRead(read2))
-        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequence() })
+        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequenceString() })
         assertEquals(2, layouts.size)
-        assertEquals(seq1, layouts[0].consensusSequence())
+        assertEquals(seq1, layouts[0].consensusSequenceString())
         assertEquals("11111", layouts[0].highQualSupportString())
-        assertEquals(seq2, layouts[1].consensusSequence())
+        assertEquals(seq2, layouts[1].consensusSequenceString())
         assertEquals("11111", layouts[1].highQualSupportString())
     }
 
@@ -115,21 +115,21 @@ class LayoutForestTest
         val seq1 = "CAGGT"
         val baseQual1 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
 
-        val read1 = LayoutForest.Read("read1", seq1, baseQual1, 0)
+        val read1 = LayoutForest.Read("read1", seq1.toByteArray(), baseQual1, 0)
 
         // seq 2 is different for the middle letter
         val seq2 = "CATAT"
         val baseQual2 = SAMUtils.fastqToPhred("FF::F") // F is 37, : is 25
-        val read2 = LayoutForest.Read("read2", seq2, baseQual2, 0)
+        val read2 = LayoutForest.Read("read2", seq2.toByteArray(), baseQual2, 0)
 
         // add it to the layout tree
         assertTrue(layoutForest.tryAddRead(read1))
         assertTrue(layoutForest.tryAddRead(read2))
 
         // since both match the high quality one we only get one layout
-        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequence() })
+        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequenceString() })
         assertEquals(1, layouts.size)
-        assertEquals(seq1, layouts[0].consensusSequence())
+        assertEquals(seq1, layouts[0].consensusSequenceString())
         assertEquals("22112", layouts[0].highQualSupportString())
     }
 
@@ -142,21 +142,21 @@ class LayoutForestTest
         val seq1 = "CATAT"
         val baseQual1 = SAMUtils.fastqToPhred("FF::F") // F is 37, : is 25
 
-        val read1 = LayoutForest.Read("read1", seq1, baseQual1, 0)
+        val read1 = LayoutForest.Read("read1", seq1.toByteArray(), baseQual1, 0)
 
         // seq 2 is different for the middle letter
         val seq2 = "CAGCT"
         val baseQual2 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
-        val read2 = LayoutForest.Read("read2", seq2, baseQual2, 0)
+        val read2 = LayoutForest.Read("read2", seq2.toByteArray(), baseQual2, 0)
 
         // add it to the layout tree
         assertTrue(layoutForest.tryAddRead(read1))
         assertTrue(layoutForest.tryAddRead(read2))
 
         // since both match the high quality one we only get one layout
-        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequence() })
+        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequenceString() })
         assertEquals(1, layouts.size)
-        assertEquals(seq2, layouts[0].consensusSequence())
+        assertEquals(seq2, layouts[0].consensusSequenceString())
         assertEquals("22112", layouts[0].highQualSupportString())
     }
 
@@ -169,17 +169,17 @@ class LayoutForestTest
 
         val seq1 = "CAGCT"
         val baseQual1 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
-        val read1 = LayoutForest.Read("read1", seq1, baseQual1, 0)
+        val read1 = LayoutForest.Read("read1", seq1.toByteArray(), baseQual1, 0)
 
         // seq 2 has a low qual diff in 3rd and high qual diff at 5th
         val seq2 = "CATCA"
         val baseQual2 = SAMUtils.fastqToPhred("FF:FF") // F is 37, : is 25
-        val read2 = LayoutForest.Read("read2", seq2, baseQual2, 0)
+        val read2 = LayoutForest.Read("read2", seq2.toByteArray(), baseQual2, 0)
 
         // seq 3 is tricky, it actually flips the 3rd base to G, so the branch needs to be moved
         val seq3 = "CAGCA"
         val baseQual3 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
-        val read3 = LayoutForest.Read("read3", seq3, baseQual3, 0)
+        val read3 = LayoutForest.Read("read3", seq3.toByteArray(), baseQual3, 0)
 
         // add to the layout tree
         assertTrue(layoutForest.tryAddRead(read1))
@@ -187,11 +187,11 @@ class LayoutForestTest
         assertTrue(layoutForest.tryAddRead(read3))
 
         // since both match the high quality one we only get one layout
-        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequence() })
+        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequenceString() })
         assertEquals(2, layouts.size)
-        assertEquals(seq3, layouts[0].consensusSequence())
+        assertEquals(seq3, layouts[0].consensusSequenceString())
         assertEquals("22122", layouts[0].highQualSupportString())
-        assertEquals(seq1, layouts[1].consensusSequence())
+        assertEquals(seq1, layouts[1].consensusSequenceString())
         assertEquals("11111", layouts[1].highQualSupportString())
     }
 
@@ -204,17 +204,17 @@ class LayoutForestTest
 
         val seq1 = "CAGCT"
         val baseQual1 = SAMUtils.fastqToPhred("FF:FF") // F is 37, : is 25
-        val read1 = LayoutForest.Read("read1", seq1, baseQual1, 0)
+        val read1 = LayoutForest.Read("read1", seq1.toByteArray(), baseQual1, 0)
 
         // seq 2 has a low qual diff in 3rd and high qual diff at 5th
         val seq2 = "CATCA"
         val baseQual2 = SAMUtils.fastqToPhred("FF:FF") // F is 37, : is 25
-        val read2 = LayoutForest.Read("read2", seq2, baseQual2, 0)
+        val read2 = LayoutForest.Read("read2", seq2.toByteArray(), baseQual2, 0)
 
         // this one actually can merge with seq2, and extend it such that end result is CAGCAT
         val seq3 = "CAGTAT"
         val baseQual3 = SAMUtils.fastqToPhred("FFF:FF") // F is 37, : is 25
-        val read3 = LayoutForest.Read("read3", seq3, baseQual3, 0)
+        val read3 = LayoutForest.Read("read3", seq3.toByteArray(), baseQual3, 0)
 
         // add to the layout tree
         assertTrue(layoutForest.tryAddRead(read1))
@@ -222,11 +222,11 @@ class LayoutForestTest
         assertTrue(layoutForest.tryAddRead(read3))
 
         // since both match the high quality one we only get one layout
-        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequence() })
+        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequenceString() })
         assertEquals(2, layouts.size)
-        assertEquals("CAGCAT", layouts[0].consensusSequence())
+        assertEquals("CAGCAT", layouts[0].consensusSequenceString())
         assertEquals("221121", layouts[0].highQualSupportString())
-        assertEquals(seq1, layouts[1].consensusSequence())
+        assertEquals(seq1, layouts[1].consensusSequenceString())
         assertEquals("11011", layouts[1].highQualSupportString())
     }
 
@@ -256,29 +256,29 @@ class LayoutForestTest
         val layoutForest = LayoutForest(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
 
         layoutForest.tryAddRead(LayoutForest.Read("r1", 
-            "GCAGCT", SAMUtils.fastqToPhred("FFFFFF"), 5))
+            "GCAGCT".toByteArray(), SAMUtils.fastqToPhred("FFFFFF"), 5))
 
         layoutForest.tryAddRead(LayoutForest.Read("r2", 
-            "CAGCT", SAMUtils.fastqToPhred("FFFFF"), 4))
+            "CAGCT".toByteArray(), SAMUtils.fastqToPhred("FFFFF"), 4))
 
         layoutForest.tryAddRead(LayoutForest.Read("r3", 
-            "AGCTA", SAMUtils.fastqToPhred("FFFFF"), 3))
+            "AGCTA".toByteArray(), SAMUtils.fastqToPhred("FFFFF"), 3))
 
         layoutForest.tryAddRead(LayoutForest.Read("r4", 
-            "AGCTG", SAMUtils.fastqToPhred("FFFFF"), 3))
+            "AGCTG".toByteArray(), SAMUtils.fastqToPhred("FFFFF"), 3))
 
         layoutForest.tryAddRead(LayoutForest.Read("r5", 
-            "CTGAA", SAMUtils.fastqToPhred("FFFFF"), 1))
+            "CTGAA".toByteArray(), SAMUtils.fastqToPhred("FFFFF"), 1))
 
         // should have 2 sequences
-        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
+        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequenceString().length })
         assertEquals(2, layouts.size)
-        assertEquals("GCAGCTGAA", layouts[0].consensusSequence())
+        assertEquals("GCAGCTGAA", layouts[0].consensusSequenceString())
         assertEquals("123344211", layouts[0].highQualSupportString())
         // 4 reads in first layout
         assertEquals(4, layouts[0].reads.size)
         assertEquals(5, layouts[0].alignedPosition)
-        assertEquals("AGCTA", layouts[1].consensusSequence())
+        assertEquals("AGCTA", layouts[1].consensusSequenceString())
         assertEquals("11111", layouts[1].highQualSupportString())
 
         // 1 read in second layout
@@ -300,36 +300,36 @@ class LayoutForestTest
 
         val seq1 = "CAGCTGGAC"
         val baseQual1 = SAMUtils.fastqToPhred("F".repeat(seq1.length)) // F is 37, : is 25
-        val read1 = LayoutForest.Read("read1", seq1, baseQual1, 6)
+        val read1 = LayoutForest.Read("read1", seq1.toByteArray(), baseQual1, 6)
 
         // read2 starts 2 bases after read1
         val seq2 = "TCCA"
         val baseQual2 = SAMUtils.fastqToPhred("FF:F") // F is 37, : is 25
-        val read2 = LayoutForest.Read("read2", seq2, baseQual2, 4)
+        val read2 = LayoutForest.Read("read2", seq2.toByteArray(), baseQual2, 4)
 
         // add to the layout tree
         assertTrue(layoutForest.tryAddRead(read1))
         assertTrue(layoutForest.tryAddRead(read2))
 
         // should have 2 sequences
-        var layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
+        var layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequenceString().length })
         assertEquals(2, layouts.size)
-        assertEquals(seq1, layouts[0].consensusSequence())
+        assertEquals(seq1, layouts[0].consensusSequenceString())
         assertEquals(6, layouts[0].alignedPosition)
-        assertEquals(seq2, layouts[1].consensusSequence())
+        assertEquals(seq2, layouts[1].consensusSequenceString())
         assertEquals(4, layouts[1].alignedPosition)
 
         // test that we can extend the new branch
         val seq3 = "CCATT"
         val baseQual3 = SAMUtils.fastqToPhred("FFFFF") // F is 37, : is 25
-        val read3 = LayoutForest.Read("read3", seq3, baseQual3, 3)
+        val read3 = LayoutForest.Read("read3", seq3.toByteArray(), baseQual3, 3)
         assertTrue(layoutForest.tryAddRead(read3))
 
-        layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
+        layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequenceString().length })
         assertEquals(2, layouts.size)
-        assertEquals(seq1, layouts[0].consensusSequence())
+        assertEquals(seq1, layouts[0].consensusSequenceString())
         assertEquals(6, layouts[0].alignedPosition)
-        assertEquals("TCCATT", layouts[1].consensusSequence())
+        assertEquals("TCCATT", layouts[1].consensusSequenceString())
         assertEquals(4, layouts[1].alignedPosition)
     }
 
@@ -346,17 +346,17 @@ class LayoutForestTest
 
         val seq1 = "CAGCT"
         val baseQual1 = SAMUtils.fastqToPhred("FF:FF") // F is 37, : is 25
-        val read1 = LayoutForest.Read("read1", seq1, baseQual1, 0)
+        val read1 = LayoutForest.Read("read1", seq1.toByteArray(), baseQual1, 0)
 
         // seq 2 has a low qual diff in 3rd and high qual diff at 5th
         val seq2 = "CATCA"
         val baseQual2 = SAMUtils.fastqToPhred("FF:FF") // F is 37, : is 25
-        val read2 = LayoutForest.Read("read2", seq2, baseQual2, 0)
+        val read2 = LayoutForest.Read("read2", seq2.toByteArray(), baseQual2, 0)
 
         // this one actually can merge with seq2, and extend it such that end result is CAGCAT
         val seq3 = "CAGTAT"
         val baseQual3 = SAMUtils.fastqToPhred("FFF:FF") // F is 37, : is 25
-        val read3 = LayoutForest.Read("read3", seq3, baseQual3, 0)
+        val read3 = LayoutForest.Read("read3", seq3.toByteArray(), baseQual3, 0)
 
         // add to the layout tree
         assertTrue(layoutForest.tryAddRead(read1))
@@ -364,11 +364,11 @@ class LayoutForestTest
         assertTrue(layoutForest.tryAddRead(read3))
 
         // we get
-        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequence() })
+        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedBy({ l -> l.consensusSequenceString() })
         assertEquals(2, layouts.size)
-        assertEquals("CAGCAT", layouts[0].consensusSequence())
+        assertEquals("CAGCAT", layouts[0].consensusSequenceString())
         assertEquals("221121", layouts[0].highQualSupportString())
-        assertEquals(seq1, layouts[1].consensusSequence())
+        assertEquals(seq1, layouts[1].consensusSequenceString())
         assertEquals("11011", layouts[1].highQualSupportString())
     }
 
@@ -394,27 +394,27 @@ class LayoutForestTest
         val layoutForest = LayoutForest(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, 2)
 
         layoutForest.tryAddRead(LayoutForest.Read("r1",
-            "GCAGCT", SAMUtils.fastqToPhred("FFFFFF"), 5))
+            "GCAGCT".toByteArray(), SAMUtils.fastqToPhred("FFFFFF"), 5))
 
         layoutForest.tryAddRead(LayoutForest.Read("r2",
-            "CAGCT", SAMUtils.fastqToPhred("FFFFF"), 4))
+            "CAGCT".toByteArray(), SAMUtils.fastqToPhred("FFFFF"), 4))
 
         layoutForest.tryAddRead(LayoutForest.Read("r3",
-            "AGCTGA", SAMUtils.fastqToPhred("FFFFFF"), 3))
+            "AGCTGA".toByteArray(), SAMUtils.fastqToPhred("FFFFFF"), 3))
 
         layoutForest.tryAddRead(LayoutForest.Read("r4",
-            "AGCTGA", SAMUtils.fastqToPhred("FFFFFF"), 3))
+            "AGCTGA".toByteArray(), SAMUtils.fastqToPhred("FFFFFF"), 3))
 
         layoutForest.tryAddRead(LayoutForest.Read("r5",
-            "AGCTAA", SAMUtils.fastqToPhred("FFFFFF"), 3))
+            "AGCTAA".toByteArray(), SAMUtils.fastqToPhred("FFFFFF"), 3))
 
         // now want to check that the layoutForest root has two children
         assertEquals(2, layoutForest.roots.size)
 
         // should have 2 sequences
-        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
+        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequenceString().length })
         assertEquals(2, layouts.size)
-        assertEquals("GCAGCTGA", layouts[0].consensusSequence())
+        assertEquals("GCAGCTGA", layouts[0].consensusSequenceString())
         assertEquals("12444422", layouts[0].highQualSupportString())
 
         // 4 reads in first layout
@@ -422,7 +422,7 @@ class LayoutForestTest
         assertEquals(5, layouts[0].alignedPosition)
 
 
-        assertEquals("AGCTAA", layouts[1].consensusSequence())
+        assertEquals("AGCTAA", layouts[1].consensusSequenceString())
         assertEquals("111111", layouts[1].highQualSupportString())
 
         // 1 read in second layout
@@ -464,27 +464,27 @@ class LayoutForestTest
         val layoutForest = LayoutForest(MIN_BASE_QUALITY, MIN_OVERLAP_BASES, MIN_SUPPORT_TO_SEAL_NODE)
 
         layoutForest.tryAddRead(LayoutForest.Read("r1",
-            "GCAGCT", SAMUtils.fastqToPhred("FFFFFF"), 4))
+            "GCAGCT".toByteArray(), SAMUtils.fastqToPhred("FFFFFF"), 4))
 
         layoutForest.tryAddRead(LayoutForest.Read("r2",
-            "AGCTGAA", SAMUtils.fastqToPhred("FFFFFFF"), 2))
+            "AGCTGAA".toByteArray(), SAMUtils.fastqToPhred("FFFFFFF"), 2))
 
         layoutForest.tryAddRead(LayoutForest.Read("r3",
-            "AGCTAA", SAMUtils.fastqToPhred("FFFFFF"), 2))
+            "AGCTAA".toByteArray(), SAMUtils.fastqToPhred("FFFFFF"), 2))
 
         layoutForest.tryAddRead(LayoutForest.Read("r4",
-            "GCTAAC", SAMUtils.fastqToPhred("FFFFFF"), 1))
+            "GCTAAC".toByteArray(), SAMUtils.fastqToPhred("FFFFFF"), 1))
 
         layoutForest.tryAddRead(LayoutForest.Read("r5",
-            "TAGCTGA", SAMUtils.fastqToPhred("FFFFFFF"), 3))
+            "TAGCTGA".toByteArray(), SAMUtils.fastqToPhred("FFFFFFF"), 3))
 
         // now want to check that the layoutForest root has two children
         assertEquals(2, layoutForest.roots.size)
 
         // should have 2 sequences
-        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequence().length })
+        val layouts = layoutForest.buildReadLayouts(layoutReadCreateFunc).sortedByDescending({ l -> l.consensusSequenceString().length })
         assertEquals(2, layouts.size)
-        assertEquals("GCAGCTAAC", layouts[0].consensusSequence())
+        assertEquals("GCAGCTAAC", layouts[0].consensusSequenceString())
         //assertEquals("12444422", layouts[0].highQualSupportString())
 
         // 3 reads in first layout
@@ -492,7 +492,7 @@ class LayoutForestTest
         assertEquals(4, layouts[0].alignedPosition)
 
 
-        assertEquals("TAGCTGAA", layouts[1].consensusSequence())
+        assertEquals("TAGCTGAA", layouts[1].consensusSequenceString())
         assertEquals("12222221", layouts[1].highQualSupportString())
 
         // 2 read in second layout, after reassignment

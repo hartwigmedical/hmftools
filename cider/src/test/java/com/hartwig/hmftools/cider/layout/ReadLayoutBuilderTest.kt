@@ -3,6 +3,11 @@ package com.hartwig.hmftools.cider.layout
 import com.hartwig.hmftools.cider.ReadKey
 import com.hartwig.hmftools.cider.TestUtils
 import htsjdk.samtools.SAMUtils
+import htsjdk.samtools.util.SequenceUtil.A
+import htsjdk.samtools.util.SequenceUtil.T
+import htsjdk.samtools.util.SequenceUtil.C
+import htsjdk.samtools.util.SequenceUtil.G
+
 import kotlin.test.*
 
 class ReadLayoutBuilderTest
@@ -47,43 +52,43 @@ class ReadLayoutBuilderTest
         var seq = "CAGGTG"
 
         // we are aligned at the T
-        var readData = TestLayoutRead("read1", ReadKey("read1", true), seq, ByteArray(seq.length){ 50 }, 4)
+        var readData = TestLayoutRead("read1", ReadKey("read1", true), seq.toByteArray(), ByteArray(seq.length){ 50 }, 4)
         group.addRead(readData, MIN_BASE_QUALITY)
 
-        assertEquals(seq, group.consensusSequence())
+        assertEquals(seq, group.consensusSequenceString())
         assertEquals(4, group.alignedPosition)
 
         // now test a sequence that extend the start by 3 bases
         seq = "AGCCAGGT"
-        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, ByteArray(seq.length){ 50 }, 7)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq.toByteArray(), ByteArray(seq.length){ 50 }, 7)
         group.addRead(readData, MIN_BASE_QUALITY)
 
-        assertEquals(seq + "G", group.consensusSequence())
+        assertEquals(seq + "G", group.consensusSequenceString())
         assertEquals(7, group.alignedPosition)
 
         // now test a sequence that extend the end by 3 bases
         seq = "AGGTGCAA"
-        readData = TestLayoutRead("read3", ReadKey("read3", true), seq, ByteArray(seq.length){ 50 }, 3)
+        readData = TestLayoutRead("read3", ReadKey("read3", true), seq.toByteArray(), ByteArray(seq.length){ 50 }, 3)
         group.addRead(readData, MIN_BASE_QUALITY)
 
-        assertEquals("AGCC" + seq, group.consensusSequence())
+        assertEquals("AGCC" + seq, group.consensusSequenceString())
         assertEquals(7, group.alignedPosition)
 
         assertEquals(3, group.reads.size)
 
         // lets see if we got the correct support counts
-        assertEquals(mapOf('A' to 1), group.highQualSequenceSupport.support[0].generateCountMap())
-        assertEquals(mapOf('G' to 1), group.highQualSequenceSupport.support[1].generateCountMap())
-        assertEquals(mapOf('C' to 1), group.highQualSequenceSupport.support[2].generateCountMap())
-        assertEquals(mapOf('C' to 2), group.highQualSequenceSupport.support[3].generateCountMap())
-        assertEquals(mapOf('A' to 3), group.highQualSequenceSupport.support[4].generateCountMap())
-        assertEquals(mapOf('G' to 3), group.highQualSequenceSupport.support[5].generateCountMap())
-        assertEquals(mapOf('G' to 3), group.highQualSequenceSupport.support[6].generateCountMap())
-        assertEquals(mapOf('T' to 3), group.highQualSequenceSupport.support[7].generateCountMap())
-        assertEquals(mapOf('G' to 2), group.highQualSequenceSupport.support[8].generateCountMap())
-        assertEquals(mapOf('C' to 1), group.highQualSequenceSupport.support[9].generateCountMap())
-        assertEquals(mapOf('A' to 1), group.highQualSequenceSupport.support[10].generateCountMap())
-        assertEquals(mapOf('A' to 1), group.highQualSequenceSupport.support[11].generateCountMap())
+        assertEquals(mapOf(A to 1), group.highQualSequenceSupport.support[0].generateCountMap())
+        assertEquals(mapOf(G to 1), group.highQualSequenceSupport.support[1].generateCountMap())
+        assertEquals(mapOf(C to 1), group.highQualSequenceSupport.support[2].generateCountMap())
+        assertEquals(mapOf(C to 2), group.highQualSequenceSupport.support[3].generateCountMap())
+        assertEquals(mapOf(A to 3), group.highQualSequenceSupport.support[4].generateCountMap())
+        assertEquals(mapOf(G to 3), group.highQualSequenceSupport.support[5].generateCountMap())
+        assertEquals(mapOf(G to 3), group.highQualSequenceSupport.support[6].generateCountMap())
+        assertEquals(mapOf(T to 3), group.highQualSequenceSupport.support[7].generateCountMap())
+        assertEquals(mapOf(G to 2), group.highQualSequenceSupport.support[8].generateCountMap())
+        assertEquals(mapOf(C to 1), group.highQualSequenceSupport.support[9].generateCountMap())
+        assertEquals(mapOf(A to 1), group.highQualSequenceSupport.support[10].generateCountMap())
+        assertEquals(mapOf(A to 1), group.highQualSequenceSupport.support[11].generateCountMap())
     }
 
     @Test
@@ -94,15 +99,15 @@ class ReadLayoutBuilderTest
         var baseQual = SAMUtils.fastqToPhred("FF::FF") // F is 37, : is 25
 
         // we are aligned at the T
-        var readData = TestLayoutRead("read1", ReadKey("read1", true), seq, baseQual, 4)
+        var readData = TestLayoutRead("read1", ReadKey("read1", true), seq.toByteArray(), baseQual, 4)
         layout.addRead(readData, MIN_BASE_QUALITY)
 
-        assertEquals(seq, layout.consensusSequence())
+        assertEquals(seq, layout.consensusSequenceString())
         assertEquals(4, layout.alignedPosition)
 
         // match a new sequence against the overlay
         seq = "CAGGTG"
-        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual, 4)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq.toByteArray(), baseQual, 4)
 
         // this should match
         assertTrue(ReadLayoutBuilder.layoutMatch(layout, readData, MIN_BASE_QUALITY, 6))
@@ -112,13 +117,13 @@ class ReadLayoutBuilderTest
 
         // match another one which should not match
         seq = "CTGGTG"
-        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual, 4)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq.toByteArray(), baseQual, 4)
         assertFalse(ReadLayoutBuilder.layoutMatch(layout, readData, MIN_BASE_QUALITY, 6))
 
         // now try to match a shorter sequence, should match also
         seq = "GGTG"
         baseQual = SAMUtils.fastqToPhred("FFFF") // F is 37, : is 25
-        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual, 2)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq.toByteArray(), baseQual, 2)
         assertTrue(ReadLayoutBuilder.layoutMatch(layout, readData, MIN_BASE_QUALITY, 4))
     }
 
@@ -147,7 +152,7 @@ class ReadLayoutBuilderTest
         // try add to layout
         layout.addRead(readData, MIN_BASE_QUALITY)
 
-        assertEquals("CAGGTGCC", layout.consensusSequence())
+        assertEquals("CAGGTGCC", layout.consensusSequenceString())
         assertEquals("11122211", layout.highQualSupportString())
     }
 
@@ -162,7 +167,7 @@ class ReadLayoutBuilderTest
         val read1 = TestUtils.createLayoutRead("read1", seq, baseQual, -2)
         layout.addRead(read1, MIN_BASE_QUALITY)
 
-        assertEquals(seq, layout.consensusSequence())
+        assertEquals(seq, layout.consensusSequenceString())
         assertEquals(-2, layout.alignedPosition)
 
         // we can still align reads normally
@@ -180,11 +185,11 @@ class ReadLayoutBuilderTest
 
         // try adding those to layout
         layout.addRead(read2, MIN_BASE_QUALITY)
-        assertEquals("TCAGGTGA", layout.consensusSequence())
+        assertEquals("TCAGGTGA", layout.consensusSequenceString())
         assertEquals("12222221", layout.highQualSupportString())
 
         layout.addRead(read3, MIN_BASE_QUALITY)
-        assertEquals("ATTCAGGTGA", layout.consensusSequence())
+        assertEquals("ATTCAGGTGA", layout.consensusSequenceString())
         assertEquals("1123333331", layout.highQualSupportString())
     }
 
@@ -195,15 +200,15 @@ class ReadLayoutBuilderTest
         var seq = "CAGGTG"
 
         // we are aligned at the T
-        var readData = TestLayoutRead("read1", ReadKey("read1", true), seq, ByteArray(seq.length){ 50 }, 4)
+        var readData = TestLayoutRead("read1", ReadKey("read1", true), seq.toByteArray(), ByteArray(seq.length){ 50 }, 4)
         group.addRead(readData, MIN_BASE_QUALITY)
 
-        assertEquals(seq, group.consensusSequence())
+        assertEquals(seq, group.consensusSequenceString())
         assertEquals(4, group.alignedPosition)
 
         // match a new sequence against the overlay
         seq = "AGCCAGAT"
-        readData = TestLayoutRead("read2", ReadKey("read2", true), seq, ByteArray(seq.length){ 50 }, 7)
+        readData = TestLayoutRead("read2", ReadKey("read2", true), seq.toByteArray(), ByteArray(seq.length){ 50 }, 7)
 
         //val (matchCount, compareCount) = ReadLayoutBuilder.layoutMatchCount(group, readData, false, MIN_BASE_QUALITY)
 
@@ -219,7 +224,7 @@ class ReadLayoutBuilderTest
         val baseQual1 = SAMUtils.fastqToPhred("FF::FF") // F is 37, : is 25
 
         // we are aligned at the T
-        var read1 = TestLayoutRead("read1", ReadKey("read1", true), seq1, baseQual1, 4)
+        var read1 = TestLayoutRead("read1", ReadKey("read1", true), seq1.toByteArray(), baseQual1, 4)
         layout1.addRead(read1, MIN_BASE_QUALITY)
 
         val layout2 = ReadLayout()
@@ -227,14 +232,14 @@ class ReadLayoutBuilderTest
         val baseQual2 = SAMUtils.fastqToPhred("F:FFFF:") // F is 37, : is 25
 
         // aligned at the first A
-        var read2 = TestLayoutRead("read2", ReadKey("read2", true), seq2, baseQual2, 0)
+        var read2 = TestLayoutRead("read2", ReadKey("read2", true), seq2.toByteArray(), baseQual2, 0)
         layout2.addRead(read2, MIN_BASE_QUALITY)
 
         // now we have 2 layouts, one is GAGGTG, another is AGGTGAT, we merge them together to create CAGGTGAT
         // and we want to align them at the 2nd G
         val layout3 = ReadLayout.merge(layout1, layout2, -1, 2, MIN_BASE_QUALITY)
 
-        assertEquals("CAGGTGAT", layout3.consensusSequence())
+        assertEquals("CAGGTGAT", layout3.consensusSequenceString())
         assertEquals("12012210", layout3.highQualSupportString())
         //assertEquals(5, compareCount)
     }

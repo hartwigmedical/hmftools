@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.cider.layout
 
 import com.hartwig.hmftools.cider.CiderConstants
+import htsjdk.samtools.util.SequenceUtil.N
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
@@ -22,7 +23,7 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
             // we want to cluster them based on aligned position so the sequence is built up from
             // longest to shortest, highest quality first
             readDataMutableList.sortWith(Collections.reverseOrder(
-                    Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.length })
+                    Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.size })
                         .thenComparingDouble({ r: ReadLayout.Read -> r.baseQualities.average() }) // handle the highest quality ones first
                         .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition })
                         .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
@@ -34,7 +35,7 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
             readDataMutableList.sortWith(Collections.reverseOrder(
                 Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition })
                     .thenComparingDouble({ r: ReadLayout.Read -> r.baseQualities.average() }) // handle the highest quality ones first
-                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.length })
+                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.size })
                     .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
             ))
         }
@@ -112,7 +113,7 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
             val readOffsetStart: Int = readData.alignedPosition - alignedPosMin
 
             // n is the number of bases overlap
-            val n: Int = Math.min(layout.length - layoutOffsetStart, readData.sequence.length - readOffsetStart)
+            val n: Int = Math.min(layout.length - layoutOffsetStart, readData.sequence.size - readOffsetStart)
 
             if (n < minOverlap)
                 return false
@@ -128,7 +129,7 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
 
         // if base qual is null then don't check it
         @JvmStatic
-        fun sequenceMatch(read1Seq: String, read2Seq: String,
+        fun sequenceMatch(read1Seq: ByteArray, read2Seq: ByteArray,
                                read1Qual: ByteArray?, read2Qual: ByteArray?,
                                read1StartOffset: Int, read2StartOffset: Int,
                                n: Int,
@@ -139,20 +140,20 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
             var comparedCount: Int = 0
             var matchCount: Int = 0
 
-            if (read1StartOffset + n > read1Seq.length)
+            if (read1StartOffset + n > read1Seq.size)
             {
                 throw RuntimeException("read1StartOffset + n > read1Seq.length")
             }
 
-            if (read2StartOffset + n > read2Seq.length)
+            if (read2StartOffset + n > read2Seq.size)
             {
                 throw RuntimeException("read2StartOffset + n > read2Seq.length")
             }
 
             for (i in 0 until n)
             {
-                val b1: Char = read1Seq[i1]
-                val b2: Char = read2Seq[i2]
+                val b1: Byte = read1Seq[i1]
+                val b2: Byte = read2Seq[i2]
 
                 if (b1 == b2)
                 {
@@ -162,7 +163,7 @@ class ReadLayoutBuilder(inputReads: List<ReadLayout.Read>, minBaseQuality: Int, 
                 }
                 else if ((read1Qual == null || read1Qual[i1] >= baseQualityCutoff) &&
                     (read2Qual == null || read2Qual[i2] >= baseQualityCutoff) &&
-                    b1 != 'N' && b2 != 'N')
+                    b1 != N && b2 != N)
                 {
                     // if both high quality and no N then we say this is a real mismatch
                     ++comparedCount

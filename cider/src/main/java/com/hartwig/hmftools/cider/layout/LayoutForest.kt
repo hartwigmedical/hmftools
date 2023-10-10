@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.cider.layout
 
+import htsjdk.samtools.util.SequenceUtil.N
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayDeque
@@ -112,15 +113,15 @@ class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var node
     class Read (
         // have a source that allows us to refer back to where this comes from
         val source: Any,
-        val sequence: String,
+        val sequence: ByteArray,
         val baseQualities: ByteArray,
         val alignedPosition: Int) // where in the read is the aligned position
 
     // each node has a base and their associated count
     class Node(var position: Int, var parent: Node?)
     {
-        internal var base: Char = UNKNOWN_BASE
-        internal var highQualBase: Char = UNKNOWN_BASE
+        internal var base: Byte = UNKNOWN_BASE
+        internal var highQualBase: Byte = UNKNOWN_BASE
         internal var count: Int = 0
         internal var highQualityCount: Int = 0
         val reads: MutableList<Read> = ArrayList()
@@ -150,12 +151,12 @@ class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var node
         return alignedPosition - readAlignedPos
     }
 
-    fun matchesNode(node: Node, base: Char, baseQuality: Byte) : Boolean
+    fun matchesNode(node: Node, base: Byte, baseQuality: Byte) : Boolean
     {
         return node.base == base || baseQuality < minBaseQuality || node.highQualBase == UNKNOWN_BASE || base == UNKNOWN_BASE
     }
 
-    fun createChild(parent: Node?, lvl: Int, base: Char) : Node
+    fun createChild(parent: Node?, lvl: Int, base: Byte) : Node
     {
         // check that we are not adding children to a sealed node
         require(parent === null || !isNodeSealed(parent))
@@ -177,9 +178,9 @@ class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var node
         return levelNodes[level]
     }
 
-    fun addToNodeCount(node: Node, base: Char, baseQuality: Byte)
+    fun addToNodeCount(node: Node, base: Byte, baseQuality: Byte)
     {
-        val highQualBase: Char = if (baseQuality >= minBaseQuality) base else UNKNOWN_BASE
+        val highQualBase: Byte = if (baseQuality >= minBaseQuality) base else UNKNOWN_BASE
 
         if (highQualBase != UNKNOWN_BASE)
         {
@@ -217,10 +218,10 @@ class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var node
         var node = lastNode
         for (i in lastNode.position - readLayoutPos downTo 0)
         {
-            require(i < read.sequence.length)
+            require(i < read.sequence.size)
             val baseQual: Byte = read.baseQualities[i]
-            val base: Char = read.sequence[i]
-            val highQualBase: Char = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
+            val base: Byte = read.sequence[i]
+            val highQualBase: Byte = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
 
             if (highQualBase != UNKNOWN_BASE)
             {
@@ -373,11 +374,11 @@ class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var node
         // in the following we check for 2 things. Firstly if the min overlap has been satisfied.
         // And if minoverlap has been satisfied, we want to check if the rest of the sequences
         // can be added to the tree without branching a node that is sealed
-        loop@ for (i in 1 until read.sequence.length)
+        loop@ for (i in 1 until read.sequence.size)
         {
             val baseQual: Byte = read.baseQualities[i]
-            val base: Char = read.sequence[i]
-            val highQualBase: Char = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
+            val base: Byte = read.sequence[i]
+            val highQualBase: Byte = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
 
             if (i >= minOverlapLength && currentNode.children.isEmpty())
             {
@@ -448,13 +449,13 @@ class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var node
         // follow this branch until a mismatch occur and we create a new subbranch from there.
         // node that this logic has to match the overlap function
         var currentNode = branchRoot
-        for (i in 1 until read.sequence.length)
+        for (i in 1 until read.sequence.size)
         {
             val level = readLayoutPos + i
             assert(currentNode.position + 1 == level)
             val baseQual: Byte = read.baseQualities[i]
-            val base: Char = read.sequence[i]
-            val highQualBase: Char = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
+            val base: Byte = read.sequence[i]
+            val highQualBase: Byte = if (baseQual >= minBaseQuality) base else UNKNOWN_BASE
 
             var child: Node? = null
 
@@ -769,7 +770,7 @@ class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var node
             layout.addRead(r, minBaseQuality)
         }
 
-        sLogger.trace("layout: num reads({}) seq({}) support({})", layout.reads.size, layout.consensusSequence(), layout.highQualSupportString())
+        sLogger.trace("layout: num reads({}) seq({}) support({})", layout.reads.size, layout.consensusSequenceString(), layout.highQualSupportString())
 
         return layout
     }
@@ -777,7 +778,7 @@ class LayoutForest(val minBaseQuality: Byte, val minOverlapLength: Int, var node
     companion object
     {
         private val sLogger = LogManager.getLogger(LayoutForest::class.java)
-        const val UNKNOWN_BASE: Char = 'N'
+        const val UNKNOWN_BASE: Byte = N
 
         // this is how much we count low qual base towards support
         // high qual base count as 1
