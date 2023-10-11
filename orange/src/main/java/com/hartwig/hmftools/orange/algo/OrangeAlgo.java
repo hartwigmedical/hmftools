@@ -67,6 +67,7 @@ import com.hartwig.hmftools.orange.OrangeRnaConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
+import com.hartwig.hmftools.orange.algo.linx.LinxReportableClusters;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
@@ -226,6 +227,9 @@ public class OrangeAlgo
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
         }
 
+        Set<Integer> linxReportableClusters =
+                LinxReportableClusters.findReportableClusters(linxData, config.linxSomaticDataDirectory(), config.tumorSampleId());
+
         OrangeRecord report = ImmutableOrangeRecord.builder()
                 .sampleId(config.tumorSampleId())
                 .samplingDate(config.samplingDate())
@@ -247,7 +251,7 @@ public class OrangeAlgo
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(ConversionUtil.mapToIterable(sigAllocations, OrangeConversion::convert))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
-                .plots(buildPlots(config, shouldHaveLinxPlots(linxData)))
+                .plots(buildPlots(config, linxReportableClusters))
                 .build();
 
         if(config.limitJsonOutput())
@@ -658,7 +662,7 @@ public class OrangeAlgo
     }
 
     @NotNull
-    private OrangePlots buildPlots(@NotNull OrangeConfig config, boolean shouldHaveLinxPlots) throws IOException
+    private OrangePlots buildPlots(@NotNull OrangeConfig config, Set<Integer> linxReportableClusters) throws IOException
     {
         LOGGER.info("Loading plots");
 
@@ -666,6 +670,7 @@ public class OrangeAlgo
 
         String linxPlotDir = config.linxPlotDirectory();
         List<String> linxDriverPlots = Lists.newArrayList();
+
         if(linxPlotDir != null && new File(linxPlotDir).exists())
         {
             for(String file : new File(linxPlotDir).list())
@@ -675,8 +680,9 @@ public class OrangeAlgo
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         }
 
-        if (shouldHaveLinxPlots && linxDriverPlots.isEmpty()) {
-            throw new RuntimeException("Expected Linx plots but no plots found");
+        if(linxReportableClusters.size() != linxDriverPlots.size())
+        {
+            throw new RuntimeException(String.format("Expected %d Linx plots but found %d", linxReportableClusters.size(), linxDriverPlots.size()));
         }
 
         String sageReferenceBQRPlot = plotManager.processPlotFile(config.sageSomaticRefSampleBQRPlot());
@@ -736,11 +742,5 @@ public class OrangeAlgo
     public void setSuppressGeneWarnings()
     {
         suppressGeneWarnings = true;
-    }
-
-    public boolean shouldHaveLinxPlots(@NotNull LinxData linxData) {
-        return linxData.reportableSomaticFusions().size()
-                + linxData.reportableSomaticBreakends().size()
-                + linxData.somaticHomozygousDisruptions().size() > 0;
     }
 }
