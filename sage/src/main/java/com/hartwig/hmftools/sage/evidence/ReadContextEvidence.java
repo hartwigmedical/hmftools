@@ -141,7 +141,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         List<ChrBaseRegion> sliceRegions = Lists.newArrayList();
 
-        int minGap = mConfig.getMaxObservedReadLength() * 2;
+        int minGap = mConfig.getReadLength() * 2;
 
         int sliceLength = lastCandidate.position() - firstCandidate.position();
         int averageGap = sliceLength / candidates.size();

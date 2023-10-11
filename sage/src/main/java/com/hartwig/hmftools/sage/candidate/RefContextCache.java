@@ -37,8 +37,8 @@ public class RefContextCache
 
         final Consumer<RefContext> evictionHandler = (refContext) -> processAltContexts(refContext);
 
-        int minCapacity = config.getMaxObservedReadLength() == DEFAULT_READ_LENGTH ?
-                MIN_CAPACITY : max(MIN_CAPACITY, config.getMaxObservedReadLength() * 2);
+        int minCapacity = config.getReadLength() == DEFAULT_READ_LENGTH ?
+                MIN_CAPACITY : max(MIN_CAPACITY, config.getReadLength() * 2);
 
         mEvictingArray = new EvictingArray(minCapacity, evictionHandler);
     }

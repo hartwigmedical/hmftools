@@ -59,7 +59,6 @@ public class SageConfig
     public final int MaxReadDepth;
     public final int MaxReadDepthPanel;
     public final int ReadContextFlankSize;
-    public final int ExpectedReadLength;
     public final int MaxPartitionSlices;
     public final ValidationStringency BamStringency;
 
@@ -76,8 +75,8 @@ public class SageConfig
 
     private boolean mIsValid;
 
-    // allow Sage to auto-adjust to the longest observed read length - set during the BQR and candidates phase
-    private int mMaxObservedReadLength;
+    // allow Sage to auto-adjust to the longest observed read length
+    private int mReadLength;
 
     private static final String REFERENCE = "reference";
     private static final String REFERENCE_BAM = "reference_bam";
@@ -88,7 +87,7 @@ public class SageConfig
     private static final String SLICE_SIZE = "slice_size";
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String INCLUDE_MT = "include_mt";
-    private static final String EXPECTED_READ_LENGTH = "read_length";
+    private static final String READ_LENGTH = "read_length";
     private static final String SYNC_FRAGMENTS = "sync_fragments";
     private static final String TRACK_UMIS = "track_umis";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
@@ -139,8 +138,7 @@ public class SageConfig
         MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
 
-        ExpectedReadLength = configBuilder.getInteger(EXPECTED_READ_LENGTH);
-        mMaxObservedReadLength = ExpectedReadLength;
+        mReadLength = configBuilder.getInteger(READ_LENGTH);
 
         MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
         SyncFragments = configBuilder.hasFlag(SYNC_FRAGMENTS);
@@ -164,14 +162,14 @@ public class SageConfig
         Threads = parseThreads(configBuilder);
     }
 
-    public int getMaxObservedReadLength() { return mMaxObservedReadLength; }
+    public int getReadLength() { return mReadLength; }
 
-    public synchronized void setMaxObservedReadLength(int readLength)
+    public void setReadLength(int readLength)
     {
-        if(mMaxObservedReadLength != readLength)
+        if(readLength != DEFAULT_READ_LENGTH)
         {
-            SG_LOGGER.info("max observed read length set({} -> {})", mMaxObservedReadLength, readLength);
-            mMaxObservedReadLength = readLength;
+            SG_LOGGER.info("max observed read length set({})", readLength);
+            mReadLength = readLength;
         }
     }
 
@@ -253,7 +251,7 @@ public class SageConfig
                 READ_CONTEXT_FLANK_SIZE, "Size of read context flank", DEFAULT_READ_CONTEXT_FLANK_SIZE);
 
         configBuilder.addInteger(MIN_MAP_QUALITY, "Min map quality to apply to non-hotspot variants", DEFAULT_MIN_MAP_QUALITY);
-        configBuilder.addInteger(EXPECTED_READ_LENGTH, "Expected read length", DEFAULT_READ_LENGTH);
+        configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
         configBuilder.addFlag(INCLUDE_MT, "Call MT variants");
         configBuilder.addInteger(SLICE_SIZE, "Slice size", DEFAULT_SLICE_SIZE);
         configBuilder.addInteger(MAX_PARTITION_SLICES, "Max slices per partition", DEFAULT_MAX_PARTITION_SLICES);
@@ -293,7 +291,7 @@ public class SageConfig
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;
         ReadContextFlankSize = DEFAULT_READ_CONTEXT_FLANK_SIZE;
-        ExpectedReadLength = DEFAULT_READ_LENGTH;
+        mReadLength = DEFAULT_READ_LENGTH;
         MaxPartitionSlices = 1;
         RefGenomeFile = "refGenome";
         OutputFile = "out.vcf";
