@@ -18,21 +18,23 @@ public class Header
     @NotNull
     private final PdfImageXObject orangeCircosObject;
     private final ReportResources reportResources;
+    private final boolean addDisclaimer;
 
-    public Header(@NotNull URL orangeCircosPath, @NotNull ReportResources reportResources)
+    public Header(@NotNull URL orangeCircosPath, @NotNull ReportResources reportResources, boolean addDisclaimer)
     {
         this.orangeCircosObject = new PdfImageXObject(ImageDataFactory.create(orangeCircosPath));
         this.reportResources = reportResources;
+        this.addDisclaimer = addDisclaimer;
     }
 
     public void renderHeader(@NotNull PdfPage page)
     {
         PdfCanvas pdfCanvas = new PdfCanvas(page.getLastContentStream(), page.getResources(), page.getDocument());
-        Canvas cv = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
+        Canvas canvas = new Canvas(pdfCanvas, page.getDocument(), page.getPageSize());
 
         pdfCanvas.addXObject(orangeCircosObject, 50, page.getPageSize().getHeight() - 70, 60, false);
 
-        cv.add(new Paragraph().add(new Text("O").setFont(reportResources.fontBold())
+        Paragraph title = new Paragraph().add(new Text("O").setFont(reportResources.fontBold())
                         .setFontSize(11)
                         .setFontColor(ReportResources.PALETTE_ORANGE_1))
                 .add(new Text("R").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_2))
@@ -40,8 +42,19 @@ public class Header
                 .add(new Text("N").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_4))
                 .add(new Text("G").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_5))
                 .add(new Text("E").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_ORANGE_6))
-                .add(new Text(" Report").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK))
-                .setFixedPosition(175, page.getPageSize().getHeight() - 40, 300));
+                .add(new Text(" Report").setFont(reportResources.fontBold()).setFontSize(11).setFontColor(ReportResources.PALETTE_BLACK));
+
+        if(addDisclaimer)
+        {
+            title = title.add(new Text(" (research use only)").setFont(reportResources.fontBold())
+                    .setFontSize(9)
+                    .setFontColor(ReportResources.PALETTE_BLACK));
+        }
+
+        float left = addDisclaimer ? 150 : 180;
+        float width = addDisclaimer ? 370 : 300;
+
+        canvas.add(title.setFixedPosition(left, page.getPageSize().getHeight() - 40, width));
 
         pdfCanvas.release();
     }

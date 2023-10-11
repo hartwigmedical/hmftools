@@ -157,9 +157,9 @@ public class ReportResources
     }
 
     @NotNull
-    public Style deemphasizedStyle()
+    public Style disclaimerStyle()
     {
-        return new Style().setFont(fontRegular).setFontSize(5).setFontColor(ReportResources.PALETTE_MID_GREY);
+        return new Style().setFont(fontRegular).setFontSize(6).setFontColor(ReportResources.PALETTE_MID_GREY);
     }
 
     @NotNull
