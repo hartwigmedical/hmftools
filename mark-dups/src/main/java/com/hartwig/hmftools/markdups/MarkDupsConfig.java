@@ -178,8 +178,10 @@ public class MarkDupsConfig
         else
         {
             Map<String,List<BaseRegion>> unmappedMap = Maps.newHashMap();
+
             ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
             unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(BaseRegion.from(excludedRegion)));
+
             UnmapRegions = new ReadUnmapper(unmappedMap, mReadLength);
         }
 

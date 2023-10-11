@@ -29,7 +29,7 @@ public class Statistics
     public long InterPartition; // reads where base partition (lower of mate or supplementary's primary) isn't the current partition
     public long MissingMateCigar;
     public long Unmapped; // fully, ie primary and mate
-    public long PairedNonHuman; // paired with a non-human chromosome
+    public long PairedAltChromosome; // paired with a non-human chromosome
 
     public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
 
@@ -45,7 +45,7 @@ public class Statistics
         Incomplete = 0;
         MissingMateCigar = 0;
         Unmapped = 0;
-        PairedNonHuman = 0;
+        PairedAltChromosome = 0;
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
     }
@@ -60,7 +60,7 @@ public class Statistics
         InterPartition += other.InterPartition;
         MissingMateCigar += other.MissingMateCigar;
         Unmapped += other.Unmapped;
-        PairedNonHuman += other.PairedNonHuman;
+        PairedAltChromosome += other.PairedAltChromosome;
 
         for(DuplicateFrequency dupFreq : other.DuplicateFrequencies.values())
         {
@@ -111,8 +111,8 @@ public class Statistics
 
         if(MD_LOGGER.isDebugEnabled())
         {
-            MD_LOGGER.debug("stats: fragments(complete={} incomplete={} interPartition={} unmapped={} pnh={}) missingMateCigar({})",
-                    LocalComplete, Incomplete, InterPartition, Unmapped, PairedNonHuman, MissingMateCigar);
+            MD_LOGGER.debug("stats: fragments(complete={} incomplete={} interPartition={} unmapped={} pairedAltChr={}))",
+                    LocalComplete, Incomplete, InterPartition, Unmapped, PairedAltChromosome);
 
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);
@@ -121,6 +121,11 @@ public class Statistics
             {
                 MD_LOGGER.debug("duplicate frequency({}={})", frequency, DuplicateFrequencies.get(frequency).Frequency);
             }
+        }
+
+        if(MissingMateCigar > 0)
+        {
+            MD_LOGGER.warn("stats: found {} reads without MateCigar attribute", MissingMateCigar);
         }
     }
 

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
@@ -59,60 +60,6 @@ public class ReadUnmapper
     public boolean enabled() { return mEnabled; }
     public UnmapStats stats() { return mStats; }
 
-    public static boolean readInRegion(final SAMRecord read, final List<BaseRegion> regions)
-    {
-        int requiredBaseCount = (int)((read.getAlignmentEnd() - read.getAlignmentStart()) * MIN_OVERLAP_PERC);
-        return containsReadPositions(read.getAlignmentStart(), read.getAlignmentEnd(), requiredBaseCount, regions);
-    }
-
-    private static boolean containsReadPositions(
-            final int readStart, final int readEnd, final int requiredReadBaseCount, final List<BaseRegion> regions)
-    {
-        for(BaseRegion region : regions)
-        {
-            if(!positionsOverlap(readStart, readEnd, region.start(), region.end()))
-                continue;
-
-            if(positionsWithin(readStart, readEnd, region.start(), region.end()))
-                return true;
-
-            int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
-
-            int requiredRegionBaseCount = (int)(region.baseLength() * MIN_OVERLAP_PERC);
-
-            if(overlapBases >= requiredReadBaseCount || overlapBases >= requiredRegionBaseCount)
-                return true;
-        }
-
-        return false;
-    }
-
-    public boolean mateReadInRegion(final SAMRecord read)
-    {
-        List<BaseRegion> mateRegions = mChrLocationsMap.get(read.getMateReferenceName());
-
-        if(mateRegions == null)
-            return false;
-
-        return containsReadPositions(
-                read.getMateAlignmentStart(), read.getMateAlignmentStart() + mReadLength - 1, mReadLength, mateRegions);
-    }
-
-    public boolean supplementaryInRegion(final SAMRecord read)
-    {
-        SupplementaryReadData suppReadData = SupplementaryReadData.from(read);
-
-        if(suppReadData == null)
-            return false;
-
-        List<BaseRegion> suppRegions = mChrLocationsMap.get(suppReadData.Chromosome);
-
-        if(suppRegions == null)
-            return false;
-
-        return containsReadPositions(suppReadData.Position, suppReadData.Position + mReadLength - 1, mReadLength, suppRegions);
-    }
-
     public boolean checkTransformRead(final SAMRecord read, final List<BaseRegion> readRegions)
     {
         if(!mEnabled || readRegions == null)
@@ -139,8 +86,7 @@ public class ReadUnmapper
 
         if(!mateUnmapped)
         {
-            List<BaseRegion> mateRegions = mChrLocationsMap.get(read.getMateReferenceName());
-            unmapMate = mateRegions != null && mateReadInRegion(read);
+            unmapMate = mateReadInRegion(read);
         }
 
         if(unmapRead)
@@ -178,11 +124,152 @@ public class ReadUnmapper
         return unmapRead || unmapMate || unmapSuppAlignment;
     }
 
+    @VisibleForTesting
+    public static boolean readInRegion(final SAMRecord read, final List<BaseRegion> regions)
+    {
+        int requiredBaseCount = (int)((read.getAlignmentEnd() - read.getAlignmentStart()) * MIN_OVERLAP_PERC);
+        return containsReadPositions(read.getAlignmentStart(), read.getAlignmentEnd(), requiredBaseCount, regions);
+    }
+
+    @VisibleForTesting
+    public boolean mateReadInRegion(final SAMRecord read)
+    {
+        List<BaseRegion> mateRegions = mChrLocationsMap.get(read.getMateReferenceName());
+
+        if(mateRegions == null)
+            return false;
+
+        // coordinate check must be identical to how the mate checks itself, which requires knowledge of aligned bases
+        if(read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
+        {
+            int approxMateEnd = read.getMateAlignmentStart() + read.getReadBases().length - 1;
+
+            return containsReadPositions(
+                    read.getMateAlignmentStart(), approxMateEnd, read.getStringAttribute(MATE_CIGAR_ATTRIBUTE), mateRegions);
+        }
+        else
+        {
+            // TODO: this won't work for split reads
+            int readBaseLength = read.getReadBases().length;
+
+            return containsReadPositions(
+                    read.getMateAlignmentStart(), read.getMateAlignmentStart() + readBaseLength - 1, readBaseLength, mateRegions);
+        }
+    }
+
+    @VisibleForTesting
+    public boolean supplementaryInRegion(final SAMRecord read)
+    {
+        SupplementaryReadData suppReadData = SupplementaryReadData.from(read);
+
+        if(suppReadData == null)
+            return false;
+
+        List<BaseRegion> suppRegions = mChrLocationsMap.get(suppReadData.Chromosome);
+
+        if(suppRegions == null)
+            return false;
+
+        int approxSuppEnd = suppReadData.Position + read.getReadBases().length - 1;
+
+        return containsReadPositions(suppReadData.Position, approxSuppEnd, suppReadData.Cigar, suppRegions);
+    }
+
+    private static boolean containsReadPositions(
+            final int readStart, final int readEnd, final int requiredReadBaseCount, final List<BaseRegion> regions)
+    {
+        for(BaseRegion region : regions)
+        {
+            if(!positionsOverlap(readStart, readEnd, region.start(), region.end()))
+                continue;
+
+            if(positionsWithin(readStart, readEnd, region.start(), region.end()))
+                return true;
+
+            int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
+
+            int requiredRegionBaseCount = (int)(region.baseLength() * MIN_OVERLAP_PERC);
+
+            if(overlapBases >= requiredReadBaseCount || overlapBases >= requiredRegionBaseCount)
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean containsReadPositions(final int readStart, int approxReadEnd, final String cigar, final List<BaseRegion> regions)
+    {
+        // mate coords and supplementaries don't have alignment end so this needs to be determined from the cigar, but only
+        // do this is if they are a possible overlap with a region
+
+        int readEnd = -1;
+        int requiredReadBaseCount = 0;
+
+        for(BaseRegion region : regions)
+        {
+            if(!positionsOverlap(readStart, approxReadEnd, region.start(), region.end()))
+                continue;
+
+            if(positionsWithin(readStart, approxReadEnd, region.start(), region.end()))
+                return true;
+
+            // now test with precise read end alignment
+            if(readEnd < 0)
+            {
+                readEnd = getReadEndFromCigar(readStart, cigar);
+                requiredReadBaseCount = (int)((readEnd - readStart) * MIN_OVERLAP_PERC);
+            }
+
+            int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
+
+            int requiredRegionBaseCount = (int)(region.baseLength() * MIN_OVERLAP_PERC);
+
+            if(overlapBases >= requiredReadBaseCount || overlapBases >= requiredRegionBaseCount)
+                return true;
+        }
+
+        return false;
+    }
+
+    public int getReadEndFromCigar(final int readStart, final String cigarStr)
+    {
+        int currentPosition = readStart;
+        int elementLength = 0;
+
+        for(int i = 0; i < cigarStr.length(); ++i)
+        {
+            char c = cigarStr.charAt(i);
+            boolean isAddItem = (c == 'D' || c == 'M' || c == 'N');
+
+            if(isAddItem)
+            {
+                currentPosition += elementLength;
+                elementLength = 0;
+                continue;
+            }
+
+            int digit = c - '0';
+            if (digit >= 0 && digit <= 9)
+            {
+                elementLength = elementLength * 10 + digit;
+            }
+            else
+            {
+                elementLength = 0;
+            }
+        }
+
+        // always pointing to the start of the next element, so need to move back a base
+        return currentPosition - 1;
+    }
+
     private static void setUnmappedAttributes(final SAMRecord read)
     {
         read.setReadUnmappedFlag(true);
         read.setMappingQuality(0);
-        read.setAttribute(UNMAP_ATTRIBUTE, 1);
+
+        // store the original mapping
+        setUnmapCoordsAttribute(read, read.getReferenceName(), read.getAlignmentStart());
     }
 
     public static void unmapReadAlignment(final SAMRecord read, boolean mateUnmapped)
@@ -217,11 +304,26 @@ public class ReadUnmapper
         unmapSupplementary(read);
     }
 
+    private static final String UNMAPP_COORDS_DELIM = ":";
+
+    public static String[] parseUnmappedCoords(final SAMRecord read)
+    {
+        return read.getStringAttribute(UNMAP_ATTRIBUTE).split(UNMAPP_COORDS_DELIM, 2);
+    }
+
+    private static void setUnmapCoordsAttribute(final SAMRecord read, final String chromosome, final int position)
+    {
+        read.setAttribute(UNMAP_ATTRIBUTE, chromosome + UNMAPP_COORDS_DELIM + position);
+    }
+
     public static void unmapMateAlignment(final SAMRecord read, boolean mateUnmapped)
     {
         // set flag mate unmapped
         read.setMateUnmappedFlag(true);
         read.setProperPairFlag(false);
+
+        // store the mate's original mapping
+        setUnmapCoordsAttribute(read, read.getMateReferenceName(), read.getMateAlignmentStart());
 
         // clear insert size
         read.setInferredInsertSize(0);

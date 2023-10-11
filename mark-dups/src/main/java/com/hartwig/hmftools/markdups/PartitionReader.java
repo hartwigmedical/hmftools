@@ -134,6 +134,28 @@ public class PartitionReader implements Consumer<List<Fragment>>
     public void postProcessRegion()
     {
         // post-slice clean-up
+
+        List<SAMRecord> pendingUnmapped = mReadPositions.getPendingUnmapped();
+
+        if(!pendingUnmapped.isEmpty())
+        {
+            MD_LOGGER.warn("partition({}) has {} pending unmapped reads", mCurrentRegion, pendingUnmapped.size());
+        }
+
+        for(SAMRecord read : pendingUnmapped)
+        {
+            String basePartition = Fragment.getBasePartition(read, mConfig.PartitionSize);
+
+            if(basePartition == null)
+            {
+                mBamWriter.writeRead(read, FragmentStatus.UNSET);
+                ++mStats.LocalComplete;
+                return;
+            }
+
+            processIncompleteRead(read, basePartition);
+        }
+
         mReadPositions.evictAll();
 
         processPendingIncompletes();

@@ -5,12 +5,16 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -26,7 +30,8 @@ public class ReadPositionsCache
     private String mChromosome;
     private final FragmentGroup[] mForwardPositions;
     private final Map<Integer,FragmentGroup> mReversePositions;
-    private final Map<String, Fragment> mFragments;
+    private final Map<String,Fragment> mFragments;
+    private final Map<String,SAMRecord> mPendingUnmapped;
     private final Consumer<List<Fragment>> mReadGroupHandler;
     private int mMinPosition;
     private int mMinPositionIndex;
@@ -39,6 +44,7 @@ public class ReadPositionsCache
     private long mFragmemtCacheCount;
     private long mFragmemtUnmatchedCount;
     private long mFragmemtNoCacheCount;
+    private long mFragmemtUnmappedMatchCount;
 
     private class FragmentGroup
     {
@@ -58,6 +64,7 @@ public class ReadPositionsCache
         mForwardPositions = new FragmentGroup[mCapacity];
         mReversePositions = Maps.newHashMap();
         mFragments = Maps.newHashMap();
+        mPendingUnmapped = Maps.newHashMap();
         mMinPosition = 0;
         mMinPositionIndex = 0;
         mUseMateCigar = useMateCigar;
@@ -67,6 +74,7 @@ public class ReadPositionsCache
         mFragmemtCacheCount = 0;
         mFragmemtUnmatchedCount = 0;
         mFragmemtNoCacheCount = 0;
+        mFragmemtUnmappedMatchCount = 0;
     }
 
     public void setCurrentChromosome(final String chromosome)
@@ -105,8 +113,10 @@ public class ReadPositionsCache
 
         boolean sameChromosome = !mateUnmapped && read.getMateReferenceName().equals(mChromosome);
 
+        // unmapped reads have the same alignment position as their mate but no chromosome or cigar info
+
         // skip if mate is on a lower chromosome
-        if(!sameChromosome && read.getReferenceIndex() > read.getMateReferenceIndex())
+        if(!mateUnmapped && !sameChromosome && read.getReferenceIndex() > read.getMateReferenceIndex())
             return false;
 
         Fragment fragment = mFragments.get(read.getReadName());
@@ -117,14 +127,29 @@ public class ReadPositionsCache
             return true;
         }
 
+        // these could be stored on the expectation that the mate is about to arrive, to avoid sending to the partition data cache
+        // but if any weren't picked up it would require them being flushed on eviction
         if(readUnmapped)
-            return false;
+        {
+            if(read.hasAttribute(UNMAP_ATTRIBUTE)) // could be distant from the mate
+                return false;
+
+            mPendingUnmapped.put(read.getReadName(), read);
+            return true;
+        }
 
         if(sameChromosome && read.getAlignmentStart() > read.getMateAlignmentStart()) // mate already processed and evicted
             return false;
 
         storeInitialRead(read);
         return true;
+    }
+
+    public List<SAMRecord> getPendingUnmapped()
+    {
+        List<SAMRecord> pendingUnmapped = mPendingUnmapped.values().stream().collect(Collectors.toList());
+        mPendingUnmapped.clear();
+        return pendingUnmapped;
     }
 
     private void storeInitialRead(final SAMRecord read)
@@ -147,8 +172,25 @@ public class ReadPositionsCache
         // only store the read if its mate is local and expected to be added
         if(fragment.hasLocalMate())
         {
-            mFragments.put(read.getReadName(), fragment);
-            ++mFragmemtCacheCount;
+            SAMRecord mateRead = null;
+
+            if(read.getMateUnmappedFlag() && !read.hasAttribute(UNMAP_ATTRIBUTE))
+            {
+                mateRead = mPendingUnmapped.get(read.getReadName());
+
+                if(mateRead != null)
+                {
+                    mPendingUnmapped.remove(read.getReadName());
+                    fragment.addRead(mateRead);
+                    ++mFragmemtUnmappedMatchCount;
+                }
+            }
+
+            if(mateRead == null)
+            {
+                mFragments.put(read.getReadName(), fragment);
+                ++mFragmemtCacheCount;
+            }
         }
         else
         {
@@ -290,9 +332,9 @@ public class ReadPositionsCache
     {
         if(mFragmemtNoCacheCount > LOG_FRAG_COUNT || mFragmemtCacheCount > LOG_FRAG_COUNT)
         {
-            MD_LOGGER.debug("read cache eviction: chr({}:{}) fragments(forward={} reverse={}) cache(none={} cache={} unmatched={})",
+            MD_LOGGER.debug("read cache eviction: chr({}:{}) fragments(fwd={} rev={}) cache(none={} cache={} unmatched={}) unmap({})",
                     mChromosome, mMinPosition, mFragments.size(), mReversePositions.size(),
-                    mFragmemtNoCacheCount, mFragmemtCacheCount, mFragmemtUnmatchedCount);
+                    mFragmemtNoCacheCount, mFragmemtCacheCount, mFragmemtUnmatchedCount, mFragmemtUnmappedMatchCount);
         }
 
         for(int i = 0; i < mCapacity; i++)
