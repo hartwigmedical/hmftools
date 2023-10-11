@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.svprep;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -28,7 +27,7 @@ public class CombinedStats
     {
         if(PerfCounters.isEmpty())
         {
-            perfCounters.forEach(x -> PerfCounters.add(x));
+            PerfCounters.addAll(perfCounters);
             return;
         }
 

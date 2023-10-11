@@ -13,6 +13,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
+import com.hartwig.hmftools.common.sv.Direction;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.ReadRecord;
@@ -24,7 +25,7 @@ public class BreakendData
 {
     public final String Chromosome;
     public final int Position;
-    public final byte Orientation;
+    public final Direction Orientation;
     public final boolean IsSingle;
 
     private final int[] mReadTypeSupport;
@@ -34,7 +35,7 @@ public class BreakendData
     private final VariantContext mVariant;
 
     public BreakendData(
-            final VariantContext variant, final String chromosome, final int position, final byte orientation, final boolean isSingle)
+            final VariantContext variant, final String chromosome, final int position, final Direction orientation, final boolean isSingle)
     {
         Chromosome = chromosome;
         Position = position;
@@ -50,7 +51,7 @@ public class BreakendData
     public static BreakendData fromVariant(final VariantContext variant)
     {
         boolean isSingle = StructuralVariantFactory.isSingleBreakend(variant);
-        byte orientation = isSingle ? parseSingleOrientation(variant) : parseSvOrientation(variant);
+        Direction orientation = isSingle ? parseSingleOrientation(variant) : parseSvOrientation(variant);
         return new BreakendData(variant, variant.getContig(), variant.getStart(), orientation, isSingle);
     }
 
@@ -114,6 +115,6 @@ public class BreakendData
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
 
-    public String toString() { return format("%s:%d:%d", mVariant.getContig(), Position, Orientation); }
+    public String toString() { return format("%s:%d:%d", mVariant.getContig(), Position, Orientation.Step); }
 
 }

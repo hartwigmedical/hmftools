@@ -26,7 +26,7 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 
-public class RegionAppendTask implements Callable
+public class RegionAppendTask implements Callable<Long>
 {
     private final ChrBaseRegion mRegion;
     private final int mTaskId;

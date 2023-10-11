@@ -28,7 +28,7 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
-public class SampleTask implements Callable
+public class SampleTask implements Callable<Long>
 {
     private final int mTaskId;
     private final CuppaConfig mConfig;

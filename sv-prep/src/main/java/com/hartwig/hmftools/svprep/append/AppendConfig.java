@@ -5,6 +5,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;

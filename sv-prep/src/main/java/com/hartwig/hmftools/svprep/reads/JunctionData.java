@@ -2,20 +2,19 @@ package com.hartwig.hmftools.svprep.reads;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.svprep.reads.ReadRecord.getSoftClippedBases;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.sv.Direction;
 
 public class JunctionData
 {
     public final int Position;
-    public final byte Orientation;
+    public final Direction Orientation;
 
     public final List<ReadGroup> JunctionGroups; // with a read matching the junction
     public final List<ReadGroup> SupportingGroups;
@@ -30,7 +29,7 @@ public class JunctionData
     private boolean mHotspot;
     private int mDepth;
 
-    public JunctionData(final int position, final byte orientation, final ReadRecord read)
+    public JunctionData(final int position, final Direction orientation, final ReadRecord read)
     {
         Position = position;
         Orientation = orientation;
@@ -91,7 +90,7 @@ public class JunctionData
         int maxHighQualBases = 0;
         ReadRecord topRead = null;
 
-        boolean useLeftSoftClip = Orientation == NEG_ORIENT;
+        boolean useLeftSoftClip = Orientation == Direction.REVERSE;
 
         List<ReadRecord> junctionReads = ReadTypeReads.get(ReadType.JUNCTION);
 
@@ -144,7 +143,7 @@ public class JunctionData
     public String toString()
     {
         return format("loc(%d:%d) frags(junc=%d exact=%d supp=%d) remotes(%d)",
-                Position, Orientation, junctionFragmentCount(), exactSupportFragmentCount(), supportingFragmentCount(),
+                Position, Orientation.Step, junctionFragmentCount(), exactSupportFragmentCount(), supportingFragmentCount(),
                 RemoteJunctions.size());
     }
 }

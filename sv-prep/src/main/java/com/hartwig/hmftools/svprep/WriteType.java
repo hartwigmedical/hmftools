@@ -6,5 +6,5 @@ public enum WriteType
     READS,
     BAM,
     CACHE_BAM,
-    FRAGMENT_LENGTH_DIST;
+    FRAGMENT_LENGTH_DIST,
 }

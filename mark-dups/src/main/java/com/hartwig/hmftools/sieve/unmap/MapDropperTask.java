@@ -16,7 +16,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class MapDropperTask implements Callable
+public class MapDropperTask implements Callable<Long>
 {
     private final MapDropperConfig mConfig;
     private final RecordWriter mWriter;

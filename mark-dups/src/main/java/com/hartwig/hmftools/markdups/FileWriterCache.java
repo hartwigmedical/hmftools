@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -67,7 +68,7 @@ public class FileWriterCache
         {
             List<SortBamCloseTask> closedSortedBamTasks = mBamWriters.stream().map(x -> new SortBamCloseTask(x)).collect(Collectors.toList());
 
-            List<Callable> callableTasks = closedSortedBamTasks.stream().collect(Collectors.toList());
+            List<Callable<?>> callableTasks = new ArrayList<>(closedSortedBamTasks);
 
             MD_LOGGER.debug("closing {} sorted bam(s)", callableTasks.size());
 
@@ -184,7 +185,7 @@ public class FileWriterCache
                     sortedThreadBams.add(sortedBamFile);
                 }
 
-                List<Callable> callableTasks = sortTasks.stream().collect(Collectors.toList());
+                List<Callable<?>> callableTasks = new ArrayList<>(sortTasks);
 
                 MD_LOGGER.debug("sorting {} bam file(s)", sortTasks.size());
 
@@ -283,7 +284,7 @@ public class FileWriterCache
         MD_LOGGER.debug("index complete");
     }
 
-    private class SortBamTask implements Callable
+    private class SortBamTask implements Callable<Long>
     {
         private final String mBamfile;
         private final String mSortedBamfile;
@@ -326,7 +327,7 @@ public class FileWriterCache
         }
     }
 
-    private class SortBamCloseTask implements Callable
+    private static class SortBamCloseTask implements Callable<Long>
     {
         private final BamWriter mBamWriter;
 

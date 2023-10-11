@@ -4,9 +4,6 @@ import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.WriteType.BAM;
 
 import java.io.File;
-import java.util.List;
-
-import com.hartwig.hmftools.svprep.reads.ReadRecord;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;

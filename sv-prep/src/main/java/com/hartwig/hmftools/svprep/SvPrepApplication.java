@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
@@ -85,9 +86,9 @@ public class SvPrepApplication
             SV_LOGGER.info("final stats: {}", combinedStats.ReadStats.toString());
 
             if(SV_LOGGER.isDebugEnabled())
-                combinedStats.PerfCounters.forEach(x -> x.logIntervalStats());
+                combinedStats.PerfCounters.forEach(PerformanceCounter::logIntervalStats);
             else
-                combinedStats.PerfCounters.forEach(x -> x.logStats());
+                combinedStats.PerfCounters.forEach(PerformanceCounter::logStats);
         }
 
         SV_LOGGER.info("SvPrep complete, mins({})", runTimeMinsStr(startTimeMs));

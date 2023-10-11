@@ -4,8 +4,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
-import static htsjdk.samtools.CigarOperator.D;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -44,7 +42,7 @@ public final class SamRecordUtils
         return quality - PHRED_OFFSET;
     }
 
-    public static int getBaseQuality(final SAMRecord record, int readPosition)
+    public static int getBaseQuality(final SAMRecord record, final int readPosition)
     {
         return getAvgBaseQuality(record, readPosition, 1);
     }
@@ -77,21 +75,22 @@ public final class SamRecordUtils
 
     public static byte orientation(final SAMRecord read) { return !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT; }
 
-    public static int getAvgBaseQuality(final SAMRecord record, int readPosition, int length)
+    /** @param readPosition 1-based position in the record */
+    public static int getAvgBaseQuality(final SAMRecord record, final int readPosition, final int length)
     {
         assert (readPosition > 0);
 
-        int score = 0;
-        final String baseQualities = record.getBaseQualityString();
-        for(int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++)
-        {
-            int baseScore = getBaseQuality(baseQualities.charAt(index));
-            score += baseScore;
-        }
-        return score / length;
+        final byte[] baseQualities = record.getBaseQualities();
+        final int startIndex = readPosition - 1;
+        final int endIndex = Math.min(startIndex + length, baseQualities.length);
+
+        int qualitySum = 0;
+        for(int i = startIndex; i < endIndex; i++)
+            qualitySum += baseQualities[i];
+        return qualitySum / length;
     }
 
-    public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
+    public static List<int[]> generateMappedCoords(final Cigar cigar, final int posStart)
     {
         final List<int[]> mappedCoords = Lists.newArrayList();
 
@@ -99,13 +98,13 @@ public final class SamRecordUtils
         int posOffset = 0;
         boolean continueRegion = false;
 
-        for(CigarElement element : cigar.getCigarElements())
+        for(final CigarElement element : cigar.getCigarElements())
         {
             if(element.getOperator() == CigarOperator.S)
             {
                 // nothing to skip
             }
-            else if(element.getOperator() == D)
+            else if(element.getOperator() == CigarOperator.D)
             {
                 posOffset += element.getLength();
                 continueRegion = true;
@@ -122,12 +121,12 @@ public final class SamRecordUtils
             }
             else if(element.getOperator() == CigarOperator.M)
             {
-                int readStartPos = posStart + posOffset;
-                int readEndPos = readStartPos + element.getLength() - 1;
+                final int readStartPos = posStart + posOffset;
+                final int readEndPos = readStartPos + element.getLength() - 1;
 
                 if(continueRegion && !mappedCoords.isEmpty())
                 {
-                    int[] lastRegion = mappedCoords.get(mappedCoords.size() - 1);
+                    final int[] lastRegion = mappedCoords.get(mappedCoords.size() - 1);
                     lastRegion[SE_END] = readEndPos;
                 }
                 else

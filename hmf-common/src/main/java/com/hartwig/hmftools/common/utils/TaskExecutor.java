@@ -67,11 +67,11 @@ public class TaskExecutor
         return Integer.parseInt(cmd.getOptionValue(THREADS, String.valueOf(defaultCount)));
     }
 
-    public static boolean executeTasks(final List<Callable> tasks, int threadCount)
+    public static boolean executeTasks(final List<? extends Callable<?>> tasks, int threadCount)
     {
         if(threadCount <= 1)
         {
-            for(Callable task : tasks)
+            for(Callable<?> task : tasks)
             {
                 try
                 {
@@ -91,11 +91,11 @@ public class TaskExecutor
         final ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("Thread-%d").build();
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount, namedThreadFactory);
-        List<FutureTask> threadTaskList = new ArrayList<FutureTask>();
+        List<FutureTask<?>> threadTaskList = new ArrayList<>();
 
-        for(Callable task : tasks)
+        for(Callable<?> task : tasks)
         {
-            FutureTask futureTask = new FutureTask(task);
+            FutureTask<?> futureTask = new FutureTask<>(task);
 
             threadTaskList.add(futureTask);
             executorService.execute(futureTask);
@@ -113,11 +113,11 @@ public class TaskExecutor
         return true;
     }
 
-    private static boolean checkThreadCompletion(final List<FutureTask> taskList)
+    private static boolean checkThreadCompletion(final List<FutureTask<?>> taskList)
     {
         try
         {
-            for(FutureTask futureTask : taskList)
+            for(FutureTask<?> futureTask : taskList)
             {
                 futureTask.get();
             }

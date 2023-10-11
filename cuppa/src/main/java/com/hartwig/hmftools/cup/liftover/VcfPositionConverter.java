@@ -28,7 +28,7 @@ import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
-public class VcfPositionConverter implements Callable
+public class VcfPositionConverter implements Callable<Long>
 {
     private final LiftoverConfig mConfig;
     private final String mSampleId;

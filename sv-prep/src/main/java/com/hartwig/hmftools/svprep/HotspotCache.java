@@ -68,10 +68,8 @@ public class HotspotCache
         if(filename == null)
             return true;
 
-        try
+        try(BufferedReader fileReader = createBufferedReader(filename))
         {
-            BufferedReader fileReader = createBufferedReader(filename);
-
             int itemCount = 0;
             String line = "";
 
@@ -97,25 +95,13 @@ public class HotspotCache
                 KnownHotspot knownHotspot = new KnownHotspot(regionStart, orientStart, regionEnd, orientEnd, geneInfo);
 
                 // add to both chromosome lists
-                List<KnownHotspot> svRegions = mHotspotRegions.get(chrStart);
-
-                if(svRegions == null)
-                {
-                    svRegions = Lists.newArrayList();
-                    mHotspotRegions.put(chrStart, svRegions);
-                }
+                List<KnownHotspot> svRegions = mHotspotRegions.computeIfAbsent(chrStart, k -> Lists.newArrayList());
 
                 svRegions.add(knownHotspot);
 
                 if(!chrStart.equals(chrEnd))
                 {
-                    svRegions = mHotspotRegions.get(chrEnd);
-
-                    if(svRegions == null)
-                    {
-                        svRegions = Lists.newArrayList();
-                        mHotspotRegions.put(chrEnd, svRegions);
-                    }
+                    svRegions = mHotspotRegions.computeIfAbsent(chrEnd, k -> Lists.newArrayList());
 
                     svRegions.add(knownHotspot);
                 }
@@ -123,7 +109,7 @@ public class HotspotCache
                 ++itemCount;
             }
 
-            SV_LOGGER.info("loaded {} known hotspot records from file", itemCount, filename);
+            SV_LOGGER.info("loaded {} known hotspot records from file {}", itemCount, filename);
         }
         catch(IOException e)
         {
@@ -134,7 +120,7 @@ public class HotspotCache
         return true;
     }
 
-    public class KnownHotspot
+    private static class KnownHotspot
     {
         public final ChrBaseRegion RegionStart;
         public final Byte OrientStart;

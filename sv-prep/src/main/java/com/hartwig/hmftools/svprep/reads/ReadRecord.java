@@ -6,14 +6,11 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.properPair;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svprep.SvConstants.MIN_INDEL_SUPPORT_LENGTH;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.rank;
 
@@ -23,6 +20,7 @@ import static htsjdk.samtools.CigarOperator.M;
 
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.sv.Direction;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -88,8 +86,8 @@ public class ReadRecord
     public int start() { return Positions[SE_START]; }
     public int end() { return Positions[SE_END]; }
 
-    public byte orientation() { return !isReadReversed() ? POS_ORIENT : NEG_ORIENT; }
-    public byte mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? POS_ORIENT : NEG_ORIENT; }
+    public Direction orientation() { return !isReadReversed() ? Direction.FORWARDS : Direction.REVERSE; }
+    public Direction mateOrientation() { return !hasFlag(SAMFlag.MATE_REVERSE_STRAND) ? Direction.FORWARDS : Direction.REVERSE; }
 
     public int flags() { return mRecord.getFlags(); }
     public Cigar cigar() { return mRecord.getCigar(); }
@@ -140,7 +138,7 @@ public class ReadRecord
     {
         return cigar.getCigarElements().stream()
                 .filter(x -> x.getOperator() == CigarOperator.D || x.getOperator() == CigarOperator.I)
-                .mapToInt(x -> x.getLength()).max().orElse(0);
+                .mapToInt(CigarElement::getLength).max().orElse(0);
     }
 
     public static String getSoftClippedBases(final SAMRecord record, final boolean isClippedLeft)

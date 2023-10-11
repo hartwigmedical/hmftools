@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.cup.liftover;
 
-import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
@@ -68,8 +65,7 @@ public class SnvLiftover
 
         if(mThreads > 1)
         {
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mThreads);
+            TaskExecutor.executeTasks(sampleTasks, mThreads);
         }
         else
         {

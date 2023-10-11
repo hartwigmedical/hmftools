@@ -2,12 +2,12 @@ package com.hartwig.hmftools.isofox;
 
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_PANEL_THRESHOLD;
 import static com.hartwig.hmftools.common.rna.RnaStatistics.LOW_COVERAGE_THRESHOLD;
 import static com.hartwig.hmftools.common.sigs.SigUtils.convertToPercentages;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.common.utils.VectorUtils.copyVector;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.APP_NAME;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.PRIORITISED_CHROMOSOMES;
@@ -33,16 +33,16 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.adjusts.GcTranscriptCalculator;
 import com.hartwig.hmftools.isofox.common.BamReadCounter;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.isofox.common.FragmentTypeCounts;
 import com.hartwig.hmftools.isofox.common.PerformanceTracking;
 import com.hartwig.hmftools.isofox.expression.ExpectedCountsCache;
@@ -154,7 +154,7 @@ public class Isofox
         }
 
         final List<ChromosomeTaskExecutor> chrTasks = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<?>> callableList = Lists.newArrayList();
         final List<String> chromosomes = Lists.newArrayList();
 
         // process any enriched genes first, then add the rest in order of decreasing length
@@ -211,7 +211,7 @@ public class Isofox
         return true;
     }
 
-    private void processBamFragments(final List<ChromosomeTaskExecutor> chrTasks, final List<Callable> callableList)
+    private void processBamFragments(final List<ChromosomeTaskExecutor> chrTasks, final List<Callable<?>> callableList)
     {
         FragmentTypeCounts totalFragmentCounts = new FragmentTypeCounts();
 
@@ -302,7 +302,7 @@ public class Isofox
     }
 
     private void applyGcAdjustments(
-            final List<ChromosomeTaskExecutor> chrTasks, final List<Callable> callableList, final GcRatioCounts actualGcCounts)
+            final List<ChromosomeTaskExecutor> chrTasks, final List<Callable<?>> callableList, final GcRatioCounts actualGcCounts)
     {
         ISF_LOGGER.info("applying GC adjustments and transcript re-fit");
 
@@ -364,8 +364,7 @@ public class Isofox
             fragSizeCalcs.add(fragSizeCalc);
         }
 
-        final List<Callable> callableList = fragSizeCalcs.stream().collect(Collectors.toList());
-        boolean validExecution = TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        boolean validExecution = TaskExecutor.executeTasks(fragSizeCalcs, mConfig.Threads);
 
         if(!validExecution)
             return;
@@ -403,7 +402,7 @@ public class Isofox
         ISF_LOGGER.info("basic BAM read counts");
 
         final List<BamReadCounter> taskList = Lists.newArrayList();
-        final List<Callable> callableList = Lists.newArrayList();
+        final List<Callable<?>> callableList = Lists.newArrayList();
 
         for(Map.Entry<String,List<GeneData>> entry : chrGeneMap.entrySet())
         {

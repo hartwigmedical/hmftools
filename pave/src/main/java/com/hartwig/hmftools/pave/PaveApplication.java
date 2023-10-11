@@ -8,8 +8,6 @@ import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -92,8 +90,7 @@ public class PaveApplication
 
         PV_LOGGER.info("sample({}) processing VCF file({})", mConfig.SampleId, mConfig.VcfFile);
 
-        final List<Callable> callableList = chromosomeTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        TaskExecutor.executeTasks(chromosomeTasks, mConfig.Threads);
 
         mTranscriptWriter.close();
         mVcfWriter.close();

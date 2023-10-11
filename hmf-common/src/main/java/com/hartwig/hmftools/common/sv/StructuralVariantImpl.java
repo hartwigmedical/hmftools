@@ -2,9 +2,6 @@ package com.hartwig.hmftools.common.sv;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
-import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

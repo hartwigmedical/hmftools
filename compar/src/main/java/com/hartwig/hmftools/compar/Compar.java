@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.compar;
 
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -73,8 +70,7 @@ public class Compar
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            TaskExecutor.executeTasks(sampleTasks, mConfig.Threads);
         }
         else
         {

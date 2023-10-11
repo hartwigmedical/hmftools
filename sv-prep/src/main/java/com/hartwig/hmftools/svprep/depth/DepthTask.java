@@ -15,8 +15,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMEN
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
@@ -24,6 +22,7 @@ import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGT
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 
@@ -32,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.sv.Direction;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
@@ -41,7 +41,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class DepthTask implements Callable
+public class DepthTask implements Callable<Long>
 {
     private final DepthConfig mConfig;
     private final Map<String,Integer> mSampleVcfGenotypeIds;
@@ -245,7 +245,7 @@ public class DepthTask implements Callable
             times.add((System.nanoTime() - startTime)/NANOS_IN_SECOND);
             readCounts.add(mTotalReadCount - readCount);
 
-            mReadGroups.values().forEach(x -> processReadGroup(x));
+            mReadGroups.values().forEach(this::processReadGroup);
         }
 
         mPerfCounter.stop();
@@ -350,7 +350,7 @@ public class DepthTask implements Callable
         boolean expectMate = false;
 
         if(read.getReadPairedFlag() && !read.getMateUnmappedFlag()
-        && read.getMateReferenceIndex() == read.getReferenceIndex() && read.getMateAlignmentStart() <= maxSlicePosition)
+        && Objects.equals(read.getMateReferenceIndex(), read.getReferenceIndex()) && read.getMateAlignmentStart() <= maxSlicePosition)
         {
             expectMate = true;
         }
@@ -378,7 +378,7 @@ public class DepthTask implements Callable
         // ignore reads which cannot span the current variant(s)
         if(read.getAlignmentEnd() < variantInfo.PositionMin)
         {
-            if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
+            if(read.getMateUnmappedFlag() || !Objects.equals(read.getMateReferenceIndex(), read.getReferenceIndex()))
                 return false;
 
             // both reads before the variants
@@ -387,7 +387,7 @@ public class DepthTask implements Callable
         }
         else if(read.getAlignmentStart() > variantInfo.PositionMax)
         {
-            if(read.getMateUnmappedFlag() || read.getMateReferenceIndex() != read.getReferenceIndex())
+            if(read.getMateUnmappedFlag() || !Objects.equals(read.getMateReferenceIndex(), read.getReferenceIndex()))
                 return false;
 
             return false;
@@ -432,8 +432,8 @@ public class DepthTask implements Callable
     private void processReadGroup(final ReadGroup readGroup)
     {
         // find the variants that this group overlaps
-        int groupMinPosition = readGroup.Reads.stream().mapToInt(x -> x.getAlignmentStart()).min().orElse(0);
-        int groupMaxPosition = readGroup.Reads.stream().mapToInt(x -> x.getAlignmentEnd()).max().orElse(0);
+        int groupMinPosition = readGroup.Reads.stream().mapToInt(SAMRecord::getAlignmentStart).min().orElse(0);
+        int groupMaxPosition = readGroup.Reads.stream().mapToInt(SAMRecord::getAlignmentEnd).max().orElse(0);
 
         for(VariantInfo variantInfo : mSliceRegionState.UncappedVariants)
         {
@@ -470,8 +470,8 @@ public class DepthTask implements Callable
             }
 
             // check for an exact SC match
-            if((variant.Orientation == NEG_ORIENT && positionWithin(readStart, variant.PositionMin, variant.PositionMax) && leftSoftClipped(read))
-            || (variant.Orientation == POS_ORIENT && positionWithin(readEnd, variant.PositionMin, variant.PositionMax)) && rightSoftClipped(read))
+            if((variant.Orientation == Direction.REVERSE && positionWithin(readStart, variant.PositionMin, variant.PositionMax) && leftSoftClipped(read))
+            || (variant.Orientation == Direction.FORWARDS && positionWithin(readEnd, variant.PositionMin, variant.PositionMax)) && rightSoftClipped(read))
             {
                 SV_LOGGER.trace("var({}) pos({}-{}) read({}-{}) id({}) at junction",
                         variant.Position, variant.PositionMin, variant.PositionMax, readStart, readEnd, read.getReadName());
@@ -481,15 +481,15 @@ public class DepthTask implements Callable
 
             if(!isSupplementary && readGroup.Reads.size() > 1)
             {
-                byte orientation = !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT;
+                Direction orientation = !read.getReadNegativeStrandFlag() ? Direction.FORWARDS : Direction.REVERSE;
 
-                if(orientation == POS_ORIENT && readEnd <= max(variant.Position, variant.PositionMax) && !hasLowerPosRead
+                if(orientation == Direction.FORWARDS && readEnd <= max(variant.Position, variant.PositionMax) && !hasLowerPosRead
                 && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasLowerPosRead = true;
                     strandCount += read.getReadNegativeStrandFlag() ? -1 : 1;
                 }
-                else if(orientation == NEG_ORIENT && readStart >= min(variant.Position, variant.PositionMin) && !hasUpperPosRead
+                else if(orientation == Direction.REVERSE && readStart >= min(variant.Position, variant.PositionMin) && !hasUpperPosRead
                 && abs(read.getInferredInsertSize()) < DEFAULT_MAX_FRAGMENT_LENGTH)
                 {
                     hasUpperPosRead = true;
@@ -565,7 +565,7 @@ public class DepthTask implements Callable
     public void addSliceVariants(final List<VariantInfo> variants)
     {
         mSliceRegionState.reset();
-        variants.forEach(x -> mSliceRegionState.addVariant(x));
+        variants.forEach(mSliceRegionState::addVariant);
         mSliceRegionState.resetUncappedVariants();
     }
 

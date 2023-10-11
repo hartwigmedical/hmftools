@@ -50,7 +50,7 @@ public class PartitionSlicer
     {
         Slice,
         Junctions,
-        Total;
+        Total,
     }
 
     public PartitionSlicer(

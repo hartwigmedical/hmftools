@@ -16,7 +16,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 
-public class RemoteReadSlicer implements Callable
+public class RemoteReadSlicer implements Callable<Long>
 {
     private final SliceConfig mConfig;
     private final String mChromosome;

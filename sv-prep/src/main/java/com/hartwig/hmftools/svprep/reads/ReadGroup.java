@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.sv.Direction;
 
 public class ReadGroup
 {
@@ -34,9 +35,9 @@ public class ReadGroup
     private class JunctionPosition
     {
         public final int Position;
-        public final byte Orientation;
+        public final Direction Orientation;
 
-        public JunctionPosition(final int position, final byte orientation)
+        public JunctionPosition(final int position, final Direction orientation)
         {
             Position = position;
             Orientation = orientation;
@@ -77,7 +78,7 @@ public class ReadGroup
             return "";
 
         StringJoiner sj = new StringJoiner(ITEM_DELIM);
-        mJunctionPositions.forEach(x -> sj.add(format("%d:%d", x.Position, x.Orientation)));
+        mJunctionPositions.forEach(x -> sj.add(format("%d:%d", x.Position, x.Orientation.Step)));
         return sj.toString();
     }
 
@@ -186,7 +187,7 @@ public class ReadGroup
         // a candidate or supporting SC low-qual read needs to check that its remote mate read supports a junction
         // and for supplementaries needs to check the the remote mate read(s) aren't duplicates
         // an exception is where a supplementary supporting a junction is paired with a non-supp candidate
-        if(mReads.stream().allMatch(x -> x.isSupplementaryAlignment()))
+        if(mReads.stream().allMatch(ReadRecord::isSupplementaryAlignment))
             return true;
 
         if(mReads.stream().allMatch(x -> x.readType() == CANDIDATE_SUPPORT

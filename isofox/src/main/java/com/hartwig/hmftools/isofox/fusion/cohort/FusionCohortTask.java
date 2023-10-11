@@ -20,7 +20,7 @@ import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
 
-public class FusionCohortTask implements Callable
+public class FusionCohortTask implements Callable<Long>
 {
     private final int mTaskId;
     private final CohortConfig mConfig;

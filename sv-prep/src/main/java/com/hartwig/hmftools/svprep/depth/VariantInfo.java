@@ -9,10 +9,10 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMEN
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.isSingleBreakend;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSingleOrientation;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.parseSvOrientation;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.List;
+
+import com.hartwig.hmftools.common.sv.Direction;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -21,7 +21,7 @@ public class VariantInfo
     public final int Position;
     public final int PositionMin;
     public final int PositionMax;
-    public final byte Orientation;
+    public final Direction Orientation;
 
     public final RefSupportCounts[] SampleSupportCounts;
 
@@ -67,16 +67,16 @@ public class VariantInfo
 
         RefSupportCounts totalCounts = new RefSupportCounts(0);
 
-        for(int i = 0; i < SampleSupportCounts.length; ++i)
+        for(final RefSupportCounts support : SampleSupportCounts)
         {
-            totalCounts.RefSupport += SampleSupportCounts[i].RefSupport;
-            totalCounts.RefPairSupport += SampleSupportCounts[i].RefPairSupport;
+            totalCounts.RefSupport += support.RefSupport;
+            totalCounts.RefPairSupport += support.RefPairSupport;
         }
 
         return totalCounts;
     }
 
-    private static byte getOrientation(final VariantContext variant)
+    private static Direction getOrientation(final VariantContext variant)
     {
         return isSingleBreakend(variant) ? parseSingleOrientation(variant) : parseSvOrientation(variant);
     }

@@ -25,7 +25,7 @@ import com.hartwig.hmftools.pave.annotation.ReferenceData;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class ChromosomeTask implements Callable
+public class ChromosomeTask implements Callable<Long>
 {
     private final HumanChromosome mChromosome;
     private final String mChromosomeStr;

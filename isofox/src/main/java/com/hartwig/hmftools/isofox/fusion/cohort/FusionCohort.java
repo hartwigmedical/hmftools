@@ -14,20 +14,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.isofox.fusion.FusionData;
 import com.hartwig.hmftools.isofox.fusion.PassingFusions;
-
-import org.apache.commons.cli.CommandLine;
 
 public class FusionCohort
 {
@@ -116,8 +112,7 @@ public class FusionCohort
 
         ISF_LOGGER.info("loading ({}) sample fusion files, allocating to {} task(s)", totalSampleCount, fusionTasks.size());
 
-        final List<Callable> callableList = fusionTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mConfig.Threads);
+        TaskExecutor.executeTasks(fusionTasks, mConfig.Threads);
 
         if(mConfig.Fusions.GenerateCohort)
         {

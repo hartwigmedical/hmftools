@@ -28,7 +28,7 @@ import com.hartwig.hmftools.pave.VariantData;
 import com.hartwig.hmftools.pave.VariantImpactBuilder;
 import com.hartwig.hmftools.pave.VariantTransImpact;
 
-public class SampleComparisonTask implements Callable
+public class SampleComparisonTask implements Callable<Long>
 {
     private final int mTaskId;
     private final ComparisonConfig mConfig;

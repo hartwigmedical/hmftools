@@ -113,7 +113,7 @@ public class ValidationRoutines
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = alleleTasks.stream().collect(Collectors.toList());
+            final List<Callable<?>> callableList = alleleTasks.stream().collect(Collectors.toList());
             TaskExecutor.executeTasks(callableList, callableList.size());
         }
         else
@@ -201,7 +201,7 @@ public class ValidationRoutines
         }
     }
 
-    private class LeaveOutAlleleTask implements Callable
+    private class LeaveOutAlleleTask implements Callable<Long>
     {
         private final int mTaskId;
         private final TrainConfig mConfig;

@@ -3,8 +3,6 @@ package com.hartwig.hmftools.common.sv;
 import java.io.IOException;
 import java.util.List;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;

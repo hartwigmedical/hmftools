@@ -3,8 +3,6 @@ package com.hartwig.hmftools.svprep.reads;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
@@ -15,17 +13,19 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.samtools.ClippedSide;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
+import com.hartwig.hmftools.common.sv.Direction;
 
 import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
 
 public class RemoteJunction
 {
     public final String Chromosome;
     public final int Position;
-    public final byte Orientation;
+    public final Direction Orientation;
     public int Fragments;
 
-    public RemoteJunction(final String chromosome, final int position, final byte orientation)
+    public RemoteJunction(final String chromosome, final int position, final Direction orientation)
     {
         Chromosome = chromosome;
         Position = position;
@@ -41,16 +41,16 @@ public class RemoteJunction
 
         if(scSide.isLeft())
         {
-            return new RemoteJunction(suppData.Chromosome, suppData.Position, NEG_ORIENT);
+            return new RemoteJunction(suppData.Chromosome, suppData.Position, Direction.REVERSE);
         }
         else
         {
             int skippedBases = remoteCigar.getCigarElements().stream()
                     .filter(x -> x.getOperator() == N || x.getOperator() == M || x.getOperator() == D)
-                    .mapToInt(x -> x.getLength()).sum();
+                    .mapToInt(CigarElement::getLength).sum();
 
             int remoteJunctionPos = suppData.Position + skippedBases - 1;
-            return new RemoteJunction(suppData.Chromosome, remoteJunctionPos, POS_ORIENT);
+            return new RemoteJunction(suppData.Chromosome, remoteJunctionPos, Direction.FORWARDS);
         }
     }
 
@@ -59,7 +59,7 @@ public class RemoteJunction
         return Chromosome.equals(other.Chromosome) && Position == other.Position && Orientation == other.Orientation;
     }
 
-    public boolean matches(final String chromosome, final int position, final byte orientation)
+    public boolean matches(final String chromosome, final int position, final Direction orientation)
     {
         return Chromosome.equals(chromosome) && Position == position && Orientation == orientation;
     }
@@ -70,7 +70,7 @@ public class RemoteJunction
             remoteJunctions.add(remoteJunction);
     }
 
-    public String toString() { return format("loc(%s:%d:%d) reads(%d)", Chromosome, Position, Orientation, Fragments); }
+    public String toString() { return format("loc(%s:%d:%d) reads(%d)", Chromosome, Position, Orientation.Step, Fragments); }
 
     public static class RemoteJunctionSorter implements Comparator<RemoteJunction>
     {

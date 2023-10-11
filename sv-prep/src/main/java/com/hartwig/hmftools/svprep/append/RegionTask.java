@@ -30,7 +30,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
-public class RegionTask implements Callable
+public class RegionTask implements Callable<Long>
 {
     private final AppendConfig mConfig;
     private final ChrBaseRegion mRegion;
@@ -43,7 +43,7 @@ public class RegionTask implements Callable
     private int mTotalReads;
     private final JunctionTracker mBreakendTracker;
 
-    private boolean mLogReadIds;
+    private final boolean mLogReadIds;
 
     public RegionTask(final AppendConfig config, final String chromosome, final List<BreakendData> breakends)
     {
@@ -131,16 +131,13 @@ public class RegionTask implements Callable
         }
         else
         {
-            boolean isSupportCandidate = mConfig.ReadFiltering.isCandidateSupportingRead(record, filters);
-
-            if(!isSupportCandidate)
+            if(!mConfig.ReadFiltering.isCandidateSupportingRead(record, filters))
                 return;
 
             ReadRecord read = ReadRecord.from(record);
             read.setFilters(filters);
 
-            if(isSupportCandidate)
-                read.setReadType(CANDIDATE_SUPPORT);
+            read.setReadType(CANDIDATE_SUPPORT);
 
             mBreakendTracker.processRead(read);
         }

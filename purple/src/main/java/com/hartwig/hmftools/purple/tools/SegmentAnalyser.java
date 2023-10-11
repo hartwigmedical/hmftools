@@ -25,7 +25,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -93,15 +92,14 @@ public class SegmentAnalyser
             ++taskIndex;
         }
 
-        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-        TaskExecutor.executeTasks(callableList, mThreads);
+        TaskExecutor.executeTasks(sampleTasks, mThreads);
 
         closeBufferedWriter(mWriter);
 
         PPL_LOGGER.info("Purple segment analysis complete");
     }
 
-    private class SampleTask implements Callable
+    private class SampleTask implements Callable<Long>
     {
         private final int mTaskId;
         private final List<String> mSampleIds;

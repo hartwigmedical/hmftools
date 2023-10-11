@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
 
-public class ChrExpectedCountsTask implements Callable
+public class ChrExpectedCountsTask implements Callable<Long>
 {
     private final RefDataConfig mConfig;
     private final EnsemblDataCache mGeneTransCache;

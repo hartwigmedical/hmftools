@@ -53,7 +53,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantTranscriptImpact;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public class NeoSampleTask implements Callable
+public class NeoSampleTask implements Callable<Long>
 {
     private final String mSampleId;
 

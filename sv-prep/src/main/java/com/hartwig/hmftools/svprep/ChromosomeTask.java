@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.svprep.reads.PartitionTask;
 import com.hartwig.hmftools.svprep.reads.PartitionThread;
 import com.hartwig.hmftools.svprep.reads.ReadFilterType;
@@ -46,11 +47,8 @@ public class ChromosomeTask
         List<ChrBaseRegion> partitions = partition(chromosome);
 
         int taskId = 0;
-        for(int i = 0; i < partitions.size(); ++i)
-        {
-            ChrBaseRegion region = partitions.get(i);
+        for(ChrBaseRegion region : partitions)
             mPartitions.add(new PartitionTask(region, taskId++));
-        }
     }
 
     public String chromosome()
@@ -101,7 +99,7 @@ public class ChromosomeTask
             if(SV_LOGGER.isDebugEnabled())
                 mCombinedStats.PerfCounters.forEach(x -> x.logIntervalStats(5));
             else
-                mCombinedStats.PerfCounters.forEach(x -> x.logStats());
+                mCombinedStats.PerfCounters.forEach(PerformanceCounter::logStats);
         }
     }
 

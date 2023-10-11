@@ -8,8 +8,6 @@ import static com.hartwig.hmftools.isofox.loader.DataLoadType.GENE_EXPRESSION;
 import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -68,8 +66,7 @@ public class IsofoxDataLoader
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            TaskExecutor.executeTasks(sampleTasks, mConfig.Threads);
         }
         else
         {

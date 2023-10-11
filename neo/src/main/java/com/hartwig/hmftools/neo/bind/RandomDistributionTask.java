@@ -18,7 +18,7 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.neo.PeptideData;
 
-public class RandomDistributionTask implements Callable
+public class RandomDistributionTask implements Callable<Long>
 {
     private final String mAllele;
 

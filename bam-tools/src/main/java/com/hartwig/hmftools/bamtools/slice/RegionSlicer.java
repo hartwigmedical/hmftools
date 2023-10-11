@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.bamtools.slice;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
@@ -9,14 +7,12 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -50,9 +46,7 @@ public class RegionSlicer
 
         BT_LOGGER.info("splitting {} regions across {} threads", regionBamSlicers.size(), mConfig.Threads);
 
-        List<Callable> callableTasks = regionBamSlicers.stream().collect(Collectors.toList());
-
-        if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
+        if(!TaskExecutor.executeTasks(regionBamSlicers, mConfig.Threads))
             System.exit(1);
 
         BT_LOGGER.info("initial slice complete");
@@ -73,9 +67,7 @@ public class RegionSlicer
             remoteReadSlicers.add(new RemoteReadSlicer(entry.getKey(), remotePositions, mConfig, sliceWriter));
         }
 
-        callableTasks = remoteReadSlicers.stream().collect(Collectors.toList());
-
-        if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
+        if(!TaskExecutor.executeTasks(remoteReadSlicers, mConfig.Threads))
             System.exit(1);
 
         sliceWriter.close();

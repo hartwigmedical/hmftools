@@ -4,10 +4,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS;
-import static com.hartwig.hmftools.common.variant.PurpleVcfTags.REPORTABLE_TRANSCRIPTS_DELIM;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
-import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.parseAltTranscriptInfo;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
@@ -15,39 +12,33 @@ import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.ASSUMED_BIALLELIC_FRACTION;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.MB_PER_GENOME;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
-import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasCodingEffect;
 import static com.hartwig.hmftools.purple.somatic.SomaticVariantEnrichment.populateHeader;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.purple.PurpleCommon;
-import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.purple.fitting.PeakModelData;
-import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
+import com.hartwig.hmftools.common.purple.PurpleCommon;
+import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
-import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.config.ReferenceData;
+import com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers;
+import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.plot.RChartData;
+import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
@@ -212,8 +203,7 @@ public class SomaticStream
                     enrichers.get(taskIndex).addVariant(variant);
                 }
 
-                final List<Callable> callableList = enrichers.stream().collect(Collectors.toList());
-                TaskExecutor.executeTasks(callableList, mConfig.Threads);
+                TaskExecutor.executeTasks(enrichers, mConfig.Threads);
             }
             else
             {
