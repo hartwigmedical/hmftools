@@ -227,9 +227,6 @@ public class OrangeAlgo
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
         }
 
-        Set<Integer> linxReportableClusters =
-                LinxReportableClusters.findReportableClusters(linxData, config.linxSomaticDataDirectory(), config.tumorSampleId());
-
         OrangeRecord report = ImmutableOrangeRecord.builder()
                 .sampleId(config.tumorSampleId())
                 .samplingDate(config.samplingDate())
@@ -251,7 +248,7 @@ public class OrangeAlgo
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(ConversionUtil.mapToIterable(sigAllocations, OrangeConversion::convert))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
-                .plots(buildPlots(config, linxReportableClusters))
+                .plots(buildPlots(config, linxData))
                 .build();
 
         if(config.limitJsonOutput())
@@ -662,7 +659,7 @@ public class OrangeAlgo
     }
 
     @NotNull
-    private OrangePlots buildPlots(@NotNull OrangeConfig config, Set<Integer> linxReportableClusters) throws IOException
+    private OrangePlots buildPlots(@NotNull OrangeConfig config, LinxData linxData) throws IOException
     {
         LOGGER.info("Loading plots");
 
@@ -671,18 +668,41 @@ public class OrangeAlgo
         String linxPlotDir = config.linxPlotDirectory();
         List<String> linxDriverPlots = Lists.newArrayList();
 
-        if(linxPlotDir != null && new File(linxPlotDir).exists())
+        if(linxPlotDir != null)
         {
-            for(String file : new File(linxPlotDir).list())
+            if(new File(linxPlotDir).exists())
             {
-                linxDriverPlots.add(plotManager.processPlotFile(linxPlotDir + File.separator + file));
+                for(String file : new File(linxPlotDir).list())
+                {
+                    linxDriverPlots.add(plotManager.processPlotFile(linxPlotDir + File.separator + file));
+                }
             }
-            LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
-        }
+            else
+            {
+                throw new RuntimeException("Linx plots enabled but plot directory not found");
+            }
 
-        if(linxReportableClusters.size() != linxDriverPlots.size())
+            Set<Integer> linxReportableClusters;
+            try
+            {
+                linxReportableClusters =
+                        LinxReportableClusters.findReportableClusters(linxData, config.linxSomaticDataDirectory(), config.tumorSampleId());
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException("Unable to determine linx reportable clusters", e);
+            }
+
+            LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
+            LOGGER.info(" Expected {} linx plots", linxReportableClusters.size());
+            if(linxReportableClusters.size() != linxDriverPlots.size())
+            {
+                throw new RuntimeException(String.format("Expected %d Linx plots but found %d", linxReportableClusters.size(), linxDriverPlots.size()));
+            }
+        }
+        else
         {
-            throw new RuntimeException(String.format("Expected %d Linx plots but found %d", linxReportableClusters.size(), linxDriverPlots.size()));
+            LOGGER.info("Skipping linx plots, directory not provided");
         }
 
         String sageReferenceBQRPlot = plotManager.processPlotFile(config.sageSomaticRefSampleBQRPlot());
