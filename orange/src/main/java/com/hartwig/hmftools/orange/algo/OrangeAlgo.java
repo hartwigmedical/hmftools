@@ -694,7 +694,6 @@ public class OrangeAlgo
             }
 
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
-            LOGGER.info(" Expected {} linx plots", linxReportableClusters.size());
             if(linxReportableClusters.size() != linxDriverPlots.size())
             {
                 throw new RuntimeException(String.format("Expected %d Linx plots but found %d", linxReportableClusters.size(), linxDriverPlots.size()));
