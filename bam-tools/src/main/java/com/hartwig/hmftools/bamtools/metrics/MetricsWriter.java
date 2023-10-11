@@ -34,6 +34,7 @@ public final class MetricsWriter
             writeMetrics(combinedStats.coverageMetrics(), config);
             writeCoverageFrequency(combinedStats.coverageMetrics(), config);
             writeFragmentLengths(combinedStats.fragmentLengths(), config);
+            writeFlagStats(combinedStats.flagStats(), config);
         }
     }
 
@@ -206,6 +207,90 @@ public final class MetricsWriter
         catch(IOException e)
         {
             BT_LOGGER.error("failed to write frag lengths file: {}", e.toString());
+        }
+    }
+
+    private static String flagStatsPercentages(final FlagQCStats numerator, final FlagQCStats denominator)
+    {
+        final String passedStr =
+                (denominator.getPassed() == 0) ? "N/A" : String.format("%.2f%%", 100.0f * numerator.getPassed() / denominator.getPassed());
+        final String failedStr =
+                (denominator.getFailed() == 0) ? "N/A" : String.format("%.2f%%", 100.0f * numerator.getFailed() / denominator.getFailed());
+        return String.format("(%s : %s)", passedStr, failedStr);
+    }
+
+    private static void writeFlagStats(final FlagStats flagStats, final MetricsConfig config)
+    {
+        try
+        {
+            // write flag stats
+            String filename = config.formFilename("flagstat");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write(String.format("%s in total (QC-passed reads + QC-failed reads)", flagStats.getTotal().toString()));
+            writer.newLine();
+
+            writer.write(String.format("%s primary", flagStats.getPrimary().toString()));
+            writer.newLine();
+
+            writer.write(String.format("%s secondary", flagStats.getSecondary().toString()));
+            writer.newLine();
+
+            writer.write(String.format("%s supplementary", flagStats.getSupp().toString()));
+            writer.newLine();
+
+            writer.write(String.format("%s duplicates", flagStats.getDuplicate().toString()));
+            writer.newLine();
+
+            writer.write(String.format("%s primary duplicates", flagStats.getPrimaryDuplicate().toString()));
+            writer.newLine();
+
+            writer.write(String.format(
+                    "%s mapped %s",
+                    flagStats.getMapped().toString(),
+                    flagStatsPercentages(flagStats.getMapped(), flagStats.getTotal())));
+            writer.newLine();
+
+            writer.write(String.format(
+                    "%s primary mapped %s",
+                    flagStats.getPrimaryMapped().toString(),
+                    flagStatsPercentages(flagStats.getPrimaryMapped(), flagStats.getPrimary())));
+            writer.newLine();
+
+            writer.write(String.format("%s paired in sequencing", flagStats.getPaired().toString()));
+            writer.newLine();
+
+            writer.write(String.format("%s read1", flagStats.getRead1().toString()));
+            writer.newLine();
+
+            writer.write(String.format("%s read2", flagStats.getRead2().toString()));
+            writer.newLine();
+
+            writer.write(String.format(
+                    "%s properly paired %s",
+                    flagStats.getProperlyPaired().toString(),
+                    flagStatsPercentages(flagStats.getProperlyPaired(), flagStats.getPaired())));
+            writer.newLine();
+
+            writer.write(String.format("%s with itself and mate mapped", flagStats.getPairMapped().toString()));
+            writer.newLine();
+
+            writer.write(String.format("%s singletons %s",
+                    flagStats.getSingleton().toString(),
+                    flagStatsPercentages(flagStats.getSingleton(), flagStats.getPaired())));
+            writer.newLine();
+
+            writer.write(String.format("%s with mate mapped to a different chr", flagStats.getInterChrPairMapped().toString()));
+            writer.newLine();
+
+            writer.write(String.format("%s with mate mapped to a different chr (mapQ>=5)", flagStats.getInterChrPairMapQGE5().toString()));
+            writer.newLine();
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            BT_LOGGER.error("failed to write flag stats file: {}", e.toString());
         }
     }
 
