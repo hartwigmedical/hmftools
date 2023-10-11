@@ -16,6 +16,7 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Table;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class HLAAlleleTable
 {
@@ -37,7 +38,7 @@ public final class HLAAlleleTable
         for(LilacAllele allele : sort(alleles))
         {
             table.addCell(cells.createContent(allele.allele()));
-            table.addCell(cells.createContent(String.valueOf(allele.refFragments())));
+            table.addCell(cells.createContent(fragmentString(allele.refFragments(), false)));
             table.addCell(cells.createContent(fragmentString(allele.tumorFragments(), isTumorFail)));
             table.addCell(cells.createContent(fragmentString(allele.rnaFragments(), isTumorFail)));
             table.addCell(cells.createContent(copyNumberString(allele.tumorCopyNumber(), isTumorFail)));
@@ -51,14 +52,26 @@ public final class HLAAlleleTable
     private static List<LilacAllele> sort(@NotNull List<LilacAllele> alleles)
     {
         return alleles.stream()
-                .sorted(Comparator.comparing(LilacAllele::allele).thenComparingInt(LilacAllele::refFragments))
+                .sorted(Comparator.comparing(LilacAllele::allele)
+                        .thenComparingInt(allele -> allele.refFragments() != null ? allele.refFragments() : 0))
                 .collect(Collectors.toList());
     }
 
     @NotNull
-    private static String fragmentString(int fragments, boolean isTumorFail)
+    private static String fragmentString(@Nullable Integer fragments, boolean isTumorFail)
     {
-        return !isTumorFail ? String.valueOf(fragments) : ReportResources.NOT_AVAILABLE;
+        if(fragments == null)
+        {
+            return ReportResources.NONE;
+        }
+        else if(isTumorFail)
+        {
+            return ReportResources.NOT_AVAILABLE;
+        }
+        else
+        {
+            return String.valueOf(fragments);
+        }
     }
 
     @NotNull
@@ -102,6 +115,6 @@ public final class HLAAlleleTable
         }
 
         String result = joiner.toString();
-        return !result.isEmpty() ? result : "None";
+        return !result.isEmpty() ? result : ReportResources.NONE;
     }
 }

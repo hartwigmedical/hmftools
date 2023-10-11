@@ -226,6 +226,9 @@ public class OrangeAlgo
             LOGGER.info("Wild-type calling skipped due to insufficient tumor sample quality");
         }
 
+        boolean haveRef = config.refSampleWGSMetricsFile() != null && config.refSampleFlagstatFile() != null;
+        boolean haveRna = config.rnaConfig() != null;
+
         OrangeRecord report = ImmutableOrangeRecord.builder()
                 .sampleId(config.tumorSampleId())
                 .samplingDate(config.samplingDate())
@@ -240,7 +243,7 @@ public class OrangeAlgo
                 .linx(linx)
                 .wildTypeGenes(wildTypeGenes)
                 .isofox(isofox)
-                .lilac(OrangeConversion.convert(lilac))
+                .lilac(OrangeConversion.convert(lilac, haveRef, haveRna))
                 .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
                 .cuppa(cuppa)

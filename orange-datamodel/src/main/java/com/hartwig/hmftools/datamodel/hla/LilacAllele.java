@@ -15,11 +15,13 @@ public interface LilacAllele
 
     double tumorCopyNumber();
 
-    int refFragments();
+    @Nullable
+    Integer refFragments();
 
     int tumorFragments();
 
-    int rnaFragments();
+    @Nullable
+    Integer rnaFragments();
 
     double somaticMissense();
 
