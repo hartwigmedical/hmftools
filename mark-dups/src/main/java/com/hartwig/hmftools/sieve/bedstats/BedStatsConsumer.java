@@ -62,6 +62,10 @@ public class BedStatsConsumer implements Callable
         {
             ++mRegionCounter;
             mBaseDepth = new int[mCurrentRegion.baseLength()];
+            for(int i = 0; i < mBaseDepth.length; i++)
+            {
+                mBaseDepth[i] = 0;
+            }
 
             mJobPerfCounter.start();
             mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
