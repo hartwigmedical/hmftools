@@ -1,0 +1,2 @@
+SampleId	ClusterId	Reportable	GeneNameUp	TranscriptUp	ChrUp	PosUp	StrandUp	RegionTypeUp	FusedExonUp	GeneNameDown	TranscriptDown	ChrDown	PosDown	StrandDown	RegionTypeDown	FusedExonDown
+tumor_sample	50	true	gene_a	transcript_a	1	0	1	INTRONIC	1	gene_b	transcript_b	2	0	1	INTRONIC	2
