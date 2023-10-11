@@ -25,6 +25,8 @@ public class RefGenomeSource implements RefGenomeInterface
 
     private static final Logger LOGGER = LogManager.getLogger(RefGenomeSource.class);
 
+    public IndexedFastaSequenceFile refGenomeFile() { return mRefGenome; }
+
     public static void addRefGenomeConfig(final Options options)
     {
         options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
@@ -84,7 +86,7 @@ public class RefGenomeSource implements RefGenomeInterface
 
         try
         {
-            LOGGER.debug("loading indexed fasta reference file");
+            // LOGGER.debug("loading indexed fasta reference file");
             IndexedFastaSequenceFile refFastaSeqFile = new IndexedFastaSequenceFile(new File(filename));
             return new RefGenomeSource(refFastaSeqFile);
         }
@@ -94,5 +96,4 @@ public class RefGenomeSource implements RefGenomeInterface
             return null;
         }
     }
-
 }

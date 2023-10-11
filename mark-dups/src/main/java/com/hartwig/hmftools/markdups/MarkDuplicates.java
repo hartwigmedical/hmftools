@@ -9,16 +9,21 @@ import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsSt
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.APP_NAME;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
+import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.markdups.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.samtools.BamSampler;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -45,6 +50,8 @@ public class MarkDuplicates
         MD_LOGGER.info("sample({}) starting mark duplicates", mConfig.SampleId);
 
         long startTimeMs = System.currentTimeMillis();
+
+        setReadLength();
 
         FileWriterCache fileWriterCache = new FileWriterCache(mConfig);
 
@@ -207,6 +214,32 @@ public class MarkDuplicates
         }
 
         MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private void setReadLength()
+    {
+        if(mConfig.readLength() > 0) // skip if set in config
+            return;
+
+        // sample the BAM to determine read length
+        BamSampler bamSampler = new BamSampler(mConfig.RefGenomeFile);
+
+        ChrBaseRegion sampleRegion = !mConfig.SpecificChrRegions.Regions.isEmpty() ?
+                mConfig.SpecificChrRegions.Regions.get(0) : bamSampler.defaultRegion();
+
+        int readLength = DEFAULT_READ_LENGTH;
+
+        if(bamSampler.calcBamCharacteristics(mConfig.BamFile, sampleRegion))
+        {
+            readLength = bamSampler.maxReadLength();
+            MD_LOGGER.info("BAM sampled max read-length({})", readLength);
+        }
+        else
+        {
+            MD_LOGGER.warn("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
+        }
+
+        mConfig.setReadLength(readLength);
     }
 
     public static void main(@NotNull final String[] args)

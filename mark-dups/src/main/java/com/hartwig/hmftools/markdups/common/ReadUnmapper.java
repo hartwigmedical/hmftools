@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.markdups.common;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
@@ -14,6 +18,8 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
@@ -22,9 +28,11 @@ import htsjdk.samtools.SAMRecord;
 public class ReadUnmapper
 {
     private final Map<String,List<BaseRegion>> mChrLocationsMap; // keyed by chromosome start
-    private final int mReadLength;
+    private int mReadLength;
     private boolean mEnabled;
     private final UnmapStats mStats;
+
+    private static final double MIN_OVERLAP_PERC = 0.9;
 
     public ReadUnmapper(final String filename, final int readLength)
     {
@@ -45,18 +53,38 @@ public class ReadUnmapper
         mStats = new UnmapStats();
     }
 
+    public void setReadLength(int readLength) { mReadLength = readLength; }
+
     public List<BaseRegion> getRegions(final String chromosome) { return mChrLocationsMap.get(chromosome); }
     public boolean enabled() { return mEnabled; }
     public UnmapStats stats() { return mStats; }
 
     public static boolean readInRegion(final SAMRecord read, final List<BaseRegion> regions)
     {
-        return containsReadPositions(read.getAlignmentStart(), read.getAlignmentEnd(), regions);
+        int requiredBaseCount = (int)((read.getAlignmentEnd() - read.getAlignmentStart()) * MIN_OVERLAP_PERC);
+        return containsReadPositions(read.getAlignmentStart(), read.getAlignmentEnd(), requiredBaseCount, regions);
     }
 
-    private static boolean containsReadPositions(final int readStart, final int readEnd, final List<BaseRegion> regions)
+    private static boolean containsReadPositions(
+            final int readStart, final int readEnd, final int requiredReadBaseCount, final List<BaseRegion> regions)
     {
-        return regions.stream().anyMatch(x -> positionsWithin(readStart, readEnd, x.start(), x.end()));
+        for(BaseRegion region : regions)
+        {
+            if(!positionsOverlap(readStart, readEnd, region.start(), region.end()))
+                continue;
+
+            if(positionsWithin(readStart, readEnd, region.start(), region.end()))
+                return true;
+
+            int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
+
+            int requiredRegionBaseCount = (int)(region.baseLength() * MIN_OVERLAP_PERC);
+
+            if(overlapBases >= requiredReadBaseCount || overlapBases >= requiredRegionBaseCount)
+                return true;
+        }
+
+        return false;
     }
 
     public boolean mateReadInRegion(final SAMRecord read)
@@ -66,7 +94,8 @@ public class ReadUnmapper
         if(mateRegions == null)
             return false;
 
-        return containsReadPositions(read.getMateAlignmentStart(), read.getMateAlignmentStart() + mReadLength - 1, mateRegions);
+        return containsReadPositions(
+                read.getMateAlignmentStart(), read.getMateAlignmentStart() + mReadLength - 1, mReadLength, mateRegions);
     }
 
     public boolean supplementaryInRegion(final SAMRecord read)
@@ -81,7 +110,7 @@ public class ReadUnmapper
         if(suppRegions == null)
             return false;
 
-        return containsReadPositions(suppReadData.Position, suppReadData.Position + mReadLength - 1, suppRegions);
+        return containsReadPositions(suppReadData.Position, suppReadData.Position + mReadLength - 1, mReadLength, suppRegions);
     }
 
     public boolean checkTransformRead(final SAMRecord read, final List<BaseRegion> readRegions)
@@ -227,5 +256,21 @@ public class ReadUnmapper
         {
             read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, null);
         }
+    }
+
+    @VisibleForTesting
+    public void addRegion(final String chromosome, final BaseRegion region)
+    {
+        List<BaseRegion> regions = mChrLocationsMap.get(chromosome);
+
+        if(regions == null)
+        {
+            regions = Lists.newArrayList();
+            mChrLocationsMap.put(chromosome, regions);
+        }
+
+        regions.add(region);
+
+        mEnabled = true;
     }
 }

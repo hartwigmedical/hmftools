@@ -59,10 +59,10 @@ public final class SamRecordTestUtils
         recordBuilder.getHeader().setSequenceDictionary(SAM_DICTIONARY_V37);
         recordBuilder.setUnmappedHasBasesAndQualities(false);
 
-        HumanChromosome chromosome = HumanChromosome.fromString(chrStr);
+        int chrIndex = !chrStr.equals(NO_CHROMOSOME_NAME) ? HumanChromosome.fromString(chrStr).ordinal() : NO_CHROMOSOME_INDEX;
 
         SAMRecord record = recordBuilder.addFrag(
-                readId, chromosome.ordinal(), readStart, isReversed, false,
+                readId, chrIndex, readStart, isReversed, false,
                 cigar, readBases, DEFAULT_BASE_QUAL, false);
 
         record.setReadBases(readBases.getBytes());
@@ -74,8 +74,11 @@ public final class SamRecordTestUtils
 
         record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
-        record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
+        record.setReferenceIndex(chrIndex); // need to override since no header is present
         record.setReadPairedFlag(true);
+
+        if(chrIndex == NO_CHROMOSOME_INDEX)
+            record.setReadUnmappedFlag(true);
 
         if(!mateChr.isEmpty() && !mateChr.equals(NO_CHROMOSOME_NAME))
         {

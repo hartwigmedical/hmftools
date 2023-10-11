@@ -98,6 +98,7 @@ public class MarkDupsConfig
     public final boolean WriteStats;
 
     private boolean mIsValid;
+    private int mReadLength;
 
     public static final Logger MD_LOGGER = LogManager.getLogger(MarkDupsConfig.class);
     public static final String APP_NAME = "MarkDups";
@@ -109,6 +110,7 @@ public class MarkDupsConfig
     private static final String READ_OUTPUTS = "read_output";
     private static final String NO_MATE_CIGAR = "no_mate_cigar";
     private static final String FORM_CONSENSUS = "form_consensus";
+    private static final String READ_LENGTH = "read_length";
 
     private static final String NO_WRITE_BAM = "no_write_bam";
     private static final String SORTED_BAM = "sorted_bam";
@@ -159,6 +161,8 @@ public class MarkDupsConfig
         BufferSize = configBuilder.getInteger(BUFFER_SIZE);
         BamStringency = BamUtils.validationStringency(configBuilder);
 
+        mReadLength = configBuilder.getInteger(READ_LENGTH);
+
         SambambaPath = configBuilder.getValue(SAMBAMBA_PATH);
         SamToolsPath = configBuilder.getValue(SAMTOOLS_PATH);
 
@@ -169,14 +173,14 @@ public class MarkDupsConfig
 
         if(configBuilder.hasValue(UNMAP_REGIONS))
         {
-            UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS), DEFAULT_READ_LENGTH);
+            UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS), mReadLength);
         }
         else
         {
             Map<String,List<BaseRegion>> unmappedMap = Maps.newHashMap();
             ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
             unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(BaseRegion.from(excludedRegion)));
-            UnmapRegions = new ReadUnmapper(unmappedMap, DEFAULT_READ_LENGTH);
+            UnmapRegions = new ReadUnmapper(unmappedMap, mReadLength);
         }
 
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
@@ -215,6 +219,14 @@ public class MarkDupsConfig
 
     public boolean isValid() { return mIsValid; }
 
+    public int readLength() { return mReadLength; }
+
+    public void setReadLength(int readLength)
+    {
+        mReadLength = readLength;
+        UnmapRegions.setReadLength(mReadLength);
+    }
+
     public String formFilename(final String fileType)
     {
         String filename = OutputDir + SampleId;
@@ -236,6 +248,7 @@ public class MarkDupsConfig
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
         configBuilder.addInteger(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
+        configBuilder.addInteger(READ_LENGTH, "Read length, otherwise will sample from BAM", 0);
 
         configBuilder.addConfigItem(
                 READ_OUTPUTS, false, format("Write reads: %s", ReadOutput.valuesStr()), NONE.toString());
@@ -282,6 +295,7 @@ public class MarkDupsConfig
         PartitionSize = partitionSize;
         BufferSize = bufferSize;
         BamStringency = ValidationStringency.STRICT;
+        mReadLength = DEFAULT_READ_LENGTH;
 
         UMIs = new UmiConfig(umiEnabled, duplexUmi, String.valueOf(DEFAULT_DUPLEX_UMI_DELIM), false);
         FormConsensus = formConsensus;
@@ -294,7 +308,7 @@ public class MarkDupsConfig
         SamToolsPath = null;
         SambambaPath = null;
 
-        UnmapRegions = new ReadUnmapper(Collections.emptyMap(), DEFAULT_READ_LENGTH);
+        UnmapRegions = new ReadUnmapper(Maps.newHashMap(), mReadLength);
 
         WriteBam = false;
         SortedBam = false;

@@ -265,8 +265,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         if(mPendingIncompleteReads.size() > 100)
         {
-            MD_LOGGER.debug("partition({}) processing {} pending incomplete fragments",
-                    mCurrentRegion, mPendingIncompleteReads.values().stream().mapToInt(x -> x.size()).sum());
+            MD_LOGGER.debug("partition({}) processing {} remote reads from {} remote partitions",
+                    mCurrentRegion, mPendingIncompleteReads.values().stream().mapToInt(x -> x.size()).sum(), mPendingIncompleteReads.size());
         }
 
         mPcPendingIncompletes.resume();
