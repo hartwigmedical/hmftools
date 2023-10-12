@@ -659,7 +659,7 @@ public class OrangeAlgo
     }
 
     @NotNull
-    private OrangePlots buildPlots(@NotNull OrangeConfig config, LinxData linxData) throws IOException
+    private OrangePlots buildPlots(@NotNull OrangeConfig config, @NotNull LinxData linxData) throws IOException
     {
         LOGGER.info("Loading plots");
 
@@ -668,36 +668,29 @@ public class OrangeAlgo
         String linxPlotDir = config.linxPlotDirectory();
         List<String> linxDriverPlots = Lists.newArrayList();
 
-        if(linxPlotDir != null)
+        if(new File(linxPlotDir).exists())
         {
-            if(new File(linxPlotDir).exists())
+            for(String file : new File(linxPlotDir).list())
             {
-                for(String file : new File(linxPlotDir).list())
-                {
-                    linxDriverPlots.add(plotManager.processPlotFile(linxPlotDir + File.separator + file));
-                }
-            }
-
-            Set<Integer> linxReportableClusters;
-            try
-            {
-                linxReportableClusters =
-                        LinxReportableClusters.findReportableClusters(linxData, config.linxSomaticDataDirectory(), config.tumorSampleId());
-            }
-            catch(IOException e)
-            {
-                throw new RuntimeException("Unable to determine linx reportable clusters", e);
-            }
-
-            LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
-            if(linxReportableClusters.size() != linxDriverPlots.size())
-            {
-                throw new RuntimeException(String.format("Expected %d Linx plots but found %d", linxReportableClusters.size(), linxDriverPlots.size()));
+                linxDriverPlots.add(plotManager.processPlotFile(linxPlotDir + File.separator + file));
             }
         }
-        else
+
+        Set<Integer> linxReportableClusters;
+        try
         {
-            LOGGER.info("Skipping linx plots, directory not provided");
+            linxReportableClusters =
+                    LinxReportableClusters.findReportableClusters(linxData, config.linxSomaticDataDirectory(), config.tumorSampleId());
+        }
+        catch(IOException e)
+        {
+            throw new RuntimeException("Unable to determine linx reportable clusters", e);
+        }
+
+        LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
+        if(linxReportableClusters.size() != linxDriverPlots.size())
+        {
+            LOGGER.warn("Expected {} linx plots, but found {}", linxReportableClusters.size(), linxDriverPlots.size());
         }
 
         String sageReferenceBQRPlot = plotManager.processPlotFile(config.sageSomaticRefSampleBQRPlot());

@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.linx.LinxData;
 import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxTestFactory;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 public class LinxReportableClustersTest
@@ -26,12 +27,13 @@ public class LinxReportableClustersTest
     @Test
     public void shouldFindAllReportableClusters() throws IOException
     {
-        LinxData linxData = testLinxData();
+        LinxData linxData = createTestLinxData();
         Set<Integer> clusters = LinxReportableClusters.findReportableClusters(linxData, LINX_TEST_DATA_DIR, "tumor_sample");
         assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters);
     }
 
-    private static LinxData testLinxData()
+    @NotNull
+    private static LinxData createTestLinxData()
     {
         List<LinxBreakend> breakends = new ArrayList<>();
         breakends.add(LinxTestFactory.breakendBuilder().svId(15).reportedDisruption(true).build());
