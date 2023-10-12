@@ -55,7 +55,7 @@ public class RegionBamSlicer implements Callable
     {
         BT_LOGGER.info("processing region({})", mRegion);
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
+        mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
 
         BT_LOGGER.info("region({}) complete, processed {} reads, remote positions({})",
                 mRegion, mReadsProcessed, mRemotePositionCount);

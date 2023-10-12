@@ -3,6 +3,7 @@ package com.hartwig.hmftools.bamtools.metrics;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
+import static com.hartwig.hmftools.bamtools.metrics.FlagQCStats.flagStatsPercentages;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.GENOME_TERRITORY_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MAD_COVERAGE_COLUMN;
 import static com.hartwig.hmftools.common.metrics.WGSMetricsFile.MEAN_COVERAGE_COLUMN;
@@ -31,10 +32,11 @@ public final class MetricsWriter
         }
         else
         {
-            writeMetrics(combinedStats.coverageMetrics(), config);
+            writeMetrics(combinedStats.coverageMetrics(), combinedStats.readCounts(), config);
             writeCoverageFrequency(combinedStats.coverageMetrics(), config);
             writeFragmentLengths(combinedStats.fragmentLengths(), config);
             writeFlagStats(combinedStats.flagStats(), config);
+            writeTargetRegionStats(combinedStats.targetRegions(), config);
         }
     }
 
@@ -109,7 +111,7 @@ public final class MetricsWriter
         return tsvData.toString();
     }
 
-    private static void writeMetrics(final CoverageMetrics metrics, final MetricsConfig config)
+    private static void writeMetrics(final CoverageMetrics metrics, final ReadCounts readCounts, final MetricsConfig config)
     {
         try
         {
@@ -118,8 +120,10 @@ public final class MetricsWriter
             BufferedWriter writer = createBufferedWriter(filename, false);
 
             writer.write(metricsHeader());
+            writer.write(format("\tDUAL_STRAND"));
             writer.newLine();
             writer.write(metricsData(metrics));
+            writer.write(format("\t%d", readCounts.DualStrand));
             writer.newLine();
 
             writer.close();
@@ -210,13 +214,31 @@ public final class MetricsWriter
         }
     }
 
-    private static String flagStatsPercentages(final FlagQCStats numerator, final FlagQCStats denominator)
+    private static void writeTargetRegionStats(final List<TargetRegionStats> targetRegionStats, final MetricsConfig config)
     {
-        final String passedStr =
-                (denominator.getPassed() == 0) ? "N/A" : String.format("%.2f%%", 100.0f * numerator.getPassed() / denominator.getPassed());
-        final String failedStr =
-                (denominator.getFailed() == 0) ? "N/A" : String.format("%.2f%%", 100.0f * numerator.getFailed() / denominator.getFailed());
-        return String.format("(%s : %s)", passedStr, failedStr);
+        try
+        {
+            // write summary metrics
+            String filename = config.formFilename("target_regions");
+            BufferedWriter writer = createBufferedWriter(filename, false);
+
+            writer.write("Chromosome\tRegionStart\tRegionEnd\tTotalReads\tDuplicates\tDualStrand");
+            writer.newLine();
+
+            for(TargetRegionStats targetRegion : targetRegionStats)
+            {
+                writer.write(String.format("%s\t%d\t%d\t%d\t%d\t%d",
+                        targetRegion.Region.Chromosome, targetRegion.Region.start(), targetRegion.Region.end(),
+                        targetRegion.Counts.TotalReads, targetRegion.Counts.Duplicates, targetRegion.Counts.DualStrand));
+                writer.newLine();
+            }
+
+            writer.close();
+        }
+        catch(IOException e)
+        {
+            BT_LOGGER.error("failed to write target regions file: {}", e.toString());
+        }
     }
 
     private static void writeFlagStats(final FlagStats flagStats, final MetricsConfig config)
@@ -245,16 +267,12 @@ public final class MetricsWriter
             writer.write(String.format("%s primary duplicates", flagStats.getPrimaryDuplicate().toString()));
             writer.newLine();
 
-            writer.write(String.format(
-                    "%s mapped %s",
-                    flagStats.getMapped().toString(),
-                    flagStatsPercentages(flagStats.getMapped(), flagStats.getTotal())));
+            writer.write(String.format("%s mapped %s",
+                    flagStats.getMapped().toString(), flagStatsPercentages(flagStats.getMapped(), flagStats.getTotal())));
             writer.newLine();
 
-            writer.write(String.format(
-                    "%s primary mapped %s",
-                    flagStats.getPrimaryMapped().toString(),
-                    flagStatsPercentages(flagStats.getPrimaryMapped(), flagStats.getPrimary())));
+            writer.write(String.format("%s primary mapped %s",
+                    flagStats.getPrimaryMapped().toString(), flagStatsPercentages(flagStats.getPrimaryMapped(), flagStats.getPrimary())));
             writer.newLine();
 
             writer.write(String.format("%s paired in sequencing", flagStats.getPaired().toString()));

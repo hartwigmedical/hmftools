@@ -33,7 +33,7 @@ public final class CommonUtils
     // config strings
     public static final String BAM_FILE = "bam_file";
     public static final String PARTITION_SIZE = "partition_size";
-    public static final String REGIONS_BED_FILE = "regions_bed_file";
+    public static final String REGIONS_FILE = "regions_file";
     public static final String READ_LENGTH = "read_length";
 
     public static final String BAM_FILE_TYPE = "bam";
@@ -51,16 +51,20 @@ public final class CommonUtils
 
         configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
         configBuilder.addPath(BAM_FILE, true, "BAM file location");
-        configBuilder.addPath(REGIONS_BED_FILE, false, "BED file with regions to analyse");
+
+        configBuilder.addPath(
+                REGIONS_FILE, false,
+                "TSV or BED file with regions to analyse, expected columns Chromosome,PositionStart,PositionEnd or no headers");
+
         configBuilder.addInteger(READ_LENGTH, "Read length", DEFAULT_READ_LENGTH);
     }
 
     public static boolean loadSpecificRegionsConfig(
             final ConfigBuilder configBuilder, final List<String> specificChromosomes, final List<ChrBaseRegion> specificRegions)
     {
-        if(configBuilder.isRegistered(REGIONS_BED_FILE) && configBuilder.hasValue(REGIONS_BED_FILE))
+        if(configBuilder.isRegistered(REGIONS_FILE) && configBuilder.hasValue(REGIONS_FILE))
         {
-            return BedFileReader.loadBedFile(configBuilder.getValue(REGIONS_BED_FILE), specificRegions);
+            return BedFileReader.loadBedFile(configBuilder.getValue(REGIONS_FILE), specificRegions);
         }
         else
         {
