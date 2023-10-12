@@ -677,10 +677,6 @@ public class OrangeAlgo
                     linxDriverPlots.add(plotManager.processPlotFile(linxPlotDir + File.separator + file));
                 }
             }
-            else
-            {
-                throw new RuntimeException("Linx plots enabled but plot directory not found");
-            }
 
             Set<Integer> linxReportableClusters;
             try
