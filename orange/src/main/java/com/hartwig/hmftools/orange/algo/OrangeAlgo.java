@@ -676,16 +676,7 @@ public class OrangeAlgo
             }
         }
 
-        Set<Integer> linxReportableClusters;
-        try
-        {
-            linxReportableClusters =
-                    LinxReportableClusters.findReportableClusters(linxData, config.linxSomaticDataDirectory(), config.tumorSampleId());
-        }
-        catch(IOException e)
-        {
-            throw new RuntimeException("Unable to determine linx reportable clusters", e);
-        }
+        Set<Integer> linxReportableClusters = LinxReportableClusters.findReportableClusters(linxData);
 
         LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         if(linxReportableClusters.size() != linxDriverPlots.size())

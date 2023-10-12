@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.common.linx;
 
 import java.util.List;
+import java.util.Map;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +33,7 @@ public interface LinxData
     List<HomozygousDisruption> somaticHomozygousDisruptions();
 
     @Nullable
-    List<LinxSvAnnotation>  allGermlineStructuralVariants();
+    List<LinxSvAnnotation> allGermlineStructuralVariants();
 
     @Nullable
     List<LinxBreakend> allGermlineBreakends();
@@ -48,4 +49,10 @@ public interface LinxData
 
     @Nullable
     List<HomozygousDisruption> germlineHomozygousDisruptions();
+
+    @NotNull
+    List<Integer> fusionClusterIds();
+
+    @NotNull
+    Map<Integer, Integer> SvIdToClusterId();
 }

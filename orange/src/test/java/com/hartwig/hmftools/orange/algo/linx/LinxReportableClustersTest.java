@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.linx.DriverEventType;
 import com.hartwig.hmftools.common.linx.ImmutableLinxData;
 import com.hartwig.hmftools.common.linx.ImmutableLinxDriver;
@@ -22,13 +22,11 @@ import org.junit.Test;
 
 public class LinxReportableClustersTest
 {
-    private static final String LINX_TEST_DATA_DIR = Resources.getResource("linx_reportable_clusters").getPath();
-
     @Test
     public void shouldFindAllReportableClusters() throws IOException
     {
         LinxData linxData = createTestLinxData();
-        Set<Integer> clusters = LinxReportableClusters.findReportableClusters(linxData, LINX_TEST_DATA_DIR, "tumor_sample");
+        Set<Integer> clusters = LinxReportableClusters.findReportableClusters(linxData);
         assertEquals(new HashSet<>(Set.of(10, 50, 100)), clusters);
     }
 
@@ -41,7 +39,14 @@ public class LinxReportableClustersTest
         List<LinxDriver> drivers = new ArrayList<>();
         drivers.add(ImmutableLinxDriver.builder().clusterId(10).gene("Gene A").eventType(DriverEventType.DEL).build());
 
-        LinxData linxData = ImmutableLinxData.builder().reportableSomaticBreakends(breakends).somaticDrivers(drivers).build();
-        return linxData;
+        List<Integer> fusions = List.of(50);
+        Map<Integer, Integer> svToCluster = Map.of(15, 100);
+
+        return ImmutableLinxData.builder()
+                .reportableSomaticBreakends(breakends)
+                .somaticDrivers(drivers)
+                .fusionClusterIds(fusions)
+                .putAllSvIdToClusterId(svToCluster)
+                .build();
     }
 }
