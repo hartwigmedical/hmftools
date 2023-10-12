@@ -340,7 +340,7 @@ public class DuplicateGroup
             }
             catch(Exception e)
             {
-                MD_LOGGER.error("error forming consensus: umi({}) coords({})", toString());
+                MD_LOGGER.error("error forming consensus: {}", toString());
 
                 for(SAMRecord read : readGroup)
                 {
