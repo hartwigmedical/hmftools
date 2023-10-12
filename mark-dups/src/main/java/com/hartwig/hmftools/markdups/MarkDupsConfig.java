@@ -23,14 +23,13 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.markdups.ReadOutput.NONE;
+import static com.hartwig.hmftools.markdups.write.ReadOutput.NONE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH;
 
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +48,7 @@ import com.hartwig.hmftools.markdups.common.ReadUnmapper;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
 import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
+import com.hartwig.hmftools.markdups.write.ReadOutput;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,10 +77,9 @@ public class MarkDupsConfig
     public final String OutputDir;
     public final String OutputId;
     public final boolean WriteBam;
-    public final boolean SortedBam;
     public final boolean MultiBam;
     public final boolean UseSortCache;
-    public final boolean KeepInterimBams;
+    public final boolean WriteStats;
 
     public final boolean NoMateCigar;
     public final int Threads;
@@ -89,6 +88,7 @@ public class MarkDupsConfig
     public final String SambambaPath;
 
     // debug
+    public final boolean KeepInterimBams;
     public final SpecificRegions SpecificChrRegions;
     public final List<String> LogReadIds;
     public final FilterReadsType SpecificRegionsFilterType;
@@ -96,7 +96,6 @@ public class MarkDupsConfig
     public final boolean PerfDebug;
     public final boolean RunChecks;
     public final boolean LogFinalCache;
-    public final boolean WriteStats;
 
     private boolean mIsValid;
     private int mReadLength;
@@ -113,19 +112,18 @@ public class MarkDupsConfig
     private static final String FORM_CONSENSUS = "form_consensus";
     private static final String READ_LENGTH = "read_length";
 
-    private static final String NO_WRITE_BAM = "no_write_bam";
-    private static final String SORTED_BAM = "sorted_bam";
     private static final String MULTI_BAM = "multi_bam";
-    private static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
     private static final String USE_SORT_CACHE = "use_sort_cache";
     private static final String SAMTOOLS_PATH = "samtools";
     private static final String SAMBAMBA_PATH = "sambamba";
-
     private static final String UNMAP_REGIONS = "unmap_regions";
+    private static final String WRITE_STATS = "write_stats";
 
+    // debug
+    private static final String KEEP_INTERIM_BAMS = "keep_interim_bams";
+    private static final String NO_WRITE_BAM = "no_write_bam";
     private static final String RUN_CHECKS = "run_checks";
     private static final String LOG_FINAL_CACHE = "log_final_cache";
-    private static final String WRITE_STATS = "write_stats";
     private static final String SPECIFIC_REGION_FILTER_TYPE = "specific_region_filter";
 
     public MarkDupsConfig(final ConfigBuilder configBuilder)
@@ -205,7 +203,6 @@ public class MarkDupsConfig
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM);
         MultiBam = WriteBam && Threads > 1 && configBuilder.hasFlag(MULTI_BAM);
-        SortedBam = configBuilder.hasFlag(SORTED_BAM);
         UseSortCache = configBuilder.hasFlag(USE_SORT_CACHE);
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
@@ -260,8 +257,7 @@ public class MarkDupsConfig
 
         configBuilder.addPath(UNMAP_REGIONS, false, "Unmap reads within these regions");
 
-        configBuilder.addFlag(NO_WRITE_BAM, "BAM not written");
-        configBuilder.addFlag(SORTED_BAM, "Write sorted BAM");
+        configBuilder.addFlag(NO_WRITE_BAM, "BAM not written, producing only TSV reads and/or statistics");
         configBuilder.addFlag(MULTI_BAM, "Write temporary BAMs with multi-threading");
         configBuilder.addFlag(USE_SORT_CACHE, "Use sort cache for BAM writing");
         configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
@@ -317,7 +313,6 @@ public class MarkDupsConfig
         UnmapRegions = new ReadUnmapper(Maps.newHashMap(), mReadLength);
 
         WriteBam = false;
-        SortedBam = false;
         MultiBam = false;
         UseSortCache = false;
         KeepInterimBams = false;

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.markdups;
+package com.hartwig.hmftools.markdups.write;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;

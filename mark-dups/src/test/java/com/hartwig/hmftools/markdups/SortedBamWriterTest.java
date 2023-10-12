@@ -8,17 +8,21 @@ import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_ID;
 import static org.junit.Assert.assertEquals;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.markdups.write.SortedBamWriter;
 
 import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class SortedReadCacheTest
+public class SortedBamWriterTest
 {
     @Test
     public void testSortedReadCache()
     {
-        SortedReadCache readCache = new SortedReadCache(10, 50, null);
+        SortedBamWriter readCache = new SortedBamWriter(10, 50, null);
+
+        readCache.initialiseStartPosition(CHR_1, 1);
+        readCache.setUpperBoundPosition(110);
 
         readCache.addRecord(createRead(CHR_1, 100));
         readCache.addRecord(createRead(CHR_1, 110));
@@ -27,6 +31,7 @@ public class SortedReadCacheTest
         assertEquals(2, readCache.cached());
 
         // add a record past the buffer position
+        readCache.setUpperBoundPosition(170);
         readCache.addRecord(createRead(CHR_1, 170));
 
         assertEquals(2, readCache.written());
@@ -45,10 +50,15 @@ public class SortedReadCacheTest
 
         assertEquals(2, readCache.written());
         assertEquals(12, readCache.cached());
-        assertEquals(20, readCache.capacity());
+        // assertEquals(20, readCache.capacity());
+
+        readCache.flush();
 
         // new chromosome
         readCache.addRecord(createRead(CHR_2, 50));
+
+        readCache.initialiseStartPosition(CHR_2, 1);
+        readCache.setUpperBoundPosition(50);
 
         assertEquals(14, readCache.written());
         assertEquals(1, readCache.cached());

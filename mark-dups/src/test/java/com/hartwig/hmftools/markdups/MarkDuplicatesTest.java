@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.markdups;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
@@ -15,8 +13,6 @@ import static com.hartwig.hmftools.markdups.TestUtils.setSecondInPair;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import java.util.List;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
@@ -33,8 +29,8 @@ public class MarkDuplicatesTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MockRefGenome mRefGenome;
-    private final FileWriterCache mFileWriterCache;
-    private final BamWriter mWriter;
+    // private final FileWriterCache mFileWriterCache;
+    private final TestBamWriter mWriter;
 
     private final PartitionReader mPartitionReader;
 
@@ -45,8 +41,9 @@ public class MarkDuplicatesTest
 
         MarkDupsConfig config = new MarkDupsConfig(1000, 1000, mRefGenome, false, false, false);
 
-        mFileWriterCache = new FileWriterCache(config);
-        mWriter = mFileWriterCache.getBamWriter("1");
+        // mFileWriterCache = new FileWriterCache(config);
+        // mWriter = mFileWriterCache.getPartitionBamWriter("1");
+        mWriter = new TestBamWriter(config);
 
         mPartitionReader = new PartitionReader(config, null, mWriter, new PartitionDataStore(config));
     }
@@ -71,7 +68,7 @@ public class MarkDuplicatesTest
         PartitionData partitionData = mPartitionReader.partitionDataStore().getOrCreatePartitionData("1_0");
 
         assertEquals(1, partitionData.resolvedFragmentStateMap().size());
-        assertEquals(1, mWriter.recordWriteCount());
+        assertEquals(1, mWriter.nonConsensusWriteCount());
 
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
@@ -80,7 +77,7 @@ public class MarkDuplicatesTest
 
         mPartitionReader.processRead(mate1);
         assertEquals(1, partitionData.resolvedFragmentStateMap().size());
-        assertEquals(2, mWriter.recordWriteCount());
+        assertEquals(2, mWriter.nonConsensusWriteCount());
 
         SAMRecord supp1 = createSamRecord(
                 read1.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
@@ -92,7 +89,7 @@ public class MarkDuplicatesTest
         mPartitionReader.processRead(supp1);
         mPartitionReader.postProcessRegion();
 
-        assertEquals(3, mWriter.recordWriteCount());
+        assertEquals(3, mWriter.nonConsensusWriteCount());
         assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
     }
 
@@ -137,7 +134,7 @@ public class MarkDuplicatesTest
         mPartitionReader.processRead(mate1);
         mPartitionReader.postProcessRegion();
 
-        assertEquals(3, mWriter.recordWriteCount());
+        assertEquals(3, mWriter.nonConsensusWriteCount());
         assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
     }
 
@@ -184,7 +181,7 @@ public class MarkDuplicatesTest
         PartitionData partitionData = mPartitionReader.partitionDataStore().getOrCreatePartitionData("1_1");
 
         assertEquals(2, partitionData.incompleteFragmentMap().size());
-        assertEquals(0, mWriter.recordWriteCount());
+        assertEquals(0, mWriter.nonConsensusWriteCount());
 
         // now the primaries, as candidates
         mPartitionReader.processRead(read1);
@@ -196,7 +193,7 @@ public class MarkDuplicatesTest
 
         assertEquals(1, partitionData.candidateDuplicatesMap().size());
         assertEquals(2, partitionData.incompleteFragmentMap().size());
-        assertEquals(0, mWriter.recordWriteCount());
+        assertEquals(0, mWriter.nonConsensusWriteCount());
 
         mPartitionReader.setupRegion(new ChrBaseRegion(CHR_1, 2001, 3000));
 
@@ -211,11 +208,11 @@ public class MarkDuplicatesTest
         setSecondInPair(mate2);
 
         mPartitionReader.processRead(mate1);
-        assertEquals(0, mWriter.recordWriteCount());
+        assertEquals(0, mWriter.nonConsensusWriteCount());
 
         mPartitionReader.processRead(mate2);
         mPartitionReader.postProcessRegion();
-        assertEquals(6, mWriter.recordWriteCount());
+        assertEquals(6, mWriter.nonConsensusWriteCount());
 
         assertTrue(partitionData.candidateDuplicatesMap().isEmpty());
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
@@ -258,8 +255,8 @@ public class MarkDuplicatesTest
 
         PartitionData partitionData = chrReaderConsensus.partitionDataStore().getOrCreatePartitionData("1_0");
 
-        assertEquals(2, mWriter.recordWriteCount());
-        assertEquals(1, mWriter.recordWriteCountConsensus());
+        assertEquals(2, mWriter.nonConsensusWriteCount());
+        assertEquals(1, mWriter.consensusWriteCount());
 
         assertEquals(2, partitionData.duplicateGroupMap().size());
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
@@ -276,13 +273,13 @@ public class MarkDuplicatesTest
         setSecondInPair(mate2);
 
         chrReaderConsensus.processRead(mate1);
-        assertEquals(2, mWriter.recordWriteCount());
+        assertEquals(2, mWriter.nonConsensusWriteCount());
 
         chrReaderConsensus.processRead(mate2);
         chrReaderConsensus.postProcessRegion();
 
-        assertEquals(4, mWriter.recordWriteCount());
-        assertEquals(2, mWriter.recordWriteCountConsensus());
+        assertEquals(4, mWriter.nonConsensusWriteCount());
+        assertEquals(2, mWriter.consensusWriteCount());
 
         // send through supplementaries first
         SAMRecord supp1 = createSamRecord(
@@ -302,8 +299,8 @@ public class MarkDuplicatesTest
         assertTrue(partitionData.duplicateGroupMap().isEmpty());
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
         assertTrue(partitionData.resolvedFragmentStateMap().isEmpty());
-        assertEquals(6, mWriter.recordWriteCount());
-        assertEquals(3, mWriter.recordWriteCountConsensus());
+        assertEquals(6, mWriter.nonConsensusWriteCount());
+        assertEquals(3, mWriter.consensusWriteCount());
     }
 
     @Test

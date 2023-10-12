@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.markdups;
+package com.hartwig.hmftools.markdups.write;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -19,7 +19,7 @@ import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordCoordinateComparator;
 
-public class SortedReadCache
+public class SortedBamWriter
 {
     private final int mCapacityStart;
     private int mCapacity;
@@ -39,8 +39,9 @@ public class SortedReadCache
     // stats
     private int mWriteCount;
     private long mReadsWritten;
+    private int mMaxCached;
 
-    public SortedReadCache(final int capacity, final int positionBuffer, @Nullable final SAMFileWriter writer)
+    public SortedBamWriter(final int capacity, final int positionBuffer, @Nullable final SAMFileWriter writer)
     {
         mCapacityStart = capacity;
         setCapacity(capacity);
@@ -54,6 +55,7 @@ public class SortedReadCache
         mMinCachedPosition = 0;
         mReadsWritten = 0;
         mWriteCount = 0;
+        mMaxCached = 0;
     }
 
     public void initialiseStartPosition(final String chromosome, int startPosition)
@@ -72,7 +74,7 @@ public class SortedReadCache
     private static final double CAPACITY_GROW_PERCENT = 0.9;
     private static final double CAPACITY_SHRINK_PERCENT = 0.5;
 
-    public boolean addRecord(final SAMRecord read)
+    public boolean canWriteRecord(final SAMRecord read)
     {
         if(read.getReadUnmappedFlag() && read.getMateUnmappedFlag())
             return false;
@@ -83,21 +85,29 @@ public class SortedReadCache
         if(!positionWithin(read.getAlignmentStart(), mLastWrittenPosition, mUpperBoundPosition))
             return false;
 
-        if(mRecords.size() < mCapacityThresholdCheck)
+        return true;
+    }
+
+    public void addRecord(final SAMRecord read)
+    {
+        mRecords.add(read);
+
+        if(mMinCachedPosition == 0 || mRecords.size() < mCapacityThresholdCheck)
         {
-            if(mRecords.isEmpty())
+            if(mMinCachedPosition == 0)
                 mMinCachedPosition = read.getAlignmentStart();
             else
                 mMinCachedPosition = min(mMinCachedPosition, read.getAlignmentStart());
 
-            mRecords.add(read);
-            return true;
+            return;
         }
 
         int maxPosition = mUpperBoundPosition - mPositionBuffer;
 
         if(maxPosition <= mMinCachedPosition)
-            return true;
+            return;
+
+        mMaxCached = max(mMaxCached, mRecords.size());
 
         // gather all reads prior to this position
         int index = 0;
@@ -122,10 +132,7 @@ public class SortedReadCache
         // sort and write them
         sortAndWrite(mSortedRecords);
 
-        mRecords.add(read);
-
         checkCapacity(maxPosition);
-        return true;
     }
 
     private void checkCapacity(int maxPosition)
@@ -151,8 +158,8 @@ public class SortedReadCache
     {
         mCapacity = capacity;
         mCapacityGrowThreshold = (int)(capacity * CAPACITY_GROW_PERCENT);
-        mCapacityShrinkThreshold = (int)(capacity * CAPACITY_SHRINK_PERCENT);
-        mCapacityThresholdCheck = (int)(capacity * CAPACITY_CHECK_PERCENT);
+        mCapacityShrinkThreshold = (int)(max(capacity * CAPACITY_SHRINK_PERCENT, 1));
+        mCapacityThresholdCheck = (int)max(capacity * CAPACITY_CHECK_PERCENT, 1);
     }
 
     private void sortAndWrite(final List<SAMRecord> records)
@@ -189,13 +196,14 @@ public class SortedReadCache
     public long writeCount() { return mWriteCount; }
     public int cached() { return mRecords.size(); }
     public int capacity() { return mCapacity; }
+    public int maxCache() { return mMaxCached; }
 
     public int averageWriteCount() { return mWriteCount > 0 ? (int)(mReadsWritten / (double)mWriteCount) : 0; }
 
     public String toString()
     {
-        return format("chr(%s) bounds(lastWrite=%d upper=%d) cached(%d/%d) avgWriteCount(%d from %d) thresholds(check=%d grow=%d shrink=%d)",
-                mCurrentChromosome, mLastWrittenPosition, mUpperBoundPosition, mRecords.size(), mCapacity,
+        return format("chr(%s) bounds(lastWrite=%d upper=%d) cached(%d/%d max=%d) avgWriteCount(%d from %d) thresholds(check=%d grow=%d shrink=%d)",
+                mCurrentChromosome, mLastWrittenPosition, mUpperBoundPosition, mRecords.size(), mCapacity, mMaxCached,
                 averageWriteCount(), mWriteCount, mCapacityThresholdCheck, mCapacityGrowThreshold, mCapacityShrinkThreshold);
     }
 }

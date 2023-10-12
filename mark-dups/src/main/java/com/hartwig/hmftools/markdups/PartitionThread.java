@@ -7,6 +7,8 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.markdups.write.BamWriter;
+import com.hartwig.hmftools.markdups.write.FileWriterCache;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
@@ -30,7 +32,7 @@ public class PartitionThread extends Thread
         mPartitions = partitions;
         mPartitionCount = partitions.size();
 
-        mBamWriter = fileWriterCache.getBamWriter(String.valueOf(threadId));
+        mBamWriter = fileWriterCache.getPartitionBamWriter(String.valueOf(threadId));
 
         SamReader samReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
