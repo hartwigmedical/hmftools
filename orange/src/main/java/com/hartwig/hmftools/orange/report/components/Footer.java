@@ -76,8 +76,8 @@ public class Footer
             {
                 String disclaimer = "All results and data described in this report are for research use only and have not "
                         + "been generated using a clinically validated and controlled procedure.";
-                Paragraph disclaimerParagraph = new Paragraph(disclaimer).setMaxWidth(400).addStyle(reportResources.deemphasizedStyle());
-                canvas.showTextAligned(disclaimerParagraph, 50, 0, TextAlignment.LEFT);
+                Paragraph disclaimerParagraph = new Paragraph(disclaimer).setMaxWidth(420).addStyle(reportResources.disclaimerStyle());
+                canvas.showTextAligned(disclaimerParagraph, 40, 0, TextAlignment.LEFT);
             }
         }
     }
