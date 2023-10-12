@@ -1,8 +1,12 @@
 package com.hartwig.hmftools.markdups;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +32,9 @@ public class SortedReadCache
     private final List<SAMRecord> mSortedRecords;
     private final SAMFileWriter mWriter;
     private String mCurrentChromosome;
+    private int mLastWrittenPosition;
+    private int mMinCachedPosition;
+    private int mUpperBoundPosition;
 
     // stats
     private int mWriteCount;
@@ -43,37 +50,63 @@ public class SortedReadCache
         mSortedRecords = Lists.newArrayListWithCapacity(mCapacity);
         mWriter = writer;
         mCurrentChromosome = "";
+        mLastWrittenPosition = 0;
+        mMinCachedPosition = 0;
         mReadsWritten = 0;
         mWriteCount = 0;
+    }
+
+    public void initialiseStartPosition(final String chromosome, int startPosition)
+    {
+        mCurrentChromosome = chromosome;
+        mLastWrittenPosition = startPosition;
+        mUpperBoundPosition = startPosition + mPositionBuffer;
+    }
+
+    public void setUpperBoundPosition(int position)
+    {
+        mUpperBoundPosition = max(position, mLastWrittenPosition + mPositionBuffer);
     }
 
     private static final double CAPACITY_CHECK_PERCENT = 0.01;
     private static final double CAPACITY_GROW_PERCENT = 0.9;
     private static final double CAPACITY_SHRINK_PERCENT = 0.5;
 
-    public void addRecord(final SAMRecord read)
+    public boolean addRecord(final SAMRecord read)
     {
+        if(read.getReadUnmappedFlag() && read.getMateUnmappedFlag())
+            return false;
+
         if(!mCurrentChromosome.equals(read.getReferenceName()))
-        {
-            mCurrentChromosome = read.getReferenceName();
-            flush();
-        }
+            return false;
+
+        if(!positionWithin(read.getAlignmentStart(), mLastWrittenPosition, mUpperBoundPosition))
+            return false;
 
         if(mRecords.size() < mCapacityThresholdCheck)
         {
+            if(mRecords.isEmpty())
+                mMinCachedPosition = read.getAlignmentStart();
+            else
+                mMinCachedPosition = min(mMinCachedPosition, read.getAlignmentStart());
+
             mRecords.add(read);
-            return;
+            return true;
         }
 
-        int maxPosition = read.getAlignmentStart() - mPositionBuffer;
+        int maxPosition = mUpperBoundPosition - mPositionBuffer;
+
+        if(maxPosition <= mMinCachedPosition)
+            return true;
 
         // gather all reads prior to this position
         int index = 0;
+        mMinCachedPosition = maxPosition;
         while(index < mRecords.size())
         {
             SAMRecord cachedRead = mRecords.get(index);
 
-            if(cachedRead.getAlignmentStart() < maxPosition)
+            if(cachedRead.getAlignmentStart() <= maxPosition)
             {
                 mSortedRecords.add(cachedRead);
                 mRecords.remove(index);
@@ -81,6 +114,7 @@ public class SortedReadCache
             else
             {
                 // cannot break since the latter records may have earlier positions
+                mMinCachedPosition = min(mMinCachedPosition, cachedRead.getAlignmentStart());
                 ++index;
             }
         }
@@ -91,6 +125,7 @@ public class SortedReadCache
         mRecords.add(read);
 
         checkCapacity(maxPosition);
+        return true;
     }
 
     private void checkCapacity(int maxPosition)
@@ -128,8 +163,17 @@ public class SortedReadCache
         mReadsWritten += records.size();
         Collections.sort(records, new SAMRecordCoordinateComparator());
 
+        if(records.get(0).getAlignmentStart() < mLastWrittenPosition)
+        {
+            MD_LOGGER.error("sorted BAM cache({}) writing earlier read({}) from {} records",
+                    toString(), readToString(records.get(0)), mRecords.size());
+            System.exit(1);
+        }
+
         if(mWriter != null)
             records.forEach(x -> mWriter.addAlignment(x));
+
+        mLastWrittenPosition = records.get(records.size() - 1).getAlignmentStart();
 
         records.clear();
         ++mWriteCount;
@@ -150,8 +194,8 @@ public class SortedReadCache
 
     public String toString()
     {
-        return format("chromosome({}) cached({}/{}) avgWriteCount({}) thresholds(check={} grow={} shrink={})",
-                mCurrentChromosome, mRecords.size(), mCapacity, averageWriteCount(),
-                mCapacityThresholdCheck, mCapacityGrowThreshold, mCapacityShrinkThreshold);
+        return format("chr(%s) bounds(lastWrite=%d upper=%d) cached(%d/%d) avgWriteCount(%d from %d) thresholds(check=%d grow=%d shrink=%d)",
+                mCurrentChromosome, mLastWrittenPosition, mUpperBoundPosition, mRecords.size(), mCapacity,
+                averageWriteCount(), mWriteCount, mCapacityThresholdCheck, mCapacityGrowThreshold, mCapacityShrinkThreshold);
     }
 }

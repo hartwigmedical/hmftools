@@ -27,6 +27,7 @@ public class FileWriterCache
     private final ReadDataWriter mReadDataWriter;
 
     private final List<BamWriter> mBamWriters;
+    private final BamWriter mSharedUnsortedWriter;
 
     private static final String BAM_FILE_ID = "mark_dups";
     private static final String SORTED_ID = "sorted";
@@ -40,17 +41,23 @@ public class FileWriterCache
 
         mBamWriters = Lists.newArrayList();
 
-
-        if(!mConfig.MultiBam)
-            createBamWriter(null);
+        if(!mConfig.MultiBam || mConfig.UseSortCache)
+        {
+            String fileId = mConfig.UseSortCache ? "shared" : null;
+            mSharedUnsortedWriter = createBamWriter(fileId, false);
+        }
+        else
+        {
+            mSharedUnsortedWriter = null;
+        }
     }
 
     public BamWriter getBamWriter(final String fileId)
     {
-        if(!mConfig.MultiBam)
+        if(!mConfig.MultiBam && !mConfig.UseSortCache)
             return mBamWriters.get(0);
 
-        return createBamWriter(fileId);
+        return createBamWriter(fileId, mConfig.UseSortCache);
     }
 
     public int totalWrittenReads()
@@ -62,10 +69,12 @@ public class FileWriterCache
     {
         mReadDataWriter.close();
 
-        // closing a sorted BAM involves a final sort, so ensure this is also multi-threaded
         if(mConfig.SortedBam && mBamWriters.size() > 1)
         {
-            List<SortBamCloseTask> closedSortedBamTasks = mBamWriters.stream().map(x -> new SortBamCloseTask(x)).collect(Collectors.toList());
+            // closing a sorted BAM involves a final sort, so ensure this is also multi-threaded
+            List<SortBamCloseTask> closedSortedBamTasks = mBamWriters.stream()
+                    .filter(x -> !x.isSorted())
+                    .map(x -> new SortBamCloseTask(x)).collect(Collectors.toList());
 
             List<Callable> callableTasks = closedSortedBamTasks.stream().collect(Collectors.toList());
 
@@ -82,14 +91,16 @@ public class FileWriterCache
         }
     }
 
-    public BamWriter createBamWriter(@Nullable final String multiId)
+    private BamWriter createBamWriter(@Nullable final String multiId, boolean isSorted)
     {
         SAMFileWriter samFileWriter = null;
         String filename = null;
 
         if(mConfig.WriteBam)
         {
-            filename = formBamFilename(mConfig.SortedBam ? SORTED_ID : UNSORTED_ID, multiId);
+            // filename = formBamFilename(mConfig.SortedBam ? SORTED_ID : UNSORTED_ID, multiId);
+
+            filename = formBamFilename(isSorted ? SORTED_ID : UNSORTED_ID, multiId);
 
             if(multiId == null)
             {
@@ -101,26 +112,17 @@ public class FileWriterCache
                 MD_LOGGER.debug("writing tmp BAM file: {}", filename);
             }
 
-            samFileWriter = initialiseSamFileWriter(filename);
+            // no option to use library-based sorting
+            samFileWriter = initialiseSamFileWriter(filename, false);
         }
 
-        BamWriter bamWriter = new BamWriter(filename, mConfig, mReadDataWriter, samFileWriter);
+        //
+        BamWriter bamWriter = new BamWriter(
+                filename, mConfig, mReadDataWriter, samFileWriter,
+                isSorted, isSorted && mConfig.UseSortCache ? mSharedUnsortedWriter : null);
+
         mBamWriters.add(bamWriter);
         return bamWriter;
-    }
-
-    private SAMFileWriter initialiseSamFileWriter(final String filename)
-    {
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
-
-        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
-
-        if(mConfig.SortedBam)
-            fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
-        else
-            fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-
-        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(filename));
     }
 
     private String formBamFilename(@Nullable final String sorted, @Nullable final String multiId)
@@ -139,6 +141,20 @@ public class FileWriterCache
         filename += ".bam";
 
         return filename;
+    }
+
+    private SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
+    {
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
+
+        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
+
+        if(isSorted)
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+        else
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(filename));
     }
 
     public void sortAndIndexBams()

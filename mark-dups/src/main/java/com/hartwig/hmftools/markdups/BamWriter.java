@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.markdups;
 
-import static java.lang.String.format;
-
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.Constants.BAM_READ_CACHE_BUFFER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 
@@ -26,19 +25,37 @@ public class BamWriter
 
     private final String mFilename;
     private final SAMFileWriter mBamWriter;
-    private int mWriteCount;
+    private boolean mWriteSorted;
+
+    private final SortedReadCache mReadCache;
+    private final BamWriter mSharedUnsortedWriter;
 
     private final ReadDataWriter mReadDataWriter;
 
+    private int mWriteCount;
     private int mNonConsensusReadCount;
     private int mConsensusReadCount;
 
-    public BamWriter(final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter)
+    public BamWriter(
+            final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter,
+            boolean writeSorted, final BamWriter sharedUnsortedWriter)
     {
         mFilename = filename;
         mConfig = config;
         mBamWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
+        mWriteSorted = writeSorted;
+
+        if(mWriteSorted)
+        {
+            mReadCache = new SortedReadCache(BAM_READ_CACHE_BUFFER, (int)(config.BufferSize * 1.5), mBamWriter);
+            mSharedUnsortedWriter = sharedUnsortedWriter;
+        }
+        else
+        {
+            mReadCache = null;
+            mSharedUnsortedWriter = null;
+        }
 
         mNonConsensusReadCount = 0;
         mConsensusReadCount = 0;
@@ -48,6 +65,25 @@ public class BamWriter
 
     public int recordWriteCount() { return mNonConsensusReadCount; }
     public int recordWriteCountConsensus() { return mConsensusReadCount; }
+    public boolean isSorted() { return mWriteSorted; }
+
+    public void initialiseRegion(final String chromosome, int startPosition)
+    {
+        if(mReadCache != null)
+            mReadCache.initialiseStartPosition(chromosome, startPosition);
+    }
+
+    public void setCurrentReadPosition(int startPosition)
+    {
+        if(mReadCache != null)
+            mReadCache.setUpperBoundPosition(startPosition);
+    }
+
+    public void onRegionComplete()
+    {
+        if(mReadCache != null)
+            mReadCache.flush();
+    }
 
     public synchronized void writeFragments(final List<Fragment> fragments, boolean excludeUmis)
     {
@@ -122,13 +158,32 @@ public class BamWriter
     private void writeRecord(final SAMRecord read)
     {
         if(mBamWriter != null)
-            mBamWriter.addAlignment(read);
+        {
+            if(mWriteSorted)
+            {
+                if(!mReadCache.addRecord(read))
+                    mSharedUnsortedWriter.writeRecordSync(read);
+            }
+            else
+            {
+                mBamWriter.addAlignment(read);
+            }
+        }
 
+        ++mWriteCount;
+    }
+
+    public synchronized void writeRecordSync(final SAMRecord read)
+    {
+        mBamWriter.addAlignment(read);
         ++mWriteCount;
     }
 
     public void close()
     {
+        if(mReadCache != null)
+            mReadCache.flush();
+
         if(mBamWriter != null)
         {
             MD_LOGGER.debug("{} records written to BAM({})", mWriteCount, mFilename);

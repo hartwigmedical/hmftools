@@ -117,7 +117,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         mReadPositions.setCurrentChromosome(region.Chromosome);
 
-        // setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
+        mBamWriter.initialiseRegion(region.Chromosome, region.start());
     }
 
     public void processRegion()
@@ -144,6 +144,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
         mReadPositions.evictAll();
 
         processPendingIncompletes();
+
+        mBamWriter.onRegionComplete();
 
         perfCountersStop();
 
@@ -191,6 +193,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         try
         {
+            mBamWriter.setCurrentReadPosition(read.getAlignmentStart());
+
             if(!mReadPositions.processRead(read))
             {
                 processIncompleteRead(read, Fragment.getBasePartition(read, mConfig.PartitionSize));
@@ -323,9 +327,6 @@ public class PartitionReader implements Consumer<List<Fragment>>
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
         boolean inExcludedRegion = false; // dropped logic since added region unmapping logic
-
-        //boolean inExcludedRegion = mExcludedRegion != null && positionFragments.stream()
-        //        .anyMatch(x -> x.reads().stream().anyMatch(y -> FragmentUtils.overlapsExcludedRegion(mExcludedRegion, y)));
 
         findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList, mConfig.UMIs.Enabled);
 

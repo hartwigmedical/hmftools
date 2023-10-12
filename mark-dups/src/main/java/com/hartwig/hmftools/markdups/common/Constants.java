@@ -15,4 +15,5 @@ public class Constants
 
     // performance
     public static final double LOCK_ACQUIRE_LONG_TIME_MS = 100;
+    public static final int BAM_READ_CACHE_BUFFER = 100000;
 }
