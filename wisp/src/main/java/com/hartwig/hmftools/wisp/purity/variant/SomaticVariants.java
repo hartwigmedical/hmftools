@@ -13,6 +13,17 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABIL
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SUBCLONAL_VCN_THRESHOLD;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GC_RATIO;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_CONFIDENCE;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER_AD;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.MAPPABILITY;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NON_SNV;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_FILTER;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_PASS;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.REPEAT_COUNT;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.SUBCLONAL;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalc.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalc.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalc.estimatedPurity;
@@ -148,7 +159,7 @@ public class SomaticVariants
             sequenceGcRatio = calcGcPercent(variantRefContext);
         }
 
-        boolean isFiltered = filterVariant(variant, subclonalLikelihood, sequenceGcRatio);
+        List<FilterReason> filterReasons = checkFilters(variant, subclonalLikelihood, sequenceGcRatio);
 
         SomaticVariant somaticVariant = null;
 
@@ -159,7 +170,7 @@ public class SomaticVariants
 
             if(somaticVariant == null)
             {
-                somaticVariant = new SomaticVariant(variant, subclonalLikelihood, !isFiltered);
+                somaticVariant = new SomaticVariant(variant, subclonalLikelihood, filterReasons);
 
                 somaticVariant.setSequenceGcRatio(sequenceGcRatio);
 
@@ -223,12 +234,26 @@ public class SomaticVariants
 
             ++totalVariants;
 
-            boolean useForTotals = useVariantForPurityCalcs(variant, sampleFragData);
+            List<FilterReason> filterReasons = Lists.newArrayList(variant.filterReasons());
+
+            boolean useForTotals = false;
+
+            if(filterReasons.isEmpty())
+            {
+                if(sampleFragData.isLowQual())
+                {
+                    filterReasons.add(LOW_QUAL_PER_AD);
+                }
+                else
+                {
+                    useForTotals = true;
+                }
+            }
 
             if(mConfig.writeType(WriteType.SOMATICS_ALL) || useForTotals)
             {
-                String filter = variant.PassFilters && useForTotals ? "PASS" : (!variant.PassFilters ? "FILTERED" : "NO_FRAGS");
-                mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleFragData, tumorFragData, filter);
+                // String filter = variant.PassFilters && useForTotals ? "PASS" : (!variant.PassFilters ? "FILTERED" : "NO_FRAGS");
+                mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleFragData, tumorFragData, filterReasons);
             }
 
             if(!useForTotals)
@@ -357,36 +382,40 @@ public class SomaticVariants
                 tumorVaf, adjustedTumorVaf, rawSamplePurity, allFragsResult, dualFragsResult, lodFragsResult);
     }
 
+    /*
     private boolean useVariantForPurityCalcs(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
-        return variant.PassFilters
+        return !variant.isFiltered()
                 && (sampleFragData.qualPerAlleleFragment() > PurityConstants.MIN_QUAL_PER_AD || sampleFragData.UmiCounts.alleleTotal() == 0);
     }
+    */
 
-    private boolean filterVariant(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
+    private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
     {
+        List<FilterReason> filters = Lists.newArrayList();
+
         if(variant.context().isFiltered())
-            return true;
+            filters.add(NO_PASS);
 
         if(variant.type() != VariantType.SNP)
-            return true;
+            filters.add(NON_SNV);
 
         if(variant.context().hasAttribute(MAPPABILITY_TAG) && variant.mappability() < 1)
-            return true;
+            filters.add(MAPPABILITY);
 
         if(variant.repeatCount() > PurityConstants.MAX_REPEAT_COUNT)
-            return true;
+            filters.add(REPEAT_COUNT);
 
         if(variant.tier() == VariantTier.LOW_CONFIDENCE)
-            return true;
+            filters.add(LOW_CONFIDENCE);
 
-        if(subclonalLikelihood > PurityConstants.MAX_SUBCLONAL_LIKELIHOOD)
-            return true;
+        if(subclonalLikelihood > MAX_SUBCLONAL_LIKELIHOOD && variant.variantCopyNumber() < SUBCLONAL_VCN_THRESHOLD)
+            filters.add(SUBCLONAL);
 
         // check GC content
         if(mConfig.GcRatioMin > 0 && sequenceGcRatio >= 0 && sequenceGcRatio < mConfig.GcRatioMin)
-            return true;
+            filters.add(GC_RATIO);
 
-        return false;
+        return filters;
     }
 }

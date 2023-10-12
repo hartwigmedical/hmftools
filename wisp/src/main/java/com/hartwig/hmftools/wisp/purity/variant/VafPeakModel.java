@@ -224,7 +224,7 @@ public class VafPeakModel extends ClonalityModel
             if(tumorFragData == null)
                 continue;
 
-            if(variant.PassFilters)
+            if(!variant.isFiltered())
             {
                 if(tumorFragData.Depth > 0)
                 {

@@ -28,8 +28,6 @@ public abstract class ClonalityModel
 
     public boolean useVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
-        return variant.PassFilters
-                && variant.sequenceGcRatio() >= mConfig.GcRatioMin
-                && (sampleFragData.qualPerAlleleFragment() > PurityConstants.MIN_QUAL_PER_AD || sampleFragData.AlleleCount == 0);
+        return !variant.isFiltered() && !sampleFragData.isLowQual();
     }
 }

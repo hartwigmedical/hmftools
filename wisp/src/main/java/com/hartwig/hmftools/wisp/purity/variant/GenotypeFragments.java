@@ -2,6 +2,8 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
 
+import com.hartwig.hmftools.wisp.purity.PurityConstants;
+
 public class GenotypeFragments
 {
     public final String SampleName;
@@ -28,6 +30,8 @@ public class GenotypeFragments
     }
 
     public double vaf() { return Depth > 0 ? AlleleCount / (double)Depth : 0; }
+
+    public boolean isLowQual() { return UmiCounts.alleleTotal() > 0 && qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD; }
 
     public String toString() { return format("%d/%d umi(ref=%d allele=%d)",
             AlleleCount, Depth, UmiCounts.refTotal(), UmiCounts.alleleTotal()); }
