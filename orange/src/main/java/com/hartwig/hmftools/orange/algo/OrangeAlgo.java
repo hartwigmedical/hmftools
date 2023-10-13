@@ -676,7 +676,7 @@ public class OrangeAlgo
         String linxPlotDir = config.linxPlotDirectory();
         List<String> linxDriverPlots = Lists.newArrayList();
 
-        if(new File(linxPlotDir).exists())
+        if(linxPlotDir != null)
         {
             for(String file : new File(linxPlotDir).list())
             {
