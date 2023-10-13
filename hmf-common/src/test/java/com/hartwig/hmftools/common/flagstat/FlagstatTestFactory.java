@@ -2,13 +2,11 @@ package com.hartwig.hmftools.common.flagstat;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class FlagstatTestFactory {
-
-    private FlagstatTestFactory() {
-    }
-
+public final class FlagstatTestFactory
+{
     @NotNull
-    public static Flagstat createMinimalTestFlagstat() {
+    public static Flagstat createMinimalTestFlagstat()
+    {
         return ImmutableFlagstat.builder()
                 .uniqueReadCount(0)
                 .secondaryCount(0)

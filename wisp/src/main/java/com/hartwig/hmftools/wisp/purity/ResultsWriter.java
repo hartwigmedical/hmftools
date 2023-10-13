@@ -12,7 +12,9 @@ import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATICS_ALL;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.Hotspot;
@@ -20,6 +22,7 @@ import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberGcData;
+import com.hartwig.hmftools.wisp.purity.variant.FilterReason;
 import com.hartwig.hmftools.wisp.purity.variant.LowCountModel;
 import com.hartwig.hmftools.wisp.purity.variant.GenotypeFragments;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticVariant;
@@ -126,7 +129,7 @@ public class ResultsWriter
 
     public synchronized void writeVariant(
             final String patientId, final String sampleId, final SomaticVariant variant, final GenotypeFragments sampleData,
-            final GenotypeFragments tumorData, final String filter)
+            final GenotypeFragments tumorData, final List<FilterReason> filterReasons)
     {
         if(mVariantWriter == null)
             return;
@@ -143,7 +146,9 @@ public class ResultsWriter
 
             sj.add(sampleId).add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
 
-            sj.add(filter).add(decorator.tier().toString()).add(variant.Type.toString()).add(String.valueOf(decorator.repeatCount()))
+            String filtersStr = filterReasons.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+
+            sj.add(filtersStr).add(decorator.tier().toString()).add(variant.Type.toString()).add(String.valueOf(decorator.repeatCount()))
                     .add(format("%.2f", decorator.mappability())).add(format("%.2f", variant.SubclonalPerc));
 
             sj.add(variantImpact.CanonicalGeneName).add(variantImpact.CanonicalCodingEffect.toString())

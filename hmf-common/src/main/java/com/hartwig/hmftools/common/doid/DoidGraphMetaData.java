@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class DoidGraphMetaData {
-
+public abstract class DoidGraphMetaData
+{
     @Nullable
     public abstract List<String> subsets();
 

@@ -5,10 +5,11 @@ import static org.junit.Assert.assertEquals;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class MicrohomologyTest {
-
+public class MicrohomologyTest
+{
     @Test
-    public void worksInRepeatSection() {
+    public void worksInRepeatSection()
+    {
         String expectedMicrohomology = "GTAACCAGGAGTGTATT";
         String refGenome = "CGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAACCAGGAGTGTATTGTAG";
         String ref = "CGTAACCAGGAGTGTATT";
@@ -17,7 +18,8 @@ public class MicrohomologyTest {
     }
 
     @Test
-    public void worksOnSangerExamples() {
+    public void worksOnSangerExamples()
+    {
         String expectedMicrohomology = "TATC";
         String refGenome = "GCACTGTATCCACTTGATATCATTAT";
 
@@ -29,7 +31,8 @@ public class MicrohomologyTest {
     }
 
     @Test
-    public void testMicrohomologyOnInsert() {
+    public void testMicrohomologyOnInsert()
+    {
         final String refSequence = "ATGCGATCTTCC";
 
         assertEquals("TC", Microhomology.microhomologyAtInsert(7, refSequence, "CTC"));
@@ -45,7 +48,8 @@ public class MicrohomologyTest {
     }
 
     @Test
-    public void testMicrohomologyOnInsertWithReadSequence() {
+    public void testMicrohomologyOnInsertWithReadSequence()
+    {
         final String readSequence = "ATGCGATCAATCTTCC";
         assertEquals("ATC", Microhomology.microhomologyAtInsert(4, 5, readSequence.getBytes()).toString());
         assertEquals("ATC", Microhomology.microhomologyAtInsert(5, 5, readSequence.getBytes()).toString());
@@ -54,7 +58,8 @@ public class MicrohomologyTest {
     }
 
     @Test
-    public void testMicrohomologyInsertInRepeat() {
+    public void testMicrohomologyInsertInRepeat()
+    {
         final String readSequence = "ATTTTGTTTGTTTGA";
 
         assertInsert("", 0, 5, readSequence);
@@ -71,7 +76,8 @@ public class MicrohomologyTest {
     }
 
     @Test
-    public void testMicrohomologyInsertWithExpandedRepeats() {
+    public void testMicrohomologyInsertWithExpandedRepeats()
+    {
         final String readSequence = "ATTTTGTTTGTTTGA";
 
         assertInsertExpandRepeats("", 0, 5, readSequence);
@@ -88,7 +94,8 @@ public class MicrohomologyTest {
     }
 
     @Test
-    public void testMicrohomologyDeleteWithExpandedRepeats() {
+    public void testMicrohomologyDeleteWithExpandedRepeats()
+    {
         final String refSequence = "ATTTTGTTTGTTTGA";
 
         assertDeleteExpandRepeats("", 0, 5, refSequence);
@@ -105,7 +112,8 @@ public class MicrohomologyTest {
     }
 
     @Test
-    public void testReconstructDeletedSequence() {
+    public void testReconstructDeletedSequence()
+    {
         assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(0, "GTCAA".getBytes(), "GA")));
         assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(1, "GACAA".getBytes(), "AT")));
         assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(2, "GATAA".getBytes(), "TC")));
@@ -114,24 +122,28 @@ public class MicrohomologyTest {
     }
 
     @Test
-    public void testReconstructDeletedSequenceWithDelCombinedWithSnv() {
+    public void testReconstructDeletedSequenceWithDelCombinedWithSnv()
+    {
         assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(1, "GACAA".getBytes(), "TT")));
         assertEquals("GATCAA", new String(Microhomology.reconstructDeletedSequence(1, "GACAA".getBytes(), "AT")));
     }
 
-    private static void assertDeleteExpandRepeats(@NotNull String expected, int position, int altLength, @NotNull String readSequence) {
+    private static void assertDeleteExpandRepeats(@NotNull String expected, int position, int altLength, @NotNull String readSequence)
+    {
         MicrohomologyContext context = Microhomology.microhomologyAtDelete(position, altLength, readSequence.getBytes());
         MicrohomologyContext context2 = Microhomology.expandMicrohomologyRepeats(context);
         assertEquals(expected, context2.toString());
     }
 
-    private static void assertInsertExpandRepeats(@NotNull String expected, int position, int altLength, @NotNull String readSequence) {
+    private static void assertInsertExpandRepeats(@NotNull String expected, int position, int altLength, @NotNull String readSequence)
+    {
         MicrohomologyContext context = Microhomology.microhomologyAtInsert(position, altLength, readSequence.getBytes());
         MicrohomologyContext context2 = Microhomology.expandMicrohomologyRepeats(context);
         assertEquals(expected, context2.toString());
     }
 
-    private static void assertInsert(@NotNull String expected, int position, int altLength, @NotNull String readSequence) {
+    private static void assertInsert(@NotNull String expected, int position, int altLength, @NotNull String readSequence)
+    {
         MicrohomologyContext context = Microhomology.microhomologyAtInsert(position, altLength, readSequence.getBytes());
         assertEquals(expected, context.toString());
     }

@@ -6,8 +6,7 @@ public enum VirusLikelihoodType
 {
     HIGH("High"),
     LOW("Low"),
-    UNKNOWN("Unknown"),
-    ;
+    UNKNOWN("Unknown");
 
     private final String mDisplay;
 

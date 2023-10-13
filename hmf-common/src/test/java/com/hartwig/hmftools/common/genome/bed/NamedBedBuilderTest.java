@@ -10,10 +10,11 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class NamedBedBuilderTest {
-
+public class NamedBedBuilderTest
+{
     @Test
-    public void testNoOverlap() {
+    public void testNoOverlap()
+    {
         final NamedBedBuilder victim = new NamedBedBuilder();
 
         final List<NamedBed> orderedInput = new ArrayList<>();
@@ -26,13 +27,15 @@ public class NamedBedBuilderTest {
         randomInput.forEach(victim::addBed);
 
         final List<NamedBed> result = victim.build();
-        for (int i = 0; i < orderedInput.size(); i++) {
+        for(int i = 0; i < orderedInput.size(); i++)
+        {
             assertEquals(orderedInput.get(i), result.get(i));
         }
     }
 
     @Test
-    public void testFullyContains() {
+    public void testFullyContains()
+    {
         final NamedBedBuilder victim = new NamedBedBuilder();
 
         final List<NamedBed> orderedInput = new ArrayList<>();
@@ -48,7 +51,8 @@ public class NamedBedBuilderTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testPartialOverlap() {
+    public void testPartialOverlap()
+    {
         final NamedBedBuilder victim = new NamedBedBuilder();
 
         final List<NamedBed> orderedInput = new ArrayList<>();
@@ -61,7 +65,8 @@ public class NamedBedBuilderTest {
     }
 
     @NotNull
-    private static NamedBed create(final int start, final int end, final String name) {
+    private static NamedBed create(final int start, final int end, final String name)
+    {
         return ImmutableNamedBed.builder().chromosome("1").start(start).end(end).name(name).build();
     }
 }

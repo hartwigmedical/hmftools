@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_3;
 import static com.hartwig.hmftools.common.codon.Codons.codonToAminoAcid;
 import static com.hartwig.hmftools.common.codon.Codons.isStopCodon;
 
-public class AminoAcidRna
+public final class AminoAcidRna
 {
     private static final String RNA_STOP_CODON_1 = swapDnaToRna(STOP_CODON_1);
     private static final String RNA_STOP_CODON_2 = swapDnaToRna(STOP_CODON_2);
@@ -16,7 +16,6 @@ public class AminoAcidRna
 
     public static final String START_CODON = "AUG";
     public static final String AA_SELENOCYSTEINE = "U";
-
 
     public static boolean isRnaStopCodon(final String rnaCodon)
     {

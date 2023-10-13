@@ -3,12 +3,8 @@ package com.hartwig.hmftools.common.fusion;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class KnownFusionCacheTestFactory {
-
-    private KnownFusionCacheTestFactory()
-    {
-    }
-
+public final class KnownFusionCacheTestFactory
+{
     @NotNull
     public static KnownFusionData createKnownPair(@NotNull String fiveGene, @NotNull String threeGene)
     {

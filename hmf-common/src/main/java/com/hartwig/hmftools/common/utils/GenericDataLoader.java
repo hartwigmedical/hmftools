@@ -15,8 +15,8 @@ import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class GenericDataLoader {
-
+public final class GenericDataLoader
+{
     private static final Logger LOGGER = LogManager.getLogger(GenericDataLoader.class);
 
     public static final String DEFAULT_DELIM = ",";
@@ -26,23 +26,28 @@ public final class GenericDataLoader {
         return loadFile(filename, GD_TYPE_DECIMAL, DEFAULT_DELIM, Lists.newArrayList());
     }
 
-    public static GenericDataCollection loadFile(final String filename, int dataType, final String delimiter, final List<String> ignoreFields)
+    public static GenericDataCollection loadFile(final String filename, int dataType, final String delimiter,
+            final List<String> ignoreFields)
     {
-        if (filename == null || filename.isEmpty()) {
+        if(filename == null || filename.isEmpty())
+        {
             return null;
         }
 
         if(!isValidType(dataType))
+        {
             return null;
+        }
 
-        try {
+        try
+        {
 
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             // read field names
             String line = fileReader.readLine();
 
-            if (line == null)
+            if(line == null)
             {
                 LOGGER.error("Empty data CSV file({})", filename);
                 return null;
@@ -69,7 +74,7 @@ public final class GenericDataLoader {
 
             collection.setFieldNames(headerNames);
 
-            while ((line = fileReader.readLine()) != null)
+            while((line = fileReader.readLine()) != null)
             {
                 // parse CSV data
                 String[] items = dataType == GD_TYPE_STRING ? line.split(",", -1) : line.split(","); // to include empty values
@@ -84,10 +89,12 @@ public final class GenericDataLoader {
                 {
                     List<Double> dataValues = Lists.newArrayList();
 
-                    for (int i = 0; i < items.length; ++i)
+                    for(int i = 0; i < items.length; ++i)
                     {
                         if(ignoreCols.contains(i))
+                        {
                             continue;
+                        }
 
                         dataValues.add(Double.parseDouble(items[i]));
                     }
@@ -98,10 +105,12 @@ public final class GenericDataLoader {
                 {
                     List<Integer> dataValues = Lists.newArrayList();
 
-                    for (int i = 0; i < items.length; ++i)
+                    for(int i = 0; i < items.length; ++i)
                     {
                         if(ignoreCols.contains(i))
+                        {
                             continue;
+                        }
 
                         dataValues.add(Integer.parseInt(items[i]));
                     }
@@ -112,10 +121,12 @@ public final class GenericDataLoader {
                 {
                     List<String> dataValues = Lists.newArrayList();
 
-                    for (int i = 0; i < items.length; ++i)
+                    for(int i = 0; i < items.length; ++i)
                     {
                         if(ignoreCols.contains(i))
+                        {
                             continue;
+                        }
 
                         dataValues.add(items[i]);
                     }
@@ -129,7 +140,7 @@ public final class GenericDataLoader {
             return collection;
 
         }
-        catch (IOException exception)
+        catch(IOException exception)
         {
             LOGGER.error("failed to read data file({}): {}", filename, exception.toString());
             return null;

@@ -3,13 +3,11 @@ package com.hartwig.hmftools.common.peach;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class PeachTestFactory {
-
-    private PeachTestFactory() {
-    }
-
+public final class PeachTestFactory
+{
     @NotNull
-    public static ImmutablePeachGenotype.Builder builder() {
+    public static ImmutablePeachGenotype.Builder builder()
+    {
         return ImmutablePeachGenotype.builder()
                 .gene(Strings.EMPTY)
                 .haplotype(Strings.EMPTY)

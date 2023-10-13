@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 
 public interface GenomePosition extends Comparable<GenomePosition>
 {
-
     @NotNull
     String chromosome();
 

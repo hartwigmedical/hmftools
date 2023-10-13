@@ -10,18 +10,20 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class AnnotatedVirusFileTest {
-
+public class AnnotatedVirusFileTest
+{
     private static final String SAMPLE_VIRUS_ANNOTATED_TSV = Resources.getResource("virus/sample.virus.annotated.tsv").getPath();
 
     @Test
-    public void canReadSampleVirusAnnotatedTsv() throws IOException {
+    public void canReadSampleVirusAnnotatedTsv() throws IOException
+    {
         List<AnnotatedVirus> annotatedVirusList = AnnotatedVirusFile.read(SAMPLE_VIRUS_ANNOTATED_TSV);
         assertEquals(2, annotatedVirusList.size());
     }
 
     @Test
-    public void canConvertAnnotatedViruses() {
+    public void canConvertAnnotatedViruses()
+    {
         AnnotatedVirus virus = VirusTestFactory.annotatedVirusBuilder().build();
 
         List<String> lines = AnnotatedVirusFile.toLines(Lists.newArrayList(virus));

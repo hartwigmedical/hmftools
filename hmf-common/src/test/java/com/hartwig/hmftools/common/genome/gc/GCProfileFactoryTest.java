@@ -10,12 +10,13 @@ import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 
 import org.junit.Test;
 
-public class GCProfileFactoryTest {
-
+public class GCProfileFactoryTest
+{
     private static final String GC_PROFILE_PATH = Resources.getResource("gc/GC_profile.1000bp.cnp").getPath();
 
     @Test
-    public void canLoadNormalFile() throws IOException {
+    public void canLoadNormalFile() throws IOException
+    {
         final Multimap<Chromosome, GCProfile> gcContent = GCProfileFactory.loadGCContent(1000, GC_PROFILE_PATH);
         assertEquals(100, gcContent.size());
     }

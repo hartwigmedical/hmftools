@@ -68,7 +68,7 @@ public class RegionBamSlicer implements Callable
     @VisibleForTesting
     public void processSamRecord(final SAMRecord read)
     {
-        if(!positionsOverlap(mRegion.start(), mRegion.end(), read.getAlignmentStart(), read.getAlignmentEnd()))
+        if(!mRegion.containsPosition(read.getAlignmentStart())) // note ignores alignment end intentionally to get unmapped mates
             return;
 
         ++mReadsProcessed;

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.common.purple;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.MAX_DELETED_GENES;
 import static com.hartwig.hmftools.common.purple.PurpleQCStatus.PASS;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Set;
@@ -78,8 +77,8 @@ public class PurpleQCTest
     public void testMultiple()
     {
         ImmutablePurpleQC.Builder victim = builder()
-            .purity(PurpleQCStatus.MIN_PURITY - 0.01)
-            .contamination(PurpleQCStatus.MAX_CONTAMINATION + 0.01);
+                .purity(PurpleQCStatus.MIN_PURITY - 0.01)
+                .contamination(PurpleQCStatus.MAX_CONTAMINATION + 0.01);
 
         Set<PurpleQCStatus> requiredStatusSet = Sets.newHashSet(PurpleQCStatus.WARN_LOW_PURITY);
         requiredStatusSet.add(PurpleQCStatus.FAIL_CONTAMINATION);

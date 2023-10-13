@@ -9,8 +9,8 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class PeachGenotypeFileTest {
-
+public class PeachGenotypeFileTest
+{
     private static final String PEACH_GENOTYPES_FILE = Resources.getResource("peach/sample_genotype.txt").getPath();
 
     private static final String GENE = "GENE";
@@ -22,7 +22,8 @@ public class PeachGenotypeFileTest {
     private static final String REPO_VERSION = "pilot";
 
     @Test
-    public void loadPeachGenotypeFile() throws IOException {
+    public void loadPeachGenotypeFile() throws IOException
+    {
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(PEACH_GENOTYPES_FILE);
 
         assertEquals(1, peachGenotypes.size());

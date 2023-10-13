@@ -134,6 +134,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
     public void postProcessRegion()
     {
         // post-slice clean-up
+        List<SAMRecord> pendingUnmapped = mReadPositions.getPendingUnmapped();
+
+        for(SAMRecord read : pendingUnmapped)
+        {
+            processIncompleteRead(read, Fragment.getBasePartition(read, mConfig.PartitionSize));
+        }
+
         mReadPositions.evictAll();
 
         processPendingIncompletes();
@@ -186,17 +193,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         {
             if(!mReadPositions.processRead(read))
             {
-                String basePartition = Fragment.getBasePartition(read, mConfig.PartitionSize);
-
-                if(basePartition == null)
-                {
-                    // mate or supp is on a non-human chromsome, meaning it won't be retrieved - so write this immediately
-                    mBamWriter.writeRead(read, FragmentStatus.UNSET);
-                    ++mStats.LocalComplete;
-                    return;
-                }
-
-                processIncompleteRead(read, basePartition);
+                processIncompleteRead(read, Fragment.getBasePartition(read, mConfig.PartitionSize));
             }
         }
         catch(Exception e)
@@ -215,6 +212,14 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     private void processIncompleteRead(final SAMRecord read, final String basePartition)
     {
+        if(basePartition == null)
+        {
+            // mate or supp is on a non-human chromosome, meaning it won't be retrieved - so write this immediately
+            mBamWriter.writeRead(read, FragmentStatus.UNSET);
+            ++mStats.LocalComplete;
+            return;
+        }
+
         if(basePartition.equals(mCurrentStrPartition))
         {
             PartitionResults partitionResults = mCurrentPartitionData.processIncompleteFragment(read);

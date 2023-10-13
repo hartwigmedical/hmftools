@@ -228,29 +228,4 @@ public class LowCountModel extends ClonalityModel
             CT_LOGGER.error("failed to write dropout calc file: {}", e.toString());
         }
     }
-
-    private double calcTumorAvgVaf()
-    {
-        double sampleVafTotal = 0;
-        int sampleVafCount = 0;
-
-        for(SomaticVariant variant : mVariants)
-        {
-            GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
-
-            if(tumorFragData == null)
-                continue;
-
-            if(variant.PassFilters)
-            {
-                if(tumorFragData.Depth > 0)
-                {
-                    sampleVafTotal += tumorFragData.vaf();
-                    ++sampleVafCount;
-                }
-            }
-        }
-
-        return sampleVafCount > 0 ? sampleVafTotal / sampleVafCount : 0;
-    }
 }

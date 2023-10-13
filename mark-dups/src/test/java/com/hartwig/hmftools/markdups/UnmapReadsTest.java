@@ -28,7 +28,7 @@ import htsjdk.samtools.SAMRecord;
 public class UnmapReadsTest
 {
     @Test
-    public void testUnamppingScenarios()
+    public void testUnamppingCoords()
     {
         Map<String,List<BaseRegion>> chrLocationsMap = Maps.newHashMap();
         chrLocationsMap.put(CHR_1, Lists.newArrayList(new BaseRegion(500, 700)));
@@ -90,4 +90,12 @@ public class UnmapReadsTest
         assertTrue(read.getReadUnmappedFlag());
         assertTrue(read.getMateUnmappedFlag());
     }
+
+    @Test
+    public void testUnamppingScenarios()
+    {
+
+
+    }
+
 }

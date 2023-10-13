@@ -10,10 +10,11 @@ import com.google.gson.JsonObject;
 
 import org.junit.Test;
 
-public class JsonDatamodelCheckerTest {
-
+public class JsonDatamodelCheckerTest
+{
     @Test
-    public void checkingWorksAsExpected() {
+    public void checkingWorksAsExpected()
+    {
         Map<String, Boolean> map = Maps.newHashMap();
         map.put("A", true);
         map.put("B", false);

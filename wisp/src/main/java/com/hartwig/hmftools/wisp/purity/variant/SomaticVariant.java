@@ -2,6 +2,8 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_FILTER;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -18,12 +20,13 @@ public class SomaticVariant
     public final double SubclonalPerc;
 
     public final List<GenotypeFragments> Samples;
-    public final boolean PassFilters;
+
+    private List<FilterReason> mFilterReasons;
 
     private final VariantContextDecorator mVariant;
     private double mSequenceGcRatio;
 
-    public SomaticVariant(final VariantContextDecorator variant, final double subclonalPerc, final boolean passFilters)
+    public SomaticVariant(final VariantContextDecorator variant, final double subclonalPerc, final List<FilterReason> filterReasons)
     {
         Chromosome = variant.chromosome();
         Position = variant.position();
@@ -32,10 +35,16 @@ public class SomaticVariant
         Type = variant.type();
         SubclonalPerc = subclonalPerc;
         Samples = Lists.newArrayList();
-        PassFilters = passFilters;
+        mFilterReasons = filterReasons;
         mVariant = variant;
         mSequenceGcRatio = 0;
     }
+
+    public void addFilterReason(final FilterReason filterReason) { mFilterReasons.add(filterReason); }
+
+    public List<FilterReason> filterReasons() { return mFilterReasons; }
+
+    public boolean isFiltered() { return !mFilterReasons.isEmpty(); }
 
     public GenotypeFragments findGenotypeData(final String sampleId)
     {

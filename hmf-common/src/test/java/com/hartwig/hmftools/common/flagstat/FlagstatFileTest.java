@@ -8,15 +8,16 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class FlagstatFileTest {
-
+public class FlagstatFileTest
+{
     private static final String FLAGSTAT_FILE = Resources.getResource("flagstat/example.flagstat").getPath();
     private static final String MALFORMED_FILE = Resources.getResource("flagstat/malformed.flagstat").getPath();
 
     private static final double EPSILON = 1E-10;
 
     @Test
-    public void canReadFlagstatFile() throws IOException {
+    public void canReadFlagstatFile() throws IOException
+    {
         Flagstat flagstat = FlagstatFile.read(FLAGSTAT_FILE);
 
         assertEquals(970, flagstat.uniqueReadCount());
@@ -31,8 +32,9 @@ public class FlagstatFileTest {
         assertEquals(0.04, flagstat.singletonProportion(), EPSILON);
     }
 
-    @Test (expected = IOException.class)
-    public void crashesOnMalformed() throws IOException {
+    @Test(expected = IOException.class)
+    public void crashesOnMalformed() throws IOException
+    {
         FlagstatFile.read(MALFORMED_FILE);
     }
 }

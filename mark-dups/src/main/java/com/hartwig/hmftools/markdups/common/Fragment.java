@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
@@ -9,6 +10,7 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.getFragmentCoordinates;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.markdups.common.ReadUnmapper.parseUnmappedCoords;
 
 import java.util.List;
 
@@ -58,10 +60,26 @@ public class Fragment
                 mAllReadsPresent = false;
 
                 if(read.getMateUnmappedFlag()) // unmapped reads come through the same slice
-                    mHasLocalMate = true;
+                {
+                    if(read.hasAttribute(UNMAP_ATTRIBUTE))
+                    {
+                        String[] mateCoords = parseUnmappedCoords(read);
+                        String mateChr = mateCoords[0];
+                        int matePosition = Integer.parseInt(mateCoords[1]);
+
+                        mHasLocalMate = mateChr.equals(read.getReferenceName())
+                                && abs(matePosition - read.getAlignmentStart()) < DEFAULT_POS_BUFFER_SIZE;
+                    }
+                    else
+                    {
+                        mHasLocalMate = true;
+                    }
+                }
                 else
+                {
                     mHasLocalMate = read.getMateReferenceName().equals(read.getReferenceName())
                             && abs(read.getMateAlignmentStart() - read.getAlignmentStart()) < DEFAULT_POS_BUFFER_SIZE;
+                }
             }
         }
         else

@@ -3,13 +3,11 @@ package com.hartwig.hmftools.common.chord;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class ChordTestFactory {
-
-    private ChordTestFactory() {
-    }
-
+public final class ChordTestFactory
+{
     @NotNull
-    public static ChordData createMinimalTestChordAnalysis() {
+    public static ChordData createMinimalTestChordAnalysis()
+    {
         return ImmutableChordData.builder()
                 .BRCA1Value(0D)
                 .BRCA2Value(0D)

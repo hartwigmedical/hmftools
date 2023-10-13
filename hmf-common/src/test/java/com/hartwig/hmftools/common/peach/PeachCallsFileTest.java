@@ -9,8 +9,8 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class PeachCallsFileTest {
-
+public class PeachCallsFileTest
+{
     private static final String PEACH_CALLS_FILE = Resources.getResource("peach/sample_calls.txt").getPath();
 
     private static final String GENE_1 = "GENE";
@@ -46,7 +46,8 @@ public class PeachCallsFileTest {
     private static final String REPO_VERSION_2 = "1.0";
 
     @Test
-    public void loadPeachCallsFile() throws IOException {
+    public void loadPeachCallsFile() throws IOException
+    {
         List<PeachCalls> peachCalls = PeachCallsFile.read(PEACH_CALLS_FILE);
 
         assertEquals(6, peachCalls.size());

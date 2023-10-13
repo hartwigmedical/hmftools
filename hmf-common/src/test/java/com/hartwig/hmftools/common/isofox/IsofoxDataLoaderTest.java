@@ -10,7 +10,6 @@ import org.junit.Test;
 
 public class IsofoxDataLoaderTest
 {
-
     private static final String ISOFOX_DATA_DIR = Resources.getResource("isofox").getPath();
 
     private static final String ISOFOX_GENE_DISTRIBUTION_CSV = ISOFOX_DATA_DIR + "/example.gene_distribution.csv";
