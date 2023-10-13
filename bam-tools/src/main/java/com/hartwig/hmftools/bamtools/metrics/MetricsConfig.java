@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.bamtools.common.CommonUtils.checkFileExists;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
@@ -37,6 +38,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.bamtools.common.CommonUtils;
 import com.hartwig.hmftools.common.genome.bed.BedFileReader;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.metrics.BamMetricsSummary;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -173,7 +175,14 @@ public class MetricsConfig
 
     public String formFilename(final String fileType)
     {
-        return CommonUtils.formFilename(SampleId, BamFile, OutputDir, OutputId, fileType);
+        String filename = OutputDir + SampleId + BamMetricsSummary.BAM_METRICS_FILE_ID;
+
+        filename += "." + fileType;
+
+        if(OutputId != null)
+            filename += "." + OutputId;
+
+        return filename + TSV_EXTENSION;
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)

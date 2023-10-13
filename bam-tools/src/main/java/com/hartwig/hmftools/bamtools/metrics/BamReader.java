@@ -114,6 +114,9 @@ public class BamReader
             // lower the duplicate count to reflect the use of consensus reads
             --mReadCounts.Duplicates;
 
+            if(isDualStrand)
+                ++mReadCounts.DualStrand;
+
             checkTargetRegions(read, true, isDualStrand);
             return;
         }
@@ -134,8 +137,6 @@ public class BamReader
 
         if(read.getDuplicateReadFlag())
             ++mReadCounts.Duplicates;
-        else if(isDualStrand)
-            ++mReadCounts.DualStrand;
 
         mFragmentLengths.processRead(read);
 
