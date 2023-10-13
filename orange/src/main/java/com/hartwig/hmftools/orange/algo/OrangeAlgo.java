@@ -248,8 +248,10 @@ public class OrangeAlgo
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(ConversionUtil.mapToIterable(sigAllocations, OrangeConversion::convert))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
-                .plots(buildPlots(config, linxData))
+                .plots(buildPlots(config))
                 .build();
+
+        verifyPlots(report.plots(), linxData);
 
         if(config.limitJsonOutput())
         {
@@ -659,7 +661,7 @@ public class OrangeAlgo
     }
 
     @NotNull
-    private OrangePlots buildPlots(@NotNull OrangeConfig config, @NotNull LinxData linxData) throws IOException
+    private OrangePlots buildPlots(@NotNull OrangeConfig config) throws IOException
     {
         LOGGER.info("Loading plots");
 
@@ -676,13 +678,6 @@ public class OrangeAlgo
             }
 
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
-        }
-
-        Set<Integer> linxReportableClusters = LinxReportableClusters.findReportableClusters(linxData);
-
-        if(linxReportableClusters.size() != linxDriverPlots.size())
-        {
-            LOGGER.warn("Expected {} linx plots, but found {}", linxReportableClusters.size(), linxDriverPlots.size());
         }
 
         String sageReferenceBQRPlot = plotManager.processPlotFile(config.sageSomaticRefSampleBQRPlot());
@@ -730,6 +725,16 @@ public class OrangeAlgo
                 .cuppaFeaturePlot(cuppaFeaturePlot)
                 .cuppaChartPlot(cuppaChartPlot)
                 .build();
+    }
+
+    private void verifyPlots(@NotNull OrangePlots orangePlots, @NotNull LinxData linxData)
+    {
+        Set<Integer> linxReportableClusters = LinxReportableClusters.findReportableClusters(linxData);
+
+        if(linxReportableClusters.size() != orangePlots.linxDriverPlots().size())
+        {
+            LOGGER.warn("Expected {} linx plots, but found {}", linxReportableClusters.size(), orangePlots.linxDriverPlots().size());
+        }
     }
 
     @NotNull

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.common.linx;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,7 @@ public interface LinxData
     List<HomozygousDisruption> germlineHomozygousDisruptions();
 
     @NotNull
-    List<Integer> fusionClusterIds();
+    Set<Integer> fusionClusterIds();
 
     @NotNull
     Map<Integer, Integer> SvIdToClusterId();

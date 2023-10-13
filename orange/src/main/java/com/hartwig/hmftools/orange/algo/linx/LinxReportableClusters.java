@@ -2,11 +2,11 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import static java.util.stream.Collectors.toList;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxData;
 
@@ -19,7 +19,7 @@ public final class LinxReportableClusters
     @NotNull
     public static Set<Integer> findReportableClusters(@NotNull LinxData linx)
     {
-        Set<Integer> clusterIds = Sets.newHashSet();
+        Set<Integer> clusterIds = new HashSet<>();
 
         clusterIds.addAll(linx.fusionClusterIds());
 

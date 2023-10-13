@@ -7,12 +7,11 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
@@ -20,10 +19,8 @@ import org.jetbrains.annotations.Nullable;
 
 public final class LinxDataLoader
 {
-
-    private LinxDataLoader()
-    {
-    }
+    private static final String VIS_FUSION_FILE_EXTENSION = ".linx.vis_fusion.tsv";
+    private static final String VIS_SV_DATA_FILE_EXTENSION = ".linx.vis_sv_data.tsv";
 
     @NotNull
     public static LinxData load(final String tumorSample, final String linxSomaticDir, @Nullable String linxGermlineDir)
@@ -184,8 +181,6 @@ public final class LinxDataLoader
         return reportableGermlineSvs;
     }
 
-    private static final String VIS_FUSION_FILE_EXTENSION = ".linx.vis_fusion.tsv";
-
     @NotNull
     private static String generateVisFusionFilename(@NotNull String basePath, @NotNull String sample)
     {
@@ -201,7 +196,7 @@ public final class LinxDataLoader
             throw new IllegalStateException(String.format("File lacks header: %s", filename));
         }
 
-        Set<Integer> clusterIds = Sets.newHashSet();
+        Set<Integer> clusterIds = new HashSet<>();
         String header = lines.get(0);
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
@@ -214,8 +209,6 @@ public final class LinxDataLoader
 
         return clusterIds;
     }
-
-    private static final String VIS_SV_DATA_FILE_EXTENSION = ".linx.vis_sv_data.tsv";
 
     @NotNull
     private static String generateVisSvDataFilename(@NotNull String basePath, @NotNull String sample)
@@ -232,7 +225,7 @@ public final class LinxDataLoader
             throw new IllegalStateException(String.format("File lacks header: %s", filename));
         }
 
-        Map<Integer, Integer> svTocluster = Maps.newHashMap();
+        Map<Integer, Integer> svToCluster = new HashMap<>();
         String header = lines.get(0);
         Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
@@ -243,12 +236,12 @@ public final class LinxDataLoader
             int clusterId = getIntValue(fieldsIndexMap, "ClusterId", 0, values);
             int svId = getIntValue(fieldsIndexMap, "SvId", 0, values);
 
-            if(!svTocluster.containsKey(svId))
+            if(!svToCluster.containsKey(svId))
             {
-                svTocluster.put(svId, clusterId);
+                svToCluster.put(svId, clusterId);
             }
         }
 
-        return svTocluster;
+        return svToCluster;
     }
 }
