@@ -2,7 +2,6 @@ package com.hartwig.hmftools.orange.algo.linx;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -23,7 +22,7 @@ import org.junit.Test;
 public class LinxReportableClustersTest
 {
     @Test
-    public void shouldFindAllReportableClusters() throws IOException
+    public void shouldFindAllReportableClusters()
     {
         LinxData linxData = createTestLinxData();
         Set<Integer> clusters = LinxReportableClusters.findReportableClusters(linxData);

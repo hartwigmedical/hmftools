@@ -674,11 +674,12 @@ public class OrangeAlgo
             {
                 linxDriverPlots.add(plotManager.processPlotFile(linxPlotDir + File.separator + file));
             }
+
+            LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         }
 
         Set<Integer> linxReportableClusters = LinxReportableClusters.findReportableClusters(linxData);
 
-        LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         if(linxReportableClusters.size() != linxDriverPlots.size())
         {
             LOGGER.warn("Expected {} linx plots, but found {}", linxReportableClusters.size(), linxDriverPlots.size());
