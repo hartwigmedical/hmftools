@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public class VirusBreakendFile
+public final class VirusBreakendFile
 {
     @NotNull
     public static List<VirusBreakend> read(@NotNull String virusBreakendTsv) throws IOException

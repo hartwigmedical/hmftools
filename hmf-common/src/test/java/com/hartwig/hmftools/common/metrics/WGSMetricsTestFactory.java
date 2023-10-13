@@ -2,13 +2,11 @@ package com.hartwig.hmftools.common.metrics;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class WGSMetricsTestFactory {
-
-    private WGSMetricsTestFactory() {
-    }
-
+public final class WGSMetricsTestFactory
+{
     @NotNull
-    public static WGSMetrics createMinimalTestWGSMetrics() {
+    public static WGSMetrics createMinimalTestWGSMetrics()
+    {
         return ImmutableWGSMetrics.builder()
                 .meanCoverage(0D)
                 .sdCoverage(0D)

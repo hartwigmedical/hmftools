@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class WGSMetricWithQC
 {
-
     @NotNull
     public abstract WGSMetrics refMetrics();
 

@@ -5,10 +5,11 @@ import static org.junit.Assert.assertEquals;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class VirusBreakendQCStatusTest {
-
+public class VirusBreakendQCStatusTest
+{
     @Test
-    public void canExtractQCOfVirusBreakend() {
+    public void canExtractQCOfVirusBreakend()
+    {
         assertEquals(VirusBreakendQCStatus.NO_ABNORMALITIES, VirusBreakendQCStatus.convert(Strings.EMPTY));
         assertEquals(VirusBreakendQCStatus.LOW_VIRAL_COVERAGE, VirusBreakendQCStatus.convert("LOW_VIRAL_COVERAGE"));
         assertEquals(VirusBreakendQCStatus.EXCESSIVE_VIRAL_COVERAGE,
@@ -22,7 +23,8 @@ public class VirusBreakendQCStatusTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void crashOnUnknownQCStatusOfVirusBreakend() {
+    public void crashOnUnknownQCStatusOfVirusBreakend()
+    {
         VirusBreakendQCStatus.convert("ABC");
     }
 }

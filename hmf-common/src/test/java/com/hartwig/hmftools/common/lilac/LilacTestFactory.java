@@ -7,18 +7,17 @@ import com.hartwig.hmftools.common.hla.LilacSummaryData;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class LilacTestFactory {
-
-    private LilacTestFactory() {
-    }
-
+public final class LilacTestFactory
+{
     @NotNull
-    public static LilacSummaryData createEmptyData() {
+    public static LilacSummaryData createEmptyData()
+    {
         return ImmutableLilacSummaryData.builder().qc(Strings.EMPTY).build();
     }
 
     @NotNull
-    public static ImmutableLilacAllele.Builder alleleBuilder() {
+    public static ImmutableLilacAllele.Builder alleleBuilder()
+    {
         return ImmutableLilacAllele.builder()
                 .allele(Strings.EMPTY)
                 .refFragments(0)

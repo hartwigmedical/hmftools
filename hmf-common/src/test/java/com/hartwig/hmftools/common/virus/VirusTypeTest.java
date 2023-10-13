@@ -1,16 +1,14 @@
 package com.hartwig.hmftools.common.virus;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 public class VirusTypeTest
 {
-
     @Test
-    public void canExtractVirusConstants() {
+    public void canExtractVirusConstants()
+    {
         VirusType virusTypeHPV = VirusType.fromVirusName("HPV");
         assertEquals(VirusType.HPV, virusTypeHPV);
 
@@ -28,9 +26,9 @@ public class VirusTypeTest
     }
 
     @Test(expected = IllegalStateException.class)
-    public void hasUnknownVirusConstants() {
+    public void hasUnknownVirusConstants()
+    {
         //noinspection ResultOfMethodCallIgnored
         VirusType.fromVirusName("ABC");
     }
-
 }

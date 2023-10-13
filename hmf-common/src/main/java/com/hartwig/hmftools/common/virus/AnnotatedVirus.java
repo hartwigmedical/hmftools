@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
              passAnnotations = { NotNull.class, Nullable.class })
 public abstract class AnnotatedVirus
 {
-
     public abstract int taxid();
 
     @NotNull

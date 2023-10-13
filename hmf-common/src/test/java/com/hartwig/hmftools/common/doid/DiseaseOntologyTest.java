@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.doid;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -8,20 +12,20 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
-public class DiseaseOntologyTest {
-
+public class DiseaseOntologyTest
+{
     private static final String DOID_FILE_JSON = Resources.getResource("doid/example_doid.json").getPath();
 
     @Test
-    public void canExtractDoidFromUrl() {
+    public void canExtractDoidFromUrl()
+    {
         String url = "http://purl.obolibrary.org/obo/DOID_345";
         assertEquals("345", DiseaseOntology.extractDoid(url));
     }
 
     @Test
-    public void canLoadDoidJsonFile() throws IOException {
+    public void canLoadDoidJsonFile() throws IOException
+    {
         DoidEntry doidEntry = DiseaseOntology.readDoidOwlEntryFromDoidJson(DOID_FILE_JSON);
 
         assertEquals(DiseaseOntology.ID_TO_READ, doidEntry.id());

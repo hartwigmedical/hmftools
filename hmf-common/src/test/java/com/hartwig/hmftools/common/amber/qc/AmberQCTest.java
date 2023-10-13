@@ -12,10 +12,11 @@ import com.hartwig.hmftools.common.amber.ImmutableAmberQC;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class AmberQCTest {
-
+public class AmberQCTest
+{
     @Test
-    public void testContaminationStatus() {
+    public void testContaminationStatus()
+    {
         assertEquals(PASS, createWithContamination(0).status());
         assertEquals(WARN, createWithContamination(0.001).status());
         assertEquals(WARN, createWithContamination(0.10).status());
@@ -24,7 +25,8 @@ public class AmberQCTest {
     }
 
     @NotNull
-    private static AmberQC createWithContamination(double contamination) {
+    private static AmberQC createWithContamination(double contamination)
+    {
         return ImmutableAmberQC.builder()
                 .contamination(contamination)
                 .consanguinityProportion(0)
