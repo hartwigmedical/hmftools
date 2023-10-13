@@ -9,6 +9,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigGroup;
 
 import org.junit.Test;
 
@@ -87,4 +88,43 @@ public class ConfigBuilderTest
         assertFalse(configBuilder.parseCommandLine(args));
     }
 
+    @Test
+    public void TestConfigGroup()
+    {
+        ConfigBuilder configBuilder = new ConfigBuilder();
+
+        // shared arg
+        configBuilder.addConfigItem(STRING, "shared", true, "value for both groups", "item needed for both groups");
+
+        // group of args handled together
+        final ConfigGroup group1 = configBuilder.newConfigGroup("mode1", "group desc");
+        group1.addConfigItem(STRING, "item1", true, "item desc", "default");
+
+        // alternate group of args
+        final ConfigGroup group2 = configBuilder.newConfigGroup("mode2", "group desc");
+        group2.addConfigItem(STRING, "item2", true, "item desc", "default");
+
+        // valid args for mode1. when groups are specified, a valid group must
+        // be given as the first argument.
+        String[] args1 = {
+                "mode1",
+                "-shared",
+                "shared_value",
+                "-item1",
+                "val"
+        };
+
+        assertTrue(configBuilder.parseCommandLine(args1));
+
+        // valid args for mode2
+        String[] args2 = {
+                "mode2",
+                "-shared",
+                "shared_value",
+                "-item2",
+                "val"
+        };
+
+        assertTrue(configBuilder.parseCommandLine(args2));
+    }
 }
