@@ -13,19 +13,24 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface GeneCopyNumber extends TranscriptRegion {
-
+public interface GeneCopyNumber extends TranscriptRegion
+{
     double maxCopyNumber();
+
     double minCopyNumber();
 
     int somaticRegions();
+
     int minRegions();
 
     int minRegionStart();
+
     int minRegionEnd();
+
     int depthWindowCount();
 
-    default int minRegionBases() {
+    default int minRegionBases()
+    {
         return minRegionEnd() - minRegionStart() + 1;
     }
 
@@ -37,13 +42,14 @@ public interface GeneCopyNumber extends TranscriptRegion {
 
     double minMinorAlleleCopyNumber();
 
-    default int totalRegions() {
+    default int totalRegions()
+    {
         return somaticRegions();
     }
 
-    static Map<String,List<GeneCopyNumber>> listToMap(final List<GeneCopyNumber> geneCopyNumbers)
+    static Map<String, List<GeneCopyNumber>> listToMap(final List<GeneCopyNumber> geneCopyNumbers)
     {
-        final Map<String,List<GeneCopyNumber>> geneCopyNumberMap = Maps.newHashMap();
+        final Map<String, List<GeneCopyNumber>> geneCopyNumberMap = Maps.newHashMap();
 
         for(GeneCopyNumber geneCopyNumber : geneCopyNumbers)
         {

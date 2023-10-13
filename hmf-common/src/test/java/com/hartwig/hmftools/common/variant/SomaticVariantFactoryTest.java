@@ -18,8 +18,8 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class SomaticVariantFactoryTest {
-
+public class SomaticVariantFactoryTest
+{
     private static final String SAMPLE = "sample";
     private static final String SOMATIC_VARIANT_FILE = Resources.getResource("variant/somatics.vcf").getPath();
 
@@ -29,13 +29,15 @@ public class SomaticVariantFactoryTest {
     private VCFCodec codec;
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         victim = new SomaticVariantFactory();
         codec = createTestCodec();
     }
 
     @NotNull
-    private static VCFCodec createTestCodec() {
+    private static VCFCodec createTestCodec()
+    {
         VCFCodec codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
@@ -43,7 +45,8 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void canLoadSomaticSimpleVCFFromFile() throws IOException {
+    public void canLoadSomaticSimpleVCFFromFile() throws IOException
+    {
         final List<SomaticVariant> unfiltered = new SomaticVariantFactory().fromVCFFile("sample", SOMATIC_VARIANT_FILE);
         assertEquals(3, unfiltered.size());
 
@@ -52,7 +55,8 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void canReadCorrectSomaticVariant() {
+    public void canReadCorrectSomaticVariant()
+    {
         final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:59,60:120";
 
         final SomaticVariant variant = assertedGet(victim.createVariant(SAMPLE, codec.decode(line)));
@@ -68,14 +72,16 @@ public class SomaticVariantFactoryTest {
     }
 
     @Test
-    public void handleZeroReadCount() {
+    public void handleZeroReadCount()
+    {
         final String line = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:AD:DP\t0/1:0,0:0";
         final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(line));
         assertFalse(missingAFVariant.isPresent());
     }
 
     @Test
-    public void incorrectSampleFieldYieldsMissingReadCounts() {
+    public void incorrectSampleFieldYieldsMissingReadCounts()
+    {
         final String missingAFLine = "15\t12345678\trs1;UCSC\tC\tA,G\t2\tPASS\tinfo;\tGT:DP\t0/1:21";
 
         final Optional<SomaticVariant> missingAFVariant = victim.createVariant(SAMPLE, codec.decode(missingAFLine));
@@ -87,7 +93,8 @@ public class SomaticVariantFactoryTest {
     }
 
     @NotNull
-    private static SomaticVariant assertedGet(@NotNull Optional<SomaticVariant> variant) {
+    private static SomaticVariant assertedGet(@NotNull Optional<SomaticVariant> variant)
+    {
         assert variant.isPresent();
         return variant.get();
     }

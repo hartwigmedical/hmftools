@@ -14,8 +14,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 
-public class GenomeRegionSelectorTest {
-
+public class GenomeRegionSelectorTest
+{
     private GenomeRegionSelector<GenomeRegion> standardSelector;
     private GenomeRegionSelector<GenomeRegion> chromosomeSelector;
 
@@ -26,21 +26,24 @@ public class GenomeRegionSelectorTest {
     private final GenomeRegion region5 = GenomeRegions.create("3", 601, 700);
 
     @Before
-    public void setup() {
+    public void setup()
+    {
         final List<GenomeRegion> regions = Lists.newArrayList(region1, region2, region3, region4, region5);
         standardSelector = GenomeRegionSelectorFactory.create(regions);
         chromosomeSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(regions));
     }
 
     @Test
-    public void testDifferentContigStyle() {
+    public void testDifferentContigStyle()
+    {
         assertSelection(region1, createPosition("chr1", 1), chromosomeSelector);
         assertSelection(region1, createPosition("1", 10), chromosomeSelector);
         assertSelection(region1, createPosition("chr1", 100), chromosomeSelector);
     }
 
     @Test
-    public void testExpectedOperation() {
+    public void testExpectedOperation()
+    {
         assertSelection(region1, createPosition("1", 1));
         assertSelection(region1, createPosition("1", 10));
         assertSelection(region1, createPosition("1", 100));
@@ -70,49 +73,59 @@ public class GenomeRegionSelectorTest {
     }
 
     @Test
-    public void testChromosomeNotAvailable() {
+    public void testChromosomeNotAvailable()
+    {
         assertAbsence(createPosition("4", 601));
     }
 
     @Test()
-    public void testStandardBackwards() {
+    public void testStandardBackwards()
+    {
         assertEquals(Optional.empty(), standardSelector.select(createPosition("1", 1000)));
         assertEquals(Optional.empty(), standardSelector.select(createPosition("1", 999)));
     }
 
     @Test()
-    public void testChromosomeBackwards() {
+    public void testChromosomeBackwards()
+    {
         assertEquals(Optional.empty(), chromosomeSelector.select(createPosition("1", 1000)));
         assertEquals(Optional.empty(), chromosomeSelector.select(createPosition("1", 999)));
     }
 
-    private void assertSelection(@NotNull final GenomeRegion expected, @NotNull final GenomePosition position) {
+    private void assertSelection(@NotNull final GenomeRegion expected, @NotNull final GenomePosition position)
+    {
         assertSelection(expected, position, chromosomeSelector);
         assertSelection(expected, position, standardSelector);
     }
 
     private static void assertSelection(@NotNull final GenomeRegion expected, @NotNull final GenomePosition position,
-            @NotNull final GenomeRegionSelector<GenomeRegion> selector) {
+            @NotNull final GenomeRegionSelector<GenomeRegion> selector)
+    {
         Optional<GenomeRegion> chromRegion = selector.select(position);
         assertTrue(chromRegion.isPresent());
         assertEquals(expected, chromRegion.get());
     }
 
-    private void assertAbsence(final GenomePosition position) {
+    private void assertAbsence(final GenomePosition position)
+    {
         assertEquals(Optional.empty(), chromosomeSelector.select(position));
         assertEquals(Optional.empty(), standardSelector.select(position));
     }
 
-    private static GenomePosition createPosition(final String chromosome, final int position) {
-        return new GenomePosition() {
+    private static GenomePosition createPosition(final String chromosome, final int position)
+    {
+        return new GenomePosition()
+        {
             @NotNull
             @Override
-            public String chromosome() {
+            public String chromosome()
+            {
                 return chromosome;
             }
 
             @Override
-            public int position() {
+            public int position()
+            {
                 return position;
             }
         };

@@ -6,9 +6,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface BaseDepthData {
-
-    enum Base {
+public interface BaseDepthData
+{
+    enum Base
+    {
         G,
         A,
         T,
@@ -30,7 +31,8 @@ public interface BaseDepthData {
 
     int altSupport();
 
-    default boolean isValid() {
+    default boolean isValid()
+    {
         return indelCount() == 0;
     }
 }

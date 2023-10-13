@@ -9,17 +9,19 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class GenomeRegionsTest {
-
+public class GenomeRegionsTest
+{
     private static final String CHROM = "1";
 
     @Test
-    public void testAddPosition() {
+    public void testAddPosition()
+    {
         final GenomeRegions victim = new GenomeRegions(CHROM, 1);
         final List<Integer> positions = Lists.newArrayList(1, 1, 2, 3, 5, 6, 7, 9, 10, 10);
         Collections.shuffle(positions);
 
-        for (Integer position : positions) {
+        for(Integer position : positions)
+        {
             victim.addPosition(position);
         }
 
@@ -31,7 +33,8 @@ public class GenomeRegionsTest {
     }
 
     @Test
-    public void testInsideMinGapInFront() {
+    public void testInsideMinGapInFront()
+    {
         final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
@@ -43,7 +46,8 @@ public class GenomeRegionsTest {
     }
 
     @Test
-    public void testOutsideMinGapInFront() {
+    public void testOutsideMinGapInFront()
+    {
         final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
@@ -55,7 +59,8 @@ public class GenomeRegionsTest {
     }
 
     @Test
-    public void testJoinMinGapInFront() {
+    public void testJoinMinGapInFront()
+    {
         final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
@@ -67,7 +72,8 @@ public class GenomeRegionsTest {
     }
 
     @Test
-    public void testInsideMinGapBehind() {
+    public void testInsideMinGapBehind()
+    {
         final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
@@ -79,7 +85,8 @@ public class GenomeRegionsTest {
     }
 
     @Test
-    public void testOutsideMinGapBehind() {
+    public void testOutsideMinGapBehind()
+    {
         final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
@@ -91,7 +98,8 @@ public class GenomeRegionsTest {
     }
 
     @Test
-    public void testJoinMinGapBehind() {
+    public void testJoinMinGapBehind()
+    {
         final GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addPosition(5000);
@@ -103,7 +111,8 @@ public class GenomeRegionsTest {
     }
 
     @Test
-    public void testJoinRegionsWithMinGap() {
+    public void testJoinRegionsWithMinGap()
+    {
         GenomeRegions victim = new GenomeRegions(CHROM, 100);
 
         victim.addRegion(5000, 6000);
@@ -121,7 +130,8 @@ public class GenomeRegionsTest {
     }
 
     @Test
-    public void testJoinRegions() {
+    public void testJoinRegions()
+    {
         GenomeRegions victim = new GenomeRegions(CHROM, 1);
 
         victim.addRegion(5000, 6000);
@@ -140,7 +150,8 @@ public class GenomeRegionsTest {
     }
 
     @Test
-    public void testJoinRegionsBoundary() {
+    public void testJoinRegionsBoundary()
+    {
         GenomeRegions victim = new GenomeRegions(CHROM);
 
         victim.addRegion(5000, 5500);
@@ -154,7 +165,8 @@ public class GenomeRegionsTest {
         assertRegion(victim.build().get(0), 5000, 6500);
     }
 
-    private void assertRegion(@NotNull final GenomeRegion region, int expectedStart, int expectedEnd) {
+    private void assertRegion(@NotNull final GenomeRegion region, int expectedStart, int expectedEnd)
+    {
         Assert.assertEquals(expectedStart, region.start());
         Assert.assertEquals(expectedEnd, region.end());
     }

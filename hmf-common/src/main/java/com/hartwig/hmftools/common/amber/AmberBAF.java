@@ -8,11 +8,12 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface AmberBAF extends GenomePosition {
-
+public interface AmberBAF extends GenomePosition
+{
     double tumorBAF();
 
-    default double tumorModifiedBAF() {
+    default double tumorModifiedBAF()
+    {
         return 0.5 + Math.abs(tumorBAF() - 0.5);
     }
 
@@ -20,7 +21,8 @@ public interface AmberBAF extends GenomePosition {
 
     double normalBAF();
 
-    default double normalModifiedBAF() {
+    default double normalModifiedBAF()
+    {
         return 0.5 + Math.abs(normalBAF() - 0.5);
     }
 

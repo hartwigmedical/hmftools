@@ -2,7 +2,8 @@ package com.hartwig.hmftools.common.sv;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum StructuralVariantType {
+public enum StructuralVariantType
+{
     BND,
     DEL,
     DUP,
@@ -12,8 +13,10 @@ public enum StructuralVariantType {
     SGL;
 
     @NotNull
-    public static StructuralVariantType fromAttribute(@NotNull String svType) {
-        if (svType.startsWith("DUP")) {
+    public static StructuralVariantType fromAttribute(@NotNull String svType)
+    {
+        if(svType.startsWith("DUP"))
+        {
             return DUP;
         }
         return StructuralVariantType.valueOf(svType);
@@ -24,13 +27,20 @@ public enum StructuralVariantType {
         // ordered alphabetically
         switch(type)
         {
-            case BND: return 0;
-            case DEL: return 1;
-            case DUP: return 2;
-            case INF: return 3;
-            case INS: return 4;
-            case INV: return 5;
-            case SGL: return 6;
+            case BND:
+                return 0;
+            case DEL:
+                return 1;
+            case DUP:
+                return 2;
+            case INF:
+                return 3;
+            case INS:
+                return 4;
+            case INV:
+                return 5;
+            case SGL:
+                return 6;
         }
 
         return 0;

@@ -10,10 +10,11 @@ import com.google.gson.JsonObject;
 
 import org.junit.Test;
 
-public class JsonFunctionsTest {
-
+public class JsonFunctionsTest
+{
     @Test
-    public void allJsonFunctionsWork() {
+    public void allJsonFunctionsWork()
+    {
         JsonObject object = new JsonObject();
 
         assertNull(JsonFunctions.optionalJsonObject(object, "any"));

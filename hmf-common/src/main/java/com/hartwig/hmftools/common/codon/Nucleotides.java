@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.codon;
 
-public class Nucleotides
+public final class Nucleotides
 {
     public static final char[] DNA_BASES = {'G', 'A', 'T', 'C'};
 
@@ -48,5 +48,4 @@ public class Nucleotides
 
         return newBases.toString();
     }
-
 }

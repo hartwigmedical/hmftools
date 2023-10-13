@@ -15,8 +15,8 @@ import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderVersion;
 
-public class StructuralVariantFactoryTest {
-
+public class StructuralVariantFactoryTest
+{
     private static final String SAMPLE = "sample";
 
     private VCFCodec mCodec;
@@ -29,7 +29,8 @@ public class StructuralVariantFactoryTest {
     }
 
     @Test
-    public void testSGL() {
+    public void testSGL()
+    {
         final String vcfEntry = "2\t192614842\tgridss14_291648b\tT\tTCTCTACACAAG.\t2076.59\tPASS\tSVTYPE=BND\tGT\t./.";
 
         final StructuralVariant variant = mSvFactory.createSingleBreakend(mCodec.decode(vcfEntry));
@@ -37,17 +38,19 @@ public class StructuralVariantFactoryTest {
     }
 
     @Test
-    public void testUseAFValueOfLeg() {
+    public void testUseAFValueOfLeg()
+    {
         final String line1 = "2\t321681\tbnd_W\tG\tG]17:198982]\t6\tPASS\tSVTYPE=BND;TAF=1.1,1.2\tGT\t./.";
         final String line2 = "17\t198982\tbnd_W\tG\tG]2:321681]\t6\tPASS\tSVTYPE=BND\tGT\t./.";
 
         final StructuralVariant variant = mSvFactory.createSV(mCodec.decode(line1), mCodec.decode(line2));
         assertEquals(1.1, variant.start().alleleFrequency(), 0.01);
-        assertNull( variant.end().alleleFrequency());
+        assertNull(variant.end().alleleFrequency());
     }
 
     @Test
-    public void testOrientation() {
+    public void testOrientation()
+    {
         final String line1 = "2\t321681\tbnd_W\tG\tG]17:198982]\t6\tPASS\tSVTYPE=BND\tGT\t./.";
         final String line2 = "2\t321682\tbnd_V\tT\t]13:123456]T\t6\tPASS\tSVTYPE=BND\tGT\t./.";
         final String line3 = "13\t123456\tbnd_U\tC\tC[2:321682[\t6\tPASS\tSVTYPE=BND\tGT\t./.";
@@ -81,7 +84,8 @@ public class StructuralVariantFactoryTest {
     }
 
     @NotNull
-    private static VCFCodec createTestCodec() {
+    private static VCFCodec createTestCodec()
+    {
         VCFCodec codec = new VCFCodec();
         VCFHeader header = new VCFHeader(Sets.newHashSet(), Sets.newHashSet(SAMPLE));
         codec.setVCFHeader(header, VCFHeaderVersion.VCF4_2);
