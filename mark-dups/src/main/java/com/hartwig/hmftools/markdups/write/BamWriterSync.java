@@ -21,7 +21,7 @@ public class BamWriterSync extends BamWriter
     public boolean isSorted() { return false; }
 
     public void initialiseRegion(final String chromosome, int startPosition) {}
-    public void setCurrentReadPosition(int startPosition) {}
+    public void setBoundaryPosition(int position, boolean isLower) {}
     public void onRegionComplete() {}
 
     @Override

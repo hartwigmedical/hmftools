@@ -34,9 +34,12 @@ public class TestBamWriter extends BamWriter
         CurrentChromosome = chromosome;
     }
 
-    public void setCurrentReadPosition(int startPosition)
+    public void setBoundaryPosition(int position, boolean isLower)
     {
-        CurrentPosLower = startPosition;
+        if(isLower)
+            CurrentPosLower = position;
+        else
+            CurrentPosUpper = position;
     }
 
     public void onRegionComplete() {}

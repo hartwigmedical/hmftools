@@ -194,7 +194,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         try
         {
-            mBamWriter.setCurrentReadPosition(read.getAlignmentStart());
+            mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
 
             if(!mReadPositions.processRead(read))
             {
@@ -371,6 +371,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
             mStats.LocalComplete += resolvedFragments.stream().mapToInt(x -> x.readCount()).sum();
         }
+
+        mBamWriter.setBoundaryPosition(position, true);
 
         mPcAcceptPositions.pause();
     }

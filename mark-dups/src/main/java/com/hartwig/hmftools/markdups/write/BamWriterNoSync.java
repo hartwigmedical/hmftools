@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.markdups.write;
 
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-import static com.hartwig.hmftools.markdups.common.Constants.BAM_READ_CACHE_BUFFER;
 
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 
@@ -24,8 +23,11 @@ public class BamWriterNoSync extends BamWriter
 
         if(mWriteSorted)
         {
-            int positionBuffer = (int)(config.BufferSize * 1.5);
-            mSortedBamWriter = new SortedBamWriter(BAM_READ_CACHE_BUFFER, positionBuffer, samFileWriter);
+            mSortedBamWriter = new SortedBamWriter(new SortedBamConfig(), samFileWriter);
+
+            if(config.PerfDebug)
+                mSortedBamWriter.togglePerfDebug();
+
             mSharedUnsortedWriter = sharedUnsortedWriter;
         }
         else
@@ -43,10 +45,15 @@ public class BamWriterNoSync extends BamWriter
             mSortedBamWriter.initialiseStartPosition(chromosome, startPosition);
     }
 
-    public void setCurrentReadPosition(int startPosition)
+    public void setBoundaryPosition(int position, boolean isLower)
     {
         if(mSortedBamWriter != null)
-            mSortedBamWriter.setUpperBoundPosition(startPosition);
+        {
+            if(isLower)
+                mSortedBamWriter.setUpperSortablePosition(position);
+            else
+                mSortedBamWriter.setUpperBoundPosition(position);
+        }
     }
 
     public void onRegionComplete()
@@ -54,78 +61,6 @@ public class BamWriterNoSync extends BamWriter
         if(mSortedBamWriter != null)
             mSortedBamWriter.flush();
     }
-
-    /*
-    public void writeFragments(final List<Fragment> fragments, boolean excludeUmis)
-    {
-        fragments.forEach(x -> doWriteFragment(x, excludeUmis));
-    }
-
-    public void writeFragment(final Fragment fragment) { doWriteFragment(fragment, true); }
-
-    public void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus)
-    {
-        writeRead(read, fragmentStatus, null);
-    }
-
-    public void writeDuplicateGroup(final DuplicateGroup group, final List<SAMRecord> completeReads)
-    {
-        for(SAMRecord read : completeReads)
-        {
-            if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
-            {
-                writeRecord(read);
-                ++mConsensusReadCount;
-
-                mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.id());
-
-                continue;
-            }
-
-            if(mConfig.UMIs.Enabled)
-                read.setAttribute(UMI_ATTRIBUTE, group.id());
-
-            writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.id());
-        }
-    }
-
-    private void doWriteFragment(final Fragment fragment, boolean excludeUmis)
-    {
-        if(excludeUmis && fragment.umi() != null) // reads in UMI groups are only written as a complete group
-            return;
-
-        if(fragment.readsWritten())
-        {
-            MD_LOGGER.error("fragment({}) reads already written", fragment);
-            return;
-        }
-
-        fragment.setReadWritten();
-        fragment.reads().forEach(x -> writeRead(x, fragment.status(), fragment));
-    }
-
-    private void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus, @Nullable final Fragment fragment)
-    {
-        writeRead(
-                read, fragmentStatus,
-                fragment != null ? fragment.coordinates().Key : "",
-                fragment != null ? fragment.averageBaseQual() : 0,
-                fragment != null ? fragment.umi() : "");
-    }
-
-    private void writeRead(
-            final SAMRecord read, final FragmentStatus fragmentStatus, final String fragmentCoordinates,
-            final double avgBaseQual, final String umiId)
-    {
-        ++mNonConsensusReadCount;
-
-        mReadDataWriter.writeReadData(read, fragmentStatus, fragmentCoordinates, avgBaseQual, umiId);
-
-        read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
-
-        writeRecord(read);
-    }
-    */
 
     @Override
     protected void writeRecord(final SAMRecord read)
@@ -157,9 +92,9 @@ public class BamWriterNoSync extends BamWriter
         {
             mSortedBamWriter.flush();
 
-            MD_LOGGER.debug("sorted-writer records written({} writes={} avg={}) maxCache({}) to BAM({})",
-                    mSortedBamWriter.written(), mSortedBamWriter.writeCount(), mSortedBamWriter.averageWriteCount(),
-                    mSortedBamWriter.maxCache(), mFilename);
+            MD_LOGGER.debug("sorted-writer records written({} writes={} avg={} max={}) maxCache({} avgCheck={}) to BAM({})",
+                    mSortedBamWriter.written(), mSortedBamWriter.writeCount(), mSortedBamWriter.avgWriteCount(),
+                    mSortedBamWriter.maxWrite(), mSortedBamWriter.maxCache(), mSortedBamWriter.avgAssessSize(), mFilename);
         }
 
         if(mSamFileWriter != null)

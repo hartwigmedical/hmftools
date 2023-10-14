@@ -6,8 +6,11 @@ import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_ID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
+import com.hartwig.hmftools.markdups.write.SortedBamConfig;
 import com.hartwig.hmftools.markdups.write.SortedBamWriter;
 
 import org.junit.Test;
@@ -19,10 +22,20 @@ public class SortedBamWriterTest
     @Test
     public void testSortedReadCache()
     {
-        SortedBamWriter readCache = new SortedBamWriter(10, 50, null);
+        SortedBamConfig config = new SortedBamConfig(
+                10, 20, 5, 1,
+                0, 0.9, 0.5);
 
-        readCache.initialiseStartPosition(CHR_1, 1);
+        SortedBamWriter readCache = new SortedBamWriter(config, null);
+
+        readCache.initialiseStartPosition(CHR_1, 50);
+        readCache.setUpperSortablePosition(100);
         readCache.setUpperBoundPosition(110);
+
+        // first test boundaries
+        assertTrue(readCache.canWriteRecord(createRead(CHR_1, 105)));
+        assertFalse(readCache.canWriteRecord(createRead(CHR_2, 105))); // wrong chromosome
+        assertFalse(readCache.canWriteRecord(createRead(CHR_1, 115))); // too high
 
         readCache.addRecord(createRead(CHR_1, 100));
         readCache.addRecord(createRead(CHR_1, 110));
@@ -32,10 +45,13 @@ public class SortedBamWriterTest
 
         // add a record past the buffer position
         readCache.setUpperBoundPosition(170);
+        readCache.setUpperSortablePosition(120);
         readCache.addRecord(createRead(CHR_1, 170));
 
         assertEquals(2, readCache.written());
         assertEquals(1, readCache.cached());
+
+        assertFalse(readCache.canWriteRecord(createRead(CHR_1, 40))); // too low
 
         readCache.addRecord(createRead(CHR_1, 180));
 
@@ -43,6 +59,8 @@ public class SortedBamWriterTest
         assertEquals(2, readCache.cached());
 
         // grow capacity for records within the position buffer
+        readCache.setUpperBoundPosition(200);
+
         for(int i = 0; i < 10; ++i)
         {
             readCache.addRecord(createRead(CHR_1, 181));
@@ -52,18 +70,28 @@ public class SortedBamWriterTest
         assertEquals(12, readCache.cached());
         // assertEquals(20, readCache.capacity());
 
-        readCache.flush();
+        readCache.setUpperSortablePosition(190);
 
-        // new chromosome
-        readCache.addRecord(createRead(CHR_2, 50));
-
-        readCache.initialiseStartPosition(CHR_2, 1);
-        readCache.setUpperBoundPosition(50);
+        readCache.addRecord(createRead(CHR_1, 200));
 
         assertEquals(14, readCache.written());
         assertEquals(1, readCache.cached());
+
+        readCache.flush();
+
+        assertEquals(15, readCache.written());
+        assertEquals(0, readCache.cached());
+
+        // new chromosome
+        readCache.initialiseStartPosition(CHR_2, 1);
+        readCache.setUpperBoundPosition(50);
+
+        readCache.addRecord(createRead(CHR_2, 50));
+
+        assertEquals(15, readCache.written());
+        assertEquals(1, readCache.cached());
         assertEquals(10, readCache.capacity());
-        assertEquals(2, readCache.writeCount());
+        assertEquals(3, readCache.writeCount());
     }
 
     private static SAMRecord createRead(final String chromosome, final int position)

@@ -49,10 +49,14 @@ public abstract class BamWriter
     public int totalWriteCount() { return nonConsensusWriteCount() + consensusWriteCount(); }
 
     public abstract boolean isSorted();
+
+    // methods to guide the sorted BAM writer
     public abstract void initialiseRegion(final String chromosome, int startPosition);
-    public abstract void setCurrentReadPosition(int startPosition);
+    public abstract void setBoundaryPosition(int position, boolean isLower);
     public abstract void onRegionComplete();
 
+    // the public write methods are all thread-safe, using atomic counters and then the key SAM-write methods are handled
+    // in the derived sync and non-sync implementations
     public void writeFragments(final List<Fragment> fragments, boolean excludeUmis)
     {
         fragments.forEach(x -> doWriteFragment(x, excludeUmis));
@@ -85,6 +89,10 @@ public abstract class BamWriter
             writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.id());
         }
     }
+
+    protected abstract void writeRecord(final SAMRecord read);
+
+    public abstract void close();
 
     private void doWriteFragment(final Fragment fragment, boolean excludeUmis)
     {
@@ -122,28 +130,4 @@ public abstract class BamWriter
 
         writeRecord(read);
     }
-
-    protected abstract void writeRecord(final SAMRecord read);
-
-    /*
-    private void writeRecord(final SAMRecord read)
-    {
-        if(mSamFileWriter != null)
-        {
-            if(mWriteSorted)
-            {
-                if(!mReadCache.addRecord(read))
-                    mSharedUnsortedWriter.writeRecordSync(read);
-            }
-            else
-            {
-                mSamFileWriter.addAlignment(read);
-            }
-        }
-
-        ++mWriteCount;
-    }
-    */
-
-    public abstract void close();
 }

@@ -56,11 +56,6 @@ public class FileWriterCache
 
     public BamWriter getPartitionBamWriter(final String fileId)
     {
-        /*
-        if(!mConfig.MultiBam && !mConfig.UseSortCache)
-            return mBamWriters.get(0);
-        */
-
         if(!mConfig.MultiBam && !mConfig.UseSortCache)
             return mSharedUnsortedWriter;
 
@@ -181,6 +176,9 @@ public class FileWriterCache
         {
             List<SortBamTask> sortTasks = Lists.newArrayList();
 
+            int unsortedBamCount = (int)mBamWriters.stream().filter(x -> !x.isSorted()).count();
+            int maxThreadCount = unsortedBamCount > 1 ? 1 : mConfig.Threads;
+
             for(BamWriter bamWriter : mBamWriters)
             {
                 if(bamWriter.isSorted())
@@ -192,7 +190,7 @@ public class FileWriterCache
 
                 String sortedBamFile = bamWriter.filename().replaceAll(UNSORTED_ID, SORTED_ID);
 
-                sortTasks.add(new SortBamTask(bamWriter.filename(), sortedBamFile, 1));
+                sortTasks.add(new SortBamTask(bamWriter.filename(), sortedBamFile, maxThreadCount));
 
                 interimBams.add(bamWriter.filename());
                 interimBams.add(sortedBamFile);
