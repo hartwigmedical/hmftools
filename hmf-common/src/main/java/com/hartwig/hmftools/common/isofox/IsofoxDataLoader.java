@@ -14,8 +14,8 @@ import com.hartwig.hmftools.common.rna.RnaStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class IsofoxDataLoader {
-
+public final class IsofoxDataLoader
+{
     private static final Logger LOGGER = LogManager.getLogger(IsofoxDataLoader.class);
 
     public static IsofoxData load(final String isofoxCancerType, final String isofoxGeneDistributionCsv,

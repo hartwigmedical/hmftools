@@ -67,6 +67,7 @@ import com.hartwig.hmftools.orange.OrangeRnaConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
+import com.hartwig.hmftools.orange.algo.linx.LinxReportableClusters;
 import com.hartwig.hmftools.orange.algo.pave.PaveAlgo;
 import com.hartwig.hmftools.orange.algo.plot.DummyPlotManager;
 import com.hartwig.hmftools.orange.algo.plot.FileBasedPlotManager;
@@ -249,6 +250,8 @@ public class OrangeAlgo
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
                 .plots(buildPlots(config))
                 .build();
+
+        verifyPlots(report.plots(), linxData);
 
         if(config.limitJsonOutput())
         {
@@ -666,17 +669,15 @@ public class OrangeAlgo
 
         String linxPlotDir = config.linxPlotDirectory();
         List<String> linxDriverPlots = Lists.newArrayList();
-        if(new File(linxPlotDir).exists())
+
+        if(linxPlotDir != null)
         {
             for(String file : new File(linxPlotDir).list())
             {
                 linxDriverPlots.add(plotManager.processPlotFile(linxPlotDir + File.separator + file));
             }
+
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
-        }
-        else
-        {
-            LOGGER.debug(" No linx plots have been loaded as plot directory {} does not exist", linxPlotDir);
         }
 
         String sageReferenceBQRPlot = plotManager.processPlotFile(config.sageSomaticRefSampleBQRPlot());
@@ -724,6 +725,16 @@ public class OrangeAlgo
                 .cuppaFeaturePlot(cuppaFeaturePlot)
                 .cuppaChartPlot(cuppaChartPlot)
                 .build();
+    }
+
+    private void verifyPlots(@NotNull OrangePlots orangePlots, @NotNull LinxData linxData)
+    {
+        Set<Integer> linxReportableClusters = LinxReportableClusters.findReportableClusters(linxData);
+
+        if(linxReportableClusters.size() != orangePlots.linxDriverPlots().size())
+        {
+            LOGGER.warn("Expected {} linx plots, but found {}", linxReportableClusters.size(), orangePlots.linxDriverPlots().size());
+        }
     }
 
     @NotNull

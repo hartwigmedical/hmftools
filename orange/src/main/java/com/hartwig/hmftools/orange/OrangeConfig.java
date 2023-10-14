@@ -244,7 +244,7 @@ public interface OrangeConfig
     @Nullable
     String linxGermlineDataDirectory();
 
-    @NotNull
+    @Nullable
     String linxPlotDirectory();
 
     @NotNull

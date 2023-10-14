@@ -11,10 +11,11 @@ import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class DoidParentsTest {
-
+public class DoidParentsTest
+{
     @Test
-    public void testBehaviour() {
+    public void testBehaviour()
+    {
         List<DoidEdge> edges = Lists.newArrayList();
         edges.add(createParent("299", "305"));
         edges.add(createParent("305", "162"));
@@ -34,13 +35,15 @@ public class DoidParentsTest {
     }
 
     @NotNull
-    public static DoidEdge createParent(@NotNull String child, @NotNull String parent) {
+    public static DoidEdge createParent(@NotNull String child, @NotNull String parent)
+    {
         String prefix = "http://purl.obolibrary.org/obo/DOID_";
         return createEdge(prefix + child, "is_a", prefix + parent);
     }
 
     @NotNull
-    public static DoidEdge createEdge(@NotNull String subject, @NotNull String pred, @NotNull String object) {
+    public static DoidEdge createEdge(@NotNull String subject, @NotNull String pred, @NotNull String object)
+    {
         return ImmutableDoidEdge.builder().subject(subject).predicate(pred).object(object).build();
     }
 }

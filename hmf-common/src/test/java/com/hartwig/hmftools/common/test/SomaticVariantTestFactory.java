@@ -13,13 +13,11 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class SomaticVariantTestFactory {
-
-    private SomaticVariantTestFactory() {
-    }
-
+public final class SomaticVariantTestFactory
+{
     @NotNull
-    public static ImmutableSomaticVariantImpl.Builder builder() {
+    public static ImmutableSomaticVariantImpl.Builder builder()
+    {
         return ImmutableSomaticVariantImpl.builder()
                 .qual(100)
                 .chromosome(Strings.EMPTY)

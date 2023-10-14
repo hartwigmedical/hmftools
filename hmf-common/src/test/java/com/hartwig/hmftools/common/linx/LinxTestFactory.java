@@ -8,11 +8,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class LinxTestFactory {
-
-    private LinxTestFactory() {
-    }
-
+public final class LinxTestFactory
+{
     @NotNull
     public static ImmutableLinxSvAnnotation.Builder svAnnotationBuilder()
     {

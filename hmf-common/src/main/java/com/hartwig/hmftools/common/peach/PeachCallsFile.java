@@ -9,25 +9,25 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class PeachCallsFile {
-
+public final class PeachCallsFile
+{
     private static final String DELIMITER = "\t";
 
-    private PeachCallsFile() {
-    }
-
     @NotNull
-    public static List<PeachCalls> read(@NotNull String filename) throws IOException {
+    public static List<PeachCalls> read(@NotNull String filename) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
     @NotNull
-    private static List<PeachCalls> fromLines(@NotNull List<String> lines) {
+    private static List<PeachCalls> fromLines(@NotNull List<String> lines)
+    {
         return lines.stream().skip(1).map(PeachCallsFile::fromString).collect(toList());
     }
 
     @NotNull
-    private static PeachCalls fromString(@NotNull String line) {
+    private static PeachCalls fromString(@NotNull String line)
+    {
         String[] values = line.split(DELIMITER);
 
         return ImmutablePeachCalls.builder()

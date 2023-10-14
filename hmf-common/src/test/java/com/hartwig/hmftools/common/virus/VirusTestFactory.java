@@ -3,33 +3,35 @@ package com.hartwig.hmftools.common.virus;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class VirusTestFactory {
-
-    private VirusTestFactory() {
-    }
-
+public final class VirusTestFactory
+{
     @NotNull
-    public static VirusInterpreterData createEmptyData() {
+    public static VirusInterpreterData createEmptyData()
+    {
         return ImmutableVirusInterpreterData.builder().build();
     }
 
     @NotNull
-    public static VirusInterpreterData createMinimalData() {
+    public static VirusInterpreterData createMinimalData()
+    {
         return createWithVirus(annotatedVirusBuilder().build());
     }
 
     @NotNull
-    public static VirusInterpreterData createProperData() {
+    public static VirusInterpreterData createProperData()
+    {
         return createWithVirus(annotatedVirusBuilder().interpretation(VirusType.MCV).expectedClonalCoverage(1.0).build());
     }
 
     @NotNull
-    public static VirusInterpreterData createHHVInterpretationData() {
+    public static VirusInterpreterData createHHVInterpretationData()
+    {
         return createWithVirus(annotatedVirusBuilder().interpretation(VirusType.HHV8).build());
     }
 
     @NotNull
-    public static ImmutableVirusBreakend.Builder virusBreakendBuilder() {
+    public static ImmutableVirusBreakend.Builder virusBreakendBuilder()
+    {
         return ImmutableVirusBreakend.builder()
                 .taxidGenus(0)
                 .nameGenus(Strings.EMPTY)
@@ -58,7 +60,8 @@ public final class VirusTestFactory {
     }
 
     @NotNull
-    public static ImmutableAnnotatedVirus.Builder annotatedVirusBuilder() {
+    public static ImmutableAnnotatedVirus.Builder annotatedVirusBuilder()
+    {
         return ImmutableAnnotatedVirus.builder()
                 .taxid(0)
                 .name(Strings.EMPTY)
@@ -73,7 +76,8 @@ public final class VirusTestFactory {
     }
 
     @NotNull
-    private static VirusInterpreterData createWithVirus(@NotNull AnnotatedVirus virus) {
+    private static VirusInterpreterData createWithVirus(@NotNull AnnotatedVirus virus)
+    {
         return ImmutableVirusInterpreterData.builder().addReportableViruses(virus).addAllViruses(virus).build();
     }
 }

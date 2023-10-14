@@ -6,20 +6,23 @@ import com.google.common.collect.Lists;
 
 import org.junit.Test;
 
-public class IntegersTest {
-
+public class IntegersTest
+{
     @Test
-    public void testMedianNoEntries() {
+    public void testMedianNoEntries()
+    {
         assertEquals(0, Integers.medianPositiveValue(Lists.newArrayList()));
     }
 
     @Test
-    public void testMedianOneEntry() {
+    public void testMedianOneEntry()
+    {
         assertEquals(5, Integers.medianPositiveValue(Lists.newArrayList(5)));
     }
 
     @Test
-    public void testMedianTwoEntry() {
+    public void testMedianTwoEntry()
+    {
         assertEquals(6, Integers.medianPositiveValue(Lists.newArrayList(7, 5)));
     }
 

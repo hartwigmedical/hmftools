@@ -5,8 +5,8 @@ import com.hartwig.hmftools.common.genome.position.GenomeInterval;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface StructuralVariantLeg extends GenomeInterval {
-
+public interface StructuralVariantLeg extends GenomeInterval
+{
     byte orientation();
 
     @NotNull
@@ -35,7 +35,8 @@ public interface StructuralVariantLeg extends GenomeInterval {
 
     int anchoringSupportDistance();
 
-    default int cnaPosition() {
-        return orientation() ==  -1 ? position() : position() + 1;
+    default int cnaPosition()
+    {
+        return orientation() == -1 ? position() : position() + 1;
     }
 }

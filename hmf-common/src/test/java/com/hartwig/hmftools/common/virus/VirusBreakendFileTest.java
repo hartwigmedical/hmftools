@@ -9,8 +9,8 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class VirusBreakendFileTest {
-
+public class VirusBreakendFileTest
+{
     private static final double EPSILON = 1e-10;
 
     private static final String EMPTY_VIRUS_BREAKEND_TSV =
@@ -19,14 +19,16 @@ public class VirusBreakendFileTest {
             Resources.getResource("virus/sample.virusbreakend.vcf.summary.tsv").getPath();
 
     @Test
-    public void canReadEmptyVirusBreakendTsv() throws IOException {
+    public void canReadEmptyVirusBreakendTsv() throws IOException
+    {
         List<VirusBreakend> virusbreakendList = VirusBreakendFile.read(EMPTY_VIRUS_BREAKEND_TSV);
 
         assertEquals(0, virusbreakendList.size());
     }
 
     @Test
-    public void canReadSampleVirusBreakendTsv() throws IOException {
+    public void canReadSampleVirusBreakendTsv() throws IOException
+    {
         List<VirusBreakend> virusbreakendList = VirusBreakendFile.read(SAMPLE_VIRUS_BREAKEND_TSV);
         assertEquals(2, virusbreakendList.size());
 
