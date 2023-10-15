@@ -41,7 +41,7 @@ public class BedStatsConsumer implements Callable
         mJobs = jobs;
         mOutputWriter = outputWriter;
 
-        mBamSlicer = new BamSlicer(0, false, true, false);
+        mBamSlicer = new BamSlicer(0, config.KeepDuplicates, true, false);
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(mConfig.BamFile));
 
         mBaseDepth = null;
