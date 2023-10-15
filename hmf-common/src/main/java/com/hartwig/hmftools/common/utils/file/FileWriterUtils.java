@@ -77,6 +77,12 @@ public final class FileWriterUtils
         return outputDir + File.separator;
     }
 
+    public static String filenamePart(final String filename)
+    {
+        int separatorIndex = filename.lastIndexOf(File.separator);
+        return separatorIndex >= 0 ? filename.substring(separatorIndex + 1) : filename;
+    }
+
     // Note: if filename ends with .gz returns a Gzipped buffered writer
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException

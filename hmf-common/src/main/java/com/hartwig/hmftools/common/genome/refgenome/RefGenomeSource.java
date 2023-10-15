@@ -38,6 +38,11 @@ public class RefGenomeSource implements RefGenomeInterface
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
     }
 
+    public static void addRefGenomeFile(final ConfigBuilder configBuilder, boolean required)
+    {
+        configBuilder.addPath(REF_GENOME, required, REF_GENOME_CFG_DESC);
+    }
+
     public static void addRefGenomeConfig(final ConfigBuilder configBuilder, boolean required)
     {
         if(required)
