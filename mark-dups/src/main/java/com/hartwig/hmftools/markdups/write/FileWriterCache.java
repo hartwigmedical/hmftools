@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.markdups.write;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.io.File;
@@ -80,22 +81,20 @@ public class FileWriterCache
 
         if(mConfig.WriteBam)
         {
-            // filename = formBamFilename(mConfig.SortedBam ? SORTED_ID : UNSORTED_ID, multiId);
-
             filename = formBamFilename(isSorted ? SORTED_ID : UNSORTED_ID, multiId);
 
             if(multiId == null)
             {
-                MD_LOGGER.debug("writing BAM file: {}", filename);
+                MD_LOGGER.debug("writing BAM file: {}", filenamePart(filename));
 
             }
             else
             {
-                MD_LOGGER.debug("writing tmp BAM file: {}", filename);
+                MD_LOGGER.debug("writing temp BAM file: {}", filenamePart(filename));
             }
 
             // no option to use library-based sorting
-            samFileWriter = initialiseSamFileWriter(filename, false);
+            samFileWriter = initialiseSamFileWriter(filename, isSorted);
         }
 
         // initiate the applicable type of BAM writer - synchronised or not
@@ -138,12 +137,15 @@ public class FileWriterCache
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
 
+        // note that while the sort order may be set to coordinate, the BAM writer is marked as presorted so
+        // the BAM will not actually be sorted by the SAMTools library
         if(isSorted)
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
         else
             fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
 
-        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(filename));
+        boolean presorted = isSorted;
+        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
     }
 
     public void sortAndIndexBams()
@@ -207,16 +209,19 @@ public class FileWriterCache
 
         MD_LOGGER.debug("sort complete");
 
-        if(mBamWriters.size() > 1)
-            mergeBams(finalBamFilename, sortedThreadBams);
+        boolean finalBamOk = true;
 
-        if(!mConfig.KeepInterimBams)
+        if(mBamWriters.size() > 1)
+            finalBamOk = mergeBams(finalBamFilename, sortedThreadBams);
+
+        if(!mConfig.KeepInterimBams && finalBamOk)
             deleteInterimBams(interimBams);
 
-        indexFinalBam(finalBamFilename);
+        if(finalBamOk)
+            indexFinalBam(finalBamFilename);
     }
 
-    private void mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
+    private boolean mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
     {
         MD_LOGGER.debug("merging {} bams", mBamWriters.size());
 
@@ -245,9 +250,13 @@ public class FileWriterCache
             command[index++] = threadBam;
         }
 
-        executeCommand(command, finalBamFilename);
+        if(executeCommand(command, finalBamFilename))
+        {
+            MD_LOGGER.debug("merge complete");
+            return true;
+        }
 
-        MD_LOGGER.debug("merge complete");
+        return false;
     }
 
     private void deleteInterimBams(final List<String> interimBams)

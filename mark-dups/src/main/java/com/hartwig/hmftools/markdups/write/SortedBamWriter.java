@@ -76,8 +76,12 @@ public class SortedBamWriter
 
     public void initialiseStartPosition(final String chromosome, int startPosition)
     {
-        mCurrentChromosome = chromosome;
-        mLastWrittenPosition = 0;
+        if(!mCurrentChromosome.equals(chromosome))
+        {
+            mCurrentChromosome = chromosome;
+            mLastWrittenPosition = 0;
+        }
+
         mMinCachedPosition = startPosition;
         mUpperBoundPosition = startPosition + mPositionBuffer;
         mUpperSortablePosition = startPosition;
@@ -207,18 +211,51 @@ public class SortedBamWriter
         mReadsWritten += records.size();
         Collections.sort(records, new SAMRecordCoordinateComparator());
 
-        if(records.get(0).getAlignmentStart() < mLastWrittenPosition)
+        if(mWriter != null)
         {
-            MD_LOGGER.error("sorted BAM cache({}) writing earlier read({}) from {} records",
-                    toString(), readToString(records.get(0)), mRecords.size());
-            System.exit(1);
+            // check the most recent write position against this new batch
+            if(records.get(0).getAlignmentStart() < mLastWrittenPosition)
+            {
+                SAMRecord nextRecord = records.get(0);
+
+                MD_LOGGER.error("sorted BAM cache({}) writing earlier(readStart={} vs last={}) from {} records, read: {}",
+                        toString(), nextRecord.getAlignmentStart(), mLastWrittenPosition, records.size(), readToString(nextRecord));
+
+                System.exit(1);
+            }
+
+            for(SAMRecord record : records)
+            {
+                mWriter.addAlignment(record);
+            }
+
+            /*
+            int readIndex = 0;
+
+            for(SAMRecord record : records)
+            {
+                try
+                {
+                    mWriter.addAlignment(record);
+                }
+                catch(Exception e)
+                {
+                    MD_LOGGER.error("sorted BAM cache({}) writing earlier(readStart={} vs last={}), record({} of {}), read: {}, error: {}",
+                            toString(), record.getAlignmentStart(), mLastWrittenPosition, readIndex, records.size(), readToString(record), e.toString());
+
+                    e.printStackTrace();
+                    System.exit(1);
+                }
+
+                mLastWrittenPosition = record.getAlignmentStart();
+                ++readIndex;
+            }
+           */
         }
 
-        if(mWriter != null)
-            records.forEach(x -> mWriter.addAlignment(x));
+        mMaxWrite = max(mMaxWrite, records.size());
 
         mLastWrittenPosition = records.get(records.size() - 1).getAlignmentStart();
-        mMaxWrite = max(mMaxWrite, records.size());
 
         records.clear();
         ++mWriteCount;

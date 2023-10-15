@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.markdups.write;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
@@ -94,7 +95,7 @@ public class BamWriterNoSync extends BamWriter
 
             MD_LOGGER.debug("sorted-writer records written({} writes={} avg={} max={}) maxCache({} avgCheck={}) to BAM({})",
                     mSortedBamWriter.written(), mSortedBamWriter.writeCount(), mSortedBamWriter.avgWriteCount(),
-                    mSortedBamWriter.maxWrite(), mSortedBamWriter.maxCache(), mSortedBamWriter.avgAssessSize(), mFilename);
+                    mSortedBamWriter.maxWrite(), mSortedBamWriter.maxCache(), mSortedBamWriter.avgAssessSize(), filenamePart(mFilename));
         }
 
         if(mSamFileWriter != null)

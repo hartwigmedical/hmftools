@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.markdups.write;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
@@ -38,7 +39,7 @@ public class BamWriterSync extends BamWriter
     {
         if(mSamFileWriter != null)
         {
-            MD_LOGGER.debug("unsorted-writer records written({}) to BAM({})", mWriteCount, mFilename);
+            MD_LOGGER.debug("unsorted-writer records written({}) to BAM({})", mWriteCount, filenamePart(mFilename));
             mSamFileWriter.close();
         }
     }
