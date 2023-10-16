@@ -7,15 +7,17 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+
 // TODO(m_cooper): Code duplication?
 public class HighDepthReader
 {
-    private static final String DELIMITER = ",";
-    private static final int NUM_FIELDS = 4;
+    private static final String DELIMITER = "\t";
+    private static final int NUM_FIELDS = 3;
 
-    static public List<HighDepthRegion> readFromFile(final String filepath)
+    static public List<ChrBaseRegion> readFromFile(final String filepath)
     {
-        final List<HighDepthRegion> records = new ArrayList<>();
+        final List<ChrBaseRegion> records = new ArrayList<>();
 
         try
         {
@@ -34,7 +36,7 @@ public class HighDepthReader
                     System.exit(1);
                 }
 
-                final HighDepthRegion record = parseFields(fields, filepath);
+                final ChrBaseRegion record = parseFields(fields, filepath);
                 records.add(record);
             }
 
@@ -50,14 +52,13 @@ public class HighDepthReader
         return records;
     }
 
-    static private HighDepthRegion parseFields(final String[] fields, final String filepath)
+    static private ChrBaseRegion parseFields(final String[] fields, final String filepath)
     {
         String chromosome = fields[0];
         int posStart = parseInt(fields[1], "PosStart", filepath);
         int posEnd = parseInt(fields[2], "PosEnd", filepath);
-        int baseDepth = parseInt(fields[3], "BaseDepth", filepath);
 
-        return new HighDepthRegion(chromosome, posStart, posEnd, baseDepth);
+        return new ChrBaseRegion(chromosome, posStart, posEnd);
     }
 
     static private int parseInt(final String str, final String fieldName, final String filepath)

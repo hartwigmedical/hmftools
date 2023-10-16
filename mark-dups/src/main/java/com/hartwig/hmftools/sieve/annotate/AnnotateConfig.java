@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.sieve.count.CountConfig;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,11 +18,13 @@ public class AnnotateConfig
     private static final String BAM_FILE = "bam_file";
     private static final String HIGH_DEPTH_FILE = "high_depth_file";
     private static final String OUTPUT_FILE = "output_file";
+    private static final String KEEP_DUPLICATES = "keep_duplicates";
 
     public final String BamFile;
     public final String HighDepthFile;
     public final String RefGenome;
     public final String OutputFile;
+    public final boolean KeepDuplicates;
     public final RefGenomeVersion RefGenVersion;
     public final int Threads;
 
@@ -32,6 +33,7 @@ public class AnnotateConfig
         BamFile = configBuilder.getValue(BAM_FILE);
         HighDepthFile = configBuilder.getValue(HIGH_DEPTH_FILE);
         OutputFile = configBuilder.getValue(OUTPUT_FILE);
+        KeepDuplicates = configBuilder.hasFlag(KEEP_DUPLICATES);
         RefGenome = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         Threads = parseThreads(configBuilder);
@@ -42,6 +44,7 @@ public class AnnotateConfig
         configBuilder.addPath(BAM_FILE, true, "BAM file");
         configBuilder.addPath(HIGH_DEPTH_FILE, true, "high depth file");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file");
+        configBuilder.addFlag(KEEP_DUPLICATES, "Include duplicates the in the counts");
         addRefGenomeConfig(configBuilder, true);
         addThreadOptions(configBuilder);
     }

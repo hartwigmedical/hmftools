@@ -12,6 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
@@ -25,12 +26,20 @@ public class Annotate
         mConfig = new AnnotateConfig(configBuilder);
     }
 
-    public static synchronized void writeRecord(final BufferedWriter outputWriter, final HighDepthRegion region,
-            final RefGenomeRegionAnnotations refAnnotations, final HighDepthCounts counts)
+    private static String regionToTSVFragement(final ChrBaseRegion region)
+    {
+        return region.chromosome() + '\t' + region.start() + '\t' + region.end();
+    }
+
+    public static synchronized void writeRecord(
+            final BufferedWriter outputWriter,
+            final ChrBaseRegion region,
+            final RefGenomeRegionAnnotations refAnnotations,
+            final HighDepthCounts counts)
     {
         try
         {
-            outputWriter.write(region.getTSVFragment() + '\t' + refAnnotations.getTSVFragment() + '\t' + counts.getTSVFragment());
+            outputWriter.write(regionToTSVFragement(region) + '\t' + refAnnotations.getTSVFragment() + '\t' + counts.getTSVFragment());
             outputWriter.newLine();
         }
         catch(IOException e)
@@ -71,18 +80,9 @@ public class Annotate
         }
 
         BufferedWriter outputWriter = createOutputWriter();
-        final List<HighDepthRegion> regions =
-                HighDepthReader.readFromFile(mConfig.HighDepthFile);
+        final List<ChrBaseRegion> regions = HighDepthReader.readFromFile(mConfig.HighDepthFile);
 
-        // TODO(m_cooper): Overlapping
-        // TODO(m_cooper): 9
-        // TODO(m_cooper): [68999357, 69000000]
-        // TODO(m_cooper): [69000000, 69000299]
-        // TODO(m_cooper): PosEnd included?
-
-        // TODO(m_cooper): Read entirely contained?
-
-        final ArrayBlockingQueue<HighDepthRegion> jobs = new ArrayBlockingQueue<>(regions.size(), true, regions);
+        final ArrayBlockingQueue<ChrBaseRegion> jobs = new ArrayBlockingQueue<>(regions.size(), true, regions);
         final List<HighDepthCountConsumer> annotateConsumers = new ArrayList<>();
         for(int i = 0; i < Math.max(mConfig.Threads, 1); i++)
         {
@@ -112,7 +112,7 @@ public class Annotate
         try
         {
             BufferedWriter writer = new BufferedWriter(new FileWriter(mConfig.OutputFile));
-            writer.write(HighDepthRegion.TSV_HEADER + '\t' + RefGenomeRegionAnnotations.TSV_HEADER + '\t' + HighDepthCounts.TSV_HEADER);
+            writer.write("Chromosome\tPosStart\tPosEnd\t" + RefGenomeRegionAnnotations.TSV_HEADER + '\t' + HighDepthCounts.TSV_HEADER);
             writer.newLine();
             return writer;
         }

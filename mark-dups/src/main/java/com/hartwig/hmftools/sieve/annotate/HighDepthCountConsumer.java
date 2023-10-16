@@ -22,7 +22,7 @@ import htsjdk.samtools.SamReaderFactory;
 public class HighDepthCountConsumer implements Callable
 {
     private final AnnotateConfig mConfig;
-    private final ArrayBlockingQueue<HighDepthRegion> mJobs;
+    private final ArrayBlockingQueue<ChrBaseRegion> mJobs;
     private final BufferedWriter mOutputWriter;
 
     private final RefGenomeSource mRefGenome;
@@ -34,12 +34,14 @@ public class HighDepthCountConsumer implements Callable
     private final PerformanceCounter mConsumerPerfCounter;
     private final PerformanceCounter mJobPerfCounter;
 
-    private HighDepthRegion mCurrentRegion;
+    private ChrBaseRegion mCurrentRegion;
     private HighDepthCounts mCurrentCounts;
     private long mReadCounter;
     private long mRegionCounter;
 
-    public HighDepthCountConsumer(final AnnotateConfig config, final ArrayBlockingQueue<HighDepthRegion> jobs,
+    public HighDepthCountConsumer(
+            final AnnotateConfig config,
+            final ArrayBlockingQueue<ChrBaseRegion> jobs,
             final BufferedWriter outputWriter)
     {
         mConfig = config;
@@ -49,7 +51,7 @@ public class HighDepthCountConsumer implements Callable
         mRefGenome = loadRefGenome(config.RefGenome);
         mRefGenomeCoords = mConfig.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
-        mBamSlicer = new BamSlicer(0, false, true, false);
+        mBamSlicer = new BamSlicer(0, config.KeepDuplicates, true, false);
         mSamReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenome)).open(new File(mConfig.BamFile));
 
         mJobPerfCounter = new PerformanceCounter("HighDepthCountConsumer Jobs");
@@ -67,12 +69,10 @@ public class HighDepthCountConsumer implements Callable
         {
             ++mRegionCounter;
             mCurrentCounts = new HighDepthCounts();
-            final ChrBaseRegion chrBaseRegion =
-                    new ChrBaseRegion(mCurrentRegion.getChromosome(), mCurrentRegion.getPosStart(), mCurrentRegion.getPosEnd());
 
             mJobPerfCounter.start();
             RefGenomeRegionAnnotations refAnnotations = annotateRegionFromRefGenome();
-            mBamSlicer.slice(mSamReader, chrBaseRegion, this::processSamRecord);
+            mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
             mJobPerfCounter.stop();
 
             Annotate.writeRecord(mOutputWriter, mCurrentRegion, refAnnotations, mCurrentCounts);
@@ -103,13 +103,13 @@ public class HighDepthCountConsumer implements Callable
     private RefGenomeRegionAnnotations annotateRegionFromRefGenome()
     {
         String refBases = mRefGenome.getBaseString(
-                mCurrentRegion.getChromosome(),
-                mCurrentRegion.getPosStart(),
-                mCurrentRegion.getPosEnd());
+                mCurrentRegion.Chromosome,
+                mCurrentRegion.start(),
+                mCurrentRegion.end());
 
         if(refBases.isEmpty())
         {
-            MD_LOGGER.error("Requested empty base string from ref genome ({}) at {}:{}-{}.", mConfig.RefGenome, mCurrentRegion.getChromosome(), mCurrentRegion.getPosStart(), mCurrentRegion.getPosEnd());
+            MD_LOGGER.error("Requested empty base string from ref genome ({}) at {}:{}-{}.", mConfig.RefGenome, mCurrentRegion.Chromosome, mCurrentRegion.start(), mCurrentRegion.end());
             System.exit(1);
         }
 
@@ -145,32 +145,32 @@ public class HighDepthCountConsumer implements Callable
                         "Found an unknown base ({}) in the ref genome ({}) at {}:{}-{}.",
                         refBases.charAt(i),
                         mConfig.RefGenome,
-                        mCurrentRegion.getChromosome(),
-                        mCurrentRegion.getPosStart(),
-                        mCurrentRegion.getPosEnd());
+                        mCurrentRegion.Chromosome,
+                        mCurrentRegion.start(),
+                        mCurrentRegion.end());
                 System.exit(1);
             }
         }
 
-        // Is this close to the centromere?
-        final int centromere = mRefGenomeCoords.centromere(mCurrentRegion.getChromosome());
-        boolean isCentromic;
-        // TODO(m_cooper): Configure the 2.5Mb threshold.
-        if(mCurrentRegion.getPosEnd() <= centromere)
+        // Distance to centromere.
+        final int centromere = mRefGenomeCoords.centromere(mCurrentRegion.Chromosome);
+        int distToCentromere = 0;
+        if(mCurrentRegion.end() <= centromere)
         {
-            isCentromic = centromere - mCurrentRegion.getPosEnd() <= 2500000;
+            distToCentromere = centromere - mCurrentRegion.end();
         }
-        else if(centromere <= mCurrentRegion.getPosStart())
+        else if(centromere <= mCurrentRegion.start())
         {
-            isCentromic = mCurrentRegion.getPosStart() - centromere <= 2500000;
-        }
-        else
-        {
-            isCentromic = true;
+            distToCentromere = mCurrentRegion.start() - centromere;
         }
 
+        // Distance to telomere.
+        final int chrLength = mRefGenomeCoords.length(mCurrentRegion.Chromosome);
+        final int distToTelomere = Math.min(mCurrentRegion.start() - 1, chrLength - mCurrentRegion.end());
+
         return new RefGenomeRegionAnnotations(
-                isCentromic,
+                distToCentromere,
+                distToTelomere,
                 1.0 * aCount / refBases.length(),
                 1.0 * tCount / refBases.length(),
                 1.0 * gCount / refBases.length(),
