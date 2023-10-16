@@ -482,7 +482,7 @@ public interface OrangeConfig
     }
 
     @NotNull
-    private static String getMetricsFile(@NotNull ConfigBuilder configBuilder, @NotNull String configStr, @Nullable String sampleId,
+    static String getMetricsFile(@NotNull ConfigBuilder configBuilder, @NotNull String configStr, @Nullable String sampleId,
             @Nullable String pipelineDir, @NotNull String toolDir)
     {
         if(configBuilder.hasValue(configStr))
