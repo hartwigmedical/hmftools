@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep18;
-import org.jooq.InsertValuesStep19;
+import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.types.UInteger;
@@ -47,7 +47,7 @@ public class StructuralVariantFusionDAO
     }
 
     @NotNull
-    private InsertValuesStep19 createBreakendInserter()
+    private InsertValuesStepN createBreakendInserter()
     {
         return context.insertInto(SVBREAKEND,
                 SVBREAKEND.MODIFIED,
@@ -68,7 +68,15 @@ public class StructuralVariantFusionDAO
                 SVBREAKEND.NEXTSPLICEEXONRANK,
                 SVBREAKEND.NEXTSPLICEEXONPHASE,
                 SVBREAKEND.NEXTSPLICEDISTANCE,
-                SVBREAKEND.TOTALEXONCOUNT);
+                SVBREAKEND.TOTALEXONCOUNT,
+                SVBREAKEND.TYPE,
+                SVBREAKEND.CHROMOSOME,
+                SVBREAKEND.CHRBAND,
+                SVBREAKEND.ORIENTATION,
+                SVBREAKEND.STRAND,
+                SVBREAKEND.EXONUP,
+                SVBREAKEND.EXONDOWN,
+                SVBREAKEND.JUNCTIONCOPYNUMBER);
     }
 
     public void writeBreakendsAndFusions(@NotNull String sampleId, @NotNull List<LinxBreakend> breakends,
@@ -81,7 +89,7 @@ public class StructuralVariantFusionDAO
         // a map of breakend DB Ids to transcripts for the fusion DB record foreign key to the breakend table
         Map<Integer, Integer> breakendIdToDbIdMap = Maps.newHashMap();
 
-        InsertValuesStep19 inserter = createBreakendInserter();
+        InsertValuesStepN inserter = createBreakendInserter();
         List<LinxBreakend> insertedBreakends = Lists.newArrayList();
 
         for(int i = 0; i < breakends.size(); ++i)
@@ -106,7 +114,15 @@ public class StructuralVariantFusionDAO
                     breakend.nextSpliceExonRank(),
                     breakend.nextSpliceExonPhase(),
                     breakend.nextSpliceDistance(),
-                    breakend.totalExonCount());
+                    breakend.totalExonCount(),
+                    breakend.type().toString(),
+                    breakend.chromosome(),
+                    breakend.chrBand(),
+                    breakend.orientation(),
+                    breakend.strand(),
+                    breakend.exonUp(),
+                    breakend.exonDown(),
+                    breakend.junctionCopyNumber());
 
             insertedBreakends.add(breakend);
 
