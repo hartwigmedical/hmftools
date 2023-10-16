@@ -15,6 +15,15 @@ import org.junit.Test;
 public class OrangeAlgoTest
 {
     @Test
+    public void canRunReportFromTestDirOnMinimalConfig() throws IOException
+    {
+        OrangeConfig config = TestOrangeConfigFactory.createMinimalConfig();
+        OrangeAlgo algo = createOrangeAlgo(config);
+
+        assertNotNull(algo.run(config));
+    }
+
+    @Test
     public void canRunReportFromTestDirTargeted() throws IOException
     {
         OrangeConfig config = TestOrangeConfigFactory.createTargetedConfig();
