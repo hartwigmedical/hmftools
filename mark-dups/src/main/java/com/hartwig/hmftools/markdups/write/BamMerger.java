@@ -87,8 +87,8 @@ public class BamMerger
 
             if((recordCount % LOG_COUNT) == 0)
             {
-                MD_LOGGER.debug("merged {} records, readers(active={} finished={})",
-                        recordCount, mActiveBamReaders.size(), mFinishedBamReaders.size());
+                MD_LOGGER.debug("merged {} records, readers(active={} finished={}) reorders({})",
+                        recordCount, mActiveBamReaders.size(), mFinishedBamReaders.size(), mReorderCount);
             }
 
             topWriter.moveNext();

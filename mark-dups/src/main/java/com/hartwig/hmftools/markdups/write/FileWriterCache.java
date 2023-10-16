@@ -164,6 +164,8 @@ public class FileWriterCache
             return;
         }
 
+        MD_LOGGER.info("sorting, merging and indexing final BAM");
+
         if(mBamWriters.size() == 1)
         {
             String unsortedBamFilename = mBamWriters.get(0).filename();
