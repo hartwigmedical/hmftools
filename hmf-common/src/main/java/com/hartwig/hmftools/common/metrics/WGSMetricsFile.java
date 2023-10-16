@@ -12,6 +12,8 @@ import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 
+// Picard WgsMetrics file output, internally superceded with BamMetricsSummary
+
 public final class WGSMetricsFile
 {
     public static final String GENOME_TERRITORY_COLUMN = "GENOME_TERRITORY";

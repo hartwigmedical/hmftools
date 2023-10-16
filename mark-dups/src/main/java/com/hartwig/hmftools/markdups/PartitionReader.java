@@ -24,6 +24,7 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
+import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.common.CandidateDuplicates;
 import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder;
@@ -117,7 +118,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         mReadPositions.setCurrentChromosome(region.Chromosome);
 
-        // setExcludedRegion(ExcludedRegions.getPolyGRegion(mConfig.RefGenVersion));
+        mBamWriter.initialiseRegion(region.Chromosome, region.start());
     }
 
     public void processRegion()
@@ -144,6 +145,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
         mReadPositions.evictAll();
 
         processPendingIncompletes();
+
+        mBamWriter.onRegionComplete();
 
         perfCountersStop();
 
@@ -191,6 +194,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         try
         {
+            mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
+
             if(!mReadPositions.processRead(read))
             {
                 processIncompleteRead(read, Fragment.getBasePartition(read, mConfig.PartitionSize));
@@ -324,9 +329,6 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         boolean inExcludedRegion = false; // dropped logic since added region unmapping logic
 
-        //boolean inExcludedRegion = mExcludedRegion != null && positionFragments.stream()
-        //        .anyMatch(x -> x.reads().stream().anyMatch(y -> FragmentUtils.overlapsExcludedRegion(mExcludedRegion, y)));
-
         findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList, mConfig.UMIs.Enabled);
 
         List<Fragment> singleFragments = mConfig.UMIs.Enabled && !inExcludedRegion ?
@@ -369,6 +371,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
             mStats.LocalComplete += resolvedFragments.stream().mapToInt(x -> x.readCount()).sum();
         }
+
+        mBamWriter.setBoundaryPosition(position, true);
 
         mPcAcceptPositions.pause();
     }

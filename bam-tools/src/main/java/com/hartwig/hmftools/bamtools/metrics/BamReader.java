@@ -2,7 +2,10 @@ package com.hartwig.hmftools.bamtools.metrics;
 
 import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL_STRAND;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +28,6 @@ public class BamReader
 {
     private final MetricsConfig mConfig;
     private final ChrBaseRegion mRegion;
-    private final ChrBaseRegion mFilterRegion;
 
     private final SamReader mSamReader;
     private final BamSlicer mBamSlicer;
@@ -34,9 +36,11 @@ public class BamReader
     private final FragmentLengths mFragmentLengths;
     private final Map<String, ReadGroup> mReadGroupMap; // keyed by readId
     private final CombinedStats mCombinedStats;
+    private final ReadCounts mReadCounts;
     private final FlagStats mFlagStats;
 
-    private int mTotalReads;
+    private final List<TargetRegionStats> mTargetRegions;
+
     private final PerformanceCounter mPerfCounter;
     private boolean mLogReadIds;
 
@@ -53,19 +57,23 @@ public class BamReader
 
         mReadGroupMap = Maps.newHashMap();
 
+        mTargetRegions = Lists.newArrayList();
+
+        if(mConfig.TargetRegions.containsKey(mRegion.Chromosome))
+        {
+            mConfig.TargetRegions.get(mRegion.Chromosome).stream()
+                    .filter(x -> x.overlaps(mRegion))
+                    .forEach(x -> mTargetRegions.add(new TargetRegionStats(new ChrBaseRegion(mRegion.Chromosome, x.start(), x.end()))));
+        }
+
         List<ChrBaseRegion> unmappableRegions = mConfig.UnmappableRegions.stream().filter(x -> x.overlaps(region)).collect(Collectors.toList());
 
         mBaseCoverage = new BaseCoverage(mConfig, mRegion.start(), mRegion.end(), unmappableRegions);
-
+        mReadCounts = new ReadCounts();
         mFlagStats = new FlagStats();
-
         mFragmentLengths = new FragmentLengths();
 
-        mFilterRegion = null;
-
-        mTotalReads = 0;
         mPerfCounter = new PerformanceCounter("Slice");
-
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
     }
 
@@ -74,7 +82,7 @@ public class BamReader
         BT_LOGGER.debug("processing region({})", mRegion);
 
         mPerfCounter.start(mConfig.PerfDebug ? mRegion.toString() : null);
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
+        mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
         mPerfCounter.stop();
 
         // process overlapping groups
@@ -85,38 +93,50 @@ public class BamReader
         }
 
         CoverageMetrics metrics = mBaseCoverage.createMetrics();
-        mCombinedStats.addStats(metrics, mFragmentLengths, mTotalReads, mPerfCounter, mFlagStats);
+        mCombinedStats.addStats(metrics, mFragmentLengths, mReadCounts, mFlagStats, mTargetRegions, mPerfCounter);
     }
+
+    public List<TargetRegionStats> targetRegions() { return mTargetRegions; }
 
     private void processSamRecord(final SAMRecord read)
     {
         int readStart = read.getAlignmentStart();
 
-        ++mTotalReads;
+        if(!mRegion.containsPosition(readStart))
+            return;
 
-        if(mFilterRegion != null)
-        {
-            if(positionsOverlap(readStart, readStart + read.getReadBases().length, mFilterRegion.start(), mFilterRegion.end()))
-                return;
-        }
+        boolean isDualStrand = false;
 
-        if(mLogReadIds) // debugging only
+        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
         {
-            if(mConfig.LogReadIds.contains(read.getReadName()))
-            {
-                BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
-            }
-        }
+            isDualStrand = isDualStrand(read);
 
-        if(mRegion.containsPosition(readStart))
-        {
-            mFlagStats.processRead(read);
-        }
+            // lower the duplicate count to reflect the use of consensus reads
+            --mReadCounts.Duplicates;
 
-        if(read.isSecondaryAlignment())
-        {
+            if(isDualStrand)
+                ++mReadCounts.DualStrand;
+
+            checkTargetRegions(read, true, isDualStrand);
             return;
         }
+
+        ++mReadCounts.TotalReads;
+
+        if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName()))
+        {
+            BT_LOGGER.debug("specific readId({}) unmapped({})", read.getReadName(), read.getReadUnmappedFlag());
+        }
+
+        mFlagStats.processRead(read);
+
+        if(read.isSecondaryAlignment())
+            return;
+
+        checkTargetRegions(read, false, isDualStrand);
+
+        if(read.getDuplicateReadFlag())
+            ++mReadCounts.Duplicates;
 
         mFragmentLengths.processRead(read);
 
@@ -145,6 +165,41 @@ public class BamReader
 
         // process this non-overlapping read immediately without caching
         mBaseCoverage.processRead(read, null);
+    }
+
+    private static boolean isDualStrand(final SAMRecord read)
+    {
+        if(read.getDuplicateReadFlag())
+            return false;
+
+        String umiType = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+        return umiType != null && umiType.equals(DUAL_STRAND.toString());
+    }
+
+    private void checkTargetRegions(final SAMRecord read, boolean isConsensus, boolean isDualStrand)
+    {
+        int readEnd = read.getAlignmentEnd();
+
+        for(TargetRegionStats targetRegion : mTargetRegions)
+        {
+            if(positionsOverlap(read.getAlignmentStart(), readEnd, targetRegion.Region.start(), targetRegion.Region.end()))
+            {
+                ++targetRegion.Counts.TotalReads;
+
+                if(read.getDuplicateReadFlag())
+                {
+                    ++targetRegion.Counts.Duplicates;
+                }
+                else
+                {
+                    if(isDualStrand)
+                       ++targetRegion.Counts.DualStrand;
+
+                    if(isConsensus)
+                        --targetRegion.Counts.Duplicates;
+                }
+            }
+        }
     }
 
     private boolean readHasOverlaps(final SAMRecord read)

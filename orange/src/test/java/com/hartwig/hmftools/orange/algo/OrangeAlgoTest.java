@@ -4,8 +4,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.orange.ImmutableOrangeConfig;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.TestOrangeConfigFactory;
 
@@ -14,6 +12,15 @@ import org.junit.Test;
 
 public class OrangeAlgoTest
 {
+    @Test
+    public void canRunReportFromTestDirOnMinimalConfig() throws IOException
+    {
+        OrangeConfig config = TestOrangeConfigFactory.createMinimalConfig();
+        OrangeAlgo algo = createOrangeAlgo(config);
+
+        assertNotNull(algo.run(config));
+    }
+
     @Test
     public void canRunReportFromTestDirTargeted() throws IOException
     {
@@ -45,19 +52,6 @@ public class OrangeAlgoTest
     public void canRunReportFromTestDirWGTSTumorNormal() throws IOException
     {
         OrangeConfig config = TestOrangeConfigFactory.createWGTSConfigTumorNormal();
-        OrangeAlgo algo = createOrangeAlgo(config);
-
-        assertNotNull(algo.run(config));
-    }
-
-    @Test
-    public void canCreateReportWithoutTumorDoids() throws IOException
-    {
-        OrangeConfig config = ImmutableOrangeConfig.builder()
-                .from(TestOrangeConfigFactory.createWGSConfigTumorNormal())
-                .primaryTumorDoids(Sets.newHashSet())
-                .build();
-
         OrangeAlgo algo = createOrangeAlgo(config);
 
         assertNotNull(algo.run(config));

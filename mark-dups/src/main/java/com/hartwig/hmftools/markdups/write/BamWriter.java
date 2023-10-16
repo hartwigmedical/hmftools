@@ -1,6 +1,4 @@
-package com.hartwig.hmftools.markdups;
-
-import static java.lang.String.format;
+package com.hartwig.hmftools.markdups.write;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
@@ -9,8 +7,9 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
 import com.hartwig.hmftools.markdups.common.DuplicateGroup;
@@ -20,55 +19,64 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 
-public class BamWriter
+public abstract class BamWriter
 {
-    private final MarkDupsConfig mConfig;
+    protected final MarkDupsConfig mConfig;
+    protected final String mFilename;
+    protected final SAMFileWriter mSamFileWriter;
+    protected final ReadDataWriter mReadDataWriter;
 
-    private final String mFilename;
-    private final SAMFileWriter mBamWriter;
-    private int mWriteCount;
+    protected final AtomicInteger mNonConsensusReadCount;
+    protected final AtomicInteger mConsensusReadCount;
 
-    private final ReadDataWriter mReadDataWriter;
-
-    private int mNonConsensusReadCount;
-    private int mConsensusReadCount;
-
-    public BamWriter(final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter)
+    public BamWriter(
+            final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter)
     {
         mFilename = filename;
         mConfig = config;
-        mBamWriter = samFileWriter;
+        mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
 
-        mNonConsensusReadCount = 0;
-        mConsensusReadCount = 0;
+        mNonConsensusReadCount = new AtomicInteger(0);
+        mConsensusReadCount = new AtomicInteger(0);
     }
 
     public String filename() { return mFilename; }
 
-    public int recordWriteCount() { return mNonConsensusReadCount; }
-    public int recordWriteCountConsensus() { return mConsensusReadCount; }
+    public int nonConsensusWriteCount() { return mNonConsensusReadCount.get(); }
+    public int consensusWriteCount() { return mConsensusReadCount.get(); }
 
-    public synchronized void writeFragments(final List<Fragment> fragments, boolean excludeUmis)
+    public int totalWriteCount() { return nonConsensusWriteCount() + consensusWriteCount(); }
+
+    public abstract boolean isSorted();
+
+    // methods to guide the sorted BAM writer
+    public abstract void initialiseRegion(final String chromosome, int startPosition);
+    public abstract void setBoundaryPosition(int position, boolean isLower);
+    public abstract void onRegionComplete();
+
+    // the public write methods are all thread-safe, using atomic counters and then the key SAM-write methods are handled
+    // in the derived sync and non-sync implementations
+    public void writeFragments(final List<Fragment> fragments, boolean excludeUmis)
     {
         fragments.forEach(x -> doWriteFragment(x, excludeUmis));
     }
 
-    public synchronized void writeFragment(final Fragment fragment) { doWriteFragment(fragment, true); }
+    public void writeFragment(final Fragment fragment) { doWriteFragment(fragment, true); }
 
-    public synchronized void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus)
+    public void writeRead(final SAMRecord read, final FragmentStatus fragmentStatus)
     {
         writeRead(read, fragmentStatus, null);
     }
 
-    public synchronized void writeDuplicateGroup(final DuplicateGroup group, final List<SAMRecord> completeReads)
+    public void writeDuplicateGroup(final DuplicateGroup group, final List<SAMRecord> completeReads)
     {
         for(SAMRecord read : completeReads)
         {
             if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
             {
                 writeRecord(read);
-                ++mConsensusReadCount;
+                mConsensusReadCount.incrementAndGet();
 
                 mReadDataWriter.writeReadData(read, PRIMARY, group.coordinatesKey(), 0, group.id());
 
@@ -81,6 +89,10 @@ public class BamWriter
             writeRead(read, DUPLICATE, group.coordinatesKey(), 0, group.id());
         }
     }
+
+    protected abstract void writeRecord(final SAMRecord read);
+
+    public abstract void close();
 
     private void doWriteFragment(final Fragment fragment, boolean excludeUmis)
     {
@@ -110,36 +122,12 @@ public class BamWriter
             final SAMRecord read, final FragmentStatus fragmentStatus, final String fragmentCoordinates,
             final double avgBaseQual, final String umiId)
     {
-        ++mNonConsensusReadCount;
+        mNonConsensusReadCount.incrementAndGet();
 
         mReadDataWriter.writeReadData(read, fragmentStatus, fragmentCoordinates, avgBaseQual, umiId);
 
         read.setDuplicateReadFlag(fragmentStatus == DUPLICATE); // overwrite any existing status
 
         writeRecord(read);
-    }
-
-    private void writeRecord(final SAMRecord read)
-    {
-        if(mBamWriter != null)
-            mBamWriter.addAlignment(read);
-
-        ++mWriteCount;
-    }
-
-    public void close()
-    {
-        if(mBamWriter != null)
-        {
-            MD_LOGGER.debug("{} records written to BAM({})", mWriteCount, mFilename);
-            mBamWriter.close();
-        }
-    }
-
-    @VisibleForTesting
-    public void resetRecordWriteCounts()
-    {
-        mConsensusReadCount = 0;
-        mNonConsensusReadCount = 0;
     }
 }

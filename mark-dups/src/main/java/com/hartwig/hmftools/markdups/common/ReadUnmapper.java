@@ -210,9 +210,6 @@ public class ReadUnmapper
             if(!positionsOverlap(readStart, approxReadEnd, region.start(), region.end()))
                 continue;
 
-            if(positionsWithin(readStart, approxReadEnd, region.start(), region.end()))
-                return true;
-
             // now test with precise read end alignment
             if(readEnd < 0)
             {

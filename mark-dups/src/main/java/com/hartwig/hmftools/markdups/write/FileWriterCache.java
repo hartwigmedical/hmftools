@@ -1,5 +1,6 @@
-package com.hartwig.hmftools.markdups;
+package com.hartwig.hmftools.markdups.write;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
 import java.io.File;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.markdups.MarkDupsConfig;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +29,7 @@ public class FileWriterCache
     private final ReadDataWriter mReadDataWriter;
 
     private final List<BamWriter> mBamWriters;
+    private final BamWriter mSharedUnsortedWriter;
 
     private static final String BAM_FILE_ID = "mark_dups";
     private static final String SORTED_ID = "sorted";
@@ -40,87 +43,74 @@ public class FileWriterCache
 
         mBamWriters = Lists.newArrayList();
 
-
-        if(!mConfig.MultiBam)
-            createBamWriter(null);
+        // create a shared BAM writer if either no multi-threading or using the sorted BAM writer
+        if(!mConfig.MultiBam || mConfig.UseSortCache)
+        {
+            String fileId = mConfig.UseSortCache ? "shared" : null;
+            mSharedUnsortedWriter = createBamWriter(fileId, true, false);
+        }
+        else
+        {
+            mSharedUnsortedWriter = null;
+        }
     }
 
-    public BamWriter getBamWriter(final String fileId)
+    public BamWriter getPartitionBamWriter(final String fileId)
     {
-        if(!mConfig.MultiBam)
-            return mBamWriters.get(0);
+        if(!mConfig.MultiBam && !mConfig.UseSortCache)
+            return mSharedUnsortedWriter;
 
-        return createBamWriter(fileId);
+        return createBamWriter(fileId, false, mConfig.UseSortCache);
     }
 
     public int totalWrittenReads()
     {
-        return mBamWriters.stream().mapToInt(x -> x.recordWriteCount()).sum();
+        return mBamWriters.stream().mapToInt(x -> x.nonConsensusWriteCount()).sum();
     }
 
     public void close()
     {
         mReadDataWriter.close();
-
-        // closing a sorted BAM involves a final sort, so ensure this is also multi-threaded
-        if(mConfig.SortedBam && mBamWriters.size() > 1)
-        {
-            List<SortBamCloseTask> closedSortedBamTasks = mBamWriters.stream().map(x -> new SortBamCloseTask(x)).collect(Collectors.toList());
-
-            List<Callable> callableTasks = closedSortedBamTasks.stream().collect(Collectors.toList());
-
-            MD_LOGGER.debug("closing {} sorted bam(s)", callableTasks.size());
-
-            if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
-                System.exit(1);
-
-            MD_LOGGER.debug("sorted BAM close complete");
-        }
-        else
-        {
-            mBamWriters.forEach(x -> x.close());
-        }
+        mBamWriters.forEach(x -> x.close());
     }
 
-    public BamWriter createBamWriter(@Nullable final String multiId)
+    private BamWriter createBamWriter(@Nullable final String multiId, boolean isSynchronous, boolean isSorted)
     {
         SAMFileWriter samFileWriter = null;
         String filename = null;
 
         if(mConfig.WriteBam)
         {
-            filename = formBamFilename(mConfig.SortedBam ? SORTED_ID : UNSORTED_ID, multiId);
+            filename = formBamFilename(isSorted ? SORTED_ID : UNSORTED_ID, multiId);
 
             if(multiId == null)
             {
-                MD_LOGGER.debug("writing BAM file: {}", filename);
+                MD_LOGGER.debug("writing BAM file: {}", filenamePart(filename));
 
             }
             else
             {
-                MD_LOGGER.debug("writing tmp BAM file: {}", filename);
+                MD_LOGGER.debug("writing temp BAM file: {}", filenamePart(filename));
             }
 
-            samFileWriter = initialiseSamFileWriter(filename);
+            // no option to use library-based sorting
+            samFileWriter = initialiseSamFileWriter(filename, isSorted);
         }
 
-        BamWriter bamWriter = new BamWriter(filename, mConfig, mReadDataWriter, samFileWriter);
+        // initiate the applicable type of BAM writer - synchronised or not
+        BamWriter bamWriter;
+
+        if(isSynchronous)
+        {
+            bamWriter = new BamWriterSync(filename, mConfig, mReadDataWriter, samFileWriter);
+        }
+        else
+        {
+            bamWriter = new BamWriterNoSync(filename, mConfig, mReadDataWriter, samFileWriter, isSorted, mSharedUnsortedWriter);
+        }
+
         mBamWriters.add(bamWriter);
         return bamWriter;
-    }
-
-    private SAMFileWriter initialiseSamFileWriter(final String filename)
-    {
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
-
-        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
-
-        if(mConfig.SortedBam)
-            fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
-        else
-            fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-
-        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(filename));
     }
 
     private String formBamFilename(@Nullable final String sorted, @Nullable final String multiId)
@@ -141,6 +131,23 @@ public class FileWriterCache
         return filename;
     }
 
+    private SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
+    {
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
+
+        SAMFileHeader fileHeader = samReader.getFileHeader().clone();
+
+        // note that while the sort order may be set to coordinate, the BAM writer is marked as presorted so
+        // the BAM will not actually be sorted by the SAMTools library
+        if(isSorted)
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
+        else
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+        boolean presorted = isSorted;
+        return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
+    }
+
     public void sortAndIndexBams()
     {
         if(mConfig.SamToolsPath == null && mConfig.SambambaPath == null)
@@ -151,68 +158,70 @@ public class FileWriterCache
         List<String> interimBams = Lists.newArrayList();
         List<String> sortedThreadBams = Lists.newArrayList();
 
-        if(!mConfig.SortedBam)
+        if(mConfig.SamToolsPath == null)
         {
-            if(mConfig.SamToolsPath == null)
-            {
-                MD_LOGGER.error("samtools required for sort");
-                return;
-            }
+            MD_LOGGER.error("samtools required for sort");
+            return;
+        }
 
-            if(mBamWriters.size() == 1)
-            {
-                String unsortedBamFilename = mBamWriters.get(0).filename();
-                SortBamTask sortBamTask = new SortBamTask(unsortedBamFilename, finalBamFilename, mConfig.Threads);
+        if(mBamWriters.size() == 1)
+        {
+            String unsortedBamFilename = mBamWriters.get(0).filename();
+            SortBamTask sortBamTask = new SortBamTask(unsortedBamFilename, finalBamFilename, mConfig.Threads);
 
-                MD_LOGGER.debug("sorting bam");
-                sortBamTask.call();
+            MD_LOGGER.debug("sorting bam");
+            sortBamTask.call();
 
-                interimBams.add(unsortedBamFilename);
-            }
-            else
-            {
-                List<SortBamTask> sortTasks = Lists.newArrayList();
-
-                for(BamWriter bamWriter : mBamWriters)
-                {
-                    String sortedBamFile = bamWriter.filename().replaceAll(UNSORTED_ID, SORTED_ID);
-
-                    sortTasks.add(new SortBamTask(bamWriter.filename(), sortedBamFile, 1));
-
-                    interimBams.add(bamWriter.filename());
-                    interimBams.add(sortedBamFile);
-                    sortedThreadBams.add(sortedBamFile);
-                }
-
-                List<Callable> callableTasks = sortTasks.stream().collect(Collectors.toList());
-
-                MD_LOGGER.debug("sorting {} bam file(s)", sortTasks.size());
-
-                if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
-                    System.exit(1);
-            }
-
-            MD_LOGGER.debug("sort complete");
+            interimBams.add(unsortedBamFilename);
         }
         else
         {
+            List<SortBamTask> sortTasks = Lists.newArrayList();
+
+            int unsortedBamCount = (int)mBamWriters.stream().filter(x -> !x.isSorted()).count();
+            int maxThreadCount = unsortedBamCount > 1 ? 1 : mConfig.Threads;
+
             for(BamWriter bamWriter : mBamWriters)
             {
+                if(bamWriter.isSorted())
+                {
+                    interimBams.add(bamWriter.filename());
+                    sortedThreadBams.add(bamWriter.filename());
+                    continue;
+                }
+
+                String sortedBamFile = bamWriter.filename().replaceAll(UNSORTED_ID, SORTED_ID);
+
+                sortTasks.add(new SortBamTask(bamWriter.filename(), sortedBamFile, maxThreadCount));
+
                 interimBams.add(bamWriter.filename());
-                sortedThreadBams.add(bamWriter.filename());
+                interimBams.add(sortedBamFile);
+                sortedThreadBams.add(sortedBamFile);
             }
+
+            List<Callable> callableTasks = sortTasks.stream().collect(Collectors.toList());
+
+            MD_LOGGER.debug("sorting {} bam file(s)", sortTasks.size());
+
+            if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
+                System.exit(1);
         }
 
-        if(mBamWriters.size() > 1)
-            mergeBams(finalBamFilename, sortedThreadBams);
+        MD_LOGGER.debug("sort complete");
 
-        if(!mConfig.KeepInterimBams)
+        boolean finalBamOk = true;
+
+        if(mBamWriters.size() > 1)
+            finalBamOk = mergeBams(finalBamFilename, sortedThreadBams);
+
+        if(!mConfig.KeepInterimBams && finalBamOk)
             deleteInterimBams(interimBams);
 
-        indexFinalBam(finalBamFilename);
+        if(finalBamOk)
+            indexFinalBam(finalBamFilename);
     }
 
-    private void mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
+    private boolean mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
     {
         MD_LOGGER.debug("merging {} bams", mBamWriters.size());
 
@@ -241,9 +250,13 @@ public class FileWriterCache
             command[index++] = threadBam;
         }
 
-        executeCommand(command, finalBamFilename);
+        if(executeCommand(command, finalBamFilename))
+        {
+            MD_LOGGER.debug("merge complete");
+            return true;
+        }
 
-        MD_LOGGER.debug("merge complete");
+        return false;
     }
 
     private void deleteInterimBams(final List<String> interimBams)
@@ -321,30 +334,6 @@ public class FileWriterCache
             command[index++] = mSortedBamfile;
 
             executeCommand(command, mSortedBamfile);
-
-            return (long)0;
-        }
-    }
-
-    private class SortBamCloseTask implements Callable
-    {
-        private final BamWriter mBamWriter;
-
-        public SortBamCloseTask(final BamWriter bamWriter)
-        {
-            mBamWriter = bamWriter;
-        }
-
-        @Override
-        public Long call()
-        {
-            if(mBamWriter == null)
-            {
-                MD_LOGGER.error("invalid bam writer");
-                return (long)0;
-            }
-
-            mBamWriter.close();
 
             return (long)0;
         }

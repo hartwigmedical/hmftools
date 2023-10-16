@@ -27,7 +27,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
-import com.hartwig.hmftools.markdups.BamWriter;
+import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 
 import htsjdk.samtools.SAMRecord;

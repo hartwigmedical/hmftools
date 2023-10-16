@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.markdups;
+package com.hartwig.hmftools.markdups.write;
 
 import static java.lang.Math.abs;
 import static java.lang.String.format;
@@ -9,9 +9,9 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRI
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-import static com.hartwig.hmftools.markdups.ReadOutput.DUPLICATES;
-import static com.hartwig.hmftools.markdups.ReadOutput.MISMATCHES;
-import static com.hartwig.hmftools.markdups.ReadOutput.NONE;
+import static com.hartwig.hmftools.markdups.write.ReadOutput.DUPLICATES;
+import static com.hartwig.hmftools.markdups.write.ReadOutput.MISMATCHES;
+import static com.hartwig.hmftools.markdups.write.ReadOutput.NONE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.UNSET;
 
@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
+import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
 
 import htsjdk.samtools.SAMRecord;
@@ -32,7 +33,6 @@ public class ReadDataWriter
     public ReadDataWriter(final MarkDupsConfig config)
     {
         mConfig = config;
-
         mWriter = initialiseReadWriter();
     }
 

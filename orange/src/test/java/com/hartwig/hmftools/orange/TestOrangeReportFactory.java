@@ -93,7 +93,7 @@ public final class TestOrangeReportFactory
     {
         return builder().experimentType(ExperimentType.WHOLE_GENOME)
                 .addConfiguredPrimaryTumor(OrangeConversion.convert(DoidTestFactory.createDoidNode("1", "cancer type")))
-                .platinumVersion("v5.32")
+                .platinumVersion("v5.33")
                 .refSample(createMinimalOrangeSample())
                 .germlineMVLHPerGene(createTestGermlineMVLHPerGene())
                 .purple(createTestPurpleData())

@@ -14,13 +14,9 @@ public class FlagQCStats
     public void record(boolean passes)
     {
         if(passes)
-        {
             mPassed++;
-        }
         else
-        {
             mFailed++;
-        }
     }
 
     public void merge(final FlagQCStats other)
@@ -33,7 +29,6 @@ public class FlagQCStats
     {
         return mPassed;
     }
-
     public int getFailed()
     {
         return mFailed;
@@ -43,5 +38,16 @@ public class FlagQCStats
     public String toString()
     {
         return String.format("%d + %d", mPassed, mFailed);
+    }
+
+    public static String flagStatsPercentages(final FlagQCStats numerator, final FlagQCStats denominator)
+    {
+        String passedStr = (denominator.getPassed() == 0) ?
+                "N/A" : String.format("%.2f%%", 100.0f * numerator.getPassed() / denominator.getPassed());
+
+        String failedStr = (denominator.getFailed() == 0) ?
+                "N/A" : String.format("%.2f%%", 100.0f * numerator.getFailed() / denominator.getFailed());
+
+        return String.format("(%s : %s)", passedStr, failedStr);
     }
 }

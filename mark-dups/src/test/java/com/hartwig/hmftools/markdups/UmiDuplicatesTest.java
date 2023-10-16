@@ -36,8 +36,7 @@ public class UmiDuplicatesTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MockRefGenome mRefGenome;
-    private final FileWriterCache mFileWriterCache;
-    private final BamWriter mWriter;
+    private final TestBamWriter mWriter;
 
     private final PartitionReader mPartitionReaderUMIs;
     private final PartitionReader mPartitionReaderDuplexUMIs;
@@ -49,8 +48,7 @@ public class UmiDuplicatesTest
 
         MarkDupsConfig umiConfig = new MarkDupsConfig(1000, 1000, mRefGenome, true, false, false);
 
-        mFileWriterCache = new FileWriterCache(umiConfig);
-        mWriter = mFileWriterCache.getBamWriter("1");
+        mWriter = new TestBamWriter(umiConfig);
 
         mPartitionReaderUMIs = new PartitionReader(umiConfig, null, mWriter, new PartitionDataStore(umiConfig));
 
@@ -84,8 +82,8 @@ public class UmiDuplicatesTest
         PartitionData partitionData = mPartitionReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
 
         assertEquals(2, partitionData.duplicateGroupMap().size());
-        assertEquals(2, mWriter.recordWriteCount());
-        assertEquals(1, mWriter.recordWriteCountConsensus());
+        assertEquals(2, mWriter.nonConsensusWriteCount());
+        assertEquals(1, mWriter.consensusWriteCount());
 
         SAMRecord mate1 = createSamRecord(
                 read1.getReadName(), CHR_1, matePos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, true,
@@ -98,12 +96,12 @@ public class UmiDuplicatesTest
         setSecondInPair(mate2);
 
         mPartitionReaderUMIs.processRead(mate1);
-        assertEquals(2, mWriter.recordWriteCount());
-        assertEquals(1, mWriter.recordWriteCountConsensus());
+        assertEquals(2, mWriter.nonConsensusWriteCount());
+        assertEquals(1, mWriter.consensusWriteCount());
 
         mPartitionReaderUMIs.processRead(mate2);
-        assertEquals(4, mWriter.recordWriteCount());
-        assertEquals(2, mWriter.recordWriteCountConsensus());
+        assertEquals(4, mWriter.nonConsensusWriteCount());
+        assertEquals(2, mWriter.consensusWriteCount());
 
         SAMRecord supp1 = createSamRecord(
                 read1.getReadName(), CHR_1, suppPos, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1, readPos, false,
@@ -116,14 +114,14 @@ public class UmiDuplicatesTest
         mPartitionReaderUMIs.setupRegion(new ChrBaseRegion(CHR_1, 1001, 2000));
 
         mPartitionReaderUMIs.processRead(supp1);
-        assertEquals(4, mWriter.recordWriteCount());
-        assertEquals(2, mWriter.recordWriteCountConsensus());
+        assertEquals(4, mWriter.nonConsensusWriteCount());
+        assertEquals(2, mWriter.consensusWriteCount());
 
         mPartitionReaderUMIs.processRead(supp2);
         mPartitionReaderUMIs.postProcessRegion();
 
-        assertEquals(6, mWriter.recordWriteCount());
-        assertEquals(3, mWriter.recordWriteCountConsensus());
+        assertEquals(6, mWriter.nonConsensusWriteCount());
+        assertEquals(3, mWriter.consensusWriteCount());
         assertTrue(partitionData.duplicateGroupMap().isEmpty());
     }
 
@@ -209,13 +207,13 @@ public class UmiDuplicatesTest
         mPartitionReaderUMIs.processRead(read1Supp3);
         mPartitionReaderUMIs.postProcessRegion();
 
-        assertEquals(7, mWriter.recordWriteCount());
-        assertEquals(3, mWriter.recordWriteCountConsensus());
+        assertEquals(7, mWriter.nonConsensusWriteCount());
+        assertEquals(3, mWriter.consensusWriteCount());
         assertTrue(partitionData.duplicateGroupMap().isEmpty());
         assertEquals(1, partitionData.incompleteFragmentMap().size());
 
         partitionData.writeRemainingReads(mWriter, mPartitionReaderUMIs.consensusReads(), false);
-        assertEquals(8, mWriter.recordWriteCount());
+        assertEquals(8, mWriter.nonConsensusWriteCount());
         assertTrue(partitionData.incompleteFragmentMap().isEmpty());
     }
 
@@ -307,8 +305,8 @@ public class UmiDuplicatesTest
         mPartitionReaderUMIs.processRead(read1Supp2);
         mPartitionReaderUMIs.postProcessRegion();
 
-        assertEquals(8, mWriter.recordWriteCount());
-        assertEquals(4, mWriter.recordWriteCountConsensus());
+        assertEquals(8, mWriter.nonConsensusWriteCount());
+        assertEquals(4, mWriter.consensusWriteCount());
 
         for(PartitionData partitionData : mPartitionReaderUMIs.partitionDataStore().partitions())
         {
@@ -391,8 +389,8 @@ public class UmiDuplicatesTest
 
         assertEquals(2, partitionData.umiGroups().size());
         assertEquals(1, partitionData.resolvedFragmentStateMap().size());
-        assertEquals(9, mWriter.recordWriteCount());
-        assertEquals(2, mWriter.recordWriteCountConsensus());
+        assertEquals(9, mWriter.nonConsensusWriteCount());
+        assertEquals(2, mWriter.consensusWriteCount());
 
         assertEquals(2, mPartitionReaderUMIs.statistics().UmiStats.UmiGroups);
         assertEquals(1, mPartitionReaderUMIs.statistics().UmiStats.PositionFragments.size());
@@ -453,8 +451,8 @@ public class UmiDuplicatesTest
         PartitionData partitionData = mPartitionReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
 
         assertEquals(2, partitionData.umiGroups().size());
-        assertEquals(5, mWriter.recordWriteCount());
-        assertEquals(2, mWriter.recordWriteCountConsensus());
+        assertEquals(5, mWriter.nonConsensusWriteCount());
+        assertEquals(2, mWriter.consensusWriteCount());
 
         assertEquals(2, mPartitionReaderUMIs.statistics().UmiStats.UmiGroups);
         assertEquals(1, mPartitionReaderUMIs.statistics().UmiStats.PositionFragments.size());
@@ -490,8 +488,8 @@ public class UmiDuplicatesTest
         mPartitionReaderUMIs.processRead(read2);
         mPartitionReaderUMIs.postProcessRegion();
 
-        assertEquals(2, mWriter.recordWriteCount());
-        assertEquals(0, mWriter.recordWriteCountConsensus());
+        assertEquals(2, mWriter.nonConsensusWriteCount());
+        assertEquals(0, mWriter.consensusWriteCount());
 
         PositionFragmentCounts positionFragmentCounts = mPartitionReaderUMIs.statistics().UmiStats.PositionFragments.get(0);
         assertEquals(2, positionFragmentCounts.UniqueCoordCount);
@@ -545,8 +543,8 @@ public class UmiDuplicatesTest
         PartitionData partitionData = mPartitionReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
 
         assertEquals(1, partitionData.umiGroups().size());
-        assertEquals(5, mWriter.recordWriteCount());
-        assertEquals(1, mWriter.recordWriteCountConsensus());
+        assertEquals(5, mWriter.nonConsensusWriteCount());
+        assertEquals(1, mWriter.consensusWriteCount());
 
         assertEquals(1, mPartitionReaderUMIs.statistics().UmiStats.UmiGroups);
         assertEquals(1, mPartitionReaderUMIs.statistics().UmiStats.PositionFragments.size());
@@ -584,8 +582,8 @@ public class UmiDuplicatesTest
         PartitionData partitionData = mPartitionReaderUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
 
         assertEquals(1, partitionData.umiGroups().size());
-        assertEquals(2, mWriter.recordWriteCount());
-        assertEquals(1, mWriter.recordWriteCountConsensus());
+        assertEquals(2, mWriter.nonConsensusWriteCount());
+        assertEquals(1, mWriter.consensusWriteCount());
 
         assertEquals(1, mPartitionReaderUMIs.statistics().UmiStats.UmiGroups);
         assertEquals(1, mPartitionReaderUMIs.statistics().UmiStats.PositionFragments.size());
@@ -668,8 +666,8 @@ public class UmiDuplicatesTest
         PartitionData partitionData = mPartitionReaderDuplexUMIs.partitionDataStore().getOrCreatePartitionData("1_0");
 
         assertEquals(5, partitionData.duplicateGroupMap().size());
-        assertEquals(5, mWriter.recordWriteCount());
-        assertEquals(2, mWriter.recordWriteCountConsensus());
+        assertEquals(5, mWriter.nonConsensusWriteCount());
+        assertEquals(2, mWriter.consensusWriteCount());
 
         assertEquals(2, mPartitionReaderDuplexUMIs.statistics().UmiStats.UmiGroups);
         assertEquals(1, mPartitionReaderDuplexUMIs.statistics().UmiStats.PositionFragments.size());

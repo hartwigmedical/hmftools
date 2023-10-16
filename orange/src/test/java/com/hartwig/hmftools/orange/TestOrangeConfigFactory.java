@@ -53,16 +53,11 @@ public final class TestOrangeConfigFactory
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
     private static final String SIGS_ALLOCATION_TSV = RUN_DIRECTORY + "/sigs/tumor_sample.sig.allocation.tsv";
 
-    private TestOrangeConfigFactory()
-    {
-    }
-
     @NotNull
-    public static OrangeConfig createTargetedConfig()
+    public static OrangeConfig createMinimalConfig()
     {
         return ImmutableOrangeConfig.builder()
                 .tumorSampleId(TUMOR_SAMPLE_ID)
-                .addPrimaryTumorDoids(MELANOMA_DOID)
                 .samplingDate(LocalDate.now())
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
                 .outputDir(Strings.EMPTY)
@@ -72,19 +67,28 @@ public final class TestOrangeConfigFactory
                 .driverGenePanelTsv(DRIVER_GENE_PANEL_TSV)
                 .knownFusionFile(KNOWN_FUSION_FILE)
                 .ensemblDataDirectory(ENSEMBL_DATA_DIRECTORY)
-                .pipelineVersionFile(PIPELINE_VERSION_FILE)
                 .tumorSampleWGSMetricsFile(TUMOR_SAMPLE_WGS_METRICS_FILE)
                 .tumorSampleFlagstatFile(TUMOR_SAMPLE_FLAGSTAT_FILE)
                 .sageSomaticTumorSampleBQRPlot(SAGE_SOMATIC_TUMOR_SAMPLE_BQR_PLOT)
                 .purpleDataDirectory(PURPLE_DATA_DIRECTORY)
                 .purplePlotDirectory(PURPLE_PLOT_DIRECTORY)
                 .linxSomaticDataDirectory(LINX_SOMATIC_DATA_DIRECTORY)
-                .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .lilacResultCsv(LILAC_RESULT_CSV)
                 .lilacQcCsv(LILAC_QC_CSV)
                 .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
                 .addDisclaimer(false)
+                .build();
+    }
+
+    @NotNull
+    public static OrangeConfig createTargetedConfig()
+    {
+        return ImmutableOrangeConfig.builder()
+                .from(createMinimalConfig())
+                .addPrimaryTumorDoids(MELANOMA_DOID)
+                .linxPlotDirectory(LINX_PLOT_DIRECTORY)
+                .pipelineVersionFile(PIPELINE_VERSION_FILE)
                 .build();
     }
 

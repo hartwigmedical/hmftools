@@ -509,7 +509,7 @@ public class OrangeAlgo
         String isofoxCancerType = cohortMapper.cancerTypeForSample(createSample(config));
         if(isofoxCancerType == null)
         {
-            LOGGER.warn("Could not resolve isofox cancer type for {}" + config.tumorSampleId());
+            LOGGER.warn("Could not resolve isofox cancer type for {}", config.tumorSampleId());
             return null;
         }
 
@@ -733,7 +733,7 @@ public class OrangeAlgo
                 .build();
     }
 
-    private void verifyPlots(@NotNull OrangePlots orangePlots, @NotNull LinxData linxData)
+    private static void verifyPlots(@NotNull OrangePlots orangePlots, @NotNull LinxData linxData)
     {
         Set<Integer> linxReportableClusters = LinxReportableClusters.findReportableClusters(linxData);
 
