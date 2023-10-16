@@ -141,7 +141,7 @@ public class SageApplication implements AutoCloseable
             sampleRegion = bamSampler.defaultRegion();
         }
 
-        if(bamSampler.calcBamCharacteristics(mConfig.TumorBams.get(0), sampleRegion))
+        if(bamSampler.calcBamCharacteristics(mConfig.TumorBams.get(0), sampleRegion) && bamSampler.maxReadLength() > 0)
         {
             mConfig.Common.setReadLength(bamSampler.maxReadLength());
         }
