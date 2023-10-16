@@ -129,7 +129,7 @@ public class MetricsConfig
         ExcludeZeroCoverage = configBuilder.hasFlag(EXCLUDE_ZERO_COVERAGE);
         WriteOldStyle = configBuilder.hasFlag(WRITE_OLD_STYLE);
 
-        TargetRegions = loadChrBaseRegions(configBuilder.getValue(REGIONS_FILE), false);
+        TargetRegions = loadChrBaseRegions(configBuilder.getValue(REGIONS_FILE));
         OnlyTargetRegions = !TargetRegions.isEmpty() && configBuilder.hasFlag(ONLY_TARGET);
 
         UnmappableRegions = Lists.newArrayList();

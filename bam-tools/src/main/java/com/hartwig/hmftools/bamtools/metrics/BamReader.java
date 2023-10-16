@@ -96,8 +96,6 @@ public class BamReader
         mCombinedStats.addStats(metrics, mFragmentLengths, mReadCounts, mFlagStats, mTargetRegions, mPerfCounter);
     }
 
-    public List<TargetRegionStats> targetRegions() { return mTargetRegions; }
-
     private void processSamRecord(final SAMRecord read)
     {
         int readStart = read.getAlignmentStart();

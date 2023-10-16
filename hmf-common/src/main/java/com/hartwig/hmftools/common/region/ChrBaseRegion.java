@@ -181,7 +181,8 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
     public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename)
     {
-        return loadChrBaseRegions(filename, false);
+        boolean isBedFile = filename.endsWith(".bed") || filename.endsWith(".bed.gz");
+        return loadChrBaseRegions(filename, isBedFile);
     }
 
     public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename, boolean isBedFile)

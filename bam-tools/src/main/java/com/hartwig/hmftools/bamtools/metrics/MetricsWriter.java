@@ -54,7 +54,7 @@ public final class MetricsWriter
             List<Integer> coverageLevels = Lists.newArrayList();
             List<Double> coveragePercents = Lists.newArrayList();
 
-            long totalBaseCount = metrics.coverageBases();
+            long totalBaseCount = metrics.genomeTerritory();
 
             for(Integer coverage : COVERAGE_LEVELS)
             {
