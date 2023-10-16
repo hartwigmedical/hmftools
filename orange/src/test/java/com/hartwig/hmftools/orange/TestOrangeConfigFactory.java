@@ -79,7 +79,6 @@ public final class TestOrangeConfigFactory
                 .purpleDataDirectory(PURPLE_DATA_DIRECTORY)
                 .purplePlotDirectory(PURPLE_PLOT_DIRECTORY)
                 .linxSomaticDataDirectory(LINX_SOMATIC_DATA_DIRECTORY)
-                .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .lilacResultCsv(LILAC_RESULT_CSV)
                 .lilacQcCsv(LILAC_QC_CSV)
                 .convertGermlineToSomatic(false)
@@ -93,6 +92,7 @@ public final class TestOrangeConfigFactory
     {
         return ImmutableOrangeConfig.builder()
                 .from(createTargetedConfig())
+                .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                 .chordPredictionTxt(CHORD_PREDICTION_TXT)
                 .cuppaResultCsv(CUPPA_RESULT_CSV)
