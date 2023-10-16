@@ -1001,6 +1001,14 @@ CREATE TABLE `svBreakend`
     `nextSpliceExonPhase` TINYINT,
     `nextSpliceDistance` INT,
     `totalExonCount` SMALLINT NOT NULL,
+    `type` VARCHAR(50) NOT NULL,
+    `chromosome` VARCHAR(20) NOT NULL,
+    `chrBand` VARCHAR(20) NOT NULL,
+    `orientation` SMALLINT NOT NULL,
+    `strand` SMALLINT NOT NULL,
+    `exonUp` SMALLINT NOT NULL,
+    `exonDown` SMALLINT NOT NULL,
+    `junctionCopyNumber` DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (`id`)
 );
 
