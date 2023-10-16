@@ -23,6 +23,7 @@ public class HighDepthCountConsumer implements Callable
 {
     private final AnnotateConfig mConfig;
     private final ArrayBlockingQueue<ChrBaseRegion> mJobs;
+    private final MaskedRegions mMaskedRegions;
     private final BufferedWriter mOutputWriter;
 
     private final RefGenomeSource mRefGenome;
@@ -42,10 +43,12 @@ public class HighDepthCountConsumer implements Callable
     public HighDepthCountConsumer(
             final AnnotateConfig config,
             final ArrayBlockingQueue<ChrBaseRegion> jobs,
+            final MaskedRegions maskedRegions,
             final BufferedWriter outputWriter)
     {
         mConfig = config;
         mJobs = jobs;
+        mMaskedRegions = maskedRegions;
         mOutputWriter = outputWriter;
 
         mRefGenome = loadRefGenome(config.RefGenome);
@@ -171,6 +174,7 @@ public class HighDepthCountConsumer implements Callable
         return new RefGenomeRegionAnnotations(
                 distToCentromere,
                 distToTelomere,
+                mMaskedRegions.distance(mCurrentRegion),
                 1.0 * aCount / refBases.length(),
                 1.0 * tCount / refBases.length(),
                 1.0 * gCount / refBases.length(),
