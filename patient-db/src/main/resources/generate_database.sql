@@ -997,7 +997,7 @@ CREATE TABLE `svBreakend`
     `codingContext` VARCHAR(20),
     `biotype` VARCHAR(255),
     `exonicBasePhase` TINYINT,
-    `nextSpliceExonRank` TINYINT UNSIGNED,
+    `nextSpliceExonRank` SMALLINT,
     `nextSpliceExonPhase` TINYINT,
     `nextSpliceDistance` INT,
     `totalExonCount` SMALLINT NOT NULL,
