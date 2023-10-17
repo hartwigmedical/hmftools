@@ -155,7 +155,7 @@ public class PurityEstimator
                 SomaticVariantResult somaticVariantResult = somaticVariants != null ?
                         somaticVariants.processSample(ctDnaSample, purityContext) : SomaticVariantResult.INVALID_RESULT;
 
-                mResultsWriter.writeSampleSummary(sample.PatientId, ctDnaSample, purityContext, cnPurityResult, somaticVariantResult);
+                mResultsWriter.writeSampleSummary(sample, ctDnaSample, purityContext, cnPurityResult, somaticVariantResult);
             }
         }
 

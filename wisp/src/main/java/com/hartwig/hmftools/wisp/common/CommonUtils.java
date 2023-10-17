@@ -11,6 +11,14 @@ public final class CommonUtils
 
     public static final String APP_NAME = "Wisp";
 
+    // common fields
+    public static final String FLD_TUMOR_ID = "TumorId";
+    public static final String FLD_CATEGORY = "Category";
+    public static final String FLD_VARIANT = "Variant";
+    public static final String FLD_BATCH_ID = "BatchId";
+
+    public static final String BATCH_CONTROL_TAG = "batch_control";
+
     public static final int DEFAULT_PROBE_LENGTH = 120;
 
     public static String generateMutationSequence(

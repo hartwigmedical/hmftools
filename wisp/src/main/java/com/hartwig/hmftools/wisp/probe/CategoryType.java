@@ -14,5 +14,6 @@ public enum CategoryType
     OTHER_CLONAL_MUTATION,
     OTHER_MUTATION,
     SUBCLONAL_MUTATION, // currently unused
+    AMP_DEL, // deprecated
     OTHER_SV;
 }

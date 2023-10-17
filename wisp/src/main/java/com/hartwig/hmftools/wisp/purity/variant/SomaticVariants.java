@@ -57,6 +57,7 @@ public class SomaticVariants
 
     private final SampleData mSample;
     private final List<SomaticVariant> mVariants;
+    private final List<ProbeVariant> mProbeVariants;
 
     public SomaticVariants(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
     {
@@ -65,6 +66,8 @@ public class SomaticVariants
         mSample = sample;
 
         mVariants = Lists.newArrayList();
+
+        mProbeVariants = mConfig.ProbeVariants.getSampleVariants(mSample.TumorId);
     }
 
     public boolean loadVariants()
@@ -140,6 +143,15 @@ public class SomaticVariants
             }
         }
 
+        if(mProbeVariants != null)
+        {
+            for(SomaticVariant variant : mVariants)
+            {
+                if(mProbeVariants.stream().anyMatch(x -> x.matches(variant)))
+                    variant.markProbeVariant();
+            }
+        }
+
         CT_LOGGER.info("processed {} filtered({}) somatic variants from VCF({})", variantCount, filteredCount, somaticVcf);
 
         return true;
@@ -173,7 +185,6 @@ public class SomaticVariants
                 somaticVariant = new SomaticVariant(variant, subclonalLikelihood, filterReasons);
 
                 somaticVariant.setSequenceGcRatio(sequenceGcRatio);
-
                 mVariants.add(somaticVariant);
             }
 
@@ -253,7 +264,7 @@ public class SomaticVariants
             if(mConfig.writeType(WriteType.SOMATICS_ALL) || useForTotals)
             {
                 // String filter = variant.PassFilters && useForTotals ? "PASS" : (!variant.PassFilters ? "FILTERED" : "NO_FRAGS");
-                mResultsWriter.writeVariant(mSample.PatientId, sampleId, variant, sampleFragData, tumorFragData, filterReasons);
+                mResultsWriter.writeVariant(mSample, sampleId, variant, sampleFragData, tumorFragData, filterReasons);
             }
 
             if(!useForTotals)
