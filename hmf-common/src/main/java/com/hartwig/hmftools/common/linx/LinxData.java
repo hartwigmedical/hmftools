@@ -55,5 +55,5 @@ public interface LinxData
     Set<Integer> fusionClusterIds();
 
     @NotNull
-    Map<Integer, Integer> SvIdToClusterId();
+    Map<Integer, Integer> svIdToClusterId();
 }

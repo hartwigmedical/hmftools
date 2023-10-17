@@ -230,7 +230,7 @@ Certain cancers such as Esophagus and Stomach were combined for the categorisati
 
 # Sub cohorts
 
-The concept of sub-cohorts are also supported in CUPPA.    Classifiers are assessed at sub-cohort level, but the values are added together and results presented at cohort level.  For now the only cancer type split into sub-cohorts is Breast, which is split into Tripple Negative vs other.   This was separated due to the ALT_SJ junction classifier having poor performance for tripple negative breast cancers, since the typical alt_sj profile is very distinct for tripple negative samples and not similar to other breast samples.  
+The concept of sub-cohorts are also supported in CUPPA.    Classifiers are assessed at sub-cohort level, but the values are added together and results presented at cohort level.  For now the only cancer type split into sub-cohorts is Breast, which is split into Triple Negative vs other.   This was separated due to the ALT_SJ junction classifier having poor performance for triple negative breast cancers, since the typical alt_sj profile is very distinct for triple negative samples and not similar to other breast samples.  
 
 ## DNA Classifier logic
 

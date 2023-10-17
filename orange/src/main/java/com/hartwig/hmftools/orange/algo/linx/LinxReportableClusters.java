@@ -26,7 +26,7 @@ public final class LinxReportableClusters
         List<LinxBreakend> breakends = linx.reportableSomaticBreakends();
         List<Integer> svIds = breakends.stream().map(LinxBreakend::svId).collect(toList());
 
-        Map<Integer, Integer> svToCluster = linx.SvIdToClusterId();
+        Map<Integer, Integer> svToCluster = linx.svIdToClusterId();
         svIds.stream().filter(svToCluster::containsKey).map(svToCluster::get).forEach(clusterIds::add);
 
         linx.somaticDrivers().stream().filter(x -> x.clusterId() >= 0).forEach(x -> clusterIds.add(x.clusterId()));
