@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTra
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -20,8 +21,8 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -305,6 +306,65 @@ public class EnsemblDataCache
         }
 
         return matchedGenes;
+    }
+
+    public final List<GeneData> findGenesByExonRegionOverlap(final String chromosome, int posStart, int posEnd)
+    {
+        // find genes if any of their exons overlap with the provided region.
+        List<GeneData> genesList = Lists.newArrayList();
+
+        final List<GeneData> geneDataList = mChrGeneDataMap.get(chromosome);
+
+        for(final GeneData geneData : geneDataList)
+        {
+            if(!positionsOverlap(posStart, posEnd, geneData.GeneStart, geneData.GeneEnd))
+            {
+                continue;
+            }
+
+            final List<TranscriptData> transList = mTranscriptByGeneIdMap.get(geneData.GeneId);
+
+            if(transList == null)
+            {
+                continue;
+            }
+
+            boolean geneExonOverlap = false;
+            for(final TranscriptData transData : transList)
+            {
+                if(!positionsOverlap(posStart, posEnd, transData.TransStart, transData.TransEnd))
+                {
+                    continue;
+                }
+
+                final List<ExonData> exonList = transData.exons();
+                if(exonList == null)
+                {
+                    continue;
+                }
+
+                for(final ExonData exonData : exonList)
+                {
+                    if(positionsOverlap(posStart, posEnd, exonData.Start, exonData.End))
+                    {
+                        geneExonOverlap = true;
+                        break;
+                    }
+                }
+
+                if(geneExonOverlap)
+                {
+                    break;
+                }
+            }
+
+            if(geneExonOverlap)
+            {
+                genesList.add(geneData);
+            }
+        }
+
+        return genesList;
     }
 
     public int findPrecedingGeneSpliceAcceptorPosition(int transId)

@@ -6,9 +6,13 @@ import static com.hartwig.hmftools.sieve.annotate.AnnotateConfig.MD_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
+import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -24,6 +28,7 @@ public class HighDepthCountConsumer implements Callable
     private final AnnotateConfig mConfig;
     private final ArrayBlockingQueue<ChrBaseRegion> mJobs;
     private final MaskedRegions mMaskedRegions;
+    private final EnsemblDataCache mEnsemblDataCache;
     private final BufferedWriter mOutputWriter;
 
     private final RefGenomeSource mRefGenome;
@@ -44,11 +49,13 @@ public class HighDepthCountConsumer implements Callable
             final AnnotateConfig config,
             final ArrayBlockingQueue<ChrBaseRegion> jobs,
             final MaskedRegions maskedRegions,
+            final EnsemblDataCache ensemblDataCache,
             final BufferedWriter outputWriter)
     {
         mConfig = config;
         mJobs = jobs;
         mMaskedRegions = maskedRegions;
+        mEnsemblDataCache = ensemblDataCache;
         mOutputWriter = outputWriter;
 
         mRefGenome = loadRefGenome(config.RefGenome);
@@ -171,10 +178,16 @@ public class HighDepthCountConsumer implements Callable
         final int chrLength = mRefGenomeCoords.length(mCurrentRegion.Chromosome);
         final int distToTelomere = Math.min(mCurrentRegion.start() - 1, chrLength - mCurrentRegion.end());
 
+        // Find gene overlaps.
+        final List<GeneData> genes =
+                mEnsemblDataCache.findGenesByExonRegionOverlap(mCurrentRegion.Chromosome, mCurrentRegion.start(), mCurrentRegion.end());
+        final String genesStr = genes.stream().map(geneData -> geneData.GeneName).collect(Collectors.joining(","));
+
         return new RefGenomeRegionAnnotations(
                 distToCentromere,
                 distToTelomere,
                 mMaskedRegions.distance(mCurrentRegion),
+                genesStr,
                 1.0 * aCount / refBases.length(),
                 1.0 * tCount / refBases.length(),
                 1.0 * gCount / refBases.length(),

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sieve.annotate;
 
+import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
@@ -49,6 +50,7 @@ public class AnnotateConfig
         configBuilder.addPath(MASKED_REGION_FILE, true, "A file describing the masked regions in the reference genome");
         configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file");
         configBuilder.addFlag(KEEP_DUPLICATES, "Include duplicates the in the counts");
+        addEnsemblDir(configBuilder, true);
         addRefGenomeConfig(configBuilder, true);
         addThreadOptions(configBuilder);
     }

@@ -12,6 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -20,10 +21,12 @@ import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 public class Annotate
 {
     private final AnnotateConfig mConfig;
+    private final EnsemblDataCache mEnsemblDataCache;
 
     public Annotate(final ConfigBuilder configBuilder)
     {
         mConfig = new AnnotateConfig(configBuilder);
+        mEnsemblDataCache = new EnsemblDataCache(configBuilder);
     }
 
     private static String regionToTSVFragement(final ChrBaseRegion region)
@@ -85,15 +88,17 @@ public class Annotate
             System.exit(1);
         }
 
-        BufferedWriter outputWriter = createOutputWriter();
+        mEnsemblDataCache.load(false);
         final MaskedRegions maskedRegions = new MaskedRegions(HighDepthReader.readFromFile(mConfig.MaskedRegionFile));
         final List<ChrBaseRegion> highDepthRegions = HighDepthReader.readFromFile(mConfig.HighDepthFile);
 
+        BufferedWriter outputWriter = createOutputWriter();
         final ArrayBlockingQueue<ChrBaseRegion> jobs = new ArrayBlockingQueue<>(highDepthRegions.size(), true, highDepthRegions);
         final List<HighDepthCountConsumer> annotateConsumers = new ArrayList<>();
         for(int i = 0; i < Math.max(mConfig.Threads, 1); i++)
         {
-            final HighDepthCountConsumer consumer = new HighDepthCountConsumer(mConfig, jobs, maskedRegions, outputWriter);
+            final HighDepthCountConsumer consumer =
+                    new HighDepthCountConsumer(mConfig, jobs, maskedRegions, mEnsemblDataCache, outputWriter);
             annotateConsumers.add(consumer);
         }
 
