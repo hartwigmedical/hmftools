@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.region;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.checkMergeOverlaps;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
@@ -14,8 +13,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -243,13 +241,38 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
                 line = fileReader.readLine();
             }
 
-            chrRegionsMap.values().forEach(x -> checkMergeOverlaps(x));
+            chrRegionsMap.values().forEach(x -> BaseRegion.checkMergeOverlaps(x));
 
             return chrRegionsMap;
         }
         catch(IOException e)
         {
             return null;
+        }
+    }
+
+
+    public static void checkMergeOverlaps(final List<ChrBaseRegion> regions, boolean checkSorted)
+    {
+        if(checkSorted)
+            Collections.sort(regions);
+
+        // merge any adjacent regions
+        int index = 0;
+        while(index < regions.size() - 1)
+        {
+            ChrBaseRegion region = regions.get(index);
+            ChrBaseRegion nextRegion = regions.get(index + 1);
+
+            if(region.Chromosome.equals(nextRegion.Chromosome) && region.end() >= nextRegion.start() - 2)
+            {
+                region.setEnd(nextRegion.end());
+                regions.remove(index + 1);
+            }
+            else
+            {
+                ++index;
+            }
         }
     }
 

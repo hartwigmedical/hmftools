@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.genome.bed;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.checkMergeOverlaps;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 
@@ -49,7 +51,6 @@ public final class BedFileReader
         }
 
         List<ChrBaseRegion> regions = loadBedFile(lines);
-        LOGGER.info("loaded {} regions from BED file {}", regions.size(), filename);
         return regions;
     }
 
@@ -59,7 +60,7 @@ public final class BedFileReader
 
         for(String line : lines)
         {
-            if(line.contains("Chromosome"))
+            if(line.contains(FLD_CHROMOSOME))
                 continue;
 
             final String[] values = line.split(TSV_DELIM, -1);
@@ -75,12 +76,19 @@ public final class BedFileReader
             regions.add(new ChrBaseRegion(chromosome, posStart, posEnd));
         }
 
+        ChrBaseRegion.checkMergeOverlaps(regions, true);
+
         return regions;
     }
 
     public static Map<Chromosome,List<BaseRegion>> loadBedFileChrMap(final String filename)
     {
-        final Map<Chromosome,List<BaseRegion>> chrRegionMap = Maps.newHashMap();
+        return loadBedFileChrMap(filename, false);
+    }
+
+    public static Map<Chromosome,List<BaseRegion>> loadBedFileChrMap(final String filename, boolean checkSortedMerged)
+    {
+        final Map<Chromosome,List<BaseRegion>> chrRegionsMap = Maps.newHashMap();
 
         try
         {
@@ -93,7 +101,7 @@ public final class BedFileReader
 
             while((line = fileReader.readLine()) != null)
             {
-                if(line.contains("Chromosome"))
+                if(line.contains(FLD_CHROMOSOME))
                     continue;
 
                 final String[] values = line.split(TSV_DELIM, -1);
@@ -106,19 +114,21 @@ public final class BedFileReader
                 {
                     currentChr = chromosome;
                     chrRegions = Lists.newArrayList();
-                    chrRegionMap.put(chromosome, chrRegions);
+                    chrRegionsMap.put(chromosome, chrRegions);
                 }
 
                 chrRegions.add(new BaseRegion(posStart, posEnd));
             }
+
+            if(checkSortedMerged)
+                chrRegionsMap.values().forEach(x -> checkMergeOverlaps(x));
         }
         catch(IOException e)
         {
-            LOGGER.error("failed to load panel BED file({}): {}", filename, e.toString());
+            LOGGER.error("failed to load BED file({}): {}", filename, e.toString());
             return null;
         }
 
-        return chrRegionMap;
+        return chrRegionsMap;
     }
-
 }
