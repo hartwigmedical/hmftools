@@ -32,8 +32,8 @@ public final class VariantEntryFactory
 
         for(PurpleDriver nonCanonicalDriver : Drivers.nonCanonicalMutationEntries(drivers))
         {
-            PurpleVariant nonCanonicalVariant = findReportedVariantForDriver(variants, nonCanonicalDriver);
-            if(nonCanonicalVariant != null)
+            List<PurpleVariant> nonCanonicalVariants = findReportedVariantsForDriver(variants, nonCanonicalDriver);
+            for(PurpleVariant nonCanonicalVariant : nonCanonicalVariants)
             {
                 entries.add(toVariantEntry(nonCanonicalVariant, nonCanonicalDriver));
             }
@@ -78,19 +78,20 @@ public final class VariantEntryFactory
                 .build();
     }
 
-    @Nullable
-    private static PurpleVariant findReportedVariantForDriver(@NotNull List<PurpleVariant> variants, @NotNull PurpleDriver driver)
+    @NotNull
+    private static List<PurpleVariant> findReportedVariantsForDriver(@NotNull List<PurpleVariant> variants, @NotNull PurpleDriver driver)
     {
+        List<PurpleVariant> reportedVariantsForDriver = Lists.newArrayList();
         List<PurpleVariant> reportedVariantsForGene = findReportedVariantsForGene(variants, driver.gene());
         for(PurpleVariant variant : reportedVariantsForGene)
         {
             if(findTranscriptImpact(variant, driver.transcript()) != null)
             {
-                return variant;
+                reportedVariantsForDriver.add(variant);
             }
         }
 
-        return null;
+        return reportedVariantsForDriver;
     }
 
     @NotNull

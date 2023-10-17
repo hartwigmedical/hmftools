@@ -134,4 +134,56 @@ public class VariantEntryFactoryTest
                         .codingEffect(PurpleCodingEffect.MISSENSE)
                         .build()));
     }
+
+    @Test
+    public void shouldReportMultipleVariantsOnDriverGene()
+    {
+        PurpleVariant driverVariant1 = TestPurpleVariantFactory.builder()
+                .reported(true)
+                .gene("gene 1")
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().transcript("transcript 1").hgvsProteinImpact("impact 1").build())
+                .addOtherImpacts(TestPurpleVariantFactory.impactBuilder().transcript("transcript 2").hgvsProteinImpact("impact 2").build())
+                .build();
+
+        PurpleVariant driverVariant2 = TestPurpleVariantFactory.builder()
+                .reported(true)
+                .gene("gene 1")
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().transcript("transcript 1").hgvsProteinImpact("impact 3").build())
+                .addOtherImpacts(TestPurpleVariantFactory.impactBuilder().transcript("transcript 2").hgvsProteinImpact("impact 4").build())
+                .build();
+
+        PurpleDriver canonicalDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.MUTATION)
+                .gene("gene 1")
+                .transcript("transcript 1")
+                .isCanonical(true)
+                .driverLikelihood(0.5)
+                .build();
+
+        PurpleDriver nonCanonicalDriver = PurpleDriverTestFactory.builder()
+                .type(PurpleDriverType.MUTATION)
+                .gene("gene 1")
+                .transcript("transcript 2")
+                .isCanonical(false)
+                .driverLikelihood(0.4)
+                .build();
+
+        List<PurpleVariant> variants = Lists.newArrayList(driverVariant1, driverVariant2);
+        List<PurpleDriver> drivers = Lists.newArrayList(canonicalDriver, nonCanonicalDriver);
+
+        List<VariantEntry> entries = VariantEntryFactory.create(variants, drivers);
+
+        assertEquals(4, entries.size());
+        VariantEntry entry1 = findByGeneAndImpact(entries, "gene 1", "impact 1");
+        assertTrue(entry1.isCanonical());
+
+        VariantEntry entry2 = findByGeneAndImpact(entries, "gene 1", "impact 2");
+        assertFalse(entry2.isCanonical());
+
+        VariantEntry entry3 = findByGeneAndImpact(entries, "gene 1", "impact 3");
+        assertTrue(entry3.isCanonical());
+
+        VariantEntry entry4 = findByGeneAndImpact(entries, "gene 1", "impact 4");
+        assertFalse(entry4.isCanonical());
+    }
 }
