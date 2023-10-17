@@ -69,10 +69,7 @@ public class StructuralVariantFusionDAO
                 SVBREAKEND.NEXTSPLICEEXONPHASE,
                 SVBREAKEND.NEXTSPLICEDISTANCE,
                 SVBREAKEND.TOTALEXONCOUNT,
-                SVBREAKEND.TYPE,
-                SVBREAKEND.CHROMOSOME,
                 SVBREAKEND.CHRBAND,
-                SVBREAKEND.ORIENTATION,
                 SVBREAKEND.STRAND,
                 SVBREAKEND.EXONUP,
                 SVBREAKEND.EXONDOWN,
@@ -115,10 +112,7 @@ public class StructuralVariantFusionDAO
                     breakend.nextSpliceExonPhase(),
                     breakend.nextSpliceDistance(),
                     breakend.totalExonCount(),
-                    breakend.type().toString(),
-                    breakend.chromosome(),
                     breakend.chrBand(),
-                    breakend.orientation(),
                     breakend.strand(),
                     breakend.exonUp(),
                     breakend.exonDown(),
@@ -254,7 +248,7 @@ public class StructuralVariantFusionDAO
         {
             LinxBreakend breakend = ImmutableLinxBreakend.builder()
                     .id(record.getValue(SVBREAKEND.ID).intValue())
-                    .svId(record.getValue(SVBREAKEND.SVID).intValue())
+                    .svId(record.getValue(SVBREAKEND.SVID))
                     .isStart(record.getValue(SVBREAKEND.STARTBREAKEND) == 1)
                     .gene(record.getValue(SVBREAKEND.GENE))
                     .transcriptId(record.getValue(SVBREAKEND.TRANSCRIPTID))
