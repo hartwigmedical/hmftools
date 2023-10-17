@@ -117,7 +117,7 @@ public class ReferenceData
 
             if(!mConfig.PanelBed.isEmpty())
             {
-                Map<Chromosome,List<BaseRegion>> panelBed = loadBedFileChrMap(mConfig.PanelBed);
+                Map<Chromosome,List<BaseRegion>> panelBed = loadBedFileChrMap(mConfig.PanelBed, true);
 
                 if(panelBed == null)
                     return false;

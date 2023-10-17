@@ -169,8 +169,9 @@ public class SageConfig
         if(readLength != DEFAULT_READ_LENGTH)
         {
             SG_LOGGER.info("max observed read length set({})", readLength);
-            mReadLength = readLength;
         }
+
+        mReadLength = readLength;
     }
 
     public String formOutputDir()
