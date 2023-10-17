@@ -166,13 +166,15 @@ public class FileWriterCache
 
         MD_LOGGER.info("sorting, merging and indexing final BAM");
 
+        boolean sortingOk = true;
+
         if(mBamWriters.size() == 1)
         {
             String unsortedBamFilename = mBamWriters.get(0).filename();
             SortBamTask sortBamTask = new SortBamTask(unsortedBamFilename, finalBamFilename, mConfig.Threads);
 
             MD_LOGGER.debug("sorting bam");
-            sortBamTask.call();
+            sortingOk = sortBamTask.success();
 
             interimBams.add(unsortedBamFilename);
         }
@@ -207,7 +209,12 @@ public class FileWriterCache
 
             if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
                 System.exit(1);
+
+            sortingOk = sortTasks.stream().allMatch(x -> x.success());
         }
+
+        if(!sortingOk)
+            return;
 
         MD_LOGGER.debug("sort complete");
 
@@ -303,13 +310,17 @@ public class FileWriterCache
         private final String mBamfile;
         private final String mSortedBamfile;
         private final int mThreadCount;
+        private boolean mSuccess;
 
         public SortBamTask(final String bamfile, final String sortedBamfile, final int threadCount)
         {
             mBamfile = bamfile;
             mThreadCount = threadCount;
             mSortedBamfile = sortedBamfile;
+            mSuccess = true;
         }
+
+        public boolean success() { return mSuccess; }
 
         @Override
         public Long call()
@@ -322,22 +333,28 @@ public class FileWriterCache
 
             // String sortArgs = format("sort -@ %s -m %dG -T tmp -O bam %s -o %s", Bash.allCpus(), SORT_MEMORY_PER_CORE, inputBam, outputBam);
 
-            final String[] command = new String[9];
+            final String[] command = new String[13];
 
             int index = 0;
             command[index++] = mConfig.SamToolsPath;
             command[index++] = "sort";
             command[index++] = "-@";
             command[index++] = String.valueOf(mThreadCount);
+            command[index++] = "-m";
+            command[index++] = "1G"; // could configure as a function of max heap used by MarkDups
+            command[index++] = "-T";
+            command[index++] = "tmp";
             command[index++] = "-O";
             command[index++] = "bam";
             command[index++] = mBamfile;
             command[index++] = "-o";
             command[index++] = mSortedBamfile;
 
-            executeCommand(command, mSortedBamfile);
+            if(executeCommand(command, mSortedBamfile))
+                return (long)0;
 
-            return (long)0;
+            mSuccess = false;
+            return (long)1;
         }
     }
 
