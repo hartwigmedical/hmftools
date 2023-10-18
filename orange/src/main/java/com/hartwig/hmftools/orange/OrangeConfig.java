@@ -7,23 +7,12 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsem
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CHORD_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.CUPPA_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.FLAGSTAT_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LILAC_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LINX_GERMLINE_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.LINX_SOMATIC_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.METRICS_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PEACH_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PURPLE_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SAGE_GERMLINE_DIR;
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SAGE_SOMATIC_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.SIGS_DIR;
-import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.VIRUS_INTERPRETER_DIR;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
@@ -32,8 +21,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLIN
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_PLOT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_PLOT_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
@@ -46,10 +33,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLIN
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
@@ -57,7 +40,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.util.Config.fileIfExists;
-import static com.hartwig.hmftools.orange.util.Config.optionalFileIfExists;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -67,17 +49,13 @@ import java.util.Locale;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.chord.ChordDataFile;
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
 import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.sage.SageCommon;
-import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
@@ -140,8 +118,6 @@ public interface OrangeConfig
         configBuilder.addPath(PIPELINE_VERSION_FILE, false, "Path towards the pipeline version file.");
 
         // tool output
-        configBuilder.addPath(REF_SAMPLE_WGS_METRICS_FILE, false, "Path towards the ref sample WGS metrics file.");
-        configBuilder.addPath(REF_SAMPLE_FLAGSTAT_FILE, false, "Path towards the ref sample flagstat file.");
         configBuilder.addPath(TUMOR_SAMPLE_WGS_METRICS_FILE, false, "Path towards the tumor sample WGS metrics file.");
         configBuilder.addPath(TUMOR_SAMPLE_FLAGSTAT_FILE, false, "Path towards the tumor sample flagstat file.");
 
@@ -158,11 +134,6 @@ public interface OrangeConfig
         configBuilder.addPath(LINX_PLOT_DIR_CFG, false, LINX_PLOT_DIR_DESC);
         configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
-        configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
-        configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
-        configBuilder.addPath(CUPPA_DIR_CFG, false, CUPPA_DIR_DESC);
-        configBuilder.addPath(PEACH_DIR_CFG, false, PEACH_DIR_DESC);
-        configBuilder.addPath(SIGS_DIR_CFG, false, SIGS_DIR_DESC);
 
         configBuilder.addFlag(CONVERT_GERMLINE_TO_SOMATIC, "If set, germline events are converted to somatic events.");
         configBuilder.addFlag(LIMIT_JSON_OUTPUT, "If set, limits every list in the json output to 1 entry.");
@@ -170,6 +141,7 @@ public interface OrangeConfig
         addLoggingOptions(configBuilder);
 
         OrangeRnaConfig.registerConfig(configBuilder);
+        OrangeWgsWithRefConfig.registerConfig(configBuilder);
     }
 
     @NotNull
@@ -217,23 +189,11 @@ public interface OrangeConfig
     @Nullable
     String pipelineVersionFile();
 
-    @Nullable
-    String refSampleWGSMetricsFile();
-
-    @Nullable
-    String refSampleFlagstatFile();
-
     @NotNull
     String tumorSampleWGSMetricsFile();
 
     @NotNull
     String tumorSampleFlagstatFile();
-
-    @Nullable
-    String sageGermlineGeneCoverageTsv();
-
-    @Nullable
-    String sageSomaticRefSampleBQRPlot();
 
     @NotNull
     String sageSomaticTumorSampleBQRPlot();
@@ -248,9 +208,6 @@ public interface OrangeConfig
     String linxSomaticDataDirectory();
 
     @Nullable
-    String linxGermlineDataDirectory();
-
-    @Nullable
     String linxPlotDirectory();
 
     @NotNull
@@ -259,35 +216,14 @@ public interface OrangeConfig
     @NotNull
     String lilacQcCsv();
 
-    @Nullable
-    String annotatedVirusTsv();
-
-    @Nullable
-    String chordPredictionTxt();
-
-    @Nullable
-    String cuppaResultCsv();
-
-    @Nullable
-    String cuppaSummaryPlot();
-
-    @Nullable
-    String cuppaFeaturePlot();
-
-    @Nullable
-    String cuppaChartPlot();
-
-    @Nullable
-    String peachGenotypeTsv();
-
-    @Nullable
-    String sigsAllocationTsv();
-
     boolean convertGermlineToSomatic();
 
     boolean limitJsonOutput();
 
     boolean addDisclaimer();
+
+    @Nullable
+    OrangeWgsWithRefConfig wgsWithRefConfig();
 
     default boolean tumorOnlyMode()
     {
@@ -345,7 +281,8 @@ public interface OrangeConfig
 
         ImmutableOrangeConfig.Builder builder = ImmutableOrangeConfig.builder();
 
-        builder.tumorSampleId(tumorSampleId)
+        builder.experimentType(experimentType)
+                .tumorSampleId(tumorSampleId)
                 .referenceSampleId(refSampleId)
                 .rnaConfig(OrangeRnaConfig.createConfig(configBuilder))
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
@@ -378,59 +315,9 @@ public interface OrangeConfig
         builder.lilacResultCsv(fileIfExists(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
         builder.lilacQcCsv(fileIfExists(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
 
-        if(refSampleId != null)
+        if(experimentType == ExperimentType.WHOLE_GENOME)
         {
-            String sageGermlineDir = getToolDirectory(
-                    configBuilder, pipelineSampleRootDir, sampleDataDir, SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
-
-            builder.sageGermlineGeneCoverageTsv(fileIfExists(SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
-            builder.sageSomaticRefSampleBQRPlot(fileIfExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
-
-            String linxGermlineDir = getToolDirectory(
-                    configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
-            builder.linxGermlineDataDirectory(linxGermlineDir);
-
-            String virusDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
-
-            if(virusDir != null)
-            {
-                builder.annotatedVirusTsv(fileIfExists(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)));
-            }
-
-            String chordDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CHORD_DIR_CFG, CHORD_DIR);
-            if(chordDir != null)
-            {
-                builder.chordPredictionTxt(fileIfExists(ChordDataFile.generateFilename(chordDir, tumorSampleId)));
-            }
-
-            String cuppaDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CUPPA_DIR_CFG, CUPPA_DIR);
-
-            if(cuppaDir != null)
-            {
-                builder.cuppaResultCsv(fileIfExists(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)));
-                builder.cuppaSummaryPlot(fileIfExists(CuppaDataFile.generateReportSummaryPlotFilename(cuppaDir, tumorSampleId)));
-                builder.cuppaFeaturePlot(optionalFileIfExists(CuppaDataFile.generateReportFeaturesPlotFilename(cuppaDir, tumorSampleId)));
-                builder.cuppaChartPlot(fileIfExists(CuppaDataFile.generateChartPlotFilename(cuppaDir, tumorSampleId)));
-            }
-
-            String sigsDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SIGS_DIR_CFG, SIGS_DIR);
-
-            if(sigsDir != null)
-            {
-                builder.sigsAllocationTsv(fileIfExists(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)));
-            }
-
-            String peachDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PEACH_DIR_CFG, PEACH_DIR);
-            if(peachDir != null)
-            {
-                builder.peachGenotypeTsv(fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv"));
-            }
-
-            builder.refSampleWGSMetricsFile(getMetricsFile(
-                    configBuilder, REF_SAMPLE_WGS_METRICS_FILE, refSampleId, pipelineSampleRootDir, METRICS_DIR));
-
-            builder.refSampleFlagstatFile(getMetricsFile(
-                    configBuilder, REF_SAMPLE_FLAGSTAT_FILE, refSampleId, pipelineSampleRootDir, FLAGSTAT_DIR));
+            builder.wgsWithRefConfig(OrangeWgsWithRefConfig.createConfig(configBuilder));
         }
 
         return builder.build();

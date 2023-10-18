@@ -101,28 +101,34 @@ public final class TestOrangeConfigFactory
         return ImmutableOrangeConfig.builder()
                 .from(createTargetedConfig())
                 .experimentType(ExperimentType.WHOLE_GENOME)
-                .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
-                .chordPredictionTxt(CHORD_PREDICTION_TXT)
-                .cuppaResultCsv(CUPPA_RESULT_CSV)
-                .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
-                .cuppaChartPlot(CUPPA_CHART_PLOT)
-                .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
+                .wgsWithRefConfig(ImmutableOrangeWgsWithRefConfig.builder()
+                        .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
+                        .chordPredictionTxt(CHORD_PREDICTION_TXT)
+                        .cuppaResultCsv(CUPPA_RESULT_CSV)
+                        .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
+                        .cuppaChartPlot(CUPPA_CHART_PLOT)
+                        .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
+                        .build())
                 .build();
     }
 
     @NotNull
     public static OrangeConfig createWGSConfigTumorNormal()
     {
+        OrangeConfig wgsConfigTumorOnly = createWGSConfigTumorOnly();
         return ImmutableOrangeConfig.builder()
-                .from(createWGSConfigTumorOnly())
+                .from(wgsConfigTumorOnly)
                 .referenceSampleId(REFERENCE_SAMPLE_ID)
                 .rnaConfig(null)
-                .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
-                .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
-                .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
-                .sageSomaticRefSampleBQRPlot(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT)
-                .linxGermlineDataDirectory(LINX_GERMLINE_DATA_DIRECTORY)
-                .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
+                .wgsWithRefConfig(ImmutableOrangeWgsWithRefConfig.builder()
+                        .from(wgsConfigTumorOnly.wgsWithRefConfig())
+                        .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
+                        .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
+                        .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
+                        .sageSomaticRefSampleBQRPlot(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT)
+                        .linxGermlineDataDirectory(LINX_GERMLINE_DATA_DIRECTORY)
+                        .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
+                        .build())
                 .build();
     }
 
