@@ -333,7 +333,7 @@ public class OrangeAlgo
         }
         else
         {
-            if(config.refSampleWGSMetricsFile() != null && config.refSampleFlagstatFile() != null)
+            if(config.wgsWithRefConfig().refSampleWGSMetricsFile() != null && config.wgsWithRefConfig().refSampleFlagstatFile() != null)
             {
                 LOGGER.info("Loading reference sample data");
             }
@@ -344,11 +344,11 @@ public class OrangeAlgo
             }
         }
 
-        String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.refSampleWGSMetricsFile();
+        String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.wgsWithRefConfig().refSampleWGSMetricsFile();
         WGSMetrics metrics = OrangeConversion.convert(WGSMetricsFile.read(metricsFile));
         LOGGER.info(" Loaded WGS metrics from {}", metricsFile);
 
-        String flagstatFile = loadTumorSample ? config.tumorSampleFlagstatFile() : config.refSampleFlagstatFile();
+        String flagstatFile = loadTumorSample ? config.tumorSampleFlagstatFile() : config.wgsWithRefConfig().refSampleFlagstatFile();
         Flagstat flagstat = OrangeConversion.convert(FlagstatFile.read(flagstatFile));
         LOGGER.info(" Loaded flagstat from {}", flagstatFile);
 
@@ -368,7 +368,7 @@ public class OrangeAlgo
     @Nullable
     private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException
     {
-        String sageGermlineGeneCoverageTsv = config.sageGermlineGeneCoverageTsv();
+        String sageGermlineGeneCoverageTsv = config.wgsWithRefConfig().sageGermlineGeneCoverageTsv();
         if(sageGermlineGeneCoverageTsv == null)
         {
             LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
@@ -459,7 +459,7 @@ public class OrangeAlgo
     {
         LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
 
-        String linxGermlineDataDirectory = config.linxGermlineDataDirectory();
+        String linxGermlineDataDirectory = config.wgsWithRefConfig().linxGermlineDataDirectory();
         LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
         LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticStructuralVariants().size());
@@ -527,12 +527,14 @@ public class OrangeAlgo
     @Nullable
     private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException
     {
+        // TODO consider if the tumor only mode is better replaced with checking if WGS is configured
+        //  here and elsewhere below
         if(config.tumorOnlyMode())
         {
             return null;
         }
 
-        String annotatedVirusTsv = config.annotatedVirusTsv();
+        String annotatedVirusTsv = config.wgsWithRefConfig().annotatedVirusTsv();
         if(annotatedVirusTsv == null)
         {
             LOGGER.debug("Skipping loading of annotated  viruses as no input has been provided");
@@ -550,7 +552,7 @@ public class OrangeAlgo
             return null;
         }
 
-        String chordPredictionTxt = config.chordPredictionTxt();
+        String chordPredictionTxt = config.wgsWithRefConfig().chordPredictionTxt();
         if(chordPredictionTxt == null)
         {
             LOGGER.debug("Skipping CHORD loading as no input has been provided");
@@ -571,7 +573,7 @@ public class OrangeAlgo
             return null;
         }
 
-        String cuppaResultTsv = config.cuppaResultCsv();
+        String cuppaResultTsv = config.wgsWithRefConfig().cuppaResultCsv();
         if(cuppaResultTsv == null)
         {
             LOGGER.debug("Skipping CUPPA loading as no input has been provided");
@@ -592,7 +594,7 @@ public class OrangeAlgo
     @Nullable
     private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException
     {
-        String peachGenotypeTsv = config.peachGenotypeTsv();
+        String peachGenotypeTsv = config.wgsWithRefConfig().peachGenotypeTsv();
 
         if(peachGenotypeTsv == null)
         {
@@ -602,7 +604,7 @@ public class OrangeAlgo
 
         LOGGER.info("Loading PEACH from {}", new File(peachGenotypeTsv).getParent());
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
-        LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.peachGenotypeTsv());
+        LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.wgsWithRefConfig().peachGenotypeTsv());
 
         return peachGenotypes;
     }
@@ -615,7 +617,7 @@ public class OrangeAlgo
             return null;
         }
 
-        String sigsAllocationTsv = config.sigsAllocationTsv();
+        String sigsAllocationTsv = config.wgsWithRefConfig().sigsAllocationTsv();
 
         if(sigsAllocationTsv == null)
         {
@@ -682,7 +684,7 @@ public class OrangeAlgo
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         }
 
-        String sageReferenceBQRPlot = plotManager.processPlotFile(config.sageSomaticRefSampleBQRPlot());
+        String sageReferenceBQRPlot = plotManager.processPlotFile(config.wgsWithRefConfig().sageSomaticRefSampleBQRPlot());
         String sageTumorBQRPlot = plotManager.processPlotFile(config.sageSomaticTumorSampleBQRPlot());
 
         String purplePlotBasePath = config.purplePlotDirectory() + File.separator + config.tumorSampleId();
@@ -695,21 +697,21 @@ public class OrangeAlgo
         String purpleKataegisPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
         String cuppaSummaryPlot = null;
-        if(config.cuppaSummaryPlot() != null)
+        if(config.wgsWithRefConfig().cuppaSummaryPlot() != null)
         {
-            cuppaSummaryPlot = plotManager.processPlotFile(config.cuppaSummaryPlot());
+            cuppaSummaryPlot = plotManager.processPlotFile(config.wgsWithRefConfig().cuppaSummaryPlot());
         }
 
         String cuppaFeaturePlot = null;
-        if(config.cuppaFeaturePlot() != null && new File(config.cuppaFeaturePlot()).exists())
+        if(config.wgsWithRefConfig().cuppaFeaturePlot() != null && new File(config.wgsWithRefConfig().cuppaFeaturePlot()).exists())
         {
-            cuppaFeaturePlot = plotManager.processPlotFile(config.cuppaFeaturePlot());
+            cuppaFeaturePlot = plotManager.processPlotFile(config.wgsWithRefConfig().cuppaFeaturePlot());
         }
 
         String cuppaChartPlot = null;
-        if(config.cuppaChartPlot() != null)
+        if(config.wgsWithRefConfig().cuppaChartPlot() != null)
         {
-            cuppaChartPlot = plotManager.processPlotFile(config.cuppaChartPlot());
+            cuppaChartPlot = plotManager.processPlotFile(config.wgsWithRefConfig().cuppaChartPlot());
         }
 
         return ImmutableOrangePlots.builder()
