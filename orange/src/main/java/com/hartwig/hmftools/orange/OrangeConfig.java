@@ -78,6 +78,7 @@ import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
+import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.immutables.value.Value;
@@ -91,6 +92,7 @@ public interface OrangeConfig
     String DOID_SEPARATOR = ";";
 
     // General params needed for every analysis
+    String EXPERIMENT_TYPE = "experiment_type";
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
@@ -115,6 +117,7 @@ public interface OrangeConfig
 
     static void registerConfig(@NotNull ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(EXPERIMENT_TYPE, true, "The type of the experiment, one of WGS or PANEL");
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
                 false,
@@ -168,6 +171,9 @@ public interface OrangeConfig
 
         OrangeRnaConfig.registerConfig(configBuilder);
     }
+
+    @NotNull
+    ExperimentType experimentType();
 
     @NotNull
     String tumorSampleId();
@@ -332,6 +338,7 @@ public interface OrangeConfig
             samplingDate = LocalDate.now();
         }
 
+        ExperimentType experimentType = determineExperimentType(configBuilder.getValue(EXPERIMENT_TYPE));
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
         String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
         String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
@@ -519,5 +526,19 @@ public interface OrangeConfig
             LOGGER.warn("Could not parse configured sampling date '{}'. Expected format is '{}'", samplingDateString, format);
         }
         return samplingDate;
+    }
+
+    @NotNull
+    private static ExperimentType determineExperimentType(@NotNull String experimentTypeString)
+    {
+        switch(experimentTypeString)
+        {
+            case "WGS":
+                return ExperimentType.WHOLE_GENOME;
+            case "PANEL":
+                return ExperimentType.TARGETED;
+            default:
+                throw new IllegalArgumentException("Invalid experiment type, must be one of WGS, PANEL");
+        }
     }
 }
