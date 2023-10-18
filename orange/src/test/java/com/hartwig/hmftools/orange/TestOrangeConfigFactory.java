@@ -3,7 +3,6 @@ package com.hartwig.hmftools.orange;
 import java.time.LocalDate;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
 
 import org.apache.logging.log4j.util.Strings;
@@ -58,7 +57,6 @@ public final class TestOrangeConfigFactory
     public static OrangeConfig createMinimalConfig()
     {
         return ImmutableOrangeConfig.builder()
-                .experimentType(ExperimentType.TARGETED)
                 .tumorSampleId(TUMOR_SAMPLE_ID)
                 .samplingDate(LocalDate.now())
                 .refGenomeVersion(OrangeRefGenomeVersion.V37)
@@ -88,7 +86,6 @@ public final class TestOrangeConfigFactory
     {
         return ImmutableOrangeConfig.builder()
                 .from(createMinimalConfig())
-                .experimentType(ExperimentType.TARGETED)
                 .addPrimaryTumorDoids(MELANOMA_DOID)
                 .linxPlotDirectory(LINX_PLOT_DIRECTORY)
                 .pipelineVersionFile(PIPELINE_VERSION_FILE)
@@ -100,35 +97,28 @@ public final class TestOrangeConfigFactory
     {
         return ImmutableOrangeConfig.builder()
                 .from(createTargetedConfig())
-                .experimentType(ExperimentType.WHOLE_GENOME)
-                .wgsWithRefConfig(ImmutableOrangeWgsWithRefConfig.builder()
-                        .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
-                        .chordPredictionTxt(CHORD_PREDICTION_TXT)
-                        .cuppaResultCsv(CUPPA_RESULT_CSV)
-                        .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
-                        .cuppaChartPlot(CUPPA_CHART_PLOT)
-                        .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
-                        .build())
+                .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
+                .chordPredictionTxt(CHORD_PREDICTION_TXT)
+                .cuppaResultCsv(CUPPA_RESULT_CSV)
+                .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
+                .cuppaChartPlot(CUPPA_CHART_PLOT)
+                .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
                 .build();
     }
 
     @NotNull
     public static OrangeConfig createWGSConfigTumorNormal()
     {
-        OrangeConfig wgsConfigTumorOnly = createWGSConfigTumorOnly();
         return ImmutableOrangeConfig.builder()
-                .from(wgsConfigTumorOnly)
+                .from(createWGSConfigTumorOnly())
                 .referenceSampleId(REFERENCE_SAMPLE_ID)
                 .rnaConfig(null)
-                .wgsWithRefConfig(ImmutableOrangeWgsWithRefConfig.builder()
-                        .from(wgsConfigTumorOnly.wgsWithRefConfig())
-                        .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
-                        .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
-                        .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
-                        .sageSomaticRefSampleBQRPlot(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT)
-                        .linxGermlineDataDirectory(LINX_GERMLINE_DATA_DIRECTORY)
-                        .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
-                        .build())
+                .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
+                .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
+                .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)
+                .sageSomaticRefSampleBQRPlot(SAGE_SOMATIC_REF_SAMPLE_BQR_PLOT)
+                .linxGermlineDataDirectory(LINX_GERMLINE_DATA_DIRECTORY)
+                .peachGenotypeTsv(PEACH_GENOTYPE_TSV)
                 .build();
     }
 
