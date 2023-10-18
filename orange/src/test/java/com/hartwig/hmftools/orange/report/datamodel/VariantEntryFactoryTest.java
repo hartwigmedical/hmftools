@@ -136,7 +136,7 @@ public class VariantEntryFactoryTest
     }
 
     @Test
-    public void shouldReportMultipleVariantsOnDriverGene()
+    public void shouldGenerateMultipleVariantsForNonCanonicalAndCanonicalDriver()
     {
         PurpleVariant driverVariant1 = TestPurpleVariantFactory.builder()
                 .reported(true)
