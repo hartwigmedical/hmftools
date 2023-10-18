@@ -64,13 +64,13 @@ public interface OrangeWgsWithRefConfig
 
     }
 
-    @NotNull
+    @Nullable
     String sageGermlineGeneCoverageTsv();
 
-    @NotNull
+    @Nullable
     String sageSomaticRefSampleBQRPlot();
 
-    @NotNull
+    @Nullable
     String linxGermlineDataDirectory();
 
     @NotNull
@@ -91,16 +91,16 @@ public interface OrangeWgsWithRefConfig
     @Nullable
     String cuppaChartPlot();
 
-    @NotNull
+    @Nullable
     String peachGenotypeTsv();
 
     @NotNull
     String sigsAllocationTsv();
 
-    @NotNull
+    @Nullable
     String refSampleWGSMetricsFile();
 
-    @NotNull
+    @Nullable
     String refSampleFlagstatFile();
 
     @NotNull

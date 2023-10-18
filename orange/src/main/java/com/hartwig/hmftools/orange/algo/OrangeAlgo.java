@@ -327,7 +327,8 @@ public class OrangeAlgo
         }
         else
         {
-            if(config.wgsWithRefConfig().refSampleWGSMetricsFile() != null && config.wgsWithRefConfig().refSampleFlagstatFile() != null)
+            if(config.wgsWithRefConfig() != null && config.wgsWithRefConfig().refSampleWGSMetricsFile() != null
+                    && config.wgsWithRefConfig().refSampleFlagstatFile() != null)
             {
                 LOGGER.info("Loading reference sample data");
             }
@@ -362,7 +363,8 @@ public class OrangeAlgo
     @Nullable
     private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException
     {
-        String sageGermlineGeneCoverageTsv = config.wgsWithRefConfig().sageGermlineGeneCoverageTsv();
+        String sageGermlineGeneCoverageTsv =
+                config.wgsWithRefConfig() != null ? config.wgsWithRefConfig().sageGermlineGeneCoverageTsv() : null;
         if(sageGermlineGeneCoverageTsv == null)
         {
             LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
@@ -453,7 +455,7 @@ public class OrangeAlgo
     {
         LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
 
-        String linxGermlineDataDirectory = config.wgsWithRefConfig().linxGermlineDataDirectory();
+        String linxGermlineDataDirectory = config.wgsWithRefConfig() != null ? config.wgsWithRefConfig().linxGermlineDataDirectory() : null;
         LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
         LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticStructuralVariants().size());
@@ -588,7 +590,7 @@ public class OrangeAlgo
     @Nullable
     private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException
     {
-        String peachGenotypeTsv = config.wgsWithRefConfig().peachGenotypeTsv();
+        String peachGenotypeTsv = config.wgsWithRefConfig() != null ? config.wgsWithRefConfig().peachGenotypeTsv() : null;
 
         if(peachGenotypeTsv == null)
         {
@@ -678,7 +680,8 @@ public class OrangeAlgo
             LOGGER.info(" Loaded {} linx plots from {}", linxDriverPlots.size(), linxPlotDir);
         }
 
-        String sageReferenceBQRPlot = plotManager.processPlotFile(config.wgsWithRefConfig().sageSomaticRefSampleBQRPlot());
+        String sageReferenceBQRPlot = plotManager.processPlotFile(
+                config.wgsWithRefConfig() != null ? config.wgsWithRefConfig().sageSomaticRefSampleBQRPlot() : null);
         String sageTumorBQRPlot = plotManager.processPlotFile(config.sageSomaticTumorSampleBQRPlot());
 
         String purplePlotBasePath = config.purplePlotDirectory() + File.separator + config.tumorSampleId();
@@ -691,19 +694,20 @@ public class OrangeAlgo
         String purpleKataegisPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
         String cuppaSummaryPlot = null;
-        if(config.wgsWithRefConfig().cuppaSummaryPlot() != null)
+        if(config.wgsWithRefConfig() != null && config.wgsWithRefConfig().cuppaSummaryPlot() != null)
         {
             cuppaSummaryPlot = plotManager.processPlotFile(config.wgsWithRefConfig().cuppaSummaryPlot());
         }
 
         String cuppaFeaturePlot = null;
-        if(config.wgsWithRefConfig().cuppaFeaturePlot() != null && new File(config.wgsWithRefConfig().cuppaFeaturePlot()).exists())
+        if(config.wgsWithRefConfig() != null && config.wgsWithRefConfig().cuppaFeaturePlot() != null && new File(config.wgsWithRefConfig()
+                .cuppaFeaturePlot()).exists())
         {
             cuppaFeaturePlot = plotManager.processPlotFile(config.wgsWithRefConfig().cuppaFeaturePlot());
         }
 
         String cuppaChartPlot = null;
-        if(config.wgsWithRefConfig().cuppaChartPlot() != null)
+        if(config.wgsWithRefConfig() != null && config.wgsWithRefConfig().cuppaChartPlot() != null)
         {
             cuppaChartPlot = plotManager.processPlotFile(config.wgsWithRefConfig().cuppaChartPlot());
         }
