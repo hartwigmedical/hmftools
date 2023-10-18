@@ -609,14 +609,14 @@ public class FrontPageChapter implements ReportChapter
         String addon = Strings.EMPTY;
         if(evaluation != null)
         {
-            String panCancerPercentile = formatPercentage(evaluation.panCancerPercentile());
+            String panCancerPercentile = formatTwoDigitDecimal(evaluation.panCancerPercentile());
             addon = " (Pan " + panCancerPercentile;
             String cancerType = evaluation.cancerType();
             if(cancerType != null && !cancerType.equals(CohortConstants.COHORT_OTHER)
                     && !cancerType.equals(CohortConstants.COHORT_UNKNOWN))
             {
                 Double percentile = evaluation.cancerTypePercentile();
-                String cancerTypePercentile = percentile != null ? formatPercentage(percentile) : "NA";
+                String cancerTypePercentile = percentile != null ? formatTwoDigitDecimal(percentile) : "NA";
                 addon = addon + " | " + evaluation.cancerType() + " " + cancerTypePercentile;
             }
             addon = addon + ")";
