@@ -31,3 +31,7 @@ CREATE TABLE svBreakend
     junctionCopyNumber DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (id)
 );
+
+CREATE INDEX `svBreakend_sampleId_svId` ON `svBreakend` (`sampleId`, `svId`);
+CREATE INDEX `svBreakend_gene` ON `svBreakend` (`gene`);
+CREATE INDEX `svBreakend_transcriptId` ON `svBreakend` (`transcriptId`);
