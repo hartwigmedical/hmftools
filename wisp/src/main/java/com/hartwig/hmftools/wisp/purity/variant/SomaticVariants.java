@@ -4,6 +4,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REALIGNED;
@@ -143,16 +144,21 @@ public class SomaticVariants
             }
         }
 
+        int matchedProbeCount = 0;
         if(mProbeVariants != null)
         {
             for(SomaticVariant variant : mVariants)
             {
                 if(mProbeVariants.stream().anyMatch(x -> x.matches(variant)))
+                {
+                    ++matchedProbeCount;
                     variant.markProbeVariant();
+                }
             }
         }
 
-        CT_LOGGER.info("processed {} filtered({}) somatic variants from VCF({})", variantCount, filteredCount, somaticVcf);
+        CT_LOGGER.info("processed {} somatic variants from VCF({}), filtered({}) probeMatched({})",
+                variantCount, filenamePart(somaticVcf), filteredCount, matchedProbeCount);
 
         return true;
     }

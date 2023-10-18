@@ -224,6 +224,16 @@ public class VariantVCF implements AutoCloseable
             header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
         }
 
+        if(!header.hasFormatLine(AVG_MAP_QUALITY))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, "Average map quality count (all,alt)"));
+        }
+
+        if(!header.hasFormatLine(AVG_NM_COUNT))
+        {
+            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, "Average NM count (all,alt)"));
+        }
+
         if(!header.hasFormatLine(UMI_TYPE_COUNTS))
         {
             header.addMetaDataLine(new VCFFormatHeaderLine(
