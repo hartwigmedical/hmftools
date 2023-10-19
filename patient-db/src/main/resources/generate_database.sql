@@ -996,15 +996,13 @@ CREATE TABLE `svBreakend`
     `regionType` VARCHAR(20) NOT NULL,
     `codingContext` VARCHAR(20),
     `biotype` VARCHAR(255),
+    `exonUp` SMALLINT NOT NULL,
+    `exonDown` SMALLINT NOT NULL,
     `exonicBasePhase` TINYINT,
     `nextSpliceExonRank` SMALLINT,
     `nextSpliceExonPhase` TINYINT,
     `nextSpliceDistance` INT,
     `totalExonCount` SMALLINT NOT NULL,
-    `strand` SMALLINT NOT NULL,
-    `exonUp` SMALLINT NOT NULL,
-    `exonDown` SMALLINT NOT NULL,
-    `junctionCopyNumber` DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (`id`)
 );
 
