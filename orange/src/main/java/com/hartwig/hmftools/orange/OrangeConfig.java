@@ -83,8 +83,6 @@ public interface OrangeConfig
 
     // Files containing the actual genomic results for this sample.
     String PIPELINE_VERSION_FILE = "pipeline_version_file";
-    String REF_SAMPLE_WGS_METRICS_FILE = "ref_sample_wgs_metrics_file";
-    String REF_SAMPLE_FLAGSTAT_FILE = "ref_sample_flagstat_file";
     String TUMOR_SAMPLE_WGS_METRICS_FILE = "tumor_sample_wgs_metrics_file";
     String TUMOR_SAMPLE_FLAGSTAT_FILE = "tumor_sample_flagstat_file";
 
