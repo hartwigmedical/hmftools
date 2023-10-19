@@ -87,21 +87,6 @@ public class VariantEntryFactoryTest
         assertNull(entry3.driverLikelihood());
     }
 
-    @NotNull
-    private static VariantEntry findByGeneAndImpact(@NotNull List<VariantEntry> entries, @NotNull String geneToFind,
-            @NotNull String impactToFind)
-    {
-        for(VariantEntry entry : entries)
-        {
-            if(entry.gene().equals(geneToFind) && entry.impact().equals(impactToFind))
-            {
-                return entry;
-            }
-        }
-
-        throw new IllegalStateException("Could not find variant entry with gene and " + geneToFind + " and impact " + impactToFind);
-    }
-
     @Test
     public void canDetermineTranscriptImpact()
     {
@@ -185,5 +170,20 @@ public class VariantEntryFactoryTest
 
         VariantEntry entry4 = findByGeneAndImpact(entries, "gene 1", "impact 4");
         assertFalse(entry4.isCanonical());
+    }
+
+    @NotNull
+    private static VariantEntry findByGeneAndImpact(@NotNull List<VariantEntry> entries, @NotNull String geneToFind,
+            @NotNull String impactToFind)
+    {
+        for(VariantEntry entry : entries)
+        {
+            if(entry.gene().equals(geneToFind) && entry.impact().equals(impactToFind))
+            {
+                return entry;
+            }
+        }
+
+        throw new IllegalStateException("Could not find variant entry with gene and " + geneToFind + " and impact " + impactToFind);
     }
 }
