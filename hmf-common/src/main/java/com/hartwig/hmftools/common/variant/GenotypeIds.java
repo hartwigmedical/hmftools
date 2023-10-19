@@ -83,13 +83,13 @@ public class GenotypeIds
             {
                 String vcfSampleName = vcfSampleNames.get(i);
 
-                if(tumorOrdinal < 0 && (vcfSampleName.equals(tumorId)
+                if(tumorOrdinal < 0 && tumorId != null && (vcfSampleName.equals(tumorId)
                 || (!checkExact && !tumorId.isEmpty() && vcfSampleName.contains(tumorId))))
                 {
                     vcfTumorId = vcfSampleNames.get(i);
                     tumorOrdinal = i;
                 }
-                else if(referenceOrdinal < 0 && (vcfSampleName.equals(referenceId)
+                else if(referenceOrdinal < 0 && referenceId != null && (vcfSampleName.equals(referenceId)
                 || (!checkExact && !referenceId.isEmpty() && vcfSampleName.contains(referenceId))))
                 {
                     vcfRefefenceId = vcfSampleNames.get(i);
