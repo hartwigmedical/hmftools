@@ -46,7 +46,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeWgsWithRefConfig
+public interface OrangeWgsConfig
 {
     String REF_SAMPLE_WGS_METRICS_FILE = "ref_sample_wgs_metrics_file";
     String REF_SAMPLE_FLAGSTAT_FILE = "ref_sample_flagstat_file";
@@ -104,9 +104,9 @@ public interface OrangeWgsWithRefConfig
     String refSampleFlagstatFile();
 
     @NotNull
-    static OrangeWgsWithRefConfig createConfig(@NotNull ConfigBuilder configBuilder)
+    static OrangeWgsConfig createConfig(@NotNull ConfigBuilder configBuilder)
     {
-        ImmutableOrangeWgsWithRefConfig.Builder builder = ImmutableOrangeWgsWithRefConfig.builder();
+        ImmutableOrangeWgsConfig.Builder builder = ImmutableOrangeWgsConfig.builder();
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
         String refSampleId = configBuilder.getValue(REFERENCE_SAMPLE_ID);
 

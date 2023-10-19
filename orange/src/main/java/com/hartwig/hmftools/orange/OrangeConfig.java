@@ -139,7 +139,7 @@ public interface OrangeConfig
         addLoggingOptions(configBuilder);
 
         OrangeRnaConfig.registerConfig(configBuilder);
-        OrangeWgsWithRefConfig.registerConfig(configBuilder);
+        OrangeWgsConfig.registerConfig(configBuilder);
     }
 
     @NotNull
@@ -221,7 +221,7 @@ public interface OrangeConfig
     boolean addDisclaimer();
 
     @Nullable
-    OrangeWgsWithRefConfig wgsWithRefConfig();
+    OrangeWgsConfig wgsConfig();
 
     default boolean tumorOnlyMode()
     {
@@ -315,7 +315,7 @@ public interface OrangeConfig
 
         if(experimentType == ExperimentType.WHOLE_GENOME)
         {
-            builder.wgsWithRefConfig(OrangeWgsWithRefConfig.createConfig(configBuilder));
+            builder.wgsConfig(OrangeWgsConfig.createConfig(configBuilder));
         }
 
         return builder.build();
