@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
 import static com.hartwig.hmftools.cup.common.CupConstants.KNOWN_MUTATIONS;
+import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.AMP_CN;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
@@ -469,7 +470,9 @@ public class FeatureDataLoader
                 if(DriverType.isGermline(driver.driver()))
                     continue;
 
-                SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), DRIVER, driver.driverLikelihood());
+                FeatureType featureType = driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP ? AMP : DRIVER;
+
+                SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), featureType, driver.driverLikelihood());
 
                 if(driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP)
                 {
