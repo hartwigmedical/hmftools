@@ -4,6 +4,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
@@ -73,9 +74,9 @@ public class SomaticVariants
 
     public boolean loadVariants()
     {
-        String somaticVcf = mConfig.SomaticVcf;
+        String somaticVcf;
 
-        if(somaticVcf.isEmpty())
+        if(mConfig.SomaticVcf.isEmpty())
         {
             somaticVcf = mConfig.SampleDataDir + mSample.TumorId + PurityConstants.PURPLE_CTDNA_SOMATIC_VCF_ID;
 
@@ -86,6 +87,8 @@ public class SomaticVariants
         }
         else
         {
+            somaticVcf = convertWildcardSamplePath(mConfig.SomaticVcf, mSample.TumorId);
+
             if(!Files.exists(Paths.get(somaticVcf)))
                 somaticVcf = mConfig.SampleDataDir + somaticVcf;
         }
