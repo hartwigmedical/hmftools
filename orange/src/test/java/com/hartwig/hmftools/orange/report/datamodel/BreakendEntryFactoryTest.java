@@ -9,7 +9,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
+import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +41,7 @@ public class BreakendEntryFactoryTest
 
         LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
 
-        List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant));
+        List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant), Lists.newArrayList(PurpleDriverTestFactory.builder().build()));
 
         assertEquals(1, entries.size());
 
@@ -60,7 +63,7 @@ public class BreakendEntryFactoryTest
         LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder().svId(1).build();
         LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).build();
 
-        BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant));
+        BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant), Lists.newArrayList(PurpleDriverTestFactory.builder().build()));
     }
 
     @Test
@@ -70,6 +73,25 @@ public class BreakendEntryFactoryTest
         assertEquals("Intron 4 Downstream", BreakendEntryFactory.range(create(4, 5, "Downstream")));
         assertEquals("Promoter Region Upstream", BreakendEntryFactory.range(create(0, 2, "Upstream")));
         assertEquals(Strings.EMPTY, BreakendEntryFactory.range(create(-1, -1, Strings.EMPTY)));
+    }
+
+    @Test
+    public void canGenerateUndisruptedCopyNumber()
+    {
+        LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder()
+                .gene("gene")
+                .type(LinxBreakendType.DUP)
+                .junctionCopyNumber(1.2)
+                .undisruptedCopyNumber(1.4)
+                .svId(1)
+                .build();
+
+        LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
+        PurpleDriver driver = PurpleDriverTestFactory.builder().gene("gene").type(PurpleDriverType.HOM_DUP_DISRUPTION).build();
+
+        List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant), Lists.newArrayList(driver));
+
+        assertEquals(0.2, entries.get(0).undisruptedCopyNumber(),0.001);
     }
 
     @NotNull
