@@ -40,7 +40,8 @@ import com.itextpdf.layout.property.HorizontalAlignment;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public class SomaticFindingsChapter implements ReportChapter {
+public class SomaticFindingsChapter implements ReportChapter
+{
     @NotNull
     private final OrangeRecord report;
     @NotNull
@@ -49,7 +50,8 @@ public class SomaticFindingsChapter implements ReportChapter {
     private final ReportResources reportResources;
 
     public SomaticFindingsChapter(@NotNull final OrangeRecord report, @NotNull final PlotPathResolver plotPathResolver,
-            @NotNull final ReportResources reportResources) {
+            @NotNull final ReportResources reportResources)
+    {
         this.report = report;
         this.plotPathResolver = plotPathResolver;
         this.reportResources = reportResources;
@@ -57,28 +59,33 @@ public class SomaticFindingsChapter implements ReportChapter {
 
     @NotNull
     @Override
-    public String name() {
+    public String name()
+    {
         return "Somatic Findings";
     }
 
     @NotNull
     @Override
-    public PageSize pageSize() {
+    public PageSize pageSize()
+    {
         return PageSize.A4;
     }
 
     @Override
-    public void render(@NotNull final Document document) {
+    public void render(@NotNull final Document document)
+    {
         document.add(new Paragraph(name()).addStyle(reportResources.chapterTitleStyle()));
 
         addSomaticVariants(document);
-        if (!PurpleQCInterpretation.isContaminated(report.purple().fit().qc())) {
+        if(!PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
             addKataegisPlot(document);
         }
         addSomaticAmpDels(document);
         addFusions(document);
 
-        if (!report.tumorOnlyMode()) {
+        if(!report.tumorOnlyMode())
+        {
             addViralPresence(document);
         }
 
@@ -86,24 +93,30 @@ public class SomaticFindingsChapter implements ReportChapter {
         addBreakends(document);
         addLossOfHeterozygosity(document);
 
-        if (!report.tumorOnlyMode()) {
+        if(!report.tumorOnlyMode())
+        {
             addSignatureAllocations(document);
         }
 
-        if (!PurpleQCInterpretation.isContaminated(report.purple().fit().qc())) {
+        if(!PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
             addStructuralDriverPlots(document);
         }
     }
 
-    private void addSomaticVariants(@NotNull Document document) {
+    private void addSomaticVariants(@NotNull Document document)
+    {
         String driverVariantsTitle = "Driver variants";
         String otherPotentiallyInterestingTitle = "Other potentially relevant variants";
 
-        if (PurpleQCInterpretation.isContaminated(report.purple().fit().qc())) {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
             Tables tables = new Tables(reportResources);
             document.add(tables.createNotAvailable(driverVariantsTitle, contentWidth()));
             document.add(tables.createNotAvailable(otherPotentiallyInterestingTitle, contentWidth()));
-        } else {
+        }
+        else
+        {
             List<PurpleDriver> somaticDrivers = report.purple().somaticDrivers();
 
             List<VariantEntry> reportableVariants =
@@ -118,32 +131,40 @@ public class SomaticFindingsChapter implements ReportChapter {
         }
     }
 
-    private void addKataegisPlot(@NotNull Document document) {
+    private void addKataegisPlot(@NotNull Document document)
+    {
         document.add(new Paragraph("Kataegis plot").addStyle(reportResources.tableTitleStyle()));
         String kataegisPlot = report.plots().purpleKataegisPlot();
-        if (kataegisPlot != null) {
+        if(kataegisPlot != null)
+        {
             Image image = Images.build(plotPathResolver.resolve(kataegisPlot));
             image.setMaxWidth(contentWidth());
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             document.add(image);
-        } else {
+        }
+        else
+        {
             document.add(new Paragraph("No kataegis plot could be generated for this sample").addStyle(reportResources.tableContentStyle()));
         }
     }
 
-    private void addSomaticAmpDels(@NotNull Document document) {
+    private void addSomaticAmpDels(@NotNull Document document)
+    {
         String driverAmpsDelsTitle = "Driver amps/dels";
         String nearDriverGainsTitle = "Potentially interesting near-driver amps";
         String suspectGainsTitle = "Other regions with amps";
         String suspectLossesTitle = "Regions with deletions in genes in other autosomal regions";
 
-        if (PurpleQCInterpretation.isContaminated(report.purple().fit().qc())) {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
             Tables tables = new Tables(reportResources);
             document.add(tables.createNotAvailable(driverAmpsDelsTitle, contentWidth()));
             document.add(tables.createNotAvailable(nearDriverGainsTitle, contentWidth()));
             document.add(tables.createNotAvailable(suspectGainsTitle, contentWidth()));
             document.add(tables.createNotAvailable(suspectLossesTitle, contentWidth()));
-        } else {
+        }
+        else
+        {
             String titleDrivers = driverAmpsDelsTitle + " (" + report.purple().reportableSomaticGainsLosses().size() + ")";
             document.add(GainLossTable.build(titleDrivers,
                     contentWidth(),
@@ -169,11 +190,14 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static List<PurpleGainLoss> selectGains(@NotNull List<PurpleGainLoss> gainsLosses) {
+    private static List<PurpleGainLoss> selectGains(@NotNull List<PurpleGainLoss> gainsLosses)
+    {
         List<PurpleGainLoss> gains = Lists.newArrayList();
-        for (PurpleGainLoss gainLoss : gainsLosses) {
-            if (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN
-                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN) {
+        for(PurpleGainLoss gainLoss : gainsLosses)
+        {
+            if(gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_GAIN
+                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_GAIN)
+            {
                 gains.add(gainLoss);
             }
         }
@@ -181,26 +205,33 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static List<PurpleGainLoss> selectLosses(@NotNull List<PurpleGainLoss> gainsLosses) {
+    private static List<PurpleGainLoss> selectLosses(@NotNull List<PurpleGainLoss> gainsLosses)
+    {
         List<PurpleGainLoss> losses = Lists.newArrayList();
-        for (PurpleGainLoss gainLoss : gainsLosses) {
-            if (gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
-                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS) {
+        for(PurpleGainLoss gainLoss : gainsLosses)
+        {
+            if(gainLoss.interpretation() == CopyNumberInterpretation.PARTIAL_LOSS
+                    || gainLoss.interpretation() == CopyNumberInterpretation.FULL_LOSS)
+            {
                 losses.add(gainLoss);
             }
         }
         return losses;
     }
 
-    private void addFusions(@NotNull Document document) {
+    private void addFusions(@NotNull Document document)
+    {
         String driverFusionsTitle = "Driver fusions";
         String nonDriverFusionsTitle = "Other potentially interesting fusions";
 
-        if (PurpleQCInterpretation.isContaminated(report.purple().fit().qc())) {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
             Tables tables = new Tables(reportResources);
             document.add(tables.createNotAvailable(driverFusionsTitle, contentWidth()));
             document.add(tables.createNotAvailable(nonDriverFusionsTitle, contentWidth()));
-        } else {
+        }
+        else
+        {
             String titleDrivers = driverFusionsTitle + " (" + report.linx().reportableSomaticFusions().size() + ")";
             document.add(DnaFusionTable.build(titleDrivers,
                     contentWidth(),
@@ -217,24 +248,31 @@ public class SomaticFindingsChapter implements ReportChapter {
         }
     }
 
-    private void addViralPresence(@NotNull Document document) {
+    private void addViralPresence(@NotNull Document document)
+    {
         VirusInterpreterData virusInterpreter = report.virusInterpreter();
 
-        if (virusInterpreter != null) {
+        if(virusInterpreter != null)
+        {
             String driverVirusTitle = "Driver viruses";
             String nonDriverVirusTitle = "Other viral presence";
 
-            if (PurpleQCInterpretation.isContaminated(report.purple().fit().qc())) {
+            if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+            {
                 Tables tables = new Tables(reportResources);
                 document.add(tables.createNotAvailable(driverVirusTitle, contentWidth()));
                 document.add(tables.createNotAvailable(nonDriverVirusTitle, contentWidth()));
-            } else {
+            }
+            else
+            {
                 String titleDrivers = driverVirusTitle + " (" + virusInterpreter.reportableViruses().size() + ")";
                 document.add(ViralPresenceTable.build(titleDrivers, contentWidth(), virusInterpreter.reportableViruses(), reportResources));
 
                 List<VirusInterpreterEntry> unreported = Lists.newArrayList();
-                for (VirusInterpreterEntry virus : virusInterpreter.allViruses()) {
-                    if (!virus.reported()) {
+                for(VirusInterpreterEntry virus : virusInterpreter.allViruses())
+                {
+                    if(!virus.reported())
+                    {
                         unreported.add(virus);
                     }
                 }
@@ -245,13 +283,17 @@ public class SomaticFindingsChapter implements ReportChapter {
         }
     }
 
-    private void addHomozygousDisruptions(@NotNull Document document) {
+    private void addHomozygousDisruptions(@NotNull Document document)
+    {
         String homozygousDisruptionTitle = "Homozygous disruptions";
 
-        if (PurpleQCInterpretation.isContaminated(report.purple().fit().qc())) {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
             Tables tables = new Tables(reportResources);
             document.add(tables.createNotAvailable(homozygousDisruptionTitle, contentWidth()));
-        } else {
+        }
+        else
+        {
             String title = homozygousDisruptionTitle + " (" + report.linx().somaticHomozygousDisruptions().size() + ")";
             document.add(HomozygousDisruptionTable.build(title,
                     contentWidth(),
@@ -260,15 +302,19 @@ public class SomaticFindingsChapter implements ReportChapter {
         }
     }
 
-    private void addBreakends(@NotNull Document document) {
+    private void addBreakends(@NotNull Document document)
+    {
         String driverGeneDisruptionsTitle = "Driver gene disruptions";
         String nonDriverGeneDisruptionsTitle = "Other potentially interesting gene disruptions";
 
-        if (PurpleQCInterpretation.isContaminated(report.purple().fit().qc())) {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
             Tables tables = new Tables(reportResources);
             document.add(tables.createNotAvailable(driverGeneDisruptionsTitle, contentWidth()));
             document.add(tables.createNotAvailable(nonDriverGeneDisruptionsTitle, contentWidth()));
-        } else {
+        }
+        else
+        {
             List<BreakendEntry> reportableBreakends = BreakendEntryFactory.create(report.linx().reportableSomaticBreakends(),
                     report.linx().allSomaticStructuralVariants(),
                     report.purple().somaticDrivers());
@@ -284,48 +330,60 @@ public class SomaticFindingsChapter implements ReportChapter {
         }
     }
 
-    private void addLossOfHeterozygosity(@NotNull Document document) {
+    private void addLossOfHeterozygosity(@NotNull Document document)
+    {
         String lohTitle = "Potentially interesting LOH events in case of MSI or HRD";
 
-        if (PurpleQCInterpretation.isContaminated(report.purple().fit().qc())) {
+        if(PurpleQCInterpretation.isContaminated(report.purple().fit().qc()))
+        {
             Tables tables = new Tables(reportResources);
             document.add(tables.createNotAvailable(lohTitle, contentWidth()));
-        } else {
+        }
+        else
+        {
             List<PurpleGeneCopyNumber> suspectGeneCopyNumbersWithLOH = report.purple().suspectGeneCopyNumbersWithLOH();
             String title = lohTitle + " (" + suspectGeneCopyNumbersWithLOH.size() + ")";
             document.add(LossOfHeterozygosityTable.build(title, contentWidth(), suspectGeneCopyNumbersWithLOH, reportResources));
         }
     }
 
-    private void addSignatureAllocations(@NotNull Document document) {
+    private void addSignatureAllocations(@NotNull Document document)
+    {
         List<SignatureAllocation> sigAllocations = report.sigAllocations();
 
-        if (sigAllocations != null) {
+        if(sigAllocations != null)
+        {
             String signatureTitle = "Signature allocations";
 
-            if (PurpleQCInterpretation.isFail(report.purple().fit().qc())) {
+            if(PurpleQCInterpretation.isFail(report.purple().fit().qc()))
+            {
                 Tables tables = new Tables(reportResources);
                 document.add(tables.createNotAvailable(signatureTitle, contentWidth()));
-            } else {
+            }
+            else
+            {
                 String title = signatureTitle + " (" + sigAllocations.size() + ")";
                 document.add(SignatureAllocationTable.build(title, contentWidth(), sigAllocations, reportResources));
             }
         }
     }
 
-    private void addStructuralDriverPlots(@NotNull Document document) {
+    private void addStructuralDriverPlots(@NotNull Document document)
+    {
         String title = "Structural driver plots (" + report.plots().linxDriverPlots().size() + ")";
         document.add(new Paragraph(title).addStyle(reportResources.tableTitleStyle()));
         Table table = new Table(2);
         Cells cells = new Cells(reportResources);
-        for (String plot : report.plots().linxDriverPlots()) {
+        for(String plot : report.plots().linxDriverPlots())
+        {
             Image image = Images.build(plotPathResolver.resolve(plot));
             image.setMaxWidth(Math.round(contentWidth() / 2D) - 2);
             image.setHorizontalAlignment(HorizontalAlignment.CENTER);
             table.addCell(cells.createImage(image));
         }
 
-        if (report.plots().linxDriverPlots().size() % 2 == 1) {
+        if(report.plots().linxDriverPlots().size() % 2 == 1)
+        {
             table.addCell(cells.createContent(Strings.EMPTY));
         }
 
@@ -333,7 +391,8 @@ public class SomaticFindingsChapter implements ReportChapter {
     }
 
     @NotNull
-    private static <T> List<T> max10(@NotNull List<T> elements) {
+    private static <T> List<T> max10(@NotNull List<T> elements)
+    {
         return elements.subList(0, Math.min(10, elements.size()));
     }
 }
