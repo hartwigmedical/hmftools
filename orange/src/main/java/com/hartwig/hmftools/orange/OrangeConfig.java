@@ -36,7 +36,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.util.Config.fileIfExists;
@@ -58,6 +57,7 @@ import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
 import com.hartwig.hmftools.datamodel.orange.OrangeRefGenomeVersion;
+import com.hartwig.hmftools.orange.util.PathResolver;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -262,8 +262,10 @@ public interface OrangeConfig
 
         ExperimentType experimentType = determineExperimentType(configBuilder.getValue(EXPERIMENT_TYPE));
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
-        String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
-        String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
+
+        PathResolver pathResolver = new PathResolver(configBuilder,
+                configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR),
+                configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
         ImmutableOrangeConfig.Builder builder = ImmutableOrangeConfig.builder();
 
@@ -281,22 +283,20 @@ public interface OrangeConfig
                 .knownFusionFile(configBuilder.getValue(KNOWN_FUSIONS_FILE))
                 .ensemblDataDirectory(configBuilder.getValue(ENSEMBL_DATA_DIR))
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
-                .tumorSampleWGSMetricsFile(getMetricsFile(
-                        configBuilder, TUMOR_SAMPLE_WGS_METRICS_FILE, tumorSampleId, pipelineSampleRootDir, METRICS_DIR))
-                .tumorSampleFlagstatFile(getMetricsFile(
-                        configBuilder, TUMOR_SAMPLE_FLAGSTAT_FILE, tumorSampleId, pipelineSampleRootDir, FLAGSTAT_DIR))
-                .purpleDataDirectory(getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PURPLE_DIR_CFG, PURPLE_DIR))
-                .purplePlotDirectory(getToolPlotsDirectory(configBuilder, pipelineSampleRootDir, PURPLE_PLOT_DIR_CFG, PURPLE_DIR))
-                .linxSomaticDataDirectory(getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_DIR_CFG, LINX_SOMATIC_DIR))
-                .linxPlotDirectory(getToolPlotsDirectory(configBuilder, pipelineSampleRootDir, LINX_PLOT_DIR_CFG, LINX_SOMATIC_DIR))
+                .tumorSampleWGSMetricsFile(pathResolver.resolveMetricsFile(TUMOR_SAMPLE_WGS_METRICS_FILE, METRICS_DIR, tumorSampleId))
+                .tumorSampleFlagstatFile(pathResolver.resolveMetricsFile(TUMOR_SAMPLE_FLAGSTAT_FILE, FLAGSTAT_DIR, tumorSampleId))
+                .purpleDataDirectory(pathResolver.resolveToolDirectory(PURPLE_DIR_CFG, PURPLE_DIR))
+                .purplePlotDirectory(pathResolver.resolveToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, PURPLE_DIR))
+                .linxSomaticDataDirectory(pathResolver.resolveToolDirectory(LINX_DIR_CFG, LINX_SOMATIC_DIR))
+                .linxPlotDirectory(pathResolver.resolveToolPlotsDirectory(LINX_PLOT_DIR_CFG, LINX_SOMATIC_DIR))
                 .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
                 .addDisclaimer(addDisclaimer);
 
-        String sageSomaticDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
+        String sageSomaticDir = pathResolver.resolveToolDirectory(SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
         builder.sageSomaticTumorSampleBQRPlot(fileIfExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, tumorSampleId)));
 
-        String lilacDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, LILAC_DIR_CFG, LILAC_DIR);
+        String lilacDir = pathResolver.resolveToolDirectory(LILAC_DIR_CFG, LILAC_DIR);
         builder.lilacResultCsv(fileIfExists(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
         builder.lilacQcCsv(fileIfExists(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
 
