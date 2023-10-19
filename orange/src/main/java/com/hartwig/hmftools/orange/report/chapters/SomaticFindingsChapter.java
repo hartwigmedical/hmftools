@@ -313,13 +313,13 @@ public class SomaticFindingsChapter implements ReportChapter
                     BreakendEntryFactory.create(report.linx().reportableSomaticBreakends(), report.linx().allSomaticStructuralVariants());
 
             String titleDriver = driverGeneDisruptionsTitle + " (" + reportableBreakends.size() + ")";
-            document.add(BreakendTable.build(titleDriver, contentWidth(), reportableBreakends, reportResources));
+            document.add(BreakendTable.build(titleDriver, contentWidth(), reportableBreakends, report.purple().somaticDrivers(), reportResources));
 
             List<BreakendEntry> additionalSuspectBreakends =
                     BreakendEntryFactory.create(report.linx().additionalSuspectSomaticBreakends(), report.linx()
                             .allSomaticStructuralVariants());
             String titleNonDrivers = nonDriverGeneDisruptionsTitle + " (" + additionalSuspectBreakends.size() + ")";
-            document.add(BreakendTable.build(titleNonDrivers, contentWidth(), additionalSuspectBreakends, reportResources));
+            document.add(BreakendTable.build(titleNonDrivers, contentWidth(), additionalSuspectBreakends, report.purple().somaticDrivers(), reportResources));
         }
     }
 

@@ -5,6 +5,9 @@ import static com.hartwig.hmftools.orange.report.ReportResources.formatSingleDig
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 import com.hartwig.hmftools.orange.report.ReportResources;
 import com.hartwig.hmftools.orange.report.datamodel.BreakendEntry;
 import com.hartwig.hmftools.orange.report.interpretation.Chromosomes;
@@ -19,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 public final class BreakendTable
 {
     @NotNull
-    public static Table build(@NotNull String title, float width, @NotNull List<BreakendEntry> breakends,
+    public static Table build(@NotNull String title, float width, @NotNull List<BreakendEntry> breakends, @NotNull List <PurpleDriver> somaticDrivers,
             @NotNull ReportResources reportResources)
     {
         if(breakends.isEmpty())
@@ -42,7 +45,7 @@ public final class BreakendTable
             table.addCell(cells.createContent(breakend.type().toString()));
             table.addCell(cells.createContent(String.valueOf(breakend.clusterId())));
             table.addCell(cells.createContent(formatSingleDigitDecimal(breakend.junctionCopyNumber())));
-            table.addCell(cells.createContent(formatSingleDigitDecimal(breakend.undisruptedCopyNumber())));
+            table.addCell(cells.createContent(displayUndisruptedCopyNumber(breakend, somaticDrivers)));
         }
 
         return new Tables(reportResources).createWrapping(table, title);
@@ -81,5 +84,16 @@ public final class BreakendTable
             addon = " (alt)";
         }
         return breakend.gene() + addon;
+    }
+
+    @NotNull
+    private static String displayUndisruptedCopyNumber(@NotNull BreakendEntry breakend, @NotNull List<PurpleDriver> somaticDrivers){
+        for (PurpleDriver drivers : somaticDrivers) {
+            if (drivers.gene().equals(breakend.gene()) && drivers.type() == PurpleDriverType.HOM_DUP_DISRUPTION && breakend.type() == LinxBreakendType.DUP) {
+                return formatSingleDigitDecimal(breakend.undisruptedCopyNumber() - breakend.junctionCopyNumber());
+            }
+        }
+
+        return formatSingleDigitDecimal(breakend.undisruptedCopyNumber());
     }
 }
