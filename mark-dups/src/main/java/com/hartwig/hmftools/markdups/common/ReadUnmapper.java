@@ -2,7 +2,6 @@ package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
@@ -29,15 +28,14 @@ import htsjdk.samtools.SAMRecord;
 public class ReadUnmapper
 {
     private final Map<String,List<BaseRegion>> mChrLocationsMap; // keyed by chromosome start
-    private int mReadLength;
     private boolean mEnabled;
     private final UnmapStats mStats;
 
     private static final double MIN_OVERLAP_PERC = 0.9;
 
-    public ReadUnmapper(final String filename, final int readLength)
+    public ReadUnmapper(final String filename)
     {
-        this(loadChrBaseRegions(filename), readLength);
+        this(loadChrBaseRegions(filename));
 
         if(mEnabled)
         {
@@ -46,15 +44,12 @@ public class ReadUnmapper
         }
     }
 
-    public ReadUnmapper(final Map<String,List<BaseRegion>> chrLocationsMap, final int readLength)
+    public ReadUnmapper(final Map<String,List<BaseRegion>> chrLocationsMap)
     {
-        mReadLength = readLength;
         mChrLocationsMap = chrLocationsMap;
         mEnabled = mChrLocationsMap != null && !mChrLocationsMap.isEmpty();
         mStats = new UnmapStats();
     }
-
-    public void setReadLength(int readLength) { mReadLength = readLength; }
 
     public List<BaseRegion> getRegions(final String chromosome) { return mChrLocationsMap.get(chromosome); }
     public boolean enabled() { return mEnabled; }
