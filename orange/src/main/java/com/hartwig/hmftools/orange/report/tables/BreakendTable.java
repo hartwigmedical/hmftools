@@ -82,5 +82,4 @@ public final class BreakendTable
         }
         return breakend.gene() + addon;
     }
-
 }

@@ -18,13 +18,11 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class BreakendEntryFactoryTest
-{
+public class BreakendEntryFactoryTest {
     private static final double EPSILON = 1.0E-10;
 
     @Test
-    public void canCreateBreakendEntries()
-    {
+    public void canCreateBreakendEntries() {
         LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder()
                 .svId(1)
                 .gene("gene")
@@ -41,7 +39,9 @@ public class BreakendEntryFactoryTest
 
         LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
 
-        List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant), Lists.newArrayList(PurpleDriverTestFactory.builder().build()));
+        List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend),
+                Lists.newArrayList(variant),
+                Lists.newArrayList(PurpleDriverTestFactory.builder().build()));
 
         assertEquals(1, entries.size());
 
@@ -58,17 +58,17 @@ public class BreakendEntryFactoryTest
     }
 
     @Test(expected = IllegalStateException.class)
-    public void crashOnMissingSvAnnotation()
-    {
+    public void crashOnMissingSvAnnotation() {
         LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder().svId(1).build();
         LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(2).build();
 
-        BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant), Lists.newArrayList(PurpleDriverTestFactory.builder().build()));
+        BreakendEntryFactory.create(Lists.newArrayList(breakend),
+                Lists.newArrayList(variant),
+                Lists.newArrayList(PurpleDriverTestFactory.builder().build()));
     }
 
     @Test
-    public void canGenerateRangeField()
-    {
+    public void canGenerateRangeField() {
         assertEquals("Exon 4 Upstream", BreakendEntryFactory.range(create(4, 4, "Upstream")));
         assertEquals("Intron 4 Downstream", BreakendEntryFactory.range(create(4, 5, "Downstream")));
         assertEquals("Promoter Region Upstream", BreakendEntryFactory.range(create(0, 2, "Upstream")));
@@ -76,8 +76,7 @@ public class BreakendEntryFactoryTest
     }
 
     @Test
-    public void canGenerateUndisruptedCopyNumber()
-    {
+    public void canGenerateUndisruptedCopyNumberForHomDupDisruptions() {
         LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder()
                 .gene("gene")
                 .type(LinxBreakendType.DUP)
@@ -89,14 +88,14 @@ public class BreakendEntryFactoryTest
         LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
         PurpleDriver driver = PurpleDriverTestFactory.builder().gene("gene").type(PurpleDriverType.HOM_DUP_DISRUPTION).build();
 
-        List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant), Lists.newArrayList(driver));
+        List<BreakendEntry> entries =
+                BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant), Lists.newArrayList(driver));
 
-        assertEquals(0.2, entries.get(0).undisruptedCopyNumber(),0.001);
+        assertEquals(0.2, entries.get(0).undisruptedCopyNumber(), 0.001);
     }
 
     @NotNull
-    private static LinxBreakend create(int exonUp, int exonDown, @NotNull String geneOrientation)
-    {
+    private static LinxBreakend create(int exonUp, int exonDown, @NotNull String geneOrientation) {
         return LinxOrangeTestFactory.breakendBuilder().exonUp(exonUp).exonDown(exonDown).geneOrientation(geneOrientation).build();
     }
 }
