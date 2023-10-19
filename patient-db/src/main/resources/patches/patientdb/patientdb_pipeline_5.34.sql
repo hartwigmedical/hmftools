@@ -24,7 +24,6 @@ CREATE TABLE svBreakend
     nextSpliceExonPhase TINYINT,
     nextSpliceDistance INT,
     totalExonCount SMALLINT NOT NULL,
-    chrBand VARCHAR(20) NOT NULL,
     strand SMALLINT NOT NULL,
     exonUp SMALLINT NOT NULL,
     exonDown SMALLINT NOT NULL,
@@ -32,6 +31,6 @@ CREATE TABLE svBreakend
     PRIMARY KEY (id)
 );
 
-CREATE INDEX `svBreakend_sampleId_svId` ON `svBreakend` (`sampleId`, `svId`);
-CREATE INDEX `svBreakend_gene` ON `svBreakend` (`gene`);
-CREATE INDEX `svBreakend_transcriptId` ON `svBreakend` (`transcriptId`);
+CREATE INDEX svBreakend_sampleId_svId ON svBreakend (sampleId, svId);
+CREATE INDEX svBreakend_gene ON svBreakend (gene);
+CREATE INDEX svBreakend_transcriptId ON svBreakend (transcriptId);
