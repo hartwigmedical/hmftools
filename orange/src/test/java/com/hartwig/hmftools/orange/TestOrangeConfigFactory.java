@@ -118,10 +118,10 @@ public final class TestOrangeConfigFactory
         OrangeConfig wgsConfigTumorOnly = createWGSConfigTumorOnly();
         return ImmutableOrangeConfig.builder()
                 .from(wgsConfigTumorOnly)
-                .referenceSampleId(REFERENCE_SAMPLE_ID)
                 .rnaConfig(null)
                 .wgsConfig(ImmutableOrangeWgsConfig.builder()
                         .from(wgsConfigTumorOnly.wgsConfig())
+                        .referenceSampleId(REFERENCE_SAMPLE_ID)
                         .refSampleWGSMetricsFile(REF_SAMPLE_WGS_METRICS_FILE)
                         .refSampleFlagstatFile(REF_SAMPLE_FLAGSTAT_FILE)
                         .sageGermlineGeneCoverageTsv(SAGE_GERMLINE_GENE_COVERAGE)

@@ -26,7 +26,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DES
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.orange.OrangeConfig.REFERENCE_SAMPLE_ID;
+import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
 import static com.hartwig.hmftools.orange.OrangeConfig.getMetricsFile;
 import static com.hartwig.hmftools.orange.OrangeConfig.getToolDirectory;
@@ -48,11 +48,15 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public interface OrangeWgsConfig
 {
+    String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String REF_SAMPLE_WGS_METRICS_FILE = "ref_sample_wgs_metrics_file";
     String REF_SAMPLE_FLAGSTAT_FILE = "ref_sample_flagstat_file";
 
     static void registerConfig(@NotNull ConfigBuilder configBuilder)
     {
+        configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
+                false,
+                "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
         configBuilder.addPath(REF_SAMPLE_WGS_METRICS_FILE, false, "Path towards the ref sample WGS metrics file.");
         configBuilder.addPath(REF_SAMPLE_FLAGSTAT_FILE, false, "Path towards the ref sample flagstat file.");
         configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
@@ -86,6 +90,9 @@ public interface OrangeWgsConfig
 
     // additional params for WGS Ref
     @Nullable
+    String referenceSampleId();
+
+    @Nullable
     String sageGermlineGeneCoverageTsv();
 
     @Nullable
@@ -108,7 +115,6 @@ public interface OrangeWgsConfig
     {
         ImmutableOrangeWgsConfig.Builder builder = ImmutableOrangeWgsConfig.builder();
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
-        String refSampleId = configBuilder.getValue(REFERENCE_SAMPLE_ID);
 
         String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
         String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
@@ -124,14 +130,14 @@ public interface OrangeWgsConfig
         String chordDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CHORD_DIR_CFG, CHORD_DIR);
         if(chordDir == null)
         {
-            throw new IllegalArgumentException("Chrod dir not found but required for WGS with Reference config");
+            throw new IllegalArgumentException("Chord dir not found but required for WGS config");
         }
         builder.chordPredictionTxt(fileIfExists(ChordDataFile.generateFilename(chordDir, tumorSampleId)));
 
         String cuppaDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, CUPPA_DIR_CFG, CUPPA_DIR);
         if(cuppaDir == null)
         {
-            throw new IllegalArgumentException("Cuppa dir not found but required for WGS with Reference config");
+            throw new IllegalArgumentException("Cuppa dir not found but required for WGS config");
         }
 
         builder.cuppaResultCsv(fileIfExists(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)));
@@ -142,37 +148,44 @@ public interface OrangeWgsConfig
         String sigsDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SIGS_DIR_CFG, SIGS_DIR);
         if(sigsDir == null)
         {
-            throw new IllegalArgumentException("Signatures dir not found but required for WGS with Reference config");
+            throw new IllegalArgumentException("Signatures dir not found but required for WGS config");
         }
         builder.sigsAllocationTsv(fileIfExists(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)));
 
         // optionally required for WGS, adding Reference
-        String sageSomaticDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
-        String sageGermlineDir = getToolDirectory(
-                configBuilder, pipelineSampleRootDir, sampleDataDir, SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
-        builder.sageGermlineGeneCoverageTsv(fileIfExists(SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
-        builder.sageSomaticRefSampleBQRPlot(fileIfExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
-
-        String linxGermlineDir = getToolDirectory(
-                configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
-        if(linxGermlineDir == null)
+        String refSampleId = configBuilder.getValue(REFERENCE_SAMPLE_ID);
+        if(refSampleId != null)
         {
-            throw new IllegalArgumentException("Linx germline dir not found but required for WGS with Reference config");
+            LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
+            builder.referenceSampleId(refSampleId);
+
+            String sageSomaticDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
+            String sageGermlineDir = getToolDirectory(
+                    configBuilder, pipelineSampleRootDir, sampleDataDir, SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
+            builder.sageGermlineGeneCoverageTsv(fileIfExists(SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
+            builder.sageSomaticRefSampleBQRPlot(fileIfExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
+
+            String linxGermlineDir = getToolDirectory(
+                    configBuilder, pipelineSampleRootDir, sampleDataDir, LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
+            if(linxGermlineDir == null)
+            {
+                throw new IllegalArgumentException("Linx germline dir not found but required for WGS with Reference config");
+            }
+            builder.linxGermlineDataDirectory(linxGermlineDir);
+
+            String peachDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PEACH_DIR_CFG, PEACH_DIR);
+            if(peachDir == null)
+            {
+                throw new IllegalArgumentException("Peach dir not found but required for WGS with Reference config");
+            }
+            builder.peachGenotypeTsv(fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv"));
+
+            builder.refSampleWGSMetricsFile(getMetricsFile(
+                    configBuilder, REF_SAMPLE_WGS_METRICS_FILE, refSampleId, pipelineSampleRootDir, METRICS_DIR));
+
+            builder.refSampleFlagstatFile(getMetricsFile(
+                    configBuilder, REF_SAMPLE_FLAGSTAT_FILE, refSampleId, pipelineSampleRootDir, FLAGSTAT_DIR));
         }
-        builder.linxGermlineDataDirectory(linxGermlineDir);
-
-        String peachDir = getToolDirectory(configBuilder, pipelineSampleRootDir, sampleDataDir, PEACH_DIR_CFG, PEACH_DIR);
-        if(peachDir == null)
-        {
-            throw new IllegalArgumentException("Peach dir not found but required for WGS with Reference config");
-        }
-        builder.peachGenotypeTsv(fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv"));
-
-        builder.refSampleWGSMetricsFile(getMetricsFile(
-                configBuilder, REF_SAMPLE_WGS_METRICS_FILE, refSampleId, pipelineSampleRootDir, METRICS_DIR));
-
-        builder.refSampleFlagstatFile(getMetricsFile(
-                configBuilder, REF_SAMPLE_FLAGSTAT_FILE, refSampleId, pipelineSampleRootDir, FLAGSTAT_DIR));
 
         return builder.build();
 

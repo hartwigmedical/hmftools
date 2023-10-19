@@ -398,7 +398,7 @@ public class OrangeAlgo
     {
         LOGGER.info("Loading PURPLE data from {}", config.purpleDataDirectory());
 
-        String referenceSample = config.referenceSampleId();
+        String referenceSample = config.wgsConfig() != null ? config.wgsConfig().referenceSampleId() : null;
         PurpleData purple = PurpleDataLoader.load(config.tumorSampleId(),
                 referenceSample,
                 config.rnaConfig() != null ? config.rnaConfig().rnaSampleId() : null,

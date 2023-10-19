@@ -72,7 +72,6 @@ public interface OrangeConfig
     // General params needed for every analysis
     String EXPERIMENT_TYPE = "experiment_type";
     String TUMOR_SAMPLE_ID = "tumor_sample_id";
-    String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String PRIMARY_TUMOR_DOIDS = "primary_tumor_doids";
     String SAMPLING_DATE = "sampling_date";
 
@@ -95,9 +94,7 @@ public interface OrangeConfig
     {
         configBuilder.addConfigItem(EXPERIMENT_TYPE, true, "The type of the experiment, one of WGS or PANEL");
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
-        configBuilder.addConfigItem(REFERENCE_SAMPLE_ID,
-                false,
-                "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
+        configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         configBuilder.addConfigItem(PRIMARY_TUMOR_DOIDS,
                 true,
                 "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
@@ -147,9 +144,6 @@ public interface OrangeConfig
 
     @NotNull
     String tumorSampleId();
-
-    @Nullable
-    String referenceSampleId();
 
     @Nullable
     OrangeRnaConfig rnaConfig();
@@ -225,7 +219,7 @@ public interface OrangeConfig
 
     default boolean tumorOnlyMode()
     {
-        return referenceSampleId() == null || referenceSampleId().isEmpty();
+        return wgsConfig() == null || wgsConfig().referenceSampleId() == null || wgsConfig().referenceSampleId().isEmpty();
     }
 
     @NotNull
@@ -256,12 +250,6 @@ public interface OrangeConfig
             LOGGER.info("Germline conversion to somatic has been enabled.");
         }
 
-        String refSampleId = configBuilder.getValue(REFERENCE_SAMPLE_ID);
-        if(refSampleId != null)
-        {
-            LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
-        }
-
         LocalDate samplingDate;
         if(configBuilder.hasValue(SAMPLING_DATE))
         {
@@ -281,7 +269,6 @@ public interface OrangeConfig
 
         builder.experimentType(experimentType)
                 .tumorSampleId(tumorSampleId)
-                .referenceSampleId(refSampleId)
                 .rnaConfig(OrangeRnaConfig.createConfig(configBuilder))
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .samplingDate(samplingDate)
