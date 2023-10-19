@@ -40,7 +40,6 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutput
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.util.Config.fileIfExists;
 
-import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -48,11 +47,9 @@ import java.util.Locale;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.flagstat.FlagstatFile;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.LilacAllele;
 import com.hartwig.hmftools.common.hla.LilacQcData;
-import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.sage.SageCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.datamodel.orange.ExperimentType;
@@ -271,7 +268,7 @@ public interface OrangeConfig
 
         builder.experimentType(experimentType)
                 .tumorSampleId(tumorSampleId)
-                .rnaConfig(OrangeRnaConfig.createConfig(configBuilder))
+                .rnaConfig(OrangeRnaConfig.createConfig(configBuilder, pathResolver))
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .samplingDate(samplingDate)
                 .refGenomeVersion(OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name()))
@@ -302,77 +299,10 @@ public interface OrangeConfig
 
         if(experimentType == ExperimentType.WHOLE_GENOME)
         {
-            builder.wgsConfig(OrangeWgsConfig.createConfig(configBuilder));
+            builder.wgsConfig(OrangeWgsConfig.createConfig(configBuilder, pathResolver));
         }
 
         return builder.build();
-    }
-
-    @Nullable
-    static String getToolDirectory(@NotNull ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
-            @Nullable String sampleDataDir, @NotNull String toolDirConfig, @NotNull String pipelineToolDir)
-    {
-        if(configBuilder.hasValue(toolDirConfig))
-        {
-            return configBuilder.getValue(toolDirConfig);
-        }
-
-        if(pipelineSampleRootDir != null)
-        {
-            return pipelineSampleRootDir + pipelineToolDir;
-        }
-
-        return sampleDataDir;
-    }
-
-    @NotNull
-    static String getToolPlotsDirectory(@NotNull ConfigBuilder configBuilder, @Nullable String pipelineSampleRootDir,
-            @NotNull String toolDirConfig, @NotNull String pipelineToolDir)
-    {
-        if(configBuilder.hasValue(toolDirConfig))
-        {
-            return configBuilder.getValue(toolDirConfig);
-        }
-
-        String plotDir = pipelineSampleRootDir != null ? fileIfExists(pipelineSampleRootDir + pipelineToolDir + "/plot") : null;
-        if(plotDir == null)
-        {
-            throw new IllegalArgumentException(
-                    "Plot directory cannot be determined from [%s]. Please define either the tool directory or the sample directory.");
-        }
-        return plotDir;
-    }
-
-    @Nullable
-    private static String getMetricsDirectory(@NotNull ConfigBuilder configBuilder, @NotNull String configStr, @Nullable String sampleId,
-            @Nullable String pipelineDir, @NotNull String toolDir)
-    {
-        if(configBuilder.hasValue(configStr))
-        {
-            return configBuilder.getValue(configStr);
-        }
-
-        if(pipelineDir == null || sampleId == null)
-        {
-            return null;
-        }
-
-        return pipelineDir + sampleId + File.separator + toolDir;
-    }
-
-    @NotNull
-    static String getMetricsFile(@NotNull ConfigBuilder configBuilder, @NotNull String configStr, @Nullable String sampleId,
-            @Nullable String pipelineDir, @NotNull String toolDir)
-    {
-        if(configBuilder.hasValue(configStr))
-        {
-            return configBuilder.getValue(configStr);
-        }
-
-        String directory = getMetricsDirectory(configBuilder, configStr, sampleId, pipelineDir, toolDir);
-
-        return toolDir.equals(METRICS_DIR) ?
-                WGSMetricsFile.generateFilename(directory, sampleId) : FlagstatFile.generateFilename(directory, sampleId);
     }
 
     @NotNull
