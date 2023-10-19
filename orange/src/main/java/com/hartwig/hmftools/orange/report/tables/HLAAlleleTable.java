@@ -60,11 +60,7 @@ public final class HLAAlleleTable
     @NotNull
     private static String fragmentString(@Nullable Integer fragments, boolean isTumorFail)
     {
-        if(fragments == null)
-        {
-            return ReportResources.NONE;
-        }
-        else if(isTumorFail)
+        if(fragments == null || isTumorFail)
         {
             return ReportResources.NOT_AVAILABLE;
         }

@@ -71,26 +71,26 @@ public final class OrangeConversion
     }
 
     @NotNull
-    public static LilacRecord convert(@NotNull LilacSummaryData lilacSummaryData, boolean haveRef, boolean haveRna)
+    public static LilacRecord convert(@NotNull LilacSummaryData lilacSummaryData, boolean hasRef, boolean hasRna)
     {
         return ImmutableLilacRecord.builder()
                 .qc(lilacSummaryData.qc())
                 .alleles(() -> lilacSummaryData.alleles()
                         .stream()
-                        .map(allele -> OrangeConversion.convert(allele, haveRef, haveRna))
+                        .map(allele -> OrangeConversion.convert(allele, hasRef, hasRna))
                         .iterator())
                 .build();
     }
 
     @NotNull
-    public static LilacAllele convert(@NotNull com.hartwig.hmftools.common.hla.LilacAllele allele, boolean haveRef, boolean haveRna)
+    public static LilacAllele convert(@NotNull com.hartwig.hmftools.common.hla.LilacAllele allele, boolean hasRef, boolean hasRna)
     {
         return ImmutableLilacAllele.builder()
                 .allele(allele.allele())
                 .tumorCopyNumber(allele.tumorCopyNumber())
-                .refFragments(haveRef ? allele.refFragments() : null)
+                .refFragments(hasRef ? allele.refFragments() : null)
                 .tumorFragments(allele.tumorFragments())
-                .rnaFragments(haveRna ? allele.rnaFragments() : null)
+                .rnaFragments(hasRna ? allele.rnaFragments() : null)
                 .somaticMissense(allele.somaticMissense())
                 .somaticNonsenseOrFrameshift(allele.somaticNonsenseOrFrameshift())
                 .somaticSplice(allele.somaticSplice())
