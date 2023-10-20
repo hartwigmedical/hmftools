@@ -33,20 +33,22 @@ public abstract class LinxBreakend
     public abstract TranscriptRegionType regionType();
     public abstract TranscriptCodingType codingType();
     public abstract String biotype();
+    public abstract int exonUp();
+    public abstract int exonDown();
     public abstract int exonicBasePhase();
     public abstract int nextSpliceExonRank();
     public abstract int nextSpliceExonPhase();
     public abstract int nextSpliceDistance();
     public abstract int totalExonCount();
 
-    // additional fields for patient report
+    // TODO Remove field.
+    public abstract int strand();
+
+    // TODO Derive properties from other sources (see also ACTIN-346)
     public abstract StructuralVariantType type();
     public abstract String chromosome();
     public abstract int orientation();
-    public abstract int strand();
     public abstract String chrBand();
-    public abstract int exonUp();
-    public abstract int exonDown();
     public abstract double junctionCopyNumber();
 
     private static final String FILE_EXTENSION = ".linx.breakend.tsv";
