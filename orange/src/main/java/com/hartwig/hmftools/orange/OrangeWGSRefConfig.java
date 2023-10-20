@@ -124,36 +124,19 @@ public interface OrangeWGSRefConfig
         String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
         // params required for WGS, Tumor only
-        String virusDir = pathResolver.resolveToolDirectory(VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
-        if(virusDir == null)
-        {
-            throw new IllegalArgumentException("Virus dir not found but required for WGS config");
-        }
+        String virusDir = pathResolver.resolveToolDirectoryIfExists(VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
         builder.annotatedVirusTsv(fileIfExists(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)));
 
-        String chordDir = pathResolver.resolveToolDirectory(CHORD_DIR_CFG, CHORD_DIR);
-        if(chordDir == null)
-        {
-            throw new IllegalArgumentException("Chord dir not found but required for WGS config");
-        }
+        String chordDir = pathResolver.resolveToolDirectoryIfExists(CHORD_DIR_CFG, CHORD_DIR);
         builder.chordPredictionTxt(fileIfExists(ChordDataFile.generateFilename(chordDir, tumorSampleId)));
 
-        String cuppaDir = pathResolver.resolveToolDirectory(CUPPA_DIR_CFG, CUPPA_DIR);
-        if(cuppaDir == null)
-        {
-            throw new IllegalArgumentException("Cuppa dir not found but required for WGS config");
-        }
-
+        String cuppaDir = pathResolver.resolveToolDirectoryIfExists(CUPPA_DIR_CFG, CUPPA_DIR);
         builder.cuppaResultCsv(fileIfExists(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)));
         builder.cuppaSummaryPlot(fileIfExists(CuppaDataFile.generateReportSummaryPlotFilename(cuppaDir, tumorSampleId)));
         builder.cuppaFeaturePlot(optionalFileIfExists(CuppaDataFile.generateReportFeaturesPlotFilename(cuppaDir, tumorSampleId)));
         builder.cuppaChartPlot(fileIfExists(CuppaDataFile.generateChartPlotFilename(cuppaDir, tumorSampleId)));
 
-        String sigsDir = pathResolver.resolveToolDirectory(SIGS_DIR_CFG, SIGS_DIR);
-        if(sigsDir == null)
-        {
-            throw new IllegalArgumentException("Signatures dir not found but required for WGS config");
-        }
+        String sigsDir = pathResolver.resolveToolDirectoryIfExists(SIGS_DIR_CFG, SIGS_DIR);
         builder.sigsAllocationTsv(fileIfExists(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)));
 
         // optionally required for WGS, adding Reference
@@ -168,18 +151,10 @@ public interface OrangeWGSRefConfig
             builder.sageGermlineGeneCoverageTsv(fileIfExists(SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
             builder.sageSomaticRefSampleBQRPlot(fileIfExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
 
-            String linxGermlineDir = pathResolver.resolveToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
-            if(linxGermlineDir == null)
-            {
-                throw new IllegalArgumentException("Linx germline dir not found but required for WGS with Reference config");
-            }
+            String linxGermlineDir = pathResolver.resolveToolDirectoryIfExists(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
 
-            String peachDir = pathResolver.resolveToolDirectory(PEACH_DIR_CFG, PEACH_DIR);
-            if(peachDir == null)
-            {
-                throw new IllegalArgumentException("Peach dir not found but required for WGS with Reference config");
-            }
+            String peachDir = pathResolver.resolveToolDirectoryIfExists(PEACH_DIR_CFG, PEACH_DIR);
             builder.peachGenotypeTsv(fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv"));
 
             builder.refSampleWGSMetricsFile(pathResolver.resolveMetricsFile(REF_SAMPLE_WGS_METRICS_FILE, METRICS_DIR, refSampleId));

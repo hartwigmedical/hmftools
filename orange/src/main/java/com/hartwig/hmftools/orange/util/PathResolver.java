@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.orange.util;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.METRICS_DIR;
 import static com.hartwig.hmftools.orange.util.Config.fileIfExists;
 
@@ -43,6 +45,17 @@ public class PathResolver
         }
 
         return sampleDataDir;
+    }
+
+    @Nullable
+    public String resolveToolDirectoryIfExists(@NotNull String toolDirConfigKey, @NotNull String defaultPipelineToolDir)
+    {
+        String toolDir = resolveToolDirectory(toolDirConfigKey, defaultPipelineToolDir);
+        if(toolDir == null)
+        {
+            throw new IllegalArgumentException(format("Failed to determine tool directory for configuration [%s/%s].", toolDirConfigKey, defaultPipelineToolDir));
+        }
+        return fileIfExists(toolDir);
     }
 
     @NotNull
