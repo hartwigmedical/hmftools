@@ -232,6 +232,7 @@ investigate potential causes for QC failure.
     - Data is displayed in the report as "NA" in case of purple QC failure, in case the data by itself is not interpretable (e.g. TML).
     - The TMB status (high vs low) is displayed on the front page along with the actual TMB.
     - The status of UGT1A1 is displayed on the front page.
+    - Lilac RNA and ref counts are displayed as NONE in case they are not available (rather than 0)
 - [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
     - Supports targeted tumor-only mode:
         - Omits Cuppa, Chord, Sigs and VirusBreakends
