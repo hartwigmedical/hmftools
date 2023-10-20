@@ -15,11 +15,13 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DE
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
@@ -58,11 +60,14 @@ public interface OrangeWgsConfig
                 "(Optional) The reference sample of the tumor sample for which ORANGE will run.");
         configBuilder.addPath(REF_SAMPLE_WGS_METRICS_FILE, false, "Path towards the ref sample WGS metrics file.");
         configBuilder.addPath(REF_SAMPLE_FLAGSTAT_FILE, false, "Path towards the ref sample flagstat file.");
+        configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
+        configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);
         configBuilder.addPath(VIRUS_DIR_CFG, false, VIRUS_DIR_DESC);
         configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
         configBuilder.addPath(CUPPA_DIR_CFG, false, CUPPA_DIR_DESC);
         configBuilder.addPath(PEACH_DIR_CFG, false, PEACH_DIR_DESC);
         configBuilder.addPath(SIGS_DIR_CFG, false, SIGS_DIR_DESC);
+
     }
 
     // params for WGS Tumor only

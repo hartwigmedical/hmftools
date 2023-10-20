@@ -17,8 +17,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LILAC_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_PLOT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_PLOT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DESC;
@@ -29,8 +27,6 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_PLOT_
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_PLOT_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
@@ -91,7 +87,6 @@ public interface OrangeConfig
     {
         configBuilder.addConfigItem(EXPERIMENT_TYPE, true, "The type of the experiment, one of WGS or PANEL");
         configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
-        configBuilder.addConfigItem(TUMOR_SAMPLE_ID, true, "The sample ID for which ORANGE will run.");
         configBuilder.addConfigItem(PRIMARY_TUMOR_DOIDS,
                 true,
                 "A semicolon-separated list of DOIDs representing the primary tumor of patient.");
@@ -119,12 +114,10 @@ public interface OrangeConfig
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
 
         configBuilder.addPath(SAGE_DIR_CFG, false, SAGE_DIR_DESC);
-        configBuilder.addPath(SAGE_GERMLINE_DIR_CFG, false, SAGE_GERMLINE_DIR_DESC);
         configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addPath(PURPLE_PLOT_DIR_CFG, false, PURPLE_PLOT_DIR_DESC);
         configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
         configBuilder.addPath(LINX_PLOT_DIR_CFG, false, LINX_PLOT_DIR_DESC);
-        configBuilder.addPath(LINX_GERMLINE_DIR_CFG, false, LINX_GERMLINE_DIR_DESC);
         configBuilder.addPath(LILAC_DIR_CFG, false, LILAC_DIR_DESC);
 
         configBuilder.addFlag(CONVERT_GERMLINE_TO_SOMATIC, "If set, germline events are converted to somatic events.");
@@ -144,6 +137,9 @@ public interface OrangeConfig
 
     @Nullable
     OrangeRnaConfig rnaConfig();
+
+    @Nullable
+    OrangeWgsConfig wgsConfig();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -211,12 +207,9 @@ public interface OrangeConfig
 
     boolean addDisclaimer();
 
-    @Nullable
-    OrangeWgsConfig wgsConfig();
-
     default boolean tumorOnlyMode()
     {
-        return wgsConfig() == null || wgsConfig().referenceSampleId() == null || wgsConfig().referenceSampleId().isEmpty();
+        return wgsConfig() == null || wgsConfig().referenceSampleId() == null;
     }
 
     @NotNull
