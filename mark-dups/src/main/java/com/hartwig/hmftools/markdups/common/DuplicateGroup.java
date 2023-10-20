@@ -4,10 +4,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -91,7 +91,7 @@ public class DuplicateGroup
         {
             SAMRecord read = firstFragment.reads().get(i);
 
-            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
             boolean hasValidSupp = suppData != null && HumanChromosome.contains(suppData.Chromosome);
 
             if(i == 0)
@@ -211,7 +211,7 @@ public class DuplicateGroup
     {
         if(!read.getSupplementaryAlignmentFlag())
         {
-            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
             boolean hasValidSupp = suppData != null && HumanChromosome.contains(suppData.Chromosome);
 
             int index = 0;
@@ -256,7 +256,7 @@ public class DuplicateGroup
 
         // boolean checkSuppData = Arrays.stream(mPrimaryReadTypeIndex).filter(x -> x != null && x.HasSupplementary).count() == 2;
         // SupplementaryReadData suppData = checkSuppData ? SupplementaryReadData.from(read) : null;
-        SupplementaryReadData suppData = SupplementaryReadData.from(read);
+        SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
 
         int matchedPrimaryIndex;
 

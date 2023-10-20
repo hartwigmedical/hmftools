@@ -2,8 +2,8 @@ package com.hartwig.hmftools.markdups.common;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -51,7 +51,7 @@ public enum FilterReadsType
         // a reason to ignore a primary read since that then impacts duplicate classification
         if(filterType.filterSupplementaries())
         {
-            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
 
             if(suppData != null)
             {

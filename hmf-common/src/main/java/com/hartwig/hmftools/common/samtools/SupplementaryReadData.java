@@ -3,7 +3,13 @@ package com.hartwig.hmftools.common.samtools;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.StringJoiner;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+
+import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -14,6 +20,7 @@ public class SupplementaryReadData
     public final char Strand;
     public final String Cigar;
     public final int MapQuality;
+    public final int NM;
 
     private static final String SUPP_DELIM = ",";
     private static final String ALIGNMENTS_DELIM = ";";
@@ -22,38 +29,115 @@ public class SupplementaryReadData
     public static final char SUPP_POS_STRAND = '+';
     public static final char SUPP_NEG_STRAND = '-';
 
-    public static SupplementaryReadData from(final SAMRecord record)
+    public SupplementaryReadData(final String chromosome, final int position, final char strand, final String cigar, final int mapQuality,
+            final int nm)
     {
-        String alignmentStr = record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
+        Chromosome = chromosome;
+        Position = position;
+        Strand = strand;
+        Cigar = cigar;
+        MapQuality = mapQuality;
+        NM = nm;
+    }
+
+    public SupplementaryReadData(final String chromosome, final int position, final char strand, final String cigar, final int mapQuality)
+    {
+        this(chromosome, position, strand, cigar, mapQuality, 0);
+    }
+
+    @Nullable
+    @VisibleForTesting
+    public static SupplementaryReadData fromAlignment(final String alignment, final String delimiter)
+    {
+        String[] items = alignment.split(delimiter);
+        if(items == null || items.length != SUPP_FIELD_COUNT)
+        {
+            return null;
+        }
+
+        return new SupplementaryReadData(items[0], Integer.parseInt(items[1]), items[2].charAt(0), items[3], Integer.parseInt(items[4]), Integer.parseInt(items[5]));
+    }
+
+    @Nullable
+    @VisibleForTesting
+    public static SupplementaryReadData fromAlignment(final String alignment)
+    {
+        return fromAlignment(alignment, SUPP_DELIM);
+    }
+
+    @Nullable
+    public static List<SupplementaryReadData> from(final SAMRecord record)
+    {
+        final String alignmentStr = record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
         return alignmentStr != null ? from(alignmentStr) : null;
     }
 
-    public static SupplementaryReadData from(final String suppData)
+    @Nullable
+    public static List<SupplementaryReadData> from(@Nullable final String suppData)
     {
-        if(suppData == null)
+        if(suppData == null || suppData.isEmpty())
             return null;
 
         // example data: 2,33141317,+,94S57M,5,0;
         // but also be multiple: 7,152184341,-,23S32M1I41M54S,0,6;11,66229611,+,115S32M4S,0,0;
         // chr6,6068632,-,35M108S,0,0;chr3,5435688,-,23S39M81S,0,1;chr3,136963678,-,101S31M11S,0,0;
 
-        String[] items = null;
         if(suppData.contains(SUPP_DELIM))
         {
-            // return the first alignment
-            final String[] alignments = suppData.split(ALIGNMENTS_DELIM);
-            items = alignments[0].split(SUPP_DELIM);
+            final List<SupplementaryReadData> output = Lists.newArrayList();
+            // Do not discard empty strings at the end when splitting.
+            final String[] alignments = suppData.split(ALIGNMENTS_DELIM, -1);
+            final int endIndex =
+                    suppData.charAt(suppData.length() - 1) == ALIGNMENTS_DELIM.charAt(0) ? alignments.length - 2 : alignments.length - 1;
+
+            for(int i = 0; i <= endIndex; ++i)
+            {
+                final String alignment = alignments[i];
+                final SupplementaryReadData suppReadData = fromAlignment(alignment);
+                if(suppReadData == null)
+                {
+                    return null;
+                }
+
+                output.add(suppReadData);
+            }
+
+            return output;
         }
         else
         {
-            // alternative delimination - only used for testing
-            items = suppData.split(ALIGNMENTS_DELIM);
+            // Alternative delimitation only use for testing.
+            return List.of(fromAlignment(suppData, ALIGNMENTS_DELIM));
         }
+    }
 
-        if(items == null || items.length != SUPP_FIELD_COUNT)
+    @Nullable
+    public static SupplementaryReadData firstAlignmentFrom(final SAMRecord record)
+    {
+        final String alignmentStr = record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
+        return alignmentStr != null ? firstAlignmentFrom(alignmentStr) : null;
+    }
+
+    @Nullable
+    public static SupplementaryReadData firstAlignmentFrom(@Nullable final String suppData)
+    {
+        if(suppData == null || suppData.isEmpty())
             return null;
 
-        return new SupplementaryReadData(items[0], Integer.parseInt(items[1]), items[2].charAt(0), items[3], Integer.parseInt(items[4]));
+        // example data: 2,33141317,+,94S57M,5,0;
+        // but also be multiple: 7,152184341,-,23S32M1I41M54S,0,6;11,66229611,+,115S32M4S,0,0;
+        // chr6,6068632,-,35M108S,0,0;chr3,5435688,-,23S39M81S,0,1;chr3,136963678,-,101S31M11S,0,0;
+
+        if(suppData.contains(SUPP_DELIM))
+        {
+            final String[] alignments = suppData.split(ALIGNMENTS_DELIM, 2);
+            return fromAlignment(alignments[0]);
+        }
+        else
+        {
+            // Alternative delimitation only use for testing.
+            return fromAlignment(suppData, ALIGNMENTS_DELIM);
+        }
     }
 
     public static int alignmentCount(final SAMRecord record)
@@ -64,33 +148,47 @@ public class SupplementaryReadData
         return alignmentCount(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
     }
 
-    public static int alignmentCount(final String suppData)
+    public static int alignmentCount(@Nullable final String suppData)
     {
         return suppData != null ? (suppData.contains(SUPP_DELIM) ? suppData.split(ALIGNMENTS_DELIM).length : 1) : 0;
     }
-
-    public SupplementaryReadData(final String chromosome, final int position, final char strand, final String cigar, final int mapQuality)
-    {
-        Chromosome = chromosome;
-        Position = position;
-        Strand = strand;
-        Cigar = cigar;
-        MapQuality = mapQuality;
-    }
-
-    public String toString()
-    {
-        return String.format("location(%s:%d) strand(%c) cigar(%s) mq(%d)",
-            Chromosome, Position, Strand, Cigar, MapQuality);
-    }
-
-    public String asCsv() { return String.format("%s;%d;%c;%s;%d;0", Chromosome, Position, Strand, Cigar, MapQuality); }
-    public String asSamTag() { return String.format("%s,%d,%c,%s,%d,0", Chromosome, Position, Strand, Cigar, MapQuality); }
 
     public static String alignmentsToSamTag(final List<SupplementaryReadData> alignments)
     {
         StringJoiner sj = new StringJoiner(ALIGNMENTS_DELIM);
         alignments.forEach(x -> sj.add(x.asSamTag()));
         return sj.toString();
+    }
+
+    public String asCsv()
+    {
+        return String.format("%s;%d;%c;%s;%d;%d", Chromosome, Position, Strand, Cigar, MapQuality, NM);
+    }
+
+    public String asSamTag()
+    {
+        return String.format("%s,%d,%c,%s,%d,%d", Chromosome, Position, Strand, Cigar, MapQuality, NM);
+    }
+
+    @Override
+    public boolean equals(final Object o)
+    {
+        if(this == o)
+        {
+            return true;
+        }
+        if(!(o instanceof SupplementaryReadData))
+        {
+            return false;
+        }
+        final SupplementaryReadData that = (SupplementaryReadData) o;
+        return Position == that.Position && Strand == that.Strand && MapQuality == that.MapQuality && NM == that.NM
+                && Objects.equals(Chromosome, that.Chromosome) && Objects.equals(Cigar, that.Cigar);
+    }
+
+    public String toString()
+    {
+        return String.format("location(%s:%d) strand(%c) cigar(%s) mq(%d) nm(%d)",
+                Chromosome, Position, Strand, Cigar, MapQuality, NM);
     }
 }

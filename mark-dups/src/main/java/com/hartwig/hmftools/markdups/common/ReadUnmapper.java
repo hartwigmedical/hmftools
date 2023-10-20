@@ -7,8 +7,8 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_INDEX;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
@@ -155,7 +155,7 @@ public class ReadUnmapper
     @VisibleForTesting
     public boolean supplementaryInRegion(final SAMRecord read)
     {
-        SupplementaryReadData suppReadData = SupplementaryReadData.from(read);
+        SupplementaryReadData suppReadData = SupplementaryReadData.firstAlignmentFrom(read);
 
         if(suppReadData == null)
             return false;
