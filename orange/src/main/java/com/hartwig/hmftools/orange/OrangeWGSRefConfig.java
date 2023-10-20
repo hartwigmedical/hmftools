@@ -47,7 +47,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface OrangeWgsConfig
+public interface OrangeWGSRefConfig
 {
     String REFERENCE_SAMPLE_ID = "reference_sample_id";
     String REF_SAMPLE_WGS_METRICS_FILE = "ref_sample_wgs_metrics_file";
@@ -115,9 +115,9 @@ public interface OrangeWgsConfig
     String refSampleFlagstatFile();
 
     @NotNull
-    static OrangeWgsConfig createConfig(@NotNull ConfigBuilder configBuilder, @NotNull PathResolver pathResolver)
+    static OrangeWGSRefConfig createConfig(@NotNull ConfigBuilder configBuilder, @NotNull PathResolver pathResolver)
     {
-        ImmutableOrangeWgsConfig.Builder builder = ImmutableOrangeWgsConfig.builder();
+        ImmutableOrangeWGSRefConfig.Builder builder = ImmutableOrangeWGSRefConfig.builder();
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
 
         String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));

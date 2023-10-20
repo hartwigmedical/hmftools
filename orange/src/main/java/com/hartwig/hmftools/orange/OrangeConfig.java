@@ -126,7 +126,7 @@ public interface OrangeConfig
         addLoggingOptions(configBuilder);
 
         OrangeRnaConfig.registerConfig(configBuilder);
-        OrangeWgsConfig.registerConfig(configBuilder);
+        OrangeWGSRefConfig.registerConfig(configBuilder);
     }
 
     @NotNull
@@ -139,7 +139,7 @@ public interface OrangeConfig
     OrangeRnaConfig rnaConfig();
 
     @Nullable
-    OrangeWgsConfig wgsConfig();
+    OrangeWGSRefConfig wgsRefConfig();
 
     @NotNull
     Set<String> primaryTumorDoids();
@@ -209,7 +209,7 @@ public interface OrangeConfig
 
     default boolean tumorOnlyMode()
     {
-        return wgsConfig() == null || wgsConfig().referenceSampleId() == null;
+        return wgsRefConfig() == null || wgsRefConfig().referenceSampleId() == null;
     }
 
     @NotNull
@@ -292,7 +292,7 @@ public interface OrangeConfig
 
         if(experimentType == ExperimentType.WHOLE_GENOME)
         {
-            builder.wgsConfig(OrangeWgsConfig.createConfig(configBuilder, pathResolver));
+            builder.wgsRefConfig(OrangeWGSRefConfig.createConfig(configBuilder, pathResolver));
         }
 
         return builder.build();

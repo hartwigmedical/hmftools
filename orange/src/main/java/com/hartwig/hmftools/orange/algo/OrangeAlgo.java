@@ -327,8 +327,8 @@ public class OrangeAlgo
         }
         else
         {
-            if(config.wgsConfig() != null && config.wgsConfig().refSampleWGSMetricsFile() != null
-                    && config.wgsConfig().refSampleFlagstatFile() != null)
+            if(config.wgsRefConfig() != null && config.wgsRefConfig().refSampleWGSMetricsFile() != null
+                    && config.wgsRefConfig().refSampleFlagstatFile() != null)
             {
                 LOGGER.info("Loading reference sample data");
             }
@@ -339,11 +339,11 @@ public class OrangeAlgo
             }
         }
 
-        String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.wgsConfig().refSampleWGSMetricsFile();
+        String metricsFile = loadTumorSample ? config.tumorSampleWGSMetricsFile() : config.wgsRefConfig().refSampleWGSMetricsFile();
         WGSMetrics metrics = OrangeConversion.convert(WGSMetricsFile.read(metricsFile));
         LOGGER.info(" Loaded WGS metrics from {}", metricsFile);
 
-        String flagstatFile = loadTumorSample ? config.tumorSampleFlagstatFile() : config.wgsConfig().refSampleFlagstatFile();
+        String flagstatFile = loadTumorSample ? config.tumorSampleFlagstatFile() : config.wgsRefConfig().refSampleFlagstatFile();
         Flagstat flagstat = OrangeConversion.convert(FlagstatFile.read(flagstatFile));
         LOGGER.info(" Loaded flagstat from {}", flagstatFile);
 
@@ -364,7 +364,7 @@ public class OrangeAlgo
     private static Map<String, Double> loadGermlineMVLHPerGene(@NotNull OrangeConfig config) throws IOException
     {
         String sageGermlineGeneCoverageTsv =
-                config.wgsConfig() != null ? config.wgsConfig().sageGermlineGeneCoverageTsv() : null;
+                config.wgsRefConfig() != null ? config.wgsRefConfig().sageGermlineGeneCoverageTsv() : null;
         if(sageGermlineGeneCoverageTsv == null)
         {
             LOGGER.info("Skipping loading of germline MVLH as no germline gene coverage has been provided");
@@ -398,7 +398,7 @@ public class OrangeAlgo
     {
         LOGGER.info("Loading PURPLE data from {}", config.purpleDataDirectory());
 
-        String referenceSample = config.wgsConfig() != null ? config.wgsConfig().referenceSampleId() : null;
+        String referenceSample = config.wgsRefConfig() != null ? config.wgsRefConfig().referenceSampleId() : null;
         PurpleData purple = PurpleDataLoader.load(config.tumorSampleId(),
                 referenceSample,
                 config.rnaConfig() != null ? config.rnaConfig().rnaSampleId() : null,
@@ -455,7 +455,7 @@ public class OrangeAlgo
     {
         LOGGER.info("Loading LINX somatic data from {}", config.linxSomaticDataDirectory());
 
-        String linxGermlineDataDirectory = config.wgsConfig() != null ? config.wgsConfig().linxGermlineDataDirectory() : null;
+        String linxGermlineDataDirectory = config.wgsRefConfig() != null ? config.wgsRefConfig().linxGermlineDataDirectory() : null;
         LinxData linx = LinxDataLoader.load(config.tumorSampleId(), config.linxSomaticDataDirectory(), linxGermlineDataDirectory);
 
         LOGGER.info(" Loaded {} somatic structural variants", linx.allSomaticStructuralVariants().size());
@@ -523,17 +523,15 @@ public class OrangeAlgo
     @Nullable
     private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException
     {
-        // TODO consider if the tumor only mode is better replaced with checking if WGS is configured
-        //  here and elsewhere below
         if(config.tumorOnlyMode())
         {
             return null;
         }
 
-        String annotatedVirusTsv = config.wgsConfig().annotatedVirusTsv();
+        String annotatedVirusTsv = config.wgsRefConfig().annotatedVirusTsv();
         if(annotatedVirusTsv == null)
         {
-            LOGGER.debug("Skipping loading of annotated  viruses as no input has been provided");
+            LOGGER.debug("Skipping loading of annotated viruses as no input has been provided");
             return null;
         }
 
@@ -548,7 +546,7 @@ public class OrangeAlgo
             return null;
         }
 
-        String chordPredictionTxt = config.wgsConfig().chordPredictionTxt();
+        String chordPredictionTxt = config.wgsRefConfig().chordPredictionTxt();
         if(chordPredictionTxt == null)
         {
             LOGGER.debug("Skipping CHORD loading as no input has been provided");
@@ -569,7 +567,7 @@ public class OrangeAlgo
             return null;
         }
 
-        String cuppaResultTsv = config.wgsConfig().cuppaResultCsv();
+        String cuppaResultTsv = config.wgsRefConfig().cuppaResultCsv();
         if(cuppaResultTsv == null)
         {
             LOGGER.debug("Skipping CUPPA loading as no input has been provided");
@@ -590,7 +588,7 @@ public class OrangeAlgo
     @Nullable
     private static List<PeachGenotype> loadPeachData(@NotNull OrangeConfig config) throws IOException
     {
-        String peachGenotypeTsv = config.wgsConfig() != null ? config.wgsConfig().peachGenotypeTsv() : null;
+        String peachGenotypeTsv = config.wgsRefConfig() != null ? config.wgsRefConfig().peachGenotypeTsv() : null;
 
         if(peachGenotypeTsv == null)
         {
@@ -600,7 +598,7 @@ public class OrangeAlgo
 
         LOGGER.info("Loading PEACH from {}", new File(peachGenotypeTsv).getParent());
         List<PeachGenotype> peachGenotypes = PeachGenotypeFile.read(peachGenotypeTsv);
-        LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.wgsConfig().peachGenotypeTsv());
+        LOGGER.info(" Loaded {} PEACH genotypes from {}", peachGenotypes.size(), config.wgsRefConfig().peachGenotypeTsv());
 
         return peachGenotypes;
     }
@@ -613,7 +611,7 @@ public class OrangeAlgo
             return null;
         }
 
-        String sigsAllocationTsv = config.wgsConfig().sigsAllocationTsv();
+        String sigsAllocationTsv = config.wgsRefConfig().sigsAllocationTsv();
 
         if(sigsAllocationTsv == null)
         {
@@ -681,7 +679,7 @@ public class OrangeAlgo
         }
 
         String sageReferenceBQRPlot = plotManager.processPlotFile(
-                config.wgsConfig() != null ? config.wgsConfig().sageSomaticRefSampleBQRPlot() : null);
+                config.wgsRefConfig() != null ? config.wgsRefConfig().sageSomaticRefSampleBQRPlot() : null);
         String sageTumorBQRPlot = plotManager.processPlotFile(config.sageSomaticTumorSampleBQRPlot());
 
         String purplePlotBasePath = config.purplePlotDirectory() + File.separator + config.tumorSampleId();
@@ -694,22 +692,22 @@ public class OrangeAlgo
         String purpleKataegisPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
         String cuppaSummaryPlot = null;
-        if(config.wgsConfig() != null && config.wgsConfig().cuppaSummaryPlot() != null)
+        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaSummaryPlot() != null)
         {
-            cuppaSummaryPlot = plotManager.processPlotFile(config.wgsConfig().cuppaSummaryPlot());
+            cuppaSummaryPlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaSummaryPlot());
         }
 
         String cuppaFeaturePlot = null;
-        if(config.wgsConfig() != null && config.wgsConfig().cuppaFeaturePlot() != null && new File(config.wgsConfig()
+        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaFeaturePlot() != null && new File(config.wgsRefConfig()
                 .cuppaFeaturePlot()).exists())
         {
-            cuppaFeaturePlot = plotManager.processPlotFile(config.wgsConfig().cuppaFeaturePlot());
+            cuppaFeaturePlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaFeaturePlot());
         }
 
         String cuppaChartPlot = null;
-        if(config.wgsConfig() != null && config.wgsConfig().cuppaChartPlot() != null)
+        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaChartPlot() != null)
         {
-            cuppaChartPlot = plotManager.processPlotFile(config.wgsConfig().cuppaChartPlot());
+            cuppaChartPlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaChartPlot());
         }
 
         return ImmutableOrangePlots.builder()
