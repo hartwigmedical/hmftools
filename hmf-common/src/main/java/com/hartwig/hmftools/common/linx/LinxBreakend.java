@@ -41,7 +41,7 @@ public abstract class LinxBreakend
     public abstract int nextSpliceDistance();
     public abstract int totalExonCount();
 
-    // TODO Remove field.
+    // TODO Property can be removed (see also ACTIN-353)
     public abstract int strand();
 
     // TODO Derive properties from other sources (see also ACTIN-346)
