@@ -59,6 +59,12 @@ public class CuppaDataPrep
 
                 List<DataItem> dataItems = categoryPrep.extractSampleData(sampleId);
 
+                if(dataItems == null)
+                {
+                    CUP_LOGGER.error("invalid category({}) data", categoryPrep.categoryType());
+                    System.exit(1);
+                }
+
                 mSampleDataWriter.writeSampleData(sampleId, categoryPrep.categoryType(), dataItems);
             }
 

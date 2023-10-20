@@ -3,6 +3,7 @@ package com.hartwig.hmftools.cup.feature;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
+import static com.hartwig.hmftools.cup.common.CupCalcs.BOOL_STR_TRUE;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromFile;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 
@@ -29,7 +30,6 @@ public class FeaturePrep implements CategoryPrep
     @Override
     public CategoryType categoryType() { return FEATURE; }
 
-    private static final String VALUE_TRUE = "true";
     private static final String AMP_TYPE = ".amp";
     private static final String MUTATION_TYPE = ".mutation";
     private static final String INDEL_TYPE = ".indel";
@@ -68,7 +68,7 @@ public class FeaturePrep implements CategoryPrep
                 {
                     case DRIVER:
                     {
-                        dataItems.add(new DataItem(DNA, ItemType.DRIVER, featureData.Name + MUTATION_TYPE, "true"));
+                        dataItems.add(new DataItem(DNA, ItemType.DRIVER, featureData.Name + MUTATION_TYPE, BOOL_STR_TRUE));
                         break;
                     }
 
@@ -88,13 +88,13 @@ public class FeaturePrep implements CategoryPrep
 
                     case FUSION:
                     {
-                        dataItems.add(new DataItem(DNA, ItemType.FUSION, featureData.Name, VALUE_TRUE));
+                        dataItems.add(new DataItem(DNA, ItemType.FUSION, featureData.Name, BOOL_STR_TRUE));
                         break;
                     }
 
                     case VIRUS:
                     {
-                        dataItems.add(new DataItem(DNA, ItemType.VIRUS, featureData.Name, VALUE_TRUE));
+                        dataItems.add(new DataItem(DNA, ItemType.VIRUS, featureData.Name, BOOL_STR_TRUE));
                         break;
                     }
                 }

@@ -223,4 +223,9 @@ public class CupCalcs
 
         return adjustedCounts;
     }
+
+    public static final String BOOL_STR_TRUE = "1";
+    public static final String BOOL_STR_FALSE = "0";
+
+    public static String boolToIntString(final boolean boolValue) { return boolValue ? BOOL_STR_TRUE : BOOL_STR_FALSE; }
 }
