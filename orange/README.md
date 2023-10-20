@@ -49,6 +49,7 @@ found [here](https://resources.hartwigmedicalfoundation.nl) for either 37 or 38 
 
 ```
 java -jar orange.jar \
+    -experiment_type PANEL
     -tumor_sample_id tumor_sample \
     -primary_tumor_doids doid1;doid2 \
     -ref_genome_version 37 \
@@ -80,6 +81,8 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
    -cuppa_dir /path/to/cuppa_output \
    -sigs_dir /path/to/sigs_output 
 ```
+
+Also, the value of the `-experiment_type` parameter should be set to `WGS` for all whole genome configurations.
 
 ### Additional parameters when whole genome germline DNA data is available
 
@@ -227,11 +230,12 @@ investigate potential causes for QC failure.
 - Upcoming
     - Disclaimer (if enabled) has bigger font size in footer, and a disclaimer is now also present in header.
     - New ORANGE-datamodel (v2.0.0) with lots of datamodel renames and clean-ups.
-      - Parameter `experimentDate` has been renamed to `samplingDate`
-      - Kataegis plots are now mandatory and expected to be produced in every situation by PURPLE.
+        - Parameter `experimentDate` has been renamed to `samplingDate`
+        - Kataegis plots are now mandatory and expected to be produced in every situation by PURPLE.
     - Data is displayed in the report as "NA" in case of purple QC failure, in case the data by itself is not interpretable (e.g. TML).
     - The TMB status (high vs low) is displayed on the front page along with the actual TMB.
     - The status of UGT1A1 is displayed on the front page.
+    - The parameter `experiment_type` is now required, with valid values being PANEL or WGS.
 - [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
     - Supports targeted tumor-only mode:
         - Omits Cuppa, Chord, Sigs and VirusBreakends
