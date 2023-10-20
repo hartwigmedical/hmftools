@@ -25,7 +25,7 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep18;
-import org.jooq.InsertValuesStep19;
+import org.jooq.InsertValuesStep21;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.types.UInteger;
@@ -47,7 +47,7 @@ public class StructuralVariantFusionDAO
     }
 
     @NotNull
-    private InsertValuesStep19 createBreakendInserter()
+    private InsertValuesStep21 createBreakendInserter()
     {
         return context.insertInto(SVBREAKEND,
                 SVBREAKEND.MODIFIED,
@@ -64,11 +64,14 @@ public class StructuralVariantFusionDAO
                 SVBREAKEND.REGIONTYPE,
                 SVBREAKEND.CODINGCONTEXT,
                 SVBREAKEND.BIOTYPE,
+                SVBREAKEND.EXONUP,
+                SVBREAKEND.EXONDOWN,
                 SVBREAKEND.EXONICBASEPHASE,
                 SVBREAKEND.NEXTSPLICEEXONRANK,
                 SVBREAKEND.NEXTSPLICEEXONPHASE,
                 SVBREAKEND.NEXTSPLICEDISTANCE,
-                SVBREAKEND.TOTALEXONCOUNT);
+                SVBREAKEND.TOTALEXONCOUNT
+                );
     }
 
     public void writeBreakendsAndFusions(@NotNull String sampleId, @NotNull List<LinxBreakend> breakends,
@@ -81,7 +84,7 @@ public class StructuralVariantFusionDAO
         // a map of breakend DB Ids to transcripts for the fusion DB record foreign key to the breakend table
         Map<Integer, Integer> breakendIdToDbIdMap = Maps.newHashMap();
 
-        InsertValuesStep19 inserter = createBreakendInserter();
+        InsertValuesStep21 inserter = createBreakendInserter();
         List<LinxBreakend> insertedBreakends = Lists.newArrayList();
 
         for(int i = 0; i < breakends.size(); ++i)
@@ -102,11 +105,14 @@ public class StructuralVariantFusionDAO
                     breakend.regionType(),
                     breakend.codingType(),
                     breakend.biotype(),
+                    breakend.exonUp(),
+                    breakend.exonDown(),
                     breakend.exonicBasePhase(),
                     breakend.nextSpliceExonRank(),
                     breakend.nextSpliceExonPhase(),
                     breakend.nextSpliceDistance(),
-                    breakend.totalExonCount());
+                    breakend.totalExonCount()
+                    );
 
             insertedBreakends.add(breakend);
 
@@ -238,7 +244,7 @@ public class StructuralVariantFusionDAO
         {
             LinxBreakend breakend = ImmutableLinxBreakend.builder()
                     .id(record.getValue(SVBREAKEND.ID).intValue())
-                    .svId(record.getValue(SVBREAKEND.SVID).intValue())
+                    .svId(record.getValue(SVBREAKEND.SVID))
                     .isStart(record.getValue(SVBREAKEND.STARTBREAKEND) == 1)
                     .gene(record.getValue(SVBREAKEND.GENE))
                     .transcriptId(record.getValue(SVBREAKEND.TRANSCRIPTID))

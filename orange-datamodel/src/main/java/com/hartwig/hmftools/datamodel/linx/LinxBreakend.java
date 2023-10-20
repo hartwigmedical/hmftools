@@ -53,8 +53,6 @@ public interface LinxBreakend
 
     int orientation();
 
-    int strand();
-
     int exonUp();
 
     int exonDown();
