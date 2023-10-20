@@ -47,7 +47,7 @@ public class PathResolver
         return sampleDataDir;
     }
 
-    @Nullable
+    @NotNull
     public String resolveToolDirectoryIfExists(@NotNull String toolDirConfigKey, @NotNull String defaultPipelineToolDir)
     {
         String toolDir = resolveToolDirectory(toolDirConfigKey, defaultPipelineToolDir);

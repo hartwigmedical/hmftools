@@ -265,7 +265,7 @@ public interface OrangeConfig
                 .primaryTumorDoids(toStringSet(configBuilder.getValue(PRIMARY_TUMOR_DOIDS), DOID_SEPARATOR))
                 .samplingDate(samplingDate)
                 .refGenomeVersion(OrangeRefGenomeVersion.valueOf(RefGenomeVersion.from(configBuilder).name()))
-                .outputDir(parseOutputDir(configBuilder))
+                .outputDir(parseOutputDirIfExists(configBuilder))
                 .doidJsonFile(configBuilder.getValue(DOID_JSON))
                 .cohortMappingTsv(configBuilder.getValue(COHORT_MAPPING_TSV))
                 .cohortPercentilesTsv(configBuilder.getValue(COHORT_PERCENTILES_TSV))
@@ -275,18 +275,18 @@ public interface OrangeConfig
                 .pipelineVersionFile(configBuilder.getValue(PIPELINE_VERSION_FILE))
                 .tumorSampleWGSMetricsFile(pathResolver.resolveMetricsFile(TUMOR_SAMPLE_WGS_METRICS_FILE, METRICS_DIR, tumorSampleId))
                 .tumorSampleFlagstatFile(pathResolver.resolveMetricsFile(TUMOR_SAMPLE_FLAGSTAT_FILE, FLAGSTAT_DIR, tumorSampleId))
-                .purpleDataDirectory(pathResolver.resolveToolDirectory(PURPLE_DIR_CFG, PURPLE_DIR))
+                .purpleDataDirectory(pathResolver.resolveToolDirectoryIfExists(PURPLE_DIR_CFG, PURPLE_DIR))
                 .purplePlotDirectory(pathResolver.resolveToolPlotsDirectory(PURPLE_PLOT_DIR_CFG, PURPLE_DIR))
-                .linxSomaticDataDirectory(pathResolver.resolveToolDirectory(LINX_DIR_CFG, LINX_SOMATIC_DIR))
+                .linxSomaticDataDirectory(pathResolver.resolveToolDirectoryIfExists(LINX_DIR_CFG, LINX_SOMATIC_DIR))
                 .linxPlotDirectory(pathResolver.resolveToolPlotsDirectory(LINX_PLOT_DIR_CFG, LINX_SOMATIC_DIR))
                 .convertGermlineToSomatic(convertGermlineToSomatic)
                 .limitJsonOutput(limitJsonOutput)
                 .addDisclaimer(addDisclaimer);
 
-        String sageSomaticDir = pathResolver.resolveToolDirectory(SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
+        String sageSomaticDir = pathResolver.resolveToolDirectoryIfExists(SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
         builder.sageSomaticTumorSampleBQRPlot(fileIfExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, tumorSampleId)));
 
-        String lilacDir = pathResolver.resolveToolDirectory(LILAC_DIR_CFG, LILAC_DIR);
+        String lilacDir = pathResolver.resolveToolDirectoryIfExists(LILAC_DIR_CFG, LILAC_DIR);
         builder.lilacResultCsv(fileIfExists(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
         builder.lilacQcCsv(fileIfExists(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
 
@@ -335,5 +335,16 @@ public interface OrangeConfig
             default:
                 throw new IllegalArgumentException("Invalid experiment type, must be one of WGS, PANEL");
         }
+    }
+
+    @NotNull
+    private static String parseOutputDirIfExists(@NotNull ConfigBuilder configBuilder)
+    {
+        String dir = parseOutputDir(configBuilder);
+        if(dir == null)
+        {
+            throw new IllegalArgumentException("Could not parse output directory from configuration");
+        }
+        return fileIfExists(dir);
     }
 }
