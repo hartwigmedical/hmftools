@@ -18,11 +18,9 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLIN
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_GERMLINE_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PEACH_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.PIPELINE_SAMPLE_ROOT_DIR;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAGE_GERMLINE_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
@@ -119,9 +117,6 @@ public interface OrangeWGSRefConfig
     {
         ImmutableOrangeWGSRefConfig.Builder builder = ImmutableOrangeWGSRefConfig.builder();
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
-
-        String pipelineSampleRootDir = checkAddDirSeparator(configBuilder.getValue(PIPELINE_SAMPLE_ROOT_DIR));
-        String sampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
         // params required for WGS, Tumor only
         String virusDir = pathResolver.resolveToolDirectoryIfExists(VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
