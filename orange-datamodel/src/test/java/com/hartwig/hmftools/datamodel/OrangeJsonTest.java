@@ -301,7 +301,6 @@ public class OrangeJsonTest
         assertEquals(2, breakend.exonDown());
         assertEquals("Upstream", breakend.geneOrientation());
         assertEquals(-1, breakend.orientation());
-        assertEquals(-1, breakend.strand());
         assertEquals(TranscriptRegionType.EXONIC, breakend.regionType());
         assertEquals(TranscriptCodingType.UTR_3P, breakend.codingType());
 
