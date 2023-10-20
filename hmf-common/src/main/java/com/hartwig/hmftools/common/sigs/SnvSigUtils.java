@@ -2,15 +2,23 @@ package com.hartwig.hmftools.common.sigs;
 
 import static com.hartwig.hmftools.common.codon.Nucleotides.swapDnaBase;
 
+import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.variant.SomaticVariant;
+
+import org.jetbrains.annotations.Nullable;
 
 public class SnvSigUtils
 {
     public static final int SNV_TRINUCLEOTIDE_BUCKET_COUNT = 96;
 
     public static void populateBucketMap(final Map<String,Integer> bucketNameIndexMap)
+    {
+        populateBucketMap(bucketNameIndexMap, null);
+    }
+
+    public static void populateBucketMap(final Map<String,Integer> bucketNameIndexMap, @Nullable final List<String> bucketNames)
     {
         char[] refBases = {'C', 'T'};
         char[] bases = {'A','C', 'G', 'T'};
@@ -39,6 +47,9 @@ public class SnvSigUtils
                             String context = String.format("%c%c%c", before, ref, after);
 
                             String bucketName = baseChange + "_" + context;
+
+                            if(bucketNames != null)
+                                bucketNames.add(bucketName);
 
                             bucketNameIndexMap.put(bucketName, index);
                             ++index;

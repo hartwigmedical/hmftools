@@ -7,7 +7,10 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
+import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +18,8 @@ import org.jetbrains.annotations.NotNull;
 public final class BreakendEntryFactory
 {
     @NotNull
-    public static List<BreakendEntry> create(@NotNull List<LinxBreakend> breakends, @NotNull List<LinxSvAnnotation> variants)
+    public static List<BreakendEntry> create(@NotNull List<LinxBreakend> breakends, @NotNull List<LinxSvAnnotation> variants,
+            @NotNull List<PurpleDriver> drivers)
     {
         List<BreakendEntry> entries = Lists.newArrayList();
         for(LinxBreakend breakend : breakends)
@@ -29,7 +33,7 @@ public final class BreakendEntryFactory
                     .range(range(breakend))
                     .clusterId(determineClusterId(breakend, variants))
                     .junctionCopyNumber(breakend.junctionCopyNumber())
-                    .undisruptedCopyNumber(breakend.undisruptedCopyNumber())
+                    .undisruptedCopyNumber(correctUndisruptedCopyNumber(breakend, drivers))
                     .build());
         }
         return entries;
@@ -76,5 +80,21 @@ public final class BreakendEntryFactory
         }
 
         throw new IllegalStateException("Could not find structural variant that underlies breakend: " + breakend);
+    }
+
+    private static double correctUndisruptedCopyNumber(@NotNull LinxBreakend breakend, @NotNull List<PurpleDriver> drivers)
+    {
+        if(breakend.type() == LinxBreakendType.DUP)
+        {
+            for(PurpleDriver driver : drivers)
+            {
+                if(driver.gene().equals(breakend.gene()) && driver.type() == PurpleDriverType.HOM_DUP_DISRUPTION)
+                {
+                    return Math.max(0.0, breakend.undisruptedCopyNumber() - breakend.junctionCopyNumber());
+                }
+            }
+        }
+
+        return breakend.undisruptedCopyNumber();
     }
 }

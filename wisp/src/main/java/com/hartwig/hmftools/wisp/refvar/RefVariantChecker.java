@@ -85,7 +85,7 @@ public class RefVariantChecker
 
         closeBufferedWriter(mWriter);
 
-        CT_LOGGER.info("Probe variation selection complete");
+        CT_LOGGER.info("Reference variant checking complete");
     }
 
     private void processSample(final SampleData sample)

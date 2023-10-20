@@ -120,6 +120,22 @@ public class SvDataLoader
             final String sampleId, final Map<String,SvData> sampleSvData,
             final List<StructuralVariantData> allSVs, final List<LinxCluster> clusterList)
     {
+        SvData svData = new SvData(sampleId);
+
+        final int[] svCounts = extractSvCounts(allSVs, clusterList);
+
+        for(SvDataType type : SvDataType.values())
+        {
+            svData.setCount(type, svCounts[type.ordinal()]);
+        }
+
+        sampleSvData.put(sampleId, svData);
+    }
+
+    public static int[] extractSvCounts(final List<StructuralVariantData> allSVs, final List<LinxCluster> clusterList)
+    {
+        final int[] svCounts = new int[SvDataType.values().length];
+
         int lineCount = clusterList.stream().filter(x -> x.resolvedType().equals("LINE")).mapToInt(x -> x.clusterCount()).sum();
 
         // ensure only filtered SVs are considered
@@ -151,15 +167,14 @@ public class SvDataLoader
                 .filter(x -> !x.resolvedType().equals("LINE"))
                 .mapToInt(x -> x.clusterCount()).max().orElse(0);
 
-        SvData svData = new SvData(sampleId);
-        svData.setCount(LINE, lineCount);
-        svData.setCount(SIMPLE_DEL_20KB_1MB, shortDels);
-        svData.setCount(SIMPLE_DUP_32B_200B, shortDups);
-        svData.setCount(SIMPLE_DUP_100KB_5MB, longDups);
-        svData.setCount(MAX_COMPLEX_SIZE, maxEventSize);
-        svData.setCount(TELOMERIC_SGL, telomericSgls);
+        svCounts[LINE.ordinal()] = lineCount;
+        svCounts[SIMPLE_DEL_20KB_1MB.ordinal()] = shortDels;
+        svCounts[SIMPLE_DUP_32B_200B.ordinal()] = shortDups;
+        svCounts[SIMPLE_DUP_100KB_5MB.ordinal()] = maxEventSize;
+        svCounts[MAX_COMPLEX_SIZE.ordinal()] = telomericSgls;
+        svCounts[MAX_COMPLEX_SIZE.ordinal()] = lineCount;
 
-        sampleSvData.put(sampleId, svData);
+        return svCounts;
     }
 
     public static boolean loadRefPercentileData(final String filename, final Map<SvDataType,Map<String,double[]>> refSvTypePercentiles)

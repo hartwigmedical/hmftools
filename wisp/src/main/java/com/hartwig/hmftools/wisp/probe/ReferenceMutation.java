@@ -2,6 +2,10 @@ package com.hartwig.hmftools.wisp.probe;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ALT;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_REF;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
@@ -125,10 +129,10 @@ public class ReferenceMutation extends Variant
 
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
-            int chrIndex = fieldsIndexMap.get("Chromosome");
-            int posIndex = fieldsIndexMap.get("Position");
-            int refIndex = fieldsIndexMap.get("Ref");
-            int altIndex = fieldsIndexMap.get("Alt");
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posIndex = fieldsIndexMap.get(FLD_POSITION);
+            int refIndex = fieldsIndexMap.get(FLD_REF);
+            int altIndex = fieldsIndexMap.get(FLD_ALT);
             int sourceIndex = fieldsIndexMap.get("Source");
             // int geneIndex = fieldsIndexMap.get("Gene");
 

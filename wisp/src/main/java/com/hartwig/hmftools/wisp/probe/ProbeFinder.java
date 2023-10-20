@@ -13,6 +13,9 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBuffer
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_BATCH_ID;
+import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_CATEGORY;
+import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_VARIANT;
 import static com.hartwig.hmftools.wisp.probe.ProbeConfig.NO_BATCH_ID;
 
 import java.io.BufferedWriter;
@@ -310,9 +313,9 @@ public class ProbeFinder
                 sj.add("SampleId");
 
             if(mConfig.BatchSampleIds.size() > 1)
-                sj.add("BatchId");
+                sj.add(FLD_BATCH_ID);
 
-            sj.add("Category").add("Status").add("Variant").add("Reported").add("CopyNumber").add("Vaf").add("TumorFrags");
+            sj.add(FLD_CATEGORY).add("Status").add(FLD_VARIANT).add("Reported").add("CopyNumber").add("Vaf").add("TumorFrags");
             sj.add("PhasedVariants").add("Gene").add("Type").add("Sequence").add("GcPercent").add("OtherData");
 
             writer.write(sj.toString());

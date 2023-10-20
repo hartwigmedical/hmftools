@@ -47,11 +47,11 @@ import static com.hartwig.hmftools.common.cuppa.CategoryType.isDna;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.isRna;
 import static com.hartwig.hmftools.cup.common.CupConstants.DEFAULT_RNA_LENGTH;
 import static com.hartwig.hmftools.cup.common.CupConstants.FEATURE_DAMPEN_FACTOR_DEFAULT;
+import static com.hartwig.hmftools.cup.prep.PrepConfig.addPipelineDirectories;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_FEATURES_FILE;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_SAMPLE_TRAITS_FILE;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_SIG_CONTRIBS_FILE;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.REF_COHORT_SV_DATA_FILE;
-import static com.hartwig.hmftools.cup.ref.RefDataConfig.addPipelineDirectories;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 

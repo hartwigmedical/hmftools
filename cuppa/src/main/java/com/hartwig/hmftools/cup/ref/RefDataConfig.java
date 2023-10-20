@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_COUNTS_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SNV_SAMPLE_POS_FREQ_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.configCategories;
+import static com.hartwig.hmftools.cup.prep.PrepConfig.addPipelineDirectories;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
@@ -133,14 +134,6 @@ public class RefDataConfig
     public static final List<String> parseFileSet(final String filenames)
     {
         return Arrays.stream(filenames.split(FILE_DELIM, -1)).collect(Collectors.toList());
-    }
-
-    public static void addPipelineDirectories(final ConfigBuilder configBuilder)
-    {
-        configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
-        configBuilder.addPath(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(VIRUS_DIR_CFG, false, PURPLE_DIR_DESC);
-        configBuilder.addPath(ISOFOX_DIR_CFG, false, ISOFOX_DIR_DESC);
     }
 
     public static void registerConfig(final ConfigBuilder configBuilder)

@@ -123,7 +123,14 @@ public class MarkDuplicates
         }
 
         fileWriterCache.close();
-        fileWriterCache.sortAndIndexBams();
+
+        if(fileWriterCache.runSortMergeIndex())
+        {
+            // log interim time
+            MD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
+
+            fileWriterCache.sortAndIndexBams();
+        }
 
         Statistics combinedStats = new Statistics();
         partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));

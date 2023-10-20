@@ -20,6 +20,7 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.wisp.common.SampleData;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberGcData;
 import com.hartwig.hmftools.wisp.purity.variant.FilterReason;
@@ -35,6 +36,7 @@ public class ResultsWriter
     private final BufferedWriter mVariantWriter;
     private final BufferedWriter mCnRatioWriter;
     private final BufferedWriter mDropoutCalcWriter;
+    private final boolean mHasBatchControls;
 
     public static final String SUMMARY_FILE_ID = "summary";
     public static final String SOMATICS_FILE_ID = "somatic_variants";
@@ -44,6 +46,8 @@ public class ResultsWriter
     public ResultsWriter(final PurityConfig config)
     {
         mConfig = config;
+        mHasBatchControls = config.hasBatchControls();
+
         mSampleWriter = initialiseWriter();
         mVariantWriter = config.writeType(SOMATICS) || config.writeType(SOMATICS_ALL) ? initialiseVariantWriter() : null;
         mCnRatioWriter = config.writeType(CN_DATA) ? initialiseCnRatioWriter() : null;
@@ -63,6 +67,9 @@ public class ResultsWriter
             if(mConfig.multipleSamples())
                 writer.write("PatientId\t");
 
+            if(mHasBatchControls)
+                writer.write("BatchControl\t");
+
             writer.write("SampleId\tTumorPurity\tTumorPloidy");
             writer.write(format("\t%s", SomaticVariantResult.header()));
             writer.write(String.format("\t%s", CnPurityResult.header()));
@@ -78,13 +85,16 @@ public class ResultsWriter
     }
 
     public synchronized void writeSampleSummary(
-            final String patientId, final String sampleId, final PurityContext purityContext, final CnPurityResult cnPurityResult,
+            final SampleData sampleData, final String sampleId, final PurityContext purityContext, final CnPurityResult cnPurityResult,
             final SomaticVariantResult somaticVariantResult)
     {
         try
         {
             if(mConfig.multipleSamples())
-                mSampleWriter.write(format("%s\t", patientId));
+                mSampleWriter.write(format("%s\t", sampleData.PatientId));
+
+            if(mHasBatchControls)
+                mSampleWriter.write(format("%s\t", sampleData.isBatchControl()));
 
             mSampleWriter.write(format("%s\t%.2f\t%.2f", sampleId, purityContext.bestFit().purity(), purityContext.bestFit().ploidy()));
             mSampleWriter.write(format("\t%s", somaticVariantResult.toTsv()));
@@ -110,11 +120,15 @@ public class ResultsWriter
             if(mConfig.multipleSamples())
                 sj.add("PatientId");
 
-            sj.add("SampleId").add("Chromosome").add("Position").add("Ref").add("Alt");
+            if(mHasBatchControls)
+                sj.add("BatchControl");
+
+            sj.add("SampleId").add("Chromosome").add("Position").add("Ref").add("Alt").add("IsProbe");
             sj.add("Filter").add("Tier").add("Type").add("RepeatCount").add("Mappability").add("SubclonalPerc");
             sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported").add("VCN").add("CopyNumber");
             sj.add("TumorDP").add("TumorAD");
             sj.add("SampleDP").add("SampleAD").add("SampleRefDual").add("SampleAlleleDual").add("SampleQualPerAD").add("SeqGcRatio");
+
             writer.write(sj.toString());
             writer.newLine();
 
@@ -128,7 +142,7 @@ public class ResultsWriter
     }
 
     public synchronized void writeVariant(
-            final String patientId, final String sampleId, final SomaticVariant variant, final GenotypeFragments sampleData,
+            final SampleData sampleData, final String sampleId, final SomaticVariant variant, final GenotypeFragments sampleFragData,
             final GenotypeFragments tumorData, final List<FilterReason> filterReasons)
     {
         if(mVariantWriter == null)
@@ -142,9 +156,13 @@ public class ResultsWriter
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             if(mConfig.multipleSamples())
-                sj.add(patientId);
+                sj.add(sampleData.PatientId);
+
+            if(mHasBatchControls)
+                sj.add(String.valueOf(sampleData.isBatchControl()));
 
             sj.add(sampleId).add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
+            sj.add(String.valueOf(variant.isProbeVariant()));
 
             String filtersStr = filterReasons.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
 
@@ -156,9 +174,9 @@ public class ResultsWriter
                     .add(format("%.2f", decorator.variantCopyNumber())).add(format("%.2f", decorator.adjustedCopyNumber()));
 
             sj.add(String.valueOf(tumorData.Depth)).add(String.valueOf(tumorData.AlleleCount));
-            sj.add(String.valueOf(sampleData.Depth)).add(String.valueOf(sampleData.AlleleCount));
-            sj.add(String.valueOf(sampleData.UmiCounts.RefDual)).add(String.valueOf(sampleData.UmiCounts.AlleleDual));
-            sj.add(format("%.1f", sampleData.qualPerAlleleFragment()));
+            sj.add(String.valueOf(sampleFragData.Depth)).add(String.valueOf(sampleFragData.AlleleCount));
+            sj.add(String.valueOf(sampleFragData.UmiCounts.RefDual)).add(String.valueOf(sampleFragData.UmiCounts.AlleleDual));
+            sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
             sj.add(format("%.3f", variant.sequenceGcRatio()));
 
             mVariantWriter.write(sj.toString());

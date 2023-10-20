@@ -148,9 +148,11 @@ public class FileWriterCache
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, presorted, new File(filename));
     }
 
+    public boolean runSortMergeIndex() { return mConfig.SamToolsPath != null || mConfig.SambambaPath != null; }
+
     public void sortAndIndexBams()
     {
-        if(mConfig.SamToolsPath == null && mConfig.SambambaPath == null)
+        if(!runSortMergeIndex())
             return;
 
         String finalBamFilename = formBamFilename(null, null);

@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.wisp.common.CommonUtils.BATCH_CONTROL_TAG;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.SampleData.ctDnaSamplesFromStr;
 
@@ -37,6 +38,7 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.wisp.common.SampleData;
+import com.hartwig.hmftools.wisp.purity.variant.ProbeVariantCache;
 
 public class PurityConfig
 {
@@ -48,6 +50,9 @@ public class PurityConfig
     public final String SampleDataDir;
     public final String PurpleDir;
     public final String CobaltDir;
+
+    public final ProbeVariantCache ProbeVariants;
+
     public final String OutputDir;
     public final String OutputId;
     public final RefGenomeInterface RefGenome;
@@ -66,6 +71,7 @@ public class PurityConfig
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
     private static final String GC_RATIO_MIN = "gc_ratio_min";
     private static final String WRITE_TYPES = "write_types";
+    private static final String PROBE_VARIANTS_FILE = "probe_variants_file";
 
     public PurityConfig(final ConfigBuilder configBuilder)
     {
@@ -92,6 +98,8 @@ public class PurityConfig
         OutputDir = checkAddDirSeparator(configBuilder.getValue(OUTPUT_DIR, SampleDataDir));
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
+        ProbeVariants = new ProbeVariantCache(configBuilder.getValue(PROBE_VARIANTS_FILE));
+
         RefGenome = configBuilder.hasValue(REF_GENOME) ? loadRefGenome(configBuilder.getValue(REF_GENOME)) : null;
 
         NoiseReadsPerMillion = configBuilder.getDecimal(NOISE_READS_PER_MILLION);
@@ -115,6 +123,8 @@ public class PurityConfig
 
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
     public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
+    public boolean multipleSamples() { return Samples.size() > 1; }
+    public boolean hasBatchControls() { return Samples.stream().anyMatch(x -> x.isBatchControl()); }
 
     private void loadSampleData(final ConfigBuilder configBuilder)
     {
@@ -138,8 +148,6 @@ public class PurityConfig
         CT_LOGGER.info("loaded {} patients and {} ctDNA samples",
                 Samples.size(), Samples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum());
     }
-
-    public boolean multipleSamples() { return Samples.size() > 1; }
 
     public String formFilename(final String fileType)
     {
@@ -190,6 +198,7 @@ public class PurityConfig
                         + Arrays.stream(WriteType.values()).map(x -> x.toString()).collect(Collectors.joining(",")));
 
         configBuilder.addPath(REF_GENOME, true, REF_GENOME_CFG_DESC);
+        configBuilder.addPath(PROBE_VARIANTS_FILE, false, "File defining the probe variants");
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION, "Expected reads-per-million from noise", PurityConstants.DEFAULT_NOISE_READS_PER_MILLION);

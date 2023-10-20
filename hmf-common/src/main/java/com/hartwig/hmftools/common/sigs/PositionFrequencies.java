@@ -60,6 +60,7 @@ public class PositionFrequencies
     public int getBucketCount() { return mPositionCacheSize; }
     public int getMaxSampleCount() { return mMaxSampleCount; }
     public final int[] getCounts() { return mCounts; }
+    public Map<String,Integer> chromosomePosIndex() { return mChromosomePosIndex; }
 
     public final Map<String,Map<Integer,Integer>> getChrPosBucketFrequencies() { return mChrPosBucketFrequencies; }
 

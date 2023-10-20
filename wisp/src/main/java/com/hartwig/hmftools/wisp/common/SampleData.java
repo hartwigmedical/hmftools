@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.wisp.common.CommonUtils.BATCH_CONTROL_TAG;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +32,8 @@ public class SampleData
         CtDnaSamples = ctDnaSamples;
         VcfTag = vcfTag;
     }
+
+    public boolean isBatchControl() { return VcfTag != null && VcfTag.contains(BATCH_CONTROL_TAG); }
 
     public String toString()
     {
