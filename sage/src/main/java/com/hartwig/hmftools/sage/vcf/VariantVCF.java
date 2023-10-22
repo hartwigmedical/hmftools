@@ -78,7 +78,7 @@ public class VariantVCF implements AutoCloseable
     public static final String AVG_NM_COUNT = "ANM";
 
     public static final String STRAND_BIAS = "SB";
-    public static final String STRAND_BIAS_DESC = "Strand bias - percentage of first-in-pair reads";
+    public static final String STRAND_BIAS_DESC = "Strand bias - percentage of forward-orientation fragments";
 
     public static final String AVG_BASE_QUAL = "ABQ";
     public static final String AVG_BASE_QUAL_DESC = "Average calculated base quality";

@@ -750,12 +750,26 @@ public class ReadContextCounter implements VariantHotspot
     private void countStrandedness(final SAMRecord record)
     {
         if(!record.getReadPairedFlag())
-            return;
+        {
+            if(record.getReadNegativeStrandFlag())
+                mReverseStrand++;
+            else
+                mForwardStrand++;
 
-        if(record.getReadNegativeStrandFlag())
-            mReverseStrand++;
-        else
-            mForwardStrand++;
+            return;
+        }
+
+        // make the distinction between F1R2 and F2R1
+        boolean firstIsForward = record.getFirstOfPairFlag() ? !record.getReadNegativeStrandFlag() : !record.getMateNegativeStrandFlag();
+        boolean secondIsForward = !record.getFirstOfPairFlag() ? !record.getReadNegativeStrandFlag() : !record.getMateNegativeStrandFlag();
+
+        if(firstIsForward != secondIsForward)
+        {
+            if(firstIsForward)
+                mForwardStrand++;
+            else
+                mReverseStrand++;
+        }
     }
 
     private void countUmiType(final SAMRecord record, final boolean isRef)
