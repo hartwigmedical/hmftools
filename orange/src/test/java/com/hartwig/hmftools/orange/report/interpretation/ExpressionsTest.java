@@ -46,6 +46,9 @@ public class ExpressionsTest
         assertEquals("1.2", Expressions.tpm(expression));
         assertEquals("0.12", Expressions.percentileType(expression));
         assertEquals("0.23", Expressions.percentileDatabase(expression));
+
+        GeneExpression cancerExpressionMissing = builder().tpm(0).percentileCancer(null).percentileCohort(0).build();
+        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.percentileType(cancerExpressionMissing));
     }
 
     @NotNull
