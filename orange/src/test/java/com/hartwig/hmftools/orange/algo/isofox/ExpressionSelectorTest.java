@@ -77,8 +77,19 @@ public class ExpressionSelectorTest
         assertTrue(lowExpression.contains(lowExpressionGene));
     }
 
+    @Test
+    public void shouldNotSelectGenesMissingCancerExpressionPercentile()
+    {
+        GeneExpression highExpressionGene = create("gene 1", GeneExpressionDistributionData.NOT_AVAILABLE, null);
+        DriverGene driver = DriverGeneTestFactory.builder().gene("gene 1").likelihoodType(DriverCategory.ONCO).build();
+
+        List<GeneExpression> highExpression = ExpressionSelector.selectHighExpressionGenes(List.of(highExpressionGene), List.of(driver));
+
+        assertEquals(0, highExpression.size());
+    }
+
     @NotNull
-    private static GeneExpression create(@NotNull String gene, double percentileCohort, double percentileCancer)
+    private static GeneExpression create(@NotNull String gene, double percentileCohort, Double percentileCancer)
     {
         return OrangeIsofoxTestFactory.geneExpressionBuilder()
                 .gene(gene)
