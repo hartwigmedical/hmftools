@@ -126,6 +126,9 @@ public class SageAppendApplication
                     continue;
             }
 
+            if(!mConfig.Common.SpecificPositions.isEmpty() && mConfig.Common.SpecificPositions.stream().noneMatch(x -> x == variant.getStart()))
+                continue;
+
             existingVariants.add(variant);
         }
 

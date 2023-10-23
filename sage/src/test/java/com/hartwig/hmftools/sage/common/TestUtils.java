@@ -77,8 +77,11 @@ public class TestUtils
 
     public static void setTumorQuality(final SageVariant variant, int count, int quality)
     {
-        variant.tumorReadCounters().get(0).counts()[RC_FULL] = count;
-        variant.tumorReadCounters().get(0).quality()[RC_FULL] = quality;
+        variant.tumorReadCounters().get(0).readSupportCounts().Full = count;
+        variant.tumorReadCounters().get(0).readSupportQualityCounts().Full = quality;
+
+        // variant.tumorReadCounters().get(0).counts()[RC_FULL] = count;
+        // variant.tumorReadCounters().get(0).quality()[RC_FULL] = quality;
     }
 
     public static void addLocalPhaseSet(final SageVariant variant, int lps, int readCount)

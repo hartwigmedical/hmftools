@@ -64,7 +64,7 @@ public class CandidateStage
                 initialCandidates.addOfMultipleSamples(altContexts);
         }
 
-        List<Candidate> candidates = initialCandidates.candidates(mConfig.SpecificPositions);
+        List<Candidate> candidates = initialCandidates.candidates(mConfig.Common.SpecificPositions);
 
         SG_LOGGER.trace("region({}) found {} candidates", region.toString(), candidates.size());
 

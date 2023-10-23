@@ -25,7 +25,9 @@ import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_S
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.FULL;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.common.ReadContextMatch.PARTIAL;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
@@ -43,8 +45,12 @@ import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
+import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -74,8 +80,8 @@ public class ReadContextCounter implements VariantHotspot
     private final boolean mIsMnv;
     private final int mMaxCoverage;
 
-    private final int[] mQualities;
-    private final int[] mCounts;
+    private final ReadSupportCounts mQualities;
+    private final ReadSupportCounts mCounts;
 
     private int mLengthened;
     private int mShortened;
@@ -124,8 +130,8 @@ public class ReadContextCounter implements VariantHotspot
         mVariant = variant;
         mIsMnv = variant.isMNV();
 
-        mQualities = new int[RC_MAX];
-        mCounts = new int[RC_MAX];
+        mQualities = new ReadSupportCounts();
+        mCounts = new ReadSupportCounts();
 
         mLengthened = 0;
         mShortened = 0;
@@ -172,27 +178,23 @@ public class ReadContextCounter implements VariantHotspot
     @Override
     public String alt() { return mVariant.alt(); }
 
-    public int altSupport() { return mCounts[RC_FULL] + mCounts[RC_PARTIAL] + mCounts[RC_CORE] + mCounts[RC_ALT] + mCounts[RC_REALIGNED]; }
+    public int altSupport() { return mCounts.altSupport(); }
+    public int refSupport() { return mCounts.Ref; }
+    public int depth() { return mCounts.Total; }
 
-    public int refSupport() { return mCounts[RC_REF]; }
-    public int coverage() { return mCounts[RC_TOTAL]; }
-    public int depth() { return mCounts[RC_TOTAL]; }
-
-    public double vaf() { return alleleFrequency(altSupport()); }
-
-    private double alleleFrequency(double support)
+    public double vaf()
     {
-        return mCounts[RC_TOTAL] == 0 ? 0d : support / mCounts[RC_TOTAL];
+        return mCounts.Total == 0 ? 0d : mCounts.altSupport() / (double)mCounts.Total;
     }
 
     public int tumorQuality()
     {
-        int tumorQuality = mQualities[RC_FULL] + mQualities[RC_PARTIAL] + mQualities[RC_REALIGNED];
+        int tumorQuality = mQualities.Full + mQualities.Partial + mQualities.Realigned;
         return Math.max(0, tumorQuality - (int) mJitterPenalty);
     }
 
-    public int[] counts() { return mCounts; }
-    public int[] quality() { return mQualities; }
+    public int[] counts() { return mCounts.toArray(); }
+    public int[] quality() { return mQualities.toArray(); }
 
     public int[] jitter()
     {
@@ -223,7 +225,7 @@ public class ReadContextCounter implements VariantHotspot
     public double averageAltBaseQuality()
     {
         // excludes realigned
-        int supportCount = mCounts[RC_FULL] + mCounts[RC_PARTIAL] + mCounts[RC_CORE];
+        int supportCount = mCounts.Full + mCounts.Partial + mCounts.Core;
         return supportCount > 0 ? mSupportAltBaseQualityTotal / (double)supportCount : 0;
     }
 
@@ -237,12 +239,12 @@ public class ReadContextCounter implements VariantHotspot
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
 
-    public boolean exceedsMaxCoverage() { return mCounts[RC_TOTAL] >= mMaxCoverage; }
+    public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
 
     public String toString()
     {
         return format("id(%d) var(%s) core(%s) counts(f=%d p=%d c=%d)",
-                mId, varString(), mReadContext.toString(), mCounts[RC_FULL], mCounts[RC_PARTIAL], mCounts[RC_CORE]);
+                mId, varString(), mReadContext.toString(), mCounts.Full, mCounts.Partial, mCounts.Core);
     }
 
     public String varString()
@@ -339,29 +341,39 @@ public class ReadContextCounter implements VariantHotspot
 
             if(match != NONE && match != ReadContextMatch.CORE_PARTIAL)
             {
+                VariantReadSupport readSupport = null;
+
                 switch(match)
                 {
                     case FULL:
-                        mCounts[RC_FULL]++;
-                        mQualities[RC_FULL] += quality;
+                        // mCounts[RC_FULL]++;
+                        // mQualities[RC_FULL] += quality;
+                        readSupport = VariantReadSupport.FULL;
                         matchType = MatchType.FULL;
                         break;
 
                     case PARTIAL:
-                        mCounts[RC_PARTIAL]++;
-                        mQualities[RC_PARTIAL] += quality;
+                        // mCounts[RC_PARTIAL]++;
+                        // mQualities[RC_PARTIAL] += quality;
+                        readSupport = VariantReadSupport.PARTIAL;
                         matchType = MatchType.PARTIAL;
                         break;
 
                     case CORE:
-                        ++mCounts[RC_CORE];
-                        mQualities[RC_CORE] += quality;
+                        // ++mCounts[RC_CORE];
+                        // mQualities[RC_CORE] += quality;
+                        readSupport = VariantReadSupport.CORE;
                         matchType = MatchType.CORE;
                         break;
                 }
 
-                ++mCounts[RC_TOTAL];
-                mQualities[RC_TOTAL] += quality;
+                // ++mCounts[RC_TOTAL];
+                // mQualities[RC_TOTAL] += quality;
+
+                registerReadSupport(record, readSupport, quality);
+
+                // if(mConfig.TrackUMIs)
+                //    countUmiType(record, UMI_SUPPORT_ALT);
 
                 mTotalMapQuality += record.getMappingQuality();
                 mTotalAltMapQuality += record.getMappingQuality();
@@ -384,9 +396,6 @@ public class ReadContextCounter implements VariantHotspot
 
                 countStrandedness(record);
 
-                if(mConfig.TrackUMIs)
-                    countUmiType(record, false);
-
                 checkImproperCount(record);
                 return SUPPORT;
             }
@@ -402,11 +411,15 @@ public class ReadContextCounter implements VariantHotspot
 
         if(realignment.Type == EXACT)
         {
-            mCounts[RC_REALIGNED]++;
-            mQualities[RC_REALIGNED] += quality;
+            // mCounts[RC_REALIGNED]++;
+            // mQualities[RC_REALIGNED] += quality;
+            // mCounts[RC_TOTAL]++;
+            // mQualities[RC_TOTAL] += quality;
 
-            mCounts[RC_TOTAL]++;
-            mQualities[RC_TOTAL] += quality;
+            // if(mConfig.TrackUMIs)
+            //    countUmiType(record, UMI_SUPPORT_ALT);
+
+            registerReadSupport(record, VariantReadSupport.REALIGNED, quality);
 
             mTotalMapQuality += record.getMappingQuality();
             mTotalAltMapQuality += record.getMappingQuality();
@@ -416,9 +429,6 @@ public class ReadContextCounter implements VariantHotspot
             logReadEvidence(record, MatchType.REALIGNED, readIndex,quality);
             rawContext.updateSupport(false, rawContext.AltSupport);
             registerRawSupport(rawContext);
-
-            if(mConfig.TrackUMIs)
-                countUmiType(record, false);
 
             return SUPPORT;
         }
@@ -441,31 +451,37 @@ public class ReadContextCounter implements VariantHotspot
 
         ReadMatchType readMatchType = UNRELATED;
 
-        mCounts[RC_TOTAL]++;
-        mQualities[RC_TOTAL] += quality;
+        // mCounts[RC_TOTAL]++;
+        // mQualities[RC_TOTAL] += quality;
 
         mTotalMapQuality += record.getMappingQuality();
         mTotalNmCount += numberOfEvents;
 
+        VariantReadSupport readSupport = null;
+
         if(rawContext.RefSupport)
         {
-            mCounts[RC_REF]++;
-            mQualities[RC_REF] += quality;
+            // mCounts[RC_REF]++;
+            // mQualities[RC_REF] += quality;
+            readSupport = VariantReadSupport.REF;
             readMatchType = NO_SUPPORT;
-
-            if(mConfig.TrackUMIs)
-                countUmiType(record, true);
         }
         else if(rawContext.AltSupport)
         {
-            mCounts[RC_ALT]++;
-            mQualities[RC_ALT] += quality;
+            // mCounts[RC_ALT]++;
+            // mQualities[RC_ALT] += quality;
+            readSupport = VariantReadSupport.OTHER_ALT;
 
             mTotalAltMapQuality += record.getMappingQuality();
             mTotalAltNmCount += numberOfEvents;
 
             countStrandedness(record);
         }
+
+        registerReadSupport(record, readSupport, quality);
+
+        // if(mConfig.TrackUMIs)
+        //    countUmiType(record, rawContext.RefSupport ? UMI_SUPPORT_REF : UMI_SUPPORT_NONE);
 
         // add to jitter penalty as a function of the number of repeats found
         if(jitterRealign.Type == LENGTHENED || jitterRealign.Type == SHORTENED)
@@ -489,6 +505,37 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         return readMatchType;
+    }
+
+    private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, final double quality)
+    {
+        mCounts.addSupport(support, 1);
+        mQualities.addSupport(support, (int)quality);
+
+        /*
+        mCounts[VariantReadSupport.TOTAL.ordinal()]++;
+        mQualities[VariantReadSupport.TOTAL.ordinal()] += quality;
+
+        if(support != null)
+        {
+            mCounts[support.ordinal()]++;
+            mQualities[support.ordinal()] += quality;
+        }
+        */
+
+        if(mConfig.TrackUMIs)
+        {
+            int umiSupportType;
+
+            if(support == null || support == VariantReadSupport.OTHER_ALT)
+                umiSupportType = UMI_SUPPORT_NONE;
+            else if(support == VariantReadSupport.REF)
+                umiSupportType = UMI_SUPPORT_REF;
+            else
+                umiSupportType = UMI_SUPPORT_ALT;
+
+            countUmiType(record, umiSupportType);
+        }
     }
 
     private void registerRawSupport(final RawContext rawContext)
@@ -772,7 +819,11 @@ public class ReadContextCounter implements VariantHotspot
         }
     }
 
-    private void countUmiType(final SAMRecord record, final boolean isRef)
+    private static final int UMI_SUPPORT_REF = 0;
+    private static final int UMI_SUPPORT_ALT = 1;
+    private static final int UMI_SUPPORT_NONE = 2;
+
+    private void countUmiType(final SAMRecord record, final int supportType)
     {
         if(mUmiTypeCounts == null)
         {
@@ -780,7 +831,13 @@ public class ReadContextCounter implements VariantHotspot
             mUmiTypeCounts = new int[UMI_TYPE_COUNT];
         }
 
-        int indexOffset = isRef ? 0 : 3;
+        if(supportType == UMI_SUPPORT_NONE)
+        {
+            ++mUmiTypeCounts[UMI_TYPE_COUNT - 1];
+            return;
+        }
+
+        int indexOffset = supportType == UMI_SUPPORT_REF ? 0 : 3;
 
         String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
 
@@ -818,4 +875,9 @@ public class ReadContextCounter implements VariantHotspot
             mImproperPairCount++;
         }
     }
+
+    @VisibleForTesting
+    public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
+    public ReadSupportCounts readSupportCounts() { return mCounts; }
+
 }

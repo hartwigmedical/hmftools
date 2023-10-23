@@ -39,8 +39,10 @@ public final class SageVcfTags
             "Read context quality [Full, Partial, Core, Realigned, Alt, Reference, Total]";
 
     public static final String UMI_TYPE_COUNTS = "UMI_CNT";
-    public static final String UMI_TYPE_COUNTS_DESCRIPTION = "UMI type counts [RefNone,RefSingle,RefDualStrand,AltNone,AltSingle,AltDualStrand]";
-    public static final int UMI_TYPE_COUNT = 6;
+    public static final String UMI_TYPE_COUNTS_DESCRIPTION =
+            "UMI type counts [RefNone,RefSingle,RefDualStrand,AltNone,AltSingle,AltDualStrand,Other]";
+    public static final int UMI_TYPE_COUNT_ORIG = 6;
+    public static final int UMI_TYPE_COUNT = 7;
 
     // indices for read counts and qualities
     public static final int RC_FULL = 0;
