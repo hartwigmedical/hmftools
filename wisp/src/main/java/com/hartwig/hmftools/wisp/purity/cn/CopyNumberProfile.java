@@ -58,7 +58,7 @@ public class CopyNumberProfile
         try
         {
             mCopyNumbers.addAll(PurpleCopyNumberFile.read(
-                    PurpleCopyNumberFile.generateFilenameForReading(mConfig.PurpleDir, mSample.TumorId)));
+                    PurpleCopyNumberFile.generateFilenameForReading(mConfig.getPurpleDir(sample.TumorId), mSample.TumorId)));
         }
         catch(Exception e)
         {
@@ -75,7 +75,7 @@ public class CopyNumberProfile
 
         try
         {
-            final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(mConfig.CobaltDir, sampleId);
+            final String cobaltFilename = CobaltRatioFile.generateFilenameForReading(mConfig.getCobaltDir(sampleId), sampleId);
 
             if(!Files.exists(Paths.get(cobaltFilename)))
             {

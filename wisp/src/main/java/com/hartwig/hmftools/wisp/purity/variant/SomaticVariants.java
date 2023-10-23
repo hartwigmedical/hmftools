@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
-import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
@@ -22,7 +20,6 @@ import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_CONFIDEN
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER_AD;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.MAPPABILITY;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NON_SNV;
-import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_FILTER;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_PASS;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.SUBCLONAL;
@@ -87,7 +84,7 @@ public class SomaticVariants
         }
         else
         {
-            somaticVcf = convertWildcardSamplePath(mConfig.SomaticVcf, mSample.TumorId);
+            somaticVcf = mConfig.getSomaticVcf(mSample.TumorId);
 
             if(!Files.exists(Paths.get(somaticVcf)))
                 somaticVcf = mConfig.SampleDataDir + somaticVcf;
