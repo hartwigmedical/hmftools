@@ -6,7 +6,7 @@ public enum VariantReadSupport
     PARTIAL,
     CORE,
     REALIGNED,
-    OTHER_ALT,
+    SIMPLE_ALT,
     REF,
     TOTAL;
 }

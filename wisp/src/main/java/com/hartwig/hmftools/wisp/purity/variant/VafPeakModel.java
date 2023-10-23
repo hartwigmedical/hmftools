@@ -180,8 +180,8 @@ public class VafPeakModel extends ClonalityModel
     private boolean canUseVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {
         return useVariant(variant, sampleFragData)
-                && sampleFragData.UmiCounts.total() >= PurityConstants.SOMATIC_PEAK_MIN_DEPTH
-                && sampleFragData.UmiCounts.alleleTotal() >= PurityConstants.SOMATIC_PEAK_MIN_AD;
+                && sampleFragData.UmiCounts.totalCount() >= PurityConstants.SOMATIC_PEAK_MIN_DEPTH
+                && sampleFragData.UmiCounts.alleleCount() >= PurityConstants.SOMATIC_PEAK_MIN_AD;
     }
 
     private class VariantCalcs

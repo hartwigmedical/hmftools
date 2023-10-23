@@ -1,20 +1,18 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT_ORIG;
 
 public class UmiTypeCounts
 {
-    public int RefNone;
-    public int RefSingle;
-    public int RefDual;
+    public int TotalNone;
+    public int TotalSingle;
+    public int TotalDual;
     public int AlleleNone;
     public int AlleleSingle;
     public int AlleleDual;
-    public int Other; // non-alt, non-ref eg other alts
 
     public static final UmiTypeCounts NO_UMI_COUNTS = new UmiTypeCounts(
-            0, 0, 0, 0, 0, 0, 0);
+            0, 0, 0, 0, 0, 0);
 
     public static UmiTypeCounts fromAttribute(final Object umiTypeCountsRaw)
     {
@@ -23,47 +21,43 @@ public class UmiTypeCounts
 
         String[] umiValues = ((String)umiTypeCountsRaw).split(",", UMI_TYPE_COUNT);
 
-        if(umiValues.length < UMI_TYPE_COUNT_ORIG) // temporary allowance for the initial 6-way split without an 'Other' count
+        if(umiValues.length < UMI_TYPE_COUNT)
             return NO_UMI_COUNTS;
 
         int index = 0;
         return new UmiTypeCounts(
                 Integer.parseInt(umiValues[index++]), Integer.parseInt(umiValues[index++]), Integer.parseInt(umiValues[index++]),
-                Integer.parseInt(umiValues[index++]), Integer.parseInt(umiValues[index++]), Integer.parseInt(umiValues[index]),
-                index < umiValues.length ? Integer.parseInt(umiValues[index]) : 0);
+                Integer.parseInt(umiValues[index++]), Integer.parseInt(umiValues[index++]), Integer.parseInt(umiValues[index]));
     }
 
     public UmiTypeCounts(
-            final int refNone, final int refSingle, final int refDual, final int alleleNone, final int alleleSingle, final int alleleDual,
-            final int other)
+            final int totalNone, final int totalSingle, final int totalDual, final int alleleNone, final int alleleSingle, final int alleleDual)
     {
-        RefNone = refNone;
-        RefSingle = refSingle;
-        RefDual = refDual;
+        TotalNone = totalNone;
+        TotalSingle = totalSingle;
+        TotalDual = totalDual;
         AlleleNone = alleleNone;
         AlleleSingle = alleleSingle;
         AlleleDual = alleleDual;
-        Other = other;
     }
 
     public void add(final UmiTypeCounts other)
     {
-        RefNone += other.RefNone;
-        RefSingle += other.RefSingle;
-        RefDual += other.RefDual;
+        TotalNone += other.TotalNone;
+        TotalSingle += other.TotalSingle;
+        TotalDual += other.TotalDual;
         AlleleNone += other.AlleleNone;
         AlleleSingle += other.AlleleSingle;
         AlleleDual += other.AlleleDual;
-        Other += other.Other;
     }
 
     public UmiTypeCounts()
     {
-        this(0, 0, 0, 0, 0, 0, 0);
+        this(0, 0, 0, 0, 0, 0);
     }
 
-    public int refTotal() { return RefNone + RefSingle + RefDual; }
-    public int alleleTotal() { return AlleleNone + AlleleSingle + AlleleDual; }
-    public int total() { return refTotal() + alleleTotal() + Other; }
-    public int dualTotal() { return RefDual + AlleleDual; }
+    public int alleleCount() { return AlleleNone + AlleleSingle + AlleleDual; }
+    public int totalCount() { return TotalNone + TotalSingle + TotalDual; }
+    public int dualCount() { return TotalDual; }
+    public int dualAlleleCount() { return TotalDual; }
 }

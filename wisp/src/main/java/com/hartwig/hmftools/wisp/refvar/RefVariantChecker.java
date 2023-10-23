@@ -243,9 +243,9 @@ public class RefVariantChecker
 
             Genotype genotype = variant.context().getGenotype(sampleId);
             UmiTypeCounts umiTypeCounts = UmiTypeCounts.fromAttribute(genotype.getExtendedAttribute(UMI_TYPE_COUNTS, null));
-            sj.add(String.valueOf(umiTypeCounts.total()));
-            sj.add(String.valueOf(umiTypeCounts.alleleTotal()));
-            sj.add(String.valueOf(umiTypeCounts.dualTotal()));
+            sj.add(String.valueOf(umiTypeCounts.totalCount()));
+            sj.add(String.valueOf(umiTypeCounts.alleleCount()));
+            sj.add(String.valueOf(umiTypeCounts.dualCount()));
             sj.add(String.valueOf(umiTypeCounts.AlleleDual));
 
             mWriter.write(sj.toString());

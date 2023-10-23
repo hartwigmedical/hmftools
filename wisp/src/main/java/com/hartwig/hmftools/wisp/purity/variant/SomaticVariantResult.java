@@ -50,7 +50,7 @@ public class SomaticVariantResult
         Method = method;
         WeightedAvgDepth = weightedAvgDepth;
         TotalFragments = sampleCounts.totalFragments();
-        UmiRefDual = umiTypeCounts.RefDual;
+        UmiRefDual = umiTypeCounts.TotalDual;
         AlleleFragments = sampleCounts.alleleFragments();
         UmiAlleleDual = umiTypeCounts.AlleleDual;
         TumorVaf = tumorVaf;

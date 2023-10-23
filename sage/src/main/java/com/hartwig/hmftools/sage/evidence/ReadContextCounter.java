@@ -9,6 +9,11 @@ import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLengt
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
+import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
+import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
+import static com.hartwig.hmftools.common.variant.VariantReadSupport.PARTIAL;
+import static com.hartwig.hmftools.common.variant.VariantReadSupport.REALIGNED;
+import static com.hartwig.hmftools.common.variant.VariantReadSupport.SIMPLE_ALT;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
@@ -336,17 +341,17 @@ public class ReadContextCounter implements VariantHotspot
                 switch(match)
                 {
                     case FULL:
-                        readSupport = VariantReadSupport.FULL;
+                        readSupport = FULL;
                         matchType = MatchType.FULL;
                         break;
 
                     case PARTIAL:
-                        readSupport = VariantReadSupport.PARTIAL;
+                        readSupport = PARTIAL;
                         matchType = MatchType.PARTIAL;
                         break;
 
                     case CORE:
-                        readSupport = VariantReadSupport.CORE;
+                        readSupport = CORE;
                         matchType = MatchType.CORE;
                         break;
                 }
@@ -389,7 +394,7 @@ public class ReadContextCounter implements VariantHotspot
 
         if(realignment.Type == EXACT)
         {
-            registerReadSupport(record, VariantReadSupport.REALIGNED, quality);
+            registerReadSupport(record, REALIGNED, quality);
 
             mTotalMapQuality += record.getMappingQuality();
             mTotalAltMapQuality += record.getMappingQuality();
@@ -433,7 +438,7 @@ public class ReadContextCounter implements VariantHotspot
         }
         else if(rawContext.AltSupport)
         {
-            readSupport = VariantReadSupport.OTHER_ALT;
+            readSupport = SIMPLE_ALT;
 
             mTotalAltMapQuality += record.getMappingQuality();
             mTotalAltNmCount += numberOfEvents;
@@ -474,17 +479,29 @@ public class ReadContextCounter implements VariantHotspot
 
         if(mConfig.TrackUMIs)
         {
-            int umiSupportType;
+            boolean supportsVariant = support != null
+                    && (support == FULL || support == PARTIAL || support == CORE || support == REALIGNED);
 
-            if(support == null || support == VariantReadSupport.OTHER_ALT)
-                umiSupportType = UMI_SUPPORT_NONE;
-            else if(support == VariantReadSupport.REF)
-                umiSupportType = UMI_SUPPORT_REF;
-            else
-                umiSupportType = UMI_SUPPORT_ALT;
-
-            countUmiType(record, umiSupportType);
+            countUmiType(record, supportsVariant);
         }
+    }
+
+    private void countUmiType(final SAMRecord record, final boolean supportsVariant)
+    {
+        if(mUmiTypeCounts == null)
+        {
+            // 3 total depth values followed by the 3 variant support values
+            mUmiTypeCounts = new int[UMI_TYPE_COUNT];
+        }
+
+        String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+        UmiReadType umiReadType = umiType != null ? UmiReadType.valueOf(umiType) : UmiReadType.NONE;
+
+        // add to total and variant support if applicable
+        ++mUmiTypeCounts[umiReadType.ordinal()];
+
+        if(supportsVariant)
+            ++mUmiTypeCounts[umiReadType.ordinal() + 3];
     }
 
     private void registerRawSupport(final RawContext rawContext)
@@ -766,38 +783,6 @@ public class ReadContextCounter implements VariantHotspot
             else
                 mReverseStrand++;
         }
-    }
-
-    private static final int UMI_SUPPORT_REF = 0;
-    private static final int UMI_SUPPORT_ALT = 1;
-    private static final int UMI_SUPPORT_NONE = 2;
-
-    private void countUmiType(final SAMRecord record, final int supportType)
-    {
-        if(mUmiTypeCounts == null)
-        {
-            // 3 ref values followed by the 3 alt values
-            mUmiTypeCounts = new int[UMI_TYPE_COUNT];
-        }
-
-        if(supportType == UMI_SUPPORT_NONE)
-        {
-            ++mUmiTypeCounts[UMI_TYPE_COUNT - 1];
-            return;
-        }
-
-        int indexOffset = supportType == UMI_SUPPORT_REF ? 0 : 3;
-
-        String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-
-        if(umiType == null)
-        {
-            ++mUmiTypeCounts[UmiReadType.NONE.ordinal() + indexOffset];
-            return;
-        }
-
-        UmiReadType umiReadType = UmiReadType.valueOf(umiType);
-        ++mUmiTypeCounts[umiReadType.ordinal() + indexOffset];
     }
 
     private int getMaxRealignDistance(final SAMRecord record)

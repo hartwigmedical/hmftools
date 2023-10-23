@@ -25,7 +25,6 @@ import com.hartwig.hmftools.wisp.common.SampleData;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberGcData;
 import com.hartwig.hmftools.wisp.purity.variant.FilterReason;
-import com.hartwig.hmftools.wisp.purity.variant.LowCountModel;
 import com.hartwig.hmftools.wisp.purity.variant.GenotypeFragments;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticVariant;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticVariantResult;
@@ -179,7 +178,7 @@ public class ResultsWriter
 
             sj.add(String.valueOf(tumorData.Depth)).add(String.valueOf(tumorData.AlleleCount));
             sj.add(String.valueOf(sampleFragData.Depth)).add(String.valueOf(sampleFragData.AlleleCount));
-            sj.add(String.valueOf(sampleFragData.UmiCounts.RefDual)).add(String.valueOf(sampleFragData.UmiCounts.AlleleDual));
+            sj.add(String.valueOf(sampleFragData.UmiCounts.TotalDual)).add(String.valueOf(sampleFragData.UmiCounts.AlleleDual));
             sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
             sj.add(format("%.3f", variant.sequenceGcRatio()));
 

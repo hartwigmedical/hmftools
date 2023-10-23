@@ -53,7 +53,7 @@ public class ReadSupportCounts
                     Ref += count;
                     break;
 
-                case OTHER_ALT:
+                case SIMPLE_ALT:
                     OtherAlt += count;
                     break;
             }
