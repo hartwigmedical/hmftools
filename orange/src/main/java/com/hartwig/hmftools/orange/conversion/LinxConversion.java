@@ -91,7 +91,6 @@ public final class LinxConversion
                 .codingType(TranscriptCodingType.valueOf(linxBreakend.codingType().name()))
                 .nextSpliceExonRank(linxBreakend.nextSpliceExonRank())
                 .orientation(linxBreakend.orientation())
-                .strand(linxBreakend.strand())
                 .exonUp(linxBreakend.exonUp())
                 .exonDown(linxBreakend.exonDown())
                 .junctionCopyNumber(linxBreakend.junctionCopyNumber())
