@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_MAX;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESCRIPTION;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
@@ -19,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.variant.SageVcfTags;
+import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
@@ -171,13 +171,15 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_COUNT, RC_MAX, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_COUNT, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_COUNT_DESCRIPTION));
+
+        header.addMetaDataLine(new VCFFormatHeaderLine(
+                READ_CONTEXT_QUALITY, VariantReadSupport.values().length, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
-
-        header.addMetaDataLine(new VCFFormatHeaderLine(
-                READ_CONTEXT_QUALITY, RC_MAX, VCFHeaderLineType.Integer, READ_CONTEXT_QUALITY_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(STRAND_BIAS, 1, VCFHeaderLineType.Float, STRAND_BIAS_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));

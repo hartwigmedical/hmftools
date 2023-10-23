@@ -6,7 +6,6 @@ import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REALIGNED;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
@@ -36,6 +35,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -208,7 +208,7 @@ public class SomaticVariants
                 final String[] qualCounts = genotype.getExtendedAttribute(READ_CONTEXT_QUALITY, 0).toString()
                         .split(LIST_SEPARATOR, -1);
 
-                for(int i = 0; i <= RC_REALIGNED; ++i)
+                for(int i = 0; i <= VariantReadSupport.REALIGNED.ordinal(); ++i)
                 {
                     qualTotal += Integer.parseInt(qualCounts[i]);
                 }

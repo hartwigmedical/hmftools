@@ -44,16 +44,6 @@ public final class SageVcfTags
     public static final int UMI_TYPE_COUNT_ORIG = 6;
     public static final int UMI_TYPE_COUNT = 7;
 
-    // indices for read counts and qualities
-    public static final int RC_FULL = 0;
-    public static final int RC_PARTIAL = 1;
-    public static final int RC_CORE = 2;
-    public static final int RC_REALIGNED = 3;
-    public static final int RC_ALT = 4;
-    public static final int RC_REF = 5;
-    public static final int RC_TOTAL = 6;
-    public static final int RC_MAX = RC_TOTAL + 1;
-
     public static final String LIST_SEPARATOR = ",";
 
     public static VCFHeader addMetaData(@NotNull final VCFHeader header)
