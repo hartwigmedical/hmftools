@@ -52,6 +52,6 @@ public class IsofoxConversionTest
         RnaFusion convertedFusion = convert(fusion);
         assertNull(convertedFusion.geneStart());
         assertNull(convertedFusion.geneEnd());
-        assertEquals("-", convertedFusion.display());
+        assertEquals("_", convertedFusion.display());
     }
 }
