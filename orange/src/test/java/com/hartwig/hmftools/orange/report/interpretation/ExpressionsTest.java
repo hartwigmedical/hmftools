@@ -26,6 +26,9 @@ public class ExpressionsTest
         GeneExpression zeroMedian = builder().tpm(0).medianTpmCancer(0D).medianTpmCohort(0D).build();
         assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeType(zeroMedian));
         assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeDatabase(zeroMedian));
+
+        GeneExpression missingCancerTPM = builder().tpm(1).medianTpmCancer(null).medianTpmCohort(3D).build();
+        assertEquals(ReportResources.NOT_AVAILABLE, Expressions.foldChangeType(missingCancerTPM));
     }
 
     @Test
