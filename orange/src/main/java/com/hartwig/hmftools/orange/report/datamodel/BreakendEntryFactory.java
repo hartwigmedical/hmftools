@@ -10,7 +10,6 @@ import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriverType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -88,10 +87,12 @@ public final class BreakendEntryFactory
         {
             for(PurpleDriver driver : drivers)
             {
-                if(driver.gene().equals(breakend.gene()) && driver.type() == PurpleDriverType.HOM_DUP_DISRUPTION)
-                {
-                    return Math.max(0.0, breakend.undisruptedCopyNumber() - breakend.junctionCopyNumber());
-                }
+                // TODO: Fix in ACTIN-282
+//
+//                if(driver.gene().equals(breakend.gene()) && driver.type() == PurpleDriverType.HOM_DUP_DISRUPTION)
+//                {
+//                    return Math.max(0.0, breakend.undisruptedCopyNumber() - breakend.junctionCopyNumber());
+//                }
             }
         }
 
