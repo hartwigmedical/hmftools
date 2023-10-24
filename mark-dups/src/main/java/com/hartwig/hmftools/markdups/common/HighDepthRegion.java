@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.markdups.common;
 
+import static java.lang.String.format;
+
 import com.hartwig.hmftools.common.region.BaseRegion;
 
 public class HighDepthRegion extends BaseRegion
@@ -16,4 +18,6 @@ public class HighDepthRegion extends BaseRegion
     {
         return mMaxDepth;
     }
+
+    public String toString() { return format("%%d-%d depth(%d)", start(), end(), mMaxDepth); }
 }

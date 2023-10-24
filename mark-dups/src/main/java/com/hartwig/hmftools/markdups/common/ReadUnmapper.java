@@ -6,6 +6,9 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getChromosomeFieldIndex;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionEndFieldIndex;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionStartFieldIndex;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_INDEX;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_NAME;
@@ -15,6 +18,10 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUT
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX;
+import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
+import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_HIGH_DEPTH;
+import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_SOFT_CLIP;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,25 +34,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
+import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
 
 import htsjdk.samtools.SAMRecord;
 
-// TODO: Note that MarkDups does not currently consider contigs outside the main Human Chromosomes, e.g. decoys. Note that currently we only unmap
-// regions on the main Human Chromosomes. However, this may lead to inconsistencies when running this on non-prod reference genomes,
-// e.g. hg38 + decoys. For example, if a primary read is mapped to Chr1 and its mate is mapped to a decoy, and we are unmapping the primary
-// read, then the mate coords of the mate on the decoy will not be correctly updated.
 public class ReadUnmapper
 {
     private final Map<String, List<HighDepthRegion>> mChrLocationsMap; // keyed by chromosome start
     private boolean mEnabled;
     private final UnmapStats mStats;
-
-    @VisibleForTesting
-    public static final int MAX_NON_OVERLAPPING_BASES = 9;
-    private static final int MIN_SOFT_CLIP = 11;
-    @VisibleForTesting
-    public static final int MIN_MAX_DEPTH = 1001;
-    private static final int CHIMERIC_FRAGMENT_LENGTH_MAX = 1000;
 
     public ReadUnmapper(final String filename)
     {
@@ -79,28 +76,36 @@ public class ReadUnmapper
         if(!mEnabled || readRegions == null)
             return false;
 
+        /* Criteria for unmapping a read:
+            - falls within a region of high depth
+            - discordant - INV, BND, one read unmapped or fragment length > 1000
+            - soft-clip bases > 20
+
+           Scenarios & logic:
+           - both read and mate are already unmapped, then nothing to do
+           - check the read's coords, its mate's coords and any supplementary alignment coords vs the loaded unmapping regions
+           - for any overlap with a non-high-depth region, additionally check discordant and soft-lip bases as above
+           -
+           - supplementaries - unmap if their primary will be or if they need to be
+         */
+
         // first check the read's alignment itself
-        final boolean readUnmapped = read.getReadUnmappedFlag();
-        final boolean mateUnmapped = mateUnmapped(read);
+        boolean readUnmapped = read.getReadUnmappedFlag();
+        boolean mateUnmapped = mateUnmapped(read);
 
         if(readUnmapped && mateUnmapped)
             return false; // nothing to do and there won't be a supplementary
 
-        final boolean isSupplementary = read.getSupplementaryAlignmentFlag();
+        boolean isSupplementary = read.getSupplementaryAlignmentFlag();
 
         boolean unmapRead = false;
+
         if(!readUnmapped)
         {
-            if(isSupplementary)
-            {
-                // Note that we unmap the supplementary if the primary read (contained in the supplementary read's supplementary attribute)
-                // is unmapped.
-                unmapRead = checkIfUnmapSupplementary(read, true) || checkIfUnmapRead(read, readRegions);
-            }
-            else
-            {
-                unmapRead = checkIfUnmapRead(read, readRegions);
-            }
+            unmapRead = checkIfUnmapRead(read, readRegions);
+
+            // supplementaries are unmapped if their primary will be unmapped
+            unmapRead |= isSupplementary && checkIfUnmapSupplementary(read, true);
         }
 
         if(unmapRead && isSupplementary)
@@ -111,7 +116,7 @@ public class ReadUnmapper
             return true;
         }
 
-        final boolean unmapMate = !mateUnmapped && checkIfUnmapMate(read);
+        boolean unmapMate = !mateUnmapped && checkIfUnmapMate(read);
 
         if(unmapRead)
         {
@@ -122,7 +127,6 @@ public class ReadUnmapper
         {
             // Note that for supplementary reads, at this point readUnmapped will be false, since a supplementary must be mapped. Also,
             // unmapRead is false, else we would have returned already. Therefore, this will only modify the mate properties and attributes.
-            // TODO: This will set the mate coords to this supplementary's coords, not the primary's coords, is this correct?
             unmapMateAlignment(read, readUnmapped, unmapRead);
         }
 
@@ -139,9 +143,7 @@ public class ReadUnmapper
             mStats.MateCount.incrementAndGet();
         }
 
-        // Check supplementary.
-        // Note that if this is a supplementary read, and its supplementary (i.e. its associated primary read) is being dropped, we will
-        // have returned early above.
+        // nothing more to do for a supplementary whose primary or mate has been unmapped, or if it was unmapped
         if(isSupplementary)
         {
             return unmapMate;
@@ -160,57 +162,43 @@ public class ReadUnmapper
 
     private static boolean checkIfUnmapRead(final SAMRecord read, final List<HighDepthRegion> readRegions)
     {
-        final int maxDepthOverlap = readMaxDepthRegionOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), readRegions);
-        if(maxDepthOverlap < 0)
-        {
+        RegionMatchType matchType = readMaxDepthRegionOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), readRegions);
+
+        if(matchType == RegionMatchType.NONE)
             return false;
-        }
 
-        if(maxDepthOverlap >= MIN_MAX_DEPTH)
-        {
+        if(matchType == RegionMatchType.HIGH_DEPTH)
             return true;
-        }
 
-        if(getSoftClipCountFromCigarStr(read.getCigarString()) >= MIN_SOFT_CLIP)
-        {
+        if(getSoftClipCountFromCigarStr(read.getCigarString()) > UNMAP_MIN_SOFT_CLIP)
             return true;
-        }
 
         if(isChimericRead(read, false))
-        {
             return true;
-        }
 
         return false;
     }
 
     private boolean checkIfUnmapMate(final SAMRecord read)
     {
-        final int maxDepthOverlap = mateMaxDepthRegionOverlap(read);
-        if(maxDepthOverlap < 0)
-        {
+        RegionMatchType matchType = mateMaxDepthRegionOverlap(read);
+
+        if(matchType == RegionMatchType.NONE)
             return false;
-        }
 
-        if(maxDepthOverlap >= MIN_MAX_DEPTH)
-        {
+        if(matchType == RegionMatchType.HIGH_DEPTH)
             return true;
-        }
 
-        // Can only check soft clips if the mate cigar attribute is set.
         if(read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
             final String mateCigar = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-            if(getSoftClipCountFromCigarStr(mateCigar) >= MIN_SOFT_CLIP)
-            {
+
+            if(getSoftClipCountFromCigarStr(mateCigar) > UNMAP_MIN_SOFT_CLIP)
                 return true;
-            }
         }
 
         if(isChimericRead(read, true))
-        {
             return true;
-        }
 
         return false;
     }
@@ -223,22 +211,17 @@ public class ReadUnmapper
             return false;
         }
 
-        final int readLength = read.getReadBases().length;
-        final int maxDepthOverlap = supplementaryMaxDepthRegionOverlap(suppData, readLength);
-        if(maxDepthOverlap < 0)
-        {
+        int readLength = read.getReadBases().length;
+        RegionMatchType matchType = supplementaryMaxDepthRegionOverlap(suppData, readLength);
+
+        if(matchType == RegionMatchType.NONE)
             return false;
-        }
 
-        if(maxDepthOverlap >= MIN_MAX_DEPTH)
-        {
+        if(matchType == RegionMatchType.HIGH_DEPTH)
             return true;
-        }
 
-        if(getSoftClipCountFromCigarStr(suppData.Cigar) >= MIN_SOFT_CLIP)
-        {
+        if(getSoftClipCountFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
             return true;
-        }
 
         // We don't want to drop supplementaries based on chimeric read criteria, since this is a criteria for a primary read and its
         // primary mate. However, when checking if we are unmapping a supplementary based on whether its primary is unmapped, we do check
@@ -251,77 +234,84 @@ public class ReadUnmapper
         return false;
     }
 
+    private enum RegionMatchType
+    {
+        NONE,
+        HIGH_DEPTH,
+        OTHER;
+    }
+
     @VisibleForTesting
-    public int mateMaxDepthRegionOverlap(final SAMRecord read)
+    public RegionMatchType mateMaxDepthRegionOverlap(final SAMRecord read)
     {
         // Returns -1 if there is no overlap.
         final List<HighDepthRegion> mateRegions = mChrLocationsMap.get(read.getMateReferenceName());
 
         if(mateRegions == null)
-        {
-            return -1;
-        }
+            return RegionMatchType.NONE;
 
-        // Coordinate check must be identical to how the mate checks itself, which requires knowledge of aligned bases.
+        // coordinate check must be identical to how the mate checks itself, which requires knowledge of aligned bases
         if(read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
-            final int approxMateEnd = read.getMateAlignmentStart() + read.getReadBases().length - 1;
+            int approxMateEnd = read.getMateAlignmentStart() + read.getReadBases().length - 1;
             return readMaxDepthRegionOverlap(
                     read.getMateAlignmentStart(), approxMateEnd, read.getStringAttribute(MATE_CIGAR_ATTRIBUTE), mateRegions);
         }
         else
         {
             // TODO: this won't work for split reads
-            final int readBaseLength = read.getReadBases().length;
+            int readBaseLength = read.getReadBases().length;
             return readMaxDepthRegionOverlap(
                     read.getMateAlignmentStart(), read.getMateAlignmentStart() + readBaseLength - 1, mateRegions);
         }
     }
 
-    private int supplementaryMaxDepthRegionOverlap(final SupplementaryReadData suppReadData, final int readLength)
+    private RegionMatchType supplementaryMaxDepthRegionOverlap(final SupplementaryReadData suppReadData, final int readLength)
     {
         // Returns -1 if there is no overlap.
         final List<HighDepthRegion> suppRegions = mChrLocationsMap.get(suppReadData.Chromosome);
-        if(suppRegions == null)
-        {
-            return -1;
-        }
 
-        final int approxSuppEnd = suppReadData.Position + readLength - 1;
+        if(suppRegions == null)
+            return RegionMatchType.NONE;
+
+        int approxSuppEnd = suppReadData.Position + readLength - 1;
         return readMaxDepthRegionOverlap(suppReadData.Position, approxSuppEnd, suppReadData.Cigar, suppRegions);
     }
 
-    private static int readMaxDepthRegionOverlap(final int readStart, final int readEnd, final List<HighDepthRegion> regions)
+    private static RegionMatchType readMaxDepthRegionOverlap(final int readStart, final int readEnd, final List<HighDepthRegion> regions)
     {
-        // Returns -1 if there is no overlap.
-        int maxDepth = -1;
-        for(final HighDepthRegion region : regions)
+        RegionMatchType matchType = RegionMatchType.NONE;
+
+        for(HighDepthRegion region : regions)
         {
             if(!positionsOverlap(readStart, readEnd, region.start(), region.end()))
                 continue;
 
             if(positionsWithin(readStart, readEnd, region.start(), region.end()))
             {
-                maxDepth = max(maxDepth, region.maxDepth());
-                continue;
+                return region.maxDepth() >= UNMAP_MIN_HIGH_DEPTH ? RegionMatchType.HIGH_DEPTH : RegionMatchType.OTHER;
             }
 
-            final int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
-            final int readLength = readEnd - readStart + 1;
-            final int nonOverlappingBases = readLength - overlapBases;
-            if(nonOverlappingBases <= MAX_NON_OVERLAPPING_BASES)
+            int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
+            int readLength = readEnd - readStart + 1;
+            int nonOverlappingBases = readLength - overlapBases;
+
+            if(nonOverlappingBases < UNMAP_MAX_NON_OVERLAPPING_BASES)
             {
-                maxDepth = max(maxDepth, region.maxDepth());
+                if(region.maxDepth() >= UNMAP_MIN_HIGH_DEPTH)
+                    return RegionMatchType.HIGH_DEPTH;
+                else
+                    matchType = RegionMatchType.OTHER;
             }
         }
 
-        return maxDepth;
+        return matchType;
     }
 
-    private static int readMaxDepthRegionOverlap(final int readStart, int approxReadEnd, final String cigar,
-            final List<HighDepthRegion> regions)
+    private static RegionMatchType readMaxDepthRegionOverlap(
+            final int readStart, int approxReadEnd, final String cigar, final List<HighDepthRegion> regions)
     {
-        // Returns -1 if there is no overlap.
+        RegionMatchType matchType = RegionMatchType.NONE;
 
         // Mate and supplementary coords don't have alignment end so this needs to be determined from the cigar, but only
         // do this is if there is a possible overlap with a region.
@@ -338,16 +328,20 @@ public class ReadUnmapper
                 readEnd = getReadEndFromCigarStr(readStart, cigar);
             }
 
-            final int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
-            final int readLength = readEnd - readStart + 1;
-            final int nonOverlappingBases = readLength - overlapBases;
-            if(nonOverlappingBases <= MAX_NON_OVERLAPPING_BASES)
+            int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
+            int readLength = readEnd - readStart + 1;
+            int nonOverlappingBases = readLength - overlapBases;
+
+            if(nonOverlappingBases < UNMAP_MAX_NON_OVERLAPPING_BASES)
             {
-                maxDepth = max(maxDepth, region.maxDepth());
+                if(region.maxDepth() >= UNMAP_MIN_HIGH_DEPTH)
+                    return RegionMatchType.HIGH_DEPTH;
+                else
+                    matchType = RegionMatchType.OTHER;
             }
         }
 
-        return maxDepth;
+        return matchType;
     }
 
     private static int getReadEndFromCigarStr(final int readStart, final String cigarStr)
@@ -413,49 +407,35 @@ public class ReadUnmapper
 
     private static boolean isChimericRead(final SAMRecord record, boolean checkForMate)
     {
-        final boolean readUnmapped = record.getReadUnmappedFlag();
-        final boolean mateUnmapped = mateUnmapped(record);
+        boolean readUnmapped = record.getReadUnmappedFlag();
+        boolean mateUnmapped = mateUnmapped(record);
 
         if(!checkForMate && readUnmapped)
-        {
             return false;
-        }
 
         if(checkForMate && mateUnmapped)
-        {
             return false;
-        }
 
-        // or a fragment length outside the observed distribution
-        if(abs(record.getInferredInsertSize()) > CHIMERIC_FRAGMENT_LENGTH_MAX)
-        {
+        // or a fragment length outside the expected maximum
+        if(abs(record.getInferredInsertSize()) > UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX)
             return true;
-        }
 
         // an unmapped mate
         if(!checkForMate && mateUnmapped)
-        {
             return true;
-        }
 
         if(checkForMate && readUnmapped)
-        {
             return true;
-        }
 
         if(record.getReadPairedFlag())
         {
             // inter-chromosomal
             if(!record.getReferenceName().equals(record.getMateReferenceName()))
-            {
                 return true;
-            }
 
             // inversion
             if(record.getReadNegativeStrandFlag() == mateNegativeStrand(record))
-            {
                 return true;
-            }
         }
 
         return false;
@@ -463,35 +443,25 @@ public class ReadUnmapper
 
     private static boolean isSupplementaryChimericRead(final SAMRecord record)
     {
-        // This looks for whether the supplementary's associated primary, whose information is contained in the supplementary read's
-        // supplementary attribute, form a chimeric read with the associate primary mate.
-        // Note that the associated primary of a supplementary is always initially mapped.
+        // check whether the primary read (detailed in the supp attribute) is chimeric with the mate - note the primary is always mapped
         final SupplementaryReadData suppReadData = SupplementaryReadData.firstAlignmentFrom(record);
 
-        // TODO: Don't check the inferred insert size. Not much we can do here, since the inferred insert size of a supplementary is always
-        // based on the supplemartary's coords, and not the associated primary.
+        // insert size is not populated for supplementaries
 
-        // an unmapped mate
         if(mateUnmapped(record))
-        {
             return true;
-        }
 
         if(record.getReadPairedFlag())
         {
             // inter-chromosomal
-            final String primaryChromosome = suppReadData.Chromosome;
-            if(!primaryChromosome.equals(record.getMateReferenceName()))
-            {
+            if(!suppReadData.Chromosome.equals(record.getMateReferenceName()))
                 return true;
-            }
 
             // inversion
-            final boolean primaryReadOnNegativeStrand = suppReadData.Strand == SupplementaryReadData.SUPP_NEG_STRAND;
+            boolean primaryReadOnNegativeStrand = suppReadData.Strand == SupplementaryReadData.SUPP_NEG_STRAND;
+
             if(primaryReadOnNegativeStrand == mateNegativeStrand(record))
-            {
                 return true;
-            }
         }
 
         return false;
@@ -578,6 +548,14 @@ public class ReadUnmapper
             read.setMateAlignmentStart(0);
             read.setMateReferenceIndex(NO_CHROMOSOME_INDEX);
             read.setMateReferenceName(NO_CHROMOSOME_NAME);
+
+            // clear the read's coords too - this is not handled elsewhere
+            if(readUnmapped)
+            {
+                read.setAlignmentStart(0);
+                read.setReferenceIndex(NO_CHROMOSOME_INDEX);
+                read.setReferenceName(NO_CHROMOSOME_NAME);
+            }
         }
         else
         {
@@ -585,15 +563,6 @@ public class ReadUnmapper
             read.setMateAlignmentStart(read.getAlignmentStart());
             read.setMateReferenceIndex(read.getReferenceIndex());
             read.setMateReferenceName(read.getReferenceName());
-        }
-
-        // If read is unmapped, have to clear its reference name and alignment start here, since no unmapping logic will be run for the
-        // read.
-        if(readUnmapped)
-        {
-            read.setAlignmentStart(0);
-            read.setReferenceIndex(NO_CHROMOSOME_INDEX);
-            read.setReferenceName(NO_CHROMOSOME_NAME);
         }
 
         // clear mate cigar if present
@@ -619,15 +588,22 @@ public class ReadUnmapper
             final List<String> lines = Files.readAllLines(Paths.get(filename));
             final String delim = FileDelimiters.inferFileDelimiter(filename);
 
-            // Remove header.
+            String header = lines.get(0);
             lines.remove(0);
+
+            Map<String,Integer> fieldIndexMap = FileReaderUtils.createFieldsIndexMap(header, delim);
+            int chrIndex = getChromosomeFieldIndex(fieldIndexMap);
+            int posStartIndex = getPositionStartFieldIndex(fieldIndexMap);
+            int posEndIndex = getPositionEndFieldIndex(fieldIndexMap);
+            int depthIndex = fieldIndexMap.get("MaxDepth");
 
             final Map<String, List<HighDepthRegion>> chrLocationsMap = Maps.newHashMap();
             for(String line : lines)
             {
-                final String[] values = line.split(delim, -1);
+                String[] values = line.split(delim, -1);
 
-                final String chromosome = values[0];
+                String chromosome = values[chrIndex];
+
                 List<HighDepthRegion> regions = chrLocationsMap.get(chromosome);
                 if(regions == null)
                 {
@@ -635,11 +611,11 @@ public class ReadUnmapper
                     chrLocationsMap.put(chromosome, regions);
                 }
 
-                final int posStart = Integer.parseInt(values[1]);
-                final int posEnd = Integer.parseInt(values[2]);
-                final int maxDepth = Integer.parseInt(values[3]);
+                int posStart = Integer.parseInt(values[posStartIndex]);
+                int posEnd = Integer.parseInt(values[posEndIndex]);
+                int maxDepth = Integer.parseInt(values[depthIndex]);
 
-                final HighDepthRegion region = new HighDepthRegion(posStart, posEnd, maxDepth);
+                HighDepthRegion region = new HighDepthRegion(posStart, posEnd, maxDepth);
                 regions.add(region);
             }
 
@@ -649,7 +625,6 @@ public class ReadUnmapper
         {
             MD_LOGGER.error("failed to read high-depth regions file {}: {}", filename, e.toString());
             System.exit(1);
-            // Unreachable.
             return null;
         }
     }

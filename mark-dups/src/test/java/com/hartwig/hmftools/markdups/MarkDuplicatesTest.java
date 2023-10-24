@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecor
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.markdups.TestUtils.setSecondInPair;
+import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
+import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -311,8 +313,8 @@ public class MarkDuplicatesTest
         MarkDupsConfig config = new MarkDupsConfig(
                 2000, 1000, mRefGenome, false, false, false);
 
-        HighDepthRegion region1 = new HighDepthRegion(550, 650, ReadUnmapper.MIN_MAX_DEPTH);
-        HighDepthRegion region2 = new HighDepthRegion(900, 1300, ReadUnmapper.MIN_MAX_DEPTH);
+        HighDepthRegion region1 = new HighDepthRegion(550, 650, UNMAP_MIN_HIGH_DEPTH + 1);
+        HighDepthRegion region2 = new HighDepthRegion(900, 1300, UNMAP_MIN_HIGH_DEPTH + 1);
         config.UnmapRegions.addRegion(CHR_1, region1);
         config.UnmapRegions.addRegion(CHR_1, region2);
 
@@ -326,8 +328,10 @@ public class MarkDuplicatesTest
         // but supp is unmapped
         SAMRecord read1 = createSamRecord(
                 mReadIdGen.nextId(), CHR_1,
-                550 - ReadUnmapper.MAX_NON_OVERLAPPING_BASES - 1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, 800, false, false,
-                new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1), false, TEST_READ_CIGAR);
+                550 - UNMAP_MAX_NON_OVERLAPPING_BASES - 2, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3,
+                800, false, false,
+                new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, TEST_READ_CIGAR, 1),
+                false, TEST_READ_CIGAR);
 
         partitionReader.processRead(read1);
 
@@ -337,7 +341,8 @@ public class MarkDuplicatesTest
         // Read overlaps so that the non overlapping bases of the aligned part does not exceed `ReadUnmapper.MAX_NON_OVERLAPPING_BASES`.
         SAMRecord read2 = createSamRecord(
                 mReadIdGen.nextId(), CHR_1,
-                551 + ReadUnmapper.MAX_NON_OVERLAPPING_BASES, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3, 800, false, false,
+                551 + UNMAP_MAX_NON_OVERLAPPING_BASES - 1, TEST_READ_BASES, TEST_READ_CIGAR, CHR_3,
+                800, false, false,
                 null, false, TEST_READ_CIGAR);
 
         partitionReader.processRead(read2);
@@ -347,7 +352,7 @@ public class MarkDuplicatesTest
         // mate is unmapped
         SAMRecord read3 = createSamRecord(
                 mReadIdGen.nextId(), CHR_1, 100, TEST_READ_BASES, TEST_READ_CIGAR, CHR_1,
-                550 - ReadUnmapper.MAX_NON_OVERLAPPING_BASES, false, false,
+                550 - UNMAP_MAX_NON_OVERLAPPING_BASES + 1, false, false,
                 null, false, TEST_READ_CIGAR);
 
         partitionReader.processRead(read3);
@@ -357,7 +362,8 @@ public class MarkDuplicatesTest
 
         // unmapped read then has mate unmapped
         SAMRecord read4 = createSamRecord(
-                mReadIdGen.nextId(), CHR_1, 1000, TEST_READ_BASES, NO_CIGAR, CHR_1, 1000, false, false,
+                mReadIdGen.nextId(), CHR_1, 1000, TEST_READ_BASES, NO_CIGAR, CHR_1,
+                1000, false, false,
                 null, false, TEST_READ_CIGAR);
 
         read4.setReadUnmappedFlag(true);
