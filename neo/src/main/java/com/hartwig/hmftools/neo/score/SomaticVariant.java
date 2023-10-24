@@ -2,9 +2,9 @@ package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.pointMutationInfo;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REALIGNED;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 
+import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.VariantType;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -71,7 +71,7 @@ public class SomaticVariant
 
         int variantSupport = 0;
 
-        for(int i = 0; i <= RC_REALIGNED; ++i)
+        for(int i = 0; i <= VariantReadSupport.REALIGNED.ordinal(); ++i)
         {
             variantSupport += Integer.parseInt(qualCounts[i]);
         }

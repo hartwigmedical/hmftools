@@ -8,14 +8,11 @@ import static com.hartwig.hmftools.common.sigs.PositionFrequencies.getPositionFr
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.common.CupConstants.DATA_TYPE_SNV_COUNT;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_BUCKET_SIZE;
 import static com.hartwig.hmftools.cup.common.CupConstants.GEN_POS_MAX_SAMPLE_COUNT;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
-import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
-import static com.hartwig.hmftools.cup.somatics.SomaticSigs.REPORTABLE_SIGS;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_13;
 import static com.hartwig.hmftools.cup.somatics.SomaticSigs.SIG_NAME_2;
 import static com.hartwig.hmftools.cup.somatics.TrinucleotideCounts.extractTrinucleotideCounts;
@@ -68,7 +65,7 @@ public class SomaticVariantPrep implements CategoryPrep
     {
         List<DataItem> dataItems = Lists.newArrayList();
 
-        final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sampleId);
+        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
 
         try
         {

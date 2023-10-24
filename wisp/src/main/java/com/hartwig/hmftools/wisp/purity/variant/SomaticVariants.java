@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_REALIGNED;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABILITY_TAG;
@@ -21,7 +19,6 @@ import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_CONFIDEN
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER_AD;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.MAPPABILITY;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NON_SNV;
-import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_FILTER;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_PASS;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.SUBCLONAL;
@@ -38,6 +35,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
+import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
@@ -73,9 +71,9 @@ public class SomaticVariants
 
     public boolean loadVariants()
     {
-        String somaticVcf = mConfig.SomaticVcf;
+        String somaticVcf;
 
-        if(somaticVcf.isEmpty())
+        if(mConfig.SomaticVcf.isEmpty())
         {
             somaticVcf = mConfig.SampleDataDir + mSample.TumorId + PurityConstants.PURPLE_CTDNA_SOMATIC_VCF_ID;
 
@@ -86,6 +84,8 @@ public class SomaticVariants
         }
         else
         {
+            somaticVcf = mConfig.getSomaticVcf(mSample.TumorId);
+
             if(!Files.exists(Paths.get(somaticVcf)))
                 somaticVcf = mConfig.SampleDataDir + somaticVcf;
         }
@@ -208,7 +208,7 @@ public class SomaticVariants
                 final String[] qualCounts = genotype.getExtendedAttribute(READ_CONTEXT_QUALITY, 0).toString()
                         .split(LIST_SEPARATOR, -1);
 
-                for(int i = 0; i <= RC_REALIGNED; ++i)
+                for(int i = 0; i <= VariantReadSupport.REALIGNED.ordinal(); ++i)
                 {
                     qualTotal += Integer.parseInt(qualCounts[i]);
                 }

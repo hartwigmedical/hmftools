@@ -28,7 +28,8 @@ public class SummaryStats
 {
     public static RnaStatistics createSummaryStats(
             final FragmentTypeCounts fragmentTypeCounts, long enrichedGeneFragCount, int spliceGeneCount,
-            double medianGCRatio, final List<FragmentSize> fragmentLengths, int maxReadLength, int lowCoverageThreshold)
+            double medianGCRatio, final List<FragmentSize> fragmentLengths, int maxReadLength,
+            int lowCoverageThreshold, int splicedGeneThreshold)
     {
         long totalFragments = fragmentTypeCounts.typeCount(TOTAL);
         long duplicateFragments = fragmentTypeCounts.typeCount(DUPLICATE);
@@ -43,7 +44,8 @@ public class SummaryStats
 
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
-        List<RnaQcFilter> qcFilters = RnaStatistics.calcQcStatus(totalFragments, duplicateFragments, spliceGeneCount, lowCoverageThreshold);
+        List<RnaQcFilter> qcFilters = RnaStatistics.calcQcStatus(
+                totalFragments, duplicateFragments, spliceGeneCount, lowCoverageThreshold, splicedGeneThreshold);
 
         return ImmutableRnaStatistics.builder()
                 .qcStatus(qcFilters)

@@ -31,7 +31,6 @@ public class SageCallConfig
     public final String PanelBed;
     public final String Hotspots;
     public final boolean PanelOnly;
-    public final Set<Integer> SpecificPositions;
 
     private final String mResourceDir;
 
@@ -41,7 +40,6 @@ public class SageCallConfig
     private static final String PANEL_BED = "panel_bed";
     private static final String HOTSPOTS = "hotspots";
     private static final String PANEL_ONLY = "panel_only";
-    private static final String SPECIFIC_POSITIONS = "specific_positions";
 
     public SageCallConfig(final String version, final ConfigBuilder configBuilder)
     {
@@ -68,16 +66,6 @@ public class SageCallConfig
         Hotspots = getReferenceFile(configBuilder, HOTSPOTS);
 
         PanelOnly = configBuilder.hasFlag(PANEL_ONLY);
-
-        SpecificPositions = Sets.newHashSet();
-        if(configBuilder.hasValue(SPECIFIC_POSITIONS))
-        {
-            final String positionList = configBuilder.getValue(SPECIFIC_POSITIONS, Strings.EMPTY);
-            if(!positionList.isEmpty())
-            {
-                Arrays.stream(positionList.split(ITEM_DELIM)).forEach(x -> SpecificPositions.add(Integer.parseInt(x)));
-            }
-        }
     }
 
     public boolean isValid()
@@ -134,9 +122,6 @@ public class SageCallConfig
 
         registerCommonConfig(configBuilder);
         addEnsemblDir(configBuilder);
-
-        // debug
-        configBuilder.addConfigItem(SPECIFIC_POSITIONS, "Run for specific positions(s) separated by ';', for debug purposes");
     }
 
     public SageCallConfig()
@@ -149,7 +134,6 @@ public class SageCallConfig
         PanelBed = "panel";
         Hotspots = "hotspots";
         PanelOnly = false;
-        SpecificPositions = Sets.newHashSet();
         mResourceDir = "";
     }
 

@@ -182,7 +182,14 @@ public class BamReader
         {
             if(positionsOverlap(read.getAlignmentStart(), readEnd, targetRegion.Region.start(), targetRegion.Region.end()))
             {
-                ++targetRegion.Counts.TotalReads;
+                if(isConsensus)
+                {
+                    --targetRegion.Counts.Duplicates;
+                }
+                else
+                {
+                    ++targetRegion.Counts.TotalReads;
+                }
 
                 if(read.getDuplicateReadFlag())
                 {
@@ -193,8 +200,11 @@ public class BamReader
                     if(isDualStrand)
                        ++targetRegion.Counts.DualStrand;
 
-                    if(isConsensus)
-                        --targetRegion.Counts.Duplicates;
+                    /*
+                    BT_LOGGER.trace("read({}) coords({}:{}) primary consensus({}) stats({} prim={})",
+                            read.getReadName(), read.getReferenceName(), read.getAlignmentStart(), isConsensus,
+                            targetRegion.Counts, targetRegion.Counts.TotalReads - targetRegion.Counts.Duplicates);
+                    */
                 }
             }
         }

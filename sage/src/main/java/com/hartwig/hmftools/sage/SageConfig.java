@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChro
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
@@ -23,8 +24,10 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_SLICE_SIZE;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -69,6 +72,7 @@ public class SageConfig
 
     // debug
     public final SpecificRegions SpecificChrRegions;
+    public final Set<Integer> SpecificPositions;
     public final boolean LogEvidenceReads;
     public final boolean LogLpsData;
     public final double PerfWarnTime;
@@ -92,6 +96,7 @@ public class SageConfig
     private static final String TRACK_UMIS = "track_umis";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
 
+    private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
     private static final String LOG_LPS_DATA = "log_lps_data";
     private static final String PERF_WARN_TIME = "perf_warn_time";
@@ -148,6 +153,16 @@ public class SageConfig
         QualityRecalibration = new QualityRecalibrationConfig(configBuilder);
 
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
+
+        SpecificPositions = Sets.newHashSet();
+        if(configBuilder.hasValue(SPECIFIC_POSITIONS))
+        {
+            final String positionList = configBuilder.getValue(SPECIFIC_POSITIONS, Strings.EMPTY);
+            if(!positionList.isEmpty())
+            {
+                Arrays.stream(positionList.split(ITEM_DELIM)).forEach(x -> SpecificPositions.add(Integer.parseInt(x)));
+            }
+        }
 
         LogLpsData = configBuilder.hasFlag(LOG_LPS_DATA);
         LogEvidenceReads = SpecificChrRegions.hasFilters() && configBuilder.hasFlag(LOG_EVIDENCE_READS);
@@ -273,6 +288,9 @@ public class SageConfig
         configBuilder.addFlag(LOG_LPS_DATA, "Log local phasing data");
         configBuilder.addDecimal(PERF_WARN_TIME, "Log details of partitions taking longer than X seconds", 0.0);
 
+        // debug
+        configBuilder.addConfigItem(SPECIFIC_POSITIONS, "Run for specific positions(s) separated by ';', for debug purposes");
+
         addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
     }
@@ -304,6 +322,7 @@ public class SageConfig
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
         TrackUMIs = false;
         SyncFragments = false;
+        SpecificPositions = Sets.newHashSet();
         LogEvidenceReads = false;
     }
 }

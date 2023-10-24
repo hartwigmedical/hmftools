@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
@@ -125,6 +126,10 @@ public class PurityConfig
     public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
     public boolean multipleSamples() { return Samples.size() > 1; }
     public boolean hasBatchControls() { return Samples.stream().anyMatch(x -> x.isBatchControl()); }
+
+    public String getPurpleDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
+    public String getSomaticVcf(final String sampleId) { return convertWildcardSamplePath(SomaticVcf, sampleId); }
+    public String getCobaltDir(final String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
 
     private void loadSampleData(final ConfigBuilder configBuilder)
     {

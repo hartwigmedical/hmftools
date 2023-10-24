@@ -413,12 +413,6 @@ public class FragmentSync
         // to be correct this should match the cigar element count
         combinedRecord.setFlags(first.getFlags());
 
-        /*
-        combinedRecord.setFirstOfPairFlag(true);
-        combinedRecord.setReadPairedFlag(true);
-        combinedRecord.setProperPairFlag(true);
-        */
-
         combinedRecord.setMappingQuality(first.getMappingQuality());
         combinedRecord.setInferredInsertSize(combinedPosEnd - combinedPosStart + 1);
 

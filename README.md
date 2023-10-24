@@ -52,7 +52,7 @@ Resource files for each component (GRCh37 and GRCh38) are available to download 
 
 ## RNA Tools
 
-| Component                    | Description                                                | Current Version                                                            |
-|------------------------------|------------------------------------------------------------|----------------------------------------------------------------------------|
-| [Isofox](./isofox/README.md) | WTS Transcript Abundance, Fusions & Novel Splice Junctions | [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.6.1) |
+| Component                    | Description                                                | Current Version                                                              |
+|------------------------------|------------------------------------------------------------|------------------------------------------------------------------------------|
+| [Isofox](./isofox/README.md) | WTS Transcript Abundance, Fusions & Novel Splice Junctions | [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/isofox-v1.7.1) |
 

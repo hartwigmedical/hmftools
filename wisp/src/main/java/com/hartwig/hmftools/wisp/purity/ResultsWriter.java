@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.WriteType.CN_DATA;
 import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATICS;
@@ -165,6 +166,9 @@ public class ResultsWriter
             sj.add(String.valueOf(variant.isProbeVariant()));
 
             String filtersStr = filterReasons.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+
+            if(filtersStr.isEmpty())
+                filtersStr = PASS;
 
             sj.add(filtersStr).add(decorator.tier().toString()).add(variant.Type.toString()).add(String.valueOf(decorator.repeatCount()))
                     .add(format("%.2f", decorator.mappability())).add(format("%.2f", variant.SubclonalPerc));

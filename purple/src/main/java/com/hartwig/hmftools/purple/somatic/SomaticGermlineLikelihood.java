@@ -43,7 +43,7 @@ public class SomaticGermlineLikelihood
             return;
 
         double rawAf = getGenotypeAttributeAsDouble(
-                variant.context().getGenotype(mGenotypeIds.ReferenceOrdinal), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
+                variant.context().getGenotype(mGenotypeIds.TumorOrdinal), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
 
         double segmentCn = variant.decorator().adjustedCopyNumber();
         double tumorMinorCn = variant.decorator().minorAlleleCopyNumber();

@@ -165,7 +165,7 @@ public class PurityEstimator
             {
                 try
                 {
-                    return PurityContextFile.read(mConfig.PurpleDir, sample.TumorId);
+                    return PurityContextFile.read(mConfig.getPurpleDir(sample.TumorId), sample.TumorId);
                 }
                 catch(Exception e)
                 {

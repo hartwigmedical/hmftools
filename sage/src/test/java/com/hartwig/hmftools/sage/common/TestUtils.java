@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
-import static com.hartwig.hmftools.common.variant.SageVcfTags.RC_FULL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
 
@@ -77,8 +76,8 @@ public class TestUtils
 
     public static void setTumorQuality(final SageVariant variant, int count, int quality)
     {
-        variant.tumorReadCounters().get(0).counts()[RC_FULL] = count;
-        variant.tumorReadCounters().get(0).quality()[RC_FULL] = quality;
+        variant.tumorReadCounters().get(0).readSupportCounts().Full = count;
+        variant.tumorReadCounters().get(0).readSupportQualityCounts().Full = quality;
     }
 
     public static void addLocalPhaseSet(final SageVariant variant, int lps, int readCount)

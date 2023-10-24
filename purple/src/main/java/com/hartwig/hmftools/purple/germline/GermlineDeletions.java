@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MACN_PERC;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.GERMLINE_DEL_CN_CONSISTENCY_MIN;
@@ -394,7 +395,7 @@ public class GermlineDeletions
 
         if(filters.isEmpty())
         {
-            filter = "PASS";
+            filter = PASS;
         }
         else
         {

@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cup.svs;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.SV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSvFile;
 import static com.hartwig.hmftools.cup.prep.DataSource.DNA;
 import static com.hartwig.hmftools.cup.svs.SvDataLoader.extractSvCounts;
@@ -42,12 +41,12 @@ public class StructuralVariantPrep implements CategoryPrep
     {
         List<DataItem> dataItems = Lists.newArrayList();
 
-        final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sampleId);
+        final String purpleDataDir = mConfig.getPurpleDataDir(sampleId);
 
         try
         {
             final String svVcfFile = purpleSvFile(mConfig.PurpleDir, sampleId);
-            final String linxDataDir = formSamplePath(mConfig.LinxDir, sampleId);
+            final String linxDataDir = mConfig.getLinxDataDir(sampleId);
             final String clusterFile = LinxCluster.generateFilename(linxDataDir, sampleId, false);
 
             final List<StructuralVariantData> svDataList = Lists.newArrayList();

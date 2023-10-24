@@ -238,6 +238,7 @@ investigate potential causes for QC failure.
     - The undisrupted CN of a DUP, in case of a HOM_DUP_DISRUPTION, is displayed as undisrupted CN minus junction CN
     - Lilac RNA and ref counts are displayed as NONE in case they are not available (rather than 0)
     - The parameter `experiment_type` is now required, with valid values being PANEL or WGS.
+    - Report all non-canonical variants in case of multiple variants in same gene
 - [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
     - Supports targeted tumor-only mode:
         - Omits Cuppa, Chord, Sigs and VirusBreakends

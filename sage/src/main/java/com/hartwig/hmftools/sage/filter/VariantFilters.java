@@ -227,7 +227,7 @@ public class VariantFilters
                 (isLongInsert ? config.MinGermlineCoverageAllosomeLongInsert : config.MinGermlineCoverageAllosome)
                 : (isLongInsert ? config.MinGermlineCoverageLongInsert : config.MinGermlineCoverage);
 
-        return normal.coverage() < minGermlineCoverage;
+        return normal.depth() < minGermlineCoverage;
     }
 
     private static boolean aboveMaxGermlineVaf(

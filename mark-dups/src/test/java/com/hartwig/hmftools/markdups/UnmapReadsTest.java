@@ -33,7 +33,7 @@ public class UnmapReadsTest
         Map<String,List<BaseRegion>> chrLocationsMap = Maps.newHashMap();
         chrLocationsMap.put(CHR_1, Lists.newArrayList(new BaseRegion(500, 700)));
 
-        ReadUnmapper readUnmapper = new ReadUnmapper(chrLocationsMap, 100);
+        ReadUnmapper readUnmapper = new ReadUnmapper(chrLocationsMap);
 
         String readBases = "";
         String readCigar = "100M";

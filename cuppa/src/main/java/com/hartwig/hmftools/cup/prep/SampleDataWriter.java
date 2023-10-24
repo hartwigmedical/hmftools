@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
@@ -81,7 +82,7 @@ public class SampleDataWriter
                 }
             }
 
-            filename += TSV_EXTENSION;
+            filename += TSV_ZIP_EXTENSION;
 
             CUP_LOGGER.info("writing {} data to {}", categoryType != null ? categoryType.toString() : "sample", filename);
 
@@ -125,8 +126,6 @@ public class SampleDataWriter
 
         try
         {
-            // StringJoiner sj = new StringJoiner(TSV_DELIM);
-
             if(mConfig.isSingleSample())
             {
                 String sourceStr = DataSource.fromCategory(categoryType).toString();

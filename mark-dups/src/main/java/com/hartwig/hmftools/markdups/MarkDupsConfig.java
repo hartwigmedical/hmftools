@@ -173,7 +173,7 @@ public class MarkDupsConfig
 
         if(configBuilder.hasValue(UNMAP_REGIONS))
         {
-            UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS), mReadLength);
+            UnmapRegions = new ReadUnmapper(configBuilder.getValue(UNMAP_REGIONS));
         }
         else
         {
@@ -182,7 +182,7 @@ public class MarkDupsConfig
             ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
             unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(BaseRegion.from(excludedRegion)));
 
-            UnmapRegions = new ReadUnmapper(unmappedMap, mReadLength);
+            UnmapRegions = new ReadUnmapper(unmappedMap);
         }
 
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
@@ -226,7 +226,6 @@ public class MarkDupsConfig
     public void setReadLength(int readLength)
     {
         mReadLength = readLength;
-        UnmapRegions.setReadLength(mReadLength);
     }
 
     public String formFilename(final String fileType)
@@ -310,7 +309,7 @@ public class MarkDupsConfig
         SamToolsPath = null;
         SambambaPath = null;
 
-        UnmapRegions = new ReadUnmapper(Maps.newHashMap(), mReadLength);
+        UnmapRegions = new ReadUnmapper(Maps.newHashMap());
 
         WriteBam = false;
         MultiBam = false;

@@ -53,8 +53,7 @@ public abstract class RnaStatistics
     public abstract List<RnaQcFilter> qcStatus();
 
     public static final int LOW_COVERAGE_THRESHOLD = 2500000;
-    public static final int LOW_COVERAGE_PANEL_THRESHOLD = 100000;
-    private static final int SPLICE_GENE_THRESHOLD = 17000;
+    public static final int SPLICE_GENE_THRESHOLD = 17000;
     private static final double HIGH_DUPLICATES_THRESHOLD = 0.9;
 
     public static final String SUMMARY_FILE_ID = "summary.csv";
@@ -155,10 +154,11 @@ public abstract class RnaStatistics
 
     public static List<RnaQcFilter> calcQcStatus(long totalFragments, long duplicateFragments, int splicedGenes)
     {
-        return calcQcStatus(totalFragments, duplicateFragments, splicedGenes, LOW_COVERAGE_THRESHOLD);
+        return calcQcStatus(totalFragments, duplicateFragments, splicedGenes, LOW_COVERAGE_THRESHOLD, SPLICE_GENE_THRESHOLD);
     }
 
-    public static List<RnaQcFilter> calcQcStatus(long totalFragments, long duplicateFragments, int splicedGenes, int lowCoverageThreshold)
+    public static List<RnaQcFilter> calcQcStatus(
+            long totalFragments, long duplicateFragments, int splicedGenes, int lowCoverageThreshold, int splicedGeneThreshold)
     {
         if(totalFragments - duplicateFragments < lowCoverageThreshold)
             return List.of(FAIL_LOW_COVERAGE);
@@ -170,7 +170,7 @@ public abstract class RnaStatistics
         if(duplicatePerc > HIGH_DUPLICATES_THRESHOLD)
             statusValues.add(WARN_DUPLICATE_RATE);
 
-        if(splicedGenes >= 0 && splicedGenes < SPLICE_GENE_THRESHOLD)
+        if(splicedGenes >= 0 && splicedGenes < splicedGeneThreshold)
             statusValues.add(WARN_SPLICED_GENE_COVERAGE);
 
         return statusValues.isEmpty() ? List.of(PASS) : statusValues;

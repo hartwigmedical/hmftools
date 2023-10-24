@@ -15,6 +15,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
@@ -45,8 +46,10 @@ public class PrepConfig
     public final String PurpleDir;
     public final String VirusDir;
     public final String IsofoxDir;
+    public final String AltSpliceJunctionSites;
 
     private static final String WRITE_FILE_BY_CATEGORY = "write_by_category";
+    private static final String REF_ALT_SJ_SITES = "ref_alt_sj_sites";
 
     public PrepConfig(final ConfigBuilder configBuilder)
     {
@@ -69,6 +72,7 @@ public class PrepConfig
         PurpleDir = configBuilder.getValue(PURPLE_DIR_CFG, "");
         VirusDir = configBuilder.getValue(VIRUS_DIR_CFG, "");
         IsofoxDir = configBuilder.getValue(ISOFOX_DIR_CFG, "");
+        AltSpliceJunctionSites = configBuilder.getValue(REF_ALT_SJ_SITES);
 
         OutputDir = parseOutputDir(configBuilder);
         OutputId = configBuilder.getValue(OUTPUT_ID);
@@ -78,6 +82,16 @@ public class PrepConfig
 
     public boolean isMultiSample() { return SampleIds.size() > 1; }
     public boolean isSingleSample() { return SampleIds.size() == 1; }
+
+    public String getLinxDataDir(final String sampleId) { return formSamplePath(sampleId, LinxDir); }
+    public String getPurpleDataDir(final String sampleId) { return formSamplePath(sampleId, PurpleDir); }
+    public String getVirusDataDir(final String sampleId) { return formSamplePath(sampleId, VirusDir); }
+    public String getIsofoxDataDir(final String sampleId) { return formSamplePath(sampleId, IsofoxDir); }
+
+    private static String formSamplePath(final String sampleId, final String samplePath)
+    {
+        return convertWildcardSamplePath(samplePath, sampleId);
+    }
 
     public static void addPipelineDirectories(final ConfigBuilder configBuilder)
     {
@@ -94,6 +108,7 @@ public class PrepConfig
         configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
         configBuilder.addPath(SAMPLE_ID_FILE, false, SAMPLE_ID_FILE_DESC);
         configBuilder.addConfigItem(REF_GENOME_VERSION, false, REF_GENOME_VERSION_CFG_DESC, V37.toString());
+        configBuilder.addPath(REF_ALT_SJ_SITES, false, "RNA required alternative splice junction sites");
         configBuilder.addFlag(WRITE_FILE_BY_CATEGORY, "Cohort mode - write files by category");
 
         addPipelineDirectories(configBuilder);
