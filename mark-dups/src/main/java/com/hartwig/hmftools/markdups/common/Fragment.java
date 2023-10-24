@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups.common;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
@@ -9,7 +10,6 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.SUPPLEMENTARY;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.UNSET;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.getFragmentCoordinates;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.common.ReadUnmapper.parseUnmappedCoords;
 
 import java.util.List;
@@ -147,7 +147,7 @@ public class Fragment
         if(read.getSupplementaryAlignmentFlag())
         {
             // get the lower of their mate or their supplementary read's location
-            SupplementaryReadData suppData = SupplementaryReadData.from(read);
+            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
 
             boolean hasSuppData = suppData != null && HumanChromosome.contains(suppData.Chromosome);
 
