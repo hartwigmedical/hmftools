@@ -59,7 +59,7 @@ public class SupplementaryJunctionData
         if(read == null)
             return null;
 
-        SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
+        SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read.getSuppAlignment());
 
         if(suppData == null)
             return null;

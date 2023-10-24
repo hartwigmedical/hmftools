@@ -5,11 +5,14 @@ import com.hartwig.hmftools.datamodel.gene.TranscriptRegionType;
 import com.hartwig.hmftools.datamodel.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.datamodel.linx.FusionPhasedType;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxDriver;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxFusion;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxHomozygousDisruption;
 import com.hartwig.hmftools.datamodel.linx.ImmutableLinxSvAnnotation;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxDriver;
+import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxFusion;
 import com.hartwig.hmftools.datamodel.linx.LinxFusionType;
 import com.hartwig.hmftools.datamodel.linx.LinxHomozygousDisruption;
@@ -19,6 +22,15 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LinxConversion
 {
+    @NotNull
+    public static LinxDriver convert(@NotNull com.hartwig.hmftools.common.linx.LinxDriver driver)
+    {
+        return ImmutableLinxDriver.builder()
+                .gene(driver.gene())
+                .type(LinxDriverType.valueOf(driver.eventType().name()))
+                .build();
+    }
+
     @NotNull
     public static LinxSvAnnotation convert(@NotNull com.hartwig.hmftools.common.linx.LinxSvAnnotation linxSvAnnotation)
     {

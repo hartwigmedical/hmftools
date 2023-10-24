@@ -5,6 +5,8 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
@@ -13,8 +15,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_C
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.NANOS_IN_SECOND;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
@@ -30,10 +30,10 @@ import java.util.concurrent.Callable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -283,7 +283,7 @@ public class DepthTask implements Callable
                 else
                 {
                     // check again for a supplementary
-                    SupplementaryReadData suppReadData = SupplementaryReadData.from(read);
+                    SupplementaryReadData suppReadData = SupplementaryReadData.firstAlignmentFrom(read);
 
                     if(suppReadData != null && suppReadData.Chromosome.equals(mChromosome)
                             && positionWithin(suppReadData.Position, mSliceRegionState.PositionMin, maxSlicePosition))
@@ -355,7 +355,7 @@ public class DepthTask implements Callable
             expectMate = true;
         }
 
-        SupplementaryReadData suppReadData = SupplementaryReadData.from(read);
+        SupplementaryReadData suppReadData = SupplementaryReadData.firstAlignmentFrom(read);
 
         if(suppReadData != null && suppReadData.Chromosome.equals(mChromosome)
         && positionWithin(suppReadData.Position, mSliceRegionState.PositionMin, maxSlicePosition))

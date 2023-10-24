@@ -103,7 +103,7 @@ public class SliceWriter
             mReadWriter.write(format("%s,%s,%d,%d,%s",
                     record.getReadName(), record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd(), record.getCigar()));
 
-            SupplementaryReadData suppData = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
             mReadWriter.write(format(",%d,%s,%d,%d,%s,%d",
                     abs(record.getInferredInsertSize()), record.getMateReferenceName(), record.getMateAlignmentStart(), record.getMappingQuality(),

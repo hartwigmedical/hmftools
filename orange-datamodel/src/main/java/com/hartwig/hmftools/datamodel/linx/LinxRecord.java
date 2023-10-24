@@ -13,6 +13,9 @@ import org.jetbrains.annotations.Nullable;
 public interface LinxRecord
 {
     @NotNull
+    List<LinxDriver> somaticDrivers();
+
+    @NotNull
     List<LinxSvAnnotation> allSomaticStructuralVariants();
 
     @Nullable

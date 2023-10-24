@@ -76,7 +76,7 @@ public class FusionRead
         ContainsSplit = read.containsSplit();
         Flags = read.flags();
 
-        SuppData = read.hasSuppAlignment() ? SupplementaryReadData.from(read.getSuppAlignment()) : null;
+        SuppData = read.hasSuppAlignment() ? SupplementaryReadData.firstAlignmentFrom(read.getSuppAlignment()) : null;
 
         SoftClipLengths = new int[]
                 { read.isSoftClipped(SE_START) ? read.Cigar.getFirstCigarElement().getLength() : 0,

@@ -79,6 +79,7 @@ public final class ReportLimiter
         // TODO Should also limit all structural variants but we have to include the ones included in reportableBreakend.
         return ImmutableLinxRecord.builder()
                 .from(linx)
+                .somaticDrivers(max1(linx.somaticDrivers()))
                 .allSomaticFusions(max1(linx.allSomaticFusions()))
                 .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
                 .additionalSuspectSomaticFusions(max1(linx.additionalSuspectSomaticFusions()))

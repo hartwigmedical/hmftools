@@ -229,7 +229,7 @@ public class BamReader
         if(!read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
             return false;
 
-        SupplementaryReadData suppData = SupplementaryReadData.from(read);
+        SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
 
         if(suppData == null)
             return false;

@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadR
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.LOG_READ_IDS_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG;
@@ -21,31 +23,25 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.markdups.write.ReadOutput.NONE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.markdups.write.ReadOutput.NONE;
 
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.markdups.common.ReadUnmapper;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
+import com.hartwig.hmftools.markdups.common.ReadUnmapper;
 import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
 import com.hartwig.hmftools.markdups.write.ReadOutput;
@@ -177,12 +173,7 @@ public class MarkDupsConfig
         }
         else
         {
-            Map<String,List<BaseRegion>> unmappedMap = Maps.newHashMap();
-
-            ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
-            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(BaseRegion.from(excludedRegion)));
-
-            UnmapRegions = new ReadUnmapper(unmappedMap);
+            UnmapRegions = new ReadUnmapper(Maps.newHashMap());
         }
 
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
