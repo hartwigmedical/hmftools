@@ -8,8 +8,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxDriver;
+import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +19,7 @@ public final class BreakendEntryFactory
 {
     @NotNull
     public static List<BreakendEntry> create(@NotNull List<LinxBreakend> breakends, @NotNull List<LinxSvAnnotation> variants,
-            @NotNull List<PurpleDriver> drivers)
+            @NotNull List<LinxDriver> drivers)
     {
         List<BreakendEntry> entries = Lists.newArrayList();
         for(LinxBreakend breakend : breakends)
@@ -81,18 +82,16 @@ public final class BreakendEntryFactory
         throw new IllegalStateException("Could not find structural variant that underlies breakend: " + breakend);
     }
 
-    private static double correctUndisruptedCopyNumber(@NotNull LinxBreakend breakend, @NotNull List<PurpleDriver> drivers)
+    private static double correctUndisruptedCopyNumber(@NotNull LinxBreakend breakend, @NotNull List<LinxDriver> drivers)
     {
         if(breakend.type() == LinxBreakendType.DUP)
         {
-            for(PurpleDriver driver : drivers)
+            for(LinxDriver driver : drivers)
             {
-                // TODO: Fix in ACTIN-282
-//
-//                if(driver.gene().equals(breakend.gene()) && driver.type() == PurpleDriverType.HOM_DUP_DISRUPTION)
-//                {
-//                    return Math.max(0.0, breakend.undisruptedCopyNumber() - breakend.junctionCopyNumber());
-//                }
+                if(driver.gene().equals(breakend.gene()) && driver.type() == LinxDriverType.HOM_DUP_DISRUPTION)
+                {
+                    return Math.max(0.0, breakend.undisruptedCopyNumber() - breakend.junctionCopyNumber());
+                }
             }
         }
 
