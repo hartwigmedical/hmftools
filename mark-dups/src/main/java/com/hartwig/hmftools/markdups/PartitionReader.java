@@ -20,20 +20,20 @@ import java.util.stream.Collectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.common.CandidateDuplicates;
 import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
+import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
+import com.hartwig.hmftools.markdups.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -54,7 +54,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
-    private final List<BaseRegion> mUnmapRegions;
+    private final List<HighDepthRegion> mUnmapRegions;
 
     private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
 
@@ -381,10 +381,12 @@ public class PartitionReader implements Consumer<List<Fragment>>
     {
         mUnmapRegions.clear();
 
-        List<BaseRegion> chrRegions = mConfig.UnmapRegions.getRegions(mCurrentRegion.Chromosome);
+        List<HighDepthRegion> chrUnmapRegions = mConfig.UnmapRegions.getRegions(mCurrentRegion.Chromosome);
 
-        if(chrRegions != null)
-            chrRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).forEach(x -> mUnmapRegions.add(x));
+        if(chrUnmapRegions != null)
+        {
+            chrUnmapRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).forEach(x -> mUnmapRegions.add(x));
+        }
     }
 
     private void perfCountersStart()
