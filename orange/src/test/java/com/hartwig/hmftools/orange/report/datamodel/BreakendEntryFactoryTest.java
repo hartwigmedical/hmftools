@@ -8,14 +8,14 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
 import com.hartwig.hmftools.datamodel.linx.LinxBreakendType;
+import com.hartwig.hmftools.datamodel.linx.LinxDriver;
+import com.hartwig.hmftools.datamodel.linx.LinxDriverType;
 import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.datamodel.purple.PurpleDriver;
 import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
-import com.hartwig.hmftools.orange.algo.util.PurpleDriverTestFactory;
+import com.hartwig.hmftools.orange.algo.util.LinxDriverTestFactory;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class BreakendEntryFactoryTest
@@ -43,7 +43,7 @@ public class BreakendEntryFactoryTest
 
         List<BreakendEntry> entries = BreakendEntryFactory.create(Lists.newArrayList(breakend),
                 Lists.newArrayList(variant),
-                Lists.newArrayList(PurpleDriverTestFactory.builder().build()));
+                Lists.newArrayList());
 
         assertEquals(1, entries.size());
 
@@ -67,7 +67,7 @@ public class BreakendEntryFactoryTest
 
         BreakendEntryFactory.create(Lists.newArrayList(breakend),
                 Lists.newArrayList(variant),
-                Lists.newArrayList(PurpleDriverTestFactory.builder().build()));
+                Lists.newArrayList());
     }
 
     @Test
@@ -80,7 +80,6 @@ public class BreakendEntryFactoryTest
     }
 
     @Test
-    @Ignore
     public void canGenerateUndisruptedCopyNumberForHomDupDisruptions()
     {
         LinxBreakend breakend = LinxOrangeTestFactory.breakendBuilder()
@@ -92,7 +91,7 @@ public class BreakendEntryFactoryTest
                 .build();
 
         LinxSvAnnotation variant = LinxOrangeTestFactory.svAnnotationBuilder().svId(1).clusterId(2).build();
-        PurpleDriver driver = PurpleDriverTestFactory.builder().gene("gene").build();
+        LinxDriver driver = LinxDriverTestFactory.builder().gene("gene").type(LinxDriverType.HOM_DUP_DISRUPTION).build();
 
         List<BreakendEntry> entries =
                 BreakendEntryFactory.create(Lists.newArrayList(breakend), Lists.newArrayList(variant), Lists.newArrayList(driver));

@@ -135,12 +135,12 @@ public class GermlineFindingsChapter implements ReportChapter
     {
         List<LinxSvAnnotation> allGermlineStructuralVariants = report.linx().allGermlineStructuralVariants();
         List<LinxBreakend> reportableGermlineBreakends = report.linx().reportableGermlineBreakends();
-        List<PurpleDriver> germlineDrivers = report.purple().germlineDrivers();
 
-        if(allGermlineStructuralVariants != null && reportableGermlineBreakends != null && germlineDrivers != null)
+        if(allGermlineStructuralVariants != null && reportableGermlineBreakends != null)
         {
+            // TODO: Load Linx germline drivers properly
             List<BreakendEntry> reportableBreakends =
-                    BreakendEntryFactory.create(reportableGermlineBreakends, allGermlineStructuralVariants, germlineDrivers);
+                    BreakendEntryFactory.create(reportableGermlineBreakends, allGermlineStructuralVariants, List.of());
 
             String title = "Potentially pathogenic germline gene disruptions (" + reportableBreakends.size() + ")";
             document.add(BreakendTable.build(title, contentWidth(), reportableBreakends, reportResources));
