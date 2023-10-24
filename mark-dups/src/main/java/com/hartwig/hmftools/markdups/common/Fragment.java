@@ -147,7 +147,7 @@ public class Fragment
         if(read.getSupplementaryAlignmentFlag())
         {
             // get the lower of their mate or their supplementary read's location
-            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
 
             boolean hasSuppData = suppData != null && HumanChromosome.contains(suppData.Chromosome);
 

@@ -4,6 +4,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.ALIGNMENTS_DELIM;
 import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
@@ -16,6 +17,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -300,6 +302,32 @@ public class UnmapReadsTest
         assertTrue(read.getMateUnmappedFlag());
         assertEquals(400, read.getMateAlignmentStart());
         assertEquals(CHR_3, read.getMateReferenceName());
+        assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    @Test
+    public void testUnmapMultipleSupplementaryAlignments()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_1, 100, READ_BASES, READ_CIGAR, CHR_3, 200, false,
+                false, null, true, READ_CIGAR);
+
+
+        SupplementaryReadData suppData1 = new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, READ_CIGAR, 60);
+        SupplementaryReadData suppData2 = new SupplementaryReadData(CHR_2, 6000, SUPP_POS_STRAND, READ_CIGAR, 60);
+        SupplementaryReadData suppData3 = new SupplementaryReadData(CHR_3, 600, SUPP_POS_STRAND, READ_CIGAR, 60);
+
+        StringJoiner saJoiner = new StringJoiner(ALIGNMENTS_DELIM);
+        saJoiner.add(suppData1.asSamTag());
+        saJoiner.add(suppData2.asSamTag());
+        saJoiner.add(suppData3.asSamTag());
+
+        read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saJoiner.toString());
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+
+        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertFalse(read.getReadUnmappedFlag());
+        assertFalse(read.getMateUnmappedFlag());
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
     }
 }

@@ -74,7 +74,7 @@ public class ReadRecord
         }
 
         mFragmentInsertSize = abs(record.getInferredInsertSize());
-        mSupplementaryAlignment = SupplementaryReadData.firstAlignmentFrom(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        mSupplementaryAlignment = SupplementaryReadData.extractAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
         mFilters = 0;
         mReadType = NO_SUPPORT;
         mWritten = false;

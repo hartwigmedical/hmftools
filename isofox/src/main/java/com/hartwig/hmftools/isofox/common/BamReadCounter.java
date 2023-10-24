@@ -197,7 +197,7 @@ public class BamReadCounter implements Callable
     {
         try
         {
-            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
             writer.write(String.format("%s,%s,%s,%d,%d,%s,%d,%d,%s,%d",
                     geneId, record.getReadName(), record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd(),

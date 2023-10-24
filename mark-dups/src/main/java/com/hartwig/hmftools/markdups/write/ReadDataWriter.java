@@ -93,7 +93,7 @@ public class ReadDataWriter
             mWriter.write(format("%s\t%s\t%d\t%d\t%s",
                     read.getReadName(), read.getContig(), read.getAlignmentStart(), read.getAlignmentEnd(), read.getCigar()));
 
-            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
             mWriter.write(format("\t%d\t%s\t%d\t%s\t%s\t%s\t%s",
                     abs(read.getInferredInsertSize()), read.getMateReferenceName(), read.getMateAlignmentStart(),

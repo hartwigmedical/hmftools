@@ -91,7 +91,7 @@ public class DuplicateGroup
         {
             SAMRecord read = firstFragment.reads().get(i);
 
-            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
             boolean hasValidSupp = suppData != null && HumanChromosome.contains(suppData.Chromosome);
 
             if(i == 0)
@@ -211,7 +211,7 @@ public class DuplicateGroup
     {
         if(!read.getSupplementaryAlignmentFlag())
         {
-            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
             boolean hasValidSupp = suppData != null && HumanChromosome.contains(suppData.Chromosome);
 
             int index = 0;
@@ -256,7 +256,7 @@ public class DuplicateGroup
 
         // boolean checkSuppData = Arrays.stream(mPrimaryReadTypeIndex).filter(x -> x != null && x.HasSupplementary).count() == 2;
         // SupplementaryReadData suppData = checkSuppData ? SupplementaryReadData.from(read) : null;
-        SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
+        SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
 
         int matchedPrimaryIndex;
 

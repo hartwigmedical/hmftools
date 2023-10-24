@@ -283,7 +283,7 @@ public class DepthTask implements Callable
                 else
                 {
                     // check again for a supplementary
-                    SupplementaryReadData suppReadData = SupplementaryReadData.firstAlignmentFrom(read);
+                    SupplementaryReadData suppReadData = SupplementaryReadData.extractAlignment(read);
 
                     if(suppReadData != null && suppReadData.Chromosome.equals(mChromosome)
                             && positionWithin(suppReadData.Position, mSliceRegionState.PositionMin, maxSlicePosition))
@@ -355,7 +355,7 @@ public class DepthTask implements Callable
             expectMate = true;
         }
 
-        SupplementaryReadData suppReadData = SupplementaryReadData.firstAlignmentFrom(read);
+        SupplementaryReadData suppReadData = SupplementaryReadData.extractAlignment(read);
 
         if(suppReadData != null && suppReadData.Chromosome.equals(mChromosome)
         && positionWithin(suppReadData.Position, mSliceRegionState.PositionMin, maxSlicePosition))

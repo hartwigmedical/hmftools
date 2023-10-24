@@ -102,10 +102,10 @@ public class ReadUnmapper
 
         if(!readUnmapped)
         {
-            unmapRead = checkIfUnmapRead(read, readRegions);
+            unmapRead = checkUnmapRead(read, readRegions);
 
             // supplementaries are unmapped if their primary will be unmapped
-            unmapRead |= isSupplementary && checkIfUnmapSupplementary(read, true);
+            unmapRead |= isSupplementary && checkUnmapSupplementaryRead(read);
         }
 
         if(unmapRead && isSupplementary)
@@ -116,7 +116,7 @@ public class ReadUnmapper
             return true;
         }
 
-        boolean unmapMate = !mateUnmapped && checkIfUnmapMate(read);
+        boolean unmapMate = !mateUnmapped && checkUnmapMate(read);
 
         if(unmapRead)
         {
@@ -150,9 +150,10 @@ public class ReadUnmapper
         }
 
         boolean unmapSuppAlignment = false;
-        if(!unmapRead && checkIfUnmapSupplementary(read, false))
+
+        if(!unmapRead && checkUnmapSupplementaryAlignments(read))
         {
-            unmapSupplementary(read);
+            clearSupplementaryAlignment(read);
             mStats.SuppAlignmentCount.incrementAndGet();
             unmapSuppAlignment = true;
         }
@@ -160,7 +161,7 @@ public class ReadUnmapper
         return unmapRead || unmapMate || unmapSuppAlignment;
     }
 
-    private static boolean checkIfUnmapRead(final SAMRecord read, final List<HighDepthRegion> readRegions)
+    private static boolean checkUnmapRead(final SAMRecord read, final List<HighDepthRegion> readRegions)
     {
         RegionMatchType matchType = readMaxDepthRegionOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), readRegions);
 
@@ -179,7 +180,7 @@ public class ReadUnmapper
         return false;
     }
 
-    private boolean checkIfUnmapMate(final SAMRecord read)
+    private boolean checkUnmapMate(final SAMRecord read)
     {
         RegionMatchType matchType = mateMaxDepthRegionOverlap(read);
 
@@ -203,16 +204,50 @@ public class ReadUnmapper
         return false;
     }
 
-    private boolean checkIfUnmapSupplementary(final SAMRecord read, final boolean representsPrimaryRead)
+    private boolean checkUnmapSupplementaryRead(final SAMRecord read)
     {
-        final SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
+        final SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
+
         if(suppData == null)
-        {
             return false;
+
+        if(checkUnmapSupplementaryAlignment(suppData, read.getReadBases().length))
+            return true;
+
+        // We don't want to drop supplementaries based on chimeric read criteria, since this is a criteria for a primary read and its
+        // primary mate. However, when checking if we are unmapping a supplementary based on whether its primary is unmapped, we do check
+        // the chimeric read criteria.
+        if(isSupplementaryChimericRead(read))
+            return true;
+
+        return false;
+    }
+
+    private boolean checkUnmapSupplementaryAlignments(final SAMRecord read)
+    {
+        // checks if any supplementary alignment qualifies for unmapping
+        List<SupplementaryReadData> alignments = SupplementaryReadData.extractAlignments(read);
+
+        if(alignments == null)
+            return false;
+
+        int readBaseLength = read.getReadBases().length;
+
+        for(SupplementaryReadData suppData : alignments)
+        {
+            if(checkUnmapSupplementaryAlignment(suppData, readBaseLength))
+                return true;
         }
 
-        int readLength = read.getReadBases().length;
-        RegionMatchType matchType = supplementaryMaxDepthRegionOverlap(suppData, readLength);
+        return false;
+    }
+
+    private boolean checkUnmapSupplementaryAlignment(final SupplementaryReadData suppData, int readBaseLength)
+    {
+        if(suppData == null)
+            return false;
+
+        RegionMatchType matchType = supplementaryMaxDepthRegionOverlap(suppData, readBaseLength);
 
         if(matchType == RegionMatchType.NONE)
             return false;
@@ -222,14 +257,6 @@ public class ReadUnmapper
 
         if(getSoftClipCountFromCigarStr(suppData.Cigar) >= UNMAP_MIN_SOFT_CLIP)
             return true;
-
-        // We don't want to drop supplementaries based on chimeric read criteria, since this is a criteria for a primary read and its
-        // primary mate. However, when checking if we are unmapping a supplementary based on whether its primary is unmapped, we do check
-        // the chimeric read criteria.
-        if(representsPrimaryRead && isSupplementaryChimericRead(read))
-        {
-            return true;
-        }
 
         return false;
     }
@@ -444,7 +471,7 @@ public class ReadUnmapper
     private static boolean isSupplementaryChimericRead(final SAMRecord record)
     {
         // check whether the primary read (detailed in the supp attribute) is chimeric with the mate - note the primary is always mapped
-        final SupplementaryReadData suppReadData = SupplementaryReadData.firstAlignmentFrom(record);
+        SupplementaryReadData suppReadData = SupplementaryReadData.extractAlignment(record);
 
         // insert size is not populated for supplementaries
 
@@ -514,7 +541,7 @@ public class ReadUnmapper
         read.setCigarString(NO_CIGAR);
 
         // clear the supplementary data too
-        unmapSupplementary(read);
+        clearSupplementaryAlignment(read);
     }
 
     private static final String UNMAPP_COORDS_DELIM = ":";
@@ -572,7 +599,7 @@ public class ReadUnmapper
         }
     }
 
-    public static void unmapSupplementary(final SAMRecord read)
+    public static void clearSupplementaryAlignment(final SAMRecord read)
     {
         // remove supplementary alignment details from attributes
         if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))

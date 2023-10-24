@@ -51,7 +51,7 @@ public enum FilterReadsType
         // a reason to ignore a primary read since that then impacts duplicate classification
         if(filterType.filterSupplementaries())
         {
-            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
 
             if(suppData != null)
             {

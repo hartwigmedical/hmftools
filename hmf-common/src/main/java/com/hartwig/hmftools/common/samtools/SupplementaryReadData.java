@@ -22,8 +22,9 @@ public class SupplementaryReadData
     public final int MapQuality;
     public final int NM;
 
+    public static final String ALIGNMENTS_DELIM = ";";
+
     private static final String SUPP_DELIM = ",";
-    private static final String ALIGNMENTS_DELIM = ";";
     private static final int SUPP_FIELD_COUNT = 6;
 
     public static final char SUPP_POS_STRAND = '+';
@@ -66,14 +67,14 @@ public class SupplementaryReadData
     }
 
     @Nullable
-    public static List<SupplementaryReadData> from(final SAMRecord record)
+    public static List<SupplementaryReadData> extractAlignments(final SAMRecord record)
     {
         final String alignmentStr = record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
-        return alignmentStr != null ? from(alignmentStr) : null;
+        return alignmentStr != null ? extractAlignments(alignmentStr) : null;
     }
 
     @Nullable
-    public static List<SupplementaryReadData> from(@Nullable final String suppData)
+    public static List<SupplementaryReadData> extractAlignments(@Nullable final String suppData)
     {
         if(suppData == null || suppData.isEmpty())
             return null;
@@ -85,19 +86,19 @@ public class SupplementaryReadData
         if(suppData.contains(SUPP_DELIM))
         {
             final List<SupplementaryReadData> output = Lists.newArrayList();
-            // Do not discard empty strings at the end when splitting.
+
+            // do not discard empty strings at the end when splitting
             final String[] alignments = suppData.split(ALIGNMENTS_DELIM, -1);
-            final int endIndex =
-                    suppData.charAt(suppData.length() - 1) == ALIGNMENTS_DELIM.charAt(0) ? alignments.length - 2 : alignments.length - 1;
+            final int endIndex = suppData.charAt(suppData.length() - 1) == ALIGNMENTS_DELIM.charAt(0) ?
+                    alignments.length - 2 : alignments.length - 1;
 
             for(int i = 0; i <= endIndex; ++i)
             {
                 final String alignment = alignments[i];
                 final SupplementaryReadData suppReadData = fromAlignment(alignment);
+
                 if(suppReadData == null)
-                {
                     return null;
-                }
 
                 output.add(suppReadData);
             }
@@ -106,20 +107,20 @@ public class SupplementaryReadData
         }
         else
         {
-            // Alternative delimitation only use for testing.
+            // alternative delimitation only use for testing
             return List.of(fromAlignment(suppData, ALIGNMENTS_DELIM));
         }
     }
 
     @Nullable
-    public static SupplementaryReadData firstAlignmentFrom(final SAMRecord record)
+    public static SupplementaryReadData extractAlignment(final SAMRecord record)
     {
         final String alignmentStr = record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE);
-        return alignmentStr != null ? firstAlignmentFrom(alignmentStr) : null;
+        return alignmentStr != null ? extractAlignment(alignmentStr) : null;
     }
 
     @Nullable
-    public static SupplementaryReadData firstAlignmentFrom(@Nullable final String suppData)
+    public static SupplementaryReadData extractAlignment(@Nullable final String suppData)
     {
         if(suppData == null || suppData.isEmpty())
             return null;

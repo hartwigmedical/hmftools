@@ -359,7 +359,7 @@ public class ChimericReadTracker
 
         if(read.hasSuppAlignment())
         {
-            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read.getSuppAlignment());
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getSuppAlignment());
 
             if(suppData != null && mConfig.Filters.skipRead(suppData.Chromosome, suppData.Position))
                 return true;

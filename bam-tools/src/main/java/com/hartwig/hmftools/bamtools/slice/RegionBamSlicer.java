@@ -96,7 +96,7 @@ public class RegionBamSlicer implements Callable
 
         if(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE))
         {
-            SupplementaryReadData suppData = SupplementaryReadData.firstAlignmentFrom(read);
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
 
             checkAddRemotePosition(read.getReadName(), suppData.Chromosome, suppData.Position);
         }
