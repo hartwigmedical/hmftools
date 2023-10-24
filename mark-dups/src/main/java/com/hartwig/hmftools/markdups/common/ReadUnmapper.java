@@ -102,10 +102,35 @@ public class ReadUnmapper
 
         if(!readUnmapped)
         {
-            unmapRead = checkUnmapRead(read, readRegions);
+            UnmapReason unmapReason = checkUnmapRead(read, readRegions);
 
-            // supplementaries are unmapped if their primary will be unmapped
-            unmapRead |= isSupplementary && checkUnmapSupplementaryRead(read);
+            if(unmapReason != UnmapReason.NONE)
+            {
+                unmapRead = true;
+
+                switch(unmapReason)
+                {
+                    case HIGH_DEPTH:
+                        mStats.HighDepthCount.incrementAndGet();
+                        break;
+
+                    case SOFT_CLIP:
+                        mStats.LongSoftClipCount.incrementAndGet();
+                        break;
+
+                    case CHIMERIC:
+                        mStats.ChimericCount.incrementAndGet();
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            else if(isSupplementary)
+            {
+                // supplementaries are unmapped if their primary will be unmapped
+                unmapRead = isSupplementary && checkUnmapSupplementaryRead(read);
+            }
         }
 
         if(unmapRead && isSupplementary)
@@ -161,23 +186,31 @@ public class ReadUnmapper
         return unmapRead || unmapMate || unmapSuppAlignment;
     }
 
-    private static boolean checkUnmapRead(final SAMRecord read, final List<HighDepthRegion> readRegions)
+    private enum UnmapReason
+    {
+        HIGH_DEPTH,
+        SOFT_CLIP,
+        CHIMERIC,
+        NONE;
+    }
+
+    private static UnmapReason checkUnmapRead(final SAMRecord read, final List<HighDepthRegion> readRegions)
     {
         RegionMatchType matchType = readMaxDepthRegionOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), readRegions);
 
         if(matchType == RegionMatchType.NONE)
-            return false;
+            return UnmapReason.NONE;
 
         if(matchType == RegionMatchType.HIGH_DEPTH)
-            return true;
+            return UnmapReason.HIGH_DEPTH;
 
         if(getSoftClipCountFromCigarStr(read.getCigarString()) > UNMAP_MIN_SOFT_CLIP)
-            return true;
+            return UnmapReason.SOFT_CLIP;
 
         if(isChimericRead(read, false))
-            return true;
+            return UnmapReason.CHIMERIC;
 
-        return false;
+        return UnmapReason.NONE;
     }
 
     private boolean checkUnmapMate(final SAMRecord read)
@@ -268,6 +301,8 @@ public class ReadUnmapper
         OTHER;
     }
 
+    private final static int READ_END_POS_BUFFER = 40; // to account for long deletes in a read that push back the alignment end
+
     @VisibleForTesting
     public RegionMatchType mateMaxDepthRegionOverlap(final SAMRecord read)
     {
@@ -280,7 +315,7 @@ public class ReadUnmapper
         // coordinate check must be identical to how the mate checks itself, which requires knowledge of aligned bases
         if(read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
-            int approxMateEnd = read.getMateAlignmentStart() + read.getReadBases().length - 1;
+            int approxMateEnd = read.getMateAlignmentStart() + read.getReadBases().length + READ_END_POS_BUFFER;
             return readMaxDepthRegionOverlap(
                     read.getMateAlignmentStart(), approxMateEnd, read.getStringAttribute(MATE_CIGAR_ATTRIBUTE), mateRegions);
         }
@@ -301,7 +336,7 @@ public class ReadUnmapper
         if(suppRegions == null)
             return RegionMatchType.NONE;
 
-        int approxSuppEnd = suppReadData.Position + readLength - 1;
+        int approxSuppEnd = suppReadData.Position + readLength + READ_END_POS_BUFFER;
         return readMaxDepthRegionOverlap(suppReadData.Position, approxSuppEnd, suppReadData.Cigar, suppRegions);
     }
 
@@ -311,6 +346,9 @@ public class ReadUnmapper
 
         for(HighDepthRegion region : regions)
         {
+            if(region.start() > readEnd)
+                break;
+
             if(!positionsOverlap(readStart, readEnd, region.start(), region.end()))
                 continue;
 
@@ -340,16 +378,16 @@ public class ReadUnmapper
     {
         RegionMatchType matchType = RegionMatchType.NONE;
 
-        // Mate and supplementary coords don't have alignment end so this needs to be determined from the cigar, but only
-        // do this is if there is a possible overlap with a region.
-        int maxDepth = -1;
         int readEnd = -1;
-        for(final HighDepthRegion region : regions)
+        for(HighDepthRegion region : regions)
         {
+            if(region.start() > approxReadEnd)
+                break;
+
             if(!positionsOverlap(readStart, approxReadEnd, region.start(), region.end()))
                 continue;
 
-            // now test with precise read end alignment
+            // now test with precise read end alignment from the Cigar
             if(readEnd < 0)
             {
                 readEnd = getReadEndFromCigarStr(readStart, cigar);
@@ -624,7 +662,9 @@ public class ReadUnmapper
             int posEndIndex = getPositionEndFieldIndex(fieldIndexMap);
             int depthIndex = fieldIndexMap.get("MaxDepth");
 
-            final Map<String, List<HighDepthRegion>> chrLocationsMap = Maps.newHashMap();
+            Map<String, List<HighDepthRegion>> chrLocationsMap = Maps.newHashMap();
+            HighDepthRegion lastRegion = null;
+
             for(String line : lines)
             {
                 String[] values = line.split(delim, -1);
@@ -636,6 +676,7 @@ public class ReadUnmapper
                 {
                     regions = Lists.newArrayList();
                     chrLocationsMap.put(chromosome, regions);
+                    lastRegion = null;
                 }
 
                 int posStart = Integer.parseInt(values[posStartIndex]);
@@ -643,6 +684,23 @@ public class ReadUnmapper
                 int maxDepth = Integer.parseInt(values[depthIndex]);
 
                 HighDepthRegion region = new HighDepthRegion(posStart, posEnd, maxDepth);
+
+                if(lastRegion != null)
+                {
+                    if(lastRegion.overlaps(region))
+                    {
+                        MD_LOGGER.warn("unmap regions overlap: current({}) next({})", lastRegion, region);
+                    }
+                    else if(region.end() < lastRegion.start())
+                    {
+                        MD_LOGGER.warn("unmap regions not sorted: current({}) next({})", lastRegion, region);
+                    }
+
+                    // to difficult to merge
+                }
+
+                lastRegion = region;
+
                 regions.add(region);
             }
 

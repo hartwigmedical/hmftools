@@ -19,5 +19,5 @@ public class HighDepthRegion extends BaseRegion
         return mMaxDepth;
     }
 
-    public String toString() { return format("%%d-%d depth(%d)", start(), end(), mMaxDepth); }
+    public String toString() { return format("%d-%d depth(%d)", start(), end(), mMaxDepth); }
 }
