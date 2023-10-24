@@ -127,7 +127,7 @@ public class ResultsWriter
             sj.add("Filter").add("Tier").add("Type").add("RepeatCount").add("Mappability").add("SubclonalPerc");
             sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported").add("VCN").add("CopyNumber");
             sj.add("TumorDP").add("TumorAD");
-            sj.add("SampleDP").add("SampleAD").add("SampleRefDual").add("SampleAlleleDual").add("SampleQualPerAD").add("SeqGcRatio");
+            sj.add("SampleDP").add("SampleAD").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD").add("SeqGcRatio");
 
             writer.write(sj.toString());
             writer.newLine();

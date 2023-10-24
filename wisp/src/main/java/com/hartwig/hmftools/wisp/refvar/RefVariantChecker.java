@@ -47,14 +47,12 @@ public class RefVariantChecker
     private final String mOutputId;
     private final String mCtDnaVcfs;
     private final String mPurpleDir;
-    private final boolean mGermlineSearch;
 
     private final List<SampleData> mSamples;
 
     private final BufferedWriter mWriter;
 
     private static final String CTDNA_VCFS = "ctdna_vcf";
-    private static final String GERMLINE_SEARCH = "germline_search";
 
     public RefVariantChecker(final ConfigBuilder configBuilder)
     {
@@ -62,8 +60,6 @@ public class RefVariantChecker
         mPurpleDir = configBuilder.getValue(PURPLE_DIR_CFG);
         mOutputDir = parseOutputDir(configBuilder);
         mOutputId = configBuilder.getValue(OUTPUT_ID);
-
-        mGermlineSearch = configBuilder.hasFlag(GERMLINE_SEARCH);
 
         mSamples = SampleData.loadSampleDataFile(configBuilder.getValue(SAMPLE_ID_FILE));
 
@@ -93,37 +89,14 @@ public class RefVariantChecker
         // read in Purple variants
 
         String purpleDir = convertWildcardSamplePath(mPurpleDir, sample.TumorId);
-        String purpleVcf = PurpleCommon.purpleSomaticVcfFile(purpleDir, sample.TumorId);
+        String purpleSomaticVcf = PurpleCommon.purpleSomaticVcfFile(purpleDir, sample.TumorId);
+        String purpleGermlineVcf = PurpleCommon.purpleGermlineVcfFile(purpleDir, sample.TumorId);
 
-        VcfFileReader vcfFileReader = new VcfFileReader(purpleVcf);
+        Map<String,List<VariantContextDecorator>> tumorChrVariantMap = Maps.newHashMap();
+        Map<String,List<VariantContextDecorator>> germlineChrVariantMap = Maps.newHashMap();
 
-        if(!vcfFileReader.fileValid())
-        {
-            CT_LOGGER.error("failed to read Purple vcf({})", purpleVcf);
-            return;
-        }
-
-        Map<String,List<VariantContextDecorator>> tumorChrVariants = Maps.newHashMap();
-
-        int tumorVarCount = 0;
-        for(VariantContext variantContext : vcfFileReader.iterator())
-        {
-            if(variantContext.isFiltered())
-                continue;
-
-            List<VariantContextDecorator> chrVariants = tumorChrVariants.get(variantContext.getContig());
-
-            if(chrVariants == null)
-            {
-                chrVariants = Lists.newArrayList();
-                tumorChrVariants.put(variantContext.getContig(), chrVariants);
-            }
-
-            chrVariants.add(new VariantContextDecorator(variantContext));
-            ++tumorVarCount;
-        }
-
-        CT_LOGGER.info("patient({}) read {} Purple variants from vcf({})", sample.PatientId, tumorVarCount, purpleVcf);
+        loadPurpleVariants(purpleSomaticVcf, tumorChrVariantMap, sample.PatientId);
+        loadPurpleVariants(purpleGermlineVcf, germlineChrVariantMap, sample.PatientId);
 
         // now process each ctDNA sample in turn
         for(String ctDnaSampleId : sample.CtDnaSamples)
@@ -142,37 +115,73 @@ public class RefVariantChecker
 
             for(VariantContext variantContext : sampleFileReader.iterator())
             {
-                if(variantContext.isFiltered() && !mGermlineSearch)
+                if(variantContext.isFiltered())
                     continue;
 
                 VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
-                if(!mGermlineSearch)
-                {
-                    if(variant.tier() != VariantTier.HOTSPOT && variant.tier() != VariantTier.PANEL)
-                        continue;
-                }
+                // if(variant.tier() != VariantTier.HOTSPOT && variant.tier() != VariantTier.PANEL)
+                //    continue;
 
                 ++ctdnaVarCount;
 
-                VariantContextDecorator tumorVariant = null;
+                VariantContextDecorator tumorVariant = findExistingVariant(variant, tumorChrVariantMap);
+                VariantContextDecorator germlineVariant = findExistingVariant(variant, germlineChrVariantMap);
 
-                List<VariantContextDecorator> tumorVariants = tumorChrVariants.get(variant.chromosome());
-
-                if(tumorVariants != null)
-                {
-                    tumorVariant = tumorVariants.stream()
-                            .filter(x -> x.position() == variant.position())
-                            .filter(x -> x.ref().equals(variant.ref()))
-                            .filter(x -> x.alt().equals(variant.alt()))
-                            .findFirst().orElse(null);
-                }
-
-                writeVariant(sample.PatientId, ctDnaSampleId, variant, tumorVariant);
+                writeVariant(sample.PatientId, ctDnaSampleId, variant, tumorVariant, germlineVariant);
 
                 CT_LOGGER.info("patient({}) sample({}) processed {} variants", sample.PatientId, ctDnaSampleId, ctdnaVarCount);
             }
         }
+    }
+
+    private void loadPurpleVariants(
+            final String purpleVcf, final Map<String,List<VariantContextDecorator>> chrVariantMap, final String patientId)
+    {
+        VcfFileReader vcfFileReader = new VcfFileReader(purpleVcf);
+
+        if(!vcfFileReader.fileValid())
+        {
+            CT_LOGGER.warn("failed to read Purple vcf({})", purpleVcf);
+            return;
+        }
+
+        int variantCount = 0;
+        for(VariantContext variantContext : vcfFileReader.iterator())
+        {
+            if(variantContext.isFiltered())
+                continue;
+
+            List<VariantContextDecorator> chrVariants = chrVariantMap.get(variantContext.getContig());
+
+            if(chrVariants == null)
+            {
+                chrVariants = Lists.newArrayList();
+                chrVariantMap.put(variantContext.getContig(), chrVariants);
+            }
+
+            chrVariants.add(new VariantContextDecorator(variantContext));
+            ++variantCount;
+        }
+
+        CT_LOGGER.debug("patient({}) loaded {} variants from Purple VCF({})", patientId, variantCount, purpleVcf);
+    }
+
+    private VariantContextDecorator findExistingVariant(
+            final VariantContextDecorator refVariant, final Map<String,List<VariantContextDecorator>> chrVariantMap)
+    {
+        VariantContextDecorator tumorVariant = null;
+
+        List<VariantContextDecorator> tumorVariants = chrVariantMap.get(refVariant.chromosome());
+
+        if(tumorVariants == null)
+            return null;
+
+        return tumorVariants.stream()
+                .filter(x -> x.position() == refVariant.position())
+                .filter(x -> x.ref().equals(refVariant.ref()))
+                .filter(x -> x.alt().equals(refVariant.alt()))
+                .findFirst().orElse(null);
     }
 
     private BufferedWriter initialiseWriter()
@@ -195,7 +204,8 @@ public class RefVariantChecker
 
             sj.add("PatientId").add("SampleId");
             sj.add("Chromosome").add("Position").add("Ref").add("Alt").add("Type").add("Tier").add("Filter");
-            sj.add("InTumor").add("Reported").add("TumorQual").add("TumorVaf").add("Hotspot");
+            sj.add("InTumor").add("TumorReported").add("TumorQual").add("TumorVaf").add("TumorHotspot");
+            sj.add("InGermline").add("GermlineReported").add("GermlineQual").add("GermlineVaf").add("GermlineHotspot");
             sj.add("Gene").add("CodingEffect");
             sj.add("SampleDP").add("SampleAD").add("SampleDual").add("SampleAlleleDual");
 
@@ -211,8 +221,8 @@ public class RefVariantChecker
     }
 
     private synchronized void writeVariant(
-            final String patientId, final String sampleId,
-            final VariantContextDecorator variant, final VariantContextDecorator tumorVariant)
+            final String patientId, final String sampleId, final VariantContextDecorator variant,
+            final VariantContextDecorator tumorVariant, final VariantContextDecorator germlineVariant)
     {
         if(mWriter == null)
             return;
@@ -225,17 +235,22 @@ public class RefVariantChecker
             sj.add(variant.chromosome()).add(String.valueOf(variant.position())).add(variant.ref()).add(variant.alt());
             sj.add(variant.type().toString()).add(variant.tier().toString()).add(variant.filter());
 
-            if(tumorVariant != null)
+            for(int i = 0; i <= 1; ++i)
             {
-                sj.add("true");
-                sj.add(String.valueOf(tumorVariant.reported()));
-                sj.add(format("%.0f", tumorVariant.qual()));
-                sj.add(format("%.2f", tumorVariant.adjustedVaf()));
-                sj.add(tumorVariant.hotspot().toString());
-            }
-            else
-            {
-                sj.add("false").add("false").add("-1").add("-1").add("N/A");
+                VariantContextDecorator existingVariant = (i == 0) ? tumorVariant : germlineVariant;
+
+                if(existingVariant != null)
+                {
+                    sj.add("true");
+                    sj.add(String.valueOf(existingVariant.reported()));
+                    sj.add(format("%.0f", existingVariant.qual()));
+                    sj.add(format("%.2f", existingVariant.adjustedVaf()));
+                    sj.add(existingVariant.hotspot().toString());
+                }
+                else
+                {
+                    sj.add("false").add("false").add("-1").add("-1").add("N/A");
+                }
             }
 
             sj.add(variant.gene());
@@ -264,7 +279,6 @@ public class RefVariantChecker
         addSampleIdFile(configBuilder, true);
         configBuilder.addPath(CTDNA_VCFS, true, "CtDNA VCFs");
         configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
-        configBuilder.addFlag(GERMLINE_SEARCH, "Search in germline filtered variants");
         addOutputOptions(configBuilder, true);
         addLoggingOptions(configBuilder);
 
