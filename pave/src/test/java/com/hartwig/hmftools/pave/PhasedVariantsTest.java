@@ -314,6 +314,7 @@ public class PhasedVariantsTest
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
         assertTrue(impact2.hasEffect(PHASED_MISSENSE));
+        assertEquals("p.Ser5_Ile6delinsAlaIle", impact1.proteinContext().Hgvs);
 
         // now synonynous
         pos = 20;
@@ -345,6 +346,7 @@ public class PhasedVariantsTest
         assertFalse(impact2.codingContext().IsFrameShift);
         assertFalse(impact2.hasEffect(FRAMESHIFT));
         assertTrue(impact2.hasEffect(PHASED_SYNONYMOUS));
+        assertEquals("p.Arg4_Arg8=", impact1.proteinContext().Hgvs);
     }
 
     @Test
