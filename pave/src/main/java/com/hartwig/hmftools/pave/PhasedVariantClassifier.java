@@ -2,6 +2,7 @@ package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
@@ -83,7 +85,7 @@ public class PhasedVariantClassifier
 
     public void clear() { mPhasedVariants.clear(); }
 
-    public static void reclassifyPhasedVariants(final PhasedVariants phasedVariants, final RefGenomeInterface refGenome)
+    public void reclassifyPhasedVariants(final PhasedVariants phasedVariants, final RefGenomeInterface refGenome)
     {
         if(phasedVariants.variants().size() < 2)
             return;
@@ -135,7 +137,7 @@ public class PhasedVariantClassifier
         }
     }
 
-    private static void reclassifyImpacts(
+    private void reclassifyImpacts(
             int localPhaseSet, final List<VariantData> variants, final List<VariantTransImpact> transImpacts, final RefGenomeInterface refGenome)
     {
         // ignore if not 2 or more with coding impacts
@@ -168,6 +170,8 @@ public class PhasedVariantClassifier
 
         // ignore any SNV or MNV which is not in between INDELs and doesn't overlap another variant
         List<VariantData> ignoredVariants = Lists.newArrayList();
+        Map<VariantTransImpact,ImpactedRefCodingData> refCodingImpacts = Maps.newHashMap();
+
         boolean hasOverlappingBaseChange = false;
 
         for(int i = 0; i < transImpacts.size(); ++i)
@@ -187,11 +191,22 @@ public class PhasedVariantClassifier
             VariantTransImpact prevTransImpact = i > 0 ? transImpacts.get(i - 1) : null;
             VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
-            boolean overlapsOnStart = prevTransImpact != null && prevTransImpact.hasCodingBases()
-                    && impactedRefCodingBasePosition(prevTransImpact, SE_END) >= impactedRefCodingBasePosition(transImpact, SE_START);
+            boolean overlapsOnStart = false;
+            boolean overlapsOnEnd = false;
 
-            boolean overlapsOnEnd = nextTransImpact != null && nextTransImpact.hasCodingBases()
-                    && impactedRefCodingBasePosition(nextTransImpact, SE_START) <= impactedRefCodingBasePosition(transImpact, SE_END);
+            ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, transImpact);
+
+            if(prevTransImpact != null && prevTransImpact.hasCodingBases())
+            {
+                ImpactedRefCodingData prevRefCodingData = getImpactedRefCodingData(refCodingImpacts, prevTransImpact);
+                overlapsOnStart = prevRefCodingData.PosEnd >= transRefCodingData.PosStart;
+            }
+
+            if(nextTransImpact != null && nextTransImpact.hasCodingBases())
+            {
+                ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, nextTransImpact);
+                overlapsOnEnd = transRefCodingData.PosEnd >= nextRefCodingData.PosStart;
+            }
 
             if(!overlapsOnStart && !overlapsOnEnd)
                 ignoredVariants.add(variant);
@@ -232,16 +247,22 @@ public class PhasedVariantClassifier
                 continue;
 
             // a distinction is made between the recorded ref codon bases and those actually involved in / impact by the variant
-            // for the purposes of checking for an overlap, the impact bases are compared
-            int impactedRefCodonStart = impactedRefCodingBasePosition(transImpact, SE_START);
-            int impactedRefCodonEnd = impactedRefCodingBasePosition(transImpact, SE_END);
+            // for the purposes of checking for an overlap, the impacted bases are compared
+            ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, transImpact);
+            int impactedRefCodonStart = transRefCodingData.PosStart;
+            int impactedRefCodonEnd = transRefCodingData.PosEnd;
             int refCodonStart = transImpact.proteinContext().refCodingBaseStart();
             int refCodonEnd = transImpact.proteinContext().refCodingBaseEnd();
 
             VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
-            int nextImpactedRefCodonStart = nextTransImpact != null && nextTransImpact.hasCodingBases()
-                    ? impactedRefCodingBasePosition(nextTransImpact, SE_START) : 0;
+            int nextImpactedRefCodonStart = 0;
+
+            if(nextTransImpact != null && nextTransImpact.hasCodingBases())
+            {
+                ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, nextTransImpact);
+                nextImpactedRefCodonStart = nextRefCodingData.PosStart;
+            }
 
             boolean overlapsOnStart = lastImpactedRefCodonEnd > 0 && impactedRefCodonStart <= lastImpactedRefCodonEnd;
             boolean overlapsOnEnd = nextImpactedRefCodonStart > 0 && impactedRefCodonEnd >= nextImpactedRefCodonStart;
@@ -407,6 +428,36 @@ public class PhasedVariantClassifier
             transImpact.effects().clear();
             combinedEffects.forEach(x -> transImpact.addEffect(x));
         }
+    }
+
+    private class ImpactedRefCodingData
+    {
+        public final int PosStart;
+        public final int PosEnd;
+
+        public ImpactedRefCodingData(final int posStart, final int posEnd)
+        {
+            PosStart = posStart;
+            PosEnd = posEnd;
+        }
+
+        public String toString() { return format("%d - %d", PosStart, PosEnd); }
+    }
+
+    private ImpactedRefCodingData getImpactedRefCodingData(
+            final Map<VariantTransImpact,ImpactedRefCodingData> impactMap, final VariantTransImpact transImpact)
+    {
+        ImpactedRefCodingData impactData = impactMap.get(transImpact);
+
+        if(impactData == null)
+        {
+            int posStart = impactedRefCodingBasePosition(transImpact, SE_START);
+            int posEnd = impactedRefCodingBasePosition(transImpact, SE_END);
+            impactData = new ImpactedRefCodingData(posStart, posEnd);
+            impactMap.put(transImpact, impactData);
+        }
+
+        return impactData;
     }
 
     private static int impactedRefCodingBasePosition(final VariantTransImpact transImpact, int seIndex)

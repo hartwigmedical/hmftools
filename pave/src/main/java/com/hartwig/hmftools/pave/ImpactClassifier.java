@@ -339,7 +339,7 @@ public class ImpactClassifier
 
         for(PhasedVariants phasedVariants : phasedVariantList)
         {
-            PhasedVariantClassifier.reclassifyPhasedVariants(phasedVariants, mRefGenome);
+            mPhasedVariants.reclassifyPhasedVariants(phasedVariants, mRefGenome);
             variants.addAll(phasedVariants.variants());
         }
 
