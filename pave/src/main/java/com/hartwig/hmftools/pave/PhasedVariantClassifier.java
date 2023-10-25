@@ -149,7 +149,7 @@ public class PhasedVariantClassifier
 
         // ignore if not phased anyway
         int indelBaseTotal = 0;
-        int indelVarCount = 0;
+        int frameshiftCount = 0;
         int minIndelIndex = transImpacts.size();
         int maxIndelIndex = 0;
 
@@ -162,7 +162,9 @@ public class PhasedVariantClassifier
                 continue;
 
             indelBaseTotal += variant.isInsert() ? variant.baseDiff() : -transImpact.codingContext().DeletedCodingBases;
-            ++indelVarCount;
+
+            if(transImpact.codingContext().IsFrameShift)
+                ++frameshiftCount;
 
             minIndelIndex = min(minIndelIndex, i);
             maxIndelIndex = max(maxIndelIndex, i);
@@ -172,7 +174,8 @@ public class PhasedVariantClassifier
         List<VariantData> ignoredVariants = Lists.newArrayList();
         Map<VariantTransImpact,ImpactedRefCodingData> refCodingImpacts = Maps.newHashMap();
 
-        boolean hasOverlappingBaseChange = false;
+        // at the same time look for an overlap between an inframe INDEL and any SNV/MNV
+        boolean hasInframeSnvMnvOverlap = false;
 
         for(int i = 0; i < transImpacts.size(); ++i)
         {
@@ -185,14 +188,9 @@ public class PhasedVariantClassifier
             if(!transImpact.hasCodingBases() || variant.isIndel())
                 continue;
 
-            if(i > minIndelIndex && i < maxIndelIndex)
-                continue; // in between INDELs
-
             VariantTransImpact prevTransImpact = i > 0 ? transImpacts.get(i - 1) : null;
-            VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
             boolean overlapsOnStart = false;
-            boolean overlapsOnEnd = false;
 
             ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, transImpact);
 
@@ -202,20 +200,39 @@ public class PhasedVariantClassifier
                 overlapsOnStart = prevRefCodingData.PosEnd >= transRefCodingData.PosStart;
             }
 
-            if(nextTransImpact != null && nextTransImpact.hasCodingBases())
+            boolean overlapsOnEnd = false;
+            VariantTransImpact nextTransImpact = null;
+
+            if(!overlapsOnStart)
             {
-                ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, nextTransImpact);
-                overlapsOnEnd = transRefCodingData.PosEnd >= nextRefCodingData.PosStart;
+                nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
+                if(nextTransImpact != null && nextTransImpact.hasCodingBases())
+                {
+                    ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, nextTransImpact);
+                    overlapsOnEnd = transRefCodingData.PosEnd >= nextRefCodingData.PosStart;
+                }
             }
 
-            if(!overlapsOnStart && !overlapsOnEnd)
-                ignoredVariants.add(variant);
-            else
-                hasOverlappingBaseChange = true;
+            if(i < minIndelIndex || i > maxIndelIndex)
+            {
+                if(!overlapsOnStart && !overlapsOnEnd)
+                {
+                    // an SNV/MNV outside the INDEL range and not overlapping
+                    ignoredVariants.add(variant);
+                    continue;
+                }
+            }
+
+            // otherwise check if the overlap is with an inframe INDEL
+            if(overlapsOnStart && variants.get(i - 1).isIndel() && !prevTransImpact.codingContext().IsFrameShift)
+                hasInframeSnvMnvOverlap = true;
+
+            if(overlapsOnEnd && variants.get(i + 1).isIndel() && !nextTransImpact.codingContext().IsFrameShift)
+                hasInframeSnvMnvOverlap = true;
         }
 
         // proceed if there are 2+ out-of-frame INDELs or at least an INDEL and an overlapping SNV/MNV
-        if(!hasOverlappingBaseChange && indelVarCount <= 1)
+        if(!hasInframeSnvMnvOverlap && frameshiftCount < 2)
             return;
 
         if(!isCodonMultiple(indelBaseTotal))
