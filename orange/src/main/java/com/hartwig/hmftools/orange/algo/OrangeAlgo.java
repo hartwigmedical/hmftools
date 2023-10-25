@@ -474,7 +474,7 @@ public class OrangeAlgo
                 linx.reportableSomaticBreakends().size());
         LOGGER.info(" Loaded {} somatic reportable homozygous disruptions", linx.somaticHomozygousDisruptions().size());
 
-        if(!config.tumorOnlyMode() && linxGermlineDataDirectory != null)
+        if(linxGermlineDataDirectory != null)
         {
             LOGGER.info("Loading LINX germline data from {}", linxGermlineDataDirectory);
             LOGGER.info(" Loaded {} germline structural variants", linx.allGermlineStructuralVariants().size());
@@ -529,7 +529,7 @@ public class OrangeAlgo
     @Nullable
     private static VirusInterpreterData loadVirusInterpreterData(@NotNull OrangeConfig config) throws IOException
     {
-        if(config.tumorOnlyMode())
+        if(config.wgsRefConfig() == null)
         {
             return null;
         }
@@ -547,7 +547,7 @@ public class OrangeAlgo
     @Nullable
     private static ChordData loadChordAnalysis(@NotNull OrangeConfig config) throws IOException
     {
-        if(config.tumorOnlyMode())
+        if(config.wgsRefConfig() == null)
         {
             return null;
         }
@@ -568,7 +568,7 @@ public class OrangeAlgo
     @Nullable
     private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException
     {
-        if(config.tumorOnlyMode())
+        if(config.wgsRefConfig() == null)
         {
             return null;
         }
@@ -612,7 +612,7 @@ public class OrangeAlgo
     @Nullable
     private static List<SignatureAllocation> loadSigAllocations(@NotNull OrangeConfig config) throws IOException
     {
-        if(config.tumorOnlyMode())
+        if(config.wgsRefConfig() == null)
         {
             return null;
         }

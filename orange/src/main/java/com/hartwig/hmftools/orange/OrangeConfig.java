@@ -208,11 +208,6 @@ public interface OrangeConfig
 
     boolean addDisclaimer();
 
-    default boolean tumorOnlyMode()
-    {
-        return wgsRefConfig() == null || wgsRefConfig().referenceSampleId() == null;
-    }
-
     @NotNull
     static OrangeConfig createConfig(@NotNull ConfigBuilder configBuilder)
     {
