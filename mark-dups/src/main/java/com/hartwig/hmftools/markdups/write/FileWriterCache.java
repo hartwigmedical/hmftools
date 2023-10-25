@@ -44,6 +44,14 @@ public class FileWriterCache
         mBamWriters = Lists.newArrayList();
 
         // create a shared BAM writer if either no multi-threading or using the sorted BAM writer
+        if(!mConfig.WriteBam)
+        {
+            BamWriter bamWriter = new BamWriterNone("none", mConfig, mReadDataWriter);
+            mSharedUnsortedWriter = bamWriter;
+            mBamWriters.add(bamWriter);
+            return;
+        }
+
         if(!mConfig.MultiBam || mConfig.UseSortCache)
         {
             String fileId = mConfig.UseSortCache ? "shared" : null;
