@@ -88,17 +88,17 @@ public interface OrangeRnaConfig
         String rnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
         LOGGER.debug("RNA sample configured as {}", rnaSampleId);
 
-        String isofoxDir = pathResolver.resolveToolDirectory(ISOFOX_DIR_CFG, ISOFOX_DIR);
+        String isofoxDir = pathResolver.resolveOptionalToolDirectory(ISOFOX_DIR_CFG, ISOFOX_DIR);
 
         String geneDistributionFile = configBuilder.getValue(ISOFOX_GENE_DISTRIBUTION_CSV);
         String altSpliceJuncCohortFile = configBuilder.getValue(ISOFOX_ALT_SJ_COHORT_CSV);
 
         String tumorSampleId = configBuilder.getValue(OrangeConfig.TUMOR_SAMPLE_ID);
 
-        String geneDataFile = Config.fileIfExists(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
-        String statisticsFile = Config.fileIfExists(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
-        String altSpliceJuncFile = Config.fileIfExists(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
-        String fusionsFile = Config.fileIfExists(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
+        String geneDataFile = Config.mandatoryPath(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
+        String statisticsFile = Config.mandatoryPath(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
+        String altSpliceJuncFile = Config.mandatoryPath(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
+        String fusionsFile = Config.mandatoryPath(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
 
         return ImmutableOrangeRnaConfig.builder()
                 .rnaSampleId(rnaSampleId)

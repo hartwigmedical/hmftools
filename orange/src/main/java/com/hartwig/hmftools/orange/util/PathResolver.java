@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.util;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.METRICS_DIR;
-import static com.hartwig.hmftools.orange.util.Config.fileIfExists;
+import static com.hartwig.hmftools.orange.util.Config.mandatoryPath;
 
 import java.io.File;
 
@@ -31,8 +31,20 @@ public class PathResolver
         this.sampleDataDir = sampleDataDir;
     }
 
+    @NotNull
+    public String resolveMandatoryToolDirectory(@NotNull String toolDirConfigKey, @NotNull String defaultPipelineToolDir)
+    {
+        String toolDir = resolveOptionalToolDirectory(toolDirConfigKey, defaultPipelineToolDir);
+        if(toolDir == null)
+        {
+            throw new IllegalArgumentException(format("Failed to determine tool directory for configuration [%s/%s].",
+                    toolDirConfigKey, defaultPipelineToolDir));
+        }
+        return mandatoryPath(toolDir);
+    }
+
     @Nullable
-    public String resolveToolDirectory(@NotNull String toolDirConfigKey, @NotNull String defaultPipelineToolDir)
+    public String resolveOptionalToolDirectory(@NotNull String toolDirConfigKey, @NotNull String defaultPipelineToolDir)
     {
         if(configBuilder.hasValue(toolDirConfigKey))
         {
@@ -48,36 +60,49 @@ public class PathResolver
     }
 
     @NotNull
-    public String resolveToolDirectoryIfExists(@NotNull String toolDirConfigKey, @NotNull String defaultPipelineToolDir)
+    public String resolveMandatoryToolPlotsDirectory(@NotNull String toolPlotDirConfigKey, @NotNull String defaultPipelineToolDir)
     {
-        String toolDir = resolveToolDirectory(toolDirConfigKey, defaultPipelineToolDir);
-        if(toolDir == null)
+        String plotDir = resolveOptionalToolPlotsDirectory(toolPlotDirConfigKey, defaultPipelineToolDir);
+        if(plotDir == null)
         {
-            throw new IllegalArgumentException(format("Failed to determine tool directory for configuration [%s/%s].", toolDirConfigKey, defaultPipelineToolDir));
+            throw new IllegalArgumentException(format("Failed to determine plot directory for configuration [%s/%s].",
+                    toolPlotDirConfigKey, defaultPipelineToolDir));
         }
-        return fileIfExists(toolDir);
+        return mandatoryPath(plotDir);
     }
 
     @NotNull
-    public String resolveToolPlotsDirectory(@NotNull String toolPlotDirConfigKey, @NotNull String defaultPipelineToolDir)
+    public String resolveOptionalToolPlotsDirectory(@NotNull String toolPlotDirConfigKey, @NotNull String defaultPipelineToolDir)
     {
         if(configBuilder.hasValue(toolPlotDirConfigKey))
         {
             return configBuilder.getValue(toolPlotDirConfigKey);
         }
 
-        String plotDir = pipelineSampleRootDir != null ? fileIfExists(
-                pipelineSampleRootDir + File.separator + defaultPipelineToolDir + File.separator + "plot") : null;
-        if(plotDir == null)
+        if(pipelineSampleRootDir != null)
         {
-            throw new IllegalArgumentException(
-                    "Plot directory cannot be determined. Please define either the tool directory or the sample directory.");
+            return pipelineSampleRootDir + File.separator + defaultPipelineToolDir + File.separator + "plot";
         }
-        return plotDir;
+
+        return null;
     }
 
     @NotNull
-    public String resolveMetricsFile(@NotNull String metricFileConfigKey, @NotNull String defaultPipelineToolDir, @NotNull String sampleId)
+    public String resolveMandatoryMetricsFile(@NotNull String metricFileConfigKey, @NotNull String defaultPipelineToolDir,
+            @NotNull String sampleId)
+    {
+        String metricsFile = resolveOptionalMetricsFile(metricFileConfigKey, defaultPipelineToolDir, sampleId);
+        if(metricsFile == null)
+        {
+            throw new IllegalArgumentException(format("Failed to determine metrics file for configuration [%s/%s].",
+                    metricFileConfigKey, defaultPipelineToolDir));
+        }
+        return mandatoryPath(metricsFile);
+    }
+
+    @Nullable
+    public String resolveOptionalMetricsFile(@NotNull String metricFileConfigKey, @NotNull String defaultPipelineToolDir,
+            @NotNull String sampleId)
     {
         if(configBuilder.hasValue(metricFileConfigKey))
         {
@@ -87,8 +112,7 @@ public class PathResolver
         String directory = resolveMetricsDirectory(defaultPipelineToolDir, sampleId);
         if(directory == null)
         {
-            throw new IllegalArgumentException(
-                    "Metrics directory cannot be determined. Please define either the tool directory or the sample directory.");
+            return null;
         }
 
         return defaultPipelineToolDir.equals(METRICS_DIR) ?

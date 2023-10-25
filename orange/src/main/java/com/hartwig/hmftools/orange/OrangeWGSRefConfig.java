@@ -25,11 +25,12 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_CFG
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SIGS_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
-import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
-import static com.hartwig.hmftools.orange.util.Config.fileIfExists;
-import static com.hartwig.hmftools.orange.util.Config.optionalFileIfExists;
+import static com.hartwig.hmftools.orange.util.Config.mandatoryPath;
+import static com.hartwig.hmftools.orange.util.Config.optionalPath;
+
+import java.io.File;
 
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
@@ -118,21 +119,21 @@ public interface OrangeWGSRefConfig
         ImmutableOrangeWGSRefConfig.Builder builder = ImmutableOrangeWGSRefConfig.builder();
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
 
-        // params required for WGS, Tumor only
-        String virusDir = pathResolver.resolveToolDirectoryIfExists(VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
-        builder.annotatedVirusTsv(fileIfExists(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)));
+        // Params required for WGS, Tumor only
+        String virusDir = pathResolver.resolveMandatoryToolDirectory(VIRUS_DIR_CFG, VIRUS_INTERPRETER_DIR);
+        builder.annotatedVirusTsv(mandatoryPath(AnnotatedVirusFile.generateFileName(virusDir, tumorSampleId)));
 
-        String chordDir = pathResolver.resolveToolDirectoryIfExists(CHORD_DIR_CFG, CHORD_DIR);
-        builder.chordPredictionTxt(fileIfExists(ChordDataFile.generateFilename(chordDir, tumorSampleId)));
+        String chordDir = pathResolver.resolveMandatoryToolDirectory(CHORD_DIR_CFG, CHORD_DIR);
+        builder.chordPredictionTxt(mandatoryPath(ChordDataFile.generateFilename(chordDir, tumorSampleId)));
 
-        String cuppaDir = pathResolver.resolveToolDirectoryIfExists(CUPPA_DIR_CFG, CUPPA_DIR);
-        builder.cuppaResultCsv(fileIfExists(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)));
-        builder.cuppaSummaryPlot(fileIfExists(CuppaDataFile.generateReportSummaryPlotFilename(cuppaDir, tumorSampleId)));
-        builder.cuppaFeaturePlot(optionalFileIfExists(CuppaDataFile.generateReportFeaturesPlotFilename(cuppaDir, tumorSampleId)));
-        builder.cuppaChartPlot(fileIfExists(CuppaDataFile.generateChartPlotFilename(cuppaDir, tumorSampleId)));
+        String cuppaDir = pathResolver.resolveMandatoryToolDirectory(CUPPA_DIR_CFG, CUPPA_DIR);
+        builder.cuppaResultCsv(mandatoryPath(CuppaDataFile.generateFilename(cuppaDir, tumorSampleId)));
+        builder.cuppaSummaryPlot(mandatoryPath(CuppaDataFile.generateReportSummaryPlotFilename(cuppaDir, tumorSampleId)));
+        builder.cuppaFeaturePlot(optionalPath(CuppaDataFile.generateReportFeaturesPlotFilename(cuppaDir, tumorSampleId)));
+        builder.cuppaChartPlot(mandatoryPath(CuppaDataFile.generateChartPlotFilename(cuppaDir, tumorSampleId)));
 
-        String sigsDir = pathResolver.resolveToolDirectoryIfExists(SIGS_DIR_CFG, SIGS_DIR);
-        builder.sigsAllocationTsv(fileIfExists(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)));
+        String sigsDir = pathResolver.resolveMandatoryToolDirectory(SIGS_DIR_CFG, SIGS_DIR);
+        builder.sigsAllocationTsv(mandatoryPath(SignatureAllocationFile.generateFilename(sigsDir, tumorSampleId)));
 
         // optionally required for WGS, adding Reference
         String refSampleId = configBuilder.getValue(REFERENCE_SAMPLE_ID);
@@ -141,19 +142,20 @@ public interface OrangeWGSRefConfig
             LOGGER.debug("Ref sample has been configured as {}.", refSampleId);
             builder.referenceSampleId(refSampleId);
 
-            String sageSomaticDir = pathResolver.resolveToolDirectory(SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
-            String sageGermlineDir = pathResolver.resolveToolDirectory(SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
-            builder.sageGermlineGeneCoverageTsv(fileIfExists(SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
-            builder.sageSomaticRefSampleBQRPlot(fileIfExists(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
+            String sageSomaticDir = pathResolver.resolveMandatoryToolDirectory(SAGE_DIR_CFG, SAGE_SOMATIC_DIR);
+            builder.sageSomaticRefSampleBQRPlot(mandatoryPath(SageCommon.generateBqrPlotFilename(sageSomaticDir, refSampleId)));
 
-            String linxGermlineDir = pathResolver.resolveToolDirectoryIfExists(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
+            String sageGermlineDir = pathResolver.resolveMandatoryToolDirectory(SAGE_GERMLINE_DIR_CFG, SAGE_GERMLINE_DIR);
+            builder.sageGermlineGeneCoverageTsv(mandatoryPath(SageCommon.generateGeneCoverageFilename(sageGermlineDir, refSampleId)));
+
+            String linxGermlineDir = pathResolver.resolveMandatoryToolDirectory(LINX_GERMLINE_DIR_CFG, LINX_GERMLINE_DIR);
             builder.linxGermlineDataDirectory(linxGermlineDir);
 
-            String peachDir = pathResolver.resolveToolDirectoryIfExists(PEACH_DIR_CFG, PEACH_DIR);
-            builder.peachGenotypeTsv(fileIfExists(checkAddDirSeparator(peachDir) + tumorSampleId + ".peach.genotype.tsv"));
+            String peachDir = pathResolver.resolveMandatoryToolDirectory(PEACH_DIR_CFG, PEACH_DIR);
+            builder.peachGenotypeTsv(mandatoryPath(peachDir + File.separator + tumorSampleId + ".peach.genotype.tsv"));
 
-            builder.refSampleWGSMetricsFile(pathResolver.resolveMetricsFile(REF_SAMPLE_WGS_METRICS_FILE, METRICS_DIR, refSampleId));
-            builder.refSampleFlagstatFile(pathResolver.resolveMetricsFile(REF_SAMPLE_FLAGSTAT_FILE, FLAGSTAT_DIR, refSampleId));
+            builder.refSampleWGSMetricsFile(pathResolver.resolveMandatoryMetricsFile(REF_SAMPLE_WGS_METRICS_FILE, METRICS_DIR, refSampleId));
+            builder.refSampleFlagstatFile(pathResolver.resolveMandatoryMetricsFile(REF_SAMPLE_FLAGSTAT_FILE, FLAGSTAT_DIR, refSampleId));
         }
 
         return builder.build();
