@@ -88,13 +88,13 @@ public interface OrangeRnaConfig
         String rnaSampleId = configBuilder.getValue(RNA_SAMPLE_ID);
         LOGGER.debug("RNA sample configured as {}", rnaSampleId);
 
-        String isofoxDir = pathResolver.resolveOptionalToolDirectory(ISOFOX_DIR_CFG, ISOFOX_DIR);
 
         String geneDistributionFile = configBuilder.getValue(ISOFOX_GENE_DISTRIBUTION_CSV);
         String altSpliceJuncCohortFile = configBuilder.getValue(ISOFOX_ALT_SJ_COHORT_CSV);
 
         String tumorSampleId = configBuilder.getValue(OrangeConfig.TUMOR_SAMPLE_ID);
 
+        String isofoxDir = pathResolver.resolveMandatoryToolDirectory(ISOFOX_DIR_CFG, ISOFOX_DIR);
         String geneDataFile = Config.mandatoryPath(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
         String statisticsFile = Config.mandatoryPath(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
         String altSpliceJuncFile = Config.mandatoryPath(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
