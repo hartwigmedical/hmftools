@@ -60,6 +60,17 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
         return positionsOverlap(mStart, mEnd, other.start(), other.end());
     }
 
+    public boolean containsRegion(final BaseRegion region)
+    {
+        return positionsWithin(region.start(), region.end(), mStart, mEnd);
+    }
+
+    public boolean containsRegion(final ChrBaseRegion region)
+    {
+        // assumes chromosome check is not relevant
+        return positionsWithin(region.start(), region.end(), mStart, mEnd);
+    }
+
     public boolean containsPosition(int position) { return positionWithin(position, start(), end()); }
 
     public boolean matches(final BaseRegion other)
@@ -111,7 +122,7 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
     }
 
     @Override
-    public int compareTo(@NotNull final BaseRegion other)
+    public int compareTo(final BaseRegion other)
     {
         if(start() < other.start())
         {
