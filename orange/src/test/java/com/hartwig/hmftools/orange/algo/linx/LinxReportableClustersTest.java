@@ -46,6 +46,7 @@ public class LinxReportableClustersTest
                 .somaticDrivers(drivers)
                 .fusionClusterIds(fusions)
                 .putAllSvIdToClusterId(svToCluster)
+                .putAllClusterIdToChainCount(Map.of(10, 2, 50, 2, 100, 2))
                 .build();
     }
 }

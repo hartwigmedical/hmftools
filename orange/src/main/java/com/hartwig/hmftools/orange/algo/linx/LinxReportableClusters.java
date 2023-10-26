@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo.linx;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +31,14 @@ public final class LinxReportableClusters
         svIds.stream().filter(svToCluster::containsKey).map(svToCluster::get).forEach(clusterIds::add);
 
         linx.somaticDrivers().stream().filter(x -> x.clusterId() >= 0).forEach(x -> clusterIds.add(x.clusterId()));
-        return clusterIds;
+
+        return clusterIds.stream().filter(x -> !isSimpleCluster(linx, x)).collect(toSet());
+    }
+
+    private static boolean isSimpleCluster(@NotNull LinxData linx, int clusterId)
+    {
+        boolean hasSingleLink = !linx.clusterIdToChainCount().containsKey(clusterId) || linx.clusterIdToChainCount().get(clusterId) == 1;
+        boolean hasNoExons = !linx.clusterIdToExonCount().containsKey(clusterId);
+        return hasSingleLink && hasNoExons;
     }
 }
