@@ -31,7 +31,6 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
-import static com.hartwig.hmftools.sage.quality.QualityCalculator.jitterPenalty;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -78,14 +77,10 @@ public class ReadContextCounter implements VariantHotspot
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
 
-    private int mLengthened;
-    private int mShortened;
-
     private int mForwardStrand;
     private int mReverseStrand;
 
-    private double mJitterPenalty;
-
+    private final JitterData mJitterData;
     private int mImproperPairCount;
 
     private int mRawDepth;
@@ -128,14 +123,10 @@ public class ReadContextCounter implements VariantHotspot
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
 
-        mLengthened = 0;
-        mShortened = 0;
+        mJitterData = new JitterData();
 
         mForwardStrand = 0;
         mReverseStrand = 0;
-
-        mJitterPenalty = 0;
-
         mImproperPairCount = 0;
 
         mRawDepth = 0;
@@ -185,7 +176,7 @@ public class ReadContextCounter implements VariantHotspot
     public int tumorQuality()
     {
         int tumorQuality = mQualities.Full + mQualities.Partial + mQualities.Realigned;
-        return Math.max(0, tumorQuality - (int) mJitterPenalty);
+        return Math.max(0, tumorQuality - mJitterData.penalty());
     }
 
     public int[] counts() { return mCounts.toArray(); }
@@ -193,7 +184,7 @@ public class ReadContextCounter implements VariantHotspot
 
     public int[] jitter()
     {
-        return new int[] { mShortened, mLengthened, qualityJitterPenalty() };
+        return mJitterData.summary();
     }
 
     public double strandBias()
@@ -449,15 +440,7 @@ public class ReadContextCounter implements VariantHotspot
         registerReadSupport(record, readSupport, quality);
 
         // add to jitter penalty as a function of the number of repeats found
-        if(jitterRealign.Type == LENGTHENED || jitterRealign.Type == SHORTENED)
-        {
-            mJitterPenalty += jitterPenalty(mConfig.Quality, jitterRealign.RepeatCount);
-
-            if(jitterRealign.Type == LENGTHENED)
-                mLengthened++;
-            else
-                mShortened++;
-        }
+        mJitterData.update(jitterRealign, mConfig.Quality);
 
         if(mConfig.LogEvidenceReads)
         {
@@ -799,8 +782,6 @@ public class ReadContextCounter implements VariantHotspot
 
         return Math.max(indelLength + Math.max(leftOffset, rightOffset), Realignment.MAX_REPEAT_SIZE) + 1;
     }
-
-    private int qualityJitterPenalty() { return (int) mJitterPenalty; }
 
     private void checkImproperCount(final SAMRecord record)
     {
