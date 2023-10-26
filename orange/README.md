@@ -49,6 +49,7 @@ found [here](https://resources.hartwigmedicalfoundation.nl) for either 37 or 38 
 
 ```
 java -jar orange.jar \
+    -experiment_type PANEL
     -tumor_sample_id tumor_sample \
     -primary_tumor_doids doid1;doid2 \
     -ref_genome_version 37 \
@@ -80,6 +81,8 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
    -cuppa_dir /path/to/cuppa_output \
    -sigs_dir /path/to/sigs_output 
 ```
+
+Also, the value of the `-experiment_type` parameter should be set to `WGS` for all whole genome configurations.
 
 ### Additional parameters when whole genome germline DNA data is available
 
@@ -234,6 +237,7 @@ investigate potential causes for QC failure.
     - The status of UGT1A1 is displayed on the front page.
     - The undisrupted CN of a DUP, in case of a HOM_DUP_DISRUPTION, is displayed as undisrupted CN minus junction CN
     - Lilac RNA and ref counts are displayed as NONE in case they are not available (rather than 0)
+    - The parameter `experiment_type` is now required, with valid values being PANEL or WGS.
     - Report all non-canonical variants in case of multiple variants in same gene
 - [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
     - Supports targeted tumor-only mode:

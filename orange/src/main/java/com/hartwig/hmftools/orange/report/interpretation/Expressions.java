@@ -39,7 +39,7 @@ public final class Expressions
     @NotNull
     public static String percentileType(@NotNull GeneExpression expression)
     {
-        return formatTwoDigitDecimal(expression.percentileCancer());
+        return expression.percentileCancer() == null ? ReportResources.NOT_AVAILABLE : formatTwoDigitDecimal(expression.percentileCancer());
     }
 
     @NotNull

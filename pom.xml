@@ -75,7 +75,7 @@
         <mark-dups.version>1.1</mark-dups.version>
         <neo.version>1.1</neo.version>
         <orange.version>3.0.0</orange.version>
-        <orange-datamodel.version>2.0.0</orange-datamodel.version>
+        <orange-datamodel.version>2.1.0</orange-datamodel.version>
         <paddle.version>1.1</paddle.version>
         <patient-db.version>5.34</patient-db.version>
         <pave.version>1.6</pave.version>
