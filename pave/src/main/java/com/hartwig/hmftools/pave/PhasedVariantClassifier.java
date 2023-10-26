@@ -1,9 +1,11 @@
 package com.hartwig.hmftools.pave;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.Codons.CODON_LENGTH;
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -468,18 +470,48 @@ public class PhasedVariantClassifier
 
         if(impactData == null)
         {
-            int posStart = impactedRefCodingBasePosition(transImpact, SE_START);
-            int posEnd = impactedRefCodingBasePosition(transImpact, SE_END);
-            impactData = new ImpactedRefCodingData(posStart, posEnd);
+            impactData = impactedRefCodingBasePosition(transImpact);
             impactMap.put(transImpact, impactData);
         }
 
         return impactData;
     }
 
-    private static int impactedRefCodingBasePosition(final VariantTransImpact transImpact, int seIndex)
+    private ImpactedRefCodingData impactedRefCodingBasePosition(final VariantTransImpact transImpact)
     {
         boolean inframeIndel = transImpact.hasEffect(INFRAME_DELETION) || transImpact.hasEffect(INFRAME_INSERTION);
-        return transImpact.proteinContext().impactedRefCodingBasePosition(seIndex, inframeIndel);
+        final ProteinContext pc = transImpact.proteinContext();
+
+        int refCodingBaseStart = pc.refCodingBasePosition(SE_START);
+        int refCodingBaseEnd = pc.refCodingBasePosition(SE_END);
+
+        if(!inframeIndel)
+        {
+            return new ImpactedRefCodingData(refCodingBaseStart, refCodingBaseEnd);
+        }
+
+        // special case for inframe INDELs which have included a full ref codon at the start and/or at end to aid with AA evaluation
+        int netCodonImpact = pc.NetCodonIndexRange[SE_END] - pc.NetCodonIndexRange[SE_START] + 1;
+        int refCodonLengthDiff = abs(pc.RefCodonBases.length() - pc.AltCodonBases.length());
+
+        if(netCodonImpact > 0 && refCodonLengthDiff == netCodonImpact * CODON_LENGTH)
+        {
+            // strip the unaffected ref codon from the start and/or end
+            if(netCodonImpact > 1)
+            {
+                refCodingBaseStart += CODON_LENGTH;
+                refCodingBaseEnd -= CODON_LENGTH;
+            }
+            else
+            {
+                if(refCodingBaseStart == transImpact.codingContext().CodingPositionRange[SE_START])
+                    refCodingBaseEnd -= CODON_LENGTH;
+                else
+                    refCodingBaseStart += CODON_LENGTH;
+            }
+        }
+
+        // no extension was required so use the standard positions
+        return new ImpactedRefCodingData(refCodingBaseStart, refCodingBaseEnd);
     }
 }

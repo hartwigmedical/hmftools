@@ -8,8 +8,7 @@ import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.TRANS_ID_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.createTransExons;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
+import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
@@ -569,6 +568,64 @@ public class PhasedVariantsTest
         assertTrue(impact3.hasEffect(PHASED_INFRAME_DELETION));
         assertTrue(impact4.hasEffect(PHASED_INFRAME_DELETION));
         assertTrue(impact5.hasEffect(SYNONYMOUS));
+    }
+
+    @Test
+    public void testMixedOverlaps2()
+    {
+        TranscriptData transData = createTransExons(
+                GENE_ID_1, TRANS_ID_1, NEG_STRAND, new int[] { 0, 100 }, 80, 5, 191, false, "");
+
+        // positions:      0123456789012345678901234567890123456789012345678901234567
+        //                 0         10        20        30        40        50
+        String refBases = "XCCCCATGAAAAAAAAAACCCCCCCCCCGGGGGGGAAGCTGATGTTCAGGAGTG" + generateRandomBases(150);
+        mRefGenome.RefGenomeMap.put(CHR_1, refBases);
+
+        // pos(12:50384540-50384542) variant(GA>G)"
+        int pos = 40;
+        String ref = refBases.substring(pos, pos + 2);
+        String alt = ref.substring(0, 1);
+        VariantData var1 = new VariantData(CHR_1, pos, ref, alt);
+        var1.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact1 = classifyVariant(var1, transData);
+
+        // pos(12:50384543) variant(G>C)
+        pos = 43;
+        ref = refBases.substring(pos, pos + 1);
+        alt = "C";
+        VariantData var2 = new VariantData(CHR_1, pos, ref, alt);
+        var2.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact2 = classifyVariant(var2, transData);
+
+        // pos(12:50384545-50384546) variant(T>TCTCAAGA)
+        pos = 45;
+        ref = refBases.substring(pos, pos + 1);
+        alt = ref + "CTCAAGA";
+        VariantData var3 = new VariantData(CHR_1, pos, ref, alt);
+        var3.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact3 = classifyVariant(var3, transData);
+
+        assertTrue(impact3.codingContext().IsFrameShift);
+        assertTrue(impact3.hasEffect(FRAMESHIFT));
+
+        // pos(12:50384548-50384549) variant(G>GCTT)
+        pos = 48;
+        ref = refBases.substring(pos, pos + 1);
+        alt = ref + "CTT";
+        VariantData var4 = new VariantData(CHR_1, pos, ref, alt);
+        var4.setVariantDetails(1, "", "", 0);
+        VariantTransImpact impact4 = classifyVariant(var4, transData);
+
+        mClassifier.processPhasedVariants(NO_LOCAL_PHASE_SET);
+
+        assertEquals("CTGATGTTCTTCAGG", impact4.proteinContext().RefCodonBases);
+        assertEquals("CTGTCTTCTCAAGACTTCAGCTTG", impact4.proteinContext().AltCodonBases);
+        assertEquals("p.Pro38_His41delinsGlnAlaGluValLeuArgArg", impact4.hgvsProtein());
+
+        assertFalse(impact3.codingContext().IsFrameShift);
+        assertFalse(impact3.hasEffect(FRAMESHIFT));
+        assertTrue(impact3.phasedFrameshift());
+        assertTrue(impact3.hasEffect(PHASED_INFRAME_INSERTION));
     }
 
     private VariantTransImpact classifyVariant(final VariantData var, final TranscriptData transData)

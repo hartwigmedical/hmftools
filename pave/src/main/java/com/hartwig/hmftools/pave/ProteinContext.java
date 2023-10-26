@@ -1,8 +1,5 @@
 package com.hartwig.hmftools.pave;
 
-import static java.lang.Math.abs;
-
-import static com.hartwig.hmftools.common.codon.Codons.CODON_LENGTH;
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
@@ -78,26 +75,6 @@ public class ProteinContext
             return RefCodonsRanges.get(0)[SE_START];
         else
             return RefCodonsRanges.get(RefCodonsRanges.size() - 1)[SE_END];
-    }
-
-    public int impactedRefCodingBasePosition(int seIndex, boolean isInframeIndel)
-    {
-        int refCodingBasePosition = refCodingBasePosition(seIndex);
-
-        if(!isInframeIndel)
-            return refCodingBasePosition;
-
-        // special case for inframe INDELs which have included a full ref codon at the start and end to aid with AA evaluation
-        int netCodonImpact = NetCodonIndexRange[SE_END] - NetCodonIndexRange[SE_START] + 1;
-        int refCodonLengthDiff = abs(RefCodonBases.length() - AltCodonBases.length());
-
-        if(netCodonImpact > 0 && refCodonLengthDiff == netCodonImpact * CODON_LENGTH)
-        {
-            // strip the unaffected ref codon from the start or end
-            return seIndex == SE_START ? refCodingBasePosition + CODON_LENGTH : refCodingBasePosition - CODON_LENGTH;
-        }
-
-        return refCodingBasePosition;
     }
 
     public static String tsvHeader()
