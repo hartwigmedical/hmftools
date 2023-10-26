@@ -11,14 +11,14 @@ import org.jetbrains.annotations.Nullable;
 public final class Config
 {
     @Nullable
-    public static String optionalFileIfExists(@NotNull String fullPath)
+    public static String optionalPath(@NotNull String fullPath)
     {
         boolean exists = Files.exists(new File(fullPath).toPath());
         return exists ? fullPath : null;
     }
 
     @NotNull
-    public static String fileIfExists(@NotNull String fullPath)
+    public static String mandatoryPath(@NotNull String fullPath)
     {
         boolean exists = Files.exists(new File(fullPath).toPath());
         if(!exists)

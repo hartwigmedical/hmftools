@@ -13,13 +13,13 @@ public interface RnaFusion
     @NotNull
     default String display()
     {
-        return String.format("%s-%s", geneStart(), geneEnd());
+        return String.format("%s_%s", geneStart() != null ? geneStart() : "", geneEnd() != null ? geneEnd() : "");
     }
 
-    @NotNull
+    @Nullable
     String geneStart();
 
-    @NotNull
+    @Nullable
     String geneEnd();
 
     @NotNull
