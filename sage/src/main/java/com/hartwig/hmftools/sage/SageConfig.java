@@ -92,7 +92,7 @@ public class SageConfig
     private static final String READ_CONTEXT_FLANK_SIZE = "read_context_flank_size";
     private static final String INCLUDE_MT = "include_mt";
     private static final String READ_LENGTH = "read_length";
-    private static final String SYNC_FRAGMENTS = "sync_fragments";
+    private static final String NO_FRAGMENT_SYNC = "no_fragment_sync";
     private static final String TRACK_UMIS = "track_umis";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
 
@@ -146,7 +146,7 @@ public class SageConfig
         mReadLength = configBuilder.getInteger(READ_LENGTH);
 
         MaxPartitionSlices = configBuilder.getInteger(MAX_PARTITION_SLICES);
-        SyncFragments = configBuilder.hasFlag(SYNC_FRAGMENTS);
+        SyncFragments = !configBuilder.hasFlag(NO_FRAGMENT_SYNC);
 
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
@@ -274,7 +274,7 @@ public class SageConfig
 
         configBuilder.addInteger(MAX_READ_DEPTH, "Max depth to look for evidence", DEFAULT_MAX_READ_DEPTH);
         configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
-        configBuilder.addFlag(SYNC_FRAGMENTS, "Handle overlapping fragment reads in evidence phase");
+        configBuilder.addFlag(NO_FRAGMENT_SYNC, "Disable fragment reads sync in evidence phase");
         configBuilder.addFlag(TRACK_UMIS, "Record counts of UMI types");
         addValidationStringencyOption(configBuilder);
 
@@ -321,7 +321,7 @@ public class SageConfig
         RefGenVersion = V37;
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
         TrackUMIs = false;
-        SyncFragments = false;
+        SyncFragments = true;
         SpecificPositions = Sets.newHashSet();
         LogEvidenceReads = false;
     }
