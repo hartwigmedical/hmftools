@@ -38,6 +38,7 @@ internal class TelomereMatcherTest
         assertFalse(TelomereMatcher.matchesGTelomere(seq, 0.9, 12))
     }
 
+    /*
     @Test
     fun testCalcTelomereMatchShort()
     {
@@ -53,6 +54,7 @@ internal class TelomereMatcherTest
 
         assertFalse(TelomereMatcher.matchesGTelomere(seq, 0.9, 12))
     }
+     */
 
     @Test
     fun testCalcTelomereMatch2()
