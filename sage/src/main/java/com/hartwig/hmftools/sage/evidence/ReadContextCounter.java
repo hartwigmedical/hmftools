@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
@@ -75,6 +76,7 @@ public class ReadContextCounter implements VariantHotspot
     private final boolean mIsMnv;
     private final boolean mAllowWildcardMatchInCore;
     private final int mMaxCoreMismatches;
+    private final int mAdjustedVariantPosition;
 
     // counts of various
     private final ReadSupportCounts mQualities;
@@ -100,6 +102,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private int mSoftClipInsertSupport;
     private int mMaxCandidateDeleteLength;
+    private int mMaxDistanceFromEdge;
 
     private List<Integer> mLocalPhaseSets;
     private List<int[]> mLpsCounts;
@@ -130,6 +133,8 @@ public class ReadContextCounter implements VariantHotspot
         mMaxCoreMismatches = mVariant.isIndel() && mVariant.alt().length() >= CORE_LOW_QUAL_MISMATCH_BASE_LENGTH ?
                 mVariant.alt().length() / CORE_LOW_QUAL_MISMATCH_BASE_LENGTH : 0;
 
+        mAdjustedVariantPosition = mVariant.isIndel() ? mVariant.position() + mVariant.indelLength() / 2 : mVariant.position();
+
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
 
@@ -151,6 +156,7 @@ public class ReadContextCounter implements VariantHotspot
         mTotalAltMapQuality = 0;
         mTotalNmCount = 0;
         mTotalAltNmCount = 0;
+        mMaxDistanceFromEdge = 0;
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
@@ -217,6 +223,7 @@ public class ReadContextCounter implements VariantHotspot
 
     public long totalNmCount() { return mTotalNmCount; }
     public long altNmCount() { return mTotalAltNmCount; }
+    public int maxDistanceFromEdge() { return mMaxDistanceFromEdge; }
 
     public double averageAltBaseQuality()
     {
@@ -358,6 +365,7 @@ public class ReadContextCounter implements VariantHotspot
                 mSupportAltBaseQualityTotal += rawBaseQuality;
 
                 registerRawSupport(rawContext);
+                updateDistanceFromReadEdge(record);
 
                 logReadEvidence(record, matchType, readIndex, quality);
 
@@ -461,7 +469,7 @@ public class ReadContextCounter implements VariantHotspot
 
         if(record.getCigar().containsOperator(CigarOperator.N))
         {
-            readIndexBases = SplitReadUtils.expandSplitRead(position(), readIndex, record);
+            readIndexBases = SplitReadUtils.expandSplitRead(readIndex, record);
         }
         else
         {
@@ -695,13 +703,6 @@ public class ReadContextCounter implements VariantHotspot
 
         if(realignLeftReadIndex >= 0) //  && realignLeftReadIndex != readIndex
         {
-            /*
-            IndexedBases readBases = new IndexedBases(position(), realignLeftReadIndex, record.getReadBases());
-
-            ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                    readBases, record.getBaseQualities(), false, 0);
-            */
-
             ReadContextMatch match = determineReadContextMatch(record, realignLeftReadIndex, false);
 
             if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
@@ -714,13 +715,6 @@ public class ReadContextCounter implements VariantHotspot
         {
             // still need to test even if this index matches the original readIndex since if the readIndex was in a delete
             // it will be have skipped above
-            /*
-            IndexedBases readBases = new IndexedBases(position(), realignRightReadIndex, record.getReadBases());
-
-            ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                    readBases, record.getBaseQualities(), false, 0);
-            */
-
             ReadContextMatch match = determineReadContextMatch(record, realignRightReadIndex, false);
 
             if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
@@ -795,6 +789,24 @@ public class ReadContextCounter implements VariantHotspot
             else
                 mReverseStrand++;
         }
+    }
+
+    private void updateDistanceFromReadEdge(final SAMRecord record)
+    {
+        if(mMaxDistanceFromEdge >= record.getReadBases().length / 2)
+            return;
+
+        if(record.getCigar().containsOperator(CigarOperator.N)) // unnecessary in append mode
+            return;
+
+        // determine how far from the edge of the read the variant is, ignoring soft-clip bases and realigned reads
+        // and for INDELs use the position of the middle base of INDEL
+        // take the lower of the 2 distances for each read, eg 50 and 100 bases, then take 50
+        int distFromStart = mAdjustedVariantPosition - record.getAlignmentStart();
+        int distFromEnd = record.getAlignmentEnd() - mAdjustedVariantPosition;
+        int minDistance = min(distFromStart, distFromEnd);
+
+        mMaxDistanceFromEdge = max(minDistance, mMaxDistanceFromEdge);
     }
 
     private int getMaxRealignDistance(final SAMRecord record)

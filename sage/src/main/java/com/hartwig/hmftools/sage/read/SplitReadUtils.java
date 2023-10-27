@@ -19,7 +19,7 @@ public final class SplitReadUtils
     public static final int MAX_SKIPPED_REFERENCE_REGIONS = 50;
 
     // purpose of this class is to handle splits (ie 'N's) and fill them in with wildcards to aid with matching
-    public static ReadIndexBases expandSplitRead(int position, int readIndex, final SAMRecord record)
+    public static ReadIndexBases expandSplitRead(int readIndex, final SAMRecord record)
     {
         final byte[] src = record.getReadBases();
         final AtomicInteger indexAdjustment = new AtomicInteger(0);

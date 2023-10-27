@@ -5,7 +5,6 @@ import static com.hartwig.hmftools.sage.read.SplitReadUtils.MAX_SKIPPED_REFERENC
 
 import static org.junit.Assert.assertEquals;
 
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 
 import org.junit.Test;
@@ -37,7 +36,7 @@ public class SpltReadsTest
 
         for(int i = 0; i < read.length(); i++)
         {
-            final ReadIndexBases readIndexBases = SplitReadUtils.expandSplitRead(100, i, samRecord);
+            final ReadIndexBases readIndexBases = SplitReadUtils.expandSplitRead(i, samRecord);
             assertExpand(i, read, readIndexBases);
         }
     }
@@ -51,7 +50,7 @@ public class SpltReadsTest
 
         for(int i = 0; i < read.length(); i++)
         {
-            final ReadIndexBases readIndexBases = SplitReadUtils.expandSplitRead(100, i, samRecord);
+            final ReadIndexBases readIndexBases = SplitReadUtils.expandSplitRead(i, samRecord);
             assertExpand(i, read, readIndexBases);
         }
     }
@@ -64,10 +63,10 @@ public class SpltReadsTest
         String read = expectedRead.replaceAll("\\.", "");
         final SAMRecord samRecord = buildSamRecord(100, cigar, read, read);
 
-        assertExpand(0, expectedRead, SplitReadUtils.expandSplitRead(100, 0, samRecord));
-        assertExpand(1, expectedRead, SplitReadUtils.expandSplitRead(100, 1, samRecord));
-        assertExpand(2 + MAX_SKIPPED_REFERENCE_REGIONS, expectedRead, SplitReadUtils.expandSplitRead(100, 2, samRecord));
-        assertExpand(3 + MAX_SKIPPED_REFERENCE_REGIONS, expectedRead, SplitReadUtils.expandSplitRead(100, 3, samRecord));
+        assertExpand(0, expectedRead, SplitReadUtils.expandSplitRead(0, samRecord));
+        assertExpand(1, expectedRead, SplitReadUtils.expandSplitRead(1, samRecord));
+        assertExpand(2 + MAX_SKIPPED_REFERENCE_REGIONS, expectedRead, SplitReadUtils.expandSplitRead(2, samRecord));
+        assertExpand(3 + MAX_SKIPPED_REFERENCE_REGIONS, expectedRead, SplitReadUtils.expandSplitRead(3, samRecord));
     }
 
     @Test
@@ -78,12 +77,12 @@ public class SpltReadsTest
         String read = expectedRead.replaceAll("\\.", "");
         final SAMRecord samRecord = buildSamRecord(100, cigar, read, read);
 
-        assertExpand(0, expectedRead, SplitReadUtils.expandSplitRead(100, 0, samRecord));
-        assertExpand(1, expectedRead, SplitReadUtils.expandSplitRead(100, 1, samRecord));
-        assertExpand(2 + MAX_SKIPPED_REFERENCE_REGIONS, expectedRead, SplitReadUtils.expandSplitRead(100, 2, samRecord));
-        assertExpand(3 + MAX_SKIPPED_REFERENCE_REGIONS, expectedRead, SplitReadUtils.expandSplitRead(100, 3, samRecord));
-        assertExpand(4 + MAX_SKIPPED_REFERENCE_REGIONS * 2, expectedRead, SplitReadUtils.expandSplitRead(100, 4, samRecord));
-        assertExpand(5 + MAX_SKIPPED_REFERENCE_REGIONS * 2, expectedRead, SplitReadUtils.expandSplitRead(100, 5, samRecord));
+        assertExpand(0, expectedRead, SplitReadUtils.expandSplitRead(0, samRecord));
+        assertExpand(1, expectedRead, SplitReadUtils.expandSplitRead(1, samRecord));
+        assertExpand(2 + MAX_SKIPPED_REFERENCE_REGIONS, expectedRead, SplitReadUtils.expandSplitRead(2, samRecord));
+        assertExpand(3 + MAX_SKIPPED_REFERENCE_REGIONS, expectedRead, SplitReadUtils.expandSplitRead(3, samRecord));
+        assertExpand(4 + MAX_SKIPPED_REFERENCE_REGIONS * 2, expectedRead, SplitReadUtils.expandSplitRead(4, samRecord));
+        assertExpand(5 + MAX_SKIPPED_REFERENCE_REGIONS * 2, expectedRead, SplitReadUtils.expandSplitRead(5, samRecord));
     }
 
     private static void assertExpand(int expectedIndex, final String expectedRead, final ReadIndexBases readIndexBases)
