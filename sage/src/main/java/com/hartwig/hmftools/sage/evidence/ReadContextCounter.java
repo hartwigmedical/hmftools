@@ -48,7 +48,7 @@ import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
+import com.hartwig.hmftools.sage.read.SplitReadUtils;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.common.ReadContext;
@@ -323,20 +323,6 @@ public class ReadContextCounter implements VariantHotspot
         // Check if FULL, PARTIAL, OR CORE
         if(!baseDeleted)
         {
-            /*
-            boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
-
-            int maxCoreMismatches = mVariant.isIndel() && mVariant.alt().length() >= CORE_LOW_QUAL_MISMATCH_BASE_LENGTH ?
-                    mVariant.alt().length() / CORE_LOW_QUAL_MISMATCH_BASE_LENGTH : 0;
-
-            IndexedBases readBases = record.getCigar().containsOperator(CigarOperator.N) ?
-                    ExpandedBasesFactory.expand(position(), readIndex, record) :
-                    new IndexedBases(position(), readIndex, record.getReadBases());
-
-            final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
-                    readBases, record.getBaseQualities(), wildcardMatchInCore, maxCoreMismatches);
-            */
-
             final ReadContextMatch match = determineReadContextMatch(record, readIndex, true);
 
             if(match != NONE && match != ReadContextMatch.CORE_PARTIAL)
@@ -475,8 +461,7 @@ public class ReadContextCounter implements VariantHotspot
 
         if(record.getCigar().containsOperator(CigarOperator.N))
         {
-            IndexedBases splitReadBases = ExpandedBasesFactory.expand(position(), readIndex, record);
-            readIndexBases = new ReadIndexBases(splitReadBases.Index, splitReadBases.Bases);
+            readIndexBases = SplitReadUtils.expandSplitRead(position(), readIndex, record);
         }
         else
         {

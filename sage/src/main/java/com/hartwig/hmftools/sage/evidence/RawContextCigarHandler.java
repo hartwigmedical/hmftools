@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftC
 
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
+import com.hartwig.hmftools.sage.read.SplitReadUtils;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -169,7 +169,7 @@ public class RawContextCigarHandler implements CigarHandler
         if(mResult != null)
             return;
 
-        if(e.getLength() > ExpandedBasesFactory.MAX_SKIPPED_REFERENCE_REGIONS)
+        if(e.getLength() > SplitReadUtils.MAX_SKIPPED_REFERENCE_REGIONS)
         {
             int refPositionEnd = refPosition + e.getLength();
             if(refPositionEnd >= mVariant.position())

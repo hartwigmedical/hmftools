@@ -7,19 +7,19 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
 
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.CigarElement;
-import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-// purpose of this class is to handle splits (ie 'N's) and fill them in with wildcards to aid with matching
-public final class ExpandedBasesFactory
+public final class SplitReadUtils
 {
     public static final int MAX_SKIPPED_REFERENCE_REGIONS = 50;
 
-    public static IndexedBases expand(int position, int readIndex, final SAMRecord record)
+    // purpose of this class is to handle splits (ie 'N's) and fill them in with wildcards to aid with matching
+    public static ReadIndexBases expandSplitRead(int position, int readIndex, final SAMRecord record)
     {
         final byte[] src = record.getReadBases();
         final AtomicInteger indexAdjustment = new AtomicInteger(0);
@@ -46,7 +46,7 @@ public final class ExpandedBasesFactory
 
         if(indexes.isEmpty())
         {
-            return new IndexedBases(position, readIndex, record.getReadBases());
+            return new ReadIndexBases(readIndex, record.getReadBases());
         }
 
         byte[] dest = new byte[src.length + indexes.size() * MAX_SKIPPED_REFERENCE_REGIONS];
@@ -71,7 +71,7 @@ public final class ExpandedBasesFactory
         // Copy remainder
         System.arraycopy(src, srcPos, dest, destPos, src.length - srcPos);
 
-        return new IndexedBases(position, readIndex + indexAdjustment.get(), dest);
+        return new ReadIndexBases(readIndex + indexAdjustment.get(), dest);
     }
 
 }

@@ -147,12 +147,8 @@ public class IndexedBases
             final int otherReadIndex, final byte[] otherBases, int otherLength, final byte[] otherBaseQuals,
             boolean wildcardsInCore, int maxCoreMismatches)
     {
-        // int otherReadIndex = other.Index;
-
         if(otherReadIndex < 0)
             return NONE;
-
-        // final byte[] otherBases = other.Bases;
 
         ReadContextMatch centreMatch = coreMatch(otherReadIndex, otherBases, otherBaseQuals, wildcardsInCore, maxCoreMismatches);
         if(centreMatch == NONE || centreMatch == CORE_PARTIAL)
