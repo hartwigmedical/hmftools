@@ -42,53 +42,40 @@ public class QualityCalculator
         return mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
     }
 
-    public static double modifiedBaseQuality(final QualityConfig config, double baseQuality, int distanceFromReadEdge)
-    {
-        if(config.DistanceFromReadEdgeFactor > 0)
-        {
-            int readEdgePenalty = max(config.DistanceFromReadEdgeFactor * distanceFromReadEdge - config.DistanceFromReadEdgeFixedPenalty, 0);
-            return min(baseQuality - config.BaseQualityFixedPenalty, readEdgePenalty);
-        }
-
-        return baseQuality - config.BaseQualityFixedPenalty;
-    }
-
     public double calculateQualityScore(
             final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents)
     {
-        int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
         double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
 
         int mapQuality = record.getMappingQuality();
         boolean isImproperPair = isImproperPair(record);
+
         int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, isImproperPair);
 
-        double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
-        return max(0, min(modifiedMapQuality, modifiedBaseQuality));
-    }
+        double modifiedBaseQuality = baseQuality - mConfig.BaseQualityFixedPenalty;
 
-    public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
+        if(mConfig.DistanceFromReadEdgeFactor > 0)
+        {
+            int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
+            int readEdgePenalty = max(mConfig.DistanceFromReadEdgeFactor * distanceFromReadEdge - mConfig.DistanceFromReadEdgeFixedPenalty, 0);
+            modifiedBaseQuality = min(modifiedBaseQuality, readEdgePenalty);
+        }
 
-    public void logReadQualCalcs(
-            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents)
-    {
-        int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
-        double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
-        double rawBaseQual = rawBaseQuality(readContextCounter, readBaseIndex, record);
+        double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
 
-        int mapQuality = record.getMappingQuality();
-        boolean isImproperPair = isImproperPair(record);
-        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, isImproperPair);
-
-        double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
-
-        if(SG_LOGGER.isTraceEnabled())
+        /*
+        if(readContextCounter.logEvidence() && !SG_LOGGER.isTraceEnabled())
         {
             SG_LOGGER.trace(format("variant(%s) read(%s) distFromEdge(%d) events(%.1f) qual(map=%d rawBase=%.1f base=%.1f) modified(map=%d base=%.1f)",
                     readContextCounter.varString(), record.getReadName(), distanceFromReadEdge, numberOfEvents,
                     mapQuality, rawBaseQual, baseQuality, modifiedMapQuality, modifiedBaseQuality));
         }
+        */
+
+        return modifiedQuality;
     }
+
+    public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
 
     public double baseQuality(final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record)
     {

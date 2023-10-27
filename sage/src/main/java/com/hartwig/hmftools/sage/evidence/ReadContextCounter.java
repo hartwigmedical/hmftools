@@ -50,7 +50,6 @@ import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.read.SplitReadUtils;
-import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
@@ -831,6 +830,8 @@ public class ReadContextCounter implements VariantHotspot
             mImproperPairCount++;
         }
     }
+
+    public boolean logEvidence() { return mConfig.LogEvidenceReads; }
 
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
