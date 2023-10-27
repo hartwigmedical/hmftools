@@ -34,3 +34,61 @@ CREATE TABLE svBreakend
 CREATE INDEX svBreakend_sampleId_svId ON svBreakend (sampleId, svId);
 CREATE INDEX svBreakend_gene ON svBreakend (gene);
 CREATE INDEX svBreakend_transcriptId ON svBreakend (transcriptId);
+
+####
+# - add cider
+
+DROP TABLE IF EXISTS `cdr3Sequence`;
+CREATE TABLE `cdr3Sequence`
+(   `id` INT NOT NULL AUTO_INCREMENT,
+    `modified` DATETIME NOT NULL,
+    `sampleId` VARCHAR(50) NOT NULL,
+    `cdr3Seq` VARCHAR(255) NOT NULL,
+    `cdr3AA` VARCHAR(100) NOT NULL,
+    `locus` VARCHAR(10) NOT NULL,
+    `filter` VARCHAR(50) NOT NULL,
+    `blastnStatus` VARCHAR(10) NOT NULL,
+    `minHighQualBaseReads` INT NOT NULL,
+    `assignedReads` INT NOT NULL,
+    `inFrame` TINYINT NOT NULL,
+    `containsStop` TINYINT NOT NULL,
+    PRIMARY KEY (`id`)
+);
+
+DROP TABLE IF EXISTS `cdr3LocusSummary`;
+CREATE TABLE `cdr3LocusSummary`
+(    `id` INT NOT NULL AUTO_INCREMENT,
+     `modified` DATETIME NOT NULL,
+     `sampleId` VARCHAR(50) NOT NULL,
+     `locus` VARCHAR(10) NOT NULL,
+     `readsUsed` INT NOT NULL,
+     `readsTotal` INT NOT NULL,
+     `downSampled` TINYINT NOT NULL,
+     `sequences` INT NOT NULL,
+     `passSequences` INT NOT NULL,
+     PRIMARY KEY (`id`)
+);
+
+CREATE INDEX `cdr3LocusSummary_sampleId_locus` ON `cdr3LocusSummary` (`sampleId`, `locus`);
+
+####
+# - add teal
+
+DROP TABLE IF EXISTS `telomereLength`;
+CREATE TABLE `telomereLength`
+(    `id` INT NOT NULL AUTO_INCREMENT,
+     `modified` DATETIME NOT NULL,
+     `sampleId` VARCHAR(50) NOT NULL,
+     `germlineTelomereLength` DOUBLE PRECISION,
+     `somaticTelomereLength` DOUBLE PRECISION,
+     `germlineFullFragments` INT,
+     `germlineCRichPartialFragments` INT,
+     `germlineGRichPartialFragments` INT,
+     `somaticFullFragments` INT,
+     `somaticCRichPartialFragments` INT,
+     `somaticGRichPartialFragments` INT,
+     `sampleMixLength` DOUBLE PRECISION,
+     PRIMARY KEY (`id`)
+);
+
+CREATE INDEX `telomereLength_sampleId` ON `telomereLength` (`sampleId`);

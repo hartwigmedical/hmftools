@@ -78,8 +78,8 @@ public final class Doubles
 
     public static double round(final double value, final int decimalPlaces)
     {
-        double logValue = pow(10, -decimalPlaces);
-        return Math.round(value / logValue) * logValue;
+        double logValue = Math.round(pow(10, decimalPlaces));
+        return Math.round(value * logValue) / logValue;
     }
 
     public static double interpolatedMedian(Collection<Double> input)
@@ -99,22 +99,20 @@ public final class Doubles
 
         int cumulativeCount = 0;
 
-        for (var itr = values.iterator(); itr.hasNext();) {
-
-            double val = itr.next();
-
-            if (cumulativeCount == count / 2.0 && val != median)
+        for(double val : values)
+        {
+            if(cumulativeCount == count / 2.0 && val != median)
             {
                 // same corner case as median, if it falls between two numbers, say 2 and 3, then
                 // we return 2.5
                 return median;
             }
 
-            if (Doubles.lessThan(val, median))
+            if(Doubles.lessThan(val, median))
             {
                 countBelowMed++;
             }
-            else if (Doubles.greaterThan(val, median))
+            else if(Doubles.greaterThan(val, median))
             {
                 countAboveMed++;
             }

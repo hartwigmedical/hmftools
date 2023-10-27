@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Set;
 
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
+import com.hartwig.hmftools.common.cider.Cdr3LocusSummary;
+import com.hartwig.hmftools.common.cider.Cdr3Sequence;
+import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.patientdb.amber.AmberMapping;
 import com.hartwig.hmftools.patientdb.amber.AmberPatient;
 import com.hartwig.hmftools.patientdb.amber.AmberSample;
@@ -131,6 +134,10 @@ public class DatabaseAccess implements AutoCloseable
     private final VirusBreakendDAO virusBreakendDAO;
     @NotNull
     private final VirusInterpreterDAO virusInterpreterDAO;
+    @NotNull
+    private final CiderDAO ciderDAO;
+    @NotNull
+    private final TealDAO tealDAO;
 
     public DatabaseAccess(@NotNull final String userName, @NotNull final String password, @NotNull final String url) throws SQLException
     {
@@ -166,6 +173,8 @@ public class DatabaseAccess implements AutoCloseable
         this.chordDAO = new ChordDAO(context);
         this.virusBreakendDAO = new VirusBreakendDAO(context);
         this.virusInterpreterDAO = new VirusInterpreterDAO(context);
+        this.ciderDAO = new CiderDAO(context);
+        this.tealDAO = new TealDAO(context);
     }
 
     public static void addDatabaseCmdLineArgs(final ConfigBuilder configBuilder, boolean isRequired)
@@ -632,6 +641,21 @@ public class DatabaseAccess implements AutoCloseable
         LOGGER.info("  Done writing raw CPCT patient data.");
     }
 
+    public void writeCdr3Sequences(@NotNull String sample, @NotNull List<Cdr3Sequence> cdr3Sequences)
+    {
+        ciderDAO.writeCdr3Sequence(sample, cdr3Sequences);
+    }
+
+    public void writeCdr3LocusSummaries(@NotNull String sample, @NotNull List<Cdr3LocusSummary> locusSummaries)
+    {
+        ciderDAO.writeLocusSummaries(sample, locusSummaries);
+    }
+
+    public void writeTelomereLength(@NotNull String sample, @Nullable TelomereLength germlineTelomereLength, @Nullable TelomereLength somaticTelomereLength)
+    {
+        tealDAO.writeTelomereLength(sample, germlineTelomereLength, somaticTelomereLength);
+    }
+
     public void writeValidationFindings(@NotNull List<ValidationFinding> findings)
     {
         validationFindingsDAO.write(findings);
@@ -693,6 +717,12 @@ public class DatabaseAccess implements AutoCloseable
 
         LOGGER.info("Deleting CUPPA result for sample: {}", sample);
         cuppaDAO.deleteCuppaForSample(sample);
+
+        LOGGER.info("Deleting CIDER data for sample: {}", sample);
+        ciderDAO.deleteCiderDataForSample(sample);
+
+        LOGGER.info("Deleting TEAL data for sample: {}", sample);
+        tealDAO.deleteTealDataForSample(sample);
 
         LOGGER.info("All data for sample '{}' has been deleted", sample);
     }

@@ -58,4 +58,8 @@ final public class DatabaseUtil {
         return b != 0;
     }
 
+    public static byte booleanToByte(boolean b)
+    {
+        return b ? (byte)1 : (byte)0;
+    }
 }
