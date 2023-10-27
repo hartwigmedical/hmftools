@@ -29,7 +29,6 @@ public class CuppaDataFile
         SortedCancerTypeProbs = sortMapByValue(getCancerTypeProbs(MainCombinedClf));
     }
 
-    // Read table --------------------------------
     private static double parseDouble(String string) {
         if(string.length()==0) {
             string = "NaN";
@@ -98,7 +97,6 @@ public class CuppaDataFile
         return cuppaPredictions;
     }
 
-    // --------------------------------
     private boolean checkHasRnaData(){
         for(CuppaPrediction cuppaPrediction : CuppaPredictions){
             if(!cuppaPrediction.DataType.equals(Categories.DataType.PROB)){
@@ -118,7 +116,6 @@ public class CuppaDataFile
         return Categories.ClfName.DNA_COMBINED;
     }
 
-    // --------------------------------
     public LinkedHashMap<String, Double> getCancerTypeProbs(Categories.ClfName targetClfName){
 
         LinkedHashMap<String, Double> cancerTypeProbs = new LinkedHashMap<>();
@@ -139,7 +136,6 @@ public class CuppaDataFile
 
     public static List<Entry<String, Double>> sortMapByValue(LinkedHashMap<String, Double> map){
 
-        // https://stackoverflow.com/questions/109383/sort-a-mapkey-value-by-values
         List<Map.Entry<String, Double>> list = new ArrayList<>(map.entrySet());
         list.sort(Map.Entry.<String, Double> comparingByValue().reversed());
 
@@ -147,33 +143,12 @@ public class CuppaDataFile
         return sortedList;
     }
 
-    // Misc --------------------------------
     public void printPredictions(int n){
         int i = 0;
         while(i < n){
             System.out.println(CuppaPredictions.get(i).toString());
             i++;
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        String filename = "/Users/lnguyen/Desktop/cuppa_vis_data.tsv";
-        CuppaDataFile cuppaDataFile = new CuppaDataFile(filename);
-
-        LinkedHashMap<String, Double> probs = cuppaDataFile.getCancerTypeProbs(Categories.ClfName.DNA_COMBINED);
-        System.out.println(cuppaDataFile.sortMapByValue(probs).get(0));
-//        System.out.println(probsSorted);
-
-//        HashMap<String, Double> probs = cuppaDataFile.getCancerTypeProbs(Categories.ClfName.dna_combined);
-//
-//        for (Map.Entry<String, Double> entry : probs.entrySet()) {
-//            System.out.println(entry.getKey() + " : " + entry.getValue());
-//        }
-
-        // cuppaDataFile.printPredictions(10);
-        // System.out.println(cuppaDataFile.mHasRnaData);
-        //System.out.println(cuppaDataFile.CuppaPredictions.get(0).DataType);
-
     }
 }
 
