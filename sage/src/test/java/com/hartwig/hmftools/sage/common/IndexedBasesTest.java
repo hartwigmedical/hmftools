@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.hartwig.hmftools.sage.evidence.ReadIndexBases;
+
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
@@ -175,12 +177,12 @@ public class IndexedBasesTest
         byte highQual = MATCHING_BASE_QUALITY + 1;
         fill(readQuals, highQual);
 
-        IndexedBases testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, refBases.getBytes());
+        ReadIndexBases testBases = new ReadIndexBases(readIndex, refBases.getBytes());
         assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, readQuals, false, 0));
 
         // base diff in core - permitted if not in an actual SNV or MNV
         String readBases = preLeftFlank + leftFlank + "ATTCC" + rightFlank;
-        testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
+        testBases = new ReadIndexBases(readIndex, readBases.getBytes());
         assertEquals(NONE, indexedBases.matchAtPosition(testBases, readQuals, false, 0));
 
         // with low qual at that base
@@ -189,7 +191,7 @@ public class IndexedBasesTest
 
         // not permitted in the alt itself
         readBases = preLeftFlank + leftFlank + "AAGCC" + rightFlank;
-        testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
+        testBases = new ReadIndexBases(readIndex, readBases.getBytes());
         assertEquals(NONE, indexedBases.matchAtPosition(testBases, readQuals, false, 0));
 
         // with low qual at that base
@@ -198,7 +200,7 @@ public class IndexedBasesTest
 
         // low qual mismatch in left flank
         readBases = preLeftFlank + "GGGAG" + core + rightFlank;
-        testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
+        testBases = new ReadIndexBases(readIndex, readBases.getBytes());
         assertEquals(CORE, indexedBases.matchAtPosition(testBases, readQuals, false, 0));
 
         readQuals[leftFlankIndex + 3] = MATCHING_BASE_QUALITY - 1;
@@ -206,14 +208,14 @@ public class IndexedBasesTest
 
         // low qual mismstch in right flank
         readBases = preLeftFlank + leftFlank + core + "GAAAA";
-        testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
+        testBases = new ReadIndexBases(readIndex, readBases.getBytes());
         assertEquals(CORE, indexedBases.matchAtPosition(testBases, readQuals, false, 0));
 
         readQuals[rightCoreIndex + 1] = MATCHING_BASE_QUALITY - 1;
         assertEquals(ReadContextMatch.FULL, indexedBases.matchAtPosition(testBases, readQuals, false, 0));
 
         readBases = preLeftFlank + leftFlank + core + "AAAAG";
-        testBases = new IndexedBases(position, readIndex, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
+        testBases = new ReadIndexBases(readIndex, readBases.getBytes());
         assertEquals(CORE, indexedBases.matchAtPosition(testBases, readQuals, false, 0));
 
         readQuals[rightCoreIndex + 5] = MATCHING_BASE_QUALITY - 1;

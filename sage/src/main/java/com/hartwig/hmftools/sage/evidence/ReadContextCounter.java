@@ -63,17 +63,20 @@ public class ReadContextCounter implements VariantHotspot
 {
     private final int mId;
     private final VariantTier mTier;
-
     private final VariantHotspot mVariant;
     private final ReadContext mReadContext;
     private final SageConfig mConfig;
     private final QualityCalculator mQualityCalculator;
     private final String mSample;
-
-    private final int mMinNumberOfEvents;
-    private final boolean mIsMnv;
     private final int mMaxCoverage;
 
+    // local variant-related state
+    private final int mMinNumberOfEvents;
+    private final boolean mIsMnv;
+    private final boolean mAllowWildcardMatchInCore;
+    private final int mMaxCoreMismatches;
+
+    // counts of various
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
 
@@ -118,7 +121,14 @@ public class ReadContextCounter implements VariantHotspot
 
         mReadContext = readContext;
         mVariant = variant;
+
+        // set local state to avoid testing on each read
         mIsMnv = variant.isMNV();
+
+        mAllowWildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
+
+        mMaxCoreMismatches = mVariant.isIndel() && mVariant.alt().length() >= CORE_LOW_QUAL_MISMATCH_BASE_LENGTH ?
+                mVariant.alt().length() / CORE_LOW_QUAL_MISMATCH_BASE_LENGTH : 0;
 
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
@@ -313,6 +323,7 @@ public class ReadContextCounter implements VariantHotspot
         // Check if FULL, PARTIAL, OR CORE
         if(!baseDeleted)
         {
+            /*
             boolean wildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
 
             int maxCoreMismatches = mVariant.isIndel() && mVariant.alt().length() >= CORE_LOW_QUAL_MISMATCH_BASE_LENGTH ?
@@ -324,6 +335,9 @@ public class ReadContextCounter implements VariantHotspot
 
             final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
                     readBases, record.getBaseQualities(), wildcardMatchInCore, maxCoreMismatches);
+            */
+
+            final ReadContextMatch match = determineReadContextMatch(record, readIndex, true);
 
             if(match != NONE && match != ReadContextMatch.CORE_PARTIAL)
             {
@@ -453,6 +467,28 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         return readMatchType;
+    }
+
+    private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, boolean allowCoreVariation)
+    {
+        ReadIndexBases readIndexBases;
+
+        if(record.getCigar().containsOperator(CigarOperator.N))
+        {
+            IndexedBases splitReadBases = ExpandedBasesFactory.expand(position(), readIndex, record);
+            readIndexBases = new ReadIndexBases(splitReadBases.Index, splitReadBases.Bases);
+        }
+        else
+        {
+            readIndexBases = new ReadIndexBases(readIndex, record.getReadBases());
+        }
+
+        final ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
+                readIndexBases, record.getBaseQualities(),
+                allowCoreVariation ? mAllowWildcardMatchInCore : false,
+                allowCoreVariation ? mMaxCoreMismatches : 0);
+
+        return match;
     }
 
     private void registerReadSupport(final SAMRecord record, @Nullable final VariantReadSupport support, final double quality)
@@ -674,10 +710,14 @@ public class ReadContextCounter implements VariantHotspot
 
         if(realignLeftReadIndex >= 0) //  && realignLeftReadIndex != readIndex
         {
+            /*
             IndexedBases readBases = new IndexedBases(position(), realignLeftReadIndex, record.getReadBases());
 
             ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
                     readBases, record.getBaseQualities(), false, 0);
+            */
+
+            ReadContextMatch match = determineReadContextMatch(record, realignLeftReadIndex, false);
 
             if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
                 return new RealignedContext(EXACT, mReadContext.indexedBases().length(), realignLeftReadIndex);
@@ -689,10 +729,14 @@ public class ReadContextCounter implements VariantHotspot
         {
             // still need to test even if this index matches the original readIndex since if the readIndex was in a delete
             // it will be have skipped above
+            /*
             IndexedBases readBases = new IndexedBases(position(), realignRightReadIndex, record.getReadBases());
 
             ReadContextMatch match = mReadContext.indexedBases().matchAtPosition(
                     readBases, record.getBaseQualities(), false, 0);
+            */
+
+            ReadContextMatch match = determineReadContextMatch(record, realignRightReadIndex, false);
 
             if(match == ReadContextMatch.FULL || match == ReadContextMatch.PARTIAL)
                 return new RealignedContext(RealignedType.EXACT, mReadContext.indexedBases().length(), realignRightReadIndex);

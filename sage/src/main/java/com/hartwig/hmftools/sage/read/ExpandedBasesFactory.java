@@ -54,7 +54,7 @@ public final class ExpandedBasesFactory
         int destPos = 0;
         for(Integer index : indexes)
         {
-            int length = index + 1 - srcPos;//
+            int length = index + 1 - srcPos;
 
             // Copy prior
             System.arraycopy(src, srcPos, dest, destPos, length);

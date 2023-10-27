@@ -140,6 +140,7 @@ public class QualityCalculator
 
     private int readDistanceFromEdge(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
+        // calculate the left and right core positions in the context of this read
         int index = readContextCounter.readContext().readBasesPositionIndex();
         int leftIndex = readContextCounter.readContext().readBasesLeftCentreIndex();
         int rightIndex = readContextCounter.readContext().readBasesRightCentreIndex();
@@ -150,6 +151,7 @@ public class QualityCalculator
         int adjustedLeftIndex = readIndex - leftOffset;
         int adjustedRightIndex = readIndex + rightOffset;
 
+        // take the smaller of the left and right core index
         return Math.max(0, Math.min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
     }
 
