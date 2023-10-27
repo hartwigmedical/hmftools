@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -32,17 +34,23 @@ public class QualityCalculator
     {
         if(config.isHighlyPolymorphic(position))
         {
-            return Math.min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedPenalty);
+            return min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedPenalty);
         }
 
         int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
-        int eventPenalty = (int)round(Math.max(0, readEvents - 1) * config.ReadEventsPenalty);
+        int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadEventsPenalty);
         return mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
     }
 
     public static double modifiedBaseQuality(final QualityConfig config, double baseQuality, int distanceFromReadEdge)
     {
-        return Math.min(baseQuality - config.BaseQualityFixedPenalty, 3 * distanceFromReadEdge - config.DistanceFromReadEdgeFixedPenalty);
+        if(config.DistanceFromReadEdgeFactor > 0)
+        {
+            int readEdgePenalty = max(config.DistanceFromReadEdgeFactor * distanceFromReadEdge - config.DistanceFromReadEdgeFixedPenalty, 0);
+            return min(baseQuality - config.BaseQualityFixedPenalty, readEdgePenalty);
+        }
+
+        return baseQuality - config.BaseQualityFixedPenalty;
     }
 
     public double calculateQualityScore(
@@ -56,7 +64,7 @@ public class QualityCalculator
         int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, isImproperPair);
 
         double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
-        return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
+        return max(0, min(modifiedMapQuality, modifiedBaseQuality));
     }
 
     public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
@@ -108,7 +116,7 @@ public class QualityCalculator
 
     private double baseQuality(final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
-        int maxIndex = Math.min(startReadIndex + length, record.getBaseQualities().length) - 1;
+        int maxIndex = min(startReadIndex + length, record.getBaseQualities().length) - 1;
         int maxLength = maxIndex - startReadIndex + 1;
 
         double quality = Integer.MAX_VALUE;
@@ -119,7 +127,7 @@ public class QualityCalculator
             byte rawQuality = record.getBaseQualities()[readIndex];
 
             double recalibratedQual = recalibrateQuality(readContextCounter, refPosition, i, rawQuality);
-            quality = Math.min(quality, recalibratedQual);
+            quality = min(quality, recalibratedQual);
         }
 
         return quality;
@@ -152,7 +160,7 @@ public class QualityCalculator
         int adjustedRightIndex = readIndex + rightOffset;
 
         // take the smaller of the left and right core index
-        return Math.max(0, Math.min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
+        return max(0, min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
     }
 
 }
