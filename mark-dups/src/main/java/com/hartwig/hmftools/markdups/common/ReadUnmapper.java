@@ -658,7 +658,6 @@ public class ReadUnmapper
             int depthIndex = fieldIndexMap.get("MaxDepth");
 
             Map<String, List<HighDepthRegion>> chrLocationsMap = Maps.newHashMap();
-            HighDepthRegion lastRegion = null;
 
             for(String line : lines)
             {
@@ -671,8 +670,9 @@ public class ReadUnmapper
                 {
                     regions = Lists.newArrayList();
                     chrLocationsMap.put(chromosome, regions);
-                    lastRegion = null;
                 }
+
+                HighDepthRegion lastRegion = (regions.isEmpty()) ? null : regions.get(regions.size() - 1);
 
                 int posStart = Integer.parseInt(values[posStartIndex]);
                 int posEnd = Integer.parseInt(values[posEndIndex]);
@@ -682,19 +682,18 @@ public class ReadUnmapper
 
                 if(lastRegion != null)
                 {
+                    // to difficult to merge
                     if(lastRegion.overlaps(region))
                     {
-                        MD_LOGGER.warn("unmap regions overlap: current({}) next({})", lastRegion, region);
+                        MD_LOGGER.error("unmap regions overlap: current({}) next({})", lastRegion, region);
+                        System.exit(1);
                     }
                     else if(region.end() < lastRegion.start())
                     {
-                        MD_LOGGER.warn("unmap regions not sorted: current({}) next({})", lastRegion, region);
+                        MD_LOGGER.error("unmap regions not sorted: current({}) next({})", lastRegion, region);
+                        System.exit(1);
                     }
-
-                    // to difficult to merge
                 }
-
-                lastRegion = region;
 
                 regions.add(region);
             }
