@@ -27,20 +27,25 @@ import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH;
+import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_HIGH_DEPTH;
 import static com.hartwig.hmftools.markdups.write.ReadOutput.NONE;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ExcludedRegions;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.markdups.common.FilterReadsType;
+import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.ReadUnmapper;
 import com.hartwig.hmftools.markdups.consensus.GroupIdGenerator;
 import com.hartwig.hmftools.markdups.umi.UmiConfig;
@@ -173,7 +178,12 @@ public class MarkDupsConfig
         }
         else
         {
-            UnmapRegions = new ReadUnmapper(Maps.newHashMap());
+            Map<String, List<HighDepthRegion>> unmappedMap = Maps.newHashMap();
+
+            ChrBaseRegion excludedRegion = ExcludedRegions.getPolyGRegion(RefGenVersion);
+            unmappedMap.put(excludedRegion.Chromosome, Lists.newArrayList(HighDepthRegion.from(excludedRegion, UNMAP_MIN_HIGH_DEPTH)));
+
+            UnmapRegions = new ReadUnmapper(unmappedMap);
         }
 
         String duplicateLogic = UMIs.Enabled ? "UMIs" : (FormConsensus ? "consensus" : "max base-qual");
