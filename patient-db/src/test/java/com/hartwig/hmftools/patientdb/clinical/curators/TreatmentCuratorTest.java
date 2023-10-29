@@ -12,10 +12,12 @@ import com.hartwig.hmftools.patientdb.clinical.datamodel.CuratedDrug;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class TreatmentCuratorTest {
+public class TreatmentCuratorTest
+{
 
     @Test
-    public void canConvertStringFieldToSynonyms() {
+    public void canConvertStringFieldToSynonyms()
+    {
         assertTrue(TreatmentCurator.toSynonyms(Strings.EMPTY).isEmpty());
         assertEquals("hi", TreatmentCurator.toSynonyms("hi").get(0));
 
@@ -28,7 +30,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesExactSingleWord() {
+    public void matchesExactSingleWord()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         Optional<CuratedDrug> curatedTreatment = curator.matchSingle("Zocor");
         assertTrue(curatedTreatment.isPresent());
@@ -36,7 +39,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void removesSearchTermsFromUnused() {
+    public void removesSearchTermsFromUnused()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         assertEquals(13, curator.unusedSearchTerms().size());
 
@@ -61,7 +65,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesIgnoringCaseSingleWord() {
+    public void matchesIgnoringCaseSingleWord()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         Optional<CuratedDrug> curatedTreatment = curator.matchSingle("zocor");
         assertTrue(curatedTreatment.isPresent());
@@ -69,7 +74,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesSingleWordWithTypo() {
+    public void matchesSingleWordWithTypo()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         Optional<CuratedDrug> curatedTreatment = curator.matchSingle("lisinoprill");
         assertTrue(curatedTreatment.isPresent());
@@ -77,7 +83,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesExactMultiWord() {
+    public void matchesExactMultiWord()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         Optional<CuratedDrug> curatedTreatment = curator.matchSingle("amlodipine besylate");
         assertTrue(curatedTreatment.isPresent());
@@ -85,7 +92,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesIgnoringCaseMultiWord() {
+    public void matchesIgnoringCaseMultiWord()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         Optional<CuratedDrug> curatedTreatment = curator.matchSingle("Amlodipine Besylate");
         assertTrue(curatedTreatment.isPresent());
@@ -93,7 +101,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesMultiWordWithTypo() {
+    public void matchesMultiWordWithTypo()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         Optional<CuratedDrug> curatedTreatment = curator.matchSingle("Amlodipin besylat");
         assertTrue(curatedTreatment.isPresent());
@@ -101,7 +110,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesTermWithSpecialChars() {
+    public void matchesTermWithSpecialChars()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         Optional<CuratedDrug> curatedTreatment = curator.matchSingle("z-pak");
         assertTrue(curatedTreatment.isPresent());
@@ -109,7 +119,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchMultipleTreatments() {
+    public void matchMultipleTreatments()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         List<CuratedDrug> curatedDrugs = curator.matchMultiple("Prinivil,Zithromax/amlodipine besylate");
         assertEquals(3, curatedDrugs.size());
@@ -120,7 +131,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchMultipleTreatmentsWithTypos() {
+    public void matchMultipleTreatmentsWithTypos()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         List<CuratedDrug> curatedDrugs = curator.matchMultiple("Prinivyl,Zithromaxx/amlodipin Besylate");
         assertEquals(3, curatedDrugs.size());
@@ -131,7 +143,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchMultipleSimilarTreatments() {
+    public void matchMultipleSimilarTreatments()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         List<CuratedDrug> curatedDrugs = curator.matchMultiple("amlodipine besylate, amlodipine acetate");
         assertEquals(2, curatedDrugs.size());
@@ -141,7 +154,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void doesNotMatchAmbiguousTerm() {
+    public void doesNotMatchAmbiguousTerm()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         List<CuratedDrug> acidCuratedDrugs = curator.search("acid");
         assertEquals(0, acidCuratedDrugs.size());
@@ -150,21 +164,24 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void doesNotMatchAmbiguousMultiTerm() {
+    public void doesNotMatchAmbiguousMultiTerm()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         List<CuratedDrug> curatedDrugs = curator.search("pain therapy");
         assertEquals(0, curatedDrugs.size());
     }
 
     @Test
-    public void doesNotMatchNonExistentComposedTerm() {
+    public void doesNotMatchNonExistentComposedTerm()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         List<CuratedDrug> curatedDrugs = curator.search("amlodipine phosphate");
         assertEquals(0, curatedDrugs.size());
     }
 
     @Test
-    public void matchesTermWithAlias() {
+    public void matchesTermWithAlias()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         List<CuratedDrug> curatedDrugs = curator.search("Zocor (simvastatin)");
         assertEquals(2, curatedDrugs.size());
@@ -173,7 +190,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void matchesTermWithNumbers() {
+    public void matchesTermWithNumbers()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         List<CuratedDrug> curatedDrugs = curator.search("TNT 101");
         assertEquals(1, curatedDrugs.size());
@@ -181,7 +199,8 @@ public class TreatmentCuratorTest {
     }
 
     @Test
-    public void doesNotMatchSingleOccurrenceOfAmbiguousTerm() {
+    public void doesNotMatchSingleOccurrenceOfAmbiguousTerm()
+    {
         TreatmentCurator curator = CuratorTestFactory.treatmentCurator();
         List<CuratedDrug> curatedDrugs = curator.search("acetate");
         assertEquals(0, curatedDrugs.size());

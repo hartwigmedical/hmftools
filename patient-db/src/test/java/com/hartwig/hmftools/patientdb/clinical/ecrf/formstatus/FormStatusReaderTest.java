@@ -11,12 +11,14 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class FormStatusReaderTest {
+public class FormStatusReaderTest
+{
 
     private static final String TEST_FILE = Resources.getResource("ecrf/test_cpct_formstatus.csv").getPath();
 
     @Test
-    public void canLoadFromCsv() throws IOException {
+    public void canLoadFromCsv() throws IOException
+    {
         FormStatusModel formStatusModel = FormStatusReader.buildModelFromCsv(TEST_FILE);
 
         Map<FormStatusKey, FormStatus> formStatuses = formStatusModel.formStatuses();

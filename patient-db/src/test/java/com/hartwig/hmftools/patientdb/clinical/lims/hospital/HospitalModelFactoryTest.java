@@ -11,12 +11,14 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class HospitalModelFactoryTest {
+public class HospitalModelFactoryTest
+{
 
     private static final String LIMS_DIRECTORY = Resources.getResource("lims").getPath();
 
     @Test
-    public void canReadHospitalAddressTsv() throws IOException {
+    public void canReadHospitalAddressTsv() throws IOException
+    {
         Map<String, HospitalAddress> hospitalAddress =
                 HospitalModelFactory.readFromHospitalAddressTsv(LIMS_DIRECTORY + File.separator + "hospital_address.tsv");
 
@@ -34,7 +36,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactCPCT() throws IOException {
+    public void canReadHospitalContactCPCT() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactCPCT =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_cpct.tsv", 2);
 
@@ -52,7 +55,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactDRUP() throws IOException {
+    public void canReadHospitalContactDRUP() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactDRUP =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_drup.tsv", 2);
         assertEquals(2, hospitalContactDRUP.size());
@@ -69,7 +73,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactWIDE() throws IOException {
+    public void canReadHospitalContactWIDE() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactWIDE =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_wide.tsv", 4);
         assertEquals(2, hospitalContactWIDE.size());
@@ -86,7 +91,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactCOREDB() throws IOException {
+    public void canReadHospitalContactCOREDB() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactCOREDB =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_coredb.tsv", 4);
         assertEquals(1, hospitalContactCOREDB.size());
@@ -98,7 +104,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactACTIN() throws IOException {
+    public void canReadHospitalContactACTIN() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactACTIN =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_actin.tsv", 2);
         assertEquals(1, hospitalContactACTIN.size());
@@ -110,7 +117,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactGLOW() throws IOException {
+    public void canReadHospitalContactGLOW() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactGLOW =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_glow.tsv", 2);
         assertEquals(1, hospitalContactGLOW.size());
@@ -122,7 +130,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactOPTIC() throws IOException {
+    public void canReadHospitalContactOPTIC() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactOPTIC =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_optic.tsv", 2);
         assertEquals(1, hospitalContactOPTIC.size());
@@ -134,7 +143,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactSHERPA() throws IOException {
+    public void canReadHospitalContactSHERPA() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactSHERPA =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_sherpa.tsv", 2);
         assertEquals(1, hospitalContactSHERPA.size());
@@ -146,7 +156,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactGENAYA() throws IOException {
+    public void canReadHospitalContactGENAYA() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactGENAYA =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_genaya.tsv", 4);
         assertEquals(1, hospitalContactGENAYA.size());
@@ -157,7 +168,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactOMIC() throws IOException {
+    public void canReadHospitalContactOMIC() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactOMIC =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_omic.tsv", 2);
         assertEquals(1, hospitalContactOMIC.size());
@@ -169,7 +181,8 @@ public class HospitalModelFactoryTest {
     }
 
     @Test
-    public void canReadHospitalContactTARGTO() throws IOException {
+    public void canReadHospitalContactTARGTO() throws IOException
+    {
         Map<String, HospitalPersons> hospitalContactTARGTO =
                 HospitalModelFactory.readFromHospitalPersonsTsv(LIMS_DIRECTORY + File.separator + "hospital_targto.tsv", 4);
         assertEquals(1, hospitalContactTARGTO.size());
@@ -179,10 +192,9 @@ public class HospitalModelFactoryTest {
         assertEquals("my@email.com", targto.requesterEmail());
     }
 
-
-
     @Test
-    public void canReadSampleToHospitalMapping() throws IOException {
+    public void canReadSampleToHospitalMapping() throws IOException
+    {
         Map<String, String> sampleHospitalMapping =
                 HospitalModelFactory.readFromSampleToHospitalMappingTsv(LIMS_DIRECTORY + File.separator + "sample_hospital_mapping.tsv");
 

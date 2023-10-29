@@ -27,7 +27,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class XMLPatientReaderTest {
+public class XMLPatientReaderTest
+{
 
     private static final String PATIENTS_TEST = Resources.getResource("ecrf/patients_example.xml").getPath();
 
@@ -35,7 +36,8 @@ public class XMLPatientReaderTest {
     private static final String PATIENT_2 = "CPCT03030303";
 
     @Test
-    public void canReadPatients() throws FileNotFoundException, XMLStreamException {
+    public void canReadPatients() throws FileNotFoundException, XMLStreamException
+    {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(PATIENTS_TEST));
 
@@ -113,7 +115,8 @@ public class XMLPatientReaderTest {
     }
 
     @Test
-    public void determinesEmptyItemGroupAndForm() throws FileNotFoundException, XMLStreamException {
+    public void determinesEmptyItemGroupAndForm() throws FileNotFoundException, XMLStreamException
+    {
         XMLInputFactory factory = XMLInputFactory.newInstance();
         XMLStreamReader reader = factory.createXMLStreamReader(new FileInputStream(PATIENTS_TEST));
 
@@ -152,17 +155,21 @@ public class XMLPatientReaderTest {
     }
 
     @NotNull
-    private static List<String> fieldValues(@NotNull EcrfPatient patient, @NotNull EcrfField field) {
+    private static List<String> fieldValues(@NotNull EcrfPatient patient, @NotNull EcrfField field)
+    {
         List<String> fieldValues = Lists.newArrayList();
-        for (EcrfDataField dataField : patient.fields()) {
-            if (dataField.name().equals(field.name())) {
+        for(EcrfDataField dataField : patient.fields())
+        {
+            if(dataField.name().equals(field.name()))
+            {
                 fieldValues.add(dataField.itemValue());
             }
         }
         return fieldValues;
     }
 
-    private static void verifyFirstFieldValue(@NotNull String expected, @Nullable List<String> values) {
+    private static void verifyFirstFieldValue(@NotNull String expected, @Nullable List<String> values)
+    {
         assert values != null && values.size() == 1;
         assertEquals(expected, values.get(0));
     }

@@ -18,12 +18,14 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
 
 import org.junit.Test;
 
-public class CpctPatientReaderTest {
+public class CpctPatientReaderTest
+{
 
     private static final String INFORMED_CONSENTS_TSV = Resources.getResource("consents/informed_consents.tsv").getPath();
 
     @Test
-    public void canLoadEmptyPatient() throws IOException {
+    public void canLoadEmptyPatient() throws IOException
+    {
         CpctPatientReader patientReader = new CpctPatientReader(
                 CuratorTestFactory.primaryTumorCurator(),
                 Maps.newHashMap(),
@@ -33,7 +35,8 @@ public class CpctPatientReaderTest {
         EcrfPatient ecrfPatient = new EcrfPatient("empty", Maps.newHashMap(), Lists.newArrayList());
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
 
-        Patient patient = patientReader.read(ecrfPatient, Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "CPCT");
+        Patient patient =
+                patientReader.read(ecrfPatient, Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "CPCT");
 
         assertNotNull(patient);
     }

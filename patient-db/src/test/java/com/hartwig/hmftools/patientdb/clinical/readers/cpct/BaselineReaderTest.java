@@ -15,12 +15,14 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
 
 import org.junit.Test;
 
-public class BaselineReaderTest {
+public class BaselineReaderTest
+{
 
     private static final String INFORMED_CONSENTS_TSV = Resources.getResource("consents/informed_consents.tsv").getPath();
 
     @Test
-    public void canReadEmptyBaselineInfo() throws IOException {
+    public void canReadEmptyBaselineInfo() throws IOException
+    {
         Map<Integer, String> hospitals = Maps.newHashMap();
         BaselineReader baselineReader =
                 new BaselineReader(CuratorTestFactory.primaryTumorCurator(), hospitals);

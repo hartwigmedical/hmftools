@@ -11,25 +11,27 @@ import com.google.common.io.Resources;
 
 import org.junit.Test;
 
-public class ConsentConfigFactoryTest {
+public class ConsentConfigFactoryTest
+{
 
     private static final String INFORMED_CONSENTS_TSV = Resources.getResource("consents/informed_consents.tsv").getPath();
 
     @Test
-    public void canReadConsentConfigFile() throws IOException {
+    public void canReadConsentConfigFile() throws IOException
+    {
         ConsentConfig consentConfig1 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("1");
 
         assertEquals("1", consentConfig1.pifVersion());
         assertEquals(Lists.newArrayList("CPCT", "CPCT1"), consentConfig1.cohort());
         assertNull(consentConfig1.inHMF());
         assertNull(consentConfig1.outsideEU());
-        assertEquals("",consentConfig1.pif222());
+        assertEquals("", consentConfig1.pif222());
         assertNull(consentConfig1.pif222Values());
-        assertEquals("",consentConfig1.pif221());
+        assertEquals("", consentConfig1.pif221());
         assertNull(consentConfig1.pif221Values());
-        assertEquals("ja",consentConfig1.pif26HMF());
+        assertEquals("ja", consentConfig1.pif26HMF());
         assertEquals(Lists.newArrayList("ja", "nee"), consentConfig1.pif26HMFValues());
-        assertEquals("ja",consentConfig1.pif26BUG());
+        assertEquals("ja", consentConfig1.pif26BUG());
         assertEquals(Lists.newArrayList("ja", "nee"), consentConfig1.pif26BUGValues());
 
         ConsentConfig consentConfig2 = ConsentConfigFactory.read(INFORMED_CONSENTS_TSV).get("2");
@@ -37,9 +39,9 @@ public class ConsentConfigFactoryTest {
         assertEquals(Lists.newArrayList("CPCT"), consentConfig2.cohort());
         assertNull(consentConfig2.inHMF());
         assertNull(consentConfig2.outsideEU());
-        assertEquals("yes",consentConfig2.pif222());
+        assertEquals("yes", consentConfig2.pif222());
         assertEquals(Lists.newArrayList("yes", "no"), consentConfig2.pif222Values());
-        assertEquals("yes",consentConfig2.pif221());
+        assertEquals("yes", consentConfig2.pif221());
         assertEquals(Lists.newArrayList("yes", "no"), consentConfig2.pif221Values());
         assertNull(consentConfig2.pif26HMF());
         assertNull(consentConfig2.pif26HMFValues());

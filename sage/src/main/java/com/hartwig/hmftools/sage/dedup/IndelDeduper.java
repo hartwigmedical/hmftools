@@ -11,13 +11,8 @@ import com.hartwig.hmftools.sage.common.SageVariant;
 
 public final class DedupIndel
 {
-    /*
-    - make a direct comparison of variants in the same LPS where the CORE at least partially overlap
-      and where at least 1 of the variants must be an INDEL.
-      For each case where this occurs:
-        - Calculate the read context and flank of each variant excluding the variant
-        - If the CORE of one variant is fully explained by the CORE+FLANKS of the other, then filter as DEDUP whichever has a shorter CORE
-        or if identical, the lowest quality.
+    /* TO-DO: describe the logic
+
     */
 
     public static void dedupIndels(final List<SageVariant> variants)

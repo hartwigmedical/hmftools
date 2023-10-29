@@ -20,7 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class TreatmentResponseMatcherTest {
+public class TreatmentResponseMatcherTest
+{
 
     private static final LocalDate JAN2015 = LocalDate.parse("2015-01-01");
     private static final LocalDate FEB2015 = LocalDate.parse("2015-02-01");
@@ -48,7 +49,8 @@ public class TreatmentResponseMatcherTest {
 
     //    ---response(jan)-start(feb)-----end(jul)--
     @Test
-    public void responseBeforeStartFails() {
+    public void responseBeforeStartFails()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_JAN2015);
         List<BiopsyTreatmentResponseData> matchedResponses =
@@ -59,7 +61,8 @@ public class TreatmentResponseMatcherTest {
 
     //    ---start/response(feb)-----end(jul)--
     @Test
-    public void responseSameDateAsStartFails() {
+    public void responseSameDateAsStartFails()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_FEB2015);
         List<BiopsyTreatmentResponseData> matchedResponses =
@@ -70,7 +73,8 @@ public class TreatmentResponseMatcherTest {
 
     //    ---start(feb)-response(mar)----end(jul)--
     @Test
-    public void responseAfterStartBeforeEndSucceeds() {
+    public void responseAfterStartBeforeEndSucceeds()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015);
         List<BiopsyTreatmentResponseData> matchedResponses =
@@ -81,7 +85,8 @@ public class TreatmentResponseMatcherTest {
 
     //    ---start(feb)-----end/response(jul)--
     @Test
-    public void responseAfterStartSameDateAsEndSucceeds() {
+    public void responseAfterStartSameDateAsEndSucceeds()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_JUL2015);
         List<BiopsyTreatmentResponseData> matchedResponses =
@@ -92,7 +97,8 @@ public class TreatmentResponseMatcherTest {
 
     //    ---start(feb)-----end(jul)-response(aug)--
     @Test
-    public void responseAfterEndSucceeds() {
+    public void responseAfterEndSucceeds()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015);
         List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_AUG2015);
         List<BiopsyTreatmentResponseData> matchedResponses =
@@ -103,7 +109,8 @@ public class TreatmentResponseMatcherTest {
 
     //    ---start(feb)-response(mar)------end(null)
     @Test
-    public void responseAfterStartBeforeNullSucceeds() {
+    public void responseAfterStartBeforeNullSucceeds()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_NULL);
         List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015);
         List<BiopsyTreatmentResponseData> matchedResponses =
@@ -114,7 +121,8 @@ public class TreatmentResponseMatcherTest {
 
     //    ---start(feb)-------end/response(null)
     @Test
-    public void responseNullFails() {
+    public void responseNullFails()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_NULL);
         List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_NULL);
         List<BiopsyTreatmentResponseData> matchedResponses =
@@ -125,7 +133,8 @@ public class TreatmentResponseMatcherTest {
 
     //    ---start(feb)-response(mar)----response(jul)--end(null)
     @Test
-    public void multipleResponsesMatchTreatment() {
+    public void multipleResponsesMatchTreatment()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_NULL);
         List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015, RESPONSE_JUL2015);
         List<BiopsyTreatmentResponseData> matchedResponses =
@@ -138,7 +147,8 @@ public class TreatmentResponseMatcherTest {
 
     //    ---start1/start2(feb)-response(mar)----end1(jul)--end2(null)
     @Test
-    public void overlappingTreatmentsCannotBeUsedForMatching() {
+    public void overlappingTreatmentsCannotBeUsedForMatching()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_FEB2015_JUL2015, TREATMENT_FEB2015_NULL);
         List<BiopsyTreatmentResponseData> responses = Lists.newArrayList(RESPONSE_MAR2015);
         List<BiopsyTreatmentResponseData> matchedResponses =
@@ -149,7 +159,8 @@ public class TreatmentResponseMatcherTest {
 
     //    --start(jan)-response(feb)-response(mar)-end(jul)-responseNE(aug)-response(sep)-start(okt)-response(nov)
     @Test
-    public void realTimelineWorksAsExpected() {
+    public void realTimelineWorksAsExpected()
+    {
         List<BiopsyTreatmentData> treatments = Lists.newArrayList(TREATMENT_JAN2015_JUL2015, TREATMENT_OCT2015_NULL);
         List<BiopsyTreatmentResponseData> responses =
                 Lists.newArrayList(RESPONSE_FEB2015, RESPONSE_MAR2015, RESPONSE_AUG2015_BASELINE, RESPONSE_SEP2015, RESPONSE_NOV2015);
@@ -164,24 +175,28 @@ public class TreatmentResponseMatcherTest {
         assertMatch(treatments.get(1).id(), matchedResponses.get(4).treatmentId());
     }
 
-    private static void assertMatch(int expectedId, @Nullable Integer actualId) {
+    private static void assertMatch(int expectedId, @Nullable Integer actualId)
+    {
         assertNotNull(actualId);
         assertEquals(expectedId, actualId.intValue());
     }
 
     @NotNull
-    private static BiopsyTreatmentData treatmentWithStartEnd(@Nullable LocalDate start, @Nullable LocalDate end) {
+    private static BiopsyTreatmentData treatmentWithStartEnd(@Nullable LocalDate start, @Nullable LocalDate end)
+    {
         DrugData drug = ImmutableDrugData.of("drug", start, end, null, Lists.newArrayList());
         return biopsyTreatmentBuilder().treatmentGiven("Yes").radiotherapyGiven("Yes").addDrugs(drug).build();
     }
 
     @NotNull
-    private static BiopsyTreatmentResponseData responseOnDate(@Nullable LocalDate date) {
+    private static BiopsyTreatmentResponseData responseOnDate(@Nullable LocalDate date)
+    {
         return biopsyTreatmentResponseBuilder().responseDate(date).response("response").measurementDone("Yes").build();
     }
 
     @NotNull
-    private static BiopsyTreatmentResponseData baselineResponseOnDate(@Nullable LocalDate date) {
+    private static BiopsyTreatmentResponseData baselineResponseOnDate(@Nullable LocalDate date)
+    {
         return biopsyTreatmentResponseBuilder().responseDate(date).response("NE").measurementDone("Yes").build();
     }
 }

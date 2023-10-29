@@ -16,10 +16,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
-public class TreatmentDataTest {
+public class TreatmentDataTest
+{
 
     @Test
-    public void canGenerateCorrectTreatmentName() {
+    public void canGenerateCorrectTreatmentName()
+    {
         List<DrugData> drugs = Lists.newArrayList(drugWithName("DrugB"), drugWithName("DrugC"), drugWithName("DrugA"), drugWithName(null));
 
         TreatmentData data = withDrugs(drugs);
@@ -28,7 +30,8 @@ public class TreatmentDataTest {
     }
 
     @Test
-    public void canGenerateCorrectTreatmentType() {
+    public void canGenerateCorrectTreatmentType()
+    {
         List<DrugData> noTypes = Lists.newArrayList(drugWithType(null));
         assertNull(withDrugs(noTypes).consolidatedType());
         assertNull(withDrugs(noTypes).concatenatedType());
@@ -43,7 +46,8 @@ public class TreatmentDataTest {
     }
 
     @Test
-    public void canGenerateCorrectTreatmentMechanism() {
+    public void canGenerateCorrectTreatmentMechanism()
+    {
         List<DrugData> noMechanism = Lists.newArrayList(drugWithMechanism(null));
         assertNull(withDrugs(noMechanism).consolidatedMechanism());
         assertNull(withDrugs(noMechanism).concatenatedMechanism());
@@ -58,7 +62,8 @@ public class TreatmentDataTest {
     }
 
     @Test
-    public void sortsCorrectly() {
+    public void sortsCorrectly()
+    {
         TreatmentData treatment2015 = withDrug(drugWithStartDate(LocalDate.parse("2015-01-01")));
         TreatmentData treatment2014 = withDrug(drugWithStartDate(LocalDate.parse("2014-01-01")));
         TreatmentData treatmentNull = withDrug(drugWithStartDate(null));
@@ -75,36 +80,42 @@ public class TreatmentDataTest {
     }
 
     @NotNull
-    private static TreatmentData withDrug(@NotNull DrugData drug) {
+    private static TreatmentData withDrug(@NotNull DrugData drug)
+    {
         return biopsyTreatmentBuilder().addDrugs(drug).build();
     }
 
     @NotNull
-    private static TreatmentData withDrugs(@NotNull List<DrugData> drugs) {
+    private static TreatmentData withDrugs(@NotNull List<DrugData> drugs)
+    {
         return biopsyTreatmentBuilder().addAllDrugs(drugs).build();
     }
 
     @NotNull
-    private static DrugData drugWithName(@Nullable String name) {
+    private static DrugData drugWithName(@Nullable String name)
+    {
         return name != null ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of(name, "", "", "")).build()
                 : drugBuilder().build();
     }
 
     @NotNull
-    private static DrugData drugWithType(@Nullable String type) {
+    private static DrugData drugWithType(@Nullable String type)
+    {
         return type != null ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of("", type, "", "")).build()
                 : drugBuilder().build();
     }
 
     @NotNull
-    private static DrugData drugWithMechanism(@Nullable String mechanism) {
+    private static DrugData drugWithMechanism(@Nullable String mechanism)
+    {
         return mechanism != null
                 ? drugBuilder().addCuratedDrugs(ImmutableCuratedDrug.of("", "", mechanism, "")).build()
                 : drugBuilder().build();
     }
 
     @NotNull
-    private static DrugData drugWithStartDate(@Nullable LocalDate startDate) {
+    private static DrugData drugWithStartDate(@Nullable LocalDate startDate)
+    {
         return drugBuilder().startDate(startDate).build();
     }
 }

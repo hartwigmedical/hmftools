@@ -7,13 +7,16 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class ClinicalTestFactory {
+public final class ClinicalTestFactory
+{
 
-    private ClinicalTestFactory() {
+    private ClinicalTestFactory()
+    {
     }
 
     @NotNull
-    public static ImmutableSampleData.Builder sampleBuilder(@NotNull LocalDate arrivalDate) {
+    public static ImmutableSampleData.Builder sampleBuilder(@NotNull LocalDate arrivalDate)
+    {
         return ImmutableSampleData.builder()
                 .sampleId("sample-" + arrivalDate.toString())
                 .sampleBarcode("ABC")
@@ -28,7 +31,8 @@ public final class ClinicalTestFactory {
     }
 
     @NotNull
-    public static ImmutableBaselineData.Builder baselineBuilder() {
+    public static ImmutableBaselineData.Builder baselineBuilder()
+    {
         return ImmutableBaselineData.builder()
                 .curatedPrimaryTumor(ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).isOverridden(false).build())
                 .demographyStatus(FormStatus.undefined())
@@ -40,22 +44,26 @@ public final class ClinicalTestFactory {
     }
 
     @NotNull
-    public static ImmutableBiopsyData.Builder biopsyBuilder() {
+    public static ImmutableBiopsyData.Builder biopsyBuilder()
+    {
         return ImmutableBiopsyData.builder().id(1).formStatus(FormStatus.undefined());
     }
 
     @NotNull
-    public static ImmutableBiopsyTreatmentData.Builder biopsyTreatmentBuilder() {
+    public static ImmutableBiopsyTreatmentData.Builder biopsyTreatmentBuilder()
+    {
         return ImmutableBiopsyTreatmentData.builder().id(1).formStatus(FormStatus.undefined());
     }
 
     @NotNull
-    public static ImmutableDrugData.Builder drugBuilder() {
+    public static ImmutableDrugData.Builder drugBuilder()
+    {
         return ImmutableDrugData.builder();
     }
 
     @NotNull
-    public static ImmutableBiopsyTreatmentResponseData.Builder biopsyTreatmentResponseBuilder() {
+    public static ImmutableBiopsyTreatmentResponseData.Builder biopsyTreatmentResponseBuilder()
+    {
         return ImmutableBiopsyTreatmentResponseData.builder().formStatus(FormStatus.undefined());
     }
 }
