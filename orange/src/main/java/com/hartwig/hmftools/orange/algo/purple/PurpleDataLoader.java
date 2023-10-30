@@ -27,22 +27,29 @@ public final class PurpleDataLoader
 {
     @NotNull
     public static PurpleData load(final String tumorSample, @Nullable final String referenceSample, @Nullable final String rnaSample,
+                                  final String purpleDir) throws IOException
+    {
+        return load(tumorSample, referenceSample, tumorSample, referenceSample, rnaSample, purpleDir);
+    }
+    @NotNull
+    public static PurpleData load(final String tumorDataId, final String referenceDataId, final String tumorDbId, @Nullable final String referenceDbId, @Nullable final String rnaSample,
             final String purpleDir) throws IOException
     {
-        String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorSample);
-        String purityTsv = PurityContextFile.generateFilenameForReading(purpleDir, tumorSample);
-        String somaticDriverCatalogTsv = DriverCatalogFile.generateSomaticFilename(purpleDir, tumorSample);
-        String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorSample));
-        String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorSample);
-        String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorSample));
-        String somaticStructuralVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticSvFile(purpleDir, tumorSample));
-        String germlineStructuralVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineSvFile(purpleDir, tumorSample));
-        String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorSample);
-        String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorSample);
-        String germlineDeletionTsv = GermlineDeletion.generateFilename(purpleDir, tumorSample);
+        System.out.printf("Start load with tumor data id [%s] and reference data id [%s] ", tumorDataId, referenceDataId);
+        String qcFile = PurpleQCFile.generateFilename(purpleDir, tumorDataId);
+        String purityTsv = PurityContextFile.generateFilenameForReading(purpleDir, tumorDataId);
+        String somaticDriverCatalogTsv = DriverCatalogFile.generateSomaticFilename(purpleDir, tumorDataId);
+        String somaticVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticVcfFile(purpleDir, tumorDataId));
+        String germlineDriverCatalogTsv = DriverCatalogFile.generateGermlineFilename(purpleDir, tumorDataId);
+        String germlineVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineVcfFile(purpleDir, tumorDataId));
+        String somaticStructuralVariantVcf = resolveVcfPath(PurpleCommon.purpleSomaticSvFile(purpleDir, tumorDataId));
+        String germlineStructuralVariantVcf = resolveVcfPath(PurpleCommon.purpleGermlineSvFile(purpleDir, tumorDataId));
+        String copyNumberTsv = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, tumorDataId);
+        String geneCopyNumberTsv = GeneCopyNumberFile.generateFilename(purpleDir, tumorDataId);
+        String germlineDeletionTsv = GermlineDeletion.generateFilename(purpleDir, tumorDataId);
 
-        return load(tumorSample,
-                referenceSample,
+        return load(tumorDbId,
+                referenceDbId,
                 rnaSample,
                 qcFile,
                 purityTsv,
