@@ -1,8 +1,10 @@
 package com.hartwig.hmftools.common.cuppa2;
 
-public class Categories {
+public class Categories
+{
 
-    public enum ClfName {
+    public enum ClfName
+    {
         COMBINED,
 
         DNA_COMBINED,
@@ -14,26 +16,25 @@ public class Categories {
         GENE_EXP,
         ALT_SJ,
 
-        NONE
-        ;
+        NONE;
     }
 
-    public enum ClfGroup {
+    public enum ClfGroup
+    {
         COMBINED,
         DNA,
         RNA,
 
-        NONE
-        ;
+        NONE;
     }
 
-    public enum DataType {
+    public enum DataType
+    {
         PROB,
         SIG_QUANTILE,
         FEAT_CONTRIB,
         CV_PERFORMANCE,
 
-        NONE
-        ;
+        NONE;
     }
 }

@@ -3,7 +3,8 @@ package com.hartwig.hmftools.common.cuppa2;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CuppaPrediction {
+public class CuppaPrediction
+{
     public static final String FLD_SAMPLE_ID = "sample_id";
     public static final String FLD_DATA_TYPE = "data_type";
     public static final String FLD_CLF_GROUP = "clf_group"; // Potentially unused
@@ -31,7 +32,8 @@ public class CuppaPrediction {
             final double featValue,
             final String cancerType,
             final double dataValue
-    ){
+    )
+    {
         SampleId = sampleId;
         DataType = dataType;
         ClfGroup = clfGroup;
@@ -42,7 +44,8 @@ public class CuppaPrediction {
         DataValue = dataValue;
     }
 
-    public List<Object> getFieldNames(){
+    public List<Object> getFieldNames()
+    {
 
         List<Object> fields = new ArrayList<>();
 
@@ -58,7 +61,8 @@ public class CuppaPrediction {
         return fields;
     }
 
-    public List<Object> getValues (){
+    public List<Object> getValues()
+    {
 
         List<Object> values = new ArrayList<>();
 
@@ -74,13 +78,15 @@ public class CuppaPrediction {
         return values;
     }
 
-    public String toString(){
+    public String toString()
+    {
         StringBuilder stringBuilder = new StringBuilder();
 
         List<Object> fields = getFieldNames();
         List<Object> values = getValues();
 
-        for(int i = 0; i < fields.size(); i++){
+        for(int i = 0; i < fields.size(); i++)
+        {
             stringBuilder.append(fields.get(i));
             stringBuilder.append("=");
             stringBuilder.append(values.get(i));
