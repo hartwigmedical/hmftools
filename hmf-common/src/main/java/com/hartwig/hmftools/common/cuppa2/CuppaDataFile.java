@@ -3,9 +3,13 @@ package com.hartwig.hmftools.common.cuppa2;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+
 
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
@@ -14,16 +18,17 @@ public class CuppaDataFile
     public final String Filename;
     public final List<CuppaPrediction> CuppaPredictions;
     public final boolean HasRnaData;
-    public final String MainCombinedClassifier;
+    public final Categories.ClfName MainCombinedClf;
+    public final List<Entry<String, Double>> SortedCancerTypeProbs;
 
     CuppaDataFile(final String filename) throws IOException {
         Filename = filename;
         CuppaPredictions = readTable(filename);
         HasRnaData = checkHasRnaData();
-        MainCombinedClassifier = getMainCombinedClassifier();
+        MainCombinedClf = getMainCombinedClf();
+        SortedCancerTypeProbs = sortMapByValue(getCancerTypeProbs(MainCombinedClf));
     }
 
-    // Read table --------------------------------
     private static double parseDouble(String string) {
         if(string.length()==0) {
             string = "NaN";
@@ -67,13 +72,13 @@ public class CuppaDataFile
 
             String sampleId = parseString(rowValues[sampleIdIndex]);
 
-            String dataTypeStr = parseString(rowValues[dataTypeIndex]);
+            String dataTypeStr = parseString(rowValues[dataTypeIndex]).toUpperCase();
             Categories.DataType dataType = Categories.DataType.valueOf(dataTypeStr);
 
-            String clfGroupStr = parseString(rowValues[clfGroupIndex]);
+            String clfGroupStr = parseString(rowValues[clfGroupIndex]).toUpperCase();
             Categories.ClfGroup clfGroup = Categories.ClfGroup.valueOf(clfGroupStr);
 
-            String clfNameStr = parseString(rowValues[clfNameIndex]);
+            String clfNameStr = parseString(rowValues[clfNameIndex]).toUpperCase();
             Categories.ClfName clfName = Categories.ClfName.valueOf(clfNameStr);
 
             String featName = parseString(rowValues[featNameIndex]);
@@ -92,14 +97,13 @@ public class CuppaDataFile
         return cuppaPredictions;
     }
 
-    // --------------------------------
     private boolean checkHasRnaData(){
         for(CuppaPrediction cuppaPrediction : CuppaPredictions){
-            if(!cuppaPrediction.DataType.equals(Categories.DataType.prob)){
+            if(!cuppaPrediction.DataType.equals(Categories.DataType.PROB)){
                 continue;
             }
 
-            if(cuppaPrediction.ClfName.equals(Categories.ClfName.rna_combined) & !Double.isNaN(cuppaPrediction.DataValue)){
+            if(cuppaPrediction.ClfName.equals(Categories.ClfName.RNA_COMBINED) & !Double.isNaN(cuppaPrediction.DataValue)){
                 return true;
             }
         }
@@ -107,33 +111,44 @@ public class CuppaDataFile
         return false;
     }
 
-    private String getMainCombinedClassifier(){
-        if(HasRnaData){ return "combined"; }
-        return "dna_combined";
+    private Categories.ClfName getMainCombinedClf(){
+        if(HasRnaData){ return Categories.ClfName.COMBINED; }
+        return Categories.ClfName.DNA_COMBINED;
     }
 
-    // --------------------------------
+    public LinkedHashMap<String, Double> getCancerTypeProbs(Categories.ClfName targetClfName){
 
+        LinkedHashMap<String, Double> cancerTypeProbs = new LinkedHashMap<>();
 
-    // Misc --------------------------------
+        for(CuppaPrediction cuppaPrediction : CuppaPredictions){
+            boolean isProbDataType = cuppaPrediction.DataType.equals(Categories.DataType.PROB);
+            boolean isTargetClfName = cuppaPrediction.ClfName.equals(targetClfName);
+
+            if(!isProbDataType | !isTargetClfName){
+                continue;
+            }
+
+            cancerTypeProbs.put(cuppaPrediction.CancerType, cuppaPrediction.DataValue);
+        }
+
+        return cancerTypeProbs;
+    }
+
+    public static List<Entry<String, Double>> sortMapByValue(LinkedHashMap<String, Double> map){
+
+        List<Map.Entry<String, Double>> list = new ArrayList<>(map.entrySet());
+        list.sort(Map.Entry.<String, Double> comparingByValue().reversed());
+
+        List<Entry<String, Double>> sortedList = new ArrayList<>(list);
+        return sortedList;
+    }
+
     public void printPredictions(int n){
         int i = 0;
         while(i < n){
             System.out.println(CuppaPredictions.get(i).toString());
             i++;
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        String filename = "/Users/lnguyen/Desktop/cuppa_vis_data.tsv";
-        CuppaDataFile cuppaDataFile = new CuppaDataFile(filename);
-
-
-
-        // cuppaDataFile.printPredictions(10);
-        // System.out.println(cuppaDataFile.mHasRnaData);
-        //System.out.println(cuppaDataFile.CuppaPredictions.get(0).DataType);
-
     }
 }
 

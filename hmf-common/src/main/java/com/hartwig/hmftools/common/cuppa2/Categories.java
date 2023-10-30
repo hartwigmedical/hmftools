@@ -3,37 +3,37 @@ package com.hartwig.hmftools.common.cuppa2;
 public class Categories {
 
     public enum ClfName {
-        combined,
+        COMBINED,
 
-        dna_combined,
-        gen_pos,
-        snv96,
-        event,
+        DNA_COMBINED,
+        GEN_POS,
+        SNV96,
+        EVENT,
 
-        rna_combined,
-        gene_exp,
-        alt_sj,
+        RNA_COMBINED,
+        GENE_EXP,
+        ALT_SJ,
 
-        none
+        NONE
         ;
     }
 
     public enum ClfGroup {
-        combined,
-        dna,
-        rna,
+        COMBINED,
+        DNA,
+        RNA,
 
-        none
+        NONE
         ;
     }
 
     public enum DataType {
-        prob,
-        sig_quantile,
-        feat_contrib,
-        cv_performance,
+        PROB,
+        SIG_QUANTILE,
+        FEAT_CONTRIB,
+        CV_PERFORMANCE,
 
-        none
+        NONE
         ;
     }
 }

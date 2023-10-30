@@ -198,15 +198,15 @@ WGS bam file and targeted bam file.
 Example file input for sample_cfg:
 [
     {
-        "sample_id": "FR16648805",
-        "wgs_cobalt_ratios": "WIDE01010081T.cobalt.ratio.tsv.gz",
-        "targeted_cobalt_ratios": "FR16648805.cobalt.ratio.tsv.gz",
+        "sample_id": "SAMPLE1",
+        "wgs_cobalt_ratios": "/data/SAMPLE1_wgs.cobalt.ratio.tsv.gz",
+        "targeted_cobalt_ratios": "/data/SAMPLE1_panel.cobalt.ratio.tsv.gz",
         "gender": "MALE"
     },
     {
-        "sample_id": "FR16648808",
-        "wgs_cobalt_ratios": "WIDE01010241T.cobalt.ratio.tsv.gz",
-        "targeted_cobalt_ratios": "FR16648808.cobalt.ratio.tsv.gz",
+        "sample_id": "SAMPLE2",
+        "wgs_cobalt_ratios": "/data/SAMPLE2_wgs.cobalt.ratio.tsv.gz",
+        "targeted_cobalt_ratios": "/data/SAMPLE2_panel.cobalt.ratio.tsv.gz",
         "gender": "FEMALE"
     }
 ]
