@@ -21,12 +21,7 @@ public class CuppaDataFile
     public final Categories.ClfName MainCombinedClf;
     public final List<Entry<String, Double>> SortedCancerTypeProbs;
 
-<<<<<<< HEAD
-    CuppaDataFile(final String filename) throws IOException
-    {
-=======
     public CuppaDataFile(final String filename) throws IOException {
->>>>>>> f51dc302f1 (Simplified sorting probs)
         Filename = filename;
         CuppaPredictions = readTable(filename);
         HasRnaData = checkHasRnaData();
