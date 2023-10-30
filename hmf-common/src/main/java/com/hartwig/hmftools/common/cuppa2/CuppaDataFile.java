@@ -15,18 +15,22 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 
 public class CuppaDataFile
 {
-    public final String Filename;
+    public final String VisDataPath;
+    public final String VisPlotPath;
+
     public final List<CuppaPrediction> CuppaPredictions;
     public final boolean HasRnaData;
-    public final Categories.ClfName MainCombinedClf;
+    public final Categories.ClfName MainCombinedClfName;
     public final List<Entry<String, Double>> SortedCancerTypeProbs;
 
-    public CuppaDataFile(final String filename) throws IOException {
-        Filename = filename;
-        CuppaPredictions = readTable(filename);
+    public CuppaDataFile(final String visDataPath, final String visPlotPath) throws IOException {
+        VisDataPath = visDataPath;
+        VisPlotPath = visPlotPath;
+
+        CuppaPredictions = readTable(visDataPath);
         HasRnaData = checkHasRnaData();
-        MainCombinedClf = getMainCombinedClf();
-        SortedCancerTypeProbs = sortMapByValue(getCancerTypeProbs(MainCombinedClf));
+        MainCombinedClfName = getMainCombinedClfName();
+        SortedCancerTypeProbs = sortMapByValue(getCancerTypeProbs(MainCombinedClfName));
     }
 
     private static double parseDouble(String string)
@@ -141,7 +145,7 @@ public class CuppaDataFile
         return false;
     }
 
-    private Categories.ClfName getMainCombinedClf()
+    private Categories.ClfName getMainCombinedClfName()
     {
         if(HasRnaData)
         {
