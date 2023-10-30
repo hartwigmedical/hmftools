@@ -51,9 +51,9 @@ public class CuppaDataFile
     {
         if(string.length() > 0)
         {
-            return string;
+            return string.toUpperCase();
         }
-        return "none";
+        return "NONE";
     }
 
     private static List<CuppaPrediction> readTable(final String filename) throws IOException
@@ -80,13 +80,15 @@ public class CuppaDataFile
 
             String sampleId = parseString(rowValues[sampleIdIndex]);
 
-            String dataTypeStr = parseString(rowValues[dataTypeIndex]).toUpperCase();
+            String dataTypeStr = parseString(rowValues[dataTypeIndex]);
             Categories.DataType dataType = Categories.DataType.valueOf(dataTypeStr);
 
-            String clfGroupStr = parseString(rowValues[clfGroupIndex]).toUpperCase();
+            String clfGroupStr = parseString(rowValues[clfGroupIndex]);
             Categories.ClfGroup clfGroup = Categories.ClfGroup.valueOf(clfGroupStr);
 
-            String clfNameStr = parseString(rowValues[clfNameIndex]).toUpperCase();
+            String clfNameStr;
+            clfNameStr = parseString(rowValues[clfNameIndex]);
+            clfNameStr = Categories.ClfName.convertAliasToName(clfNameStr);
             Categories.ClfName clfName = Categories.ClfName.valueOf(clfNameStr);
 
             String featName = parseString(rowValues[featNameIndex]);
@@ -103,6 +105,22 @@ public class CuppaDataFile
         }
 
         return cuppaPredictions;
+    }
+
+    public void printPredictions(int nRows)
+    {
+        int i = 0;
+        for(CuppaPrediction cuppaPrediction : CuppaPredictions)
+        {
+            System.out.println( cuppaPrediction.toString());
+
+            i++;
+            if(nRows == i)
+            {
+                break;
+            }
+
+        }
     }
 
     private boolean checkHasRnaData()
