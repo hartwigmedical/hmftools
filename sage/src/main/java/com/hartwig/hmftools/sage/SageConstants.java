@@ -23,6 +23,7 @@ public class SageConstants
     public static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
 
+    // read evidence
     public static final int MATCHING_BASE_QUALITY = 20;
     public static final int CORE_LOW_QUAL_MISMATCH_BASE_LENGTH = 20;
     public static final double SC_READ_EVENTS_FACTOR = 12;
@@ -57,6 +58,8 @@ public class SageConstants
 
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
+
+    public static final int INDEL_DEDUP_MAX_DIST_THRESHOLD = 40;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
             "hotspot", 70, 0.005,

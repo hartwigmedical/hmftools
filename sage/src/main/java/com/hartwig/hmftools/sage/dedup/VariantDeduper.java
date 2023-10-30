@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.dedup;
 
-import static com.hartwig.hmftools.sage.dedup.DedupIndel.dedupIndels;
+import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.dedup.DedupMatching.dedupMatchingVariants;
 import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvOverlaps;
 import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvSnvs;
@@ -8,16 +8,19 @@ import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvSnvs;
 import java.util.List;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.SageVariant;
 
 public class VariantDeduper
 {
     private final DedupMixedGermlineSomatic mDedupMixedGermlineSomatic;
+    private final IndelDeduper mIndelDeduper;
 
-    public VariantDeduper(final List<TranscriptData> transcripts)
+    public VariantDeduper(final List<TranscriptData> transcripts, final RefGenomeInterface refGenome)
     {
         mDedupMixedGermlineSomatic = new DedupMixedGermlineSomatic(transcripts);
+        mIndelDeduper = new IndelDeduper(refGenome);
     }
 
     public void processVariants(final List<SageVariant> variants)
@@ -28,7 +31,9 @@ public class VariantDeduper
 
         dedupMnvSnvs(variants);
 
-        dedupIndels(variants);
+        dedupIndelsOld(variants);
+
+        // mIndelDeduper.dedupVariants(variants);
 
         dedupMatchingVariants(variants);
     }
@@ -55,5 +60,4 @@ public class VariantDeduper
         final String longerAlt = new String(longer.alt().getBytes(), offset, shorter.alt().length());
         return shorterAlt.equals(longerAlt);
     }
-
 }

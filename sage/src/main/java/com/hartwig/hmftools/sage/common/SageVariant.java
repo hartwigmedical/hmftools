@@ -167,17 +167,14 @@ public class SageVariant
     }
 
     public boolean isIndel() { return variant().ref().length() != variant().alt().length(); }
-
     public boolean isMnv()
     {
         return variant().ref().length() > 1 && variant().ref().length() == variant().alt().length();
     }
-
     public boolean isSnv()
     {
         return variant().ref().length() == 1 && variant().alt().length() == 1;
     }
-
     public boolean isDelete() { return variant().ref().length() > variant().alt().length(); }
     public boolean isInsert() { return variant().ref().length() < variant().alt().length(); }
 

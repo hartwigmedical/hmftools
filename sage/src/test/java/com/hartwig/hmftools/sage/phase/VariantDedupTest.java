@@ -13,10 +13,11 @@ import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.createVariantHotspot;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
+import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_GERMLINE_DEPTH;
-import static com.hartwig.hmftools.sage.dedup.DedupIndel.dedupIndels;
 import static com.hartwig.hmftools.sage.dedup.VariantDeduper.longerContainsShorter;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -273,7 +274,7 @@ public class VariantDedupTest
 
         List<SageVariant> variants = Lists.newArrayList(var1, var2);
 
-        dedupIndels(variants);
+        dedupIndelsOld(variants);
 
         assertTrue(var1.isPassing());
         assertFalse(var2.isPassing());
@@ -289,7 +290,7 @@ public class VariantDedupTest
 
         variants = Lists.newArrayList(var1, var2);
 
-        dedupIndels(variants);
+        dedupIndelsOld(variants);
 
         assertTrue(var1.isPassing());
         assertFalse(var2.isPassing());
@@ -304,7 +305,7 @@ public class VariantDedupTest
 
         variants = Lists.newArrayList(var1, var2);
 
-        dedupIndels(variants);
+        dedupIndelsOld(variants);
 
         assertTrue(var1.isPassing());
         assertFalse(var2.isPassing());
@@ -320,7 +321,7 @@ public class VariantDedupTest
 
         variants = Lists.newArrayList(var1, var2);
 
-        dedupIndels(variants);
+        dedupIndelsOld(variants);
 
         assertTrue(var1.isPassing());
         assertFalse(var2.isPassing());
@@ -333,7 +334,7 @@ public class VariantDedupTest
 
         variants = Lists.newArrayList(var1, var2);
 
-        dedupIndels(variants);
+        dedupIndelsOld(variants);
 
         assertFalse(var1.isPassing());
         assertTrue(var2.isPassing()); // MNV has longer read context
@@ -392,7 +393,7 @@ public class VariantDedupTest
         List<SageVariant> variants = Lists.newArrayList(var1, var2, var3, var4);
 
         // will keep left most since all are of equal length
-        dedupIndels(variants);
+        dedupIndelsOld(variants);
 
         assertTrue(var1.isPassing());
         assertFalse(var2.isPassing());
@@ -469,6 +470,6 @@ public class VariantDedupTest
 
         assertTrue(var1.isPassing());
         assertTrue(var2.isPassing());
-        assertTrue(var3.filters().contains(DEDUP_INDEL_FILTER));
+        assertTrue(var3.filters().contains(DEDUP_INDEL_FILTER_OLD));
     }
 }

@@ -52,6 +52,7 @@ public class VariantVCF implements AutoCloseable
     public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";
     public static final String DEDUP_SNV_MNV_FILTER = "dedupSnvMnv";
     public static final String DEDUP_INDEL_FILTER = "dedupIndel";
+    public static final String DEDUP_INDEL_FILTER_OLD = "dedupIndelOld";
     public static final String DEDUP_MATCH = "dedupMatch";
 
     public static final String READ_CONTEXT_JITTER = "RC_JIT";

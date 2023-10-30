@@ -2,11 +2,13 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.evidence.FragmentSyncOutcome.ORIG_READ_COORDS;
 import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.BASE_MISMATCH;
 import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.CIGAR_MISMATCH;
 import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.COMBINED;
@@ -420,6 +422,9 @@ public class FragmentSync
         {
             combinedRecord.setAttribute(tagAndValue.tag, tagAndValue.value);
         }
+
+        // provide original coords since these are used in the evidence phase
+        combinedRecord.setAttribute(ORIG_READ_COORDS, format("%d;%d;%d;%d", firstPosStart, firstPosEnd, secondPosStart, secondPosEnd));
 
         return new FragmentSyncOutcome(combinedRecord, COMBINED);
     }

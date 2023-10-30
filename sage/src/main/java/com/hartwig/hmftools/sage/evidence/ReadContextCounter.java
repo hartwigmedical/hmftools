@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
@@ -24,6 +25,7 @@ import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LEN
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.evidence.FragmentSyncOutcome.ORIG_READ_COORDS;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
@@ -166,6 +168,7 @@ public class ReadContextCounter implements VariantHotspot
     public VariantHotspot variant() { return mVariant; }
     public ReadContext readContext() { return mReadContext; }
     public VariantTier tier() { return mTier; }
+    public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
 
     @Override
     public String chromosome() { return mVariant.chromosome(); }
@@ -223,6 +226,7 @@ public class ReadContextCounter implements VariantHotspot
     public long totalNmCount() { return mTotalNmCount; }
     public long altNmCount() { return mTotalAltNmCount; }
     public int maxDistanceFromEdge() { return mMaxDistanceFromEdge; }
+    public int minNumberOfEvents() { return mMinNumberOfEvents; }
 
     public double averageAltBaseQuality()
     {
@@ -801,8 +805,39 @@ public class ReadContextCounter implements VariantHotspot
         // determine how far from the edge of the read the variant is, ignoring soft-clip bases and realigned reads
         // and for INDELs use the position of the middle base of INDEL
         // take the lower of the 2 distances for each read, eg 50 and 100 bases, then take 50
-        int distFromStart = mAdjustedVariantPosition - record.getAlignmentStart();
-        int distFromEnd = record.getAlignmentEnd() - mAdjustedVariantPosition;
+        int distFromStart = -1;
+        int distFromEnd = -1;
+
+        if(record.hasAttribute(ORIG_READ_COORDS))
+        {
+            String[] originalCoords = record.getStringAttribute(ORIG_READ_COORDS).split(";", 4);
+
+            int firstPosStart = Integer.parseInt(originalCoords[0]);
+            int firstPosEnd = Integer.parseInt(originalCoords[1]);
+            int secondPosStart = Integer.parseInt(originalCoords[2]);
+            int secondPosEnd = Integer.parseInt(originalCoords[3]);
+
+            if(positionWithin(mAdjustedVariantPosition, firstPosStart, firstPosEnd))
+            {
+                distFromStart = mAdjustedVariantPosition - firstPosStart;
+                distFromEnd = firstPosEnd - mAdjustedVariantPosition;
+            }
+
+            if(positionWithin(mAdjustedVariantPosition, secondPosStart, secondPosEnd))
+            {
+                if(distFromStart == -1 || mAdjustedVariantPosition - secondPosStart < distFromStart)
+                    distFromStart = mAdjustedVariantPosition - secondPosStart;
+
+                if(distFromEnd == -1 || secondPosEnd - mAdjustedVariantPosition < distFromEnd)
+                    distFromEnd = secondPosEnd - mAdjustedVariantPosition;
+            }
+        }
+        else
+        {
+            distFromStart = mAdjustedVariantPosition - record.getAlignmentStart();
+            distFromEnd = record.getAlignmentEnd() - mAdjustedVariantPosition;
+        }
+
         int minDistance = min(distFromStart, distFromEnd);
 
         mMaxDistanceFromEdge = max(minDistance, mMaxDistanceFromEdge);

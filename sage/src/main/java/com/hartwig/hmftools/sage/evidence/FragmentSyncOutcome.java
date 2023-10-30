@@ -7,6 +7,8 @@ public class FragmentSyncOutcome
     public final SAMRecord CombinedRecord;
     public final FragmentSyncType SyncType;
 
+    public static final String ORIG_READ_COORDS = "OC";
+
     public FragmentSyncOutcome(final FragmentSyncType syncType)
     {
         this(null, syncType);
