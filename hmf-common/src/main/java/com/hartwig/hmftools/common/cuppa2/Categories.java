@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.cuppa2;
 
 public class Categories
 {
-
     public enum ClfName
     {
         COMBINED,
@@ -17,6 +16,17 @@ public class Categories
         ALT_SJ,
 
         NONE;
+
+        public static String convertAliasToName(String string){
+            string = string.toUpperCase();
+
+            if(string.equals("RMD")){
+                return "GEN_POS";
+            }
+
+            return string;
+        }
+
     }
 
     public enum ClfGroup
