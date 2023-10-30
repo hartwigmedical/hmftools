@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.markdups.tools;
+package com.hartwig.hmftools.markdups.utils.repeatfinder;
 
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.loadChrBaseRegions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.markdups.tools.RepeatFinderConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.utils.repeatfinder.RepeatFinderConfig.MD_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -98,12 +98,12 @@ public class RepeatFinder
             chrRegionsMap.values().stream().forEach(Collections::sort);
         }
 
-        final BufferedWriter writer = initialiseWriter();
+        BufferedWriter writer = initialiseWriter();
 
-        final List<RepeatFinderTask> finderTasks = Lists.newArrayList();
+        List<RepeatFinderTask> finderTasks = Lists.newArrayList();
         for(final HumanChromosome chromosome : HumanChromosome.values())
         {
-            final String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
+            String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
             RepeatFinderTask finderTask;
             if(chrRegionsMap == null)
             {
@@ -112,12 +112,12 @@ public class RepeatFinder
                 continue;
             }
 
-            final List<BaseRegion> chrRegions = chrRegionsMap.get(chrStr);
+            List<BaseRegion> chrRegions = chrRegionsMap.get(chrStr);
             finderTask = new RepeatFinderTask(mConfig, chrStr, writer, chrRegions);
             finderTasks.add(finderTask);
         }
 
-        final List<Callable> callableList = finderTasks.stream().collect(Collectors.toList());
+        List<Callable> callableList = finderTasks.stream().collect(Collectors.toList());
         TaskExecutor.executeTasks(callableList, mConfig.Threads);
 
         closeBufferedWriter(writer);

@@ -1,12 +1,13 @@
-package com.hartwig.hmftools.markdups.tools;
+package com.hartwig.hmftools.markdups.utils.repeatfinder;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.markdups.tools.RepeatFinderConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.utils.repeatfinder.RepeatFinderConfig.MD_LOGGER;
 
 import java.io.BufferedWriter;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
@@ -29,10 +30,8 @@ public class RepeatFinderTask implements Callable
     private final RefGenomeCoordinates mRefGenomeCoords;
 
     private final PerformanceCounter mPerfCounter;
-    private int mSingleNuclRepeatCount;
-    private int mDoubleNuclRepeatCount;
-    private int mTotalSingleNuclRepeatBases;
-    private int mTotalDoubleNuclRepeatBases;
+    private int mRepeatRegionCount;
+    private int mTotalRepeatBases;
 
     public RepeatFinderTask(final RepeatFinderConfig config, final String chromosome, final BufferedWriter writer)
     {
@@ -53,10 +52,8 @@ public class RepeatFinderTask implements Callable
         mRefGenomeCoords = mConfig.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
         mPerfCounter = new PerformanceCounter(String.format("RepeatFinderTask Chr(%s)", mChromosome));
-        mSingleNuclRepeatCount = 0;
-        mDoubleNuclRepeatCount = 0;
-        mTotalSingleNuclRepeatBases = 0;
-        mTotalDoubleNuclRepeatBases = 0;
+        mRepeatRegionCount = 0;
+        mTotalRepeatBases = 0;
     }
 
     @Override
@@ -70,8 +67,8 @@ public class RepeatFinderTask implements Callable
 
         mPerfCounter.logStats();
         MD_LOGGER.info(
-                "RepeatFinderTask for chromosome {} finished, {} single nucleotide repeats found that cover a total of {} bases, {} double nucleotide repeats found that cover a total of {} bases",
-                mChromosome, mSingleNuclRepeatCount, mTotalSingleNuclRepeatBases, mDoubleNuclRepeatCount, mTotalDoubleNuclRepeatBases);
+                "RepeatFinderTask for chromosome {} finished, {} repeat regaions found that cover a total of {} bases",
+                mChromosome, mRepeatRegionCount, mTotalRepeatBases);
 
         return (long) 0;
     }
@@ -87,10 +84,12 @@ public class RepeatFinderTask implements Callable
      */
     private void processChromosome()
     {
-        final int chromosomeLength = mRefGenomeCoords.length(mChromosome);
-        final String refBases = mRefGenome.getBaseString(mChromosome, 1, chromosomeLength);
+        int chromosomeLength = mRefGenomeCoords.length(mChromosome);
+        String refBases = mRefGenome.getBaseString(mChromosome, 1, chromosomeLength);
 
-        final List<Character> history = Lists.newArrayList();
+        ChrBaseRegion currentRepeatRegion = null;
+        List<String> currentRepeatBaseStrs = Lists.newArrayList();
+        List<Character> history = Lists.newArrayList();
         int currentRepeatLength = 0;
         int chrBedRegionIdx = 0;
         boolean shiftChrBedRegionIdx = false;
@@ -98,7 +97,17 @@ public class RepeatFinderTask implements Callable
         {
             if(shiftChrBedRegionIdx)
             {
-                final int currentRepeatStart = i - currentRepeatLength;
+                // genome coords start at one, not zero.
+                int currentRepeatStart;
+                if(currentRepeatRegion == null)
+                {
+                    currentRepeatStart = i - currentRepeatLength;
+                }
+                else
+                {
+                    currentRepeatStart = currentRepeatRegion.start() - 1;
+                }
+
                 // Note that chrBedRegions are indexed from one, not zero.
                 while(chrBedRegionIdx < mChrBedRegions.size() && mChrBedRegions.get(chrBedRegionIdx).end() - 1 < currentRepeatStart)
                 {
@@ -107,7 +116,7 @@ public class RepeatFinderTask implements Callable
                 shiftChrBedRegionIdx = false;
             }
 
-            final char base = Character.toUpperCase(refBases.charAt(i));
+            char base = Character.toUpperCase(refBases.charAt(i));
             if(history.size() <= 1 && base == 'N')
             {
                 history.clear();
@@ -141,9 +150,30 @@ public class RepeatFinderTask implements Callable
             shiftChrBedRegionIdx = true;
             if(currentRepeatLength >= mConfig.MinRepeatBases)
             {
-                final int repeatEnd = i - 1;
-                final int repeatStart = repeatEnd - currentRepeatLength + 1;
-                foundRepeat(repeatStart, repeatEnd, history, chrBedRegionIdx);
+                // genome coords start at one, not zero.
+                int repeatEnd = i;
+                int repeatStart = repeatEnd - currentRepeatLength + 1;
+                if(currentRepeatRegion == null)
+                {
+                    currentRepeatRegion = new ChrBaseRegion(mChromosome, repeatStart, repeatEnd);
+                    currentRepeatBaseStrs.add(getRepeatBaseStr(history));
+                }
+                else
+                {
+                    int gapSize = repeatStart - currentRepeatRegion.end();
+                    if(gapSize <= mConfig.MaxMergeGap)
+                    {
+                        currentRepeatRegion.setEnd(repeatEnd);
+                        currentRepeatBaseStrs.add(getRepeatBaseStr(history));
+                    }
+                    else
+                    {
+                        foundRepeat(currentRepeatRegion, currentRepeatBaseStrs, chrBedRegionIdx);
+                        currentRepeatRegion = new ChrBaseRegion(mChromosome, repeatStart, repeatEnd);
+                        currentRepeatBaseStrs.clear();
+                        currentRepeatBaseStrs.add(getRepeatBaseStr(history));
+                    }
+                }
             }
 
             if(base == 'N')
@@ -160,23 +190,49 @@ public class RepeatFinderTask implements Callable
 
         if(currentRepeatLength >= mConfig.MinRepeatBases)
         {
-            final int repeatEnd = chromosomeLength - 1;
-            final int repeatStart = repeatEnd - currentRepeatLength + 1;
-            foundRepeat(repeatStart, repeatEnd, history, chrBedRegionIdx);
+            // genome coords start at one, not zero.
+            int repeatEnd = chromosomeLength;
+            int repeatStart = repeatEnd - currentRepeatLength + 1;
+            if(currentRepeatRegion == null)
+            {
+                currentRepeatRegion = new ChrBaseRegion(mChromosome, repeatStart, repeatEnd);
+                currentRepeatBaseStrs.add(getRepeatBaseStr(history));
+            }
+            else
+            {
+                int gapSize = repeatStart - currentRepeatRegion.end();
+                if(gapSize <= mConfig.MaxMergeGap)
+                {
+                    currentRepeatRegion.setEnd(repeatEnd);
+                    currentRepeatBaseStrs.add(getRepeatBaseStr(history));
+                }
+                else
+                {
+                    foundRepeat(currentRepeatRegion, currentRepeatBaseStrs, chrBedRegionIdx);
+                    currentRepeatRegion = new ChrBaseRegion(mChromosome, repeatStart, repeatEnd);
+                    currentRepeatBaseStrs.clear();
+                    currentRepeatBaseStrs.add(getRepeatBaseStr(history));
+                }
+            }
+        }
+
+        if(currentRepeatRegion != null)
+        {
+            foundRepeat(currentRepeatRegion, currentRepeatBaseStrs, chrBedRegionIdx);
         }
     }
 
-    private void foundRepeat(final int repeatStart, final int repeatEnd, final List<Character> repeatBases, final int chrBedRegionIdx)
+    private void foundRepeat(final ChrBaseRegion repeatRegion, final List<String> repeatBasesStrs, int chrBedRegionIdx)
     {
-        final ChrBaseRegion repeatRegion = new ChrBaseRegion(mChromosome, repeatStart + 1, repeatEnd + 1);
+        String repeatBasesStr = repeatBasesStrs.stream().collect(Collectors.joining(","));
         RepeatInfo repeatInfo;
         if(mBedAnnotations)
         {
-            final List<BaseRegion> containedWithinBedRegions = Lists.newArrayList();
-            final List<BaseRegion> partialOverlapsWithBedRegions = Lists.newArrayList();
+            List<BaseRegion> containedWithinBedRegions = Lists.newArrayList();
+            List<BaseRegion> partialOverlapsWithBedRegions = Lists.newArrayList();
             for(int i = chrBedRegionIdx; i < mChrBedRegions.size() && mChrBedRegions.get(i).start() <= repeatRegion.end(); ++i)
             {
-                final BaseRegion chrBedRegion = mChrBedRegions.get(i);
+                BaseRegion chrBedRegion = mChrBedRegions.get(i);
                 if(chrBedRegion.containsRegion(repeatRegion))
                 {
                     containedWithinBedRegions.add(chrBedRegion);
@@ -187,25 +243,27 @@ public class RepeatFinderTask implements Callable
                 }
             }
 
-            repeatInfo = new RepeatInfo(repeatBases, repeatRegion, containedWithinBedRegions, partialOverlapsWithBedRegions);
+            repeatInfo = new RepeatInfo(repeatRegion, repeatBasesStr, containedWithinBedRegions, partialOverlapsWithBedRegions);
         }
         else
         {
-            repeatInfo = new RepeatInfo(repeatBases, repeatRegion);
+            repeatInfo = new RepeatInfo(repeatRegion, repeatBasesStr);
         }
 
-        final boolean singleNuclRepeat = repeatBases.get(0).equals(repeatBases.get(1));
-        if(singleNuclRepeat)
-        {
-            ++mSingleNuclRepeatCount;
-            mTotalSingleNuclRepeatBases += repeatRegion.baseLength();
-        }
-        else
-        {
-            ++mDoubleNuclRepeatCount;
-            mTotalDoubleNuclRepeatBases += repeatRegion.baseLength();
-        }
+        ++mRepeatRegionCount;
+        mTotalRepeatBases += repeatRegion.baseLength();
 
         RepeatFinder.writeRepeat(mWriter, repeatInfo);
+    }
+
+    private static String getRepeatBaseStr(final List<Character> history)
+    {
+        String repeatBaseStr = String.valueOf(history.get(0));
+        if(!history.get(0).equals(history.get(1)))
+        {
+            repeatBaseStr = repeatBaseStr + history.get(1);
+        }
+
+        return repeatBaseStr;
     }
 }
