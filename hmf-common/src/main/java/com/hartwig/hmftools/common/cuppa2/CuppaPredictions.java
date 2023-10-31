@@ -5,29 +5,21 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
-public class CuppaDataFile
+public class CuppaPredictions
 {
-    // public final String VisDataPath;
-
-    public final List<CuppaPrediction> PredictionEntries;
+    public final List<CuppaPredictionEntry> PredictionEntries;
     public final boolean HasRnaData;
     public final Categories.ClfName MainCombinedClfName;
-//    public final List<Entry<String, Double>> SortedCancerTypeProbs;
 
-    public CuppaDataFile(final List<CuppaPrediction> entries) throws IOException {
-        // VisDataPath = visDataPath;
-
+    public CuppaPredictions(final List<CuppaPredictionEntry> entries) throws IOException {
         PredictionEntries = entries;
         HasRnaData = checkHasRnaData();
         MainCombinedClfName = getMainCombinedClfName();
-//        SortedCancerTypeProbs = sortMapByValue(getCancerTypeProbs(MainCombinedClfName));
     }
 
     private static double parseDouble(String string)
@@ -57,7 +49,7 @@ public class CuppaDataFile
         return "NONE";
     }
 
-    public static CuppaDataFile fromTsv(final String filename) throws IOException
+    public static CuppaPredictions fromTsv(final String filename) throws IOException
     {
         String delimiter = TSV_DELIM;
 
@@ -65,18 +57,18 @@ public class CuppaDataFile
 
         String line = fileReader.readLine();
         final Map<String, Integer> fieldsMap = createFieldsIndexMap(line, delimiter);
-        int sampleIdIndex = fieldsMap.get(CuppaPrediction.FLD_SAMPLE_ID);
-        int dataTypeIndex = fieldsMap.get(CuppaPrediction.FLD_DATA_TYPE);
-        int clfGroupIndex = fieldsMap.get(CuppaPrediction.FLD_CLF_GROUP);
-        int clfNameIndex = fieldsMap.get(CuppaPrediction.FLD_CLF_NAME);
-        int featNameIndex = fieldsMap.get(CuppaPrediction.FLD_FEAT_NAME);
-        int featValueIndex = fieldsMap.get(CuppaPrediction.FLD_FEAT_VALUE);
-        int cancerTypeIndex = fieldsMap.get(CuppaPrediction.FLD_CANCER_TYPE);
-        int dataValueIndex = fieldsMap.get(CuppaPrediction.FLD_DATA_VALUE);
-        int rankIndex = fieldsMap.get(CuppaPrediction.FLD_RANK);
-        int rankGroupIndex = fieldsMap.get(CuppaPrediction.FLD_RANK_GROUP);
+        int sampleIdIndex = fieldsMap.get(CuppaPredictionEntry.FLD_SAMPLE_ID);
+        int dataTypeIndex = fieldsMap.get(CuppaPredictionEntry.FLD_DATA_TYPE);
+        int clfGroupIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CLF_GROUP);
+        int clfNameIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CLF_NAME);
+        int featNameIndex = fieldsMap.get(CuppaPredictionEntry.FLD_FEAT_NAME);
+        int featValueIndex = fieldsMap.get(CuppaPredictionEntry.FLD_FEAT_VALUE);
+        int cancerTypeIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CANCER_TYPE);
+        int dataValueIndex = fieldsMap.get(CuppaPredictionEntry.FLD_DATA_VALUE);
+        int rankIndex = fieldsMap.get(CuppaPredictionEntry.FLD_RANK);
+        int rankGroupIndex = fieldsMap.get(CuppaPredictionEntry.FLD_RANK_GROUP);
 
-        List<CuppaPrediction> cuppaPredictions = new ArrayList<>();
+        List<CuppaPredictionEntry> cuppaPredictions = new ArrayList<>();
         while((line = fileReader.readLine()) != null)
         {
             String[] rowValues = line.split(delimiter, -1);
@@ -106,7 +98,7 @@ public class CuppaDataFile
             int rank = Integer.parseInt(rowValues[rankIndex]);
             int rankGroup = Integer.parseInt(rowValues[rankGroupIndex]);
 
-            CuppaPrediction cuppaPrediction = new CuppaPrediction(
+            CuppaPredictionEntry cuppaPrediction = new CuppaPredictionEntry(
                     sampleId, dataType, clfGroup, clfName,
                     featName, featValue, cancerType, dataValue,
                     rank, rankGroup
@@ -115,13 +107,13 @@ public class CuppaDataFile
             cuppaPredictions.add(cuppaPrediction);
         }
 
-        return new CuppaDataFile(cuppaPredictions);
+        return new CuppaPredictions(cuppaPredictions);
     }
 
     public void printPredictions(int nRows)
     {
         int i = 0;
-        for(CuppaPrediction cuppaPrediction : PredictionEntries)
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
             System.out.println( cuppaPrediction.toString());
 
@@ -141,7 +133,7 @@ public class CuppaDataFile
 
     private boolean checkHasRnaData()
     {
-        for(CuppaPrediction cuppaPrediction : PredictionEntries)
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
             if(!cuppaPrediction.DataType.equals(Categories.DataType.PROB))
             {
@@ -166,9 +158,10 @@ public class CuppaDataFile
         return Categories.ClfName.DNA_COMBINED;
     }
 
-    public CuppaDataFile subsetByDataType(Categories.DataType dataType) throws IOException {
-        List<CuppaPrediction> newPredictionEntries = new ArrayList<>();
-        for(CuppaPrediction cuppaPrediction : PredictionEntries)
+    public CuppaPredictions subsetByDataType(Categories.DataType dataType) throws IOException
+    {
+        List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
             if(!cuppaPrediction.DataType.equals(dataType))
             {
@@ -176,59 +169,35 @@ public class CuppaDataFile
             }
             newPredictionEntries.add(cuppaPrediction);
         }
-        return new CuppaDataFile(newPredictionEntries);
+        return new CuppaPredictions(newPredictionEntries);
     }
 
-    public CuppaDataFile getTopPredictions(int n) throws IOException {
-        List<CuppaPrediction> newPredictionEntries = new ArrayList<>();
-        for(CuppaPrediction cuppaPrediction : PredictionEntries)
+    public CuppaPredictions getTopPredictions(int n) throws IOException
+    {
+        List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
             if(cuppaPrediction.Rank <= n)
             {
                 newPredictionEntries.add(cuppaPrediction);
             }
         }
-        return new CuppaDataFile(newPredictionEntries);
+        return new CuppaPredictions(newPredictionEntries);
     }
 
-    public CuppaDataFile sortByRank() throws IOException {
-        Comparator<CuppaPrediction> comparator = Comparator.comparing(cuppaPrediction -> cuppaPrediction.RankGroup);
+    public CuppaPredictions sortByRank() throws IOException
+    {
+        Comparator<CuppaPredictionEntry> comparator = Comparator.comparing(cuppaPrediction -> cuppaPrediction.RankGroup);
         comparator = comparator.thenComparing(cuppaPrediction -> cuppaPrediction.Rank);
-        List<CuppaPrediction> sortPredictionEntries = PredictionEntries
+
+        List<CuppaPredictionEntry> sortPredictionEntries = PredictionEntries
                 .stream()
                 .sorted(comparator)
                 .collect(Collectors.toList());
 
-        return new CuppaDataFile(sortPredictionEntries);
+        return new CuppaPredictions(sortPredictionEntries);
     }
 
-//    public LinkedHashMap<String, Double> getCancerTypeProbs(Categories.ClfName targetClfName)
-//    {
-//        LinkedHashMap<String, Double> cancerTypeProbs = new LinkedHashMap<>();
-//
-//        for(CuppaPrediction cuppaPrediction : PredictionEntries)
-//        {
-//            boolean isProbDataType = cuppaPrediction.DataType.equals(Categories.DataType.PROB);
-//            boolean isTargetClfName = cuppaPrediction.ClfName.equals(targetClfName);
-//
-//            if(!isProbDataType | !isTargetClfName)
-//            {
-//                continue;
-//            }
-//
-//            cancerTypeProbs.put(cuppaPrediction.CancerType, cuppaPrediction.DataValue);
-//        }
-//
-//        return cancerTypeProbs;
-//    }
-//
-    public static List<Entry<String, Double>> sortMapByValue(LinkedHashMap<String, Double> map)
-    {
-        List<Map.Entry<String, Double>> list = new ArrayList<>(map.entrySet());
-        list.sort(Map.Entry.<String, Double>comparingByValue().reversed());
-
-        return new ArrayList<>(list);
-    }
 }
 
 
