@@ -42,7 +42,6 @@ public class ProbeFinder
     private final List<Variant> mCommonVariants;
     private final RefGenomeInterface mRefGenome;
     private final Map<String,BufferedWriter> mWriters;
-    private int mBatchId;
 
     public ProbeFinder(final ConfigBuilder configBuilder)
     {
@@ -52,7 +51,6 @@ public class ProbeFinder
         mCommonVariants = Lists.newArrayList();
 
         mWriters = Maps.newHashMap();
-        mBatchId = 0;
     }
 
     public void run()

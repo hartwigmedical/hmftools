@@ -16,13 +16,11 @@ import static com.hartwig.hmftools.wisp.probe.CategoryType.OTHER_CODING_MUTATION
 import static com.hartwig.hmftools.wisp.probe.CategoryType.OTHER_MUTATION;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.SUBCLONAL_MUTATION;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.DEFAULT_GC_THRESHOLD_MAX;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.DEFAULT_GC_THRESHOLD_MIN;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.DEFAULT_MAPPABILITY_MIN;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.DEFAULT_REPEAT_COUNT_MAX;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.MAX_INDEL_LENGTH;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.MAX_INSERT_BASES;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_MAPPABILITY_MIN;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_REPEAT_COUNT_MAX;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_INDEL_LENGTH;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_INSERT_BASES;
 
 import java.util.List;
 
@@ -43,6 +41,7 @@ public class SomaticMutation extends Variant
 {
     private final VariantContextDecorator mVariantDecorator;
     private final int mTumorDepth;
+    private final double mTumorAF;
     private String mSequence;
     private int mLocationHash;
 
@@ -53,9 +52,15 @@ public class SomaticMutation extends Variant
         final Genotype genotype = variantContext.getGenotype(sampleId);
 
         if(genotype != null)
+        {
             mTumorDepth = genotype.getAD()[1];
+            mTumorAF = mVariantDecorator.allelicDepth(sampleId).alleleFrequency();
+        }
         else
+        {
             mTumorDepth = 0;
+            mTumorAF = mVariantDecorator.adjustedVaf();
+        }
 
         mLocationHash = Integer.parseInt(Strings.reverseString(String.valueOf(variantContext.getStart())));
 
@@ -112,7 +117,7 @@ public class SomaticMutation extends Variant
     public double copyNumber() { return mVariantDecorator.adjustedCopyNumber(); }
 
     @Override
-    public double vaf() { return mVariantDecorator.adjustedVaf(); }
+    public double vaf() { return mTumorAF; }
 
     @Override
     public double gc() { return calcGcPercent(mSequence); }
@@ -121,7 +126,7 @@ public class SomaticMutation extends Variant
     public String otherData()
     {
         return format("Map=%.2f Repeats=%d/%d SubClonal=%.2f GermlineStatus=%s",
-            mVariantDecorator.mappability(), mVariantDecorator.repeatCount(),
+                mVariantDecorator.mappability(), mVariantDecorator.repeatCount(),
                 mVariantDecorator.context().getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0),
                 subclonalLikelihood(),
                 mVariantDecorator.context().getAttributeAsString(PURPLE_GERMLINE_INFO, ""));
@@ -158,13 +163,13 @@ public class SomaticMutation extends Variant
     @Override
     public boolean passNonReportableFilters(final ProbeConfig config)
     {
-        if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
+        if(gc() < config.GcRatioLimitMin || gc() > config.GcRatioLimitMax)
             return false;
 
         if(categoryType() != SUBCLONAL_MUTATION && vaf() < config.VafMin)
             return false;
 
-        int fragmentThreshold = categoryType() == OTHER_MUTATION ? config.FragmentCountOtherMutationMin : config.FragmentCountMin;
+        int fragmentThreshold = categoryType() == OTHER_MUTATION ? config.FragmentCountMinLower : config.FragmentCountMin;
         if(tumorFragments() < fragmentThreshold)
             return false;
 
