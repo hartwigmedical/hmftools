@@ -523,7 +523,7 @@ public class OrangeAlgo
     @NotNull
     private static LilacSummaryData loadLilacData(@NotNull OrangeConfig config) throws IOException
     {
-        return LilacSummaryData.load(config.lilacQcCsv(), config.lilacResultCsv());
+        return LilacSummaryData.load(config.lilacQcTsv(), config.lilacResultTsv());
     }
 
     @Nullable

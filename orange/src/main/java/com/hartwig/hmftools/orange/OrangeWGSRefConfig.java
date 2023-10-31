@@ -27,8 +27,8 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_CF
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.VIRUS_DIR_DESC;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
 import static com.hartwig.hmftools.orange.OrangeConfig.TUMOR_SAMPLE_ID;
-import static com.hartwig.hmftools.orange.util.Config.mandatoryPath;
-import static com.hartwig.hmftools.orange.util.Config.optionalPath;
+import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
+import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
 import java.io.File;
 

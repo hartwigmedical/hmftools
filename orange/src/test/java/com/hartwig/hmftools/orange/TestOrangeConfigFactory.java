@@ -44,8 +44,8 @@ public final class TestOrangeConfigFactory
     private static final String ISOFOX_GENE_DATA_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.gene_data.csv";
     private static final String ISOFOX_FUSION_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.pass_fusions.csv";
     private static final String ISOFOX_ALT_SPLICE_JUNCTION_CSV = RUN_DIRECTORY + "/isofox/tumor_sample.alt_splice_junc.csv";
-    private static final String LILAC_RESULT_CSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.csv";
-    private static final String LILAC_QC_CSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.qc.csv";
+    private static final String LILAC_RESULT_TSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.tsv";
+    private static final String LILAC_QC_TSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.qc.tsv";
     private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusinterprtr/tumor_sample.virus.annotated.tsv";
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/tumor_sample_chord_prediction.txt";
     private static final String CUPPA_RESULT_CSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cup.data.csv";
@@ -75,8 +75,8 @@ public final class TestOrangeConfigFactory
                 .purpleDataDirectory(PURPLE_DATA_DIRECTORY)
                 .purplePlotDirectory(PURPLE_PLOT_DIRECTORY)
                 .linxSomaticDataDirectory(LINX_SOMATIC_DATA_DIRECTORY)
-                .lilacResultCsv(LILAC_RESULT_CSV)
-                .lilacQcCsv(LILAC_QC_CSV)
+                .lilacResultTsv(LILAC_RESULT_TSV)
+                .lilacQcTsv(LILAC_QC_TSV)
                 .convertGermlineToSomatic(false)
                 .limitJsonOutput(false)
                 .addDisclaimer(false)
