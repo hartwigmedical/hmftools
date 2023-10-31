@@ -33,7 +33,7 @@ public class VariantDeduper
 
         dedupIndelsOld(variants);
 
-        // mIndelDeduper.dedupVariants(variants);
+        mIndelDeduper.dedupVariants(variants);
 
         dedupMatchingVariants(variants);
     }
