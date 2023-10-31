@@ -3,7 +3,7 @@ package com.hartwig.hmftools.orange.util;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.METRICS_DIR;
-import static com.hartwig.hmftools.orange.util.Config.mandatoryPath;
+import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
 
 import java.io.File;
 
@@ -71,7 +71,7 @@ public class PathResolver
         return mandatoryPath(plotDir);
     }
 
-    @NotNull
+    @Nullable
     public String resolveOptionalToolPlotsDirectory(@NotNull String toolPlotDirConfigKey, @NotNull String defaultPipelineToolDir)
     {
         if(configBuilder.hasValue(toolPlotDirConfigKey))

@@ -10,8 +10,8 @@ import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.rna.GeneFusionFile;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.orange.util.Config;
 import com.hartwig.hmftools.orange.util.PathResolver;
+import com.hartwig.hmftools.orange.util.PathUtil;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -95,10 +95,10 @@ public interface OrangeRnaConfig
         String tumorSampleId = configBuilder.getValue(OrangeConfig.TUMOR_SAMPLE_ID);
 
         String isofoxDir = pathResolver.resolveMandatoryToolDirectory(ISOFOX_DIR_CFG, ISOFOX_DIR);
-        String geneDataFile = Config.mandatoryPath(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
-        String statisticsFile = Config.mandatoryPath(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
-        String altSpliceJuncFile = Config.mandatoryPath(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
-        String fusionsFile = Config.mandatoryPath(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
+        String geneDataFile = PathUtil.mandatoryPath(GeneExpressionFile.generateFilename(isofoxDir, tumorSampleId));
+        String statisticsFile = PathUtil.mandatoryPath(RnaStatistics.generateFilename(isofoxDir, tumorSampleId));
+        String altSpliceJuncFile = PathUtil.mandatoryPath(AltSpliceJunctionFile.generateFilename(isofoxDir, tumorSampleId));
+        String fusionsFile = PathUtil.mandatoryPath(GeneFusionFile.generateFilename(isofoxDir, tumorSampleId));
 
         return ImmutableOrangeRnaConfig.builder()
                 .rnaSampleId(rnaSampleId)

@@ -34,8 +34,8 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.util.Config.mandatoryPath;
-import static com.hartwig.hmftools.orange.util.Config.optionalPath;
+import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
+import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

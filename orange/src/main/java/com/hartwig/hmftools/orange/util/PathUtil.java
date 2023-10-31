@@ -8,12 +8,12 @@ import java.nio.file.Files;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class Config
+public final class PathUtil
 {
     @Nullable
-    public static String optionalPath(@NotNull String fullPath)
+    public static String optionalPath(@Nullable String fullPath)
     {
-        boolean exists = Files.exists(new File(fullPath).toPath());
+        boolean exists = fullPath != null && Files.exists(new File(fullPath).toPath());
         return exists ? fullPath : null;
     }
 
