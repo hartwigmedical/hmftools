@@ -231,7 +231,7 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming
-  - 
+    - Fixed bug (potential NPE) when resolving optional paths 
 - [3.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.0)
     - Disclaimer (if enabled) has bigger font size in footer, and a disclaimer is now also present in header.
         - New ORANGE-datamodel (v2.0.0) with lots of datamodel renames and clean-ups.
