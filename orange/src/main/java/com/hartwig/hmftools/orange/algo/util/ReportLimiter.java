@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.orange.algo.util;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -115,7 +114,7 @@ public final class ReportLimiter
             return null;
         }
 
-        List<Integer> structuralVariantsToRetain = new ArrayList<>();
+        List<Integer> structuralVariantsToRetain = Lists.newArrayList();
         for(LinxBreakend breakend : filteredAllBreakends)
         {
             structuralVariantsToRetain.add(breakend.svId());
