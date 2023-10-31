@@ -247,6 +247,8 @@ public interface OrangeConfig
         }
 
         ExperimentType experimentType = determineExperimentType(configBuilder.getValue(EXPERIMENT_TYPE));
+        LOGGER.info("Experiment type has been resolved to '{}'", experimentType);
+
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
 
         PathResolver pathResolver = new PathResolver(configBuilder,
