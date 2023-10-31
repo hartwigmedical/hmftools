@@ -127,6 +127,11 @@ public class CuppaDataFile
         }
     }
 
+    public void printPredictions()
+    {
+        printPredictions(10);
+    }
+
     private boolean checkHasRnaData()
     {
         for(CuppaPrediction cuppaPrediction : CuppaPredictions)
