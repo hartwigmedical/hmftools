@@ -33,10 +33,12 @@ public class IndelDeduper
     */
 
     private final RefGenomeInterface mRefGenome;
+    private int mGroupIterations;
 
     public IndelDeduper(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
+        mGroupIterations = 0;
     }
 
     public void dedupVariants(final List<SageVariant> variants)
@@ -76,6 +78,9 @@ public class IndelDeduper
 
             List<Variant> dedupGroup = findDedupGroup(indel, candidates);
 
+            if(dedupGroup.isEmpty())
+                continue;
+
             // de-dup this group
             dedupIndelGroup(indel, dedupGroup);
 
@@ -105,30 +110,28 @@ public class IndelDeduper
     }
 
     private static final int INDEL_DEDUP_PHASED_DIST_THRESHOLD = 60;
+    private static final int INDEL_DEDUP_MAX_COMBO_GROUP = 6;
+    private static final int INDEL_DEDUP_LOG_ITERATIONS = 25;
 
     private List<Variant> findDedupGroup(final Variant indel, final List<Variant> candidates)
     {
         List<Variant> dedupGroup = Lists.newArrayList();
-
-        int indelFlankPosStart = indel.FlankPosStart;
-        int indelFlankPosEnd = indel.FlankPosEnd;
 
         for(Variant variant : candidates)
         {
             if(variant == indel)
                 continue;
 
-            if(variant.FlankPosEnd < indelFlankPosStart - INDEL_DEDUP_PHASED_DIST_THRESHOLD)
+            if(variant.FlankPosEnd < indel.FlankPosStart - INDEL_DEDUP_PHASED_DIST_THRESHOLD)
                 continue;
 
-            if(variant.FlankPosStart > indelFlankPosEnd + INDEL_DEDUP_PHASED_DIST_THRESHOLD)
+            if(variant.FlankPosStart > indel.FlankPosEnd + INDEL_DEDUP_PHASED_DIST_THRESHOLD)
                 break;
 
             if(!indel.Variant.hasMatchingLps(variant.Variant.localPhaseSets()))
                 continue;
 
-            if(positionsOverlap(indelFlankPosStart, indelFlankPosEnd, variant.FlankPosStart, variant.FlankPosEnd)
-            || variant.ReadCounter.maxDistanceFromEdge() < INDEL_DEDUP_MAX_DIST_THRESHOLD)
+            if(isDedupCandidate(indel, variant))
             {
                 dedupGroup.add(variant);
             }
@@ -139,12 +142,14 @@ public class IndelDeduper
 
     private void dedupIndelGroup(final Variant indel, final List<Variant> dedupGroup)
     {
-        SG_LOGGER.trace("indel({}) with {} other variants", indel, dedupGroup.size() - 1);
+        SG_LOGGER.trace("indel({}) with {} other variants", indel, dedupGroup.size());
 
         List<Variant> dedupedVariants = Lists.newArrayListWithCapacity(dedupGroup.size());
 
         int indelPosStart = indel.position();
         int indelPosEnd = indel.positionEnd();
+
+        List<Variant> overlappedIndels = Lists.newArrayList();
 
         // any DEL overlapping the main INDEL can be de-duped immediately
         int index = 0;
@@ -155,7 +160,7 @@ public class IndelDeduper
             if(variant.Variant.isDelete() && positionsOverlap(indelPosStart, indelPosEnd, variant.position(), variant.positionEnd()))
             {
                 dedupGroup.remove(index);
-                dedupedVariants.add(variant);
+                overlappedIndels.add(variant);
             }
             else
             {
@@ -171,16 +176,33 @@ public class IndelDeduper
         IndexedBases indelReadContextBases = indel.ReadCounter.readContext().indexedBases();
         String indelCoreFlankBases = indelReadContextBases.fullString();
 
-        checkDedupCombinations(indel, dedupGroup, dedupedVariants, indelCoreFlankBases, refBases, indel.FlankPosStart, indel.FlankPosEnd);
+        mGroupIterations = 0;
+
+        if(!checkDedupCombinations(indel, dedupGroup, dedupedVariants, indelCoreFlankBases, refBases, indel.FlankPosStart, indel.FlankPosEnd))
+        {
+            overlappedIndels.forEach(x -> markAsDedup(x.Variant));
+            dedupGroup.addAll(overlappedIndels); // add back in so they're removed from further consideration
+            return;
+        }
+
+        if(mGroupIterations >= INDEL_DEDUP_LOG_ITERATIONS)
+        {
+            SG_LOGGER.debug("indel({}) deduped {} variants, iterations({})", indel, dedupGroup.size(), mGroupIterations);
+        }
+
+        dedupGroup.addAll(overlappedIndels);
+        dedupedVariants.addAll(overlappedIndels);
+        dedupGroup.add(indel); // so it can be rescued if required
 
         for(Variant variant : dedupGroup)
         {
             if(dedupedVariants.contains(variant))
             {
-                if(variant.Variant.isPassing())
-                    variant.Variant.markDedupIndelDiff();
+                // only de-dup variants which fall within the INDEL's bounds
+                if(!isDedupCandidate(indel, variant))
+                    continue;
 
-                variant.Variant.filters().add(DEDUP_INDEL_FILTER);
+                markAsDedup(variant.Variant);
             }
             else if(!variant.Variant.isPassing()) // rescue
             {
@@ -192,7 +214,21 @@ public class IndelDeduper
         }
     }
 
-    private void checkDedupCombinations(
+    private static void markAsDedup(final SageVariant variant)
+    {
+        if(variant.isPassing())
+            variant.markDedupIndelDiff();
+
+        variant.filters().add(DEDUP_INDEL_FILTER);
+    }
+
+    private static boolean isDedupCandidate(final Variant indel, final Variant variant)
+    {
+        return positionsOverlap(indel.FlankPosStart, indel.FlankPosEnd, variant.FlankPosStart, variant.FlankPosEnd)
+                || variant.ReadCounter.maxDistanceFromEdge() < INDEL_DEDUP_MAX_DIST_THRESHOLD;
+    }
+
+    private boolean checkDedupCombinations(
             final Variant indel, final List<Variant> dedupGroup, final List<Variant> dedupedVariants,
             final String indelCoreFlankBases, final String refBases, final int refPosStart, final int refPosEnd)
     {
@@ -203,57 +239,66 @@ public class IndelDeduper
         if(checkDedupCombination(
                 indel, dedupGroup, Collections.emptyList(), dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
         {
-            return;
+            return true;
         }
 
         // then check all variants
         if(checkDedupCombination(indel, dedupGroup, dedupGroup, dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
         {
-            return;
+            return true;
         }
 
         if(dedupGroup.size() == 1)
-            return;
+            return false;
 
-        // otherwise try combinations
-        for(Variant variant : dedupGroup)
+        if(dedupGroup.size() > INDEL_DEDUP_MAX_COMBO_GROUP)
         {
+            dedupedVariants.addAll(dedupGroup);
+            return false;
+        }
+
+        // otherwise try combinations by recursively building all possible combinations
+        for(int i = 0; i < dedupGroup.size(); ++i)
+        {
+            Variant variant = dedupGroup.get(i);
+
             if(checkDedupCombinationRecursive(
-                    indel, dedupGroup, variant, dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
+                    indel, dedupGroup, Lists.newArrayList(variant), i, dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
             {
-                return;
+                return true;
             }
         }
+
+        return false;
     }
 
     private boolean checkDedupCombinationRecursive(
-            final Variant indel, final List<Variant> allVariants, final Variant selectedVariant, final List<Variant> dedupedVariants,
-            final String indelCoreFlankBases, final String refBases, final int refPosStart, final int refPosEnd)
+            final Variant indel, final List<Variant> allVariants, final List<Variant> selectedVariants, final int selectVarIndex,
+            final List<Variant> dedupedVariants, final String indelCoreFlankBases,
+            final String refBases, final int refPosStart, final int refPosEnd)
     {
         // first test just the selected variant
         if(checkDedupCombination(
-                indel, allVariants, Lists.newArrayList(selectedVariant), dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
+                indel, allVariants, selectedVariants, dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
         {
             return true;
         }
 
-        // form a new list from remaining variants in turn
-        for(int i = 0; i < allVariants.size(); ++i)
+        if(selectVarIndex >= allVariants.size() - 1)
+            return false;
+
+        // then form a new list from remaining variants in turn
+        for(int j = selectVarIndex + 1; j < allVariants.size(); ++j)
         {
-            Variant variant = allVariants.get(i);
+            Variant nextVariant = allVariants.get(j);
 
-            if(variant == selectedVariant)
+            List<Variant> newSelectedVariants = Lists.newArrayList(selectedVariants);
+            newSelectedVariants.add(nextVariant);
+
+            if(checkDedupCombinationRecursive(
+                    indel, allVariants, newSelectedVariants, j, dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
             {
-                for(int j = i + 1; j < allVariants.size(); ++i)
-                {
-                    Variant nextVariant = allVariants.get(j);
-
-                    if(checkDedupCombinationRecursive(
-                            indel, allVariants, nextVariant, dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
-                    {
-                        return true;
-                    }
-                }
+                return true;
             }
         }
 
@@ -264,12 +309,17 @@ public class IndelDeduper
             final Variant indel, final List<Variant> allVariants, final List<Variant> selectedVariants, final List<Variant> dedupedVariants,
             final String indelCoreFlankBases, final String refBases, final int refPosStart, final int refPosEnd)
     {
+        ++mGroupIterations;
+
         List<VariantHotspot> testVariants = Lists.newArrayList(indel.Variant.variant());
         selectedVariants.forEach(x -> testVariants.add(x.Variant.variant()));
 
         String netAltBases = buildAltBasesString(refBases, refPosStart, refPosEnd, testVariants);
 
-        if(indelCoreFlankBases.contains(netAltBases))
+        boolean matched = indelCoreFlankBases.length() >= netAltBases.length() ?
+                indelCoreFlankBases.contains(netAltBases) : netAltBases.contains(indelCoreFlankBases);
+
+        if(matched)
         {
             allVariants.stream().filter(x -> !selectedVariants.contains(x)).forEach(x -> dedupedVariants.add(x));
             return true;
@@ -371,11 +421,13 @@ public class IndelDeduper
             // flank positions are estimate since they aren't aware of other variants in their core and flanks
             final IndexedBases indexedBases = ReadCounter.readContext().indexedBases();
 
+            // note that flank positions are estimates of position since they aren't aware of other INDELs in their context
             int leftFlankFromCore = indexedBases.Index - indexedBases.LeftFlankIndex;
             FlankPosStart = variant.position() - leftFlankFromCore;
 
             int rightFlankFromCore = indexedBases.RightFlankIndex - indexedBases.Index;
-            FlankPosEnd = positionEnd() + rightFlankFromCore;
+            int indelGap = variant.isDelete() ? variant.ref().length() - 1 : (variant.isInsert() ? -(variant.alt().length() - 1) : 0);
+            FlankPosEnd = positionEnd() + rightFlankFromCore + indelGap;
         }
 
         public String ref()
@@ -399,7 +451,8 @@ public class IndelDeduper
                 return position() + Variant.ref().length() - 1;
         }
 
-        public String toString() { return format("%s flankPos(%d - %d) score(%d)",
-                Variant.toString(), FlankPosStart, FlankPosEnd, IndelScore); }
+        public String toString() { return format("var(%s:%d %s>%s) filters(%s) flankPos(%d - %d) distFromEdge(%d) score(%d)",
+                Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), Variant.filters().toString(),
+                FlankPosStart, FlankPosEnd, ReadCounter.maxDistanceFromEdge(), IndelScore); }
     }
 }

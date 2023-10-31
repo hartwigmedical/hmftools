@@ -203,6 +203,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MNV_FILTER, "Filter duplicate MNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_SNV_MNV_FILTER, "Variant duplicate MNV vs SNV"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_INDEL_FILTER, "Variant duplicate SNV/MNV vs INDEL"));
+        header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_INDEL_FILTER_OLD, "Variant duplicate SNV/MNV vs INDEL old version"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER, "Variant duplicate mixed somatic/germline"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MATCH, "Variant duplicate with different read contexts"));
 

@@ -134,7 +134,7 @@ public class ReadContextCounter implements VariantHotspot
         mMaxCoreMismatches = mVariant.isIndel() && mVariant.alt().length() >= CORE_LOW_QUAL_MISMATCH_BASE_LENGTH ?
                 mVariant.alt().length() / CORE_LOW_QUAL_MISMATCH_BASE_LENGTH : 0;
 
-        mAdjustedVariantPosition = mVariant.isIndel() ? mVariant.position() + mVariant.indelLength() / 2 : mVariant.position();
+        mAdjustedVariantPosition = mVariant.isIndel() ? mVariant.position() + indelLength() / 2 : mVariant.position();
 
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
