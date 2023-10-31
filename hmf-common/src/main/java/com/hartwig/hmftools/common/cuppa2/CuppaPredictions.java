@@ -13,12 +13,12 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 public class CuppaPredictions
 {
     public final List<CuppaPredictionEntry> PredictionEntries;
-    public final boolean HasRnaData;
+    public final boolean HasRnaPredictions;
     public final Categories.ClfName MainCombinedClfName;
 
-    public CuppaPredictions(final List<CuppaPredictionEntry> entries) throws IOException {
-        PredictionEntries = entries;
-        HasRnaData = checkHasRnaData();
+    public CuppaPredictions(final List<CuppaPredictionEntry> predictionEntries) throws IOException {
+        PredictionEntries = predictionEntries;
+        HasRnaPredictions = checkHasRnaPredictions();
         MainCombinedClfName = getMainCombinedClfName();
     }
 
@@ -40,11 +40,11 @@ public class CuppaPredictions
         return Double.parseDouble(string);
     }
 
-    private static String parseString(final String string)
+    private static String parseStringWithEmpty(final String string)
     {
         if(string.length() > 0)
         {
-            return string.toUpperCase();
+            return string;
         }
         return "NONE";
     }
@@ -73,28 +73,27 @@ public class CuppaPredictions
         {
             String[] rowValues = line.split(delimiter, -1);
 
-            String dataTypeStr = parseString(rowValues[dataTypeIndex]);
+            String dataTypeStr = parseStringWithEmpty(rowValues[dataTypeIndex]).toUpperCase();
             Categories.DataType dataType = Categories.DataType.valueOf(dataTypeStr);
             if(!Categories.DataType.isSampleLevelDataType(dataType))
             {
                 continue;
             }
 
-            String sampleId = parseString(rowValues[sampleIdIndex]);
+            String sampleId = rowValues[sampleIdIndex];
 
-            String clfGroupStr = parseString(rowValues[clfGroupIndex]);
+            String clfGroupStr = parseStringWithEmpty(rowValues[clfGroupIndex]).toUpperCase();
             Categories.ClfGroup clfGroup = Categories.ClfGroup.valueOf(clfGroupStr);
 
             String clfNameStr;
-            clfNameStr = parseString(rowValues[clfNameIndex]);
+            clfNameStr = parseStringWithEmpty(rowValues[clfNameIndex]).toUpperCase();
             clfNameStr = Categories.ClfName.convertAliasToName(clfNameStr);
             Categories.ClfName clfName = Categories.ClfName.valueOf(clfNameStr);
 
-            String featName = parseString(rowValues[featNameIndex]);
+            String featName = parseStringWithEmpty(rowValues[featNameIndex]);
             double featValue = parseDouble(rowValues[featValueIndex]);
             String cancerType = rowValues[cancerTypeIndex];
             double dataValue = parseDouble(rowValues[dataValueIndex]);
-
             int rank = Integer.parseInt(rowValues[rankIndex]);
             int rankGroup = Integer.parseInt(rowValues[rankGroupIndex]);
 
@@ -131,7 +130,17 @@ public class CuppaPredictions
         printPredictions(10);
     }
 
-    private boolean checkHasRnaData()
+    public CuppaPredictionEntry get(int index)
+    {
+        return PredictionEntries.get(index);
+    }
+
+    public int size()
+    {
+        return PredictionEntries.size();
+    }
+
+    private boolean checkHasRnaPredictions()
     {
         for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
@@ -151,7 +160,7 @@ public class CuppaPredictions
 
     private Categories.ClfName getMainCombinedClfName()
     {
-        if(HasRnaData)
+        if(HasRnaPredictions)
         {
             return Categories.ClfName.COMBINED;
         }
