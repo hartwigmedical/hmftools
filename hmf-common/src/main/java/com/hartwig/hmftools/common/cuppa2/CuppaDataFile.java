@@ -16,16 +16,14 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 public class CuppaDataFile
 {
     public final String VisDataPath;
-    public final String VisPlotPath;
 
     public final List<CuppaPrediction> CuppaPredictions;
     public final boolean HasRnaData;
     public final Categories.ClfName MainCombinedClfName;
     public final List<Entry<String, Double>> SortedCancerTypeProbs;
 
-    public CuppaDataFile(final String visDataPath, final String visPlotPath) throws IOException {
+    public CuppaDataFile(final String visDataPath) throws IOException {
         VisDataPath = visDataPath;
-        VisPlotPath = visPlotPath;
 
         CuppaPredictions = readTable(visDataPath);
         HasRnaData = checkHasRnaData();
