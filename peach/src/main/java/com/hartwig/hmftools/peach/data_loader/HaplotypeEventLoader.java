@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static com.hartwig.hmftools.peach.PeachUtils.PCH_LOGGER;
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 public class HaplotypeEventLoader
@@ -23,12 +22,12 @@ public class HaplotypeEventLoader
             String vcf, String sampleName, Map<Chromosome, Set<Integer>> relevantVariantPositions
     )
     {
-        Map<String, Integer> eventIdToCount = new HashMap<>();
         try(
                 AbstractFeatureReader<VariantContext, LineIterator> reader = getFeatureReader(
                         vcf, new VCFCodec(), false)
         )
         {
+            Map<String, Integer> eventIdToCount = new HashMap<>();
             for(VariantContext variantContext : reader.iterator())
             {
                 if(variantContext.isFiltered())
@@ -46,19 +45,19 @@ public class HaplotypeEventLoader
 
                 if(eventIdToCount.containsKey(event.id()))
                 {
-                    PCH_LOGGER.error("encountered event with ID '{}' more than once in VCF '{}'", event.id(), vcf);
-                    System.exit(1);
+                    throw new IllegalStateException(
+                            String.format("encountered event with ID '%s' more than once in VCF '%s'", event.id(), vcf)
+                    );
                 }
 
                 eventIdToCount.put(event.id(), count);
             }
+            return eventIdToCount;
         }
         catch(IOException e)
         {
-            PCH_LOGGER.error("failed to read VCF file({}): {}", vcf, e.toString());
-            System.exit(1);
+            throw new RuntimeException(String.format("failed to read VCF file: %s", vcf), e);
         }
-        return eventIdToCount;
     }
 
     private static Integer getEventCount(GenotypeType genotypeType, String eventId)
@@ -77,8 +76,12 @@ public class HaplotypeEventLoader
                 count = 2;
                 break;
             default:
-                PCH_LOGGER.error("cannot get occurrence count for event with ID '{}' with genotypeType '{}'", eventId, genotypeType.toString());
-                System.exit(1);
+                String error_msg = String.format(
+                        "cannot get occurrence count for event with ID '%s' and genotypeType '%s'",
+                        eventId,
+                        genotypeType
+                );
+                throw new IllegalStateException(error_msg);
         }
         return count;
     }

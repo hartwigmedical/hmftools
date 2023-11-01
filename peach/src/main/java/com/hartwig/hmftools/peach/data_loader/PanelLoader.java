@@ -29,20 +29,18 @@ public class PanelLoader
 {
     public static HaplotypePanel loadHaplotypePanel(String filename)
     {
-        HaplotypePanel panel = null;
         try
         {
             List<String> lines = Files.readAllLines(Paths.get(filename));
-            panel = loadHaplotypePanel(lines);
+            HaplotypePanel panel = loadHaplotypePanel(lines);
 
             PCH_LOGGER.info("loaded {} haplotypes from file ({})", panel.getHaplotypeCount(), filename);
+            return panel;
         }
         catch(Exception e)
         {
-            PCH_LOGGER.error("failed to load haplotypes TSV({}): {}", filename, e.toString());
-            System.exit(1);
+            throw new RuntimeException(String.format("failed to load haplotypes TSV: %s", filename), e);
         }
-        return panel;
     }
 
     @NotNull

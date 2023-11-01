@@ -32,36 +32,41 @@ public class PeachApplication
 
     public void run()
     {
-        if(!config.isValid())
+        try
         {
-            PCH_LOGGER.error("invalid config, exiting");
+            if (!config.isValid())
+            {
+                throw new IllegalArgumentException("invalid config");
+            }
+            PCH_LOGGER.info("running PEACH");
+
+            PCH_LOGGER.info("creating output directory");
+            // Output directory cannot be null in valid config
+            assert config.outputDir != null;
+            File outputDirectory = new File(config.outputDir);
+            if (!outputDirectory.exists() && !outputDirectory.mkdirs())
+            {
+                throw new RuntimeException(String.format("could not create output directory: %s", config.outputDir));
+            }
+
+            PCH_LOGGER.info("read haplotypes TSV");
+            HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(config.haplotypesTsv);
+
+            PCH_LOGGER.info("read events");
+            Map<String, Integer> eventIdToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
+                    config.vcfFile, config.sampleName, haplotypePanel.getRelevantVariantPositions()
+            );
+
+            PCH_LOGGER.info("call haplotypes");
+            HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
+            Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
+
+            writeOutputFiles(eventIdToCount, geneToHaplotypeAnalysis);
+        } catch (Exception e)
+        {
+            PCH_LOGGER.error("unrecoverable error encountered", e);
             System.exit(1);
         }
-        PCH_LOGGER.info("running PEACH");
-
-        PCH_LOGGER.info("creating output directory");
-        // Output directory cannot be null in valid config
-        assert config.outputDir != null;
-        File outputDirectory = new File(config.outputDir);
-        if (!outputDirectory.exists() && !outputDirectory.mkdirs())
-        {
-            PCH_LOGGER.error("could not create output directory, exiting");
-            System.exit(1);
-        }
-
-        PCH_LOGGER.info("read haplotypes TSV");
-        HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(config.haplotypesTsv);
-
-        PCH_LOGGER.info("read events");
-        Map<String, Integer> eventIdToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
-                config.vcfFile, config.sampleName, haplotypePanel.getRelevantVariantPositions()
-        );
-
-        PCH_LOGGER.info("call haplotypes");
-        HaplotypeCaller caller = new HaplotypeCaller(haplotypePanel);
-        Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis = caller.getGeneToHaplotypeAnalysis(eventIdToCount);
-
-        writeOutputFiles(eventIdToCount, geneToHaplotypeAnalysis);
 
         PCH_LOGGER.info("finished running PEACH");
     }
@@ -83,8 +88,7 @@ public class PeachApplication
         }
         catch (IOException e)
         {
-            PCH_LOGGER.error("failed to create all output files: {}", e.toString());
-            System.exit(1);
+            throw new RuntimeException("failed to create all output files", e);
         }
     }
 
