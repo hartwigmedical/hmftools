@@ -110,7 +110,7 @@ public class IndelDeduper
     }
 
     private static final int INDEL_DEDUP_PHASED_DIST_THRESHOLD = 60;
-    private static final int INDEL_DEDUP_MAX_COMBO_GROUP = 6;
+    private static final int INDEL_DEDUP_MAX_COMBO_GROUP = 7;
     private static final int INDEL_DEDUP_LOG_ITERATIONS = 25;
 
     private List<Variant> findDedupGroup(final Variant indel, final List<Variant> candidates)
@@ -216,10 +216,12 @@ public class IndelDeduper
 
     private static void markAsDedup(final SageVariant variant)
     {
+        // mark only otherwise passing
         if(variant.isPassing())
+        {
             variant.markDedupIndelDiff();
-
-        variant.filters().add(DEDUP_INDEL_FILTER);
+            variant.filters().add(DEDUP_INDEL_FILTER);
+        }
     }
 
     private static boolean isDedupCandidate(final Variant indel, final Variant variant)
@@ -253,6 +255,7 @@ public class IndelDeduper
 
         if(dedupGroup.size() > INDEL_DEDUP_MAX_COMBO_GROUP)
         {
+            SG_LOGGER.debug("indel({}) skipped deduping {} variants", indel, dedupGroup.size());
             dedupedVariants.addAll(dedupGroup);
             return false;
         }

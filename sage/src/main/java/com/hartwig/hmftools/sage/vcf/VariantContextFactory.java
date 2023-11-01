@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.OLD_INDEL_DEDUP_FLAG;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
@@ -76,6 +77,11 @@ public final class VariantContextFactory
         if(variant.mixedGermlineImpact() > 0)
         {
             builder.attribute(MIXED_SOMATIC_GERMLINE, variant.mixedGermlineImpact());
+        }
+
+        if(variant.dedupIndelDiff())
+        {
+            builder.attribute(OLD_INDEL_DEDUP_FLAG, true);
         }
 
         final VariantContext context = builder.make();

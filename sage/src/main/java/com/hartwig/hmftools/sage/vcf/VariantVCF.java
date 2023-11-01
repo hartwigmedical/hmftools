@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.sage.vcf;
 
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_DESC;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT_DESCRIPTION;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
@@ -52,8 +54,10 @@ public class VariantVCF implements AutoCloseable
     public static final String DEDUP_MIXED_GERMLINE_SOMATIC_FILTER = "dedupMixedGermlineSomatic";
     public static final String DEDUP_SNV_MNV_FILTER = "dedupSnvMnv";
     public static final String DEDUP_INDEL_FILTER = "dedupIndel";
-    public static final String DEDUP_INDEL_FILTER_OLD = "dedupIndelOld";
     public static final String DEDUP_MATCH = "dedupMatch";
+
+    public static final String DEDUP_INDEL_FILTER_OLD = "dedupIndelOld";
+    public static final String OLD_INDEL_DEDUP_FLAG = "DEDUP_INDEL_OLD";
 
     public static final String READ_CONTEXT_JITTER = "RC_JIT";
     private static final String READ_CONTEXT_JITTER_DESCRIPTION = "Read context jitter [Shortened, Lengthened, QualityPenalty]";
@@ -217,6 +221,9 @@ public class VariantVCF implements AutoCloseable
                 "Excess germline relative quality"));
         header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName(), "Excess germline alt support"));
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
+
+        header.addMetaDataLine(new VCFInfoHeaderLine(
+                OLD_INDEL_DEDUP_FLAG, 0, VCFHeaderLineType.Flag, "Temp marking of old-routine INDEL deduping"));
 
         return header;
     }

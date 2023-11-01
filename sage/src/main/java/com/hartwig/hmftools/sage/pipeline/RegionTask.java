@@ -195,7 +195,6 @@ public class RegionTask
         if(mConfig.Common.logPerfStats())
             mResults.addPerfCounters(mPerfCounters);
 
-        mResults.addMaxMemory(MemoryCalcs.calcMemoryUsage());
         mResults.addSynCounts(mEvidenceStage.getSyncCounts());
         mResults.addEvidenceStats(mEvidenceStage.getEvidenceStats());
     }

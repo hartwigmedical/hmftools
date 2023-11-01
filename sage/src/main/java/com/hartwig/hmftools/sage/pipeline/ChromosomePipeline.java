@@ -139,7 +139,6 @@ public class ChromosomePipeline implements AutoCloseable
         if(mConfig.Common.logPerfStats())
         {
             mRegionResults.logPerfCounters();
-            SG_LOGGER.debug("chromosome({}) max memory({})", mChromosome, mRegionResults.maxMemoryUsage());
             SG_LOGGER.debug("chromosome({}) evidence stats: {}", mChromosome, mRegionResults.evidenceStats().toString());
         }
 
@@ -148,8 +147,6 @@ public class ChromosomePipeline implements AutoCloseable
 
         SG_LOGGER.info("chromosome({}) analysis complete", mChromosome);
     }
-
-    public int maxMemoryUsage() { return mRegionResults.maxMemoryUsage(); }
 
     @Override
     public void close() throws IOException
