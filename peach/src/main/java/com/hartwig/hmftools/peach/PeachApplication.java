@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.peach;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.peach.data_loader.HaplotypeEventLoader;
 import com.hartwig.hmftools.peach.data_loader.PanelLoader;
 import com.hartwig.hmftools.peach.output.AllHaplotypeCombinationsFile;
@@ -10,12 +11,7 @@ import com.hartwig.hmftools.peach.output.EventsFile;
 import com.hartwig.hmftools.peach.output.EventsPerGeneFile;
 import com.hartwig.hmftools.peach.output.QcStatusFile;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -29,9 +25,9 @@ public class PeachApplication
     @NotNull
     private final PeachConfig config;
 
-    public PeachApplication(@NotNull final PeachConfig config)
+    public PeachApplication(@NotNull final ConfigBuilder configBuilder)
     {
-        this.config = config;
+        this.config = new PeachConfig(configBuilder);
     }
 
     public void run()
@@ -44,6 +40,8 @@ public class PeachApplication
         PCH_LOGGER.info("running PEACH");
 
         PCH_LOGGER.info("creating output directory");
+        // Output directory cannot be null in valid config
+        assert config.outputDir != null;
         File outputDirectory = new File(config.outputDir);
         if (!outputDirectory.exists() && !outputDirectory.mkdirs())
         {
@@ -102,31 +100,15 @@ public class PeachApplication
 
     public static void main(String[] args)
     {
-        final Options options = PeachConfig.createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder("Peach");
 
-        try
-        {
-            final CommandLine cmd = createCommandLine(args, options);
+        PeachConfig.addOptions(configBuilder);
 
-            setLogLevel(cmd);
+        addLoggingOptions(configBuilder);
 
-            PeachConfig config = new PeachConfig(cmd);
-            PeachApplication peachApplication = new PeachApplication(config);
-            peachApplication.run();
-        }
-        catch(ParseException e)
-        {
-            PCH_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("PeachApplication", options);
-            System.exit(1);
-        }
-    }
+        configBuilder.checkAndParseCommandLine(args);
 
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        PeachApplication peachApplication = new PeachApplication(configBuilder);
+        peachApplication.run();
     }
 }

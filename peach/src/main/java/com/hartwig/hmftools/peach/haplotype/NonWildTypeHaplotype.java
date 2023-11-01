@@ -13,7 +13,7 @@ public class NonWildTypeHaplotype implements Haplotype
 
     public NonWildTypeHaplotype(@NotNull String name, @NotNull ImmutableList<HaplotypeEvent> events)
     {
-        if (events.size() < 1)
+        if (events.isEmpty())
             throw new RuntimeException(String.format("Non-wild type haplotype '%s' has no associated events", name));
         this.name = name;
         this.events = events;

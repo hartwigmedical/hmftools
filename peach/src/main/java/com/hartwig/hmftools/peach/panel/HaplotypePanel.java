@@ -6,7 +6,6 @@ import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
 import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
 import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
-import com.hartwig.hmftools.peach.panel.GeneHaplotypePanel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;

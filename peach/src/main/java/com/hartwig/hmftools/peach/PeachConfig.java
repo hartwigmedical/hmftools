@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.peach;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import java.io.File;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 public class PeachConfig
 {
@@ -32,19 +31,19 @@ public class PeachConfig
     private static final String PICARD = "picard_jar";
     private static final String TARGET_REF_GENOME = "target_ref_genome";
 
-    public PeachConfig(final CommandLine cmd)
+    public PeachConfig(final ConfigBuilder configBuilder)
     {
-        vcfFile = cmd.getOptionValue(VCF_FILE);
-        haplotypesTsv = cmd.getOptionValue(HAPLOTYPES_TSV);
-        sampleName = cmd.getOptionValue(SAMPLE_NAME);
+        vcfFile = configBuilder.getValue(VCF_FILE);
+        haplotypesTsv = configBuilder.getValue(HAPLOTYPES_TSV);
+        sampleName = configBuilder.getValue(SAMPLE_NAME);
 
-        doLiftOver = cmd.hasOption(DO_LIFT_OVER);
-        chainFile = cmd.getOptionValue(CHAIN_FILE);
-        liftOverBed = cmd.getOptionValue(LIFT_OVER_BED);
-        picardJar = cmd.getOptionValue(PICARD);
-        targetRefGenome = cmd.getOptionValue(TARGET_REF_GENOME);
+        doLiftOver = configBuilder.hasFlag(DO_LIFT_OVER);
+        chainFile = configBuilder.getValue(CHAIN_FILE);
+        liftOverBed = configBuilder.getValue(LIFT_OVER_BED);
+        picardJar = configBuilder.getValue(PICARD);
+        targetRefGenome = configBuilder.getValue(TARGET_REF_GENOME);
 
-        outputDir = parseOutputDir(cmd);
+        outputDir = parseOutputDir(configBuilder);
     }
 
     public boolean isValid()
@@ -57,23 +56,19 @@ public class PeachConfig
         return true;
     }
 
-    public static Options createOptions()
+    public static void addOptions(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
-        options.addOption(VCF_FILE, true, "VCF input file");
-        options.addOption(HAPLOTYPES_TSV, true, "Haplotype config file");
-        options.addOption(SAMPLE_NAME, true, "Name of sample in VCF to call haplotypes for");
+        configBuilder.addPath(VCF_FILE, true, "VCF input file");
+        configBuilder.addPath(HAPLOTYPES_TSV, true, "Haplotype config file");
+        configBuilder.addConfigItem(SAMPLE_NAME, true, "Name of sample in VCF to call haplotypes for");
+        configBuilder.addFlag(DO_LIFT_OVER, "Do liftover to 38");
+        configBuilder.addPath(CHAIN_FILE, false, "USCS chain file for liftover, if liftover is needed");
+        configBuilder.addPath(LIFT_OVER_BED, false, "BED file specifying ranges that need to be lifted over to 38, if liftover is needed");
+        configBuilder.addPath(PICARD, false, "Picard JAR for liftover, if liftover is needed");
+        configBuilder.addPath(TARGET_REF_GENOME, false, "Target reference FASTA file for liftover, if liftover is needed");
 
-        options.addOption(DO_LIFT_OVER, false, "Do liftover to 38");
-        options.addOption(CHAIN_FILE, true, "USCS chain file for liftover, if liftover is needed");
-        options.addOption(LIFT_OVER_BED, true, "BED file specifying ranges that need to be lifted over to 38, if liftover is needed");
-        options.addOption(PICARD, true, "Picard JAR for liftover, if liftover is needed");
-        options.addOption(TARGET_REF_GENOME, true, "Target reference FASTA file for liftover, if liftover is needed");
-
-        addOutputDir(options);
-        addLoggingOptions(options);
-
-        return options;
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
     }
 
     public String getAdjustedChainFilePath()
