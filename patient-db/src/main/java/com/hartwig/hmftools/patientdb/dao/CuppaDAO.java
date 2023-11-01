@@ -16,12 +16,41 @@ public class CuppaDAO {
         this.context = context;
     }
 
-    void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood) {
+    void writeCuppa(
+            @NotNull String sample,
+            @NotNull String dataType,
+            @NotNull String clfName,
+            @NotNull String cancerType,
+            Double dataValue,
+            int rank,
+            int rankGroup
+    )
+    {
         deleteCuppaForSample(sample);
         LocalDateTime timestamp = LocalDateTime.now();
 
-        context.insertInto(CUPPA, CUPPA.MODIFIED, CUPPA.SAMPLEID, CUPPA.CUPPATUMORLOCATION, CUPPA.CUPPAPREDICTION)
-                .values(timestamp, sample, cancerType, Double.toString(likelihood))
+        context
+                .insertInto(
+                        CUPPA,
+                        CUPPA.MODIFIED,
+                        CUPPA.SAMPLEID,
+                        CUPPA.DATATYPE,
+                        CUPPA.CLFNAME,
+                        CUPPA.CANCERTYPE,
+                        CUPPA.DATAVALUE,
+                        CUPPA.RANK,
+                        CUPPA.RANKGROUP
+                )
+                .values(
+                        timestamp,
+                        sample,
+                        dataType,
+                        clfName,
+                        cancerType,
+                        dataValue,
+                        rank,
+                        rankGroup
+                )
                 .execute();
     }
 

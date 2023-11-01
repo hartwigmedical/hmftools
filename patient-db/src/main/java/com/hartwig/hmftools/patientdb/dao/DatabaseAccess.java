@@ -560,9 +560,11 @@ public class DatabaseAccess implements AutoCloseable
         peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
-    public void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood)
-    {
-        cuppaDAO.writeCuppa(sample, cancerType, likelihood);
+    public void writeCuppa(
+            @NotNull String sample, @NotNull String dataType, @NotNull String clfName,
+            @NotNull String cancerType, Double dataValue, int rank, int rankGroup
+    ){
+        cuppaDAO.writeCuppa(sample, dataType, clfName, cancerType, dataValue, rank, rankGroup);
     }
 
     public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends)
