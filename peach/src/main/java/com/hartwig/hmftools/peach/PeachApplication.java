@@ -51,20 +51,10 @@ public class PeachApplication
 
         PCH_LOGGER.info("read haplotypes TSV");
         HaplotypePanel haplotypePanel = PanelLoader.loadHaplotypePanel(config.haplotypesTsv);
-        String callInputVcf;
-        if (config.doLiftOver)
-        {
 
-            LiftoverService liftoverService = new LiftoverService(config);
-            liftoverService.doLiftover();
-            callInputVcf = config.getLiftoverOutputVcfPath();
-            //TODO: handle reference sequence differences V37 vs V38 properly
-        } else {
-            callInputVcf = config.vcfFile;
-        }
         PCH_LOGGER.info("read events");
         Map<String, Integer> eventIdToCount = HaplotypeEventLoader.loadRelevantVariantHaplotypeEvents(
-                callInputVcf, config.sampleName, haplotypePanel.getRelevantVariantPositions()
+                config.vcfFile, config.sampleName, haplotypePanel.getRelevantVariantPositions()
         );
 
         PCH_LOGGER.info("call haplotypes");
