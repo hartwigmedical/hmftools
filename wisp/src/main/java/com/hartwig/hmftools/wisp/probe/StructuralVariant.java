@@ -20,8 +20,6 @@ import static com.hartwig.hmftools.wisp.probe.CategoryType.AMP;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.FUSION;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_GC_THRESHOLD_MAX;
-import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_GC_THRESHOLD_MIN;
 import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_SV_BREAKENDS_PER_GENE;
 import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_INSERT_BASES;
 import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_POLY_A_T_BASES;
@@ -321,19 +319,19 @@ public class StructuralVariant extends Variant
     boolean checkFilters() { return mCategoryType != FUSION && mCategoryType != AMP && mCategoryType != CategoryType.DEL; }
 
     @Override
-    public boolean passNonReportableFilters(final ProbeConfig config)
+    public boolean passNonReportableFilters(final ProbeConfig config, boolean useLowerLimits)
     {
         if(reported() && mCategoryType != DISRUPTION)
             return true;
 
-        if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
+        if(!passesGcRatioLimit(gc(), config, useLowerLimits))
             return false;
 
         for(String refSequence : mRefSequences)
         {
             double gcRatio = calcGcPercent(refSequence);
 
-            if(gcRatio < DEFAULT_GC_THRESHOLD_MIN || gcRatio > DEFAULT_GC_THRESHOLD_MAX)
+            if(!passesGcRatioLimit(gcRatio, config, useLowerLimits))
                 return false;
 
             if(exceedsPolyAtThreshold(refSequence))
@@ -343,7 +341,7 @@ public class StructuralVariant extends Variant
         if(vaf() < config.VafMin)
             return false;
 
-        if(tumorFragments() < config.FragmentCountMin)
+        if(!passesFragmentCountLimit(tumorFragments(), config, useLowerLimits))
             return false;
 
         return true;

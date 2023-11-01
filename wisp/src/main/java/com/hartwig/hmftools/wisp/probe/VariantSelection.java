@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.wisp.probe;
 
-import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
@@ -11,6 +10,7 @@ import static com.hartwig.hmftools.wisp.probe.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.wisp.probe.SelectionStatus.EXCEEDS_COUNT;
 import static com.hartwig.hmftools.wisp.probe.SelectionStatus.FILTERED;
 import static com.hartwig.hmftools.wisp.probe.SelectionStatus.GENE_LOCATIONS;
+import static com.hartwig.hmftools.wisp.probe.SelectionStatus.NOT_SET;
 import static com.hartwig.hmftools.wisp.probe.SelectionStatus.PROXIMATE;
 import static com.hartwig.hmftools.wisp.probe.SelectionStatus.SELECTED;
 
@@ -33,65 +33,10 @@ public final class VariantSelection
 
         ProximateLocations registeredLocations = new ProximateLocations();
         Map<String,Integer> geneDisruptions = Maps.newHashMap();
-
-        int index = 0;
         int[] typeCounts = new int[CategoryType.values().length];
 
-        while(index < variants.size())
-        {
-            Variant variant = variants.get(index);
-
-            boolean canAdd = false;
-
-            if(!variant.checkFilters())
-            {
-                canAdd = true;
-            }
-            else
-            {
-                if(!variant.checkAndRegisterGeneLocation(geneDisruptions))
-                {
-                    canAdd = false;
-                    variant.setSelectionStatus(GENE_LOCATIONS);
-                }
-                else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, config.NonReportableSvCount)
-                || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, config.SubclonalCount))
-                {
-                    canAdd = false;
-                    variant.setSelectionStatus(EXCEEDS_COUNT);
-                }
-                else if(!variant.passNonReportableFilters(config))
-                {
-                    variant.setSelectionStatus(FILTERED);
-                    canAdd = false;
-                }
-                else
-                {
-                    canAdd = true;
-                }
-            }
-
-            if(canAdd)
-            {
-                if(variant.checkAndRegisterLocation(registeredLocations))
-                {
-                    addVariant(variant, selectedVariants, typeCounts);
-                }
-                else
-                {
-                    variant.setSelectionStatus(PROXIMATE);
-                }
-            }
-
-            if(!variant.isSelected() && config.WriteAll)
-                selectedVariants.add(variant);
-
-            int variantSequences = selectedVariants.stream().filter(x -> x.isSelected()).mapToInt(x -> x.sequenceCount()).sum();
-            if(variantSequences >= config.ProbeCount)
-                break;
-
-            ++index;
-        }
+        selectVariants(variants, config, selectedVariants, registeredLocations, geneDisruptions, typeCounts, false);
+        selectVariants(variants, config, selectedVariants, registeredLocations, geneDisruptions, typeCounts, true);
 
         StringJoiner sj = new StringJoiner(" ");
         for(CategoryType type : CategoryType.values())
@@ -119,43 +64,76 @@ public final class VariantSelection
         return typeCounts[categoryType.ordinal()] >= maxCount;
     }
 
-    public static final int NEAR_DISTANCE = 50;
-
-    public static boolean isNearRegisteredLocation(
-            final Map<String,List<Integer>> registeredLocations, final String chromosome, final int position)
+    private static void selectVariants(
+            final List<Variant> variants, final ProbeConfig config, final List<Variant> selectedVariants,
+            final ProximateLocations registeredLocations, final Map<String,Integer> geneDisruptions, final int[] typeCounts,
+            boolean useLowerThresholds)
     {
-        List<Integer> positions = registeredLocations.get(chromosome);
-
-        if(positions == null)
-            return false;
-
-        return positions.stream().anyMatch(x -> abs(x - position) <= NEAR_DISTANCE);
-    }
-
-    public static void addRegisteredLocation(final Map<String,List<Integer>> registeredLocations, final String chromosome, final int position)
-    {
-        List<Integer> positions = registeredLocations.get(chromosome);
-
-        if(positions == null)
+        for(Variant variant : variants)
         {
-            positions = Lists.newArrayList(position);
-            registeredLocations.put(chromosome, positions);
-            return;
+            if(useLowerThresholds && variant.isSelected())
+                continue;
+
+            boolean canAdd = true;
+
+            if(variant.checkFilters())
+            {
+                if(!useLowerThresholds)
+                {
+                    if(!variant.checkAndRegisterGeneLocation(geneDisruptions))
+                    {
+                        canAdd = false;
+                        variant.setSelectionStatus(GENE_LOCATIONS);
+                    }
+                    else if(exceedsMaxByType(variant.categoryType(), OTHER_SV, typeCounts, config.NonReportableSvCount)
+                        || exceedsMaxByType(variant.categoryType(), SUBCLONAL_MUTATION, typeCounts, config.SubclonalCount))
+                    {
+                        canAdd = false;
+                        variant.setSelectionStatus(EXCEEDS_COUNT);
+                    }
+                    else if(!variant.passNonReportableFilters(config, false))
+                    {
+                        variant.setSelectionStatus(FILTERED);
+                        canAdd = false;
+                    }
+                }
+                else
+                {
+                    // check second-pass criteria
+                    if(variant.selectionStatus() != FILTERED)
+                        continue;
+
+                    if(variant.passNonReportableFilters(config, true))
+                    {
+                        variant.setSelectionStatus(NOT_SET);
+                    }
+                    else
+                    {
+                        canAdd = false;
+                    }
+                }
+            }
+
+            if(canAdd)
+            {
+                if(variant.checkAndRegisterLocation(registeredLocations))
+                {
+                    addVariant(variant, selectedVariants, typeCounts);
+                }
+                else
+                {
+                    variant.setSelectionStatus(PROXIMATE);
+                }
+            }
+
+            if(!variant.isSelected() && config.WriteAll && useLowerThresholds)
+                selectedVariants.add(variant);
+
+            int variantSequences = selectedVariants.stream().filter(x -> x.isSelected()).mapToInt(x -> x.sequenceCount()).sum();
+            if(variantSequences >= config.ProbeCount)
+                break;
         }
-
-        int index = 0;
-        while(index < positions.size())
-        {
-            if(positions.get(index) > position)
-                ++index;
-
-            break;
-        }
-
-        positions.add(index, position);
     }
-
-
 
     private static void addVariant(final Variant variant, final List<Variant> selectedVariants, final int[] typeCounts)
     {

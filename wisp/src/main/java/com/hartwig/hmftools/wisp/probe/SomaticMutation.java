@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.wisp.probe.CategoryType.REPORTABLE_MUTATION;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.SUBCLONAL_MUTATION;
 import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_MAPPABILITY_MIN;
 import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_REPEAT_COUNT_MAX;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_REPEAT_COUNT_MAX_LOWER;
 import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_SUBCLONAL_LIKELIHOOD_MIN;
 import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_INDEL_LENGTH;
 import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_INSERT_BASES;
@@ -161,16 +162,15 @@ public class SomaticMutation extends Variant
     boolean checkFilters() { return !reported(); }
 
     @Override
-    public boolean passNonReportableFilters(final ProbeConfig config)
+    public boolean passNonReportableFilters(final ProbeConfig config, boolean useLowerLimits)
     {
-        if(gc() < config.GcRatioLimitMin || gc() > config.GcRatioLimitMax)
+        if(!passesGcRatioLimit(gc(), config, useLowerLimits))
             return false;
 
         if(categoryType() != SUBCLONAL_MUTATION && vaf() < config.VafMin)
             return false;
 
-        int fragmentThreshold = categoryType() == OTHER_MUTATION ? config.FragmentCountMinLower : config.FragmentCountMin;
-        if(tumorFragments() < fragmentThreshold)
+        if(!passesFragmentCountLimit(tumorFragments(), config, useLowerLimits))
             return false;
 
         if(mVariantDecorator.mappability() < DEFAULT_MAPPABILITY_MIN)
@@ -179,7 +179,8 @@ public class SomaticMutation extends Variant
         int repeatCountMax = max(
                 mVariantDecorator.repeatCount(), mVariantDecorator.context().getAttributeAsInt(READ_CONTEXT_REPEAT_COUNT, 0));
 
-        if(repeatCountMax > DEFAULT_REPEAT_COUNT_MAX)
+        int maxRepeatCount = useLowerLimits ? DEFAULT_REPEAT_COUNT_MAX_LOWER : DEFAULT_REPEAT_COUNT_MAX;
+        if(repeatCountMax > maxRepeatCount)
             return false;
 
         if(mVariantDecorator.type() == VariantType.INDEL)

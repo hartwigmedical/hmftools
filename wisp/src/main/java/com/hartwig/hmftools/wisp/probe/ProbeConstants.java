@@ -6,7 +6,7 @@ public final class ProbeConstants
     public static final double DEFAULT_VAF_MIN = 0.05;
 
     public static final int DEFAULT_FRAG_COUNT_MIN = 11;
-    public static final int DEFAULT_FRAG_COUNT_MIN_LOWER = 8;
+    public static final int DEFAULT_FRAG_COUNT_MIN_LOWER = 7;
 
     public static final int DEFAULT_NON_REPORTABLE_SV_COUNT = 30;
 
@@ -17,8 +17,8 @@ public final class ProbeConstants
 
     public static final double DEFAULT_MAPPABILITY_MIN = 0.5;
 
-    public static final double DEFAULT_REPEAT_COUNT_MAX = 3;
-    public static final double DEFAULT_REPEAT_COUNT_MAX_LOWER = 6;
+    public static final int DEFAULT_REPEAT_COUNT_MAX = 3;
+    public static final int DEFAULT_REPEAT_COUNT_MAX_LOWER = 6;
 
     public static final double DEFAULT_SUBCLONAL_LIKELIHOOD_MIN = 0.95;
     public static final int DEFAULT_SV_BREAKENDS_PER_GENE = 5;

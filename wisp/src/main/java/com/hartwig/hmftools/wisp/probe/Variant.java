@@ -50,7 +50,24 @@ public abstract class Variant
     abstract boolean checkAndRegisterLocation(final ProximateLocations registeredLocations);
     boolean checkAndRegisterGeneLocation(final Map<String,Integer> geneDisruptions) { return true; }
 
-    boolean passNonReportableFilters(final ProbeConfig config) { return true; }
+    boolean passNonReportableFilters(final ProbeConfig config, boolean useLowerLimits) { return true; }
+
+    protected static boolean passesGcRatioLimit(double gcRatio, final ProbeConfig config, boolean useLowerLimits)
+    {
+        if(useLowerLimits)
+            return gcRatio >= config.GcRatioLimitLowerMin && gcRatio <= config.GcRatioLimitLowerMax;
+        else
+            return gcRatio >= config.GcRatioLimitMin && gcRatio <= config.GcRatioLimitMax;
+    }
+
+    protected static boolean passesFragmentCountLimit(int fragmentCount, final ProbeConfig config, boolean useLowerLimits)
+    {
+        if(useLowerLimits)
+            return fragmentCount >= config.FragmentCountMinLower;
+        else
+            return fragmentCount >= config.FragmentCountMin;
+    }
+
 
     int sequenceCount() { return 1 + refSequences().size(); }
 
