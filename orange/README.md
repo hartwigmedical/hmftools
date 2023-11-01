@@ -1,10 +1,11 @@
 # Oncogenic Results of Analyzing the Genome
 
-ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into a single PDF and JSON file:
+ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into a single PDF and JSON file (
+see [orange-datamodel](../orange-datamodel)).
 
-1. The algo depends exclusively on config and data produced by the [Hartwig platinum pipeline](https://github.com/hartwigmedical/platinum)
+1. The algo depends exclusively on config and data produced by the [Hartwig genomic pipeline](../pipeline)
    and hence can always be run as final step without any additional local data or config required.
-2. ORANGE respects the mode in which the pipeline has been run (tumor-only vs tumor-reference, targeted vs whole genome).
+2. ORANGE respects the mode in which the pipeline has been run (tumor-only vs tumor-reference, targeted (panel) vs whole genome).
    In case RNA data is provided, the algo combines the RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample.
 3. ORANGE can be configured to convert all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part
    of the analysis without actually loosing this data.
@@ -45,14 +46,14 @@ ORANGE requires the output of various Hartwig algorithms, along with some resour
 known fusions and ensembl data cache). The resource files required to run ORANGE can be
 found [here](https://resources.hartwigmedicalfoundation.nl) for either 37 or 38 reference genome version.
 
-### Base (targeted) tumor-only DNA mode
+### Base (targeted/panel) tumor-only DNA mode
 
 ```
 java -jar orange.jar \
-    -experiment_type PANEL
+    -experiment_type "PANEL"
     -tumor_sample_id tumor_sample \
-    -primary_tumor_doids doid1;doid2 \
-    -ref_genome_version 37 \
+    -primary_tumor_doids "doid1;doid2" \
+    -ref_genome_version "37" \
     -output_dir /path/to/where/to/write/output \
     -doid_json /path/to/input_doid_tree.json \
     -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
@@ -66,9 +67,11 @@ java -jar orange.jar \
     -purple_dir /path/to/purple_output \
     -purple_plot_dir /path/to/purple_plots \
     -linx_dir /path/to/linx_somatic_output \
-    -linx_plot_dir /path/to/linx_somatic_output_plots \
+    -linx_plot_dir /path/to/optional_linx_somatic_output_plots \
     -lilac_dir /path/to/lilac_output 
 ```
+
+Note that `linx_plot_dir` is an optional parameter and can be left out completely in case linx has not generated any plots.
 
 Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
 tumor characteristics. If primary tumor doids are not provided, percentiles are calculated against the full HMF database only.
@@ -228,7 +231,7 @@ investigate potential causes for QC failure.
 ## Version History and Download Links
 
 - Upcoming
-  - 
+    - Fixed bug (potential NPE) when resolving optional paths 
 - [3.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.0)
     - Disclaimer (if enabled) has bigger font size in footer, and a disclaimer is now also present in header.
         - New ORANGE-datamodel (v2.0.0) with lots of datamodel renames and clean-ups.

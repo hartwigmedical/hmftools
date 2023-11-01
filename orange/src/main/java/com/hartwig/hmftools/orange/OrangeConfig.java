@@ -34,8 +34,8 @@ import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.orange.OrangeApplication.LOGGER;
-import static com.hartwig.hmftools.orange.util.Config.mandatoryPath;
-import static com.hartwig.hmftools.orange.util.Config.optionalPath;
+import static com.hartwig.hmftools.orange.util.PathUtil.mandatoryPath;
+import static com.hartwig.hmftools.orange.util.PathUtil.optionalPath;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -197,10 +197,10 @@ public interface OrangeConfig
     String linxPlotDirectory();
 
     @NotNull
-    String lilacResultCsv();
+    String lilacResultTsv();
 
     @NotNull
-    String lilacQcCsv();
+    String lilacQcTsv();
 
     boolean convertGermlineToSomatic();
 
@@ -247,6 +247,8 @@ public interface OrangeConfig
         }
 
         ExperimentType experimentType = determineExperimentType(configBuilder.getValue(EXPERIMENT_TYPE));
+        LOGGER.info("Experiment type has been resolved to '{}'", experimentType);
+
         String tumorSampleId = configBuilder.getValue(TUMOR_SAMPLE_ID);
 
         PathResolver pathResolver = new PathResolver(configBuilder,
@@ -283,8 +285,8 @@ public interface OrangeConfig
         builder.sageSomaticTumorSampleBQRPlot(mandatoryPath(SageCommon.generateBqrPlotFilename(sageSomaticDir, tumorSampleId)));
 
         String lilacDir = pathResolver.resolveMandatoryToolDirectory(LILAC_DIR_CFG, LILAC_DIR);
-        builder.lilacResultCsv(mandatoryPath(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
-        builder.lilacQcCsv(mandatoryPath(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
+        builder.lilacResultTsv(mandatoryPath(LilacAllele.generateFilename(lilacDir, tumorSampleId)));
+        builder.lilacQcTsv(mandatoryPath(LilacQcData.generateFilename(lilacDir, tumorSampleId)));
 
         if(experimentType == ExperimentType.WHOLE_GENOME)
         {
