@@ -128,7 +128,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
             SG_LOGGER.debug("region({}) evidence stats: {}", regionBounds, mStats);
         }
 
-        // SG_LOGGER.debug("variant-reads({}) phasing checks({})", mVariantReadChecks, mPhasingChecks);
+        if(mConfig.Quality.MapQualityRatioFactor > 0)
+        {
+            mReadCounters.forEach(x -> x.applyMapQualityRatio());
+        }
 
         return mReadCounters;
     }

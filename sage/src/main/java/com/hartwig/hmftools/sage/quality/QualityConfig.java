@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MQ_RATIO_FACTOR;
+
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.hla.HlaCommon;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
@@ -14,6 +16,7 @@ public class QualityConfig
     public final int FixedPenalty;
     public final double ReadEventsPenalty;
     public final int ImproperPairPenalty;
+    public final double MapQualityRatioFactor;
 
     private static final String JITTER_PENALTY = "jitter_penalty";
     private static final String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
@@ -23,6 +26,7 @@ public class QualityConfig
     private static final String MAP_QUAL_FIXED_PENALTY = "fixed_qual_penalty";
     private static final String MAP_QUAL_IMPROPER_PAIR_PENALTY = "improper_pair_qual_penalty";
     private static final String MAP_QUAL_READ_EVENTS_PENALTY = "read_events_qual_penalty";
+    private static final String MAP_QUAL_RATIO_FACTOR = "map_qual_ratio_factor";
 
     private static final double DEFAULT_JITTER_PENALTY = 0.25;
     private static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -42,6 +46,7 @@ public class QualityConfig
         FixedPenalty = configBuilder.getInteger(MAP_QUAL_FIXED_PENALTY);
         ReadEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
+        MapQualityRatioFactor = configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
     }
 
     public QualityConfig()
@@ -54,6 +59,7 @@ public class QualityConfig
         FixedPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
         ReadEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
         ImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
+        MapQualityRatioFactor = DEFAULT_MQ_RATIO_FACTOR;
     }
 
     public boolean isHighlyPolymorphic(final GenomePosition position)
@@ -88,5 +94,7 @@ public class QualityConfig
         configBuilder.addDecimal(
                 MAP_QUAL_READ_EVENTS_PENALTY,
                 "Penalty to apply to map qual for additional distance from ref", DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY);
+
+        configBuilder.addDecimal(MAP_QUAL_RATIO_FACTOR, "Map quality ratio factor (0 = disabled)", DEFAULT_MQ_RATIO_FACTOR);
     }
 }
