@@ -10,30 +10,35 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-class GenomePositionSelectorListImpl<P extends GenomePosition> implements GenomePositionSelector<P> {
-
+class GenomePositionSelectorListImpl<P extends GenomePosition> implements GenomePositionSelector<P>
+{
     @NotNull
     private final List<P> positions;
     private int index = 0;
 
-    GenomePositionSelectorListImpl(@NotNull final List<P> positions) {
+    GenomePositionSelectorListImpl(@NotNull final List<P> positions)
+    {
         this.positions = positions;
     }
 
     @Override
     @NotNull
-    public Optional<P> select(@NotNull final GenomePosition position) {
-        if (positions.isEmpty()) {
+    public Optional<P> select(@NotNull final GenomePosition position)
+    {
+        if(positions.isEmpty())
+        {
             return Optional.empty();
         }
 
         int currentCompare = current().compareTo(position);
-        while (currentCompare >= 0 && index > 0) {
+        while(currentCompare >= 0 && index > 0)
+        {
             index--;
             currentCompare = current().compareTo(position);
         }
 
-        while (currentCompare < 0 && index < positions.size() - 1) {
+        while(currentCompare < 0 && index < positions.size() - 1)
+        {
             index++;
             currentCompare = current().compareTo(position);
         }
@@ -42,15 +47,18 @@ class GenomePositionSelectorListImpl<P extends GenomePosition> implements Genome
     }
 
     @Override
-    public void select(final GenomeRegion region, final Consumer<P> handler) {
-        if (positions.isEmpty()) {
+    public void select(final GenomeRegion region, final Consumer<P> handler)
+    {
+        if(positions.isEmpty())
+        {
             return;
         }
 
         // Line up index to start
         select(GenomePositions.create(region.chromosome(), region.start()));
 
-        while (index < positions.size() && compare(current(), region) == 0) {
+        while(index < positions.size() && compare(current(), region) == 0)
+        {
             handler.accept(current());
             index++;
         }
@@ -59,7 +67,8 @@ class GenomePositionSelectorListImpl<P extends GenomePosition> implements Genome
     }
 
     @NotNull
-    private P current() {
+    private P current()
+    {
         return positions.get(index);
     }
 }

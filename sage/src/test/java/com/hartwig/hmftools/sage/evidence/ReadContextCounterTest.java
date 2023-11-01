@@ -2,28 +2,22 @@ package com.hartwig.hmftools.sage.evidence;
 
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.buildSamRecord;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_FULL;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_PARTIAL;
 
 import static org.junit.Assert.assertEquals;
 
 import static htsjdk.samtools.SAMUtils.phredToFastq;
 
-import java.util.Collections;
-
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.common.IndexedBases;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
-import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
@@ -35,20 +29,12 @@ import junit.framework.TestCase;
 
 public class ReadContextCounterTest
 {
-    private static final String SAMPLE = "sample";
     private static final int MAX_COVERAGE = 1000;
     private static final VariantTier TIER = VariantTier.PANEL;
-    private static final SageConfig CONFIG = new SageConfig();
-    private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
-
-    // convert to using MockRefGenome
-    private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
-
-    private static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(CONFIG.Quality, RECALIBRATION, REF_BASES);
 
     private static void processRead(final ReadContextCounter rcCounter, final SAMRecord record)
     {
-        rcCounter.processRead(record, CONFIG, QUALITY_CALCULATOR,1, null);
+        rcCounter.processRead(record, 1);
     }
 
     @Test
@@ -57,8 +43,8 @@ public class ReadContextCounterTest
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
 
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0,
+                        TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(555, "3S3M", "TGTTTC", "######");
         processRead(victim, record);
@@ -72,8 +58,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(556, "2S3M", "TGTTC", "#####");
         processRead(victim, record);
@@ -87,8 +73,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 2, "CAT", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(555, "2S1M", "CAT", "#####");
         processRead(victim, record);
@@ -102,8 +88,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("A").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 2,"CAT", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         String quals = buildQualString(new int[] {37, 37, 37});
 
@@ -130,10 +116,10 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("TCG").alt("ATC").position(552).build();
         final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
-        final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "########");
+        final SAMRecord record = buildSamRecord(555, "5S3M", "GAAAAATC", "FFFFFFFF");
         processRead(victim, record);
 
         assertEquals(1, victim.depth());
@@ -145,8 +131,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("G").alt("GT").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 5, "TGTTTC", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(553, "2M4S", "TGTTTC", "######");
         processRead(victim, record);
@@ -160,8 +146,8 @@ public class ReadContextCounterTest
     {
         final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder().chromosome("1").ref("GT").alt("G").position(554).build();
         final ReadContext readContext = createReadContext(554, 1, 0, 4, "TGTTC", Strings.EMPTY);
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         final SAMRecord record = buildSamRecord(553, "2M3S", "TGTTC", "#####");
         processRead(victim, record);
@@ -177,10 +163,10 @@ public class ReadContextCounterTest
 
         final ReadContext readContext = createReadContext(552, 2, 0, 6, "GAAAAAT", Strings.EMPTY);
 
-        final ReadContextCounter victim =
-                new ReadContextCounter(1, hotspot, readContext, TIER, MAX_COVERAGE, 0);
+        final ReadContextCounter victim = new ReadContextCounter(
+                1, hotspot, readContext, TIER, MAX_COVERAGE, 0, TEST_CONFIG, QUALITY_CALCULATOR, null);
 
-        final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "########");
+        final SAMRecord record = buildSamRecord(550, "2M6S", "GAAAAATC", "FFFFFFFF");
         processRead(victim, record);
 
         assertEquals(1, victim.depth());
@@ -217,7 +203,7 @@ public class ReadContextCounterTest
         TestCase.assertEquals(2, task.getVariants().size());
         SageVariant var = task.getVariants().stream().filter(x -> x.position() == 51).findFirst().orElse(null);
         TestCase.assertNotNull(var);
-        TestCase.assertEquals(2, var.tumorReadCounters().get(0).counts()[RC_FULL]);
+        TestCase.assertEquals(2, var.tumorReadCounters().get(0).readSupportCounts().Full);
     }
 
     @Test
@@ -285,23 +271,23 @@ public class ReadContextCounterTest
         TestCase.assertNotNull(var3);
         TestCase.assertNotNull(var4);
         TestCase.assertNotNull(var5);
-        TestCase.assertEquals(5, var1.tumorReadCounters().get(0).counts()[RC_FULL]);
-        TestCase.assertEquals(1, var1.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
+        TestCase.assertEquals(5, var1.tumorReadCounters().get(0).readSupportCounts().Full);
+        TestCase.assertEquals(1, var1.tumorReadCounters().get(0).readSupportCounts().Partial);
 
-        TestCase.assertEquals(5, var2.tumorReadCounters().get(0).counts()[RC_FULL]);
-        TestCase.assertEquals(1, var2.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
+        TestCase.assertEquals(5, var2.tumorReadCounters().get(0).readSupportCounts().Full);
+        TestCase.assertEquals(1, var2.tumorReadCounters().get(0).readSupportCounts().Partial);
 
-        TestCase.assertEquals(5, var3.tumorReadCounters().get(0).counts()[RC_FULL]);
-        TestCase.assertEquals(1, var3.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
+        TestCase.assertEquals(5, var3.tumorReadCounters().get(0).readSupportCounts().Full);
+        TestCase.assertEquals(1, var3.tumorReadCounters().get(0).readSupportCounts().Partial);
 
-        TestCase.assertEquals(4, var4.tumorReadCounters().get(0).counts()[RC_FULL]);
-        TestCase.assertEquals(1, var4.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
+        TestCase.assertEquals(4, var4.tumorReadCounters().get(0).readSupportCounts().Full);
+        TestCase.assertEquals(1, var4.tumorReadCounters().get(0).readSupportCounts().Partial);
 
-        TestCase.assertEquals(5, var5.tumorReadCounters().get(0).counts()[RC_FULL]);
-        TestCase.assertEquals(1, var5.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
+        TestCase.assertEquals(5, var5.tumorReadCounters().get(0).readSupportCounts().Full);
+        TestCase.assertEquals(1, var5.tumorReadCounters().get(0).readSupportCounts().Partial);
 
-        TestCase.assertEquals(3, var6.tumorReadCounters().get(0).counts()[RC_FULL]);
-        TestCase.assertEquals(0, var6.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
+        TestCase.assertEquals(3, var6.tumorReadCounters().get(0).readSupportCounts().Full);
+        TestCase.assertEquals(0, var6.tumorReadCounters().get(0).readSupportCounts().Partial);
     }
 
 }

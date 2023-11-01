@@ -2,22 +2,19 @@ package com.hartwig.hmftools.purple.somatic;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
-import java.io.File;
 import java.util.List;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.common.hla.HlaCommon;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
-import com.hartwig.hmftools.purple.somatic.HotspotEnrichment;
-import com.hartwig.hmftools.purple.somatic.SomaticVariant;
-import com.hartwig.hmftools.purple.somatic.SomaticPurityEnrichment;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticVariantCache
@@ -27,6 +24,7 @@ public class SomaticVariantCache
     private final List<SomaticVariant> mVariants;
 
     private VCFHeader mVcfHeader;
+    private GenotypeIds mGenotypeIds;
 
     // counts for plot & chart down-sampling
     private int mIndelCount;
@@ -40,10 +38,12 @@ public class SomaticVariantCache
         mIndelCount = 0;
         mSnpCount = 0;
         mVcfHeader = null;
+        mGenotypeIds = null;
     }
 
     public boolean hasData() { return !mVariants.isEmpty(); }
     public List<SomaticVariant> variants() { return mVariants; }
+    public GenotypeIds genotypeIds() { return mGenotypeIds; }
 
     public int snpCount() { return mSnpCount; }
     public int indelCount() { return mIndelCount; }
@@ -55,12 +55,14 @@ public class SomaticVariantCache
 
         final HotspotEnrichment hotspotEnrichment = new HotspotEnrichment(somaticHotspots, true);
 
-        VCFFileReader vcfReader = new VCFFileReader(new File(somaticVcf), false);
-        mVcfHeader = vcfReader.getHeader();
+        VcfFileReader vcfReader = new VcfFileReader(somaticVcf);
+        mVcfHeader = vcfReader.vcfHeader();
+
+        mGenotypeIds = GenotypeIds.fromVcfHeader(mVcfHeader, mConfig.ReferenceId, mConfig.TumorId);
 
         boolean tumorOnly = mConfig.tumorOnlyMode();
 
-        for(VariantContext variantContext : vcfReader)
+        for(VariantContext variantContext : vcfReader.iterator())
         {
             SomaticVariant variant = new SomaticVariant(variantContext, mConfig.TumorId, mConfig.ReferenceId);
 
@@ -73,6 +75,15 @@ public class SomaticVariantCache
                 if(qualThreshold != null && variant.decorator().qual() < qualThreshold)
                     continue;
             }
+
+            if(mConfig.FilterSomaticsOnGene)
+            {
+                if(variant.variantImpact() == null || variant.variantImpact().CanonicalGeneName.isEmpty())
+                    continue;
+            }
+
+            if(mConfig.excludeOnSpecificRegion(variant.chromosome(), variant.position()))
+                continue;
 
             mVariants.add(variant);
 

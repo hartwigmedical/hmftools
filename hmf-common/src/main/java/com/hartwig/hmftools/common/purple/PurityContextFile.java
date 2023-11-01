@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +60,7 @@ public final class PurityContextFile
     @NotNull
     static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("purity")
                 .add("normFactor")
                 .add("score")
@@ -75,7 +75,6 @@ public final class PurityContextFile
                 .add("maxPloidy")
                 .add("minDiploidProportion")
                 .add("maxDiploidProportion")
-                .add("version")
                 .add("somaticPenalty")
                 .add("wholeGenomeDuplication")
                 .add("msIndelsPerMb")
@@ -96,7 +95,7 @@ public final class PurityContextFile
         final FittedPurity purity = context.bestFit();
         final FittedPurityScore score = context.score();
 
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(FORMAT.format(purity.purity()))
                 .add(FORMAT.format(purity.normFactor()))
                 .add(FORMAT.format(purity.score()))
@@ -111,7 +110,6 @@ public final class PurityContextFile
                 .add(FORMAT.format(score.maxPloidy()))
                 .add(FORMAT.format(score.minDiploidProportion()))
                 .add(FORMAT.format(score.maxDiploidProportion()))
-                .add(String.valueOf(context.version()))
                 .add(FORMAT.format(purity.somaticPenalty()))
                 .add(String.valueOf(context.wholeGenomeDuplication()))
                 .add(FORMAT.format(context.microsatelliteIndelsPerMb()))
@@ -132,8 +130,8 @@ public final class PurityContextFile
 
         List<String> lines = Files.readAllLines(new File(filePath).toPath());
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
-        String[] values = lines.get(1).split(DELIMITER, -1);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
+        String[] values = lines.get(1).split(TSV_DELIM, -1);
 
         ImmutablePurityContext.Builder builder = ImmutablePurityContext.builder();
 
@@ -171,7 +169,6 @@ public final class PurityContextFile
                 .runMode(runMode)
                 .targeted(fieldsIndexMap.containsKey("targeted") ? Boolean.parseBoolean(values[fieldsIndexMap.get("targeted")]) : false)
                 .polyClonalProportion(Double.parseDouble(values[fieldsIndexMap.get("polyclonalProportion")]))
-                .version(values[fieldsIndexMap.get("version")])
                 .wholeGenomeDuplication(Boolean.parseBoolean(values[fieldsIndexMap.get("wholeGenomeDuplication")]))
                 .microsatelliteIndelsPerMb(Double.parseDouble(values[fieldsIndexMap.get("msIndelsPerMb")]))
                 .microsatelliteStatus(MicrosatelliteStatus.valueOf(values[fieldsIndexMap.get("msStatus")]))

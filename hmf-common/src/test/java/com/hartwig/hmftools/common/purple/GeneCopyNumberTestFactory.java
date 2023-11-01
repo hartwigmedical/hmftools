@@ -3,13 +3,11 @@ package com.hartwig.hmftools.common.purple;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class GeneCopyNumberTestFactory {
-
-    private GeneCopyNumberTestFactory() {
-    }
-
+public final class GeneCopyNumberTestFactory
+{
     @NotNull
-    public static ImmutableGeneCopyNumber.Builder builder() {
+    public static ImmutableGeneCopyNumber.Builder builder()
+    {
         return ImmutableGeneCopyNumber.builder()
                 .start(0)
                 .end(0)

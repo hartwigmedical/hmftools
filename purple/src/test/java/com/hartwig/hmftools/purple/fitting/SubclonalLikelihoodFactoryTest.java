@@ -16,7 +16,7 @@ public class SubclonalLikelihoodFactoryTest
     @Test
     public void testSubclonalLikelihood()
     {
-        final List<PeakModel> model = Lists.newArrayList(
+        final List<PeakModelData> model = Lists.newArrayList(
                 createModel(true, true, 0.0, 1),
                 createModel(true, true, 0.05, 2),
                 createModel(false, true, 0.05, 1),
@@ -34,7 +34,7 @@ public class SubclonalLikelihoodFactoryTest
     @Test
     public void testIgnoreInvalid()
     {
-        final List<PeakModel> model = Lists.newArrayList(
+        final List<PeakModelData> model = Lists.newArrayList(
                 createModel(true, true, 0.05, 2),
                 createModel(false, false, 0.05, 1),
                 createModel(false, true, 0.05, 1));
@@ -50,9 +50,8 @@ public class SubclonalLikelihoodFactoryTest
         assertEquals(0, victim.subclonalLikelihood(0.05), 0.01);
     }
 
-    @NotNull
-    private static PeakModel createModel(boolean subclonal, boolean isValid, double bucket, double bucketWeight)
+    private static PeakModelData createModel(boolean subclonal, boolean isValid, double bucket, double bucketWeight)
     {
-        return ModifiablePeakModel.create().setBucket(bucket).setBucketWeight(bucketWeight).setIsSubclonal(subclonal).setIsValid(isValid);
+        return new PeakModelData(0, 0, bucket, bucketWeight, isValid, subclonal);
     }
 }

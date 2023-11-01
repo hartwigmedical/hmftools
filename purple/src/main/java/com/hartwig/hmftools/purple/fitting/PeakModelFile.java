@@ -1,45 +1,44 @@
 package com.hartwig.hmftools.purple.fitting;
 
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
-import org.jetbrains.annotations.NotNull;
-
-public final class PeakModelFile {
-
-    private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
-
-    private static final String DELIMITER = "\t";
+public final class PeakModelFile
+{
     private static final String EXTENSION = ".purple.somatic.clonality.tsv";
 
-    private PeakModelFile() {
+    public static String generateFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample) {
-        return basePath + File.separator + sample + EXTENSION;
-    }
-
-    public static void write(@NotNull final String filename, @NotNull final List<PeakModel> model) throws IOException {
+    public static void write(final String filename, final List<PeakModelData> model) throws IOException
+    {
         Files.write(new File(filename).toPath(), toLines(model));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<PeakModel> model) {
+    private static List<String> toLines(final List<PeakModelData> model)
+    {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
         model.stream().map(PeakModelFile::toString).forEach(lines::add);
         return lines;
     }
 
-    @NotNull
-    private static String header() {
-        return new StringJoiner(DELIMITER, "", "").add("peak")
+    private static String header()
+    {
+        return new StringJoiner(TSV_DELIM, "", "")
+                .add("peak")
                 .add("bucket")
                 .add("bucketWeight")
                 .add("peakAvgWeight")
@@ -48,14 +47,15 @@ public final class PeakModelFile {
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final PeakModel ratio) {
-        return new StringJoiner(DELIMITER).add(FORMAT.format(ratio.peak()))
-                .add(FORMAT.format(ratio.bucket()))
-                .add(FORMAT.format(ratio.bucketWeight()))
-                .add(FORMAT.format(ratio.peakAvgWeight()))
-                .add(String.valueOf(ratio.isValid()))
-                .add(String.valueOf(ratio.isSubclonal()))
+    private static String toString(final PeakModelData ratio)
+    {
+        return new StringJoiner(TSV_DELIM)
+                .add(format("%.4f", ratio.Peak))
+                .add(format("%.4f", ratio.Bucket))
+                .add(format("%.4f", ratio.BucketWeight))
+                .add(format("%.4f", ratio.PeakAvgWeight))
+                .add(String.valueOf(ratio.IsValid))
+                .add(String.valueOf(ratio.IsSubclonal))
                 .toString();
     }
 }

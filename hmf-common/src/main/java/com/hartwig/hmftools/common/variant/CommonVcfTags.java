@@ -1,13 +1,6 @@
 package com.hartwig.hmftools.common.variant;
 
-import org.jetbrains.annotations.NotNull;
-
 import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLine;
-import htsjdk.variant.vcf.VCFHeaderLineCount;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public final class CommonVcfTags
 {
@@ -16,10 +9,6 @@ public final class CommonVcfTags
 
     public static final String REPORTED_FLAG = "REPORTED";
     public static final String REPORTED_DESC = "Variant is reported in the driver catalog";
-
-    private CommonVcfTags()
-    {
-    }
 
     public static int getGenotypeAttributeAsInt(final Genotype genotype, final String attribute, int defaultVaue)
     {
@@ -32,5 +21,4 @@ public final class CommonVcfTags
         Object value = genotype.getExtendedAttribute(attribute);
         return value == null ? defaultVaue : Double.parseDouble(value.toString());
     }
-
 }

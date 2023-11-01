@@ -8,10 +8,11 @@ import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTra
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.loadTranscriptSpliceAcceptorData;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptProteinData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -47,6 +49,7 @@ public class EnsemblDataCache
     private boolean mRequireSplicePositions;
     private boolean mCanonicalTranscriptsOnly;
     private boolean mRequireGeneSynonyms;
+    private boolean mRequireNonEnsemblTranscripts;
 
     private final Map<GeneData,Integer> mDownstreamGeneAnnotations;
     private final List<GeneData> mAlternativeGeneData;
@@ -58,6 +61,11 @@ public class EnsemblDataCache
     public EnsemblDataCache(final CommandLine cmd, final RefGenomeVersion refGenomeVersion)
     {
         this(cmd.getOptionValue(ENSEMBL_DATA_DIR), refGenomeVersion);
+    }
+
+    public EnsemblDataCache(final ConfigBuilder configBuilder)
+    {
+        this(configBuilder.getValue(ENSEMBL_DATA_DIR), RefGenomeVersion.from(configBuilder));
     }
 
     public EnsemblDataCache(final String dataPath, final RefGenomeVersion refGenomeVersion)
@@ -77,8 +85,19 @@ public class EnsemblDataCache
         mRequireSplicePositions = false;
         mCanonicalTranscriptsOnly = false;
         mRequireGeneSynonyms = false;
+        mRequireNonEnsemblTranscripts = false;
         mDownstreamGeneAnnotations = Maps.newHashMap();
         mAlternativeGeneData = Lists.newArrayList();
+    }
+
+    public static void addEnsemblDir(final ConfigBuilder configBuilder)
+    {
+        addEnsemblDir(configBuilder, false);
+    }
+
+    public static void addEnsemblDir(final ConfigBuilder configBuilder, boolean required)
+    {
+        configBuilder.addPath(ENSEMBL_DATA_DIR, required, ENSEMBL_DATA_DIR_CFG);
     }
 
     public static void addEnsemblDir(final Options options)
@@ -109,6 +128,7 @@ public class EnsemblDataCache
     }
 
     public void setRequireGeneSynonyms() { mRequireGeneSynonyms = true; }
+    public void setRequireNonEnsemblTranscripts() { mRequireNonEnsemblTranscripts = true; }
 
     public Map<String,List<TranscriptData>> getTranscriptDataMap() { return mTranscriptByGeneIdMap; }
     public Map<String,List<GeneData>> getChrGeneDataMap() { return mChrGeneDataMap; }
@@ -195,18 +215,6 @@ public class EnsemblDataCache
     public List<TranscriptData> getTranscripts(final String geneId)
     {
         return mTranscriptByGeneIdMap.get(geneId);
-    }
-
-    public void populateGeneIdList(final List<String> uniqueGeneIds, final String chromosome, int position, int upstreamDistance)
-    {
-        // find the unique set of geneIds
-        final List<GeneData> matchedGenes = findGeneRegions(chromosome, position, upstreamDistance);
-
-        for(final GeneData geneData : matchedGenes)
-        {
-            if(!uniqueGeneIds.contains(geneData.GeneId))
-                uniqueGeneIds.add(geneData.GeneId);
-        }
     }
 
     public TranscriptData getCanonicalTranscriptData(final String geneId) { return getTranscriptData(geneId, ""); }
@@ -397,7 +405,8 @@ public class EnsemblDataCache
         if(!delayTranscriptLoading)
         {
             if(!EnsemblDataLoader.loadTranscriptData(
-                    mDataPath, mTranscriptByGeneIdMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly, Lists.newArrayList()))
+                    mDataPath, mTranscriptByGeneIdMap, mRestrictedGeneIdList, mRequireExons, mCanonicalTranscriptsOnly,
+                    mRequireNonEnsemblTranscripts, Collections.emptyList()))
             {
                 return false;
             }
@@ -414,13 +423,14 @@ public class EnsemblDataCache
 
     public boolean loadTranscriptData(final List<String> restrictedGeneIds)
     {
-        return loadTranscriptData(restrictedGeneIds, Lists.newArrayList());
+        return loadTranscriptData(restrictedGeneIds, Collections.emptyList());
     }
 
     public boolean loadTranscriptData(final List<String> restrictedGeneIds, final List<String> nonCanonicalTrans)
     {
         if(!EnsemblDataLoader.loadTranscriptData(
-                mDataPath, mTranscriptByGeneIdMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly, nonCanonicalTrans))
+                mDataPath, mTranscriptByGeneIdMap, restrictedGeneIds, mRequireExons, mCanonicalTranscriptsOnly,
+                mRequireNonEnsemblTranscripts, nonCanonicalTrans))
         {
             return false;
         }
@@ -549,26 +559,4 @@ public class EnsemblDataCache
 
         return domainPositions;
     }
-
-    public Map<String,String> createTransGeneNamesMap()
-    {
-        Map<String,String> transGeneMap = Maps.newHashMap();
-
-        for(List<GeneData> geneDataList : mChrGeneDataMap.values())
-        {
-            for(GeneData geneData : geneDataList)
-            {
-                List<TranscriptData> transDataList = getTranscripts(geneData.GeneId);
-
-                for(TranscriptData tranData : transDataList)
-                {
-                    if(tranData.IsCanonical)
-                        transGeneMap.put(tranData.TransName, geneData.GeneName);
-                }
-            }
-        }
-
-        return transGeneMap;
-    }
-
 }

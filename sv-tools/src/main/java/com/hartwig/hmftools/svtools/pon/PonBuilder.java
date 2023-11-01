@@ -2,8 +2,8 @@ package com.hartwig.hmftools.svtools.pon;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.chrEnd;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.chrStart;
 import static com.hartwig.hmftools.svtools.pon.PonLocations.chromosome;
@@ -14,23 +14,17 @@ import static com.hartwig.hmftools.svtools.pon.PonLocations.orientation;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -45,9 +39,9 @@ public class PonBuilder
 
     public static final Logger PON_LOGGER = LogManager.getLogger(PonBuilder.class);
 
-    public PonBuilder(final CommandLine cmd)
+    public PonBuilder(final ConfigBuilder configBuilder)
     {
-        mConfig = new PonConfig(cmd);
+        mConfig = new PonConfig(configBuilder);
 
         mSampleVcfFiles = Maps.newHashMap();
         mPonStore = new PonStore();
@@ -199,21 +193,14 @@ public class PonBuilder
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = new Options();
-        PonConfig.addOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        PonConfig.registerConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        PonBuilder germlineVcfReader = new PonBuilder(cmd);
+        PonBuilder germlineVcfReader = new PonBuilder(configBuilder);
         germlineVcfReader.run();
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

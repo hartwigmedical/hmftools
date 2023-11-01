@@ -45,7 +45,13 @@ args="${args} -hotspots ${hotspots} \
   -out ${sage_vcf}"
 
 if [ "${run_mode}" == "PANEL" ]; then
-  args="${args} -hotspot_min_tumor_vaf 0.01 -hotspot_min_tumor_qual 150 -panel_min_tumor_qual 250 -high_confidence_min_tumor_qual 350 -low_confidence_min_tumor_qual 500"
+  args="${args} -hard_min_tumor_vaf 0.005 \
+    -hotspot_min_tumor_vaf 0.01 -hotspot_min_tumor_qual 100 \
+    -panel_min_tumor_qual 250 \
+    -high_confidence_min_tumor_qual 350 \
+    -low_confidence_min_tumor_qual 500 \
+    -max_read_depth 100000 \
+    -sync_fragments"
 fi  
 
 # optional: -write_bqr_plot

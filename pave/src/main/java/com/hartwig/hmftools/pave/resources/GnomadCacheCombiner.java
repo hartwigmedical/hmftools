@@ -3,14 +3,15 @@ package com.hartwig.hmftools.pave.resources;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
+import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -21,12 +22,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class GnomadCacheCombiner
@@ -38,11 +36,11 @@ public class GnomadCacheCombiner
     private static final String GNOMAD_DIR_1 = "gnomad_dir_1";
     private static final String GNOMAD_DIR_2 = "gnomad_dir_2";
 
-    public GnomadCacheCombiner(final CommandLine cmd)
+    public GnomadCacheCombiner(ConfigBuilder configBuilder)
     {
-        mOutputDir = parseOutputDir(cmd);
-        mGnomadDir1 = checkAddDirSeparator(cmd.getOptionValue(GNOMAD_DIR_1));
-        mGnomadDir2 = checkAddDirSeparator(cmd.getOptionValue(GNOMAD_DIR_2));
+        mOutputDir = parseOutputDir(configBuilder);
+        mGnomadDir1 = checkAddDirSeparator(configBuilder.getValue(GNOMAD_DIR_1));
+        mGnomadDir2 = checkAddDirSeparator(configBuilder.getValue(GNOMAD_DIR_2));
     }
 
     public void run()
@@ -212,26 +210,18 @@ public class GnomadCacheCombiner
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        Options options = new Options();
-        options.addOption(GNOMAD_DIR_1, true, "Gnomad VCF input file");
-        options.addOption(GNOMAD_DIR_2, true, "Gnomad VCF input file");
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        final CommandLine cmd = createCommandLine(args, options);
-        setLogLevel(cmd);
+        configBuilder.addPath(GNOMAD_DIR_1, true, "Gnomad VCF input file");
+        configBuilder.addPath(GNOMAD_DIR_2, true, "Gnomad VCF input file");
+        addOutputOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
-        GnomadCacheCombiner gnomadCacheBuilder = new GnomadCacheCombiner(cmd);
+        configBuilder.checkAndParseCommandLine(args);
+
+        GnomadCacheCombiner gnomadCacheBuilder = new GnomadCacheCombiner(configBuilder);
         gnomadCacheBuilder.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

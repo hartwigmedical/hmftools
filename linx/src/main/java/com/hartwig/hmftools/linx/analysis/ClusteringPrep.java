@@ -48,7 +48,7 @@ public class ClusteringPrep
     public static void populateChromosomeBreakendMap(final List<SvVarData> allVariants, final ClusteringState state)
     {
         // add each SV's breakends to a map keyed by chromosome, with the breakends in order of position lowest to highest
-        for (final SvVarData var : allVariants)
+        for(final SvVarData var : allVariants)
         {
             addSvToChrBreakendMap(var, state.getChrBreakendMap());
         }
@@ -56,7 +56,7 @@ public class ClusteringPrep
         // set indices
         for(List<SvBreakend> breakendList : state.getChrBreakendMap().values())
         {
-            for (int i = 0; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size(); ++i)
             {
                 breakendList.get(i).setChrPosIndex(i);
             }
@@ -128,7 +128,10 @@ public class ClusteringPrep
             }
             else
             {
-                newType = sglSvData.startOrientation() == POS_ORIENT ? DEL : DUP;
+                if((sglSvData.startOrientation() == POS_ORIENT) == (sglSvData.startPosition() < infSvData.startPosition()))
+                    newType = DEL;
+                else
+                    newType = DUP;
             }
         }
         else
@@ -206,7 +209,7 @@ public class ClusteringPrep
 
         int simpleArmCount = 0;
 
-        for (final Map.Entry<String, List<SvBreakend>> entry : state.getChrBreakendMap().entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : state.getChrBreakendMap().entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
@@ -251,13 +254,13 @@ public class ClusteringPrep
 
                 if(pArmHasInversions)
                 {
-                    if (var.arm(true) == P_ARM || var.arm(false) == P_ARM)
+                    if(var.arm(true) == P_ARM || var.arm(false) == P_ARM)
                         continue;
                 }
 
                 if(qArmHasInversions)
                 {
-                    if (var.arm(true) == Q_ARM || var.arm(false) == Q_ARM)
+                    if(var.arm(true) == Q_ARM || var.arm(false) == Q_ARM)
                         continue;
                 }
 
@@ -336,14 +339,14 @@ public class ClusteringPrep
                 // a new closest breakend
                 var.setNearestSvDistance(closestDistance);
 
-                if (var.type() == BND || var.isSglBreakend() || var.type() == INS)
+                if(var.type() == BND || var.isSglBreakend() || var.type() == INS)
                 {
                     // cannot overlap for these types
                     var.setNearestSvRelation(RELATION_TYPE_NEIGHBOUR);
                 }
                 else
                 {
-                    if ((nextBreakend != null && nextBreakend.getSV() == var) || (prevBreakend != null && prevBreakend.getSV() == var))
+                    if((nextBreakend != null && nextBreakend.getSV() == var) || (prevBreakend != null && prevBreakend.getSV() == var))
                         var.setNearestSvRelation(RELATION_TYPE_NEIGHBOUR);
                     else
                         var.setNearestSvRelation(RELATION_TYPE_OVERLAP);
@@ -364,26 +367,26 @@ public class ClusteringPrep
 
         if(state.getLohEventList() != null)
         {
-            for (final LohEvent lohEvent : state.getLohEventList())
+            for(final LohEvent lohEvent : state.getLohEventList())
             {
-                if (!lohEvent.isSvEvent())
+                if(!lohEvent.isSvEvent())
                     continue;
 
                 // use the breakend table to find matching SVs
-                if (breakendList == null || !currentChromosome.equals(lohEvent.Chromosome))
+                if(breakendList == null || !currentChromosome.equals(lohEvent.Chromosome))
                 {
                     breakendList = state.getChrBreakendMap().get(lohEvent.Chromosome);
                     currentChromosome = lohEvent.Chromosome;
                 }
 
-                if (breakendList == null)
+                if(breakendList == null)
                     continue;
 
-                for (final SvBreakend breakend : breakendList)
+                for(final SvBreakend breakend : breakendList)
                 {
                     final SvVarData var = breakend.getSV();
 
-                    if (breakend.orientation() == 1 && var.id() == lohEvent.StartSV)
+                    if(breakend.orientation() == 1 && var.id() == lohEvent.StartSV)
                     {
                         // check for an INV that the correct end is associated
                         boolean skipInvBreakend = var.type() == INV
@@ -396,7 +399,7 @@ public class ClusteringPrep
                         }
                     }
 
-                    if (breakend.orientation() == -1 && var.id() == lohEvent.EndSV)
+                    if(breakend.orientation() == -1 && var.id() == lohEvent.EndSV)
                     {
                         boolean skipInvBreakend = var.type() == INV
                                 && abs(breakend.position() - lohEvent.PosEnd) > abs(breakend.getOtherBreakend().position() - lohEvent.PosEnd);
@@ -408,50 +411,50 @@ public class ClusteringPrep
                         }
                     }
 
-                    if (lohEvent.matchedBothSVs())
+                    if(lohEvent.matchedBothSVs())
                         break;
                 }
 
-                if (lohEvent.StartSV != CN_DATA_NO_SV && lohEvent.getBreakend(true) == null)
+                if(lohEvent.StartSV != CN_DATA_NO_SV && lohEvent.getBreakend(true) == null)
                     ++missedEvents;
 
-                if (lohEvent.EndSV != CN_DATA_NO_SV && lohEvent.getBreakend(false) == null)
+                if(lohEvent.EndSV != CN_DATA_NO_SV && lohEvent.getBreakend(false) == null)
                     ++missedEvents;
             }
         }
 
         if(state.getHomLossList() != null && !state.getHomLossList().isEmpty())
         {
-            for (HomLossEvent homLossEvent : state.getHomLossList())
+            for(HomLossEvent homLossEvent : state.getHomLossList())
             {
-                if (homLossEvent.StartSV == CN_DATA_NO_SV && homLossEvent.EndSV == CN_DATA_NO_SV)
+                if(homLossEvent.StartSV == CN_DATA_NO_SV && homLossEvent.EndSV == CN_DATA_NO_SV)
                     continue;
 
                 breakendList = state.getChrBreakendMap().get(homLossEvent.Chromosome);
 
-                if (breakendList == null)
+                if(breakendList == null)
                     continue;
 
-                for (final SvBreakend breakend : breakendList)
+                for(final SvBreakend breakend : breakendList)
                 {
-                    if (breakend.orientation() == 1 && breakend.getSV().id() == homLossEvent.StartSV)
+                    if(breakend.orientation() == 1 && breakend.getSV().id() == homLossEvent.StartSV)
                     {
                         homLossEvent.setBreakend(breakend, true);
                     }
 
-                    if (breakend.orientation() == -1 && breakend.getSV().id() == homLossEvent.EndSV)
+                    if(breakend.orientation() == -1 && breakend.getSV().id() == homLossEvent.EndSV)
                     {
                         homLossEvent.setBreakend(breakend, false);
                     }
 
-                    if (homLossEvent.matchedBothSVs())
+                    if(homLossEvent.matchedBothSVs())
                         break;
                 }
 
-                if (homLossEvent.StartSV != CN_DATA_NO_SV && homLossEvent.getBreakend(true) == null)
+                if(homLossEvent.StartSV != CN_DATA_NO_SV && homLossEvent.getBreakend(true) == null)
                     ++missedEvents;
 
-                if (homLossEvent.EndSV != CN_DATA_NO_SV && homLossEvent.getBreakend(false) == null)
+                if(homLossEvent.EndSV != CN_DATA_NO_SV && homLossEvent.getBreakend(false) == null)
                     ++missedEvents;
             }
         }

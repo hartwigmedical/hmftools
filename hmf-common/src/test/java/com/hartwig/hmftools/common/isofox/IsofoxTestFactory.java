@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.isofox;
 
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.PASS;
+
+import java.util.List;
+
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
@@ -11,35 +15,38 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class IsofoxTestFactory {
-
-    private IsofoxTestFactory() {
-    }
-
+public final class IsofoxTestFactory
+{
     @NotNull
-    public static IsofoxData createMinimalIsofoxTestData() {
+    public static IsofoxData createMinimalIsofoxTestData()
+    {
         return ImmutableIsofoxData.builder().summary(IsofoxTestFactory.rnaStatisticsBuilder().build()).build();
     }
-    
+
     @NotNull
-    public static ImmutableRnaStatistics.Builder rnaStatisticsBuilder() {
+    public static ImmutableRnaStatistics.Builder rnaStatisticsBuilder()
+    {
         return ImmutableRnaStatistics.builder()
                 .totalFragments(0)
+                .qcStatus(List.of(PASS))
                 .duplicateFragments(0)
                 .splicedFragmentPerc(0D)
                 .unsplicedFragmentPerc(0D)
                 .altFragmentPerc(0D)
                 .chimericFragmentPerc(0D)
+                .splicedGeneCount(0)
                 .readLength(0)
                 .fragmentLength5thPercent(0D)
                 .fragmentLength50thPercent(0D)
                 .fragmentLength95thPercent(0D)
                 .enrichedGenePercent(0D)
-                .medianGCRatio(0D);
+                .medianGCRatio(0D)
+                .forwardStrandPercent(0D);
     }
 
     @NotNull
-    public static ImmutableGeneExpression.Builder geneExpressionBuilder() {
+    public static ImmutableGeneExpression.Builder geneExpressionBuilder()
+    {
         return ImmutableGeneExpression.builder()
                 .geneName(Strings.EMPTY)
                 .tpm(0D)
@@ -52,7 +59,8 @@ public final class IsofoxTestFactory {
     }
 
     @NotNull
-    public static ImmutableRnaFusion.Builder rnaFusionBuilder() {
+    public static ImmutableRnaFusion.Builder rnaFusionBuilder()
+    {
         return ImmutableRnaFusion.builder()
                 .name(Strings.EMPTY)
                 .chromosomeUp(Strings.EMPTY)
@@ -75,8 +83,10 @@ public final class IsofoxTestFactory {
     }
 
     @NotNull
-    public static ImmutableNovelSpliceJunction.Builder novelSpliceJunctionBuilder() {
+    public static ImmutableNovelSpliceJunction.Builder novelSpliceJunctionBuilder()
+    {
         return ImmutableNovelSpliceJunction.builder()
+                .geneName(Strings.EMPTY)
                 .chromosome(Strings.EMPTY)
                 .junctionStart(0)
                 .junctionEnd(0)

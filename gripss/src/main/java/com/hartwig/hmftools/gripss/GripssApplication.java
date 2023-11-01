@@ -2,15 +2,15 @@ package com.hartwig.hmftools.gripss;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations.REPEAT_MASK_FILE;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.UNTEMPLATED_SEQUENCE_ALIGNMENTS;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
-import static com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations.REPEAT_MASK_FILE;
+import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
+import static com.hartwig.hmftools.gripss.GripssConfig.addConfig;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,11 +18,12 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.gripss.common.Breakend;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
@@ -35,20 +36,11 @@ import com.hartwig.hmftools.gripss.links.DsbLinkFinder;
 import com.hartwig.hmftools.gripss.links.LinkRescue;
 import com.hartwig.hmftools.gripss.links.LinkStore;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
-import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations;
+import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotator;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 
 public class GripssApplication
@@ -62,7 +54,7 @@ public class GripssApplication
     private final SoftFilters mSoftFilters;
     private final RefGenomeInterface mRefGenome;
     private BreakendRealigner mRealigner;
-    private final RepeatMaskAnnotations mRepeatMaskAnnotations;
+    private final RepeatMaskAnnotator mRepeatMaskAnnotator;
     private final TargetRegions mTargetRegions;
 
     private int mProcessedVariants;
@@ -70,44 +62,42 @@ public class GripssApplication
     private final FilterCache mFilterCache;
 
     public GripssApplication(
-            final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome, final CommandLine cmd)
+            final GripssConfig config, final FilterConstants filterConstants, final RefGenomeInterface refGenome,
+            final ConfigBuilder configBuilder)
     {
-        final VersionInfo version = new VersionInfo("gripss.version");
-        GR_LOGGER.info("Gripss version: {}", version.version());
-
         mConfig = config;
         mFilterConstants = filterConstants;
 
         mRefGenome = refGenome;
 
         GR_LOGGER.info("loading reference data");
-        mPonCache = new PonCache(cmd);
-        mHotspotCache = new HotspotCache(cmd);
-        mTargetRegions = new TargetRegions(cmd);
+        mPonCache = new PonCache(configBuilder);
+        mHotspotCache = new HotspotCache(configBuilder);
+        mTargetRegions = new TargetRegions(configBuilder);
 
-        mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache, mTargetRegions);
+        mVariantBuilder = new VariantBuilder(mFilterConstants, mHotspotCache, mTargetRegions, mConfig.GermlineMode);
         mSoftFilters = new SoftFilters(mFilterConstants, mConfig.GermlineMode);
         mRealigner = null;
 
         mProcessedVariants = 0;
         mSvDataCache = new SvDataCache();
         mFilterCache = new FilterCache();
-        mRepeatMaskAnnotations = new RepeatMaskAnnotations();
+        mRepeatMaskAnnotator = new RepeatMaskAnnotator();
 
-        if(cmd.hasOption(REPEAT_MASK_FILE))
+        if(configBuilder.hasValue(REPEAT_MASK_FILE))
         {
-            if(!mRepeatMaskAnnotations.load(cmd.getOptionValue(REPEAT_MASK_FILE), mConfig.RefGenVersion))
+            if(!mRepeatMaskAnnotator.load(configBuilder.getValue(REPEAT_MASK_FILE), mConfig.RefGenVersion))
                 System.exit(1);
         }
     }
 
-    public static GripssApplication fromCommandArgs(final CommandLine cmd)
+    public static GripssApplication fromCommandArgs(final ConfigBuilder configBuilder)
     {
-        GripssConfig config = new GripssConfig(cmd);
-        FilterConstants filterConstants = FilterConstants.from(cmd);
-        RefGenomeInterface refGenome = loadRefGenome(cmd.getOptionValue(REF_GENOME));
+        GripssConfig config = new GripssConfig(configBuilder);
+        FilterConstants filterConstants = FilterConstants.from(configBuilder);
+        RefGenomeInterface refGenome = loadRefGenome(configBuilder.getValue(REF_GENOME));
 
-        return new GripssApplication(config, filterConstants, refGenome, cmd);
+        return new GripssApplication(config, filterConstants, refGenome, configBuilder);
     }
 
     public void run()
@@ -125,34 +115,38 @@ public class GripssApplication
         }
 
         processVcf(mConfig.VcfFile);
+
+        GR_LOGGER.info("Gripss run complete");
     }
 
     private void processVcf(final String vcfFile)
     {
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                vcfFile, new VCFCodec(), false);
+        VcfFileReader vcfFileReader = new VcfFileReader(vcfFile);
 
-        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
+        VCFHeader vcfHeader = vcfFileReader.vcfHeader();
 
         GR_LOGGER.info("sample({}) processing VCF({})", mConfig.SampleId, vcfFile);
 
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mConfig.ReferenceId, mConfig.SampleId, mConfig.GermlineMode);
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mConfig.ReferenceId, mConfig.SampleId);
 
-        if(genotypeIds == null)
+        if(genotypeIds.TumorOrdinal < 0 || (!mConfig.ReferenceId.isEmpty() && genotypeIds.ReferenceOrdinal < 0))
         {
+            GripssConfig.GR_LOGGER.error("missing sample names in VCF: {}", vcfHeader.getGenotypeSamples());
             System.exit(1);
         }
 
+        mVariantBuilder.setGenotypeOrdinals(genotypeIds);
+
         mRealigner = new BreakendRealigner(mRefGenome);
 
-        if(mConfig.tumorOnly())
-        {
-            GR_LOGGER.info("tumor genotype info({}: {})", genotypeIds.TumorOrdinal, genotypeIds.TumorId);
-        }
-        else if(mConfig.GermlineMode)
+        if(mConfig.GermlineMode)
         {
             GR_LOGGER.info("genotype info: germline mode ref({}: {}) tumor({}: {})",
                     genotypeIds.TumorOrdinal, genotypeIds.TumorId, genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId);
+        }
+        else if(mConfig.ReferenceId.isEmpty())
+        {
+            GR_LOGGER.info("tumor genotype info({}: {})", genotypeIds.TumorOrdinal, genotypeIds.TumorId);
         }
         else
         {
@@ -160,16 +154,9 @@ public class GripssApplication
                     genotypeIds.ReferenceOrdinal, genotypeIds.ReferenceId, genotypeIds.TumorOrdinal, genotypeIds.TumorId);
         }
 
-        try
-        {
-            reader.iterator().forEach(x -> processVariant(x, genotypeIds));
-        }
-        catch(IOException e)
-        {
-            GR_LOGGER.error("error reading vcf({}): {}", vcfFile, e.toString());
-        }
+        vcfFileReader.iterator().forEach(x -> processVariant(x, genotypeIds));
 
-        GR_LOGGER.info("read VCF: breakends({}) unmatched({}) complete({}) hardFiltered({})",
+        GR_LOGGER.info("read VCF: processedBreakends({}) unmatched({}) complete({}) hardFiltered({})",
                 mProcessedVariants, mVariantBuilder.incompleteSVs(), mSvDataCache.getSvList().size(), mVariantBuilder.hardFilteredCount());
 
         GR_LOGGER.info("writing output VCF files to {}", mConfig.OutputDir);
@@ -287,7 +274,7 @@ public class GripssApplication
 
         mFilterCache.updateFilters(rescuedBreakends, Sets.newHashSet());
 
-        if(mRepeatMaskAnnotations.hasData())
+        if(mRepeatMaskAnnotator.hasData())
         {
             int annotated = 0;
             for(List<Breakend> chrBreakendList : mSvDataCache.getBreakendMap().values())
@@ -304,7 +291,7 @@ public class GripssApplication
                     if(alignments.isEmpty())
                         continue;
 
-                    RepeatMaskAnnotation rmAnnotation = mRepeatMaskAnnotations.annotate(breakend.sv().insertSequence(), alignments);
+                    RepeatMaskAnnotation rmAnnotation = mRepeatMaskAnnotator.annotate(breakend.sv().insertSequence(), alignments);
 
                     if(rmAnnotation != null)
                     {
@@ -370,35 +357,14 @@ public class GripssApplication
         mSvDataCache.addSvData(svData);
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        GripssConfig.addCommandLineOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder("Gripss");
+        addConfig(configBuilder);
 
-        try
-        {
-            final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-            setLogLevel(cmd);
-
-            GripssApplication gripss = GripssApplication.fromCommandArgs(cmd);
-            gripss.run();
-
-            GR_LOGGER.info("Gripss run complete");
-        }
-        catch(ParseException e)
-        {
-            GR_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("GripssApplication", options);
-            System.exit(1);
-        }
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        GripssApplication gripss = GripssApplication.fromCommandArgs(configBuilder);
+        gripss.run();
     }
 }

@@ -3,12 +3,12 @@ package com.hartwig.hmftools.linx.drivers;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.genome.chromosome.HumanChromosome.isShortArm;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.copyNumbersEqual;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatPloidy;
-import static com.hartwig.hmftools.linx.analysis.SvUtilities.isShortArmChromosome;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN_ARM;
 import static com.hartwig.hmftools.common.linx.DriverEventType.GAIN_CHR;
@@ -67,9 +67,9 @@ public class AmplificationDrivers
 
         double samplePloidy = mDataCache.samplePloidy();
 
-        if(!isShortArmChromosome(dgData.GeneInfo.Chromosome))
+        if(!isShortArm(dgData.GeneInfo.Chromosome))
         {
-            if (chromosomeCopyNumber / samplePloidy > 2)
+            if(chromosomeCopyNumber / samplePloidy > 2)
             {
                 LNX_LOGGER.debug("gene({}) AMP gain from chromosome chChange({} telo={} centro={}) vs samplePloidy({})",
                         dgData.GeneInfo.GeneName, formatJcn(chromosomeCopyNumber),
@@ -85,7 +85,7 @@ public class AmplificationDrivers
                 min(tcData.CentromerePArm, tcData.TelomerePArm) - tcData.CentromereQArm
                 : min(tcData.CentromereQArm, tcData.TelomereQArm) - tcData.CentromerePArm;
 
-        if (centromereCNChange > 0 && !copyNumbersEqual(centromereCNChange, 0))
+        if(centromereCNChange > 0 && !copyNumbersEqual(centromereCNChange, 0))
         {
             LNX_LOGGER.debug("gene({}) AMP gain from arm({}) cnChange across centromere({} -> {} = {})",
                     dgData.GeneInfo.GeneName, dgData.Arm, formatJcn(tcData.CentromerePArm), formatJcn(tcData.CentromereQArm),
@@ -119,17 +119,17 @@ public class AmplificationDrivers
         {
             index += traverseUp ? 1 : -1;
 
-            if (index < 0 || index >= breakendList.size())
+            if(index < 0 || index >= breakendList.size())
                 break;
 
             SvBreakend breakend = breakendList.get(index);
 
-            if ((traverseUp && breakend.position() > stopPosition) || (!traverseUp && breakend.position() < stopPosition))
+            if((traverseUp && breakend.position() > stopPosition) || (!traverseUp && breakend.position() < stopPosition))
             {
                 break;
             }
 
-            if (breakend.getCluster() == startBreakend.getCluster())
+            if(breakend.getCluster() == startBreakend.getCluster())
             {
                 segmentBreakends.add(breakend);
                 endCopyNumber = breakend.getCopyNumber(!traverseUp);
@@ -180,7 +180,7 @@ public class AmplificationDrivers
 
         while (true)
         {
-            if (breakend != null)
+            if(breakend != null)
                 index += traverseUp ? 1 : -1;
 
             if(index < 0 || index >= breakendList.size())
@@ -188,7 +188,7 @@ public class AmplificationDrivers
 
             breakend = breakendList.get(index);
 
-            if ((traverseUp && breakend.position() > transStart) || (!traverseUp && breakend.position() < transEnd))
+            if((traverseUp && breakend.position() > transStart) || (!traverseUp && breakend.position() < transEnd))
                 break;
 
             final SvCluster cluster = breakend.getCluster();
@@ -288,7 +288,7 @@ public class AmplificationDrivers
 
     private static void checkClusterAmplification(final DriverGeneData dgData, final List<SvBreakend> breakendList)
     {
-        if (breakendList == null || breakendList.isEmpty())
+        if(breakendList == null || breakendList.isEmpty())
             return;
 
         // sum up breakend ploidies from telomere to centromere for the gene in question net off ploidy within a cluster
@@ -312,21 +312,21 @@ public class AmplificationDrivers
 
             while (true)
             {
-                if (breakend != null)
+                if(breakend != null)
                     index += traverseUp ? 1 : -1;
 
-                if (index < startIndex || index > endIndex)
+                if(index < startIndex || index > endIndex)
                     break;
 
                 breakend = breakendList.get(index);
 
                 // make note of any breakend preceding the gene in the direction of traversal
-                if ((traverseUp && breakend.position() > transEnd) || (!traverseUp && breakend.position() < transStart))
+                if((traverseUp && breakend.position() > transEnd) || (!traverseUp && breakend.position() < transStart))
                     break;
 
                 final SvCluster cluster = breakend.getCluster();
 
-                if (cluster.hasLinkingLineElements() || processedClusters.contains(cluster))
+                if(cluster.hasLinkingLineElements() || processedClusters.contains(cluster))
                     continue;
 
                 if(cluster.getSvCount() == 1 && cluster.getSV(0).type() == DEL) // explicitly disallow

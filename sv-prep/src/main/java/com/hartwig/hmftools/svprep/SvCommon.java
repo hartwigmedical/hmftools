@@ -2,28 +2,21 @@ package com.hartwig.hmftools.svprep;
 
 import static java.lang.Math.round;
 
+import com.hartwig.hmftools.common.samtools.BamSlicer;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class SvCommon
 {
     public static final Logger SV_LOGGER = LogManager.getLogger(SvCommon.class);
+    public static final String APP_NAME = "SvPrep";
 
-    public static final String DELIM = ",";
-    public static final String BED_DELIM = "\t";
-    public static final String ITEM_DELIM = ";";
-    public static final String SUB_ITEM_DELIM = ":";
-
-    private static final long MEGABYTE = 1024L * 1024L;
-
-    public static int calcMemoryUsage(boolean runGc)
+    public static BamSlicer createBamSlicer()
     {
-        Runtime runtime = Runtime.getRuntime();
-
-        if(runGc)
-            runtime.gc();
-
-        long memory = runtime.totalMemory() - runtime.freeMemory();
-        return round(memory / MEGABYTE);
+        BamSlicer bamSlicer = new BamSlicer(0, false, true, false);
+        bamSlicer.setKeepUnmapped();
+        bamSlicer.setKeepHardClippedSecondaries();
+        return bamSlicer;
     }
 }

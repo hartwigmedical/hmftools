@@ -3,9 +3,10 @@ package com.hartwig.hmftools.isofox.common;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.generateCommonExonicRegions;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
@@ -13,7 +14,6 @@ import static com.hartwig.hmftools.isofox.common.RegionReadData.generateExonicRe
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.List;
 import java.util.Map;
@@ -81,18 +81,18 @@ public class GeneCollection
 
     public int id() { return mId; }
     public String chrId() { return String.format("%s_%d", mChromosome, mId); }
-    public final String chromosome() { return mChromosome; }
-    public final List<GeneReadData> genes() { return mGenes; }
-    public final List<String> geneIds() { return mGeneIds; }
+    public String chromosome() { return mChromosome; }
+    public List<GeneReadData> genes() { return mGenes; }
+    public List<String> geneIds() { return mGeneIds; }
     public final int[] regionBounds() { return mRegionBounds; }
     public void setNonGenicPosition(int se, int position) { mNonGenicPositions[se] = position; }
     public int[] getNonGenicPositions() { return mNonGenicPositions; }
     public boolean isEndOfChromosome() { return mEndOfChromosome; }
     public void setEndOfChromosome() { mEndOfChromosome = true; }
 
-    public final List<TranscriptData> getTranscripts() { return mTranscripts; }
+    public List<TranscriptData> getTranscripts() { return mTranscripts; }
 
-    public final List<RegionReadData> getExonRegions() { return mExonRegions; }
+    public List<RegionReadData> getExonRegions() { return mExonRegions; }
     public List<int[]> getCommonExonicRegions() { return mCommonExonicRegions; }
 
     public int getStrand(int transId)
@@ -262,7 +262,7 @@ public class GeneCollection
     public int[][] getTranscriptReadCount(final int transId)
     {
         int[][] counts = mTranscriptReadCounts.get(transId);
-        return counts != null ? counts : new int[FragmentMatchType.MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
+        return counts != null ? counts : new int[FragmentMatchType.values().length][UNIQUE_TRANS_COUNT+1];
     }
 
     public void addTranscriptReadMatch(int transId, boolean isUnique, FragmentMatchType type)
@@ -270,16 +270,16 @@ public class GeneCollection
         int[][] counts = mTranscriptReadCounts.get(transId);
         if(counts == null)
         {
-            counts = new int[FragmentMatchType.MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
+            counts = new int[FragmentMatchType.values().length][UNIQUE_TRANS_COUNT+1];
             mTranscriptReadCounts.put(transId,  counts);
         }
 
         if(isUnique)
         {
-            ++counts[FragmentMatchType.typeAsInt(type)][UNIQUE_TRANS_COUNT];
+            ++counts[type.ordinal()][UNIQUE_TRANS_COUNT];
         }
 
-        ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
+        ++counts[type.ordinal()][TRANS_COUNT];
     }
 
     public void addTranscriptReadMatch(int transId, FragmentMatchType type)
@@ -287,11 +287,11 @@ public class GeneCollection
         int[][] counts = mTranscriptReadCounts.get(transId);
         if(counts == null)
         {
-            counts = new int[FragmentMatchType.MAX_FRAG_TYPE][UNIQUE_TRANS_COUNT+1];
+            counts = new int[FragmentMatchType.values().length][UNIQUE_TRANS_COUNT+1];
             mTranscriptReadCounts.put(transId,  counts);
         }
 
-        ++counts[FragmentMatchType.typeAsInt(type)][TRANS_COUNT];
+        ++counts[type.ordinal()][TRANS_COUNT];
     }
 
     public final FragmentTypeCounts fragmentTypeCounts() { return mFragmentCounts; }

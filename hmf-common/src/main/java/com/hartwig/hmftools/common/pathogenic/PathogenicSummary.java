@@ -1,16 +1,13 @@
 package com.hartwig.hmftools.common.pathogenic;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+public class PathogenicSummary
+{
+    public final String ClinvarInfo;
+    public final Pathogenicity Status;
 
-@Value.Immutable
-@Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface PathogenicSummary {
-
-    @NotNull
-    String clinvarInfo();
-
-    @NotNull
-    Pathogenicity pathogenicity();
+    public PathogenicSummary(final String clinvarInfo, final Pathogenicity status)
+    {
+        ClinvarInfo = clinvarInfo;
+        Status = status;
+    }
 }

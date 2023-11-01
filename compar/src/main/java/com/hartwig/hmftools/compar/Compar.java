@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.compar;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.util.List;
@@ -11,12 +12,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class Compar
@@ -24,9 +21,9 @@ public class Compar
     private final ComparConfig mConfig;
     private final MismatchWriter mWriter;
 
-    public Compar(final CommandLine cmd)
+    public Compar(final ConfigBuilder configBuilder)
     {
-        mConfig = new ComparConfig(cmd);
+        mConfig = new ComparConfig(configBuilder);
         mWriter = new MismatchWriter(mConfig);
     }
 
@@ -54,10 +51,12 @@ public class Compar
             System.exit(1);
         }
 
-        List<ComparTask> sampleTasks = Lists.newArrayList();
+        long startTimeMs = System.currentTimeMillis();
 
         if(mConfig.Threads > 1)
         {
+            List<ComparTask> sampleTasks = Lists.newArrayList();
+
             for(int i = 0; i < min(mConfig.SampleIds.size(), mConfig.Threads); ++i)
             {
                 sampleTasks.add(new ComparTask(i, mConfig, mWriter));
@@ -80,36 +79,30 @@ public class Compar
         else
         {
             ComparTask sampleTask = new ComparTask(0, mConfig, mWriter);
-
             sampleTask.getSampleIds().addAll(mConfig.SampleIds);
-
-            sampleTasks.add(sampleTask);
             sampleTask.call();
         }
 
         mWriter.close();
 
-        CMP_LOGGER.info("comparison complete");
+        if(mConfig.multiSample())
+        {
+            CMP_LOGGER.info("comparison of {} samples complete, mins({})", mConfig.SampleIds.size(), runTimeMinsStr(startTimeMs));
+        }
+        else
+        {
+            CMP_LOGGER.info("comparison complete");
+        }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        Options options = new Options();
-        ComparConfig.addCmdLineArgs(options);
+        ConfigBuilder configBuilder = new ConfigBuilder("Compar");
+        ComparConfig.addConfig(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        Compar compar = new Compar(cmd);
+        Compar compar = new Compar(configBuilder);
         compar.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

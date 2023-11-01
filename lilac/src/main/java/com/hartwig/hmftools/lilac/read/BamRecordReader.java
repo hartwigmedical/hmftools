@@ -2,26 +2,23 @@ package com.hartwig.hmftools.lilac.read;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
-import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_CHR;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.SPLICE_VARIANT_BUFFER;
 import static com.hartwig.hmftools.lilac.ReferenceData.STOP_LOSS_ON_C_INDEL;
 import static com.hartwig.hmftools.lilac.ReferenceData.INDEL_PON;
+import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.mergeFragments;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
-import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.lilac.LociPosition;
 import com.hartwig.hmftools.lilac.fragment.Fragment;
 import com.hartwig.hmftools.lilac.fragment.FragmentUtils;
 import com.hartwig.hmftools.lilac.fragment.NucleotideFragmentFactory;
@@ -39,11 +36,12 @@ import java.util.stream.Collectors;
 
 public class BamRecordReader implements BamReader
 {
-    private final Map<String,TranscriptData> mTranscripts;
-    private final List<ChrBaseRegion> mCodingRegions;
+    private final Map<String,GeneCodingRegions> mGeneCodingRegions;
 
     private final String mBamFile;
-    private final SamReaderFactory mSamReaderFactory;
+    private final SamReader mSamReader;
+
+    private final BamSlicer mBamSlicer;
     private final NucleotideFragmentFactory mFragmentFactory;
 
     private final Map<Indel,List<Fragment>> mKnownStopLossFragments;
@@ -60,14 +58,17 @@ public class BamRecordReader implements BamReader
     {
         mBamFile = bamFile;
 
-        mSamReaderFactory = SamReaderFactory.makeDefault().referenceSequence(new File(refGenome));
+        SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault().referenceSequence(new File(refGenome));
+        mSamReader = samReaderFactory.open(new File(mBamFile));
+        mBamSlicer = new BamSlicer(MIN_MAPPING_QUALITY);
 
-        mTranscripts = transcripts;
+        mGeneCodingRegions = Maps.newHashMap();
 
-        mCodingRegions = HLA_GENES.stream()
-                .map(x -> mTranscripts.get(x))
-                .map(x -> new ChrBaseRegion(HLA_CHR, x.CodingStart - MAX_DISTANCE, x.CodingEnd + MAX_DISTANCE))
-                .collect(Collectors.toList());
+        for(String geneName : HLA_GENES)
+        {
+            TranscriptData transcriptData = transcripts.get(geneName);
+            mGeneCodingRegions.put(geneName, new GeneCodingRegions(geneName, HLA_CHR, transcriptData));
+        }
 
         mFragmentFactory = factory;
         mFilteredRecordCount = 0;
@@ -78,10 +79,7 @@ public class BamRecordReader implements BamReader
         mDiscardIndelReadIds = Sets.newHashSet();
     }
 
-    public int alignmentFiltered()
-    {
-        return mFilteredRecordCount;
-    }
+    public int filteredReadCount() { return mFilteredRecordCount; }
 
     public Map<Indel,List<Fragment>> getKnownStopLossFragments() { return mKnownStopLossFragments; }
 
@@ -102,244 +100,87 @@ public class BamRecordReader implements BamReader
         return filteredMap;
     }
 
-    public List<Fragment> readFromBam()
+    public List<Fragment> findGeneFragments()
     {
         final List<Fragment> fragments = Lists.newArrayList();
 
         for(String geneName : HLA_GENES)
         {
-            TranscriptData transcript = mTranscripts.get(geneName);
-            fragments.addAll(readFromBam(geneName, transcript));
+            GeneCodingRegions geneCodingRegions = mGeneCodingRegions.get(geneName);
+
+            fragments.addAll(findGeneFragments(geneCodingRegions));
         }
 
         return fragments;
     }
 
-    private List<Fragment> readFromBam(final String geneName, final TranscriptData transcript)
+    private List<Fragment> findGeneFragments(final GeneCodingRegions geneCodingRegions)
     {
-        LL_LOGGER.debug("  querying {} coding region({}: {} -> {})", geneName, HLA_CHR, transcript.CodingStart, transcript.CodingEnd);
+        LL_LOGGER.debug("querying HLA gene({})", geneCodingRegions.GeneName);
 
-        boolean reverseStrand = transcript.Strand == NEG_STRAND;
-        final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
+        // slice for the whole coding region rather than per exon
+        ChrBaseRegion sliceRegion = new ChrBaseRegion(geneCodingRegions.Chromosome, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
+        List<SAMRecord> records = mBamSlicer.slice(mSamReader, sliceRegion);
 
-        List<Fragment> readFragments = Lists.newArrayList();
-
-        for (NamedBed codingRegion : codingRegions)
-        {
-            readFragments.addAll(realign(codingRegion, reverseStrand, mBamFile));
-        }
-
-        readFragments = readFragments.stream().filter(x -> !mDiscardIndelReadIds.contains(x.id())).collect(Collectors.toList());
-
-        return FragmentUtils.mergeFragmentsById(readFragments);
-    }
-
-    private List<NamedBed> codingRegions(final String geneName, final TranscriptData transcript)
-    {
-        final List<NamedBed> regions = LociPosition.codingRegions(geneName, HLA_CHR, transcript);
-
-        if(transcript.Strand == POS_STRAND)
-            return regions;
-
-        final List<NamedBed> regionsReversed = Lists.newArrayList();
-
-        for(int i = regions.size() - 1; i >= 0; --i)
-            regionsReversed.add(regions.get(i));
-
-        return regionsReversed;
-    }
-
-    public List<Fragment> readFromBam(final SomaticVariant variant)
-    {
-        final GenomePosition variantPosition = GenomePositions.create(variant.Chromosome, variant.Position);
-
-        for(String geneName : HLA_GENES)
-        {
-            TranscriptData transcript = mTranscripts.get(geneName);
-            boolean reverseStrand = transcript.Strand == NEG_STRAND;
-            final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
-
-            for(NamedBed codingRegion : codingRegions)
-            {
-                if(!regionCoversVariant(codingRegion, variant))
-                    continue;
-
-                List<BamCodingRecord> regionCodingRecords = query(reverseStrand, variantPosition, codingRegion, mBamFile);
-                List<BamCodingRecord> codingRecords = Lists.newArrayList();
-
-                for(BamCodingRecord record : regionCodingRecords)
-                {
-                    if(!recordContainsVariant(variant, record))
-                        continue;
-
-                    if(codingRecords.stream().anyMatch(x -> x.getSamRecord().hashCode() == record.getSamRecord().hashCode()))
-                        continue;
-
-                    codingRecords.add(record);
-                }
-
-                final List<Fragment> readFragments = codingRecords.stream()
-                        .map(x -> mFragmentFactory.createAlignmentFragments(x, codingRegion))
-                        .filter(x -> x != null)
-                        .collect(Collectors.toList());
-
-                List<Fragment> mateFragments = queryMateFragments(geneName, transcript, codingRecords);
-                readFragments.addAll(mateFragments);
-
-                List<Fragment> readGroupFragments = FragmentUtils.mergeFragmentsById(readFragments);
-                return readGroupFragments;
-            }
-        }
-
-        return Lists.newArrayList();
-    }
-
-    private static boolean regionCoversVariant(final NamedBed codingRegion, final SomaticVariant variant)
-    {
-        // allow a margin for splice variants
-        if(variant.CanonicalCodingEffect == CodingEffect.SPLICE)
-        {
-            return abs(variant.Position - codingRegion.start()) <= SPLICE_VARIANT_BUFFER
-                || abs(variant.Position - codingRegion.end()) <= SPLICE_VARIANT_BUFFER;
-        }
-        else
-        {
-            return codingRegion.start() <= variant.Position && variant.Position <= codingRegion.end();
-        }
-    }
-
-    private boolean recordContainsVariant(final SomaticVariant variant, final BamCodingRecord record)
-    {
-        if (variant.Alt.length() != variant.Ref.length())
-        {
-            Indel expectedIndel = new Indel(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
-            return record.getIndels().stream().anyMatch(x -> x.match(expectedIndel));
-        }
-
-        for (int i = 0; i < variant.Alt.length(); ++i)
-        {
-            int position = variant.Position + i;
-            char expectedBase = variant.Alt.charAt(i);
-
-            int readIndex = record.getSamRecord().getReadPositionAtReferencePosition(position) - 1;
-
-            if (readIndex < 0)
-                return false;
-
-            if (record.getSamRecord().getReadString().charAt(readIndex) != expectedBase)
-                return false;
-        }
-
-        return true;
-    }
-
-    private final List<Fragment> queryMateFragments(
-            final String geneName, final TranscriptData transcript, final List<BamCodingRecord> codingRecords)
-    {
-        BamSlicer slicer = new BamSlicer(MIN_MAPPING_QUALITY);
-
-        SamReader samReader = mSamReaderFactory.open(new File(mBamFile));
-
-        List<SAMRecord> records = codingRecords.stream().map(x -> x.getSamRecord()).collect(Collectors.toList());
-        List<SAMRecord> mateRecords = slicer.queryMates(samReader, records);
-
-        List<Fragment> fragments = Lists.newArrayList();
-
-        boolean reverseStrand = transcript.Strand == NEG_STRAND;
-        final List<NamedBed> codingRegions = codingRegions(geneName, transcript);
-
-        for (NamedBed codingRegion : codingRegions)
-        {
-            for(SAMRecord record : mateRecords)
-            {
-                if(record.getAlignmentStart() > codingRegion.end() || record.getAlignmentEnd() < codingRegion.start())
-                    continue;
-
-                BamCodingRecord codingRecord = BamCodingRecord.create(
-                        reverseStrand, ChrBaseRegion.from(codingRegion), record, true, true);
-
-                Fragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, codingRegion);
-
-                if(fragment != null)
-                    fragments.add(fragment);
-            }
-        }
-
-        return fragments;
-    }
-
-    private List<BamCodingRecord> query(
-            boolean reverseStrand, final GenomePosition variantRegion, final NamedBed nearestCodingRegion, final String bamFileName)
-    {
-        BamSlicer slicer = new BamSlicer(MIN_MAPPING_QUALITY);
-
-        SamReader samReader = mSamReaderFactory.open(new File(bamFileName));
-
-        ChrBaseRegion codingRegion = new ChrBaseRegion(
-                nearestCodingRegion.chromosome(), (int)nearestCodingRegion.start(), (int)nearestCodingRegion.end());
-
-        final List<SAMRecord> records = slicer.slice(samReader, variantRegion);
-
-        final List<BamCodingRecord> codingRecords = Lists.newArrayList();
+        List<ReadRecord> reads = Lists.newArrayList();
 
         for(SAMRecord record : records)
         {
-            if(bothEndsInRangeOfCodingTranscripts(record))
+            List<BaseRegion> codingExonOverlaps = geneCodingRegions.CodingRegions.stream()
+                    .filter(x -> positionsOverlap(x.start(), x.end(), record.getAlignmentStart(), record.getAlignmentEnd()))
+                    .collect(Collectors.toList());
+
+            // read must overlap an exon to even be considered
+            if(codingExonOverlaps.isEmpty())
+                continue;
+
+            if(!bothEndsInRangeOfCodingTranscripts(record))
             {
-                codingRecords.add(BamCodingRecord.create(reverseStrand, codingRegion, record, true, true));
+                LL_LOGGER.trace("filter read: id({}) coords({}-{}) cigar({}) from gene region({}:{}-{})",
+                        record.getReadName(), record.getAlignmentStart(), record.getAlignmentEnd(), record.getCigarString(),
+                        geneCodingRegions.GeneName, geneCodingRegions.CodingStart, geneCodingRegions.CodingEnd);
+
+                ++mFilteredRecordCount;
             }
             else
             {
-                ++mFilteredRecordCount;
+                codingExonOverlaps.forEach(x -> reads.add(ReadRecord.create(x, record, true, true)));
             }
         }
 
-        return codingRecords;
+        Map<String,Fragment> readIdFragments = createFragments(geneCodingRegions.GeneName, geneCodingRegions.Strand, reads);
+
+        List<Fragment> readFragments = readIdFragments.values().stream()
+                .filter(x -> !mDiscardIndelReadIds.contains(x.id()))
+                .collect(Collectors.toList());
+
+        return readFragments;
     }
 
-    private List<BamCodingRecord> query(boolean reverseStrand, final NamedBed bedRegion, final String bamFileName)
+    private Map<String,Fragment> createFragments(final String geneName, final byte geneStrand, final List<ReadRecord> codingRecords)
     {
-        BamSlicer slicer = new BamSlicer(MIN_MAPPING_QUALITY);
+        Map<String,Fragment> readIdFragments = Maps.newHashMap();
 
-        SamReader samReader = mSamReaderFactory.open(new File(bamFileName));
-
-        ChrBaseRegion codingRegion = new ChrBaseRegion(bedRegion.chromosome(), (int)bedRegion.start(), (int)bedRegion.end());
-
-        List<SAMRecord> records = slicer.slice(samReader, codingRegion);
-
-        final List<BamCodingRecord> codingRecords = Lists.newArrayList();
-
-        for(SAMRecord record : records)
+        for(ReadRecord codingRecord : codingRecords)
         {
-            if(bothEndsInRangeOfCodingTranscripts(record))
-            {
-                codingRecords.add(BamCodingRecord.create(reverseStrand, codingRegion, record, true, true));
-            }
-            else
-            {
-                ++mFilteredRecordCount;
-            }
-        }
-
-        return codingRecords;
-    }
-
-    private List<Fragment> realign(final NamedBed codingRegion, boolean reverseStrand, String bamFileName)
-    {
-        List<Fragment> fragments = Lists.newArrayList();
-
-        final List<BamCodingRecord> codingRecords = query(reverseStrand, codingRegion, bamFileName);
-
-        for(BamCodingRecord codingRecord : codingRecords)
-        {
-            Fragment fragment = mFragmentFactory.createFragment(codingRecord, codingRegion);
+            Fragment fragment = mFragmentFactory.createFragment(codingRecord, geneName, geneStrand);
 
             if(fragment != null)
             {
-                fragments.add(fragment);
+                Fragment existingFragment = readIdFragments.get(fragment.id());
+
+                if(existingFragment == null)
+                {
+                    readIdFragments.put(fragment.id(), fragment);
+                    existingFragment = fragment;
+                }
+                else
+                {
+                    mergeFragments(existingFragment, fragment);
+                }
 
                 if(codingRecord.getIndels().contains(STOP_LOSS_ON_C_INDEL))
-                    addKnownIndelFragment(fragment);
+                    addKnownIndelFragment(existingFragment);
 
                 continue;
             }
@@ -367,7 +208,7 @@ public class BamRecordReader implements BamReader
             }
         }
 
-        return fragments;
+        return readIdFragments;
     }
 
     private void addKnownIndelFragment(final Fragment fragment)
@@ -377,6 +218,10 @@ public class BamRecordReader implements BamReader
         {
             indelFrags = Lists.newArrayList();
             mKnownStopLossFragments.put(STOP_LOSS_ON_C_INDEL, indelFrags);
+        }
+        else if(indelFrags.contains(fragment))
+        {
+            return;
         }
 
         indelFrags.add(fragment);
@@ -388,14 +233,161 @@ public class BamRecordReader implements BamReader
         indelMap.put(indel, count != null ? count + 1 : 1);
     }
 
-    private final boolean bothEndsInRangeOfCodingTranscripts(final SAMRecord record)
+    private boolean bothEndsInRangeOfCodingTranscripts(final SAMRecord record)
     {
-        boolean recordInRange = mCodingRegions.stream()
-                .anyMatch(x -> x.containsPosition(record.getContig(), record.getAlignmentStart()));
+        if(!record.getMateReferenceName().equals(HLA_CHR))
+            return false;
 
-        boolean mateInRange = mCodingRegions.stream()
-                .anyMatch(x -> x.containsPosition(record.getContig(), record.getMateAlignmentStart()));
+        // this check allows records to span across HLA genes, since a read may be mismapped
+        boolean readInRange = mGeneCodingRegions.values().stream()
+                .anyMatch(x -> x.withinCodingBounds(record.getAlignmentStart(), MAX_DISTANCE));
 
-        return recordInRange && mateInRange;
+        boolean mateInRange = mGeneCodingRegions.values().stream()
+                .anyMatch(x -> x.withinCodingBounds(record.getMateAlignmentStart(), MAX_DISTANCE));
+
+        return readInRange && mateInRange;
+    }
+
+    // methods for checking somatic variant support in HLA regions
+    public List<Fragment> findVariantFragments(final SomaticVariant variant)
+    {
+        // slice the BAM for the variant, get the mates if they are within the same gene's coding region,
+        // then create and filter fragments
+
+        for(String geneName : HLA_GENES)
+        {
+            GeneCodingRegions geneCodingRegions = mGeneCodingRegions.get(geneName);
+
+            for(BaseRegion codingRegion : geneCodingRegions.CodingRegions)
+            {
+                if(!regionCoversVariant(codingRegion, variant))
+                    continue;
+
+                ChrBaseRegion sliceRegion = new ChrBaseRegion(geneCodingRegions.Chromosome, codingRegion.start(), codingRegion.end());
+                List<ReadRecord> regionCodingRecords = findVariantRecords(variant, sliceRegion);
+                List<ReadRecord> codingRecords = Lists.newArrayList();
+
+                for(ReadRecord record : regionCodingRecords)
+                {
+                    if(!recordContainsVariant(variant, record))
+                        continue;
+
+                    if(codingRecords.stream().anyMatch(x -> x.getSamRecord().hashCode() == record.getSamRecord().hashCode()))
+                        continue;
+
+                    codingRecords.add(record);
+                }
+
+                final List<Fragment> readFragments = codingRecords.stream()
+                        .map(x -> mFragmentFactory.createAlignmentFragments(x, geneName, geneCodingRegions.Strand))
+                        .filter(x -> x != null)
+                        .collect(Collectors.toList());
+
+                List<Fragment> mateFragments = queryMateFragments(geneCodingRegions, codingRecords);
+                readFragments.addAll(mateFragments);
+
+                List<Fragment> readGroupFragments = FragmentUtils.mergeFragmentsById(readFragments);
+                return readGroupFragments;
+            }
+        }
+
+        return Lists.newArrayList();
+    }
+
+    private List<Fragment> queryMateFragments(GeneCodingRegions geneCodingRegions, final List<ReadRecord> codingRecords)
+    {
+        List<SAMRecord> records = codingRecords.stream().map(x -> x.getSamRecord()).collect(Collectors.toList());
+        List<SAMRecord> mateRecords = mBamSlicer.queryMates(mSamReader, records);
+
+        List<Fragment> fragments = Lists.newArrayList();
+
+        for(SAMRecord record : mateRecords)
+        {
+            // take any mate within a coding region of the same gene
+            BaseRegion matchedCodingRegion = geneCodingRegions.CodingRegions.stream()
+                    .filter(x -> positionsOverlap(x.start(), x.end(), record.getAlignmentStart(), record.getAlignmentEnd()))
+                    .findFirst().orElse(null);
+
+            if(matchedCodingRegion == null)
+                continue;
+
+            ReadRecord codingRecord = ReadRecord.create(matchedCodingRegion, record, true, true);
+
+            Fragment fragment = mFragmentFactory.createAlignmentFragments(codingRecord, geneCodingRegions.GeneName, geneCodingRegions.Strand);
+
+            if(fragment != null)
+                fragments.add(fragment);
+        }
+
+        return fragments;
+    }
+
+    private List<ReadRecord> findVariantRecords(final SomaticVariant variant, final ChrBaseRegion codingRegion)
+    {
+        final List<SAMRecord> records = mBamSlicer.slice(mSamReader, new ChrBaseRegion(variant.Chromosome, variant.Position, variant.Position));
+
+        final List<ReadRecord> codingRecords = Lists.newArrayList();
+
+        BaseRegion baseCodingRegion = new BaseRegion(codingRegion.start(), codingRegion.end());
+
+        for(SAMRecord record : records)
+        {
+            if(bothEndsInRangeOfCodingTranscripts(record))
+            {
+                codingRecords.add(ReadRecord.create(baseCodingRegion, record, true, true));
+            }
+            else
+            {
+                ++mFilteredRecordCount;
+            }
+        }
+
+        return codingRecords;
+    }
+
+    private static boolean regionCoversVariant(final BaseRegion codingRegion, final SomaticVariant variant)
+    {
+        // allow a margin for splice variants
+        if(variant.CanonicalCodingEffect == CodingEffect.SPLICE)
+        {
+            return abs(variant.Position - codingRegion.start()) <= SPLICE_VARIANT_BUFFER
+                    || abs(variant.Position - codingRegion.end()) <= SPLICE_VARIANT_BUFFER;
+        }
+        else
+        {
+            return codingRegion.containsPosition(variant.Position);
+        }
+    }
+
+    public static List<Fragment> filterVariantFragments(final SomaticVariant variant, final List<Fragment> fragments)
+    {
+        return fragments.stream()
+                .filter(x -> x.reads().stream().anyMatch(y -> recordContainsVariant(variant, y)))
+                .collect(Collectors.toList());
+    }
+
+    private static boolean recordContainsVariant(final SomaticVariant variant, final ReadRecord record)
+    {
+        if(variant.Alt.length() != variant.Ref.length())
+        {
+            Indel expectedIndel = new Indel(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
+            return record.getIndels().stream().anyMatch(x -> x.match(expectedIndel));
+        }
+
+        for(int i = 0; i < variant.Alt.length(); ++i)
+        {
+            int position = variant.Position + i;
+            char expectedBase = variant.Alt.charAt(i);
+
+            int readIndex = record.getSamRecord().getReadPositionAtReferencePosition(position) - 1;
+
+            if(readIndex < 0)
+                return false;
+
+            if(record.getSamRecord().getReadString().charAt(readIndex) != expectedBase)
+                return false;
+        }
+
+        return true;
     }
 }

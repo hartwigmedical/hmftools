@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.patientdb;
 
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
+import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -18,28 +21,27 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class LoadPeachData {
-
-    private static final Logger LOGGER = LogManager.getLogger(LoadPeachData.class);
-
-    private static final String SAMPLE = "sample";
+public class LoadPeachData
+{
     private static final String PEACH_GENOTYPE_TXT = "peach_genotype_txt";
     private static final String PEACH_CALLS_TXT = "peach_calls_txt";
 
-    public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException {
+    public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
+    {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
+
+        logVersion();
 
         String sample = cmd.getOptionValue(SAMPLE);
 
         String peachGenotypeTxt = cmd.getOptionValue(PEACH_GENOTYPE_TXT);
         String peachCallsTxt = cmd.getOptionValue(PEACH_CALLS_TXT);
 
-        if (Utils.anyNull(sample, peachCallsTxt, peachGenotypeTxt)) {
+        if(CommonUtils.anyNull(sample, peachCallsTxt, peachGenotypeTxt))
+        {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("Patient-DB - Load PEACH Data", options);
             System.exit(1);
@@ -62,7 +64,8 @@ public class LoadPeachData {
     }
 
     @NotNull
-    private static Options createOptions() {
+    private static Options createOptions()
+    {
         Options options = new Options();
 
         options.addOption(SAMPLE, true, "Sample for which we are going to load the PEACH data");

@@ -1,17 +1,24 @@
 package com.hartwig.hmftools.cider
 
-import com.hartwig.hmftools.cider.layout.LayoutTree
+import com.hartwig.hmftools.cider.layout.LayoutForest
 import com.hartwig.hmftools.cider.layout.ReadLayout
+import com.hartwig.hmftools.common.utils.Doubles
 import htsjdk.samtools.SAMRecord
+import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
+import kotlin.random.Random
 
 // helper class to convert from the outer VJ classes to the layout classes
 // create an interface to make it easier to test
 abstract class IVJReadLayoutAdaptor
 {
-    //fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
+    abstract fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
+
+    abstract fun toLayoutReadSlice(read: ReadLayout.Read) : ReadSlice
+
     abstract fun getAnchorMatchMethod(layout: ReadLayout) : VJReadCandidate.MatchMethod
     abstract fun getTemplateAnchorSequence(layout: ReadLayout) : String
 
@@ -49,11 +56,14 @@ abstract class IVJReadLayoutAdaptor
 // Most functions here rely on this.
 class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality: Int) : IVJReadLayoutAdaptor()
 {
+    data class LayoutBuildResult(val layouts: List<ReadLayout>, val numCandidateReads: Int, val numHighQualReads: Int,
+                                 val numReadsUsed: Int, val downSampled: Boolean)
+
     private class VjLayoutRead private constructor(
         val layoutReadSlice: ReadSlice,
         val readCandidate: VJReadCandidate,
         readKey: ReadKey,
-        sequence: String,
+        sequence: ByteArray,
         baseQualities: ByteArray,
         alignedPosition: Int)
         : ReadLayout.Read(readKey, sequence, baseQualities, alignedPosition)
@@ -62,11 +72,9 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
                 : this(layoutReadSlice,
             readCandidate,
             ReadKey(layoutReadSlice.readName, layoutReadSlice.firstOfPairFlag),
-            layoutReadSlice.readString,
+            layoutReadSlice.readString.toByteArray(),
             layoutReadSlice.baseQualities,
             alignedPosition)
-        {
-        }
 
         override fun copy(alignedPosition: Int): ReadLayout.Read
         {
@@ -98,12 +106,12 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         return VjLayoutRead(slice, readCandidate, alignedPosition)
     }
 
-    fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
+    override fun toReadCandidate(read: ReadLayout.Read) : VJReadCandidate
     {
         return (read as VjLayoutRead).readCandidate
     }
 
-    fun toLayoutReadSlice(read: ReadLayout.Read) : ReadSlice
+    override fun toLayoutReadSlice(read: ReadLayout.Read) : ReadSlice
     {
         return (read as VjLayoutRead).layoutReadSlice
     }
@@ -136,7 +144,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             val numGs = CiderUtils.numTrailingPolyG(read.readString, sliceEnd)
             if (numGs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
-                sLogger.debug("read({}) strand(+) poly G tail of length({}) found({})",
+                sLogger.trace("read({}) strand(+) poly G tail of length({}) found({})",
                     read, numGs, read.readString)
                 sliceEnd -= numGs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
             }
@@ -146,7 +154,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
             val numCs = CiderUtils.numLeadingPolyC(read.readString, sliceStart)
             if (numCs >= CiderConstants.MIN_POLY_G_TRIM_COUNT)
             {
-                sLogger.debug("read({}) strand(-) poly G tail of length({}) found({})",
+                sLogger.trace("read({}) strand(-) poly G tail of length({}) found({})",
                     read, numCs, read.readString)
                 sliceStart += numCs + CiderConstants.POLY_G_TRIM_EXTRA_BASE_COUNT
             }
@@ -190,7 +198,7 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         if (readCandidates.isEmpty())
             throw IllegalArgumentException("read candidate list is empty")
 
-        return readCandidates.maxByOrNull({ r -> r.similarityScore })?.templateAnchorSequence ?: ""
+        return readCandidates.maxByOrNull({ r -> r.similarityScore })?.templateAnchorSequence ?: String()
     }
 
     // NOTE: the anchor range could be outside the layout
@@ -213,48 +221,102 @@ class VJReadLayoutBuilder(private val trimBases: Int, private val minBaseQuality
         return anchorRange
     }
 
-    // Build layouts using layout tree
-    // TODO: merge layouts where differences are outside of the anchor
+    // Build layouts using layout forest
     fun buildLayouts(geneType: VJGeneType, readCandidates: List<VJReadCandidate>,
-                     minMatchedBases: Int)
-    : List<ReadLayout>
+                     minMatchedBases: Int, maxReadCountPerGene: Int, maxLowQualBaseFraction: Double)
+    : LayoutBuildResult
     {
-        sLogger.info("building {} layouts from {} reads", geneType, readCandidates.size)
+        val numHighQualReads: Int
+        val downSampled: Boolean
 
-        val layoutReads = ArrayList<ReadLayout.Read>()
+        val layoutReads: MutableList<ReadLayout.Read> = ArrayList()
 
         for (r in readCandidates)
         {
-            val layoutRead = readCandidateToLayoutRead(r)
-            if (layoutRead != null)
+            val layoutRead = readCandidateToLayoutRead(r) ?: continue
+
+            // filter reads by number of low qual base
+            val fractionLowQual = layoutRead.baseQualities.count { bq -> bq < minBaseQuality }.toDouble() / layoutRead.readLength
+
+            if (Doubles.lessOrEqual(fractionLowQual, maxLowQualBaseFraction))
+            {
                 layoutReads.add(layoutRead)
+            }
         }
+
+        // here is the high qual reads
+        numHighQualReads = layoutReads.size
+
+        // see if we need to downsample
+        if (layoutReads.size >= maxReadCountPerGene)
+        {
+            val fractionToKeep = maxReadCountPerGene.toDouble() / layoutReads.size
+
+            sLogger.printf(Level.INFO, "building %s layouts, read count(%d) > limit(%d), downsampling(frac to keep: %.3f)",
+                geneType, layoutReads.size, maxReadCountPerGene, fractionToKeep)
+
+            // we always use the same seed to make it predictable
+            val random = Random(0)
+
+            val downSampledReads = layoutReads.filter { (random.nextDouble() < fractionToKeep) }
+            layoutReads.clear()
+            layoutReads.addAll(downSampledReads)
+
+            downSampled = true
+        }
+        else
+        {
+            downSampled = false
+        }
+
+        sLogger.info("building {} layouts from {} reads", geneType, layoutReads.size)
 
         // always build from left to right
         layoutReads.sortWith(
             Collections.reverseOrder(
                 Comparator.comparingInt({ r: ReadLayout.Read -> r.alignedPosition })
                     .thenComparingDouble({ r: ReadLayout.Read -> r.baseQualities.average() }) // handle the highest quality ones first
-                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.length })
+                    .thenComparingInt({ r: ReadLayout.Read -> r.alignedPosition + r.sequence.size })
                     .thenComparing({ r: ReadLayout.Read -> r.readKey.readName }) // lastly we use read Id just in case
             ))
 
-        sLogger.info("building layouts from {} reads", layoutReads.size)
-
-        val layoutTree = LayoutTree(minBaseQuality.toByte(), minMatchedBases)
+        val layoutForest = LayoutForest(minBaseQuality.toByte(), minMatchedBases, CiderConstants.LAYOUT_MIN_SUPPORT_TO_SEAL_NODE)
 
         // go through the read data list, and add one by one to the list of clusters
         // if there are multiple clusters that matches, we choose the highest one
         for (read in layoutReads)
         {
-            layoutTree.tryAddRead(LayoutTree.Read(read, read.sequence, read.baseQualities, read.alignedPosition))
+            layoutForest.tryAddRead(LayoutForest.Read(read, read.sequence, read.baseQualities, read.alignedPosition))
         }
 
-        val readLayouts: List<ReadLayout> = layoutTree.buildReadLayouts({ read: LayoutTree.Read -> read.source as VjLayoutRead })
+        val readLayouts: List<ReadLayout> = layoutForest.buildReadLayouts({ read: LayoutForest.Read -> read.source as VjLayoutRead })
+            .sortedByDescending { layout: ReadLayout -> layout.reads.size }
 
-        sLogger.info("built {} layouts from {} reads", readLayouts.size, layoutReads.size)
+        // We want to perform a quick sanity check that the number of reads are correct
+        readCountSanityCheck(layoutReads, readLayouts)
 
-        return readLayouts
+        sLogger.info("built {} {} layouts from {} reads", readLayouts.size, geneType, layoutReads.size)
+
+        return LayoutBuildResult(layouts=readLayouts, numCandidateReads=readCandidates.size, numHighQualReads=numHighQualReads,
+            numReadsUsed=layoutReads.size, downSampled=downSampled)
+    }
+
+    // sanity check to make sure we got all correct read counts
+    fun readCountSanityCheck(reads: List<ReadLayout.Read>, layouts: List<ReadLayout>)
+    {
+        // check to make sure all reads are used
+        val readSet: MutableSet<ReadKey> = HashSet()
+
+        reads.forEach { o -> readSet.add(o.readKey) }
+        layouts.forEach { l -> readSet.removeAll(l.reads.map { r -> r.readKey }) }
+
+        if (readSet.isNotEmpty())
+        {
+            sLogger.error("built layouts are missing {} input reads", readSet.size)
+            readSet.forEach({ o -> sLogger.info("read {} missing in built layouts", o) })
+        }
+
+        require(readSet.isEmpty())
     }
 
     companion object

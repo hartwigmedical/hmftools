@@ -159,8 +159,9 @@ public class GeneTestUtils
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .likelihoodType(TSG)
-                .reportGermlineDisruption(true)
                 .reportPGX(false)
+                .reportGermlineDisruption(DriverGeneGermlineReporting.ANY)
+                .reportGermlineDeletion(DriverGeneGermlineReporting.ANY)
                 .build();
     }
 

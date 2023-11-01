@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.isofox.results;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.GeneCollection.UNIQUE_TRANS_COUNT;
 import static com.hartwig.hmftools.isofox.common.RegionReadData.findExonRegion;
@@ -91,9 +92,9 @@ public class TranscriptResult
         UniqueSpliceJunctionsSupported = uniqueSpliceJunctionsSupported;
 
         final int[][] supportingFragments = geneCollection.getTranscriptReadCount(transData.TransId);
-        UniqueSpliceJunctionFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.SPLICED)][UNIQUE_TRANS_COUNT];
-        UniqueNonSJFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.LONG)][UNIQUE_TRANS_COUNT];
-        DiscordantFragments = supportingFragments[FragmentMatchType.typeAsInt(FragmentMatchType.DISCORDANT)][TRANS_COUNT];
+        UniqueSpliceJunctionFragments = supportingFragments[FragmentMatchType.SPLICED.ordinal()][UNIQUE_TRANS_COUNT];
+        UniqueNonSJFragments = supportingFragments[FragmentMatchType.LONG.ordinal()][UNIQUE_TRANS_COUNT];
+        DiscordantFragments = supportingFragments[FragmentMatchType.DISCORDANT.ordinal()][TRANS_COUNT];
 
         EffectiveLength = calcEffectiveLength(exonicBases, expRateFragmentLengths);
 
@@ -168,7 +169,6 @@ public class TranscriptResult
     public static final String FLD_FITTED_FRAGMENTS = "FittedFragments";
     public static final String FLD_RAW_FRAGMENTS = "RawFittedFragments";
     public static final String FLD_EFFECTIVE_LENGTH = "EffectiveLength";
-    public static final String FLD_TPM = "AdjTPM";
 
     public static String csvHeader()
     {
@@ -182,7 +182,7 @@ public class TranscriptResult
                 .add(FLD_EFFECTIVE_LENGTH)
                 .add(FLD_FITTED_FRAGMENTS)
                 .add(FLD_RAW_FRAGMENTS)
-                .add(FLD_TPM)
+                .add(FLD_ADJ_TPM)
                 .add("RawTPM")
                 .add("TranscriptBasesCovered")
                 .add("SJSupported")

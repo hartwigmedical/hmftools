@@ -2,12 +2,12 @@ package com.hartwig.hmftools.purple.plot;
 
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberBAF;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
@@ -26,21 +26,8 @@ public class Charts
     public Charts(final PurpleConfig config, final ExecutorService executorService, boolean isHg38) throws IOException
     {
         mRCharts = new RCharts(config, executorService);
-        mCircosCharts = new CircosCharts(config, executorService, isHg38);
-
         mConfig = config;
-
-        ChartConfig chartConfig = config.Charting;
-
-        if(chartConfig.CircosBinary.isPresent())
-        {
-            createDirectory(chartConfig.CircosDirectory);
-        }
-
-        if(chartConfig.Enabled || chartConfig.CircosBinary.isPresent())
-        {
-            createDirectory(chartConfig.PlotDirectory);
-        }
+        mCircosCharts = config.Charting.CircosBinary != null ? new CircosCharts(config, executorService, isHg38) : null;
     }
 
     public void write(
@@ -51,31 +38,28 @@ public class Charts
     {
         final ChartConfig chartConfig = mConfig.Charting;
 
-        mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
-        final List<Future<Integer>> futures = mCircosCharts.chartFutures();
+        final List<Future<Integer>> chartFutures = Lists.newArrayList();
 
-        if(chartConfig.Enabled)
+        if(mCircosCharts != null)
         {
-            futures.addAll(mRCharts.chartFutures(sampleId, plotSomatics));
+            mCircosCharts.write(referenceId, sampleId, gender, copyNumbers, somaticVariants, structuralVariants, regions, bafs);
+            chartFutures.addAll(mCircosCharts.chartFutures());
         }
 
-        for(final Future<Integer> future : futures)
+        if(!chartConfig.Disabled)
+        {
+            chartFutures.addAll(mRCharts.chartFutures(sampleId, plotSomatics));
+        }
+
+        for(final Future<Integer> future : chartFutures)
         {
             // This (intentionally) has side effect of alerting users to any exceptions
             int result = future.get();
             if(result != 0)
             {
-                PPL_LOGGER.warn("Error generating charts");
+                PPL_LOGGER.warn("error generating charts");
+                throw new Exception("charting failed");
             }
-        }
-    }
-
-    private void createDirectory(final String dir) throws IOException
-    {
-        final File output = new File(dir);
-        if(!output.exists() && !output.mkdirs())
-        {
-            throw new IOException("Unable to create chart directory " + dir);
         }
     }
 }

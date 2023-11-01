@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
+
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 
 import org.apache.logging.log4j.util.Strings;
@@ -18,10 +20,11 @@ public final class DriverGeneTestFactory
                 .reportDisruption(false)
                 .reportAmplification(false)
                 .reportSomaticHotspot(false)
-                .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
-                .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
+                .reportGermlineVariant(NONE)
+                .reportGermlineHotspot(NONE)
                 .likelihoodType(DriverCategory.ONCO)
-                .reportGermlineDisruption(false)
+                .reportGermlineDisruption(NONE)
+                .reportGermlineDeletion(NONE)
                 .reportPGX(false);
     }
 }

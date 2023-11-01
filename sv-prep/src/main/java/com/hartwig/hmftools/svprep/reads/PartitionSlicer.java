@@ -1,10 +1,8 @@
 package com.hartwig.hmftools.svprep.reads;
 
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.getPolyGRegion;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.getPolyGRegion;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
-import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_FRACTION;
-import static com.hartwig.hmftools.svprep.SvConstants.DOWN_SAMPLE_THRESHOLD;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 
@@ -16,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.CombinedStats;
 import com.hartwig.hmftools.svprep.ExistingJunctionCache;
 import com.hartwig.hmftools.svprep.ResultsWriter;
@@ -45,8 +43,6 @@ public class PartitionSlicer
     private final PartitionStats mStats;
     private final CombinedStats mCombinedStats;
 
-    private final ReadRateTracker mReadRateTracker;
-    private boolean mRateLimitTriggered;
     private boolean mLogReadIds;
     private final List<PerformanceCounter> mPerfCounters;
 
@@ -77,19 +73,6 @@ public class PartitionSlicer
         mSamReader = samReader;
         mBamSlicer = bamSlicer;
 
-        if(mConfig.ApplyDownsampling)
-        {
-            int rateSegmentLength = mConfig.PartitionSize / DOWN_SAMPLE_FRACTION;
-            int downsampleThreshold = DOWN_SAMPLE_THRESHOLD / DOWN_SAMPLE_FRACTION;
-            mReadRateTracker = new ReadRateTracker(rateSegmentLength, mRegion.start(), downsampleThreshold);
-        }
-        else
-        {
-            mReadRateTracker = null;
-        }
-
-        mRateLimitTriggered = false;
-
         ChrBaseRegion excludedRegion = getPolyGRegion(mConfig.RefGenVersion);
         mFilterRegion = region.overlaps(excludedRegion) ? excludedRegion : null;
 
@@ -112,7 +95,7 @@ public class PartitionSlicer
         perfCounterStart(PerfCounters.Total);
         perfCounterStart(PerfCounters.Slice);
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(mRegion), this::processSamRecord);
+        mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
 
         perfCounterStop(PerfCounters.Slice);
 
@@ -140,9 +123,6 @@ public class PartitionSlicer
             mPerfCounters.addAll(mJunctionTracker.perfCounters());
 
         mCombinedStats.addPerfCounters(mPerfCounters);
-
-        if(mRateLimitTriggered)
-            System.gc();
     }
 
     private static final boolean LOG_READ_ONLY = false;
@@ -155,9 +135,6 @@ public class PartitionSlicer
             return;
 
         ++mStats.TotalReads;
-
-        if(mStats.TotalReads > 0 && (mStats.TotalReads % 1_000_000) == 0)
-            System.gc();
 
         if(mFilterRegion != null)
         {
@@ -179,9 +156,6 @@ public class PartitionSlicer
             else if(LOG_READ_ONLY)
                 return;
         }
-
-        if(readStart > 0 && !checkReadRateLimits(readStart))
-            return;
 
         int filters = mReadFilters.checkFilters(record);
 
@@ -301,32 +275,4 @@ public class PartitionSlicer
     }
 
     private void perfCounterStop(final PerfCounters pc) { mPerfCounters.get(pc.ordinal()).stop(); }
-
-    private boolean checkReadRateLimits(int positionStart)
-    {
-        if(mReadRateTracker == null)
-            return true;
-
-        boolean wasLimited = mReadRateTracker.isRateLimited();
-        int lastSegementReadCount = mReadRateTracker.readCount();
-
-        boolean handleRead = mReadRateTracker.handleRead(positionStart);
-
-        if(wasLimited != mReadRateTracker.isRateLimited())
-        {
-            if(mReadRateTracker.isRateLimited())
-            {
-                SV_LOGGER.info("region({}) rate limited with read count({}) at position({})",
-                        mRegion, lastSegementReadCount, positionStart);
-                mRateLimitTriggered = true;
-            }
-            else
-            {
-                SV_LOGGER.info("region({}) rate limit cleared at position({}), last read count({})",
-                        mRegion, positionStart, lastSegementReadCount);
-            }
-        }
-
-        return handleRead;
-    }
 }

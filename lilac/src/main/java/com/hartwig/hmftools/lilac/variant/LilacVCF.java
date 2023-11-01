@@ -44,7 +44,7 @@ public class LilacVCF
         return this;
     }
 
-    public final void writeVariant(final VariantContext context, final List<HlaAllele> alleles)
+    public void writeVariant(final VariantContext context, final List<HlaAllele> alleles)
     {
         String alleleStr = alleles.isEmpty() ? "UNKNOWN" : HlaAllele.toString(alleles);
         VariantContext newContext = new VariantContextBuilder(context).attribute(HLA, alleleStr).make();

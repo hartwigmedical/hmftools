@@ -208,14 +208,14 @@ public class VariantContextDecorator implements GenomePosition
     }
 
     @NotNull
-    public AllelicDepth allelicDepth(@NotNull final String sample)
+    public AllelicDepth allelicDepth(final String sample)
     {
         final Genotype genotype = mContext.getGenotype(sample);
         return genotype != null ? AllelicDepth.fromGenotype(genotype) : NO_DEPTH;
     }
 
     @NotNull
-    public GenotypeStatus genotypeStatus(@NotNull final String sample)
+    public GenotypeStatus genotypeStatus(final String sample)
     {
         final Genotype genotype = mContext.getGenotype(sample);
         return genotype != null ? GenotypeStatus.fromGenotype(genotype) : GenotypeStatus.UNKNOWN;
@@ -273,17 +273,17 @@ public class VariantContextDecorator implements GenomePosition
 
     public boolean isPathogenic()
     {
-        if(clinvarPathogenicSummary().pathogenicity() == Pathogenicity.BENIGN_BLACKLIST)
+        if(clinvarPathogenicSummary().Status == Pathogenicity.BENIGN_BLACKLIST)
         {
             return false;
         }
 
-        if(isHotspot() || clinvarPathogenicSummary().pathogenicity().isPathogenic())
+        if(isHotspot() || clinvarPathogenicSummary().Status.isPathogenic())
         {
             return true;
         }
 
-        return clinvarPathogenicSummary().pathogenicity() == Pathogenicity.UNKNOWN
+        return clinvarPathogenicSummary().Status == Pathogenicity.UNKNOWN
                 && PATHOGENIC_EFFECT.contains(variantImpact().CanonicalCodingEffect);
     }
 

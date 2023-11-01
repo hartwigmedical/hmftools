@@ -5,6 +5,7 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 
 import com.hartwig.hmftools.sage.common.RefSequence;
@@ -44,7 +45,7 @@ public final class NumberEvents
 
     public static int rawNM(final SAMRecord record, final RefSequence refGenome)
     {
-        Object nm = record.getAttribute("NM");
+        Object nm = record.getAttribute(NUM_MUTATONS_ATTRIBUTE);
         if(nm instanceof Integer)
         {
             return (int) nm;

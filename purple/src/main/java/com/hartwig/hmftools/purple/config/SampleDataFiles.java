@@ -1,13 +1,24 @@
 package com.hartwig.hmftools.purple.config;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.AMBER_DIR;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.COBALT_DIR;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.GRIPSS_GERMLINE_DIR;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.GRIPSS_SOMATIC_DIR;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PAVE_GERMLINE_DIR;
+import static com.hartwig.hmftools.common.pipeline.PipelineToolDirectories.PAVE_SOMATIC_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
+
+import htsjdk.variant.vcf.VCFFileReader;
 
 public class SampleDataFiles
 {
@@ -23,79 +34,114 @@ public class SampleDataFiles
     public static final String SAMPLE_DIR = "sample_dir";
     private static final String AMBER = "amber";
     private static final String COBALT = "cobalt";
-    private static String STRUCTURAL_VARIANTS = "structural_vcf";
     private static String SOMATIC_SV_VCF = "somatic_sv_vcf";
     private static String GERMLINE_SV_VCF = "germline_sv_vcf";
     private static String SV_RECOVERY_VCF = "sv_recovery_vcf";
     public static String GERMLINE_VARIANTS = "germline_vcf";
     private static String SOMATIC_VARIANTS = "somatic_vcf";
 
-    static void addOptions(final Options options)
+    static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(SAMPLE_DIR, true,"Path to the sample's directory where expect to find Cobalt, Amber, Gripss etc directories");
+        configBuilder.addPath(SAMPLE_DIR, false,"Path to the sample's directory where expect to find Cobalt, Amber, Gripss etc directories");
 
-        options.addOption(COBALT,true,
+        configBuilder.addPath(COBALT,false,
                 "Path to COBALT output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/cobalt");
 
-        options.addOption(AMBER, true,
+        configBuilder.addPath(AMBER, false,
                 "Path to AMBER output directory. Required if <run_dir> not set, otherwise defaults to <run_dir>/amber");
 
-        options.addOption(STRUCTURAL_VARIANTS, true, "Optional location of somatic SV VCF for more accurate segmentation");
-        options.addOption(SOMATIC_SV_VCF, true, "Optional location of somatic SV VCF for more accurate segmentation");
-        options.addOption(GERMLINE_SV_VCF, true, "Optional location of germline SV VCF to annotate");
-        options.addOption(SV_RECOVERY_VCF, true, "Optional location of failing structural variants that may be recovered");
-        options.addOption(GERMLINE_VARIANTS, true, "Optional location of germline variants to enrich and process in driver catalog.");
-        options.addOption(SOMATIC_VARIANTS, true, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
+        configBuilder.addPath(SOMATIC_SV_VCF, false, "Optional location of somatic SV VCF");
+        configBuilder.addPath(GERMLINE_SV_VCF, false, "Optional location of germline SV VCF to annotate");
+        configBuilder.addPath(SV_RECOVERY_VCF, false, "Optional location of failing structural variants that may be recovered");
+        configBuilder.addPath(GERMLINE_VARIANTS, false, "Optional location of germline variants to enrich and process in driver catalog.");
+        configBuilder.addPath(SOMATIC_VARIANTS, false, "Optional location of somatic variant vcf to assist fitting in highly-diploid samples.");
     }
 
-    public SampleDataFiles(final CommandLine cmd, final String sampleId, final String referenceId) throws ParseException
+    public SampleDataFiles(final ConfigBuilder configBuilder, final String sampleId)
     {
-        SampleDataDir = cmd.hasOption(SAMPLE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(SAMPLE_DIR)) : null;
+        SampleDataDir = configBuilder.hasValue(SAMPLE_DIR) ? checkAddDirSeparator(configBuilder.getValue(SAMPLE_DIR)) : null;
 
-        if(cmd.hasOption(AMBER))
-            AmberDirectory = cmd.getOptionValue(AMBER);
+        if(configBuilder.hasValue(AMBER))
+            AmberDirectory = checkAddDirSeparator(configBuilder.getValue(AMBER));
         else if(SampleDataDir != null)
-            AmberDirectory = SampleDataDir + "amber/";
+            AmberDirectory = SampleDataDir + AMBER_DIR + File.separator;
         else
-            throw new ParseException("missing amber or sample_data_dir config");
+            AmberDirectory = null;
 
-        if(cmd.hasOption(COBALT))
-            CobaltDirectory = cmd.getOptionValue(COBALT);
+        if(configBuilder.hasValue(COBALT))
+            CobaltDirectory = checkAddDirSeparator(configBuilder.getValue(COBALT));
         else if(SampleDataDir != null)
-            CobaltDirectory = SampleDataDir + "cobalt/";
+            CobaltDirectory = SampleDataDir + COBALT_DIR + File.separator;
         else
-            throw new ParseException("missing cobalt or sample_data_dir config");
+            CobaltDirectory = null;
 
-        if(cmd.hasOption(STRUCTURAL_VARIANTS))
-            SomaticSvVcfFile = getFilename(cmd, STRUCTURAL_VARIANTS, SampleDataDir, sampleId, ".gripss.filtered.somatic.vcf.gz");
-        else
-            SomaticSvVcfFile = getFilename(cmd, SOMATIC_SV_VCF, SampleDataDir, sampleId, ".gripss.filtered.somatic.vcf.gz");
+        SomaticSvVcfFile = getFilename(configBuilder, SOMATIC_SV_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.filtered.somatic.vcf.gz");
+        GermlineSvVcfFile = getFilename(configBuilder, GERMLINE_SV_VCF, GRIPSS_GERMLINE_DIR, sampleId, ".gripss.filtered.germline.vcf.gz");
 
-        GermlineSvVcfFile = getFilename(cmd, GERMLINE_SV_VCF, SampleDataDir, referenceId, ".gripss.filtered.germline.vcf.gz");
+        RecoveredSvVcfFile = getFilename(configBuilder, SV_RECOVERY_VCF, GRIPSS_SOMATIC_DIR, sampleId, ".gripss.somatic.vcf.gz");
 
-        RecoveredSvVcfFile = getFilename(cmd, SV_RECOVERY_VCF, SampleDataDir, sampleId, ".gripss.somatic.vcf.gz");
-        SomaticVcfFile = getFilename(cmd, SOMATIC_VARIANTS, SampleDataDir, sampleId, ".sage.somatic.filtered.pave.vcf.gz");
-        GermlineVcfFile = getFilename(cmd, GERMLINE_VARIANTS, SampleDataDir, sampleId, ".sage.germline.filtered.pave.vcf.gz");
+        SomaticVcfFile = getFilename(configBuilder, SOMATIC_VARIANTS, PAVE_SOMATIC_DIR, sampleId, ".pave.somatic.vcf.gz");
+        GermlineVcfFile = getFilename(configBuilder, GERMLINE_VARIANTS, PAVE_GERMLINE_DIR, sampleId, ".pave.germline.vcf.gz");
+    }
+
+    public boolean hasValidSampleNames(final PurpleConfig config)
+    {
+        boolean germlineValid = !config.runGermline()
+                || (hasValidVcfSampleNames(GermlineSvVcfFile, config) && hasValidVcfSampleNames(GermlineVcfFile, config));
+
+        boolean tumorValid = !config.runGermline()
+                || (hasValidVcfSampleNames(SomaticSvVcfFile, config) && hasValidVcfSampleNames(SomaticVcfFile, config));
+
+        return tumorValid && germlineValid;
+    }
+
+    private boolean hasValidVcfSampleNames(final String vcfFile, final PurpleConfig config)
+    {
+        if(vcfFile.isEmpty())
+            return true;
+
+        VcfFileReader vcfReader = new VcfFileReader(vcfFile);
+
+        List<String> vcfSampleNames = vcfReader.vcfHeader().getGenotypeSamples();
+
+        if(config.runTumor() && !vcfSampleNames.contains(config.TumorId))
+        {
+            PPL_LOGGER.error("vcf({}) missing tumorId({}) genotype", vcfFile, config.TumorId);
+            return false;
+        }
+
+        if(config.runGermline() && !vcfSampleNames.contains(config.ReferenceId))
+        {
+            PPL_LOGGER.error("vcf({}) missing referenceId({}) genotype", vcfFile, config.ReferenceId);
+            return false;
+        }
+
+        return true;
     }
 
     private String getFilename(
-            final CommandLine cmd, final String config, final String sampleDataDir,
-            final String sampleId, final String fileSuffix) throws ParseException
+            final ConfigBuilder configBuilder, final String config, final String toolDir, final String sampleId, final String fileSuffix)
     {
-        if(cmd.hasOption(config))
+        if(configBuilder.hasValue(config))
         {
-            final String filename = cmd.getOptionValue(config);
+            final String filename = configBuilder.getValue(config);
 
             if(Files.exists(Paths.get(filename)))
                 return filename;
-            else
-                throw new ParseException(String.format("missing file: %s", filename));
+
+            PPL_LOGGER.error("missing file: {}", filename);
+            return null;
         }
 
-        if(sampleDataDir == null)
+        if(SampleDataDir == null)
             return "";
 
-        final String filename = sampleDataDir + sampleId + fileSuffix;
+        String filename = SampleDataDir + toolDir + File.separator + sampleId + fileSuffix;
+
+        if(Files.exists(Paths.get(filename)))
+            return filename;
+
+        filename = SampleDataDir + sampleId + fileSuffix;
 
         return Files.exists(Paths.get(filename)) ? filename : "";
     }

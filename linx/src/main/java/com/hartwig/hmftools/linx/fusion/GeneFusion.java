@@ -17,9 +17,14 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_BOT
 import static com.hartwig.hmftools.common.linx.FusionPhasedType.INFRAME;
 import static com.hartwig.hmftools.common.linx.FusionPhasedType.OUT_OF_FRAME;
 import static com.hartwig.hmftools.common.linx.FusionPhasedType.SKIPPED_EXONS;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.UNSET;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 
+import java.util.List;
+import java.util.StringJoiner;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.fusion.KnownFusionType;
+import com.hartwig.hmftools.common.linx.FusionReportableReason;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.linx.FusionLikelihoodType;
 import com.hartwig.hmftools.common.linx.FusionPhasedType;
@@ -30,7 +35,7 @@ public class GeneFusion
     private final BreakendTransData[] mTranscripts;
 
     private boolean mIsReportable;
-    private ReportableReason mReportableReason;
+    private List<FusionReportableReason> mReportableReasons;
     private boolean mPhaseMatched;
     private int[] mExonsSkipped;
     private KnownFusionType mKnownFusionType;
@@ -49,7 +54,7 @@ public class GeneFusion
         mTranscripts = new BreakendTransData[] { upstreamTrans, downstreamTrans };
 
         mIsReportable = false;
-        mReportableReason = UNSET;
+        mReportableReasons = Lists.newArrayList();
         mKnownFusionType = KnownFusionType.NONE;
         mIsPromiscuous = new boolean[] { false, false };
         mPhaseMatched = phaseMatched;
@@ -87,9 +92,28 @@ public class GeneFusion
     }
 
     public boolean reportable(){ return mIsReportable; }
-    public void setReportable(boolean toggle) { mIsReportable = toggle; }
-    public void setReportableReason(final ReportableReason reason) { mReportableReason = reason; }
-    public ReportableReason reportableReason() { return mReportableReason; }
+
+    public void setReportable(boolean toggle)
+    {
+        mIsReportable = toggle;
+        mReportableReasons.clear();
+    }
+
+    public void setReportableReasons(final List<FusionReportableReason> reasons) { mReportableReasons.addAll(reasons); }
+    public void addReportableReason(final FusionReportableReason reason) { mReportableReasons.add(reason); }
+
+    public String reportableReasonsStr()
+    {
+        if(mReportableReasons.isEmpty())
+            return FusionReportableReason.OK.toString();
+
+        if(mKnownFusionType == KnownFusionType.NONE) // only log the first reason for non-known types
+            return mReportableReasons.get(0).toString();
+
+        StringJoiner sj = new StringJoiner(ITEM_DELIM);
+        mReportableReasons.forEach(x -> sj.add(x.toString()));
+        return sj.toString();
+    }
 
     public boolean proteinFeaturesSet() { return mProteinFeaturesSet; }
     public void setProteinFeaturesSet() { mProteinFeaturesSet = true; }
@@ -238,7 +262,7 @@ public class GeneFusion
     public final String toString()
     {
         return String.format("%d: %s type(%s) reportable(%s reason=%s) phased(%s) SVs(%d & %d) up(%s:%d:%d exon=%d) down(%s:%d:%d exon=%d)",
-                mId, name(), knownTypeStr(), mIsReportable, mReportableReason, mPhaseMatched,
+                mId, name(), knownTypeStr(), mIsReportable, mReportableReasons, mPhaseMatched,
                 mTranscripts[FS_UP].gene().id(), mTranscripts[FS_DOWN].gene().id(),
                 mTranscripts[FS_UP].gene().chromosome(), mTranscripts[FS_UP].gene().orientation(),
                 mTranscripts[FS_UP].gene().position(), getFusedExon(true),

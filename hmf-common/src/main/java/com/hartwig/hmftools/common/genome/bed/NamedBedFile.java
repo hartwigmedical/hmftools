@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.genome.bed;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import static htsjdk.tribble.AbstractFeatureReader.getFeatureReader;
 
 import java.io.FileOutputStream;
@@ -8,6 +10,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -15,7 +18,6 @@ import java.util.zip.GZIPOutputStream;
 
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
-import org.apache.commons.compress.utils.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -29,11 +31,6 @@ import htsjdk.tribble.readers.LineIterator;
 public final class NamedBedFile
 {
     private static final Logger LOGGER = LogManager.getLogger(NamedBedFile.class);
-    private static final String DELIMITER = "\t";
-
-    private NamedBedFile()
-    {
-    }
 
     public static void writeUnnamedBedFile(final String filename, final List<GenomeRegion> regions) throws IOException
     {
@@ -66,7 +63,7 @@ public final class NamedBedFile
     @NotNull
     public static List<NamedBed> readBedFile(String bedFile) throws IOException
     {
-        List<NamedBed> result = Lists.newArrayList();
+        List<NamedBed> result = new ArrayList<>();
         NamedBed prevRegion = null;
         try(final AbstractFeatureReader<BEDFeature, LineIterator> reader = getFeatureReader(bedFile, new BEDCodec(), false))
         {
@@ -82,10 +79,9 @@ public final class NamedBedFile
                 }
                 else
                 {
-                    if(prevRegion != null && namedBed.chromosome().equals(prevRegion.chromosome())
-                            && prevRegion.end() >= namedBed.start())
+                    if(prevRegion != null && namedBed.chromosome().equals(prevRegion.chromosome()) && prevRegion.end() >= namedBed.start())
                     {
-                        LOGGER.warn("BED file is not sorted, please fix! Current={}, Previous={}", namedBed, prevRegion);
+                        LOGGER.warn("BED file is not sorted: Current={}, Previous={}", namedBed, prevRegion);
                     }
                     else
                     {
@@ -112,7 +108,7 @@ public final class NamedBedFile
 
     private static String asBed(final GenomeRegion region)
     {
-        return new StringJoiner(DELIMITER).add(region.chromosome())
+        return new StringJoiner(TSV_DELIM).add(region.chromosome())
                 .add(String.valueOf(region.start() - 1))
                 .add(String.valueOf(region.end()))
                 .toString();
@@ -120,7 +116,7 @@ public final class NamedBedFile
 
     private static String asBed(final NamedBed region)
     {
-        return new StringJoiner(DELIMITER).add(region.chromosome())
+        return new StringJoiner(TSV_DELIM).add(region.chromosome())
                 .add(String.valueOf(region.start() - 1))
                 .add(String.valueOf(region.end()))
                 .add(region.name())

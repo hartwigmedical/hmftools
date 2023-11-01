@@ -6,13 +6,10 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.gene.BreakendTransData.POST_CODING_PHASE;
 
 import java.util.List;
@@ -20,13 +17,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.CodingBaseData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
@@ -53,41 +49,6 @@ public final class BreakendGenePrep
             specificPreGeneRanges.add(new ChrBaseRegion(geneData.Chromosome, preGeneStart, preGeneEnd));
         }
 
-        /* deprecated logic to only load transcripts relating to the breakends in a specific sample
-           was used: isSingleSample() && !RunDrivers && RestrictedGeneIds.isEmpty() && !IsGermline;
-
-        if(loadBreakendGenes)
-        {
-            // only load transcript info for the genes covered
-            final List<String> restrictedGeneIds = Lists.newArrayList();
-
-            for(final SvVarData var : svList)
-            {
-                for(int be = SE_START; be <= SE_END; ++be)
-                {
-                    if(be == SE_END && var.isSglBreakend())
-                    {
-                        // special case of looking for mappings to locations containing genes so hotspot fusions can be found
-                        for(final SglMapping mapping : var.getSglMappings())
-                        {
-                            ensemblDataCache.populateGeneIdList(restrictedGeneIds, mapping.Chromosome, mapping.Position, upstreamDistance);
-                        }
-                    }
-                    else
-                    {
-                        boolean isStart = isStart(be);
-                        ensemblDataCache.populateGeneIdList(restrictedGeneIds, var.chromosome(isStart), var.position(isStart), upstreamDistance);
-                    }
-                }
-            }
-
-            ensemblDataCache.getAlternativeGeneData().stream().filter(x -> !restrictedGeneIds.contains(x.GeneId))
-                    .forEach(x -> restrictedGeneIds.add(x.GeneId));
-
-            ensemblDataCache.loadTranscriptData(restrictedGeneIds);
-        }
-        */
-
         // associate breakends with transcripts
         for(final SvVarData var : svList)
         {
@@ -99,7 +60,7 @@ public final class BreakendGenePrep
                 if(be == SE_END && var.isSglBreakend())
                 {
                     // special case of looking for mappings to locations containing genes so hotspot fusions can be found
-                    for(final SglMapping mapping : var.getSglMappings())
+                    for(SglMapping mapping : var.getSglMappings())
                     {
                         int preGeneDistance = getPreGeneDistance(
                                 mapping.Chromosome, mapping.Position, defaultPreGeneDistance, specificPreGeneDistance, specificPreGeneRanges);

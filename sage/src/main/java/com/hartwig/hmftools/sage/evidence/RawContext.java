@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.String.format;
+
 import com.hartwig.hmftools.common.samtools.CigarTraversal;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 
@@ -47,6 +49,12 @@ public class RawContext
         CigarTraversal.traverseCigar(record, handler);
         RawContext result = handler.result();
         return result == null ? INVALID_CONTEXT : result;
+    }
+
+    public String toString()
+    {
+        return format("index(%d) sc(%s) del(%s) skip(%s) alt(%s) ref(%s) depth(%s) bq(%d)",
+                ReadIndex, ReadIndexInSkipped, ReadIndexInDelete, ReadIndexInSkipped, AltSupport, RefSupport, DepthSupport, BaseQuality);
     }
 
     static RawContext inSoftClip(final int readIndex, final boolean altSupport, final int quality)

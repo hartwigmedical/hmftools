@@ -82,7 +82,7 @@ public class PonSampleTask implements Callable
     private void clearSampleData()
     {
         mProcessedVariants = 0;
-        mSvFactory = new StructuralVariantFactory(new AlwaysPassFilter());
+        mSvFactory = StructuralVariantFactory.build(new AlwaysPassFilter());
     }
 
     private void processVariant(final VariantContext variant)

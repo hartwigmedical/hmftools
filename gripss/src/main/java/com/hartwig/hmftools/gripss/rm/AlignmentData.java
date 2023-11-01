@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.gripss.rm;
 
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.calcCigarLength;
@@ -13,7 +14,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.samtools.CigarUtils;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 import htsjdk.samtools.Cigar;
 
@@ -32,6 +33,11 @@ public class AlignmentData
         Chromosome = chromosome;
         Region = region;
         CigarStr = cigar;
+    }
+
+    public int overlappingBases(final BaseRegion region)
+    {
+        return min(Region.end(), region.end()) - max(Region.start(), region.start()) + 1;
     }
 
     public static AlignmentData fromAlignment(final String alignment)

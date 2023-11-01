@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.orange.cohort.percentile;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -13,17 +13,20 @@ import java.util.Map;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.orange.cohort.mapping.CohortConstants;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CohortPercentilesFileTest {
-
-    private static final String EXAMPLE_PERCENTILE_TSV = Resources.getResource("cohort/percentile/example_cohort_percentiles.tsv").getPath();
+public class CohortPercentilesFileTest
+{
+    private static final String EXAMPLE_PERCENTILE_TSV =
+            Resources.getResource("cohort/percentile/example_cohort_percentiles.tsv").getPath();
 
     @Test
-    public void canReadExampleCohortPercentilesTsv() throws IOException {
+    public void canReadExampleCohortPercentilesTsv() throws IOException
+    {
         Multimap<PercentileType, CohortPercentiles> map = CohortPercentilesFile.read(EXAMPLE_PERCENTILE_TSV);
 
         assertEquals(1, map.keySet().size());
@@ -36,9 +39,12 @@ public class CohortPercentilesFileTest {
     }
 
     @NotNull
-    private static CohortPercentiles find(@NotNull Collection<CohortPercentiles> percentiles, @NotNull String cancerType) {
-        for (CohortPercentiles percentile : percentiles) {
-            if (percentile.cancerType().equals(cancerType)) {
+    private static CohortPercentiles find(@NotNull Collection<CohortPercentiles> percentiles, @NotNull String cancerType)
+    {
+        for(CohortPercentiles percentile : percentiles)
+        {
+            if(percentile.cancerType().equals(cancerType))
+            {
                 return percentile;
             }
         }
@@ -47,7 +53,8 @@ public class CohortPercentilesFileTest {
     }
 
     @Test
-    public void canConvertBackAndForth() {
+    public void canConvertBackAndForth()
+    {
         Multimap<PercentileType, CohortPercentiles> testMap = createTestMap();
 
         List<String> lines = CohortPercentilesFile.toLines(testMap);
@@ -60,7 +67,8 @@ public class CohortPercentilesFileTest {
     }
 
     @NotNull
-    private static Multimap<PercentileType, CohortPercentiles> createTestMap() {
+    private static Multimap<PercentileType, CohortPercentiles> createTestMap()
+    {
         Multimap<PercentileType, CohortPercentiles> map = ArrayListMultimap.create();
         map.put(PercentileType.SV_TMB,
                 ImmutableCohortPercentiles.builder().cancerType("type 1").cohortSize(12).addValues(1, 2, 3, 4).build());

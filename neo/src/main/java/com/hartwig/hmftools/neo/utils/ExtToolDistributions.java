@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRED_AFFINITY;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PRES_SCORE;
@@ -21,6 +20,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.VectorUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.RandomDistributionTask;
@@ -28,11 +28,6 @@ import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 import com.hartwig.hmftools.neo.bind.RandomPeptideDistribution;
 import com.hartwig.hmftools.neo.bind.ScoreDistributionData;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // rather than use/trust McfFlurry's affinity and presentation score percentiles, rebuild a distribution for each of them using their
@@ -51,13 +46,13 @@ public class ExtToolDistributions
     private static final String VALIDATION_FILE = "validation_data_file";
     private static final String USE_PRESENTATION = "use_presentation";
 
-    public ExtToolDistributions(final CommandLine cmd)
+    public ExtToolDistributions(final ConfigBuilder configBuilder)
     {
-        mMcfPredictionsFile = cmd.getOptionValue(PREDICTIONS_FILE);
-        mValidationDataFile = cmd.getOptionValue(VALIDATION_FILE);
+        mMcfPredictionsFile = configBuilder.getValue(PREDICTIONS_FILE);
+        mValidationDataFile = configBuilder.getValue(VALIDATION_FILE);
 
-        mConfig = new RandomPeptideConfig(cmd);
-        mUsePresentation = cmd.hasOption(USE_PRESENTATION);
+        mConfig = RandomPeptideConfig.forReading(configBuilder);
+        mUsePresentation = configBuilder.hasFlag(USE_PRESENTATION);
 
         mRandomDistribution = new RandomPeptideDistribution(mConfig);
 
@@ -220,29 +215,25 @@ public class ExtToolDistributions
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        RandomPeptideConfig.addCmdLineArgs(options);
-        options.addOption(PREDICTIONS_FILE, true, "MCF predictions file");
-        options.addOption(VALIDATION_FILE, true, "Binding validation file");
-        options.addOption(USE_PRESENTATION, false, "Rank and score using presentation instead of affinity");
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        RandomPeptideConfig.addConfigForReading(configBuilder);
+        configBuilder.addPath(PREDICTIONS_FILE, true, "MCF predictions file");
+        configBuilder.addPath(VALIDATION_FILE, true, "Binding validation file");
+        configBuilder.addFlag(USE_PRESENTATION, "Rank and score using presentation instead of affinity");
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        ExtToolDistributions extToolDistributions = new ExtToolDistributions(cmd);
+        ExtToolDistributions extToolDistributions = new ExtToolDistributions(configBuilder);
         extToolDistributions.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

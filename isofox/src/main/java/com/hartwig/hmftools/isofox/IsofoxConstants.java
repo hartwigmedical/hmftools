@@ -6,10 +6,12 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class IsofoxConstants
 {
+    public static final String APP_NAME = "Isofox";
+
     public static final int DEFAULT_MAX_FRAGMENT_SIZE = 550;
 
     // min number of fragments to sample when calculating fragment length distribution for calculation of expected fragment counts
@@ -26,6 +28,8 @@ public class IsofoxConstants
     public static final int MAX_NOVEL_SJ_DISTANCE = 500000; // beyond which a fragment will be considered chimeric
 
     public static final double MAX_GENE_PERC_CONTRIBUTION = 0.01;
+
+    public static final double PANEL_LOW_COVERAGE_FACTOR = 5; // expected rate for panel vs full genome
 
     public static void populateEnrichedGeneIds(final List<String> geneIds, final RefGenomeVersion version)
     {
@@ -62,4 +66,6 @@ public class IsofoxConstants
         else
             regions.add(new ChrBaseRegion("6", 29690552, 33111102));
     }
+
+    public static final String DEFAULT_EXPECTED_RATE_LENGTHS = "50-1;75-1;100-1;125-1;150-1;200-1;250-1;300-1;400-1;550-1";
 }

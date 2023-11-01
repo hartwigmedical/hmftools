@@ -1,41 +1,45 @@
 package com.hartwig.hmftools.orange.algo.purple;
 
-import com.hartwig.hmftools.common.purple.FittedPurityMethod;
-import com.hartwig.hmftools.common.purple.Gender;
-import com.hartwig.hmftools.common.purple.ImmutablePurpleQC;
-import com.hartwig.hmftools.common.purple.PurpleQC;
-import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
-import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleFit;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleCharacteristics;
+import com.hartwig.hmftools.datamodel.purple.PurpleFit;
+import com.hartwig.hmftools.datamodel.purple.PurpleFittedPurityMethod;
+import com.hartwig.hmftools.datamodel.purple.PurpleGermlineAberration;
+import com.hartwig.hmftools.datamodel.purple.PurpleMicrosatelliteStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleQC;
+import com.hartwig.hmftools.datamodel.purple.PurpleQCStatus;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleTumorMutationalStatus;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class TestPurpleInterpretationFactory {
-
-    private TestPurpleInterpretationFactory() {
-    }
-
+public final class TestPurpleInterpretationFactory
+{
     @NotNull
-    public static PurpleInterpretedData createMinimalTestPurpleData() {
+    public static PurpleRecord createMinimalTestPurpleData()
+    {
         return builder().build();
     }
 
     @NotNull
-    public static ImmutablePurpleInterpretedData.Builder builder() {
-        return ImmutablePurpleInterpretedData.builder()
+    public static ImmutablePurpleRecord.Builder builder()
+    {
+        return ImmutablePurpleRecord.builder()
                 .fit(createMinimalTestFitData())
                 .characteristics(createMinimalTestCharacteristicsData());
     }
 
     @NotNull
-    public static PurityPloidyFit createMinimalTestFitData() {
-        return ImmutablePurityPloidyFit.builder()
+    public static PurpleFit createMinimalTestFitData()
+    {
+        return ImmutablePurpleFit.builder()
                 .qc(qcPass())
-                .fittedPurityMethod(FittedPurityMethod.NORMAL)
+                .fittedPurityMethod(PurpleFittedPurityMethod.NORMAL)
                 .purity(0D)
                 .minPurity(0D)
                 .maxPurity(0D)
-                .containsTumorCells(true)
-                .hasSufficientQuality(true)
                 .ploidy(0D)
                 .minPloidy(0D)
                 .maxPloidy(0D)
@@ -43,30 +47,25 @@ public final class TestPurpleInterpretationFactory {
     }
 
     @NotNull
-    private static PurpleQC qcPass() {
-        return ImmutablePurpleQC.builder()
-                .method(FittedPurityMethod.NORMAL)
-                .amberMeanDepth(0)
-                .copyNumberSegments(1)
-                .unsupportedCopyNumberSegments(0)
-                .deletedGenes(0)
-                .purity(0.5)
-                .contamination(0D)
-                .cobaltGender(Gender.FEMALE)
-                .amberGender(Gender.FEMALE)
+    private static PurpleQC qcPass()
+    {
+        return TestPurpleQCFactory.builder()
+                .addStatus(PurpleQCStatus.PASS)
+                .addGermlineAberrations(PurpleGermlineAberration.NONE)
                 .build();
     }
 
     @NotNull
-    private static PurpleCharacteristics createMinimalTestCharacteristicsData() {
+    private static PurpleCharacteristics createMinimalTestCharacteristicsData()
+    {
         return ImmutablePurpleCharacteristics.builder()
                 .wholeGenomeDuplication(false)
                 .microsatelliteIndelsPerMb(0D)
-                .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
+                .microsatelliteStatus(PurpleMicrosatelliteStatus.UNKNOWN)
                 .tumorMutationalBurdenPerMb(0D)
-                .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
+                .tumorMutationalBurdenStatus(PurpleTumorMutationalStatus.UNKNOWN)
                 .tumorMutationalLoad(0)
-                .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
+                .tumorMutationalLoadStatus(PurpleTumorMutationalStatus.UNKNOWN)
                 .svTumorMutationalBurden(0)
                 .build();
     }

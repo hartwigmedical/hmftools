@@ -2,18 +2,18 @@ package com.hartwig.hmftools.compar.cuppa;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.Category.CUPPA;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.Category.CUPPA;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.MatchLevel;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class CuppaData implements ComparableItem
 {

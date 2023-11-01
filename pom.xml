@@ -14,9 +14,8 @@
         <module>cider</module>
         <module>cobalt</module>
         <module>compar</module>
-        <module>ctdna</module>
         <module>cuppa</module>
-        <module>fastq-stats</module>
+        <module>fastq-tools</module>
         <module>gene-utils</module>
         <module>gripss</module>
         <module>health-checker</module>
@@ -25,8 +24,10 @@
         <module>isofox</module>
         <module>lilac</module>
         <module>linx</module>
+        <module>mark-dups</module>
         <module>neo</module>
         <module>orange</module>
+        <module>orange-datamodel</module>
         <module>paddle</module>
         <module>patient-db</module>
         <module>purple</module>
@@ -39,6 +40,7 @@
         <module>sv-tools</module>
         <module>teal</module>
         <module>virus-interpreter</module>
+        <module>wisp</module>
     </modules>
 
     <properties>
@@ -57,36 +59,39 @@
 
         <hmf-common.version>local-SNAPSHOT</hmf-common.version>
 
-        <amber.version>3.9</amber.version>
-        <bam-tools.version>1.0</bam-tools.version>
-        <cider.version>0.5</cider.version>
-        <cobalt.version>1.13</cobalt.version>
-        <compar.version>1.1</compar.version>
-        <ctdna.version>1.0</ctdna.version>
-        <cuppa.version>1.8</cuppa.version>
-        <gene-utils.version>1.0</gene-utils.version>
-        <gripss.version>2.3.3</gripss.version>
-        <health-checker.version>3.3</health-checker.version>
-        <hmf-id-generator.version>3.0</hmf-id-generator.version>
-        <isofox.version>1.6.1</isofox.version>
-        <lilac.version>1.4.3</lilac.version>
-        <linx.version>1.23.1</linx.version>
-        <neo.version>1.0</neo.version>
-        <orange.version>2.2</orange.version>
-        <paddle.version>1.0</paddle.version>
-        <patient-db.version>3.73</patient-db.version>
-        <pave.version>1.4.1</pave.version>
+        <amber.version>4.0</amber.version>
+        <bam-tools.version>1.2</bam-tools.version>
+        <cider.version>1.0.2</cider.version>
+        <cobalt.version>1.15.2</cobalt.version>
+        <compar.version>1.1.1</compar.version>
+        <cuppa.version>1.9</cuppa.version>
+        <fastq-tools.version>1.0</fastq-tools.version>
+        <gene-utils.version>1.1</gene-utils.version>
+        <gripss.version>2.4</gripss.version>
+        <health-checker.version>3.5</health-checker.version>
+        <hmf-id-generator.version>3.1</hmf-id-generator.version>
+        <isofox.version>1.7.1</isofox.version>
+        <lilac.version>1.6</lilac.version>
+        <linx.version>1.25</linx.version>
+        <mark-dups.version>1.1</mark-dups.version>
+        <neo.version>1.1</neo.version>
+        <orange.version>3.0.1</orange.version>
+        <orange-datamodel.version>2.0.0</orange-datamodel.version>
+        <paddle.version>1.1</paddle.version>
+        <patient-db.version>5.34</patient-db.version>
+        <pave.version>1.6</pave.version>
         <peach.version>2.0</peach.version>
-        <purple.version>3.8</purple.version>
-        <sage.version>3.3</sage.version>
-        <sigs.version>1.2</sigs.version>
-        <sv-prep.version>1.1</sv-prep.version>
+        <purple.version>4.0</purple.version>
+        <sage.version>3.4</sage.version>
+        <sigs.version>1.3</sigs.version>
+        <sv-prep.version>1.2.3</sv-prep.version>
         <sv-tools.version>1.0</sv-tools.version>
-        <teal.version>1.0.1</teal.version>
-        <virus-interpreter.version>1.2</virus-interpreter.version>
+        <teal.version>1.1.0</teal.version>
+        <virus-interpreter.version>1.4</virus-interpreter.version>
+        <wisp.version>1.0</wisp.version>
 
         <commons.cli.version>1.3.1</commons.cli.version>
-        <immutables.version>2.5.5</immutables.version>
+        <immutables.version>2.9.3</immutables.version>
         <htsjdk.version>2.23.0</htsjdk.version>
         <intellij.annotations.version>12.0</intellij.annotations.version>
         <google.guava.version>31.0.1-jre</google.guava.version>
@@ -104,7 +109,7 @@
         <kotlin.coroutines.version>1.5.2</kotlin.coroutines.version>
         <selenium.version>3.14.0</selenium.version>
         <itext.version>7.1.5</itext.version>
-        <tablesaw.version>0.42.0</tablesaw.version>
+        <tablesaw.version>0.43.1</tablesaw.version>
         <jcommander.version>1.81</jcommander.version>
 
         <kotest.version>4.6.4</kotest.version>
@@ -117,6 +122,13 @@
     </properties>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>com.google.cloud.artifactregistry</groupId>
+                <artifactId>artifactregistry-maven-wagon</artifactId>
+                <version>2.2.0</version>
+            </extension>
+        </extensions>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -188,6 +200,11 @@
                 <groupId>com.hartwig</groupId>
                 <artifactId>patient-db</artifactId>
                 <version>${patient-db.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hartwig</groupId>
+                <artifactId>orange-datamodel</artifactId>
+                <version>${orange-datamodel.version}</version>
             </dependency>
 
             <dependency>
@@ -384,4 +401,14 @@
         </dependencies>
     </dependencyManagement>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>artifact-registry</id>
+            <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
+        </snapshotRepository>
+        <repository>
+            <id>artifact-registry</id>
+            <url>artifactregistry://europe-west4-maven.pkg.dev/hmf-build/hmf-maven</url>
+        </repository>
+    </distributionManagement>
 </project>

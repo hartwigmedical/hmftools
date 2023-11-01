@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -37,6 +38,13 @@ public class FeatureClassifierTest
     private static final String GENE_001 = "GENE_001";
     private static final String GENE_002 = "GENE_002";
 
+    private final ConfigBuilder mConfigBuilder = new ConfigBuilder();
+
+    public FeatureClassifierTest()
+    {
+        FeatureClassifier.registerConfig(mConfigBuilder);
+    }
+
     @Test
     public void testFeaturesNonRefSamples()
     {
@@ -44,7 +52,7 @@ public class FeatureClassifierTest
 
         CuppaConfig config = new CuppaConfig();
 
-        FeatureClassifier classifier = new FeatureClassifier(config, dataCache, null);
+        FeatureClassifier classifier = new FeatureClassifier(config, dataCache, mConfigBuilder);
 
         final Map<String,List<SampleFeatureData>> sampleFeatureMap = Maps.newHashMap();
         final Map<String,List<FeaturePrevData>> cancerFeaturePrevalence = Maps.newHashMap();
@@ -120,7 +128,7 @@ public class FeatureClassifierTest
 
         CuppaConfig config = new CuppaConfig();
 
-        FeatureClassifier classifier = new FeatureClassifier(config, dataCache, null);
+        FeatureClassifier classifier = new FeatureClassifier(config, dataCache, mConfigBuilder);
 
         final Map<String, List<SampleFeatureData>> sampleFeatureMap = Maps.newHashMap();
         final Map<String, List<FeaturePrevData>> cancerFeaturePrevalence = Maps.newHashMap();
@@ -174,7 +182,7 @@ public class FeatureClassifierTest
 
         CuppaConfig config = new CuppaConfig();
 
-        FeatureClassifier classifier = new FeatureClassifier(config, dataCache, null);
+        FeatureClassifier classifier = new FeatureClassifier(config, dataCache, mConfigBuilder);
 
         final Map<String,List<SampleFeatureData>> sampleFeatureMap = Maps.newHashMap();
         final Map<String,List<FeaturePrevData>> cancerFeaturePrevalence = Maps.newHashMap();

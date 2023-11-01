@@ -19,16 +19,17 @@ object CiderFormatter
         return aminoAcidFromBases(vdj.cdr3Sequence) + suffix
     }
 
-    fun vAnchorAA(vdj: VDJSequence): String
+    fun vAnchorAA(vdj: VDJSequence): String?
     {
-        val vAnchorSeq = vdj.vAnchorSequence
+        val vAnchorSeq = vdj.vAnchorSequence ?: return null
 
         // codon align
         return aminoAcidFromBases(vAnchorSeq.drop(vAnchorSeq.length % 3))
     }
 
-    fun jAnchorAA(vdj: VDJSequence): String
+    fun jAnchorAA(vdj: VDJSequence): String?
     {
-        return aminoAcidFromBases(vdj.jAnchorSequence)
+        val jAnchorSeq = vdj.jAnchorSequence ?: return null
+        return aminoAcidFromBases(jAnchorSeq)
     }
 }

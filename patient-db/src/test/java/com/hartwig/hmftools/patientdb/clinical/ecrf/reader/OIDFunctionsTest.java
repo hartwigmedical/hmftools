@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class OIDFunctionsTest {
+public class OIDFunctionsTest
+{
 
     @Test
-    public void canConvertBetweenFieldNameAndOID() {
+    public void canConvertBetweenFieldNameAndOID()
+    {
         String ecrfFieldName = "cat.fldName";
         String OID = OIDFunctions.toOID(ecrfFieldName);
 
@@ -15,7 +17,8 @@ public class OIDFunctionsTest {
     }
 
     @Test
-    public void canExtractNoCategory() {
+    public void canExtractNoCategory()
+    {
         String name = OIDFunctions.NO_CATEGORY + OIDFunctions.OID_SEPARATOR + "fldName";
         String OID = OIDFunctions.toOID(name);
 

@@ -14,13 +14,14 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PCFFileTest {
-
+public class PCFFileTest
+{
     private static final int WINDOW = 1000;
     private static final String BASE_PATH = Resources.getResource("pcf").getPath();
 
     @Test
-    public void testBafFile() throws IOException {
+    public void testBafFile() throws IOException
+    {
         final ListMultimap<Chromosome, PCFPosition> resultMap =
                 PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "baf.pcf");
 
@@ -42,7 +43,8 @@ public class PCFFileTest {
     }
 
     @Test
-    public void testRatioFile() throws IOException {
+    public void testRatioFile() throws IOException
+    {
         final ListMultimap<Chromosome, PCFPosition> resultMap =
                 PCFFile.readPositions(WINDOW, PCFSource.TUMOR_BAF, BASE_PATH + File.separator + "ratio.pcf");
 
@@ -64,13 +66,15 @@ public class PCFFileTest {
         assertPosition(90458001, 90458001, 90458001, chromosomeThreeResults.get(4));
     }
 
-    private static void assertPosition(long position, long min, long max, @NotNull final PCFPosition victim) {
+    private static void assertPosition(long position, long min, long max, @NotNull final PCFPosition victim)
+    {
         assertEquals(position, victim.position());
         assertEquals(min, victim.minPosition());
         assertEquals(max, victim.maxPosition());
     }
 
-    private static void assertPosition(long position, @NotNull final PCFPosition victim) {
+    private static void assertPosition(long position, @NotNull final PCFPosition victim)
+    {
         assertEquals(position, victim.position());
     }
 }

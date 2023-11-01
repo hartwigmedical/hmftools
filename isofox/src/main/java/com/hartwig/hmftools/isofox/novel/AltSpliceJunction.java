@@ -3,8 +3,7 @@ package com.hartwig.hmftools.isofox.novel;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.SP_SEQ_ACCEPTOR;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.SP_SEQ_DONOR_1;
 import static com.hartwig.hmftools.isofox.common.CommonUtils.SP_SEQ_DONOR_2;

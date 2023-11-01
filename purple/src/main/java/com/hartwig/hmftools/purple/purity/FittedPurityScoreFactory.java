@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.purity;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.utils.Doubles.greaterThan;
 
 import java.util.Collection;
@@ -17,8 +20,7 @@ public final class FittedPurityScoreFactory
 {
     private static final double POLYCLONAL_DISTANCE = 0.25;
 
-    @NotNull
-    public static FittedPurityScore score(@NotNull final List<FittedPurity> purities)
+    public static FittedPurityScore score(final List<FittedPurity> purities)
     {
         ImmutableFittedPurityScore.Builder builder = ImmutableFittedPurityScore.builder()
                 .minPloidy(0)
@@ -28,18 +30,34 @@ public final class FittedPurityScoreFactory
                 .maxPurity(0)
                 .maxDiploidProportion(0);
 
-        purities.stream().max(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.maxPloidy(x.ploidy()));
-        purities.stream().min(FittedPurityScoreFactory::comparePloidy).ifPresent(x -> builder.minPloidy(x.ploidy()));
-        purities.stream().max(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.maxPurity(x.purity()));
-        purities.stream().min(FittedPurityScoreFactory::comparePurity).ifPresent(x -> builder.minPurity(x.purity()));
-        purities.stream()
-                .max(FittedPurityScoreFactory::compareDiploidProportion)
-                .ifPresent(x -> builder.maxDiploidProportion(x.diploidProportion()));
-        purities.stream()
-                .min(FittedPurityScoreFactory::compareDiploidProportion)
-                .ifPresent(x -> builder.minDiploidProportion(x.diploidProportion()));
+        double maxPloidy = 0;
+        double minPloidy = Double.MAX_VALUE;
+        double maxPurity = 0;
+        double minPurity = Double.MAX_VALUE;
+        double maxDp = 0;
+        double minDp = Double.MAX_VALUE;
 
-        return builder.build();
+        for(FittedPurity fittedPurity : purities)
+        {
+            maxPloidy = max(maxPloidy, fittedPurity.ploidy());
+            minPloidy = min(minPloidy, fittedPurity.ploidy());
+
+            maxPurity = max(maxPurity, fittedPurity.purity());
+            minPurity = min(minPurity, fittedPurity.purity());
+
+            maxDp = max(maxDp, fittedPurity.diploidProportion());
+            minDp = min(minDp, fittedPurity.diploidProportion());
+        }
+
+        builder.maxPurity(maxPurity)
+                .minPurity(minPurity)
+                .maxPloidy(maxPloidy)
+                .minPloidy(minPloidy)
+                .maxDiploidProportion(maxDp)
+                .minDiploidProportion(minDp);
+
+        FittedPurityScore fittedPurityScore = builder.build();
+        return fittedPurityScore;
     }
 
     public static double polyclonalProportion(final Collection<PurpleCopyNumber> regions)
@@ -57,21 +75,6 @@ public final class FittedPurityScoreFactory
         }
 
         return totalCount == 0 ? 0 : 1d * polyclonalCount / totalCount;
-    }
-
-    private static int comparePurity(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2)
-    {
-        return Double.compare(o1.purity(), o2.purity());
-    }
-
-    private static int comparePloidy(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2)
-    {
-        return Double.compare(o1.ploidy(), o2.ploidy());
-    }
-
-    private static int compareDiploidProportion(@NotNull final FittedPurity o1, @NotNull final FittedPurity o2)
-    {
-        return Double.compare(o1.diploidProportion(), o2.diploidProportion());
     }
 
     @VisibleForTesting

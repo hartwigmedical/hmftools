@@ -5,11 +5,11 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -132,9 +132,9 @@ public class DoubleMinuteFinder implements CohortFileInterface
         final List<SvVarData> candidateDmSVs = Lists.newArrayList();
         final List<SvVarData> candidateFlankedSVs = Lists.newArrayList();
 
-        for (SvVarData var : cluster.getSVs())
+        for(SvVarData var : cluster.getSVs())
         {
-            if (var.jcn() < JCN_THRESHOLD)
+            if(var.jcn() < JCN_THRESHOLD)
                 continue;
 
             double svAdjMAPRatio = getAdjacentMajorAPRatio(var);

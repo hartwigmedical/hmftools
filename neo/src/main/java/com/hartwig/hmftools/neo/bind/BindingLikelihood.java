@@ -3,11 +3,11 @@ package com.hartwig.hmftools.neo.bind;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
@@ -74,6 +74,9 @@ public class BindingLikelihood
         if(pepLenIndex == INVALID_PEP_LEN)
             return INVALID_LIKELIHOOD;
 
+        if(rank >= mScoreRankBuckets.get(mScoreRankBuckets.size() - 1))
+            return 0;
+
         double[][] likelihoods = mAlleleLikelihoodMap.get(allele);
         if(likelihoods == null)
         {
@@ -115,7 +118,7 @@ public class BindingLikelihood
         {
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
@@ -126,7 +129,7 @@ public class BindingLikelihood
 
             for(String line : lines)
             {
-                String[] items = line.split(DELIM, -1);
+                String[] items = line.split(BIND_DELIM, -1);
                 String allele = items[alleleIndex];
                 int peptideLength = Integer.parseInt(items[pepLenIndex]);
 
@@ -426,7 +429,4 @@ public class BindingLikelihood
             NE_LOGGER.error("failed to initialise binding likelihood file: {}", e.toString());
         }
     }
-
-
-
 }

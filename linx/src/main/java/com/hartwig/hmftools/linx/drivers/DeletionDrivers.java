@@ -37,13 +37,11 @@ public class DeletionDrivers
 {
     private final DriverDataCache mDataCache;
     private final Map<String,List<String>> mReportableDisruptionGeneTranscripts;
-    private final boolean mHomDisAllGenes;
 
-    public DeletionDrivers(final Map<String,List<String>> disruptionGeneTranscripts, final DriverDataCache dataCache, boolean homDisAllGenes)
+    public DeletionDrivers(final Map<String,List<String>> disruptionGeneTranscripts, final DriverDataCache dataCache)
     {
         mDataCache = dataCache;
         mReportableDisruptionGeneTranscripts = disruptionGeneTranscripts;
-        mHomDisAllGenes = homDisAllGenes;
     }
 
     public void annotateDeleteEvent(final DriverGeneData dgData)
@@ -229,7 +227,7 @@ public class DeletionDrivers
 
                 final List<BreakendGeneData> genesList = breakend.getSV().getGenesList(breakend.usesStart()).stream()
                         .filter(x -> !delDriverGeneIds.contains(x.geneId()))
-                        .filter(x -> mHomDisAllGenes || mReportableDisruptionGeneTranscripts.containsKey(x.geneId()))
+                        .filter(x -> mReportableDisruptionGeneTranscripts.containsKey(x.geneId()))
                         .collect(Collectors.toList());
 
                 if(genesList.isEmpty())
@@ -340,19 +338,14 @@ public class DeletionDrivers
         if(matchingGene.transcripts().stream().noneMatch(x -> x.transName().equals(transcript.transName()) && x.isDisruptive()))
             return;
 
-        double cnLowSideStart = breakend.copyNumberLowSide();
-        double cnLowSideEnd = otherBreakend.copyNumberLowSide();
-        double jcn = breakend.jcn();
-        double jcnThreshold = max(jcn * (1 + MAX_COPY_NUM_DIFF_PERC), jcn + MAX_COPY_NUM_DIFF);
-
-        if(cnLowSideStart < jcnThreshold && cnLowSideEnd < jcnThreshold)
+        if(isHomozygousDupDisruption(breakend, otherBreakend, breakend.jcn()))
         {
             delDriverGeneIds.add(geneId);
 
             LNX_LOGGER.debug("DUP({}) cluster({}) gene({}:{}) cause homozygous disruption cnLowSide({} & {}) jcn({})",
                     breakend, breakend.getCluster().id(), transcript.geneName(), transcript.transName(),
                     transcript.geneName(), breakend.getCluster().id(), breakend.getSV().id(),
-                    formatJcn(cnLowSideStart), formatJcn(cnLowSideEnd), formatJcn(jcn));
+                    formatJcn(breakend.copyNumberLowSide()), formatJcn(otherBreakend.copyNumberLowSide()), formatJcn(breakend.jcn()));
 
             DriverGeneData dgData = mDataCache.createDriverData(transcript.gene(), transcript.TransData, DriverType.HOM_DUP_DISRUPTION);
 
@@ -365,5 +358,14 @@ public class DeletionDrivers
                 disDelDrivers.add(dgData);
             }
         }
+    }
+
+    public static boolean isHomozygousDupDisruption(final SvBreakend breakend, final SvBreakend otherBreakend, final double jcn)
+    {
+        double cnLowSideStart = breakend.copyNumberLowSide();
+        double cnLowSideEnd = otherBreakend.copyNumberLowSide();
+        double jcnThreshold = max(jcn * (1 + MAX_COPY_NUM_DIFF_PERC), jcn + MAX_COPY_NUM_DIFF);
+
+        return cnLowSideStart < jcnThreshold && cnLowSideEnd < jcnThreshold;
     }
 }

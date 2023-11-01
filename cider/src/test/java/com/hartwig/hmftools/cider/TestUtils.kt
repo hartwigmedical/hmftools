@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.cider
 
+import com.google.common.collect.ImmutableList
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.cider.layout.TestLayoutRead
+import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SAMUtils
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertTrue
@@ -13,20 +15,39 @@ object TestUtils
     // used to assign unique read id
     val nextReadId = AtomicInteger(1)
 
-    fun createRead(readId: String, seq: String, baseQualityString: String, alignedPosition: Int, firstOfPair: Boolean = true)
+    fun createLayoutRead(readId: String, seq: String, baseQualityString: String, alignedPosition: Int, firstOfPair: Boolean = true)
     : ReadLayout.Read
     {
         val baseQual = SAMUtils.fastqToPhred(baseQualityString)
 
         // we are aligned at the T
-        return TestLayoutRead(readId, ReadKey(readId, firstOfPair), seq, baseQual, alignedPosition)
+        return TestLayoutRead(readId, ReadKey(readId, firstOfPair), seq.toByteArray(), baseQual, alignedPosition)
+    }
+
+    // helper function to create read candidates
+    fun createReadCandidate(seq: String, isReadNegativeStrand: Boolean, useReverseComplement: Boolean, vj: VJ,
+                            anchorOffsetStart: Int, anchorOffsetEnd: Int) : VJReadCandidate
+    {
+        val record = SAMRecord(null)
+        record.readName = "read"
+        record.readPairedFlag = true
+        record.firstOfPairFlag = true
+        record.readNegativeStrandFlag = isReadNegativeStrand
+        record.readString = seq
+        record.baseQualityString = "F".repeat(seq.length)
+        val vjGeneType = if (vj == VJ.V) VJGeneType.TRAV else VJGeneType.TRAJ
+
+        return VJReadCandidate(record, ImmutableList.of(), vjGeneType,
+            "CACGTG", VJReadCandidate.MatchMethod.ALIGN,
+            useReverseComplement, anchorOffsetStart, anchorOffsetEnd,
+            0, 0)
     }
 
     // create a very simple layout with just a sequence
     fun createLayout(seq: String, alignedPosition: Int = 0, minBaseQuality: Byte = MIN_BASE_QUALITY) : ReadLayout
     {
         val baseQual = SAMUtils.phredToFastq(minBaseQuality * 2).toString().repeat(seq.length)
-        val read = createRead("createLayout::autoReadId::${nextReadId.getAndIncrement()}", seq, baseQual, alignedPosition)
+        val read = createLayoutRead("createLayout::autoReadId::${nextReadId.getAndIncrement()}", seq, baseQual, alignedPosition)
         val layout = ReadLayout()
         layout.addRead(read, minBaseQuality)
         return layout
@@ -44,7 +65,7 @@ object TestUtils
         if (vAnchorBoundary != null)
         {
             assertTrue(layoutStart + vAnchorBoundary < layout.length)
-            val vAnchorSeq = layout.consensusSequence().drop(layoutStart).substring(0, vAnchorBoundary)
+            val vAnchorSeq = layout.consensusSequenceString().drop(layoutStart).substring(0, vAnchorBoundary)
             // create VJ anchor
             vAnchor = VJAnchorByReadMatch(
                 vj = VJ.V,
@@ -62,7 +83,7 @@ object TestUtils
         if (jAnchorBoundary != null)
         {
             assertTrue(layoutStart + jAnchorBoundary <= layout.length)
-            val jAnchorSeq = layout.consensusSequence().substring(jAnchorBoundary)
+            val jAnchorSeq = layout.consensusSequenceString().substring(jAnchorBoundary)
             jAnchor = VJAnchorByReadMatch(
                 vj = VJ.J,
                 geneType = VJGeneType.IGHJ,
@@ -92,7 +113,7 @@ object TestUtils
 
         if (vAnchorBoundary != null)
         {
-            val vAnchorSeq = layout.consensusSequence().substring(0, vAnchorBoundary)
+            val vAnchorSeq = layout.consensusSequenceString().substring(0, vAnchorBoundary)
             // create VJ anchor
             vAnchor = VJAnchorByReadMatch(
                 vj = VJ.V,
@@ -109,7 +130,7 @@ object TestUtils
         }
         if (jAnchorBoundary != null)
         {
-            val jAnchorSeq = layout.consensusSequence().substring(jAnchorBoundary)
+            val jAnchorSeq = layout.consensusSequenceString().substring(jAnchorBoundary)
             jAnchor = VJAnchorByReadMatch(
                 vj = VJ.J,
                 geneType = VJGeneType.IGHJ,
@@ -134,13 +155,11 @@ object TestUtils
         "IGHJ1",
         "01",
         null,
-        "GCTGAATACTTCCAGCACTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCAG",
         "TGGGGCCAGGGCACCCTGGTCACCGTCTCC",
         null)
 
     val ighJ6 = VJAnchorTemplate(
         VJGeneType.IGHJ, "IGHJ6","01", null,
-        "ATTACTACTACTACTACGGTATGGACGTCTGGGGGCAAGGGACCACGGTCACCGTCTCCTCAG",
         "TGGGGGCAAGGGACCACGGTCACCGTCTCC",
         null)
 
@@ -149,13 +168,11 @@ object TestUtils
         "IGHV1-18",
         "01",
         null,
-        "CAGGTTCAGCTGGTGCAGTCTGGAGCTGAGGTGAAGAAGCCTGGGGCCTCAGTGAAGGTCTCCTGCAAGGCTTCTGGTTACACCTTTACCAGCTATGGTATCAGCTGGGTGCGACAGGCCCCTGGACAAGGGCTTGAGTGGATGGGATGGATCAGCGCTTACAATGGTAACACAAACTATGCACAGAAGCTCCAGGGCAGAGTCACCATGACCACAGACACATCCACGAGCACAGCCTACATGGAGCTGAGGAGCCTGAGATCTGACGACACGGCCGTGTATTACTGTGCGAGAGA",
         "AGATCTGACGACACGGCCGTGTATTACTGT",
         null)
 
     val ighV3_7 = VJAnchorTemplate(
         VJGeneType.IGHV, "IGHV3-7", "01", null,
-        "GAGGTGCAGCTGGTGGAGTCTGGGGGAGGCTTGGTCCAGCCTGGGGGGTCCCTGAGACTCTCCTGTGCAGCCTCTGGATTCACCTTTAGTAGCTATTGGATGAGCTGGGTCCGCCAGGCTCCAGGGAAGGGGCTGGAGTGGGTGGCCAACATAAAGCAAGATGGAAGTGAGAAATACTATGTGGACTCTGTGAAGGGCCGATTCACCATCTCCAGAGACAACGCCAAGAACTCACTGTATCTGCAAATGAACAGCCTGAGAGCCGAGGACACGGCTGTGTATTACTGTGCGAGAGA",
         "AGAGCCGAGGACACGGCTGTGTATTACTGT",
         null)
 }

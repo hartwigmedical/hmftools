@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.purple.segment;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,11 +22,10 @@ public final class SegmentFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String EXTENSION = ".purple.segment.tsv";
-    private static final String DELIMITER = "\t";
 
     public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
     public static void write(final String filePath, Collection<ObservedRegion> fittedRegions) throws IOException
@@ -42,7 +43,7 @@ public final class SegmentFile
 
     private static List<ObservedRegion> fromLines(final List<String> lines)
     {
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
         lines.remove(0);
 
         int chrIndex = fieldsIndexMap.get("chromosome");
@@ -74,7 +75,7 @@ public final class SegmentFile
 
         for(final String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             final ObservedRegion region = new ObservedRegion(
                     values[chrIndex],
@@ -111,7 +112,7 @@ public final class SegmentFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("chromosome")
                 .add("start")
                 .add("end")
@@ -143,7 +144,7 @@ public final class SegmentFile
 
     private static String toString(final ObservedRegion region)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(region.chromosome())
                 .add(String.valueOf(region.start()))
                 .add(String.valueOf(region.end()))

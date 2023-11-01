@@ -4,13 +4,11 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MAX_DISTANCE;
 import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MIN_FRAGMENTS;
 import static com.hartwig.hmftools.svprep.SvConstants.DISCORDANT_GROUP_MIN_FRAGMENTS_SHORT;
@@ -21,9 +19,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.svprep.BlacklistLocations;
-import com.hartwig.hmftools.svprep.HotspotCache;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public final class DiscordantGroups
 {
@@ -152,7 +148,7 @@ public final class DiscordantGroups
             for(ReadGroup readGroup : readGroups)
             {
                 junctionData.SupportingGroups.add(readGroup);
-                readGroup.addJunctionPosition(junctionData.Position);
+                readGroup.addJunctionPosition(junctionData);
 
                 readGroup.reads().forEach(x -> x.setReadType(ReadType.SUPPORT, true));
                 // readGroup.reads().forEach(x -> junctionData.addReadType(x, ReadType.SUPPORT)); // no need

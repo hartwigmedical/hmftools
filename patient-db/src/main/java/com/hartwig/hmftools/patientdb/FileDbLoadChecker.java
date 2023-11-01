@@ -3,15 +3,21 @@ package com.hartwig.hmftools.patientdb;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.patientdb.LoadPurpleData.hasMissingFiles;
+import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.databaseAccess;
 
@@ -39,19 +45,15 @@ import com.hartwig.hmftools.common.linx.LinxDriver;
 import com.hartwig.hmftools.common.linx.LinxFusion;
 import com.hartwig.hmftools.common.linx.LinxLink;
 import com.hartwig.hmftools.common.linx.LinxSvAnnotation;
-import com.hartwig.hmftools.common.utils.ConfigUtils;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Record;
 import org.jooq.Record1;
@@ -66,34 +68,28 @@ public class FileDbLoadChecker
     private final DatabaseAccess mDbAccess;
     private final int mThreads;
 
-    private static final String SAMPLE = "sample";
-    private static final String PURPLE_DIR = "purple_dir";
-    private static final String LINX_DIR = "linx_dir";
-
-    private static final Logger LOGGER = LogManager.getLogger(LoadPurpleSomaticVariants.class);
-
-    public FileDbLoadChecker(final CommandLine cmd) throws Exception
+    public FileDbLoadChecker(final ConfigBuilder configBuilder) throws Exception
     {
-        String outputDir = parseOutputDir(cmd);
+        String outputDir = parseOutputDir(configBuilder);
 
         mWriter = initialiseOutputFile(outputDir);
 
-        mDbAccess = databaseAccess(cmd);
+        mDbAccess = databaseAccess(configBuilder);
 
         mSampleIds = Lists.newArrayList();
 
-        if(cmd.hasOption(SAMPLE))
+        if(configBuilder.hasValue(SAMPLE))
         {
-            mSampleIds.add(cmd.getOptionValue(SAMPLE));
+            mSampleIds.add(configBuilder.getValue(SAMPLE));
         }
         else
         {
-            mSampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd));
+            mSampleIds.addAll(ConfigUtils.loadSampleIdsFile(configBuilder));
         }
 
-        mPurpleDir = cmd.hasOption(PURPLE_DIR) ? checkAddDirSeparator(cmd.getOptionValue(PURPLE_DIR)) : null;
-        mLinxDir = cmd.hasOption(LINX_DIR) ? checkAddDirSeparator(cmd.getOptionValue(LINX_DIR)) : null;
-        mThreads = parseThreads(cmd);
+        mPurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG));
+        mLinxDir = checkAddDirSeparator(configBuilder.getValue(LINX_DIR_CFG));
+        mThreads = parseThreads(configBuilder);
     }
 
     public void run()
@@ -246,7 +242,7 @@ public class FileDbLoadChecker
                 List<SomaticVariant> somaticVariants = somaticVariantFactory.fromVCFFile(sampleId, somaticVcf);
                 checkFileVsDatabase(sampleId, "SomaticVariant", somaticVariants.size(), "somaticVariant");
 
-                final String geneCopyNumberFile = GeneCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
+                final String geneCopyNumberFile = GeneCopyNumberFile.generateFilename(purpleDir, sampleId);
                 final String copyNumberFile = PurpleCopyNumberFile.generateFilenameForReading(purpleDir, sampleId);
                 final String svVcf = PurpleCommon.purpleSomaticSvFile(purpleDir, sampleId);
 
@@ -361,39 +357,23 @@ public class FileDbLoadChecker
         }
     }
 
-    public static void main(@NotNull String[] args)
+    public static void main(@NotNull String[] args) throws Exception
     {
-        Options options = createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        try
-        {
-            CommandLine cmd = new DefaultParser().parse(options, args);
+        configBuilder.addConfigItem(SAMPLE, false, "Tumor sample ID");
+        addSampleIdFile(configBuilder, false);
+        configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addPath(LINX_DIR_CFG, true, LINX_DIR_DESC);
+        addThreadOptions(configBuilder);
+        addDatabaseCmdLineArgs(configBuilder, true);
+        ConfigUtils.addLoggingOptions(configBuilder);
+        FileWriterUtils.addOutputOptions(configBuilder);
 
-            setLogLevel(cmd);
+        configBuilder.checkAndParseCommandLine(args);
 
-            FileDbLoadChecker fileDbLoadChecker = new FileDbLoadChecker(cmd);
-            fileDbLoadChecker.run();
-        }
-        catch(Exception e)
-        {
-            LOGGER.error("Error: {}", e.toString());
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-        options.addOption(SAMPLE, true, "Tumor sample ID");
-        addSampleIdFile(options);
-        options.addOption(PURPLE_DIR, true, "Sample Purple directory");
-        options.addOption(LINX_DIR, true, "Sample Linx directory");
-        addThreadOptions(options);
-        addDatabaseCmdLineArgs(options);
-        ConfigUtils.addLoggingOptions(options);
-        FileWriterUtils.addOutputOptions(options);
-        return options;
+        setLogLevel(configBuilder);
+        FileDbLoadChecker fileDbLoadChecker = new FileDbLoadChecker(configBuilder);
+        fileDbLoadChecker.run();
     }
 }

@@ -31,4 +31,21 @@ public class FusionConstants
     public static final int FUSION_MAX_CHAIN_LINKS = 4;
 
     public static final int ENHANCER_PROMISCUOUS_MIN_DISTANCE = 100000;
+
+    public static final List<String> PROTEINS_REQUIRED_KEPT = Lists.newArrayList();
+
+    public static final List<String> PROTEINS_REQUIRED_LOST = Lists.newArrayList();
+
+    static
+    {
+        PROTEINS_REQUIRED_LOST.add("Raf-like Ras-binding");
+
+        PROTEINS_REQUIRED_KEPT.add("Ets domain");
+        PROTEINS_REQUIRED_KEPT.add("Protein kinase domain");
+        PROTEINS_REQUIRED_KEPT.add("Epidermal growth factor-like domain");
+        PROTEINS_REQUIRED_KEPT.add("Ankyrin repeat-containing domain");
+        PROTEINS_REQUIRED_KEPT.add("Basic-leucine zipper domain");
+        PROTEINS_REQUIRED_KEPT.add("High mobility group box domain");
+        PROTEINS_REQUIRED_KEPT.add("Bromodomain");
+    }
 }

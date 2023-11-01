@@ -1,19 +1,16 @@
 package com.hartwig.hmftools.pave.compare;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.localPhaseSetsStringToList;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
-import java.util.List;
 import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientdb.database.hmfpatients.Tables;
+import com.hartwig.hmftools.pave.VariantData;
 
-import org.jooq.Record;
+import org.checkerframework.checker.units.qual.A;
 
 public class RefVariantData
 {
@@ -81,40 +78,9 @@ public class RefVariantData
                 localPhaseSet, variant.reported(), variant.isHotspot());
     }
 
-    public static RefVariantData fromRecord(final Record record)
+    public boolean matches(final VariantData variant)
     {
-        CodingEffect canonicalCodingEffect = record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
-                ? CodingEffect.UNDEFINED
-                : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT));
-
-        CodingEffect worstCodingEffect = record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
-                ? CodingEffect.UNDEFINED
-                : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT));
-
-        String localPhaseSetStr = record.get(Tables.SOMATICVARIANT.LOCALPHASESET);
-        List<Integer> localPhaseSets = localPhaseSetsStringToList(localPhaseSetStr);
-        int localPhaseSet = localPhaseSets != null ? localPhaseSets.get(0) : NO_LOCAL_PHASE_SET;
-
-        boolean isHotspot = Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)) == Hotspot.HOTSPOT;
-
-        return new RefVariantData(
-                record.getValue(Tables.SOMATICVARIANT.CHROMOSOME),
-                record.getValue(Tables.SOMATICVARIANT.POSITION),
-                record.getValue(Tables.SOMATICVARIANT.REF),
-                record.getValue(Tables.SOMATICVARIANT.ALT),
-                VariantType.valueOf(record.getValue(SOMATICVARIANT.TYPE)),
-                record.getValue(Tables.SOMATICVARIANT.GENE),
-                record.getValue(SOMATICVARIANT.CANONICALEFFECT),
-                canonicalCodingEffect,
-                worstCodingEffect,
-                record.getValue(SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),
-                record.getValue(SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
-                record.getValue(SOMATICVARIANT.MICROHOMOLOGY),
-                record.getValue(SOMATICVARIANT.REPEATSEQUENCE),
-                record.getValue(SOMATICVARIANT.REPEATCOUNT),
-                localPhaseSet,
-                record.getValue(SOMATICVARIANT.REPORTED) == 1,
-                isHotspot);
+        return variant.Chromosome.equals(Chromosome) && variant.Position == Position && variant.Ref.equals(Ref) && variant.Alt.equals(Alt);
     }
 
     public String toString()

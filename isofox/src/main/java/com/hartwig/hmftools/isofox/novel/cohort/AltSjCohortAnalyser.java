@@ -1,18 +1,21 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionContext.SPLICE_JUNC;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.CANONICAL_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -24,12 +27,12 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-import com.hartwig.hmftools.isofox.cohort.SampleDataCache;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class AltSjCohortAnalyser
 {
@@ -39,8 +42,8 @@ public class AltSjCohortAnalyser
     private final int mMinSampleThreshold;
     private final int mMinCancerSampleThreshold;
     private final int mMinFragments;
-    private final double mProbabilityThreshold;
     private final boolean mKnownSitesOnly;
+    private final boolean mLoadCanonical;
 
     private final AltSjWriter mWriter;
 
@@ -51,42 +54,44 @@ public class AltSjCohortAnalyser
 
     private static final String ALT_SJ_MIN_SAMPLES = "alt_sj_min_samples";
     private static final String ALT_SJ_MIN_CANCER_SAMPLES = "alt_sj_min_cancer_samples";
-    private static final String ALT_SJ_PROB_THRESHOLD = "alt_sj_prob_threshold";
     private static final String ALT_SJ_MIN_FRAGS = "alt_sj_min_frags";
     private static final String ALT_SJ_KNOWN_SITES_ONLY = "alt_sj_known_sites_only";
+    public static final String ALT_SJ_LOAD_CANONICAL = "alt_sj_load_canonical";
+    public static final String ALT_SJ_LOAD_CANONICAL_DESC = "Load canonical splice junction files isntead of alts";
 
-    public AltSjCohortAnalyser(final CohortConfig config, final CommandLine cmd)
+    public AltSjCohortAnalyser(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mAltSpliceJunctions = Maps.newHashMap();
 
-        mMinSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_SAMPLES, "0"));
-        mMinCancerSampleThreshold = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_CANCER_SAMPLES, "0"));
-        mMinFragments = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS, "0"));
-        mProbabilityThreshold = Double.parseDouble(cmd.getOptionValue(ALT_SJ_PROB_THRESHOLD, "1.0"));
-        mKnownSitesOnly = cmd.hasOption(ALT_SJ_KNOWN_SITES_ONLY);
+        mMinSampleThreshold = configBuilder.getInteger(ALT_SJ_MIN_SAMPLES);
+        mMinCancerSampleThreshold = configBuilder.getInteger(ALT_SJ_MIN_CANCER_SAMPLES);
+        mMinFragments = configBuilder.getInteger(ALT_SJ_MIN_FRAGS);
+        mLoadCanonical = configBuilder.hasFlag(ALT_SJ_LOAD_CANONICAL);
+        mKnownSitesOnly = configBuilder.hasFlag(ALT_SJ_KNOWN_SITES_ONLY);
 
         mAltSjFilter = new AltSjFilter(mConfig.RestrictedGeneIds, mConfig.ExcludedGeneIds, mMinFragments);
 
         boolean freqByCancerType = mConfig.SampleData.CancerTypeSamples.size() > 1 && mMinCancerSampleThreshold > 0;
-        mWriter = new AltSjWriter(config, cmd, freqByCancerType);
+        mWriter = new AltSjWriter(config, configBuilder, freqByCancerType);
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(ALT_SJ_MIN_SAMPLES, true, "Min number of samples to report an alt SJ");
-        options.addOption(ALT_SJ_MIN_CANCER_SAMPLES, true, "Min number of samples to report an alt SJ");
-        options.addOption(ALT_SJ_MIN_FRAGS, true, "Min frag count supporting alt-SJs outside gene panel");
-        options.addOption(ALT_SJ_PROB_THRESHOLD, true, "Only write alt SJs for fisher probability less than this");
-        options.addOption(ALT_SJ_KNOWN_SITES_ONLY, false, "Only write alt SJs if at least one site is a known splice site");
-        AltSjWriter.addCmdLineOptions(options);
+        configBuilder.addInteger(ALT_SJ_MIN_SAMPLES, "Min number of samples to report an alt SJ", 0);
+        configBuilder.addInteger(ALT_SJ_MIN_CANCER_SAMPLES, "Min number of samples to report an alt SJ", 0);
+        configBuilder.addInteger(ALT_SJ_MIN_FRAGS, "Min frag count supporting alt-SJs outside gene panel", 0);
+        configBuilder.addFlag(ALT_SJ_LOAD_CANONICAL, ALT_SJ_LOAD_CANONICAL_DESC);
+        configBuilder.addFlag(ALT_SJ_KNOWN_SITES_ONLY, "Only write alt SJs if at least one site is a known splice site");
+        AltSjWriter.registerConfig(configBuilder);
     }
 
     public void processAltSpliceJunctions()
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, ALT_SPLICE_JUNCTION, filenames))
+        AnalysisType analysisType = mLoadCanonical ? CANONICAL_SPLICE_JUNCTION : ALT_SPLICE_JUNCTION;
+        if(!formSampleFilenames(mConfig, analysisType, filenames))
             return;
 
         if(mConfig.SampleData.CancerTypeSamples.size() > 1 && mMinCancerSampleThreshold > 0)
@@ -108,16 +113,19 @@ public class AltSjCohortAnalyser
                     if(altSJFile == null)
                         continue;
 
-                    final List<AltSpliceJunctionFile> altSJs = loadFile(altSJFile, null, mAltSjFilter);
+                    final List<AltSpliceJunctionFile> altSJs = mLoadCanonical ?
+                            loadCanonicalSpliceFile(altSJFile, null, mAltSjFilter) :
+                            loadFile(altSJFile, null, mAltSjFilter);
+
                     ++sampleCount;
 
-                    ISF_LOGGER.debug("{}: sample({}) loaded {} alt-SJ records", sampleCount, sampleId, altSJs.size());
+                    ISF_LOGGER.debug("{}: sample({}) loaded {} splice-junction records", sampleCount, sampleId, altSJs.size());
 
                     altSJs.forEach(x -> addAltSpliceJunction(x, sampleId, cancerType));
                 }
 
                 // write out alt-SJs for this cancer type
-                ISF_LOGGER.info("cancerType({}) writing alt-SJs for {} samples", cancerType, sampleIds.size());
+                ISF_LOGGER.info("cancerType({}) writing splice-junction for {} samples", cancerType, sampleIds.size());
                 mWriter.writeCancerTypeFrequencies(mAltSpliceJunctions, mMinCancerSampleThreshold);
                 mAltSpliceJunctions.clear();
             }
@@ -155,12 +163,6 @@ public class AltSjCohortAnalyser
 
             ISF_LOGGER.info("loaded {} alt-SJ records", totalProcessed);
 
-            if(mProbabilityThreshold < 1)
-            {
-                // write a report for any re-occurring alt SJ
-                mWriter.writeReoccurringAltSpliceJunctions(mAltSpliceJunctions, mMinSampleThreshold, mProbabilityThreshold);
-            }
-
             // write a cohort file
             mWriter.writeCohortFrequencies(mAltSpliceJunctions, mMinSampleThreshold);
         }
@@ -184,9 +186,9 @@ public class AltSjCohortAnalyser
             int posStart = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
             int posEnd = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
             int type = fieldsIndexMap.get(FLD_ALT_SJ_TYPE);
-            int fragCount = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
-            int depthStart = fieldsIndexMap.get("DepthStart");
-            int depthEnd = fieldsIndexMap.get("DepthEnd");
+            int fragCount = fieldsIndexMap.get(FLD_FRAG_COUNT);
+            int depthStart = fieldsIndexMap.get(FLD_DEPTH_START);
+            int depthEnd = fieldsIndexMap.get(FLD_DEPTH_END);
             int regionStart = fieldsIndexMap.containsKey("RegionStart") ? fieldsIndexMap.get("RegionStart") : fieldsIndexMap.get("ContextStart");
             int regionEnd = fieldsIndexMap.containsKey("RegionEnd") ? fieldsIndexMap.get("RegionEnd") : fieldsIndexMap.get("ContextEnd");
             int basesStart = fieldsIndexMap.get("BasesStart");
@@ -198,14 +200,14 @@ public class AltSjCohortAnalyser
 
             for(String data : lines)
             {
-                final String[] items = data.split(DELIMITER);
+                final String[] values = data.split(DELIMITER);
 
-                if(!filter.passesFilter(items[geneId], Integer.parseInt(items[fragCount])))
+                if(!filter.passesFilter(values[geneId], Integer.parseInt(values[fragCount])))
                     continue;
 
                 try
                 {
-                    altSJs.add(AltSpliceJunctionFile.fromCsv(items, geneId, geneName, chr, posStart, posEnd, type,
+                    altSJs.add(AltSpliceJunctionFile.parseLine(values, geneId, geneName, chr, posStart, posEnd, type,
                             fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd));
                 }
                 catch(Exception e)
@@ -218,7 +220,65 @@ public class AltSjCohortAnalyser
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to alt splice junction load file({}): {}", filename.toString(), e.toString());
+            ISF_LOGGER.error("failed to load alt splice junction file({}): {}", filename.toString(), e.toString());
+            return null;
+        }
+    }
+
+    public static List<AltSpliceJunctionFile> loadCanonicalSpliceFile(
+            final Path filename, final Map<String,Integer> refFieldsIndexMap, final AltSjFilter filter)
+    {
+        try
+        {
+            final List<String> lines = Files.readAllLines(filename);
+
+            Map<String,Integer> fieldsIndexMap = refFieldsIndexMap != null ? refFieldsIndexMap : createFieldsIndexMap(lines.get(0), DELIMITER);
+
+            lines.remove(0);
+
+            int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
+            int geneNameIndex = fieldsIndexMap.get(FLD_GENE_NAME);
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
+            int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
+            int fragCountIndex = fieldsIndexMap.get(FLD_FRAG_COUNT);
+            int depthStartIndex = fieldsIndexMap.get(FLD_DEPTH_START);
+            int depthEndIndex = fieldsIndexMap.get(FLD_DEPTH_END);
+
+            /*
+            GeneId,GeneName,Chromosome,SjStart,SjEnd,FragCount,DepthStart,DepthEnd,TranscriptNames
+            ENSG00000272636,DOC2B,17,11981,13921,9,16,15,ENST00000343572
+             */
+
+            final List<AltSpliceJunctionFile> altSJs = Lists.newArrayList();
+
+            final AltSpliceJunctionContext[] emptyRegionContexts = { SPLICE_JUNC, SPLICE_JUNC };
+            final String[] emptyBaseContexts = {"", ""};
+            final String[] emptyTranscriptNames = {"", ""};
+
+            for(String data : lines)
+            {
+                final String[] values = data.split(DELIMITER);
+
+                String geneId = values[geneIdIndex];
+                int fragCount = Integer.parseInt(values[fragCountIndex]);
+
+                if(!filter.passesFilter(geneId, fragCount))
+                    continue;
+
+                int[] spliceJunction = new int[] { Integer.parseInt(values[posStartIndex]), Integer.parseInt(values[posEndIndex]) };
+                int[] depthCounts = new int[] { Integer.parseInt(values[depthStartIndex]), Integer.parseInt(values[depthEndIndex]) };
+
+                altSJs.add(new AltSpliceJunctionFile(
+                        geneId, values[geneNameIndex], values[chrIndex], spliceJunction, AltSpliceJunctionType.CANONICAL,
+                        fragCount, depthCounts, emptyRegionContexts, emptyBaseContexts, emptyTranscriptNames));
+            }
+
+            return altSJs;
+        }
+        catch(IOException e)
+        {
+            ISF_LOGGER.error("failed to load canonical splice junction file({}): {}", filename.toString(), e.toString());
             return null;
         }
     }
@@ -255,15 +315,7 @@ public class AltSjCohortAnalyser
             geneList.add(asjCohortData);
         }
 
-        if(!mConfig.SampleData.SampleCohort.isEmpty())
-        {
-            boolean isCohortA = mConfig.SampleData.sampleInCohort(sampleId, SampleDataCache.COHORT_A);
-            asjCohortData.addSampleCount(sampleId, altSJ.FragmentCount, isCohortA);
-        }
-        else
-        {
-            asjCohortData.addSampleCount(sampleId, altSJ.FragmentCount, cancerType);
-        }
+        asjCohortData.addSampleCount(sampleId, altSJ.FragmentCount, cancerType);
 
         asjCohortData.addPositionCount(SE_START, altSJ.DepthCounts[SE_START]);
         asjCohortData.addPositionCount(SE_END, altSJ.DepthCounts[SE_END]);

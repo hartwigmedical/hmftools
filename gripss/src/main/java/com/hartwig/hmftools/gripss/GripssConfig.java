@@ -1,36 +1,32 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificChromsomes;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.SPECIFIC_CHROMOSOMES_DESC;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificChromsomes;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.gripss.RepeatMaskAnnotations;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.TargetRegions;
-import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotations;
+import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotator;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,25 +43,23 @@ public class GripssConfig
     public final String OutputId;
     public final List<String> RestrictedChromosomes;
 
-    public static final String SAMPLE = "sample";
-    public static final String REFERENCE = "reference";
     private static final String VCF_FILE = "vcf";
     private static final String GERMLINE = "germline";
 
     public static final Logger GR_LOGGER = LogManager.getLogger(GripssApplication.class);
 
-    public GripssConfig(final CommandLine cmd)
+    public GripssConfig(final ConfigBuilder configBuilder)
     {
-        SampleId = cmd.getOptionValue(SAMPLE, "");
-        ReferenceId = cmd.getOptionValue(REFERENCE, "");
-        GermlineMode = cmd.hasOption(GERMLINE);
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
+        SampleId = configBuilder.getValue(SAMPLE);
+        ReferenceId = configBuilder.getValue(REFERENCE, "");
+        GermlineMode = configBuilder.hasFlag(GERMLINE);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        VcfFile = cmd.getOptionValue(VCF_FILE, "");
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        VcfFile = configBuilder.getValue(VCF_FILE);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        RestrictedChromosomes = loadSpecificChromsomes(cmd);
+        RestrictedChromosomes = loadSpecificChromsomes(configBuilder);
     }
 
     public GripssConfig(
@@ -80,8 +74,6 @@ public class GripssConfig
         OutputId = null;
         RestrictedChromosomes = Lists.newArrayList();
     }
-
-    public boolean tumorOnly() { return ReferenceId.isEmpty(); }
 
     public boolean isValid()
     {
@@ -112,25 +104,23 @@ public class GripssConfig
         return false;
     }
 
-    public static void addCommandLineOptions(final Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(SAMPLE, true, "Name of the tumor sample");
-        options.addOption(REFERENCE, true, "Optional, name of the reference sample");
-        options.addOption(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
-        options.addOption(GERMLINE, false, "Run in germline mode");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(REFERENCE, REFERENCE_DESC);
+        configBuilder.addPath(VCF_FILE, true, "Path to the GRIDSS structural variant VCF file");
+        configBuilder.addFlag(GERMLINE, "Run in germline mode");
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
-        addRefGenomeConfig(options);
+        addOutputOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
+        addRefGenomeConfig(configBuilder, true);
 
-        options.addOption(SPECIFIC_CHROMOSOMES, true, SPECIFIC_CHROMOSOMES_DESC);
+        addSpecificChromosomesRegionsConfig(configBuilder);
 
-        PonCache.addCmdLineArgs(options);
-        HotspotCache.addCmdLineArgs(options);
-        FilterConstants.addCmdLineArgs(options);
-        RepeatMaskAnnotations.addCmdLineArgs(options);
-        TargetRegions.addCmdLineArgs(options);
+        PonCache.addConfig(configBuilder);
+        HotspotCache.addConfig(configBuilder);
+        FilterConstants.addConfig(configBuilder);
+        RepeatMaskAnnotations.addConfig(configBuilder);
+        TargetRegions.addConfig(configBuilder);
     }
 }

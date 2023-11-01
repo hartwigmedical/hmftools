@@ -4,7 +4,7 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -245,60 +245,6 @@ public class ExternalFusionCompare
                     ++index;
                 }
             }
-
-            /*
-            try
-            {
-                BufferedReader fileReader = new BufferedReader(new FileReader(unfilteredFile));
-
-                String line = fileReader.readLine(); // skip header
-
-                if(mFieldsMap.isEmpty())
-                {
-                    mFieldsMap.putAll(createFieldsIndexMap(line, DELIMITER));
-                }
-
-                while ((line = fileReader.readLine()) != null)
-                {
-                    // extract the required data from the unfiltered fusion record if a match is found
-                    final FusionData unfilteredFusion = FusionData.fromCsv(line, mFieldsMap);
-
-                    int index = 0;
-                    while(index < unmatchedExternalFusions.size())
-                    {
-                        ExternalFusionData extFusion = unmatchedExternalFusions.get(index);
-
-                        if(junctionMatch(
-                                extFusion.Chromosomes, unfilteredFusion.Chromosomes, extFusion.JunctionPositions, unfilteredFusion.JunctionPositions))
-                        {
-                            final String otherData = String.format("reason=%s anchorDistance=%d af=%.3f",
-                                    unfilteredFusion.getFilter().toString(),
-                                    min(unfilteredFusion.AnchorDistance[SE_START], unfilteredFusion.AnchorDistance[SE_END]),
-                                    unfilteredFusion.alleleFrequency());
-
-                            cacheMatchResults(sampleId, getMatchType(MT_FILT_IN_ISOFOX), unfilteredFusion.Id,
-                                    extFusion.Chromosomes, extFusion.JunctionPositions, extFusion.JunctionOrientations,
-                                    unfilteredFusion.JunctionTypes, extFusion.SvType, unfilteredFusion.GeneIds, extFusion.GeneNames,
-                                    unfilteredFusion.supportingFragments(), unfilteredFusion.DiscordantFrags,
-                                    extFusion.SplitFragments, extFusion.DiscordantFragments, unfilteredFusion.cohortFrequency(), otherData);
-
-                            unmatchedExternalFusions.remove(index);
-
-                            if(unmatchedExternalFusions.isEmpty())
-                                return;
-
-                            continue;
-                        }
-
-                        ++index;
-                    }
-                }
-            }
-            catch(IOException e)
-            {
-                ISF_LOGGER.error("failed to load unfiltered fusion file({}): {}", unfilteredFile, e.toString());
-            }
-            */
         }
 
         for(ExternalFusionData extFusion : unmatchedExternalFusions)

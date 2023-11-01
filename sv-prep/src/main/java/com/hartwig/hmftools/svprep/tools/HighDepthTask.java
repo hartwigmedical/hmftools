@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -59,7 +59,9 @@ public class HighDepthTask implements Callable
     @Override
     public Long call()
     {
-        RefGenomeCoordinates refGenomeCoords = mConfig.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        RefGenomeCoordinates refGenomeCoords = mConfig.RefGenVersion == V37 ?
+                RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+
         int chromosomeLength = refGenomeCoords.length(stripChrPrefix(mChromosome));
 
         List<ChrBaseRegion> partitions = Lists.newArrayList();
@@ -93,7 +95,6 @@ public class HighDepthTask implements Callable
             if((processed % 100) == 0)
             {
                 SV_LOGGER.info("chr({}) processed {} partitions", mChromosome, processed);
-                System.gc();
             }
         }
 
@@ -115,7 +116,7 @@ public class HighDepthTask implements Callable
 
         mPerfCounter.start();
 
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(mCurrentPartition), this::processSamRecord);
+        mBamSlicer.slice(mSamReader, mCurrentPartition, this::processSamRecord);
 
         findHighDepthRegions();
 

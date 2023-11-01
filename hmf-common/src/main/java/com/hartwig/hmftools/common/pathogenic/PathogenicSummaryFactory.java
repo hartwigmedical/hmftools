@@ -1,41 +1,37 @@
 package com.hartwig.hmftools.common.pathogenic;
 
 import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
-public final class PathogenicSummaryFactory {
-
+public final class PathogenicSummaryFactory
+{
     public static final String CLNSIG = "CLNSIG";
     public static final String CLNSIGCONF = "CLNSIGCONF";
     public static final String BLACKLIST_BED = "BLACKLIST_BED";
     public static final String BLACKLIST_VCF = "BLACKLIST_VCF";
 
-    private PathogenicSummaryFactory() {
-    }
-
-    @NotNull
-    public static PathogenicSummary fromContext(@NotNull VariantContext context) {
+    public static PathogenicSummary fromContext(final VariantContext context)
+    {
         final String clnSig = clnSig(context);
         final String clnSigConf = clnSigConf(context);
         final String clinvarInfo = !clnSigConf.isEmpty() ? clnSigConf : clnSig;
 
-        final Pathogenicity path =
+        final Pathogenicity pathogenicity =
                 context.getAttributeAsBoolean(BLACKLIST_BED, false) || context.getAttributeAsBoolean(BLACKLIST_VCF, false)
                         ? Pathogenicity.BENIGN_BLACKLIST
                         : Pathogenicity.fromClinvarAnnotation(clnSig, clnSigConf);
 
-        return ImmutablePathogenicSummary.builder().clinvarInfo(clinvarInfo).pathogenicity(path).build();
+        return new PathogenicSummary(clinvarInfo, pathogenicity);
     }
 
-    @NotNull
-    public static String clnSig(@NotNull VariantContext context) {
+    public static String clnSig(final VariantContext context)
+    {
         return String.join(",", context.getAttributeAsStringList(CLNSIG, Strings.EMPTY));
     }
 
-    @NotNull
-    public static String clnSigConf(@NotNull VariantContext context) {
+    public static String clnSigConf(final VariantContext context)
+    {
         return String.join(",", context.getAttributeAsStringList(CLNSIGCONF, Strings.EMPTY));
     }
 }

@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.sage.append;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.sage.SageApplication.createCommandLine;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.appendHeader;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,18 +21,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
-import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
+import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMSequenceDictionary;
@@ -40,102 +40,117 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.cram.ref.ReferenceSource;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.readers.LineIterator;
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
 
 public class SageAppendApplication
 {
-    private final SageConfig mConfig;
-    private final String mInputVcf;
+    private final SageAppendConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenome;
 
     private static final double MIN_PRIOR_VERSION = 2.8;
-    private static final String INPUT_VCF = "input_vcf";
 
-    public SageAppendApplication(final Options options, final String... args) throws ParseException, IOException
+    public SageAppendApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("sage.version");
-        SG_LOGGER.info("SAGE version: {}", version.version());
+        mConfig = new SageAppendConfig(version.version(), configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!mConfig.Common.isValid())
+        {
+            SG_LOGGER.error("invalid config");
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        IndexedFastaSequenceFile refFastaSeqFile = null;
 
-        mConfig = new SageConfig(true, version.version(), cmd);
-        mInputVcf = mConfig.SampleDataDir + cmd.getOptionValue(INPUT_VCF);
+        try
+        {
+            refFastaSeqFile = new IndexedFastaSequenceFile(new File(mConfig.Common.RefGenomeFile));
+        }
+        catch (IOException e)
+        {
+            SG_LOGGER.error("Reference file loading failed: {}", e.toString());
+            System.exit(1);
+        }
 
-        mRefGenome = new IndexedFastaSequenceFile(new File(mConfig.RefGenomeFile));
+        mRefGenome = refFastaSeqFile;
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException
     {
-        // check config
-        if(mInputVcf == null || mInputVcf.isEmpty())
-        {
-            SG_LOGGER.error("no input VCF file specified");
-            System.exit(1);
-        }
-
-        if(mInputVcf.equals(mConfig.OutputFile))
+        if(mConfig.InputVcf.equals(mConfig.Common.OutputFile))
         {
             SG_LOGGER.error("input and output VCFs must be different");
             System.exit(1);
         }
 
-        if(mConfig.ReferenceIds.isEmpty())
+        if(mConfig.Common.ReferenceIds.isEmpty())
         {
             SG_LOGGER.error("missing reference Id must be supplied");
             System.exit(1);
         }
 
-        SG_LOGGER.info("reading and validating file: {}", mInputVcf);
+        SG_LOGGER.info("appending variants with {} sample BAM(s)", mConfig.Common.ReferenceBams.size());
 
-        long startTime = System.currentTimeMillis();
+        SG_LOGGER.info("reading and validating file: {}", mConfig.InputVcf);
 
-        final List<VariantContext> existingVariants = Lists.newArrayList();
+        long startTimeMs = System.currentTimeMillis();
 
-        VCFHeader inputHeader = null;
+        VcfFileReader vcfFileReader = new VcfFileReader(mConfig.InputVcf);
 
-        try
+        if(!vcfFileReader.fileValid())
         {
-            AbstractFeatureReader<VariantContext, LineIterator> vcfReader = AbstractFeatureReader.getFeatureReader(
-                    mInputVcf, new VCFCodec(), false);
-
-            inputHeader = (VCFHeader)vcfReader.getHeader();
-            if(!validateInputHeader(inputHeader))
-            {
-                System.exit(1);
-            }
-
-            existingVariants.addAll(verifyAndReadExisting(vcfReader));
-            vcfReader.close();
-        }
-        catch(Exception e)
-        {
-            SG_LOGGER.error("failed to read input VCF({})", mInputVcf, e.toString());
-            e.printStackTrace();
+            SG_LOGGER.error("invalid input VCF({})", mConfig.InputVcf);
             System.exit(1);
         }
 
-        SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
-        final VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig, inputHeader);
+        VCFHeader inputHeader = vcfFileReader.vcfHeader();
+
+        if(!validateInputHeader(inputHeader))
+        {
+            System.exit(1);
+        }
+
+        final List<VariantContext> existingVariants = Lists.newArrayList();
+
+        for(VariantContext variantContext : vcfFileReader.iterator())
+        {
+            VariantContext variant = variantContext.fullyDecode(inputHeader, false);
+
+            if(mConfig.FilterToGenes)
+            {
+                VariantImpact variantImpact = VariantImpactSerialiser.fromVariantContext(variant);
+
+                if(variantImpact == null || variantImpact.CanonicalGeneName.isEmpty())
+                    continue;
+            }
+
+            if(!mConfig.Common.SpecificPositions.isEmpty() && mConfig.Common.SpecificPositions.stream().noneMatch(x -> x == variant.getStart()))
+                continue;
+
+            existingVariants.add(variant);
+        }
+
+        vcfFileReader.close();
+
+        SG_LOGGER.info("loaded {} variants", existingVariants.size());
+
+        SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
+        final VariantVCF outputVCF = new VariantVCF(mRefGenome, mConfig.Common, inputHeader);
 
         if(existingVariants.isEmpty())
         {
             outputVCF.close();
-            SG_LOGGER.info("input VCF empty", existingVariants.size());
+            SG_LOGGER.info("writing empty output VCF", existingVariants.size());
             return;
         }
 
-        SG_LOGGER.info("loaded {} variants", existingVariants.size());
-
         final SAMSequenceDictionary dictionary = dictionary();
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mRefGenome);
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
+                mConfig.Common, mRefGenome, "", Collections.emptyList(), Collections.emptyList());
+
         baseQualityRecalibration.produceRecalibrationMap();
 
         if(!baseQualityRecalibration.isValid())
@@ -143,13 +158,13 @@ public class SageAppendApplication
 
         final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
-        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig, mRefGenome);
+        final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
 
         for(final SAMSequenceRecord samSequenceRecord : dictionary.getSequences())
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 
-            if(!mConfig.processChromosome(chromosome))
+            if(!mConfig.Common.processChromosome(chromosome))
                 continue;
 
             SG_LOGGER.info("processing chromosome({})", chromosome);
@@ -176,7 +191,7 @@ public class SageAppendApplication
             }
 
             final List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            TaskExecutor.executeTasks(callableList, mConfig.Common.Threads);
 
             for(RegionAppendTask regionTask : regionTasks)
             {
@@ -189,22 +204,7 @@ public class SageAppendApplication
 
         mRefGenome.close();
 
-        long timeTaken = System.currentTimeMillis() - startTime;
-        SG_LOGGER.info("completed in {} seconds", String.format("%.1f",timeTaken / 1000.0));
-    }
-
-    private List<VariantContext> verifyAndReadExisting(final AbstractFeatureReader<VariantContext, LineIterator> vcfReader) throws IOException
-    {
-        List<VariantContext> result = Lists.newArrayList();
-
-        VCFHeader header = (VCFHeader) vcfReader.getHeader();
-
-        for(VariantContext variantContext : vcfReader.iterator())
-        {
-            result.add(variantContext.fullyDecode(header, false));
-        }
-
-        return result;
+        SG_LOGGER.info("SageAppend complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
     private boolean validateInputHeader(VCFHeader header)
@@ -223,7 +223,7 @@ public class SageAppendApplication
 
         SG_LOGGER.info("existing VCF samples: {}", sj.toString());
 
-        for(String refSample : mConfig.ReferenceIds)
+        for(String refSample : mConfig.Common.ReferenceIds)
         {
             if(existingSamples.contains(refSample))
             {
@@ -264,10 +264,10 @@ public class SageAppendApplication
 
     private SAMSequenceDictionary dictionary() throws IOException
     {
-        final String bam = mConfig.ReferenceBams.get(0);
+        final String bam = mConfig.Common.ReferenceBams.get(0);
 
         SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.Stringency)
+                .validationStringency(mConfig.Common.BamStringency)
                 .referenceSource(new ReferenceSource(mRefGenome)).open(new File(bam));
 
         SAMSequenceDictionary dictionary = tumorReader.getFileHeader().getSequenceDictionary();
@@ -275,35 +275,24 @@ public class SageAppendApplication
         return dictionary;
     }
 
-    public static Options createOptions()
-    {
-        final Options options = new Options();
-        SageConfig.commonOptions().getOptions().forEach(options::addOption);
-        options.addOption(INPUT_VCF, true, "Path to input vcf");
-        return options;
-    }
-
     public static void main(String[] args)
     {
-        final Options options = createOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        SageAppendConfig.registerConfig(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        SageAppendApplication application = new SageAppendApplication(configBuilder);
 
         try
         {
-            final SageAppendApplication application = new SageAppendApplication(options, args);
             application.run();
-        }
-        catch(ParseException e)
-        {
-            SG_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SageAppendApplication", options);
-            System.exit(1);
         }
         catch(Exception e)
         {
-            SG_LOGGER.warn(e);
+            SG_LOGGER.error("error: {}", e.toString());
+            e.printStackTrace();
             System.exit(1);
         }
     }
-
 }

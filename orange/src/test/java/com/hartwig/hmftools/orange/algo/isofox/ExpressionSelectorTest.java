@@ -9,16 +9,17 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
-import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.common.isofox.GeneExpressionDistributionData;
+import com.hartwig.hmftools.datamodel.isofox.GeneExpression;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class ExpressionSelectorTest {
-
+public class ExpressionSelectorTest
+{
     @Test
-    public void canSelectHighExpressionGenes() {
+    public void shouldSelectHighExpressionGenes()
+    {
         GeneExpression highExpressionGene1 = create("gene 1", 0.95, 0.95);
         GeneExpression nonHighExpressionGene1 = create("gene 1", 0.85, 0.95);
         GeneExpression highExpressionGene2 = create("gene 2", 0.95, 0.95);
@@ -35,7 +36,20 @@ public class ExpressionSelectorTest {
     }
 
     @Test
-    public void canSelectLowExpressionGenes() {
+    public void shouldSelectHighExpressionGeneWithoutCohort()
+    {
+        GeneExpression highExpressionGene = create("gene 1", GeneExpressionDistributionData.NOT_AVAILABLE, 0.95);
+        DriverGene driver = DriverGeneTestFactory.builder().gene("gene 1").likelihoodType(DriverCategory.ONCO).build();
+
+        List<GeneExpression> highExpression = ExpressionSelector.selectHighExpressionGenes(List.of(highExpressionGene), List.of(driver));
+
+        assertEquals(1, highExpression.size());
+        assertTrue(highExpression.contains(highExpressionGene));
+    }
+
+    @Test
+    public void shouldSelectLowExpressionGenes()
+    {
         GeneExpression lowExpressionGene1 = create("gene 1", 0.02, 0.02);
         GeneExpression nonLowExpressionGene1 = create("gene 1", 0.02, 0.08);
         GeneExpression lowExpressionGene2 = create("gene 2", 0.02, 0.02);
@@ -51,10 +65,34 @@ public class ExpressionSelectorTest {
         assertTrue(lowExpression.contains(lowExpressionGene2));
     }
 
+    @Test
+    public void shouldSelectLowExpressionGenesWithoutCohort()
+    {
+        GeneExpression lowExpressionGene = create("gene 2", GeneExpressionDistributionData.NOT_AVAILABLE, 0.02);
+        DriverGene driver = DriverGeneTestFactory.builder().gene("gene 2").likelihoodType(DriverCategory.TSG).build();
+
+        List<GeneExpression> lowExpression = ExpressionSelector.selectLowExpressionGenes(List.of(lowExpressionGene), List.of(driver));
+
+        assertEquals(1, lowExpression.size());
+        assertTrue(lowExpression.contains(lowExpressionGene));
+    }
+
+    @Test
+    public void shouldNotSelectGenesMissingCancerExpressionPercentile()
+    {
+        GeneExpression highExpressionGene = create("gene 1", GeneExpressionDistributionData.NOT_AVAILABLE, null);
+        DriverGene driver = DriverGeneTestFactory.builder().gene("gene 1").likelihoodType(DriverCategory.ONCO).build();
+
+        List<GeneExpression> highExpression = ExpressionSelector.selectHighExpressionGenes(List.of(highExpressionGene), List.of(driver));
+
+        assertEquals(0, highExpression.size());
+    }
+
     @NotNull
-    private static GeneExpression create(@NotNull String gene, double percentileCohort, double percentileCancer) {
-        return IsofoxTestFactory.geneExpressionBuilder()
-                .geneName(gene)
+    private static GeneExpression create(@NotNull String gene, double percentileCohort, Double percentileCancer)
+    {
+        return OrangeIsofoxTestFactory.geneExpressionBuilder()
+                .gene(gene)
                 .percentileCohort(percentileCohort)
                 .percentileCancer(percentileCancer)
                 .build();

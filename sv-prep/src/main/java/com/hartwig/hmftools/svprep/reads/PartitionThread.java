@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.svprep.reads;
 
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
+import static com.hartwig.hmftools.svprep.SvCommon.createBamSlicer;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import com.hartwig.hmftools.svprep.SvConfig;
 
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 
 public class PartitionThread extends Thread
 {
@@ -44,11 +46,11 @@ public class PartitionThread extends Thread
         mPartitions = partitions;
 
         mSamReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
+                SamReaderFactory.makeDefault()
+                        .validationStringency(mConfig.BamStringency)
+                        .referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
 
-        mBamSlicer = new BamSlicer(0, false, true, false);
-        mBamSlicer.setKeepUnmapped();
-        mBamSlicer.setKeepHardClippedSecondaries();
+        mBamSlicer = createBamSlicer();
 
         start();
     }
@@ -65,25 +67,20 @@ public class PartitionThread extends Thread
                         partition.TaskId, partition.Region, mConfig, mSamReader, mBamSlicer,
                         mSpanningReadCache, mExistingJunctionCache, mWriter, mCombinedStats);
 
-                boolean logAndGc = partition.TaskId > 0 && (partition.TaskId % 10) == 0;
-
-                if(logAndGc)
+                if(partition.TaskId > 0 && (partition.TaskId % 10) == 0)
                 {
                     SV_LOGGER.debug("chromosome({}) processing partition({}), remaining({})",
                             mChromosome, partition.TaskId, mPartitions.size());
                 }
 
                 slicer.run();
-
-                if(logAndGc)
-                    System.gc();
             }
             catch(NoSuchElementException e)
             {
                 SV_LOGGER.trace("all tasks complete");
                 break;
             }
-            catch(Exception e)
+            catch(Throwable e)
             {
                 SV_LOGGER.error("thread execution error: {}", e.toString());
                 e.printStackTrace();

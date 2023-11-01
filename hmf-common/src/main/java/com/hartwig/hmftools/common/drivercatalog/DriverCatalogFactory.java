@@ -18,28 +18,7 @@ public final class DriverCatalogFactory
 {
     private DriverCatalogFactory() {}
 
-    @NotNull
-    public static <T extends SomaticVariant> Map<DriverImpact,Integer> driverImpactCount(@NotNull final List<T> variants)
-    {
-        return variants.stream().collect(Collectors.groupingBy(DriverImpact::select, Collectors.counting()))
-                .entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().intValue()));
-    }
-
-    @NotNull
-    static <T extends SomaticVariant> Map<VariantType,Integer> variantTypeCount(@NotNull final List<T> variants)
-    {
-        return variantTypeCount(t -> true, variants);
-    }
-
-    @NotNull
-    static <T extends SomaticVariant> Map<VariantType,Integer> variantTypeCount(final Predicate<T> predicate, final List<T> variants)
-    {
-        return variants.stream().filter(predicate)
-                .collect(Collectors.groupingBy(SomaticVariant::type, Collectors.counting()))
-                .entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().intValue()));
-    }
-
-    public static double probabilityDriverVariant(long sampleSNVCount, @NotNull final DndsDriverImpactLikelihood likelihood)
+    public static double probabilityDriverVariant(long sampleSNVCount, final DndsDriverImpactLikelihood likelihood)
     {
         return probabilityDriverVariantSameImpact(0, sampleSNVCount, likelihood);
     }
@@ -56,8 +35,9 @@ public final class DriverCatalogFactory
         return likelihood.driversPerSample() / (likelihood.driversPerSample() + pVariantNonDriver * (1 - likelihood.driversPerSample()));
     }
 
-    public static double probabilityDriverVariant(long firstVariantTypeCount, long secondVariantTypeCount,
-            @NotNull final DndsDriverImpactLikelihood firstLikelihood, @NotNull final DndsDriverImpactLikelihood secondLikelihood)
+    public static double probabilityDriverVariant(
+            long firstVariantTypeCount, long secondVariantTypeCount,
+            final DndsDriverImpactLikelihood firstLikelihood, final DndsDriverImpactLikelihood secondLikelihood)
     {
         if(firstLikelihood.equals(secondLikelihood))
         {

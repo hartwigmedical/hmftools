@@ -11,7 +11,6 @@ import static com.hartwig.hmftools.common.cuppa.ResultType.PREVALENCE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.GENDER;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.MS_INDELS_TMB;
-import static com.hartwig.hmftools.cup.traits.SampleTraitType.PLOIDY;
 import static com.hartwig.hmftools.cup.traits.SampleTraitType.WGD;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_FEMALE_INDEX;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.GENDER_MALE_INDEX;
@@ -30,6 +29,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.common.cuppa.ClassifierType;
@@ -40,9 +40,6 @@ import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-
 public class SampleTraitClassifier implements CuppaClassifier
 {
     private final CuppaConfig mConfig;
@@ -52,13 +49,10 @@ public class SampleTraitClassifier implements CuppaClassifier
 
     private final Map<SampleTraitType,Map<String,double[]>> mRefTraitPercentiles;
     private final Map<SampleTraitType,Map<String,Double>> mRefTraitRates;
-    private final boolean mApplyPloidyLikelihood;
 
     private final Map<String,double[]> mRefGenderRates;
 
-    private static final String APPLY_PLOIDY_LIKELIHOOD = "apply_ploidy_likelihood";
-
-    public SampleTraitClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public SampleTraitClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -67,17 +61,10 @@ public class SampleTraitClassifier implements CuppaClassifier
         mRefTraitPercentiles = Maps.newHashMap();
         mRefTraitRates = Maps.newHashMap();
         mRefGenderRates = Maps.newHashMap();
-
-        mApplyPloidyLikelihood = cmd.hasOption(APPLY_PLOIDY_LIKELIHOOD);
     }
 
     public CategoryType categoryType() { return SAMPLE_TRAIT; }
     public void close() {}
-
-    public static void addCmdLineArgs(Options options)
-    {
-        options.addOption(APPLY_PLOIDY_LIKELIHOOD, false, "Add ploidy high/low likelihood feature");
-    }
 
     @Override
     public boolean loadData()
@@ -191,9 +178,6 @@ public class SampleTraitClassifier implements CuppaClassifier
 
         int cancerSampleCount = sample.isRefSample() ? mSampleDataCache.getCancerSampleCount(sample.cancerType()) : 0;
         addTraitLikelihoods(sample, cancerSampleCount, results, MS_INDELS_TMB, sampleTraits.IndelsMbPerMb);
-
-        if(mApplyPloidyLikelihood)
-            addTraitLikelihoods(sample, cancerSampleCount, results, PLOIDY, sampleTraits.Ploidy);
 
         addGenderClassifier(sample, sampleTraits, results);
         return true;

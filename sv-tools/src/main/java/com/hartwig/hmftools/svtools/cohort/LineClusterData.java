@@ -5,8 +5,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.KNOWN;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.KNOWN_SUSPECT;
 import static com.hartwig.hmftools.svtools.cohort.LineElementType.NONE;
@@ -15,7 +15,7 @@ import static com.hartwig.hmftools.svtools.cohort.LineElementType.SUSPECT;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import org.apache.commons.compress.utils.Lists;
 
@@ -133,7 +133,7 @@ public class LineClusterData
         if(MatchedClusters.isEmpty())
             return mPrimaryRegion.Region;
 
-        ChrBaseRegion combinedRegion = new ChrBaseRegion(mPrimaryRegion.Region.Chromosome, mPrimaryRegion.Region.Positions);
+        ChrBaseRegion combinedRegion = mPrimaryRegion.Region.clone();
 
         for(LineClusterData otherCluster : MatchedClusters)
         {

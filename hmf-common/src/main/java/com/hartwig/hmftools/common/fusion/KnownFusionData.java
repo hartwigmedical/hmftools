@@ -3,6 +3,7 @@ package com.hartwig.hmftools.common.fusion;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KF_LOGGER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class KnownFusionData
 {
@@ -41,16 +42,16 @@ public class KnownFusionData
     // 3' gene alternative mappings
     private final List<ChrBaseRegion> mThreeGeneAltRegions;
 
-    private static final String FLD_TYPE = "Type";
-    private static final String FLD_FIVE_GENE = "FiveGene";
-    private static final String FLD_THREE_GENE = "ThreeGene";
-    private static final String FLD_PUB_MED = "PubMedId";
-    private static final String FLD_CANCER_TYPES = "CancerTypes";
-    private static final String FLD_KNOWN_EXON_TRANS = "KnownExonTranscript";
-    private static final String FLD_KNOWN_EXON_UP_RANGE = "KnownExonUpRange";
-    private static final String FLD_KNOWN_EXON_DOWN_RANGE = "KnownExonDownRange";
-    private static final String FLD_HIGH_IMPACT_PROM = "HighImpactPromiscuous";
-    private static final String FLD_OVERRIDES = "Overrides";
+    public static final String FLD_TYPE = "Type";
+    public static final String FLD_FIVE_GENE = "FiveGene";
+    public static final String FLD_THREE_GENE = "ThreeGene";
+    public static final String FLD_PUB_MED = "PubMedId";
+    public static final String FLD_CANCER_TYPES = "CancerTypes";
+    public static final String FLD_KNOWN_EXON_TRANS = "KnownExonTranscript";
+    public static final String FLD_KNOWN_EXON_UP_RANGE = "KnownExonUpRange";
+    public static final String FLD_KNOWN_EXON_DOWN_RANGE = "KnownExonDownRange";
+    public static final String FLD_HIGH_IMPACT_PROM = "HighImpactPromiscuous";
+    public static final String FLD_OVERRIDES = "Overrides";
 
     public static final String OVERRIDE_IG_RANGE = "IG_RANGE";
     public static final String OVERRIDE_THREE_PRIME_RANGE = "THREE_PRIME_RANGE";
@@ -59,8 +60,7 @@ public class KnownFusionData
     public static final String OVERRIDE_DOWN_DISTANCE = "DOWN_GENE_DOWNSTREAM_DISTANCE";
     public static final String ALT_DATA = "ALT";
 
-    private static final String FILE_DELIM = ",";
-    private static final String ITEM_DELIM = ";";
+    public static final String FILE_DELIM = ",";
     private static final String OVERRIDES_DELIM = " ";
     private static final String OVERRIDES_ID_DELIM = "=";
 
@@ -204,11 +204,6 @@ public class KnownFusionData
     public boolean withinGeneRegion(final String chromosome, int position)
     {
         return mGeneRegion != null && mGeneRegion.containsPosition(chromosome, position);
-    }
-
-    public boolean matchesGeneRegion(final String chromosome, int position, byte orientation)
-    {
-        return (mGeneStrand == 0 || mGeneStrand == orientation) && withinGeneRegion(chromosome, position);
     }
 
     public final List<ChrBaseRegion> getThreeGeneAltRegions() { return mThreeGeneAltRegions; }

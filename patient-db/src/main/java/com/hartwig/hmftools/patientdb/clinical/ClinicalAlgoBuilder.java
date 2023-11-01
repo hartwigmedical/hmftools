@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidNode;
 import com.hartwig.hmftools.patientdb.clinical.curators.BiopsySiteCurator;
+import com.hartwig.hmftools.patientdb.clinical.curators.DoidNodesResolver;
 import com.hartwig.hmftools.patientdb.clinical.curators.PrimaryTumorCurator;
 import com.hartwig.hmftools.patientdb.clinical.curators.TreatmentCurator;
 import com.hartwig.hmftools.patientdb.clinical.ecrf.EcrfModel;
@@ -38,14 +39,14 @@ public final class ClinicalAlgoBuilder {
     @NotNull
     public static ClinicalAlgo fromConfig(@NotNull ClinicalAlgoConfig config) throws IOException, XMLStreamException {
         List<DoidNode> doidNodes = DiseaseOntology.readDoidOwlEntryFromDoidJson(config.doidJson()).nodes();
-        PrimaryTumorCurator primaryTumorCurator =
-                new PrimaryTumorCurator(config.tumorLocationMappingTsv(), config.tumorLocationOverridesTsv(), doidNodes);
+        DoidNodesResolver doidNodesResolver = new DoidNodesResolver(doidNodes);
+        PrimaryTumorCurator primaryTumorCurator = new PrimaryTumorCurator(config.tumorLocationMappingTsv(),
+                config.tumorLocationOverridesTsv(), doidNodesResolver);
         BiopsySiteCurator biopsySiteCurator = new BiopsySiteCurator(config.biopsyMappingTsv());
         TreatmentCurator treatmentCurator = new TreatmentCurator(config.treatmentMappingTsv());
-
         EcrfModels ecrfModels = loadEcrfModels(config);
 
-        return new ClinicalAlgo(ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator);
+        return new ClinicalAlgo(ecrfModels, primaryTumorCurator, biopsySiteCurator, treatmentCurator, doidNodesResolver);
     }
 
     @NotNull

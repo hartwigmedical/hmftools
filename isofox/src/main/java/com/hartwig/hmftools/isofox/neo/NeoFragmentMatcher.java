@@ -5,11 +5,10 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.VAR_INFO_DELIM;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.EXACT_MATCH;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentSupport.MISMATCH;
@@ -27,76 +26,6 @@ public class NeoFragmentMatcher
     public static final int MIN_BASE_OVERLAP = 10;
     public static final int NOVEL_BASE_OVERLAP = 5;
     private static final int MAX_BASE_MISMATCH = 2;
-
-    public static NeoFragmentSupport findPointMutationSupport(final NeoEpitopeData neData, final ReadRecord read)
-    {
-        NeoFragmentSupport support = new NeoFragmentSupport();
-
-        // reads always go up in position (+ve to -ve orientation)
-        final int[] codingBaseRange = neData.getCodingBaseRange(FS_UP);
-        final String neoCodingBases = neData.getFullCodingBases(FS_UP);
-
-        // reads with soft-clipped bases to another gene will match the coding bases starting midway through the coding bases
-        // the read may cross any part of of the coding base region, which will cover all neo-epitope bases (up, down & novel)
-        int overlapBases = calcCoordinatesOverlap(read.getMappedRegionCoords(), neData.CodingBaseCoords[FS_UP]);
-
-        if(overlapBases < MIN_BASE_OVERLAP)
-            return support;
-
-        int mutationPosition = neData.Positions[FS_UP];
-        int maxStartPos = max(read.PosStart, codingBaseRange[SE_START]);
-        int minEndPos = min(read.PosEnd, codingBaseRange[SE_END]);
-
-        int matchLevel = compareCodingBases(read, neoCodingBases, neData.CodingBaseCoords[FS_UP], maxStartPos, minEndPos);
-
-        if(matchLevel == MISMATCH)
-            return support;
-
-        final String[] varData = neData.Source.VariantInfo.split(VAR_INFO_DELIM);
-        int refLength = varData[2].length();
-        int altLength = varData[3].length();
-        int baseDiff = altLength - refLength;
-        int novelLength = 0;
-
-        if(baseDiff == 0)
-        {
-            novelLength = refLength + NOVEL_BASE_OVERLAP;
-        }
-        else if(baseDiff > 0)
-        {
-            // insert case - limit to 10 inserted bases
-            novelLength = min(altLength, 10) + NOVEL_BASE_OVERLAP;
-        }
-        else
-        {
-            // delete
-            novelLength = refLength + NOVEL_BASE_OVERLAP;
-        }
-
-        List<int[]> novelRanges = Lists.newArrayList();
-        novelRanges.add(new int[] { mutationPosition, mutationPosition });
-        expandRange(novelRanges, mutationPosition, neData.CodingBaseCoords[FS_UP], NOVEL_BASE_OVERLAP, false);
-        expandRange(novelRanges, mutationPosition, neData.CodingBaseCoords[FS_UP], novelLength, true);
-
-        int novelOverlap = calcCoordinatesOverlap(read.getMappedRegionCoords(), novelRanges);
-
-        if(novelOverlap >= MIN_BASE_OVERLAP)
-        {
-            ++support.NovelFragments[matchLevel];
-        }
-        else
-        {
-            int novelRangeStart = novelRanges.get(0)[SE_START];
-            int novelRangeEnd = novelRanges.get(novelRanges.size() - 1)[SE_END];
-
-            if((read.PosEnd < novelRangeEnd && neData.posStrand(FS_UP)) || (read.PosStart > novelRangeStart && !neData.posStrand(FS_UP)))
-                ++support.UpFragments[matchLevel];
-            else
-                ++support.DownFragments[matchLevel];
-        }
-
-        return support;
-    }
 
     public static NeoFragmentSupport findFusionSupport(final NeoEpitopeData neData, int stream, final ReadRecord read)
     {
@@ -337,8 +266,7 @@ public class NeoFragmentMatcher
     }
 
     public static int compareCodingBases(
-            final ReadRecord read, final String neoCodingBases, final List<int[]> neoCoords,
-            int posStart, int posEnd)
+            final ReadRecord read, final String neoCodingBases, final List<int[]> neoCoords, int posStart, int posEnd)
     {
         int readBaseIndex = 0;
         String readBases = "";
@@ -468,7 +396,7 @@ public class NeoFragmentMatcher
             else
                 refBase = neData.getCodingBaseRange(fs)[neData.Orientations[fs] == POS_ORIENT ? SE_END : SE_START];
 
-            for(ReadRecord read : readGroup.Reads)
+            for(ReadRecord read : readGroup.reads())
             {
                 if(!read.Chromosome.equals(chromosome))
                     continue;
@@ -484,6 +412,4 @@ public class NeoFragmentMatcher
                 ++neData.getFragmentSupport().RefBaseDepth[fs];
         }
     }
-
-
 }

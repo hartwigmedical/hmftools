@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.virus;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 
 import java.io.File;
@@ -15,31 +17,31 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class AnnotatedVirusFile {
+public final class AnnotatedVirusFile
+{
     private static final String ANNOTATED_VIRUS_EXTENSION = ".virus.annotated.tsv";
 
-    private static final String DELIMITER = "\t";
-
-    private AnnotatedVirusFile() {
+    @NotNull
+    public static String generateFileName(@NotNull String outputDir, @NotNull String sampleId)
+    {
+        return checkAddDirSeparator(outputDir) + sampleId + ANNOTATED_VIRUS_EXTENSION;
     }
 
     @NotNull
-    public static String generateFileName(@NotNull String outputDir, @NotNull String sampleId) {
-        return outputDir + File.separator + sampleId + ANNOTATED_VIRUS_EXTENSION;
-    }
-
-    @NotNull
-    public static List<AnnotatedVirus> read(@NotNull String annotatedVirusTsv) throws IOException {
+    public static List<AnnotatedVirus> read(@NotNull String annotatedVirusTsv) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(annotatedVirusTsv).toPath()));
     }
 
-    public static void write(@NotNull String annotatedVirusTsv, @NotNull List<AnnotatedVirus> annotatedViruses) throws IOException {
+    public static void write(@NotNull String annotatedVirusTsv, @NotNull List<AnnotatedVirus> annotatedViruses) throws IOException
+    {
         Files.write(new File(annotatedVirusTsv).toPath(), toLines(annotatedViruses));
     }
 
     @VisibleForTesting
     @NotNull
-    static List<String> toLines(@NotNull List<AnnotatedVirus> annotatedViruses) {
+    static List<String> toLines(@NotNull List<AnnotatedVirus> annotatedViruses)
+    {
         List<String> lines = Lists.newArrayList();
         lines.add(header());
         annotatedViruses.stream().map(AnnotatedVirusFile::toString).forEach(lines::add);
@@ -48,11 +50,12 @@ public final class AnnotatedVirusFile {
 
     @VisibleForTesting
     @NotNull
-    static List<AnnotatedVirus> fromLines(@NotNull List<String> lines) {
+    static List<AnnotatedVirus> fromLines(@NotNull List<String> lines)
+    {
         List<AnnotatedVirus> virusList = Lists.newArrayList();
 
         String header = lines.get(0);
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         // support for version 1 not having coverage columns
@@ -61,12 +64,15 @@ public final class AnnotatedVirusFile {
         Integer expectedClonalCoverageIndex = fieldsIndexMap.get("expectedClonalCoverage");
         Integer driverLikelihoodIndex = fieldsIndexMap.get("driverLikelihood");
 
-        for (String line : lines) {
-            String[] values = line.split(DELIMITER, -1);
+        for(String line : lines)
+        {
+            String[] values = line.split(TSV_DELIM, -1);
 
             Double expectedClonalCoverage = null;
-            if (expectedClonalCoverageIndex != null) {
-                if (!values[expectedClonalCoverageIndex].equals("null")) {
+            if(expectedClonalCoverageIndex != null)
+            {
+                if(!values[expectedClonalCoverageIndex].equals("null"))
+                {
                     expectedClonalCoverage = Double.valueOf(values[expectedClonalCoverageIndex]);
                 }
             }
@@ -78,7 +84,7 @@ public final class AnnotatedVirusFile {
                     .integrations(Integer.parseInt(values[fieldsIndexMap.get("integrations")]))
                     .interpretation(values[fieldsIndexMap.get("interpretation")].equals("null")
                             ? null
-                            : values[fieldsIndexMap.get("interpretation")])
+                            : VirusType.fromVirusName(values[fieldsIndexMap.get("interpretation")]))
                     .percentageCovered(percentageCoveredIndex != null ? Double.parseDouble(values[percentageCoveredIndex]) : 0)
                     .meanCoverage(meanCoverageIndex != null ? Double.parseDouble(values[meanCoverageIndex]) : 0)
                     .expectedClonalCoverage(expectedClonalCoverage)
@@ -91,8 +97,9 @@ public final class AnnotatedVirusFile {
     }
 
     @NotNull
-    private static String header() {
-        return new StringJoiner(DELIMITER).add("taxid")
+    private static String header()
+    {
+        return new StringJoiner(TSV_DELIM).add("taxid")
                 .add("name")
                 .add("qcStatus")
                 .add("integrations")
@@ -106,12 +113,13 @@ public final class AnnotatedVirusFile {
     }
 
     @NotNull
-    private static String toString(@NotNull AnnotatedVirus annotatedVirus) {
-        return new StringJoiner(DELIMITER).add(String.valueOf(annotatedVirus.taxid()))
+    private static String toString(@NotNull AnnotatedVirus annotatedVirus)
+    {
+        return new StringJoiner(TSV_DELIM).add(String.valueOf(annotatedVirus.taxid()))
                 .add(annotatedVirus.name())
                 .add(annotatedVirus.qcStatus().toString())
                 .add(String.valueOf(annotatedVirus.integrations()))
-                .add(annotatedVirus.interpretation())
+                .add(String.valueOf(annotatedVirus.interpretation()))
                 .add(String.valueOf(annotatedVirus.percentageCovered()))
                 .add(String.valueOf(annotatedVirus.meanCoverage()))
                 .add(String.valueOf(annotatedVirus.expectedClonalCoverage()))

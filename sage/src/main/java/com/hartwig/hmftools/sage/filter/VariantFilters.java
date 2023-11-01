@@ -43,7 +43,7 @@ public class VariantFilters
 
     public boolean passesHardFilters(final ReadContextCounter readCounter)
     {
-        if(readCounter.Tier.equals(VariantTier.HOTSPOT))
+        if(readCounter.tier().equals(VariantTier.HOTSPOT))
             return true;
 
         if(readCounter.rawAltBaseQuality() < mConfig.HardMinTumorRawBaseQuality)
@@ -80,7 +80,7 @@ public class VariantFilters
                 mFilterCounts[HARD_FC_TUMOR_QUAL], mFilterCounts[HARD_FC_TUMOR_VAF]);
     }
 
-    public boolean enabled() { return mConfig.SoftFilter; }
+    public boolean enabled() { return !mConfig.DisableSoftFilter; }
 
     public void applySoftFilters(final SageVariant variant)
     {
@@ -155,7 +155,7 @@ public class VariantFilters
             filters.add(SoftFilter.STRAND_BIAS.filterName());
         }
 
-        if(belowMinAverageBaseQuality(primaryTumor))
+        if(belowMinAverageBaseQuality(primaryTumor, tier))
         {
             filters.add(SoftFilter.MIN_AVG_BASE_QUALITY.filterName());
         }
@@ -180,9 +180,12 @@ public class VariantFilters
         return Doubles.lessThan(primaryTumor.vaf(), config.MinTumorVaf);
     }
 
-    private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor)
+    private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor, final VariantTier tier)
     {
-        return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
+        if(tier == VariantTier.HOTSPOT)
+            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQualHotspot);
+        else
+            return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
     }
 
     // normal and paired tumor-normal tests
@@ -224,7 +227,7 @@ public class VariantFilters
                 (isLongInsert ? config.MinGermlineCoverageAllosomeLongInsert : config.MinGermlineCoverageAllosome)
                 : (isLongInsert ? config.MinGermlineCoverageLongInsert : config.MinGermlineCoverage);
 
-        return normal.coverage() < minGermlineCoverage;
+        return normal.depth() < minGermlineCoverage;
     }
 
     private static boolean aboveMaxGermlineVaf(
@@ -269,16 +272,17 @@ public class VariantFilters
 
     private static final EnumSet<VariantTier> PANEL_ONLY_TIERS = EnumSet.of(VariantTier.HOTSPOT, VariantTier.PANEL);
 
-    public static boolean checkFinalFilters(final SageVariant variant, final Set<Integer> passingPhaseSets, final SageConfig config)
+    public static boolean checkFinalFilters(
+            final SageVariant variant, final Set<Integer> passingPhaseSets, final SageConfig config, boolean panelOnly)
     {
-        if(config.PanelOnly && !PANEL_ONLY_TIERS.contains(variant.tier()))
+        if(panelOnly && !PANEL_ONLY_TIERS.contains(variant.tier()))
             return false;
 
         if(variant.isPassing())
             return true;
 
-        if(config.Filter.HardFilter)
-            return false;
+        if(config.Filter.DisableHardFilter)
+            return true;
 
         if(variant.tier() == VariantTier.HOTSPOT)
             return true;

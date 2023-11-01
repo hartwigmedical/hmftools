@@ -5,6 +5,7 @@ import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -15,7 +16,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.typeAsInt;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
-import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.isSimpleSingleSV;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.addSvToChrBreakendMap;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.calcConsistency;
@@ -168,26 +168,26 @@ public class SvCluster
 
         ++mTypeCounts[typeAsInt(var.type())];
 
-        if (var.type() == BND || var.isCrossArm())
+        if(var.type() == BND || var.isCrossArm())
             mRecalcRemoteSVStatus = true;
 
         addSvToChrBreakendMap(var, mChrBreakendMap);
 
         // keep track of all SVs in their respective chromosomal arms
-        for (int be = SE_START; be <= SE_END; ++be)
+        for(int be = SE_START; be <= SE_END; ++be)
         {
-            if (be == SE_END && var.isSglBreakend())
+            if(be == SE_END && var.isSglBreakend())
                 continue;
 
-            if (be == SE_END && var.isLocal())
+            if(be == SE_END && var.isLocal())
                 continue;
 
             boolean useStart = isStart(be);
 
             boolean groupFound = false;
-            for (ArmGroup armGroup : mArmGroups)
+            for(ArmGroup armGroup : mArmGroups)
             {
-                if (armGroup.chromosome().equals(var.chromosome(useStart)) && armGroup.arm().equals(var.arm(useStart)))
+                if(armGroup.chromosome().equals(var.chromosome(useStart)) && armGroup.arm().equals(var.arm(useStart)))
                 {
                     armGroup.addVariant(var);
                     groupFound = true;
@@ -195,7 +195,7 @@ public class SvCluster
                 }
             }
 
-            if (!groupFound)
+            if(!groupFound)
             {
                 ArmGroup armGroup = new ArmGroup(var.chromosome(useStart), var.arm(useStart));
                 armGroup.addVariant(var);
@@ -244,9 +244,9 @@ public class SvCluster
 
         if(requireConsistency)
         {
-            for (final SvChain chain : mChains)
+            for(final SvChain chain : mChains)
             {
-                if (!chain.isConsistent(requireConsistency))
+                if(!chain.isConsistent(requireConsistency))
                     return false;
             }
         }
@@ -542,17 +542,17 @@ public class SvCluster
         mShortTIRemoteSVs.clear();
         mUnlinkedRemoteSVs.clear();
 
-        for (final SvChain chain : mChains)
+        for(final SvChain chain : mChains)
         {
             // any pair of remote SVs which don't form a short TI are fair game
-            for (final LinkedPair pair : chain.getLinkedPairs())
+            for(final LinkedPair pair : chain.getLinkedPairs())
             {
-                if (pair.first().isCrossArm() && pair.second().isCrossArm() && pair.length() <= SHORT_TI_LENGTH)
+                if(pair.first().isCrossArm() && pair.second().isCrossArm() && pair.length() <= SHORT_TI_LENGTH)
                 {
-                    if (!mShortTIRemoteSVs.contains(pair.first()))
+                    if(!mShortTIRemoteSVs.contains(pair.first()))
                         mShortTIRemoteSVs.add(pair.first());
 
-                    if (!mShortTIRemoteSVs.contains(pair.second()))
+                    if(!mShortTIRemoteSVs.contains(pair.second()))
                         mShortTIRemoteSVs.add(pair.second());
                 }
             }
@@ -589,12 +589,12 @@ public class SvCluster
         double minSvJcn = -1;
         int maxAssembledMultiple = 1; // the highest multiple of a breakend linked to other assembled breakends
 
-        for (final SvVarData var : mSVs)
+        for(final SvVarData var : mSVs)
         {
             int svJcn = var.getImpliedJcn();
             maxAssembledMultiple = max(maxAssembledMultiple, var.getMaxAssembledBreakend());
 
-            if (mJcnRange[SE_START] < 0 || svJcn < mJcnRange[SE_START])
+            if(mJcnRange[SE_START] < 0 || svJcn < mJcnRange[SE_START])
             {
                 mJcnRange[SE_START] = svJcn;
                 minSvJcn = svJcn;
@@ -634,12 +634,12 @@ public class SvCluster
             mJcnRange[SE_START] = -1;
             mJcnRange[SE_END] = 0;
 
-            for (Map.Entry<Integer, Integer> entry : jcnFrequency.entrySet())
+            for(Map.Entry<Integer, Integer> entry : jcnFrequency.entrySet())
             {
                 int ploidy = entry.getKey();
                 int svCount = entry.getValue();
 
-                if (svCount == svCalcJcnCount)
+                if(svCount == svCalcJcnCount)
                 {
                     // all SVs can settle on the same ploidy value, so take this
                     mJcnRange[SE_END] = ploidy;
@@ -647,7 +647,7 @@ public class SvCluster
                     break;
                 }
 
-                if (ploidy > 0 && (mJcnRange[SE_START] < 0 || ploidy < mJcnRange[SE_START]))
+                if(ploidy > 0 && (mJcnRange[SE_START] < 0 || ploidy < mJcnRange[SE_START]))
                      mJcnRange[SE_START] = ploidy;
 
                 mJcnRange[SE_START] = max(mJcnRange[SE_START], minSvJcn);
@@ -656,13 +656,13 @@ public class SvCluster
 
             if(mJcnRange[SE_START] < mJcnRange[SE_END] && maxAssembledMultiple == 1)
             {
-                if (tightestMaxJcn > tightestMinJcn && tightestMaxJcn - tightestMinJcn < 1)
+                if(tightestMaxJcn > tightestMinJcn && tightestMaxJcn - tightestMinJcn < 1)
                 {
                     // if all SVs cover the same value but it's not an integer, still consider them uniform
                     mJcnRange[SE_START] = 1;
                     mJcnRange[SE_END] = 1;
                 }
-                else if (countHalfToOneJcn == svCalcJcnCount)
+                else if(countHalfToOneJcn == svCalcJcnCount)
                 {
                     mJcnRange[SE_START] = 1;
                     mJcnRange[SE_END] = 1;
@@ -695,11 +695,11 @@ public class SvCluster
 
     private void resetBreakendMapIndices()
     {
-        for (Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             List<SvBreakend> breakendList = entry.getValue();
 
-            for (int i = 0; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
                 breakend.setClusterChrPosIndex(i);
@@ -712,9 +712,9 @@ public class SvCluster
         // moves assembly and unique inferred linked pairs which are used in chains to a set of 'final' linked pairs
         mLinkedPairs.clear();
 
-        for (final SvChain chain : mChains)
+        for(final SvChain chain : mChains)
         {
-            for (final LinkedPair pair : chain.getLinkedPairs())
+            for(final LinkedPair pair : chain.getLinkedPairs())
             {
                 if(mLinkedPairs.stream().anyMatch(x -> x.matches(pair)))
                     continue;

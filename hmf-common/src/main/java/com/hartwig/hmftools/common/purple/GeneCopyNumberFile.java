@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,8 +15,6 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
-import org.jetbrains.annotations.NotNull;
-
 public final class GeneCopyNumberFile
 {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
@@ -24,25 +23,22 @@ public final class GeneCopyNumberFile
 
     private GeneCopyNumberFile() {}
 
-    @NotNull
-    public static String generateFilenameForWriting(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilenameForWriting(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
-    @NotNull
-    public static String generateFilenameForReading(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
-    @NotNull
-    public static List<GeneCopyNumber> read(@NotNull final String fileName) throws IOException
+    public static List<GeneCopyNumber> read(final String fileName) throws IOException
     {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
-    public static void write(@NotNull final String fileName, @NotNull List<GeneCopyNumber> geneCopyNumbers) throws IOException
+    public static void write(final String fileName, List<GeneCopyNumber> geneCopyNumbers) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(geneCopyNumbers));
     }
@@ -58,7 +54,7 @@ public final class GeneCopyNumberFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("chromosome")
                 .add("start")
                 .add("end")
@@ -82,7 +78,7 @@ public final class GeneCopyNumberFile
 
     private static String toString(final GeneCopyNumber geneCopyNumber)
     {
-        return new StringJoiner(DELIMITER).add(geneCopyNumber.chromosome())
+        return new StringJoiner(TSV_DELIM).add(geneCopyNumber.chromosome())
                 .add(String.valueOf(geneCopyNumber.start()))
                 .add(String.valueOf(geneCopyNumber.end()))
                 .add(geneCopyNumber.geneName())
@@ -106,7 +102,7 @@ public final class GeneCopyNumberFile
     @VisibleForTesting
     static List<GeneCopyNumber> fromLines(final List<String> lines)
     {
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
         lines.remove(0);
 
         int chrIndex = fieldsIndexMap.get("chromosome");
@@ -132,7 +128,7 @@ public final class GeneCopyNumberFile
 
         for(final String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             final ImmutableGeneCopyNumber.Builder builder = ImmutableGeneCopyNumber.builder()
                     .chromosome(values[chrIndex])

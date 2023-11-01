@@ -3,21 +3,17 @@ package com.hartwig.hmftools.bamtools.slice;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.bamtools.BmConfig.BM_LOGGER;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BAM_FILE_TYPE;
+import static com.hartwig.hmftools.bamtools.common.CommonUtils.BT_LOGGER;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
-import com.beust.jcommander.internal.Sets;
-import com.google.common.collect.Maps;
-import com.hartwig.hmftools.bamtools.BamFunction;
-import com.hartwig.hmftools.bamtools.BmConfig;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 
 import htsjdk.samtools.SAMFileHeader;
@@ -29,52 +25,49 @@ import htsjdk.samtools.SamReaderFactory;
 
 public class SliceWriter
 {
-    private final BmConfig mConfig;
+    private final SliceConfig mConfig;
 
     private int mRecordWriteCount;
     private final SAMFileWriter mBamWriter;
     private final BufferedWriter mReadWriter;
     private String mOutputBam;
 
-    private final Set<String> mDuplicateReadIds;
-    private final Map<String,SAMRecord> mSupplementaryReads;
-
-    public SliceWriter(final BmConfig config)
+    public SliceWriter(final SliceConfig config)
     {
         mConfig = config;
         mRecordWriteCount = 0;
-        mBamWriter = config.runFunction(BamFunction.BAM_SLICE) ? initialiseBam() : null;
-        mReadWriter = config.runFunction(BamFunction.BAM_READS) ? initialiseReadWriter() : null;
-        mSupplementaryReads = Maps.newHashMap();
-        mDuplicateReadIds = Sets.newHashSet();
+        mBamWriter = config.WriteBam ? initialiseBam() : null;
+        mReadWriter = config.WriteReads ? initialiseReadWriter() : null;
     }
 
     private SAMFileWriter initialiseBam()
     {
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
 
-        mOutputBam = mConfig.OutputDir + mConfig.SampleId + ".slice";
-
-        if(mConfig.OutputId != null)
-            mOutputBam += "." + mConfig.OutputId;
-
-        mOutputBam += ".bam";
+        mOutputBam = mConfig.formFilename(BAM_FILE_TYPE);
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
-        fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+
+        if(mConfig.UnsortedBam)
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+        else
+            fileHeader.setSortOrder(SAMFileHeader.SortOrder.coordinate);
 
         return new SAMFileWriterFactory().makeBAMWriter(fileHeader, false, new File(mOutputBam));
     }
 
-    public void writeRecord(final SAMRecord record)
+    public synchronized void writeRead(final SAMRecord read) { doWriteRecord(read); }
+    public synchronized void writeReads(final List<SAMRecord> reads) { reads.forEach(x -> doWriteRecord(x));}
+
+    private void doWriteRecord(final SAMRecord read)
     {
         ++mRecordWriteCount;
 
         if(mBamWriter != null)
-            mBamWriter.addAlignment(record);
+            mBamWriter.addAlignment(read);
 
         if(mReadWriter != null)
-            writeReadData(record);
+            writeReadData(read);
     }
 
     private BufferedWriter initialiseReadWriter()
@@ -94,7 +87,7 @@ public class SliceWriter
         }
         catch(IOException e)
         {
-            BM_LOGGER.error(" failed to create read writer: {}", e.toString());
+            BT_LOGGER.error(" failed to create read writer: {}", e.toString());
         }
 
         return null;
@@ -110,7 +103,7 @@ public class SliceWriter
             mReadWriter.write(format("%s,%s,%d,%d,%s",
                     record.getReadName(), record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd(), record.getCigar()));
 
-            SupplementaryReadData suppData = SupplementaryReadData.from(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
+            SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(record.getStringAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
             mReadWriter.write(format(",%d,%s,%d,%d,%s,%d",
                     abs(record.getInferredInsertSize()), record.getMateReferenceName(), record.getMateAlignmentStart(), record.getMappingQuality(),
@@ -124,42 +117,21 @@ public class SliceWriter
         }
         catch(IOException e)
         {
-            BM_LOGGER.error(" failed to write read data: {}", e.toString());
+            BT_LOGGER.error(" failed to write read data: {}", e.toString());
         }
-    }
-
-    public void addSupplementary(final SAMRecord record)
-    {
-        if(mDuplicateReadIds.contains(record.getReadName()))
-        {
-            mDuplicateReadIds.remove(record.getReadName());
-            return;
-        }
-
-        mSupplementaryReads.put(record.getReadName(), record);
-    }
-
-    public void registerDuplicateRead(SAMRecord record)
-    {
-        if(mSupplementaryReads.containsKey(record.getReadName()))
-            mSupplementaryReads.remove(record.getReadName());
-        else
-            mDuplicateReadIds.add(record.getReadName());
     }
 
     public void close()
     {
-        // write any non-duplicate supplementaries
-        BM_LOGGER.debug("final duplicate readIds({}) cached supplementaries({})",
-                mDuplicateReadIds.size(), mSupplementaryReads.size());
-
-        mSupplementaryReads.values().forEach(x -> writeRecord(x));
-        mSupplementaryReads.clear();
-        mDuplicateReadIds.clear();
-
         if(mBamWriter != null)
         {
-            BM_LOGGER.info("{} records written to BAM: {}", mRecordWriteCount, mOutputBam);
+            BT_LOGGER.info("{} records written to BAM: {}", mRecordWriteCount, mOutputBam);
+
+            if(!mConfig.UnsortedBam)
+            {
+                BT_LOGGER.debug("sorting sliced BAM");
+            }
+
             mBamWriter.close();
         }
 

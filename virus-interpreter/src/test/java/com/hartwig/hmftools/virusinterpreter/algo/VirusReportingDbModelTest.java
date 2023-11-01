@@ -7,18 +7,20 @@ import static org.junit.Assert.assertTrue;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.junit.Test;
 
-public class VirusReportingDbModelTest {
-
+public class VirusReportingDbModelTest
+{
     @Test
-    public void canInterpretVirus() {
+    public void canInterpretVirus()
+    {
         Map<Integer, VirusReportingDb> speciesToInterpretationMap = Maps.newHashMap();
 
         VirusReportingDb virusWhitelist = ImmutableVirusReportingDb.builder()
-                .virusInterpretation("EBV")
+                .virusInterpretation(VirusType.EBV)
                 .integratedMinimalCoverage(null)
                 .nonIntegratedMinimalCoverage(null)
                 .virusDriverLikelihoodType(VirusLikelihoodType.HIGH)
@@ -27,7 +29,7 @@ public class VirusReportingDbModelTest {
         speciesToInterpretationMap.put(1, virusWhitelist);
         VirusReportingDbModel virusInterpretationModel = new VirusReportingDbModel(speciesToInterpretationMap);
 
-        assertEquals("EBV", virusInterpretationModel.interpretVirusSpecies(1));
+        assertEquals(VirusType.EBV, virusInterpretationModel.interpretVirusSpecies(1));
 
         assertTrue(virusInterpretationModel.hasInterpretation(1));
         assertFalse(virusInterpretationModel.hasInterpretation(3));

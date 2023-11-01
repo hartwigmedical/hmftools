@@ -2,16 +2,16 @@ package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
-import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus.MSS;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.HIGH;
 import static com.hartwig.hmftools.common.virus.VirusLikelihoodType.UNKNOWN;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.purpleSomaticVcfFile;
+import static com.hartwig.hmftools.cup.common.CupConstants.KNOWN_MUTATIONS;
+import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.AMP_CN;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_CHROMOSOME;
@@ -19,7 +19,6 @@ import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_AMP;
 import static com.hartwig.hmftools.cup.feature.SampleFeatureData.DRIVER_TYPE_DEL;
 import static com.hartwig.hmftools.cup.feature.ViralInsertionType.OTHER;
-import static com.hartwig.hmftools.cup.feature.ViralInsertionType.fromVirusName;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.DRIVERCATALOG;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVFUSION;
@@ -54,6 +53,7 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.AnnotatedVirusFile;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.cup.somatics.SomaticDataLoader;
 import com.hartwig.hmftools.cup.somatics.SomaticVariant;
@@ -104,13 +104,13 @@ public class FeatureDataLoader
     }
 
     public static boolean loadFeaturesFromFile(
-            final String sampleId, final String linxDataDir, final String purpleDataDir,
+            final String sampleId, final String linxDataDir, final String purpleDataDir, final String virusDataDir,
             final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
         // extract features from standard pipeline output files and fail if any cannot be loaded
         try
         {
-            String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(linxDataDir, sampleId);
+            String viralAnnotationFilename = AnnotatedVirusFile.generateFileName(virusDataDir, sampleId);
 
             final List<AnnotatedVirus> virusAnnotations = Lists.newArrayList();
 
@@ -131,7 +131,7 @@ public class FeatureDataLoader
             final List<DriverCatalog> drivers = Lists.newArrayList();
 
             final String linxDriverCatalogFilename = LinxDriver.generateCatalogFilename(linxDataDir, sampleId, true);
-            final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilename(linxDataDir, sampleId);
+            final String purpleDriverCatalogFilename = DriverCatalogFile.generateSomaticFilename(purpleDataDir, sampleId);
 
             if(Files.exists(Paths.get(linxDriverCatalogFilename)))
             {
@@ -274,6 +274,7 @@ public class FeatureDataLoader
                     .geneContextEnd("")
                     .geneTranscriptEnd("")
                     .junctionCopyNumber(0.0)
+                    .reportableReasons("")
                     .build();
 
             final List<LinxFusion> fusions = sampleFusionMap.get(sampleId);
@@ -300,14 +301,13 @@ public class FeatureDataLoader
         {
             final String sampleId = record.getValue(VIRUSANNOTATION.SAMPLEID);
 
-            String interpretation = record.getValue(VIRUSANNOTATION.INTERPRETATION) != null ?
-                    record.getValue(VIRUSANNOTATION.INTERPRETATION) : Strings.EMPTY;
+            String interpretation = record.getValue(VIRUSANNOTATION.INTERPRETATION);
 
             AnnotatedVirus annotatedVirus = ImmutableAnnotatedVirus.builder()
                         .taxid(record.getValue(VIRUSANNOTATION.TAXID))
                         .name(record.getValue(VIRUSANNOTATION.VIRUSNAME))
                         .qcStatus(VirusBreakendQCStatus.valueOf(record.getValue(VIRUSANNOTATION.QCSTATUS)))
-                        .interpretation(interpretation)
+                        .interpretation(interpretation == null ? null : VirusType.fromVirusName(interpretation))
                         .reported(record.getValue(VIRUSANNOTATION.REPORTED) == 1)
                         .integrations(record.getValue(VIRUSANNOTATION.INTEGRATIONS))
                         .percentageCovered(record.getValue(VIRUSANNOTATION.PERCENTAGECOVERED))
@@ -340,38 +340,17 @@ public class FeatureDataLoader
         return gene.equals(INDEL_ALB) || gene.equals(INDEL_SFTPB) || gene.equals(INDEL_SLC34A2);
     }
 
-    private static boolean isKnownIndel(final String gene, final int repeatCount, final VariantType variantType)
+    public static boolean isKnownIndel(final String gene, final int repeatCount, final VariantType variantType)
     {
         return isKnownIndelGene(gene) && variantType == INDEL && repeatCount <= INDEL_MAX_REPEAT_COUNT;
     }
 
     private static final String MUTATION_EGFR = "EGFR";
 
-    private static boolean isKnownEGFRMutation(
+    private static boolean isKnownMutation(
             final String gene, final VariantType variantType, final int position, final String ref, final String alt)
     {
-        if(!gene.equals(MUTATION_EGFR))
-            return false;
-
-        // GRCh37 coords hard-coded for now
-
-        // p.Thr790Met
-        if(variantType == SNP && ref.equals("C") && alt.equals("T") && position == 55249071)
-            return true;
-
-        // p.Leu858Ar
-        if(variantType == SNP && ref.equals("T") && alt.equals("G") && position == 55259515)
-            return true;
-
-        // inframe DEL in exon 19 (canonical transcript)
-        if(variantType == INDEL && positionWithin(position, 55242415, 55242513))
-            return true;
-
-        // exon 20
-        if(variantType == INDEL && positionWithin(position, 55248986, 55249171))
-            return true;
-
-        return false;
+        return KNOWN_MUTATIONS.stream().anyMatch(x -> x.matches(gene, variantType, ref, alt, position));
     }
 
     private static Map<String,List<String>> getSpecificMutations(
@@ -397,7 +376,7 @@ public class FeatureDataLoader
             final String ref = record.getValue(SOMATICVARIANT.REF);
             final String alt = record.getValue(SOMATICVARIANT.ALT);
 
-            if((checkIndels && isKnownIndel(gene, repeatCount, type)) || isKnownEGFRMutation(gene, type, position, ref, alt))
+            if((checkIndels && isKnownIndel(gene, repeatCount, type)) || isKnownMutation(gene, type, position, ref, alt))
             {
                 List<String> genes = sampleMutationMap.get(sampleId);
 
@@ -413,7 +392,7 @@ public class FeatureDataLoader
 
     private static List<String> loadSpecificMutations(final String vcfFile, boolean checkIndels)
     {
-        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariants(vcfFile, Lists.newArrayList());
+        final List<SomaticVariant> variants = SomaticDataLoader.loadSomaticVariantsFromVcf(vcfFile, Lists.newArrayList());
 
         final List<String> mutations = Lists.newArrayList();
 
@@ -423,7 +402,7 @@ public class FeatureDataLoader
                 continue;
 
             if((checkIndels && isKnownIndel(variant.Gene, variant.RepeatCount, variant.Type))
-            || isKnownEGFRMutation(variant.Gene, variant.Type, variant.Position, variant.Ref, variant.Alt))
+            || isKnownMutation(variant.Gene, variant.Type, variant.Position, variant.Ref, variant.Alt))
             {
                 mutations.add(variant.Gene);
             }
@@ -491,7 +470,9 @@ public class FeatureDataLoader
                 if(DriverType.isGermline(driver.driver()))
                     continue;
 
-                SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), DRIVER, driver.driverLikelihood());
+                FeatureType featureType = driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP ? AMP : DRIVER;
+
+                SampleFeatureData feature = new SampleFeatureData(sampleId, driver.gene(), featureType, driver.driverLikelihood());
 
                 if(driver.driver() == DriverType.AMP || driver.driver() == DriverType.PARTIAL_AMP)
                 {

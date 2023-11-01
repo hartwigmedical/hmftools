@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.common.drivercatalog;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.checkConvertType;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.List;
@@ -22,30 +24,46 @@ public final class DriverCatalogFile
 {
     static final DecimalFormat FORMAT = new DecimalFormat("0.0000", new DecimalFormatSymbols(Locale.ENGLISH));
 
-    private static final String DELIMITER = "\t";
-    private static final String SOMATIC_DRIVER_CATALOG_EXTENSION = ".driver.catalog.somatic.tsv";
-    private static final String GERMLINE_DRIVER_CATALOG_EXTENSION = ".driver.catalog.germline.tsv";
+    // backwards compatibility for v5.32 and earlier
+    private static final String OLD_SOMATIC_EXTENSION = ".driver.catalog.somatic.tsv";
+    private static final String OLD_GERMLINE_EXTENSION = ".driver.catalog.germline.tsv";
 
-    @NotNull
-    public static String generateSomaticFilename(@NotNull final String basePath, @NotNull final String sample)
+    private static final String SOMATIC_EXTENSION = ".purple.driver.catalog.somatic.tsv";
+    private static final String GERMLINE_EXTENSION = ".purple.driver.catalog.germline.tsv";
+
+    public static String generateFilename(final String basePath, final String sample, boolean isSomatic)
     {
-        return basePath + File.separator + sample + SOMATIC_DRIVER_CATALOG_EXTENSION;
+        // backwards compatible for reading
+        String filename = basePath + File.separator + sample + (isSomatic ? SOMATIC_EXTENSION : GERMLINE_EXTENSION);
+
+        if(Files.exists(Paths.get(filename)))
+            return filename;
+
+        return basePath + File.separator + sample + (isSomatic ? OLD_SOMATIC_EXTENSION : OLD_GERMLINE_EXTENSION);
     }
 
-    @NotNull
-    public static String generateGermlineFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilenameForWriting(final String basePath, final String sample, boolean isSomatic)
     {
-        return basePath + File.separator + sample + GERMLINE_DRIVER_CATALOG_EXTENSION;
+        return basePath + File.separator + sample + (isSomatic ? SOMATIC_EXTENSION : GERMLINE_EXTENSION);
     }
 
-    public static void write(@NotNull final String filename, @NotNull final List<DriverCatalog> catalog) throws IOException
+    public static String generateSomaticFilename(final String basePath, final String sample)
+    {
+        return generateFilename(basePath, sample, true);
+    }
+
+    public static String generateGermlineFilename(final String basePath, final String sample)
+    {
+        return generateFilename(basePath, sample, false);
+    }
+
+    public static void write(final String filename, final List<DriverCatalog> catalog) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(catalog));
     }
 
     @VisibleForTesting
-    @NotNull
-    static List<String> toLines(@NotNull final List<DriverCatalog> catalog)
+    static List<String> toLines(final List<DriverCatalog> catalog)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -56,7 +74,8 @@ public final class DriverCatalogFile
     @NotNull
     private static String header()
     {
-        return new StringJoiner(DELIMITER).add("chromosome")
+        return new StringJoiner(TSV_DELIM)
+                .add("chromosome")
                 .add("chromosomeBand")
                 .add("gene")
                 .add("transcript")
@@ -76,10 +95,10 @@ public final class DriverCatalogFile
                 .toString();
     }
 
-    @NotNull
-    private static String toString(@NotNull final DriverCatalog driverCatalog)
+    private static String toString(final DriverCatalog driverCatalog)
     {
-        return new StringJoiner(DELIMITER).add(driverCatalog.chromosome())
+        return new StringJoiner(TSV_DELIM)
+                .add(driverCatalog.chromosome())
                 .add(driverCatalog.chromosomeBand())
                 .add(driverCatalog.gene())
                 .add(driverCatalog.transcript())
@@ -99,25 +118,23 @@ public final class DriverCatalogFile
                 .toString();
     }
 
-    @NotNull
-    public static List<DriverCatalog> read(@NotNull final String fileName) throws IOException
+    public static List<DriverCatalog> read(final String fileName) throws IOException
     {
         return fromLines(Files.readAllLines(new File(fileName).toPath()));
     }
 
     @VisibleForTesting
-    @NotNull
-    static List<DriverCatalog> fromLines(@NotNull final List<String> lines)
+    static List<DriverCatalog> fromLines(final List<String> lines)
     {
         List<DriverCatalog> drivers = Lists.newArrayList();
 
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             drivers.add(ImmutableDriverCatalog.builder()
                     .chromosome(values[fieldsIndexMap.get("chromosome")])

@@ -9,13 +9,15 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.fusionInfo;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.INFRAME_FUSION;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeType.OUT_OF_FRAME_FUSION;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
@@ -70,7 +72,9 @@ public class SvNeoEpitope extends NeoEpitope
         return fusionInfo(mSvFusion.Chromosomes, mSvFusion.Positions, mSvFusion.Orientations);
     }
 
-    public double copyNumber() { return mSvFusion.JunctionCopyNumber; }
+    public double variantCopyNumber() { return mSvFusion.JunctionCopyNumber; }
+    public double copyNumber() { return mSvFusion.CopyNumber; }
+    public double subclonalLikelihood() { return 0; }
 
     public boolean phaseMatched()
     {
@@ -118,6 +122,10 @@ public class SvNeoEpitope extends NeoEpitope
                 Phases[FS_DOWN] = exon.PhaseEnd;
                 ExonRank[FS_DOWN] = exon.Rank + 1;
             }
+        }
+        else if(RegionType[FS_DOWN] == UPSTREAM)
+        {
+            setDownstreamPhaseFromUtr();
         }
     }
 
@@ -218,6 +226,12 @@ public class SvNeoEpitope extends NeoEpitope
                     downRequiredBases, canStartInExon, true, false);
         }
 
+        if(cbExcerpt.Bases.isEmpty() || cbExcerpt.Positions[SE_START] == 0 || cbExcerpt.Positions[SE_END] == 0)
+        {
+            Valid = false;
+            return;
+        }
+
         ExtPositions[FS_DOWN][SE_START] = cbExcerpt.Positions[SE_START];
         ExtPositions[FS_DOWN][SE_END] = cbExcerpt.Positions[SE_END];
         ExtCodingBases[FS_DOWN] = cbExcerpt.Bases;
@@ -260,12 +274,70 @@ public class SvNeoEpitope extends NeoEpitope
         }
     }
 
+    private void setDownstreamPhaseFromUtr()
+    {
+        int breakpointPosition = position(FS_DOWN);
+        TranscriptData transData = TransData[FS_DOWN];
+
+        if(transData.posStrand())
+        {
+            for(ExonData exon : transData.exons())
+            {
+                if(exon.Rank == 1)
+                    continue;
+
+                if(exon.Start <= breakpointPosition)
+                    continue;
+
+                Phases[FS_DOWN] = exon.PhaseStart;
+                ExonRank[FS_DOWN] = exon.Rank;
+                break;
+            }
+        }
+        else
+        {
+            for(int i = transData.exons().size() - 1; i >= 0; --i)
+            {
+                ExonData exon = transData.exons().get(i);
+
+                if(exon.End >= breakpointPosition)
+                    continue;
+
+                Phases[FS_DOWN] = exon.PhaseEnd;
+                ExonRank[FS_DOWN] = exon.Rank;
+                break;
+            }
+
+        }
+    }
+
     public String toString()
     {
-        return String.format("fusion up(%s: %s:%d:%d) down(%s: %s:%d:%d)",
-                mSvFusion.GeneNames[FS_UP], mSvFusion.Chromosomes[FS_UP],
+        return String.format("fusion up(%s:%s %s:%d:%d) down(%s:%s %s:%d:%d) phased(%s) trans up(%s:%s) down(%s:%s)",
+                mSvFusion.GeneNames[FS_UP], TransData[FS_UP].TransName, mSvFusion.Chromosomes[FS_UP],
                 mSvFusion.Positions[FS_UP], mSvFusion.Orientations[FS_UP],
-                mSvFusion.GeneNames[FS_DOWN], mSvFusion.Chromosomes[FS_DOWN],
-                mSvFusion.Positions[FS_DOWN], mSvFusion.Orientations[FS_DOWN]);
+                mSvFusion.GeneNames[FS_DOWN], TransData[FS_DOWN].TransName, mSvFusion.Chromosomes[FS_DOWN],
+                mSvFusion.Positions[FS_DOWN], mSvFusion.Orientations[FS_DOWN], phaseMatched(),
+                CodingType[FS_UP], RegionType[FS_UP], CodingType[FS_DOWN], RegionType[FS_DOWN]);
+    }
+
+    public static boolean svIsNonDisruptiveInCodingTranscript(final int[] positions, final TranscriptData transcriptData)
+    {
+        if(transcriptData.nonCoding())
+            return false;
+
+        for(int i = 0; i < transcriptData.exons().size() - 1; ++i)
+        {
+            ExonData exon = transcriptData.exons().get(i);
+            ExonData nextExon = transcriptData.exons().get(i + 1);
+
+            if(positionsWithin(positions[SE_START], positions[SE_END], exon.End, nextExon.Start)
+            && positionsWithin(exon.End, nextExon.Start, transcriptData.CodingStart, transcriptData.CodingEnd))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -8,7 +8,9 @@ public class SageConstants
     public static final int DEFAULT_MAX_READ_DEPTH = 1000;
     public static final int DEFAULT_MAX_READ_DEPTH_PANEL = 100_000;
     public static final int DEFAULT_SLICE_SIZE = 100_000;
+    public static final int DEFAULT_MAX_PARTITION_SLICES = 10;
 
+    public static final int DEFAULT_READ_LENGTH = 151;
     public static final int DEFAULT_READ_CONTEXT_FLANK_SIZE = 10;
     public static final int MIN_CORE_DISTANCE = 2;
 
@@ -21,6 +23,7 @@ public class SageConstants
     public static final int DEFAULT_BQR_SAMPLE_SIZE = 2_000_000;
     public static final int DEFAULT_BQR_MIN_MAP_QUAL = 10;
 
+    // read evidence
     public static final int MATCHING_BASE_QUALITY = 20;
     public static final int CORE_LOW_QUAL_MISMATCH_BASE_LENGTH = 20;
     public static final double SC_READ_EVENTS_FACTOR = 12;
@@ -31,7 +34,10 @@ public class SageConstants
     public static final int SC_INSERT_MIN_SC_LENGTH = 12;
     public static final int SC_INSERT_MIN_LENGTH = 5;
     public static final int MIN_INSERT_ALIGNMENT_OVERLAP = 5;
-    public static final int DEFAULT_READ_LENGTH = 151;
+
+    public static final int MIN_SOFT_CLIP_MIN_BASE_QUAL = 25;
+    public static final int MAX_SOFT_CLIP_LOW_QUAL_COUNT = 5;
+    public static final double MIN_SOFT_CLIP_HIGH_QUAL_PERC = 0.75;
 
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
     public static final int LONG_GERMLINE_INSERT_LENGTH = 10;
@@ -50,23 +56,28 @@ public class SageConstants
     public static final int HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL = 8;
     public static final int HOTSPOT_MIN_RAW_ALT_BASE_QUAL = 150;
 
-    public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 22;
+    public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
+    public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
 
-    public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(70, 0.005,
+    public static final int INDEL_DEDUP_MAX_DIST_THRESHOLD = 40;
+
+    public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
+            "hotspot", 70, 0.005,
             0, 0, 0, 0,
             0.1, 0.5);
 
-    public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(100, 0.02  ,
+    public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
+            "panel", 100, 0.02  ,
             0, 0, 0, 0,
             0.04, 0.04);
 
-    public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(160, 0.025,
+    public static final SoftFilterConfig DEFAULT_HIGH_CONFIDENCE_FILTER = new SoftFilterConfig(
+            "high_confidence", 160, 0.025,
             10, 15, 6, 9,
             0.04, 0.04);
 
-    public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(240, 0.025,
+    public static final SoftFilterConfig DEFAULT_LOW_CONFIDENCE_FILTER = new SoftFilterConfig(
+            "low_confidence", 240, 0.025,
             10, 15, 6, 9,
             0.04, 0.04);
-
-    public static final String ITEM_DELIM = ";";
 }

@@ -76,7 +76,7 @@ There are 6 tracks showing from innermost to outermost:
 5. Impacted genes (if any)
 6. Affected chromosomes
 
-The scaling of both distances and copy numbers in the figure has been modified to make the figure readable. Specifically, the distances between each feature in the chart (either breakend or gene exon start or end) are modified to a log based scale, so that the entire genomic rearrangement spanning millions of bases and multiple chromosomes can be viewed, but that local topology of regions with high densities of breakpoints can be introspected. JCN is set with a linear scale but is scaled down if the maximum cluster JCN exceeds 6 or if the total density of events exceeds a certain maximum to ensure that even the most complex clusters can be introspected. Additionally, if the total number of breakends displayed exceeds XX then the junctions become increasingly transparent such that other features on the plot don’t become obscured.
+The scaling of both distances and copy numbers in the figure has been modified to make the figure readable. Specifically, the distances between each feature in the chart (either breakend or gene exon start or end) are modified to a log based scale, so that the entire genomic rearrangement spanning millions of bases and multiple chromosomes can be viewed, but that local topology of regions with high densities of breakpoints can be introspected. JCN is set with a linear scale but is scaled down if the maximum cluster JCN exceeds 6 or if the total density of events exceeds a certain maximum to ensure that even the most complex clusters can be introspected. Additionally, if the total number of breakends displayed exceeds 9 then the junctions become increasingly transparent such that other features on the plot don’t become obscured.
 
 Another key feature of the CIRCOS plot is the ability to trace the derivative chromosome(s). Each segment in the 4th track represents a segment of the derivative chromosome and is linked on both ends either to a centromeric or telomeric end (marked with an open or closed square respective) or a breakend (marked with a track or triangle in the case of foldbacks). Each derivative chromosome can be traced continuously from one telomeric / centromeric end to another (or to a single breakend if one is reached) by following a continuous series of segments and breakends. To make this easier to follow, each time a new segment is connected on a chromosome the segment is offset outwards slightly. Hence the derivative chromosomes can be traced from the inside to the outside of the 4th track of the diagram. A cluster may contain 1 or more derivative chromosomes. In cluster mode each derivative chromosome will be shown in a different colour for ease of viewing (with a maximum of 10 colours after which all derivative chromosomes are shown in black). In chromosome mode, derivative chromosomes will be shown in the same colours, but each cluster is shown in a different colour. Red and green are reserved for simple deletions and tandem duplications respectively. Since there may be many of these on a single chromosome, telomeric and centromeric connectors are not shown for these simple variant types. Light blue is also reserved for LINE clusters which can also be frequent in samples with highly deregulated LINE machinery. 
 
@@ -154,15 +154,16 @@ vis_file_dir | Path to Linx output directory, see below for expected files
 plot_out | Plot output directory
 data_out | Data output directory
 circos |Path to circos binary
-ensembl_data_dir | Ensembl data cache directory as use by Linx
+ensembl_data_dir | Ensembl data cache directory as used by Linx
 ref_genome_version | Defaults to version 37, valid values are 37 or 38
 
 ## Other Arguments
 
 Argument |  Description 
 ---|---
-clusterId | Only generate image for specified comma-separated clusters
+clusterId | Only generate image for specified comma-separated cluster IDs
 chromosome | Only generate images for specified comma-separated chromosomes, or 'All' to show full genome
+chainId | Only generate image for specified comma-separated chain IDs (requires cluster IDs to also be specified)
 include_line_elements | Include line elements in chromosome visualisations (excluded by default) 
 gene | Add canonical transcriptions of supplied genes separated by ',' to image. Requires config 'ensembl_data_dir' to be set as well.
 plot_reportable | Plot any cluster with reported fusion, disruption, or driver

@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
+import static java.lang.String.format;
+
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -17,17 +20,21 @@ public class KataegisQueue
 
     private final Consumer<SomaticVariant> mConsumer;
     private final Deque<SomaticVariant> mBuffer;
+
     private final String mIdPrefix;
+    private final AtomicInteger mKataegisId;
+    private String mCurrentIdentifier;
 
-    private int mIdentifier;
-
-    public KataegisQueue(final String idPrefix, final Predicate<SomaticVariant> candidate, final Consumer<SomaticVariant> consumer)
+    public KataegisQueue(
+            final String idPrefix, final AtomicInteger kataegisId, final Predicate<SomaticVariant> candidate,
+            final Consumer<SomaticVariant> consumer)
     {
         mCandidate = candidate;
         mConsumer = consumer;
         mIdPrefix = idPrefix;
         mBuffer = new ArrayDeque<>();
-        mIdentifier = 0;
+        mKataegisId = kataegisId;
+        setIdentifier();
     }
 
     public void processVariant(final SomaticVariant context)
@@ -68,9 +75,11 @@ public class KataegisQueue
             {
                 final KataegisWindow window = longestViableWindow(first);
                 final boolean isWindowViable = window.isViable(MIN_COUNT, MAX_AVG_DISTANCE);
+
+
                 if(isWindowViable)
                 {
-                    mIdentifier++;
+                    setIdentifier();
                 }
 
                 while(!mBuffer.isEmpty())
@@ -83,7 +92,7 @@ public class KataegisQueue
 
                     if(isWindowViable && mCandidate.test(peek))
                     {
-                        peek.context().getCommonInfo().putAttribute(KATAEGIS_FLAG, mIdPrefix + "_" + mIdentifier, true);
+                        peek.context().getCommonInfo().putAttribute(KATAEGIS_FLAG, mCurrentIdentifier, true);
                         // PPL_LOGGER.debug("var({}) added kataegis flag: {}", peek, peek.context().getAttribute(KATAEGIS_FLAG));
                     }
 
@@ -119,5 +128,10 @@ public class KataegisQueue
         }
 
         return result;
+    }
+
+    private void setIdentifier()
+    {
+        mCurrentIdentifier = format("%s_%d", mIdPrefix, mKataegisId.incrementAndGet());
     }
 }

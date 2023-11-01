@@ -1,21 +1,23 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber.DELIMITER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getBoolValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getDoubleValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getValue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.linx.types.ResolvedType;
-
-import org.jetbrains.annotations.NotNull;
 
 public class VisSvData
 {
@@ -101,26 +103,24 @@ public class VisSvData
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_sv_data.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_sv_data.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
     }
 
-    @NotNull
     public static List<VisSvData> read(final String filePath) throws IOException
     {
         return fromLines(Files. readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisSvData> svDataList) throws IOException
+    public static void write(final String filename, List<VisSvData> svDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(svDataList));
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final List<VisSvData> cnDataList)
+    private static List<String> toLines(final List<VisSvData> cnDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -128,16 +128,44 @@ public class VisSvData
         return lines;
     }
 
-    @NotNull
-    static List<VisSvData> fromLines(@NotNull List<String> lines)
+    private static List<VisSvData> fromLines(final List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisSvData::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        lines.remove(0);
+
+        List<VisSvData> data = Lists.newArrayList();
+
+        for(String line : lines)
+        {
+            String[] values = line.split(TSV_DELIM);
+
+            data.add(new VisSvData(
+                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getIntValue(fieldsIndexMap, "ClusterId", 0, values),
+                    getIntValue(fieldsIndexMap, "ChainId", 0, values),
+                    getIntValue(fieldsIndexMap, "SvId", 0, values),
+                    StructuralVariantType.valueOf(values[fieldsIndexMap.get("Type")]),
+                    ResolvedType.valueOf(values[fieldsIndexMap.get("ResolvedType")]),
+                    getBoolValue(fieldsIndexMap, "IsSynthetic", false, values),
+                    getValue(fieldsIndexMap, "ChrStart", "", values),
+                    getValue(fieldsIndexMap, "ChrEnd", "", values),
+                    getIntValue(fieldsIndexMap, "PosStart", 0, values),
+                    getIntValue(fieldsIndexMap, "PosEnd", 0, values),
+                    Byte.parseByte(values[fieldsIndexMap.get("OrientStart")]),
+                    Byte.parseByte(values[fieldsIndexMap.get("OrientEnd")]),
+                    getValue(fieldsIndexMap, "InfoStart", "", values),
+                    getValue(fieldsIndexMap, "InfoEnd", "", values),
+                    getDoubleValue(fieldsIndexMap, "JunctionCopyNumber", 0, values),
+                    getBoolValue(fieldsIndexMap, "InDoubleMinute", false, values)));
+        }
+
+        return data;
     }
 
-    @NotNull
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("SampleId")
                 .add("ClusterId")
                 .add("ChainId")
@@ -158,10 +186,9 @@ public class VisSvData
                 .toString();
     }
 
-    @NotNull
-    public static String toString(@NotNull final VisSvData svData)
+    public static String toString(final VisSvData svData)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(svData.SampleId))
                 .add(String.valueOf(svData.ClusterId))
                 .add(String.valueOf(svData.ChainId))
@@ -181,32 +208,4 @@ public class VisSvData
                 .add(String.valueOf(svData.InDoubleMinute))
                 .toString();
     }
-
-    @NotNull
-    private static VisSvData fromString(@NotNull final String tiData)
-    {
-        String[] values = tiData.split(DELIMITER);
-
-        int index = 0;
-
-        return new VisSvData(
-                values[index++],
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                StructuralVariantType.valueOf(values[index++]),
-                com.hartwig.hmftools.linx.types.ResolvedType.valueOf(values[index++]),
-                Boolean.parseBoolean(values[index++]),
-                values[index++],
-                values[index++],
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                Byte.parseByte(values[index++]),
-                Byte.parseByte(values[index++]),
-                values[index++],
-                values[index++],
-                Double.parseDouble(values[index++]),
-                index < values.length ? Boolean.parseBoolean(values[index++]) : false);
-    }
-
 }

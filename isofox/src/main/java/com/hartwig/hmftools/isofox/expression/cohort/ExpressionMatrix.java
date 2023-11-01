@@ -2,24 +2,24 @@ package com.hartwig.hmftools.isofox.expression.cohort;
 
 import static java.lang.Math.log;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -83,9 +83,10 @@ public class ExpressionMatrix
         try
         {
             final List<String> lines = Files.readAllLines(filename);
+            String fileDelim = inferFileDelimiter(filename.toString());
 
             if(fieldsMap.isEmpty())
-                fieldsMap.putAll(createFieldsIndexMap(lines.get(0), DELIMITER));
+                fieldsMap.putAll(createFieldsIndexMap(lines.get(0), fileDelim));
 
             lines.remove(0);
 
@@ -95,7 +96,7 @@ public class ExpressionMatrix
             int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
 
             int transNameIndex = isTranscriptLevel ? fieldsMap.get(FLD_TRANS_NAME) : -1;
-            int tpmIndex = fieldsMap.get(FLD_TPM);
+            int tpmIndex = fieldsMap.get(FLD_ADJ_TPM);
 
             int itemIndex = 0;
             List<String> itemCache = isTranscriptLevel ? mTranscriptNames : mGeneIds;
@@ -111,7 +112,7 @@ public class ExpressionMatrix
                 // cull rows based on any restrictions in place
                 if(!mConfig.RestrictedGeneIds.isEmpty())
                 {
-                    long itemCount = lines.stream().map(x -> x.split(DELIMITER, -1)[geneIdIndex])
+                    long itemCount = lines.stream().map(x -> x.split(fileDelim, -1)[geneIdIndex])
                             .filter(x -> mConfig.RestrictedGeneIds.contains(x))
                             .count();
 
@@ -129,7 +130,7 @@ public class ExpressionMatrix
 
             for(final String data : lines)
             {
-                final String[] items = data.split(DELIMITER);
+                final String[] items = data.split(fileDelim, -1);
 
                 final String geneId = items[geneIdIndex];
                 final String transName = transNameIndex >= 0 ? items[transNameIndex] : "";

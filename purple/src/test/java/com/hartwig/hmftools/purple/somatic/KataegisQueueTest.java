@@ -1,12 +1,13 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
 import static com.hartwig.hmftools.purple.TestUtils.SAMPLE_ID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Lists;
@@ -31,7 +32,7 @@ public class KataegisQueueTest
 
         List<SomaticVariant> result = kataegis(input);
         assertEquals(KataegisQueue.MIN_COUNT, result.size());
-        assertEquals("TST_1", result.get(0).context().getAttribute(KATAEGIS_FLAG));
+        assertEquals("TST_2", result.get(0).context().getAttribute(KATAEGIS_FLAG));
     }
 
     @Test
@@ -60,7 +61,7 @@ public class KataegisQueueTest
 
         List<SomaticVariant> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals("TST_1", result.get(0).context().getAttribute(KATAEGIS_FLAG));
+        assertEquals("TST_2", result.get(0).context().getAttribute(KATAEGIS_FLAG));
     }
 
     @Test
@@ -75,7 +76,7 @@ public class KataegisQueueTest
 
         List<SomaticVariant> result = kataegis(Lists.newArrayList(context1, context2, context3, context4, context5, context6));
         assertEquals(6, result.size());
-        assertEquals("TST_1", result.get(0).context().getAttribute(KATAEGIS_FLAG));
+        assertEquals("TST_2", result.get(0).context().getAttribute(KATAEGIS_FLAG));
     }
 
     @Test
@@ -94,7 +95,7 @@ public class KataegisQueueTest
 
         final List<SomaticVariant> result = kataegis(input);
         assertEquals(KataegisQueue.MIN_COUNT + 2, result.size());
-        assertEquals("TST_1", result.get(i + 1).context().getAttribute(KATAEGIS_FLAG));
+        assertEquals("TST_2", result.get(i + 1).context().getAttribute(KATAEGIS_FLAG));
         assertFalse(result.get(i + 2).context().hasAttribute(KATAEGIS_FLAG));
     }
 
@@ -116,7 +117,7 @@ public class KataegisQueueTest
     {
         final Predicate<SomaticVariant> kataegisPredicate = variant -> variant.context().getAlternateAllele(0).getBaseString().equals("T");
         final List<SomaticVariant> result = Lists.newArrayList();
-        KataegisQueue inner = new KataegisQueue("TST", kataegisPredicate, result::add);
+        KataegisQueue inner = new KataegisQueue("TST", new AtomicInteger(), kataegisPredicate, result::add);
         variants.forEach(inner::processVariant);
         inner.flush();
         return result;

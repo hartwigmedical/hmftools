@@ -82,11 +82,7 @@ public final class PrimaryTumorDataWriter {
                                 tumorLocationSearchTerm);
                     }
                 } else {
-                    if (!allowExceptionsForPatient(patient.patientIdentifier())) {
-                        LOGGER.warn("Could not find input tumor location for patient {}", patient.patientIdentifier());
-                    } else {
-                        patientTumorCurationStatusMap.put(patient.patientIdentifier(), PatientTumorCurationStatus.MISSING_TUMOR_CURATION);
-                    }
+                    patientTumorCurationStatusMap.put(patient.patientIdentifier(), PatientTumorCurationStatus.MISSING_TUMOR_CURATION);
                 }
             } else {
                 if (allowExceptionsForPatient(patientId)) {

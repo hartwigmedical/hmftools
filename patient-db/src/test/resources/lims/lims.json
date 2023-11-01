@@ -1,6 +1,7 @@
 {
   "samples": {
     "FR1234": {
+      "data_source": "LAMA",
       "tumor_perc": "NA",
       "submission": "HMFregCPCT",
       "sample_name": "SAMP01010003R",
@@ -26,6 +27,7 @@
       "hospital_pa_sample_id": ""
     },
     "FR1235": {
+      "data_source": "LAMA",
       "tumor_perc": 30,
       "submission": "HMFregCPCT",
       "sample_name": "SAMP01010003T",
@@ -51,6 +53,7 @@
       "hospital_pa_sample_id": ""
     },
     "FR1236": {
+      "data_source": "LAMA",
       "tumor_perc": 30,
       "submission": "HMFregCPCT",
       "sample_name": "SAMP01010003T",
@@ -76,10 +79,12 @@
       "hospital_pa_sample_id": ""
     },
     "FR1237": {
+      "data_source": "LAMA",
       "analysis_type": "do not analyze me",
       "label": "Nothing"
     },
     "FR1238": {
+      "data_source": "LAMA",
       "analysis_type": "Somatic_T",
       "label": "Research"
     }

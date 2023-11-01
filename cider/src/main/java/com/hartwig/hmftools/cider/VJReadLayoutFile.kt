@@ -2,7 +2,7 @@ package com.hartwig.hmftools.cider
 
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
-import com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter
 import htsjdk.samtools.SAMUtils
 import java.io.BufferedWriter
 import java.io.File
@@ -10,6 +10,16 @@ import java.io.File
 object VJReadLayoutFile
 {
     private const val FILE_EXTENSION = ".cider.layout.gz"
+
+    const val ANSI_RESET = "\u001B[0m"
+    const val ANSI_BLACK = "\u001B[30m"
+    const val ANSI_RED = "\u001B[31m"
+    const val ANSI_GREEN = "\u001B[32m"
+    const val ANSI_YELLOW = "\u001B[33m"
+    const val ANSI_BLUE = "\u001B[34m"
+    const val ANSI_PURPLE = "\u001B[35m"
+    const val ANSI_CYAN = "\u001B[36m"
+    const val ANSI_WHITE = "\u001B[37m"
 
     private fun generateFilename(basePath: String, sample: String): String
     {
@@ -57,7 +67,7 @@ object VJReadLayoutFile
 
         val anchorRange = vjReadLayoutAdaptor.getExtrapolatedAnchorRange(geneType.vj, layout)
 
-        var sequence = layout.consensusSequence()
+        var sequence = layout.consensusSequenceString()
         var support = layout.highQualSupportString()
 
         // make sure aligned to codon
@@ -65,7 +75,7 @@ object VJReadLayoutFile
         val aa = insertDashes(Codons.aminoAcidFromBases(codonAlignedSeq), IntRange(anchorRange.first / 3, (anchorRange.last + 1) / 3 - 1))
 
         // insert - into the sequence and support
-        sequence = insertDashes(sequence, anchorRange)
+        sequence = coloriseSequence(insertDashes(sequence, anchorRange))
         support = insertDashes(support, anchorRange)
 
         writer.write("${layout.id} type: ${geneType}, read count: ${layout.reads.size}, split(5) read count: ${numSplitReads5Bases}, ")
@@ -78,10 +88,10 @@ object VJReadLayoutFile
         {
             val read: VJReadCandidate = vjReadLayoutAdaptor.toReadCandidate(r)
             val readPadding = Math.max(layout.alignedPosition - r.alignedPosition, 0)
-            val paddedSeq = " ".repeat(readPadding) + r.sequence
+            val paddedSeq = " ".repeat(readPadding) + r.sequenceString
             val paddedQual = " ".repeat(readPadding) + SAMUtils.phredToFastq(r.baseQualities)
             writer.write("    read: ${read.read}\n")
-            writer.write("    ${insertDashes(paddedSeq, anchorRange)}\n")
+            writer.write("    ${coloriseSequence(insertDashes(paddedSeq, anchorRange))}\n")
             writer.write("    ${insertDashes(paddedQual, anchorRange)}\n")
         }
     }
@@ -89,5 +99,28 @@ object VJReadLayoutFile
     private fun insertDashes(str: String, anchorRange: IntRange): String
     {
         return CiderUtils.insertDashes(str, anchorRange.first, anchorRange.last + 1)
+    }
+
+    private fun coloriseSequence(str: String): String
+    {
+        // use IGV colours
+        // adenine in green, cytosine in blue, guanine in yellow, and thymine in red (A, C, G, T).
+        val stringBuilder = StringBuilder()
+
+        for (b in str)
+        {
+            when (b)
+            {
+                'A' -> stringBuilder.append(ANSI_GREEN)
+                'C' -> stringBuilder.append(ANSI_PURPLE)
+                'G' -> stringBuilder.append(ANSI_YELLOW)
+                'T' -> stringBuilder.append(ANSI_RED)
+            }
+
+            stringBuilder.append(b)
+        }
+
+        stringBuilder.append(ANSI_RESET)
+        return stringBuilder.toString()
     }
 }

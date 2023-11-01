@@ -38,16 +38,16 @@ public abstract class LilacSummaryData
                 .build();
     }
 
-    public static LilacSummaryData load(final String lilacQcCsv, final String lilacResultCsv) throws IOException
+    public static LilacSummaryData load(final String lilacQcFile, final String lilacResultFile) throws IOException
     {
-        LOGGER.info("Loading LILAC data from {}", new File(lilacQcCsv).getParent());
+        LOGGER.info("Loading LILAC data from {}", new File(lilacQcFile).getParent());
 
-        LilacQcData qcData = LilacQcData.read(lilacQcCsv);
+        LilacQcData qcData = LilacQcData.read(lilacQcFile);
 
-        LOGGER.info("Read QC status '{}' from {}", qcData.status(), lilacQcCsv);
+        LOGGER.info(" Read QC status '{}' from {}", qcData.status(), lilacQcFile);
 
-        List<LilacAllele> alleles = LilacAllele.read(lilacResultCsv);
-        LOGGER.info("Read {} LILAC alleles from {}", alleles.size(), lilacResultCsv);
+        List<LilacAllele> alleles = LilacAllele.read(lilacResultFile);
+        LOGGER.info(" Read {} LILAC alleles from {}", alleles.size(), lilacResultFile);
 
         return ImmutableLilacSummaryData.builder()
                 .qc(qcData.status())

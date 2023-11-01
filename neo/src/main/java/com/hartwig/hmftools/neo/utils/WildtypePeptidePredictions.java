@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.neo.utils;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.io.BufferedWriter;
@@ -21,13 +22,8 @@ import java.util.Map;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // routine for reading in the full ref-genome wildtype McfFlurry binding predictions (ran by Francisco)
@@ -43,16 +39,16 @@ public class WildtypePeptidePredictions
     private static final String PREDICTIONS_DIR = "predictions_dir";
     private static final String OUTPUT_FILE = "output_file";
 
-    public WildtypePeptidePredictions(final CommandLine cmd)
+    public WildtypePeptidePredictions(final ConfigBuilder configBuilder)
     {
-        mEnsemblDataCache = new EnsemblDataCache(cmd, RefGenomeVersion.V37);
+        mEnsemblDataCache = new EnsemblDataCache(configBuilder);
         mEnsemblDataCache.setRequiredData(false, false, false, true);
 
         mEnsemblDataCache.load(false);
 
-        mPredictionsDir = cmd.getOptionValue(PREDICTIONS_DIR);
-        mOutputFile = cmd.getOptionValue(OUTPUT_FILE);
-        mWriter = initialiseWriter(parseOutputDir(cmd));
+        mPredictionsDir = configBuilder.getValue(PREDICTIONS_DIR);
+        mOutputFile = configBuilder.getValue(OUTPUT_FILE);
+        mWriter = initialiseWriter(parseOutputDir(configBuilder));
     }
 
     public void run()
@@ -157,29 +153,19 @@ public class WildtypePeptidePredictions
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addEnsemblDir(options);
-        options.addOption(OUTPUT_FILE, true, "Output filename");
-        options.addOption(PREDICTIONS_DIR, true, "McfFlurry predictions directory");
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        addEnsemblDir(configBuilder);
+        configBuilder.addPath(OUTPUT_FILE, true, "Output filename");
+        configBuilder.addPath(PREDICTIONS_DIR, true, "McfFlurry predictions directory");
 
-        addOutputDir(options);
-        addLoggingOptions(options);
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        WildtypePeptidePredictions wtPredictions = new WildtypePeptidePredictions(cmd);
+        WildtypePeptidePredictions wtPredictions = new WildtypePeptidePredictions(configBuilder);
         wtPredictions.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

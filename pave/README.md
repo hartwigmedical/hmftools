@@ -11,10 +11,10 @@ GeneName | HGNC gene name
 Transcript | Ensembl transcript ID
 Effects | list of effects separated by '&'
 SpliceRegion | true/false - if variant overlaps with the 8 intronic bases or 3 exonic bases around a splice junction 
+HgvsCodingImpact | HGVS coding impact
+HgvsProteinImpact | HGVS protein impact 
 
-For any gene with 1 or more impacts, the following summary data is written:
-
-For each impacted transcript it will add the following fields:
+For any variant with one or more impacted transcripts, the following summary data is written:
 
 Field | Description
 ---|---
@@ -29,7 +29,7 @@ OtherReportableEffects |Transcript, HGVS Coding, HGVS Protein, Effects, CodingEf
 WorstCodingEffect | From all transcripts
 GenesAffected | Count of genes which the variant overlaps
 
-* if additional reportable transcripts are configured in driver gene panel
+<nowiki>*</nowiki> if additional reportable transcripts are configured in driver gene panel
 
 ## Running Pave
 
@@ -38,22 +38,22 @@ GenesAffected | Count of genes which the variant overlaps
 Argument | Description 
 ---|---
 sample | Sample ID
-vcf_file | Input somatic variant VCF
+vcf_file | Input variant VCF
 ref_genome | Reference genome fasta file
 ensembl_data_dir | Path to Ensembl data cache directory
 driver_gene_panel|Driver Gene Panel
 ref_genome_version | 37 (default) or 38
-output_dir | Output directory for VCF and transcript CSV
 
 ### Optional Arguments
 
 Argument | Description 
 ---|---
+output_dir | Output directory for VCF and transcript CSV, will use input VCF directory if not specified
 output_vcf_file | Specify the output VCF filename
 only_canonical | Only annotate impacts on canonical transcripts
 read_pass_only | Only process passing variants
 write_pass_only | Only write passing variants
-write_transcript_csv | Write a detailed CSV file for each impacted transcript
+write_transcript_data | Write a detailed TSV file for each impacted transcript
 
 ```
 java -jar pave.jar 
@@ -100,8 +100,8 @@ The effects and codingEffects supported by PAVE are the following:
 Effect<sup>1</sup>|Coding effect<sup>2</sup>
 ---|---
 • upstream_gene_variant (<1kb)<br />• intron_variant<br />• 5_prime_UTR_variant<br />• 3_prime_UTR_variant<br />• non_coding_transcript_exon_variant | NONE
-• synonymous_variant | SYNONYMOUS
-• missense_variant<br />• inframe_insertion<sup>3</sup><br />• inframe_deletion<sup>3</sup><br />• phased_inframe_insertion<sup>4</sup><br />• phased_inframe_deletion<sup>4</sup> | MISSENSE
+• synonymous_variant<br />• phased_synonymous<sup>4</sup> | SYNONYMOUS
+• missense_variant<br />• inframe_insertion<sup>3</sup><br />• inframe_deletion<sup>3</sup><br />• phased_inframe_insertion<sup>4</sup><br />• phased_inframe_deletion<sup>4</sup><br />• phased_missense<sup>4</sup> | MISSENSE
 • stop_gained<br />• frameshift<br />• start_lost<sup>5</sup><br />• stop_lost<sup>5</sup> | NONSENSE_OR_FRAMESHIFT
 • splice_donor_variant (D-1,D+1,D+2,D+5)<br />• splice_acceptor_variant (A+1;A+2; A+3 if ALT=G only) | SPLICE<sup>6,7</sup>
 
@@ -116,7 +116,7 @@ Notes:
    - SYNONYMOUS
    - NONE
 3. Inframe INDELs may occasionally be annotated as notionally partially or completely outside the coding region due to left alignment and microhomology. Any INDEL with a length that is a multiplier of 3, that can be right aligned to be fully inside the coding regions should be marked as effect=inframe_insertion/inframe_deletion (notable examples include known pathogenic variants in KIT (4:55593579 CAGAAACCCATGTATGAAGTACAGTGGA > C) and EGFR (7:55248980 C > CTCCAGGAAGCCT)). 
-4. Where there are 2 or more frameshift variants with the same LPS (local phase set), if the combined impact causes an inframe indel, then mark both as effect = phased_inframe_deletion / phased_inframe_insertion.   If a phased inframe indel and snv affect the same codon, then mark both as phased_inframe_deletion / phased_inframe_insertion and calculate the combined coding effect (eg.  EGFR p.Glu746_Ser752delinsVal).   
+4. Where there are 2 or more frameshift variants with the same LPS (local phase set), if the combined impact causes an inframe indel, then mark both as effect = phased_inframe_deletion / phased_inframe_insertion.   If a phased inframe indel and snv or mnv affect the same codon, then mark both as phased_inframe_deletion / phased_inframe_insertion and calculate the combined coding effect (eg.  EGFR p.Glu746_Ser752delinsVal). If the net impact is no inserted or deleted bases, then classify the phased variants as phased missense or synonymous. 
 5. Where an INDEL also leads to a stop_lost or start_lost, the lost effects are prioritised
 6. A SPLICE MNV needs to be marked as splice if any base overlaps a splice site.
 7. Any INDEL which overlaps a canonical splice region (ie.[D-1:D+5] OR [A+3:A+1]) should be marked as splice_donor/splice_acceptor if and only if the canonical sites are changed according to the SPLICE rules listed above. Where an INDEL has microhomology extends over a splice donor or splice acceptor region, the variant is tested at both the leftmost and rightmost alignment, with intronic only effects prioritised highest, then exonic effects and finally splice effects.   A notable recurrent example where D+5 is not affected by an indel with microhomology in GRCH37 are indels at the homopolymer at MSH2 2:47641559.  Both splice and frameshift/inframe effects may be reported together if a deletion unambiguously both overlaps coding bases and changes canonical splice sites.
@@ -149,7 +149,7 @@ _ | Intronic (pre) | c.726-5537_726-5536delTT
 _ | 5’UTR Intronic | c.-147-1093delA
 Duplications | Coding | c.128dupA | Use duplications in case of INS with full homology match.
 _ | Intronic (post) | c.830+11459_830+11461dupGGA
-_ | Start codon overlap | c.-1_1delAA
+_ | Start codon overlap | c.-1_1dupAA
 Insertions | Coding | c.1033_1034insA
 _ | Intronic (post) | c.15+1619_15+1620insTTTGTT
 _ | Intronic (5’UTR) | c.-23-304_-23-303insA
@@ -172,12 +172,12 @@ Type | Context | Examples | Notes
 ---|---|---|---
 SYNONYMOUS | Synonymous | p.Leu54= | Snpeff uses p.Leu54Leu but the recommendation has changed (https://www.hgvs.org/mutnomen/disc.html#silent)
 _ | Synonymous (MNV multiple codon) | p.Leu54_Arg55=
-_ | Synonymous( Stop retained) | p.Ter26= | Not supported
+_ | Synonymous (Stop retained) | p.Ter26= |
 MISSENSE | Missense | p.Trp26Cys
 _ | Missense (MNV multiple codon) | p.Ala100_Val101delinsArgTrp  | SnpEff uses format: p.AlaVal100ArgTrp
 NONSENSE OR FRAMESHIFT  | Stop Gained | p.Trp26*
-_ | Stop Gained (MNV multiple codon - 2nd codon stop)  | p.Cys495_Val496delinsArg*
-_ | Stop Gained(MNV multiple codon - 1st codon stop) | p.Cys495_Val496delins*
+_ | Stop Gained (MNV multiple codon - 2nd codon stop) | p.Cys495_Val496delinsArg*
+_ | Stop Gained (MNV multiple codon - 1st codon stop) | p.Cys495_Val496delins*
 _ | Frameshift | p.Arg97fs | Always use simply fs even if also stop gained
 _ | Stop Lost | p.Ter407Trpext*? | Ie. a STOP at AA407 changes to a W and extends the protein
 _ | Start Lost | p.Met1? | Any variant that disrupts initiator codon
@@ -215,16 +215,20 @@ will mark any variant of tier = HOTSPOT as PON if it matches an entry with 5+ Sa
 ### GNOMAD Population Frequency
 We annotate the population frequency using gnomAD v3.1.2 for hg38 (merged with gnomAD v2.1.1 liftover for exome regions only) and v2.1.1 exome only for GRCH37. We filter the Gnomad file for variants with at least 1e-5 frequency for exome only and 5e-5 for genome. The VCF tag 'GND_FREQ' will report the frequency.
 
+### CLINVAR
+If a clinvar VCF is provided, PAVE also annotates the clinical signficance of each variant.
+
 ### PON settings used in the HMF pipeline
 
 A summary of the PON annotation and filtering currently used in the HMF pipeline is below:
 
-Fitlter | Annotations | Source | Filter Thresholds | Ref Genome versions
+Filter | Annotations | Source | Filter Thresholds | Ref Genome versions
 ---|---|---|---|---
 PON_GNOMAD | GND_FREQ | Gnomad v3 | GND_FREQ<0.00015 | 38 only
 PON_PANEL_ARTEFACT | PON_PANEL | Curated FFPE Panel Artefacts*** | PON_PANEL {ANY} | 38 only 
 PON | PON_COUNT* | PON_MAX** | HMF Cohort | See detailed table below | 37 & 38
-* Count germline samples with at least 3 reads and sum of base quality > 30
+
+<nowiki>*</nowiki> Count germline samples with at least 3 reads and sum of base quality > 30
 ** Maximum read support in any one sample
 *** The FFPE panel artefacts were curated from recurrent variants in the panel regions only of 35 samples run on HMF FFPE tumor only panels.
 
@@ -237,10 +241,11 @@ Version | Samples | HOTSPOT | PANEL | OTHER
 
 ## Known Issues
 - Frameshifts may not always be fully aligned to 3'UTR for HGNC protein annotation
-- Where multiple ALTs are included on a single line only the 1st ALT allele will be annotated.   A workaround is to split multiallelic lines into multiple recorrds first (eg.  the -m none option in bcftools).
+- Where multiple ALTs are included on a single line only the 1st ALT allele will be annotated.   A workaround is to split multiallelic lines into multiple records first (eg.  the -m none option in bcftools).
+- Duplications may sometimes be marked as insertions 
 
 # Version History and Download Links
-- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.4.1)
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.4.2)
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.3)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.2)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/pave-v1.1)

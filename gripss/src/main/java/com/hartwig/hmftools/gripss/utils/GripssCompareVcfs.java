@@ -9,19 +9,23 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PASS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.PON_FILTER_PON;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REMOTE_LINKED_BY;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
-import static com.hartwig.hmftools.gripss.GripssConfig.REFERENCE;
-import static com.hartwig.hmftools.gripss.GripssConfig.SAMPLE;
+import static com.hartwig.hmftools.common.variant.GenotypeIds.fromVcfHeader;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_AS;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_ASRP;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_BAQ;
@@ -52,19 +56,16 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.gripss.VariantBuilder;
 import com.hartwig.hmftools.gripss.common.Breakend;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
-import com.hartwig.hmftools.gripss.common.VcfUtils;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.TargetRegions;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -93,6 +94,7 @@ public class GripssCompareVcfs
     private final boolean mKeyByCoords; // instead of assuming VCF Ids match
     private final boolean mWriteAllDiffs;
     private final boolean mGridssDiffsOnly;
+    private final boolean mRefDepthDiffsOnly;
 
     private final List<VcfCompareField> mVcfCheckFields;
 
@@ -101,31 +103,48 @@ public class GripssCompareVcfs
     private static final String IGNORE_PON_DIFF = "ignore_pon_diff";
     private static final String KEY_BY_COORDS = "key_by_coords";
     private static final String WRITE_ALL_DIFFS = "write_all_diffs";
+
     private static final String GRIDSS_ONLY = "gridss_only";
+    private static final String REF_DEPTH_ONLY = "ref_depth_only";
 
     private static final int DEFAULT_MAX_DIFF = 20;
     private static final double DEFAULT_MAX_DIFF_PERC = 0.2;
 
-    public GripssCompareVcfs(final CommandLine cmd)
+    public GripssCompareVcfs(final ConfigBuilder configBuilder)
     {
-        mSampleId = cmd.getOptionValue(SAMPLE);
-        mReferenceId = cmd.getOptionValue(REFERENCE, "");
-        mOriginalVcf = cmd.getOptionValue(ORIGINAL_VCF);
-        mNewVcf = cmd.getOptionValue(NEW_VCF);
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
+        mSampleId = configBuilder.getValue(SAMPLE);
+        mReferenceId = configBuilder.getValue(REFERENCE, "");
+        mOriginalVcf = configBuilder.getValue(ORIGINAL_VCF);
+        mNewVcf = configBuilder.getValue(NEW_VCF);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
 
         mOriginalSvData = Maps.newHashMap();
         mOriginalCoordsSvData = Maps.newHashMap();
 
-        mVariantBuilder = new VariantBuilder(null, new HotspotCache(cmd), new TargetRegions(null));
+        mVariantBuilder = new VariantBuilder(
+                null, new HotspotCache(configBuilder), new TargetRegions(configBuilder), false);
 
-        mIgnorePonDiff = cmd.hasOption(IGNORE_PON_DIFF);
-        mKeyByCoords = cmd.hasOption(KEY_BY_COORDS);
-        mWriteAllDiffs = cmd.hasOption(WRITE_ALL_DIFFS);
-        mGridssDiffsOnly = cmd.hasOption(GRIDSS_ONLY);
+        mIgnorePonDiff = configBuilder.hasFlag(IGNORE_PON_DIFF);
+        mKeyByCoords = configBuilder.hasFlag(KEY_BY_COORDS);
+        mWriteAllDiffs = configBuilder.hasFlag(WRITE_ALL_DIFFS);
+        mGridssDiffsOnly = configBuilder.hasFlag(GRIDSS_ONLY);
+        mRefDepthDiffsOnly = configBuilder.hasFlag(REF_DEPTH_ONLY);
 
         mVcfCheckFields = Lists.newArrayList();
+        addComparisonFields();
+
+        mWriter = initialiseWriter();
+    }
+
+    private void addComparisonFields()
+    {
+        if(mRefDepthDiffsOnly)
+        {
+            mVcfCheckFields.add(new VcfCompareField(VT_REF, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            mVcfCheckFields.add(new VcfCompareField(VT_REFPAIR, GenotypeScope.BOTH, VariantTypeScope.BOTH, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
+            return;
+        }
 
         if(!mGridssDiffsOnly)
         {
@@ -155,8 +174,6 @@ public class GripssCompareVcfs
         mVcfCheckFields.add(new VcfCompareField(VT_BSC, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(VT_BASRP, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
         mVcfCheckFields.add(new VcfCompareField(VT_BASSR, GenotypeScope.BOTH, VariantTypeScope.SGL, DEFAULT_MAX_DIFF, DEFAULT_MAX_DIFF_PERC));
-
-        mWriter = initialiseWriter();
     }
 
     public void run()
@@ -174,17 +191,18 @@ public class GripssCompareVcfs
 
         compareVariants(mNewVcf);
         closeBufferedWriter(mWriter);
+
+        GR_LOGGER.info("Gripss compare VCFs complete");
     }
 
     private void loadOriginalVariants(final String vcfFile)
     {
         mVariantBuilder.clearState();
 
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                vcfFile, new VCFCodec(), false);
+        VcfFileReader reader = new VcfFileReader(vcfFile);
 
-        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, mReferenceId, mSampleId, false);
+        VCFHeader vcfHeader = reader.vcfHeader();
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mReferenceId, mSampleId);
 
         if(genotypeIds == null)
         {
@@ -220,7 +238,7 @@ public class GripssCompareVcfs
                 }
             }
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             GR_LOGGER.error("error reading vcf({}): {}", vcfFile, e.toString());
         }
@@ -240,11 +258,10 @@ public class GripssCompareVcfs
 
         GR_LOGGER.info("loading new VCF({})", newVcfFile);
 
-        final AbstractFeatureReader<VariantContext, LineIterator> reader = AbstractFeatureReader.getFeatureReader(
-                newVcfFile, new VCFCodec(), false);
+        VcfFileReader reader = new VcfFileReader(newVcfFile);
 
-        VCFHeader vcfHeader = (VCFHeader)reader.getHeader();
-        GenotypeIds genotypeIds = VcfUtils.parseVcfSampleIds(vcfHeader, "", mSampleId, false);
+        VCFHeader vcfHeader = reader.vcfHeader();
+        GenotypeIds genotypeIds = fromVcfHeader(vcfHeader, mReferenceId, mSampleId);
 
         if(genotypeIds == null)
             System.exit(1);
@@ -362,7 +379,7 @@ public class GripssCompareVcfs
 
             GR_LOGGER.info("loaded {} new SVs", newSvCount);
         }
-        catch(IOException e)
+        catch(Exception e)
         {
             GR_LOGGER.error("error reading vcf({}): {}", newVcfFile, e.toString());
         }
@@ -491,23 +508,23 @@ public class GripssCompareVcfs
     {
         try
         {
-            String fileName = mOutputDir + mSampleId + ".compare";
+            String fileName = mOutputDir + mSampleId + ".sv_compare";
 
             if(mOutputId != null)
                 fileName += "." + mOutputId;
 
-            fileName += ".csv";
+            fileName += TSV_EXTENSION;
 
             GR_LOGGER.info("writing comparison file: {}", fileName);
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
             if(mKeyByCoords)
-                writer.write("OrigId,NewId");
+                writer.write("OrigId\tNewId");
             else
                 writer.write("SvId");
 
-            writer.write(",Coords,Type,DiffType,OrigValue,NewValue,OrigQual,NewQual,OrigFilters,NewFilters");
+            writer.write("\tCoords\tType\tDiffType\tOrigValue\tNewValue\tOrigQual\tNewQual\tOrigFilters\tNewFilters");
             writer.newLine();
 
             return writer;
@@ -528,7 +545,7 @@ public class GripssCompareVcfs
 
             if(mKeyByCoords)
             {
-                mWriter.write(format("%s,%s",
+                mWriter.write(format("%s\t%s",
                         origSv != null ? origSv.id() : "", newSv != null ? newSv.id() : ""));
             }
             else
@@ -536,10 +553,10 @@ public class GripssCompareVcfs
                 mWriter.write(format("%s", origSv != null ? origSv.id() : newSv.id()));
             }
 
-            mWriter.write(format(",%s,%s,%s,%s,%s",
+            mWriter.write(format("\t%s\t%s\t%s\t%s\t%s",
                     coords, type, diffType, origValue, newValue));
 
-            mWriter.write(format(",%.1f,%.1f,%s,%s",
+            mWriter.write(format("\t%.1f\t%.1f\t%s\t%s",
                     origSv != null ? origSv.breakendStart().Qual : -1, newSv != null ? newSv.breakendStart().Qual : -1,
                     origSv != null ? filtersStr(origSv.breakendStart().Context.getFilters(), true) : "",
                     newSv != null ? filtersStr(newSv.breakendStart().Context.getFilters(), true) : ""));
@@ -597,36 +614,33 @@ public class GripssCompareVcfs
             DiffAbs = diffAbs;
             DiffPerc = diffPerc;
         }
+
+        public String toString() { return format("tag(%s) scope(%s) st(%s)", VcfTag, Scope, TypeScope); }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(SAMPLE, true, "Name of the tumor sample");
-        options.addOption(ORIGINAL_VCF, true, "Optional, name of the reference sample");
-        options.addOption(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
-        options.addOption(IGNORE_PON_DIFF, false, "Ignore diffs if just PON filter");
-        options.addOption(KEY_BY_COORDS, false, "Match SVs on coords rather than VcfId");
-        options.addOption(WRITE_ALL_DIFFS, false, "Write all VCF field diffs, not just the first");
-        options.addOption(GRIDSS_ONLY, false, "Only compare fields written by Grids (ie no Gripss)");
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
+        configBuilder.addConfigItem(REFERENCE, true, REFERENCE_DESC);
+        configBuilder.addPath(ORIGINAL_VCF, true, "Optional, name of the reference sample");
+        configBuilder.addPath(NEW_VCF, true, "Path to the GRIDSS structural variant VCF file");
+        configBuilder.addFlag(IGNORE_PON_DIFF, "Ignore diffs if just PON filter");
+        configBuilder.addFlag(KEY_BY_COORDS, "Match SVs on coords rather than VcfId");
+        configBuilder.addFlag(WRITE_ALL_DIFFS, "Write all VCF field diffs, not just the first");
+        configBuilder.addFlag(GRIDSS_ONLY, "Only compare fields written by Grids (ie no Gripss)");
+        configBuilder.addFlag(REF_DEPTH_ONLY, "Only compare reference depth fields");
 
-        final CommandLine cmd = createCommandLine(args, options);
+        HotspotCache.addConfig(configBuilder);
+        TargetRegions.addConfig(configBuilder);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        setLogLevel(cmd);
+        configBuilder.checkAndParseCommandLine(args);
+        setLogLevel(configBuilder);
 
-        GripssCompareVcfs gripssCompare = new GripssCompareVcfs(cmd);
+        GripssCompareVcfs gripssCompare = new GripssCompareVcfs(configBuilder);
         gripssCompare.run();
-
-        GR_LOGGER.info("Gripss compare VCFs complete");
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

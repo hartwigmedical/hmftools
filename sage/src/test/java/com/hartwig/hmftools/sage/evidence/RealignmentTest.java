@@ -3,9 +3,6 @@ package com.hartwig.hmftools.sage.evidence;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_FULL;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_PARTIAL;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_REALIGNED;
 import static com.hartwig.hmftools.sage.evidence.Realignment.realigned;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
@@ -15,7 +12,7 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
@@ -64,9 +61,9 @@ public class RealignmentTest
         SageVariant var2 = task.getVariants().stream().filter(x -> x.position() == 312).findFirst().orElse(null);
         assertNotNull(var1);
         assertNotNull(var2);
-        assertEquals(4, var1.tumorReadCounters().get(0).counts()[RC_FULL]);
-        assertEquals(2, var2.tumorReadCounters().get(0).counts()[RC_FULL]);
-        assertEquals(2, var2.tumorReadCounters().get(0).counts()[RC_REALIGNED]);
+        assertEquals(4, var1.tumorReadCounters().get(0).readSupportCounts().Full);
+        assertEquals(2, var2.tumorReadCounters().get(0).readSupportCounts().Full);
+        assertEquals(2, var2.tumorReadCounters().get(0).readSupportCounts().Realigned);
     }
 
     @Test
@@ -115,11 +112,11 @@ public class RealignmentTest
         SageVariant var2 = task.getVariants().stream().filter(x -> x.position() == 98).findFirst().orElse(null);
         assertNotNull(var1);
         assertNotNull(var2);
-        assertEquals(4, var1.tumorReadCounters().get(0).counts()[RC_FULL]);
-        assertEquals(2, var1.tumorReadCounters().get(0).counts()[RC_PARTIAL]);
+        assertEquals(4, var1.tumorReadCounters().get(0).readSupportCounts().Full);
+        assertEquals(2, var1.tumorReadCounters().get(0).readSupportCounts().Partial);
 
-        assertEquals(2, var2.tumorReadCounters().get(0).counts()[RC_FULL]);
-        assertEquals(4, var2.tumorReadCounters().get(0).counts()[RC_REALIGNED]);
+        assertEquals(2, var2.tumorReadCounters().get(0).readSupportCounts().Full);
+        assertEquals(4, var2.tumorReadCounters().get(0).readSupportCounts().Realigned);
     }
 
     @Test
@@ -166,12 +163,12 @@ public class RealignmentTest
         assertNotNull(var1);
         assertNotNull(var2);
         assertNotNull(var3);
-        assertEquals(4, var1.tumorReadCounters().get(0).counts()[RC_FULL]);
+        assertEquals(4, var1.tumorReadCounters().get(0).readSupportCounts().Full);
 
-        assertEquals(2, var2.tumorReadCounters().get(0).counts()[RC_FULL]);
-        assertEquals(2, var2.tumorReadCounters().get(0).counts()[RC_REALIGNED]);
-        assertEquals(2, var3.tumorReadCounters().get(0).counts()[RC_FULL]);
-        assertEquals(2, var3.tumorReadCounters().get(0).counts()[RC_REALIGNED]);
+        assertEquals(2, var2.tumorReadCounters().get(0).readSupportCounts().Full);
+        assertEquals(2, var2.tumorReadCounters().get(0).readSupportCounts().Realigned);
+        assertEquals(2, var3.tumorReadCounters().get(0).readSupportCounts().Full);
+        assertEquals(2, var3.tumorReadCounters().get(0).readSupportCounts().Realigned);
     }
 
     @Test

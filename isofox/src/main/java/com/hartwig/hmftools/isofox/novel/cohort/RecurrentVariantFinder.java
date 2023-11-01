@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -14,11 +14,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class RecurrentVariantFinder
 {
@@ -28,17 +26,18 @@ public class RecurrentVariantFinder
 
     protected static final String SOMATIC_VARIANT_FILE = "somatic_variants_file";
 
-    public RecurrentVariantFinder(final CohortConfig config, final CommandLine cmd)
+    public RecurrentVariantFinder(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
-        mSomaticVariantsFile = cmd.getOptionValue(SOMATIC_VARIANT_FILE);
+        mSomaticVariantsFile = configBuilder.getValue(SOMATIC_VARIANT_FILE);
         mWriter = null;
         initialiseWriter();
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(SOMATIC_VARIANT_FILE, true, "Write out recurrent somatic variants for subsequent non-DB loading");
+        configBuilder.addConfigItem(
+                SOMATIC_VARIANT_FILE, false, "Write out recurrent somatic variants for subsequent non-DB loading");
     }
 
     public void processCohortSomaticVariants()

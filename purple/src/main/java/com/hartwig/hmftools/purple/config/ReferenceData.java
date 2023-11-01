@@ -1,22 +1,22 @@
 package com.hartwig.hmftools.purple.config;
 
-import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
+import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.GC_PROFILE;
+import static com.hartwig.hmftools.common.genome.gc.GCProfileFactory.addGcProfilePath;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.hla.HlaCommon.hlaChromosome;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TARGET_REGIONS_BED_DESC;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.SampleDataFiles.GERMLINE_VARIANTS;
 import static com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency.COHORT_DEL_FREQ_FILE;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -28,34 +28,28 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelFactory;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLength;
-import com.hartwig.hmftools.common.genome.chromosome.ChromosomeLengthFactory;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.hla.HlaCommon;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotFile;
 import com.hartwig.hmftools.purple.germline.GermlineDeletionFrequency;
+import com.hartwig.hmftools.purple.region.ObservedRegionFactory;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.util.Strings;
 
-import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
 public class ReferenceData
 {
     public final RefGenomeVersion RefGenVersion;
     public final IndexedFastaSequenceFile RefGenome;
-    public final RefGenomeCoordinates RefGeCoordinates;
 
     public final Map<Chromosome,GenomePosition> ChromosomeLengths;
-
     public final Map<Chromosome,GenomePosition> Centromeres;
 
     public final EnsemblDataCache GeneTransCache;
@@ -74,27 +68,22 @@ public class ReferenceData
 
     private static final String SOMATIC_HOTSPOT = "somatic_hotspots";
     private static final String GERMLINE_HOTSPOT = "germline_hotspots";
-    private static final String GC_PROFILE = "gc_profile";
 
-    public static final String TARGET_REGION_BED = "target_regions_bed";
     private static final String TARGET_REGIONS_RATIOS = "target_regions_ratios";
     private static final String TARGET_REGION_MSI_INDELS = "target_regions_msi_indels";
 
-    public ReferenceData(final CommandLine cmd, final PurpleConfig config)
+    public ReferenceData(final ConfigBuilder configBuilder, final PurpleConfig config)
     {
         mIsValid = true;
 
-        if(!cmd.hasOption(REF_GENOME) && !config.DriversOnly)
+        if(!configBuilder.hasValue(REF_GENOME) && !config.DriversOnly)
         {
             mIsValid = false;
             PPL_LOGGER.error(REF_GENOME + " is a mandatory argument");
         }
 
-        final String refGenomePath = cmd.getOptionValue(REF_GENOME);
-        GcProfileFilename = cmd.getOptionValue(GC_PROFILE);
-
-        // TO-DO is this really necessary
-        final Map<Chromosome, GenomePosition> lengthPositions = Maps.newHashMap();
+        final String refGenomePath = configBuilder.getValue(REF_GENOME);
+        GcProfileFilename = configBuilder.getValue(GC_PROFILE);
 
         IndexedFastaSequenceFile refGenome = null;
 
@@ -103,14 +92,6 @@ public class ReferenceData
             try
             {
                 refGenome = new IndexedFastaSequenceFile(new File(refGenomePath));
-
-                SAMSequenceDictionary sequenceDictionary = refGenome.getSequenceDictionary();
-                if(sequenceDictionary == null)
-                {
-                    throw new ParseException("Supplied ref genome must have associated sequence dictionary");
-                }
-
-                lengthPositions.putAll(fromLengths(ChromosomeLengthFactory.create(refGenome.getSequenceDictionary())));
             }
             catch(Exception e)
             {
@@ -121,19 +102,17 @@ public class ReferenceData
 
         RefGenome = refGenome;
 
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
         PPL_LOGGER.info("using ref genome: {}", RefGenVersion);
 
-        RefGeCoordinates = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        ChromosomeLengths = Maps.newHashMap();
+        Centromeres = Maps.newHashMap();
+        setChromosomeCoords();
 
-        final Map<Chromosome, String> chromosomeNames =
-                lengthPositions.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, x -> x.getValue().chromosome()));
+        ObservedRegionFactory.setSpecificRegions(RefGenVersion, ChromosomeLengths, Centromeres);
 
-        ChromosomeLengths = toPosition(RefGeCoordinates.Lengths, chromosomeNames);
-        Centromeres = toPosition(RefGeCoordinates.Centromeres, chromosomeNames);
-
-        String somaticHotspotVcf = cmd.getOptionValue(SOMATIC_HOTSPOT, Strings.EMPTY);
-        String germlineHotspotVcf = cmd.getOptionValue(GERMLINE_HOTSPOT, Strings.EMPTY);
+        String somaticHotspotVcf = configBuilder.getValue(SOMATIC_HOTSPOT);
+        String germlineHotspotVcf = configBuilder.getValue(GERMLINE_HOTSPOT);
 
         if(config.RunDrivers || config.DriversOnly)
         {
@@ -156,7 +135,7 @@ public class ReferenceData
 
             try
             {
-                driverGenes.addAll(DriverGenePanelConfig.driverGenes(cmd));
+                driverGenes.addAll(DriverGenePanelConfig.driverGenes(configBuilder));
             }
             catch(IOException e)
             {
@@ -166,7 +145,7 @@ public class ReferenceData
 
             DriverGenes = DriverGenePanelFactory.create(driverGenes);
 
-            if(cmd.hasOption(GERMLINE_VARIANTS))
+            if(configBuilder.hasValue(GERMLINE_VARIANTS))
             {
                 if(germlineHotspotVcf.isEmpty())
                 {
@@ -187,7 +166,7 @@ public class ReferenceData
         }
 
         OtherReportableTranscripts = Maps.newHashMap();
-        GeneTransCache = new EnsemblDataCache(cmd.getOptionValue(ENSEMBL_DATA_DIR, ""), RefGenVersion);
+        GeneTransCache = new EnsemblDataCache(configBuilder);
         loadGeneTransCache();
 
         if(mIsValid && config.tumorOnlyMode())
@@ -210,12 +189,12 @@ public class ReferenceData
             PPL_LOGGER.error("failed to load hotspots: {}", e.toString());
         }
 
-        CohortGermlineDeletions = new GermlineDeletionFrequency(cmd.getOptionValue(COHORT_DEL_FREQ_FILE));
+        CohortGermlineDeletions = new GermlineDeletionFrequency(configBuilder.getValue(COHORT_DEL_FREQ_FILE));
 
         TargetRegions = new TargetRegionsData(
-                cmd.getOptionValue(TARGET_REGION_BED),
-                cmd.getOptionValue(TARGET_REGIONS_RATIOS),
-                cmd.getOptionValue(TARGET_REGION_MSI_INDELS));
+                configBuilder.getValue(TARGET_REGIONS_BED),
+                configBuilder.getValue(TARGET_REGIONS_RATIOS),
+                configBuilder.getValue(TARGET_REGION_MSI_INDELS));
     }
 
     private void loadGeneTransCache()
@@ -239,7 +218,7 @@ public class ReferenceData
 
             GeneTransCache.setRequiredData(true, false, false, true);
             mIsValid &= GeneTransCache.load(true);
-            mIsValid &= GeneTransCache.loadTranscriptData(Lists.newArrayList(), additionalTransNames);
+            mIsValid &= GeneTransCache.loadTranscriptData(Collections.emptyList(), additionalTransNames);
         }
         else
         {
@@ -250,46 +229,30 @@ public class ReferenceData
 
     public boolean isValid() { return mIsValid && TargetRegions.isValid(); }
 
-    public static void addOptions(final Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        addRefGenomeConfig(configBuilder, false);
 
-        options.addOption(SOMATIC_HOTSPOT, true, "Path to somatic hotspot VCF");
-        options.addOption(GERMLINE_HOTSPOT, true, "Path to germline hotspot VCF");
-        options.addOption(GC_PROFILE, true, "Path to GC profile");
-        options.addOption(COHORT_DEL_FREQ_FILE, true, "Path to cohort germline deletions frequency file");
-        options.addOption(TARGET_REGION_BED, true, "Target regions BED file");
-        options.addOption(TARGET_REGIONS_RATIOS, true, "Path to target regions ratios file");
-        options.addOption(TARGET_REGION_MSI_INDELS, true, "Path to target regions MSI INDELs file");
-        EnsemblDataCache.addEnsemblDir(options);
-        DriverGenePanelConfig.addGenePanelOption(false, options);
+        configBuilder.addConfigItem(SOMATIC_HOTSPOT, false, "Path to somatic hotspot VCF", "");
+        configBuilder.addConfigItem(GERMLINE_HOTSPOT, false, "Path to germline hotspot VCF", "");
+        addGcProfilePath(configBuilder, false);
+        configBuilder.addPath(COHORT_DEL_FREQ_FILE, false, "Path to cohort germline deletions frequency file");
+        configBuilder.addPath(TARGET_REGIONS_BED, false, TARGET_REGIONS_BED_DESC);
+        configBuilder.addPath(TARGET_REGIONS_RATIOS, false, "Path to target regions ratios file");
+        configBuilder.addPath(TARGET_REGION_MSI_INDELS, false, "Path to target regions MSI INDELs file");
+        EnsemblDataCache.addEnsemblDir(configBuilder, true);
+        DriverGenePanelConfig.addGenePanelOption(configBuilder, false);
     }
 
-    private static Map<Chromosome,GenomePosition> toPosition(final Map<Chromosome,Integer> longs, final Map<Chromosome, String> contigMap)
+    private void setChromosomeCoords()
     {
-        final Map<Chromosome, GenomePosition> result = Maps.newHashMap();
+        RefGenomeCoordinates coordinates = RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
 
-        for(Map.Entry<Chromosome, String> entry : contigMap.entrySet())
+        for(HumanChromosome chromosome : HumanChromosome.values())
         {
-            final Chromosome chromosome = entry.getKey();
-            final String contig = entry.getValue();
-            if(longs.containsKey(chromosome))
-            {
-                result.put(chromosome, GenomePositions.create(contig, longs.get(chromosome)));
-            }
+            String chrStr = RefGenVersion.versionedChromosome(chromosome.toString());
+            ChromosomeLengths.put(chromosome, GenomePositions.create(chrStr, coordinates.Lengths.get(chromosome)));
+            Centromeres.put(chromosome, GenomePositions.create(chrStr, coordinates.Centromeres.get(chromosome)));
         }
-
-        return result;
     }
-
-    private static Map<Chromosome,GenomePosition> fromLengths(final Collection<ChromosomeLength> lengths)
-    {
-        return lengths.stream()
-                .filter(x -> HumanChromosome.contains(x.chromosome()))
-                .collect(Collectors.toMap(x -> HumanChromosome.fromString(x.chromosome()),
-                        item -> GenomePositions.create(item.chromosome(), item.length())));
-    }
-
-
 }

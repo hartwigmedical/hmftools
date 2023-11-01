@@ -9,7 +9,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -22,6 +21,7 @@ import com.hartwig.hmftools.common.circos.CircosINDELWriter;
 import com.hartwig.hmftools.common.circos.CircosLinkWriter;
 import com.hartwig.hmftools.common.circos.CircosSNPWriter;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -65,8 +65,9 @@ public class CircosCharts
     {
         mCurrentReferenceId = referenceId;
         mCurrentSampleId = sampleId;
-        mBaseCircosTumorSample = mConfig.CircosDirectory + File.separator + mCurrentSampleId;
-        mBaseCircosReferenceSample = mConfig.CircosDirectory + File.separator + mCurrentReferenceId;
+        mBaseCircosTumorSample = mConfig.CircosDirectory + mCurrentSampleId;
+
+        mBaseCircosReferenceSample = mCurrentReferenceId != null ? mConfig.CircosDirectory + mCurrentReferenceId : "";
 
         final List<VariantContextDecorator> somatics = somaticVariants.stream()
                 .filter(x -> HumanChromosome.contains(x.chromosome()))
@@ -80,16 +81,11 @@ public class CircosCharts
         writeBafs(Downsample.downsample(MAX_PLOT_POINTS, bafs));
     }
 
-    @NotNull
     public List<Future<Integer>> chartFutures()
     {
         final List<Future<Integer>> futures = Lists.newArrayList();
-        final Optional<String> circosBinary = mConfig.CircosBinary;
-        if(circosBinary.isPresent())
-        {
-            futures.add(mExecutorService.submit(() -> generateCircos(circosBinary.get(), "input")));
-            futures.add(mExecutorService.submit(() -> generateCircos(circosBinary.get(), "circos")));
-        }
+        futures.add(mExecutorService.submit(() -> generateCircos(mConfig.CircosBinary, "input")));
+        futures.add(mExecutorService.submit(() -> generateCircos(mConfig.CircosBinary, "circos")));
 
         return futures;
     }
@@ -106,7 +102,6 @@ public class CircosCharts
         return execution.generateCircos(inputConfig, outputPath, outputFile, mConfig.CircosDirectory);
     }
 
-    @NotNull
     private String confFile(final String type)
     {
         return mBaseCircosTumorSample + "." + type + "." + "conf";
@@ -119,11 +114,20 @@ public class CircosCharts
 
     private void writeObservedRegions(final List<ObservedRegion> fittedRegions) throws IOException
     {
-        CircosFileWriter.writeRegions(mBaseCircosReferenceSample + ".ratio.circos",
-                fittedRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),
-                ObservedRegion::unnormalisedObservedNormalRatio);
-        CircosFileWriter.writeRegions(mBaseCircosTumorSample + ".ratio.circos",
-                fittedRegions.stream().filter(x -> Doubles.positive(x.observedTumorRatio())).collect(Collectors.toList()),
+        List<ObservedRegion> selectRegions = fittedRegions.stream()
+                .filter(x -> x.germlineStatus() == GermlineStatus.DIPLOID).collect(Collectors.toList());
+
+        if(!mBaseCircosReferenceSample.isEmpty())
+        {
+            CircosFileWriter.writeRegions(
+                    mBaseCircosReferenceSample + ".ratio.circos",
+                    selectRegions.stream().filter(x -> Doubles.positive(x.unnormalisedObservedNormalRatio())).collect(Collectors.toList()),
+                    ObservedRegion::unnormalisedObservedNormalRatio);
+        }
+
+        CircosFileWriter.writeRegions(
+                mBaseCircosTumorSample + ".ratio.circos",
+                selectRegions.stream().filter(x -> Doubles.positive(x.observedTumorRatio())).collect(Collectors.toList()),
                 ObservedRegion::observedTumorRatio);
     }
 
@@ -166,6 +170,10 @@ public class CircosCharts
         String content = readResource("/circos/" + type + ".template");
         content = content.replaceAll("SAMPLE", mCurrentSampleId);
         content = content.replaceAll("REFERENCE", mCurrentReferenceId != null ? mCurrentReferenceId : mCurrentSampleId);
+
+        // use the tumor colour for reference in tumor-only mode to keep those points the same
+        content = content.replaceAll("COBALT_REF_COLOUR", mCurrentReferenceId != null ? "green" : "cobalt");
+
         content = content.replaceAll("EXCLUDE", gender.equals(Gender.FEMALE) ? "hsY" : "hsZ");
         content = content.replaceAll("KARYOTYPE",
                 mIsHg38 ? "data/karyotype/karyotype.human.hg38.txt" : "data/karyotype/karyotype.human.hg19.txt");
@@ -176,11 +184,10 @@ public class CircosCharts
     {
         Charset charset = StandardCharsets.UTF_8;
         final String content = readResource("/circos/" + inputName);
-        final String outputFilename = mConfig.CircosDirectory + File.separator + outputName;
+        final String outputFilename = mConfig.CircosDirectory + outputName;
         Files.write(new File(outputFilename).toPath(), content.getBytes(charset));
     }
 
-    @NotNull
     private String readResource(final String resource) throws IOException
     {
         InputStream in = getClass().getResourceAsStream(resource);
@@ -188,21 +195,13 @@ public class CircosCharts
         return IOUtils.toString(reader);
     }
 
-    @NotNull
     private List<VariantContextDecorator> snp(final List<VariantContextDecorator> somaticVariants)
     {
-        return somaticVariants.stream()
-                .filter(x -> x.type() == VariantType.SNP)
-                .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
-                .collect(Collectors.toList());
+        return somaticVariants.stream().filter(x -> x.type() == VariantType.SNP).collect(Collectors.toList());
     }
 
-    @NotNull
     private List<VariantContextDecorator> indel(final List<VariantContextDecorator> somaticVariants)
     {
-        return somaticVariants.stream()
-                .filter(x -> x.type() == VariantType.INDEL)
-                .filter(x -> HumanChromosome.fromString(x.chromosome()).intValue() <= 25)
-                .collect(Collectors.toList());
+        return somaticVariants.stream().filter(x -> x.type() == VariantType.INDEL).collect(Collectors.toList());
     }
 }

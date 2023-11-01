@@ -1,29 +1,31 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.compar.Category.GERMLINE_SV;
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_QUAL;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.Category.GERMLINE_SV;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_QUAL;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.MatchLevel;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class GermlineSvData implements ComparableItem
 {
     public final LinxGermlineSv SvData;
+    private final boolean mIsReported;
 
     protected static final String FLD_GERMLINE_FRAGS = "GermlineFragments";
 
-    public GermlineSvData(final LinxGermlineSv svData)
+    public GermlineSvData(final LinxGermlineSv svData, boolean isReported)
     {
         SvData = svData;
+        mIsReported = isReported;
     }
 
     @Override
@@ -41,13 +43,16 @@ public class GermlineSvData implements ComparableItem
     public List<String> displayValues()
     {
         List<String> values = Lists.newArrayList();
-        values.add(String.format("%s", SvData.Reported));
+        values.add(String.format("%s", mIsReported));
         values.add(String.format("%d", SvData.GermlineFragments));
         return values;
     }
 
     @Override
-    public boolean reportable() { return SvData.Reported; }
+    public boolean reportable()
+    {
+        return mIsReported;
+    }
 
     @Override
     public boolean matches(final ComparableItem other)

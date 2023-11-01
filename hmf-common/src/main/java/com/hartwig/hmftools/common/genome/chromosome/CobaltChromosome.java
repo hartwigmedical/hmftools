@@ -8,8 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CobaltChromosome extends Chromosome {
-
+public interface CobaltChromosome extends Chromosome
+{
     @NotNull
     String contig();
 

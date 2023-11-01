@@ -2,22 +2,22 @@ package com.hartwig.hmftools.neo.utils;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_LIKE_RANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
-import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE;
 import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE_CFG;
 import static com.hartwig.hmftools.neo.utils.PeptideExpressionData.SOURCE_PROTEOME;
@@ -37,14 +37,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class ExpressionAnalyser
@@ -67,23 +63,23 @@ public class ExpressionAnalyser
     private static final String VALIDATION_PEPTIDES_FILE = "validation_file";
     private static final String PEPTIDE_SEARCH_FILE = "peptide_search_file";
 
-    public ExpressionAnalyser(final CommandLine cmd)
+    public ExpressionAnalyser(final ConfigBuilder configBuilder)
     {
-        mTranscriptExpression = new TranscriptExpression(cmd.getOptionValue(IMMUNE_EXPRESSION_FILE));
+        mTranscriptExpression = new TranscriptExpression(configBuilder.getValue(IMMUNE_EXPRESSION_FILE));
 
-        mBinderPeptides = loadPeptideData(cmd.getOptionValue(VALIDATION_PEPTIDES_FILE), SOURCE_VALIDATION);
+        mBinderPeptides = loadPeptideData(configBuilder.getValue(VALIDATION_PEPTIDES_FILE), SOURCE_VALIDATION);
         mValidationAlleles = mBinderPeptides.stream().map(x -> x.Allele).collect(Collectors.toSet());
 
-        mProteomePeptides = loadPeptideData(cmd.getOptionValue(PROTEOME_PEPTIDES_FILE), SOURCE_PROTEOME);
+        mProteomePeptides = loadPeptideData(configBuilder.getValue(PROTEOME_PEPTIDES_FILE), SOURCE_PROTEOME);
 
-        mPeptideSearchDataMap = loadPeptideSearchData(cmd.getOptionValue(PEPTIDE_SEARCH_FILE));
+        mPeptideSearchDataMap = loadPeptideSearchData(configBuilder.getValue(PEPTIDE_SEARCH_FILE));
 
         mExpressionDistribution = new ExpressionDistribution();
 
-        mGenePropensity = new GenePropensity(mExpressionDistribution, cmd.getOptionValue(ENSEMBL_DATA_DIR));
+        mGenePropensity = new GenePropensity(mExpressionDistribution, configBuilder.getValue(ENSEMBL_DATA_DIR));
 
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
 
         String outputFile = BindCommon.formFilename(mOutputDir, "peptide_expression", mOutputId);
         mWriter = initialiseWriter(outputFile);
@@ -211,7 +207,7 @@ public class ExpressionAnalyser
 
             // Allele,Peptide,LikelihoodRank,GeneName,TransName - for proteome binders OR
             // Allele,Peptide,Source,LikelihoodRank - for binding data
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
@@ -222,7 +218,7 @@ public class ExpressionAnalyser
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] values = line.split(DELIMITER, -1);
+                final String[] values = line.split(CSV_DELIM, -1);
 
                 String allele = values[alleleIndex];
                 String peptide = values[peptideIndex];
@@ -265,7 +261,7 @@ public class ExpressionAnalyser
             lines.remove(0);
 
             // Peptide,Genes,Transcripts,AminoAcidPos,UpFlank,DownFlank,MatchCount
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
             int transcriptsIndex = fieldsIndexMap.get("Transcripts");
@@ -273,7 +269,7 @@ public class ExpressionAnalyser
 
             for(String line :lines)
             {
-                final String[] values = line.split(DELIMITER, -1);
+                final String[] values = line.split(CSV_DELIM, -1);
 
                 String peptide = values[peptideIndex];
                 String transcriptsStr = values[transcriptsIndex];
@@ -309,30 +305,20 @@ public class ExpressionAnalyser
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
-        options.addOption(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
-        options.addOption(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
-        options.addOption(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");
-        addEnsemblDir(options);
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        configBuilder.addPath(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
+        configBuilder.addPath(PROTEOME_PEPTIDES_FILE, true, "Proteome binders file");
+        configBuilder.addPath(VALIDATION_PEPTIDES_FILE, true, "Immunogenic peptide data file");
+        configBuilder.addPath(PEPTIDE_SEARCH_FILE, true, "Peptide location in proteome");
+        addEnsemblDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        ExpressionAnalyser expressionAnalyser = new ExpressionAnalyser(cmd);
+        ExpressionAnalyser expressionAnalyser = new ExpressionAnalyser(configBuilder);
         expressionAnalyser.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

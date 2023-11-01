@@ -21,12 +21,15 @@ import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.common.purple.TumorMutationalStatus;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
+import com.hartwig.hmftools.purple.copynumber.LohCalcData;
+import com.hartwig.hmftools.purple.copynumber.LohCalcs;
 import com.hartwig.hmftools.purple.somatic.SomaticStream;
 import com.hartwig.hmftools.purple.sv.SomaticSvCache;
 
 public final class PurpleSummaryData
 {
-    public static PurpleQC createQC(double contamination, final BestFit bestFit, final Gender amberGender, final Gender cobaltGender,
+    public static PurpleQC createQC(
+            double contamination, final BestFit bestFit, final Gender amberGender, final Gender cobaltGender,
             final List<PurpleCopyNumber> copyNumbers, final List<GeneCopyNumber> geneCopyNumbers,
             final Set<GermlineAberration> aberrations, int amberMeanDepth, int maxDeletedGenes)
     {
@@ -42,6 +45,8 @@ public final class PurpleSummaryData
                 PurpleQCStatus.genderPass(amberGender, cobaltGender, aberrations),
                 unsupportedCopyNumberSegments, deletedGenes, bestFit.fit().purity(), bestFit.method(), contamination, maxDeletedGenes);
 
+        LohCalcData lohCalcData = LohCalcs.calcLohData(copyNumbers);
+
         return ImmutablePurpleQC.builder()
                 .status(statusSet)
                 .method(bestFit.method())
@@ -54,15 +59,15 @@ public final class PurpleSummaryData
                 .deletedGenes(deletedGenes)
                 .germlineAberrations(aberrations)
                 .amberMeanDepth(amberMeanDepth)
+                .lohPercent(lohCalcData.lohPercent())
                 .build();
     }
 
     public static PurityContext createPurity(
-            final String version, final BestFit bestFit, final Gender gender, final PurpleConfig config, final PurpleQC qcChecks,
+            final BestFit bestFit, final Gender gender, final PurpleConfig config, final PurpleQC qcChecks,
             final List<PurpleCopyNumber> copyNumbers, final SomaticStream somaticStream, final SomaticSvCache svCache)
     {
         return ImmutablePurityContext.builder()
-                .version(version)
                 .bestFit(bestFit.fit())
                 .method(bestFit.method())
                 .gender(gender)

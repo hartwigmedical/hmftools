@@ -1,11 +1,21 @@
 package com.hartwig.hmftools.purple.fitting;
 
-import org.immutables.value.Value;
+import static java.lang.String.format;
 
-@Value.Immutable
-public abstract class SomaticPeak {
+public class SomaticPeak
+{
 
-    public abstract double alleleFrequency();
+    public final double AlleleFrequency;
+    public final int Count;
 
-    public abstract int count();
+    public SomaticPeak(final double alleleFrequency, final int count)
+    {
+        AlleleFrequency = alleleFrequency;
+        Count = count;
+    }
+
+    public String toString()
+    {
+        return format("vaf(%.3f) count(%d)", AlleleFrequency, Count);
+    }
 }

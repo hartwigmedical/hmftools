@@ -17,6 +17,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.sage.GeneDepth;
 import com.hartwig.hmftools.common.sage.GeneDepthFile;
+import com.hartwig.hmftools.common.sage.SageCommon;
+import com.hartwig.hmftools.sage.SageConfig;
 
 public class Coverage
 {
@@ -24,7 +26,7 @@ public class Coverage
 
     private static final String GENE_EXON_DELIM = "_";
 
-    public Coverage(final List<String> samples, final Collection<NamedBed> panel)
+    public Coverage(final List<String> samples, final Collection<NamedBed> panel, final SageConfig config)
     {
         mGeneCoverage = Maps.newHashMap();
 
@@ -50,7 +52,7 @@ public class Coverage
                     exonCoverages.add(new ExonCoverage(exon, exonRank));
                 }
 
-                GeneCoverage geneCoverage = new GeneCoverage(gene, exonCoverages);
+                GeneCoverage geneCoverage = new GeneCoverage(gene, exonCoverages, config.MinMapQuality);
                 geneCoverages.add(geneCoverage);
             }
         }
@@ -79,8 +81,8 @@ public class Coverage
             String sampleId = entry.getKey();
             List<GeneCoverage> geneCoverages = entry.getValue();
 
-            String geneFile = parent + File.separator + sampleId + ".sage.gene.coverage.tsv";
-            String exonFile = parent + File.separator + sampleId + ".sage.exon.medians.tsv";
+            String geneFile = SageCommon.generateGeneCoverageFilename(parent, sampleId);
+            String exonFile = SageCommon.generateExonMediansFilename(parent, sampleId);
 
             try
             {

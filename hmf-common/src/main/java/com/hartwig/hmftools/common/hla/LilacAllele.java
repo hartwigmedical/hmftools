@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.common.hla;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.checkFileExtensionRename;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,28 +20,44 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class LilacAllele {
-
+public abstract class LilacAllele
+{
     public abstract String allele();
+
     public abstract int refFragments();
+
     public abstract int refUnique();
+
     public abstract int refShared();
+
     public abstract int refWild();
+
     public abstract int tumorFragments();
+
     public abstract int tumorUnique();
+
     public abstract int tumorShared();
+
     public abstract int tumorWild();
+
     public abstract int rnaFragments();
+
     public abstract int rnaUnique();
+
     public abstract int rnaShared();
+
     public abstract int rnaWild();
 
     public abstract double tumorCopyNumber();
 
     public abstract double somaticMissense();
+
     public abstract double somaticNonsenseOrFrameshift();
+
     public abstract double somaticSplice();
+
     public abstract double somaticSynonymous();
+
     public abstract double somaticInframeIndel();
 
     public double somaticVariantCount()
@@ -46,8 +65,7 @@ public abstract class LilacAllele {
         return somaticMissense() + somaticNonsenseOrFrameshift() + somaticSplice() + somaticSynonymous() + somaticInframeIndel();
     }
 
-    protected static final String DELIMITER = ",";
-    private static final String FILE_EXTENSION = ".lilac.csv";
+    private static final String FILE_EXTENSION = ".lilac.tsv";
 
     public static String generateFilename(final String basePath, final String sample)
     {
@@ -56,54 +74,21 @@ public abstract class LilacAllele {
 
     public static List<LilacAllele> read(final String filePath) throws IOException
     {
-        return fromLines(Files.readAllLines(new File(filePath).toPath()));
-    }
+        String filename = checkFileExtensionRename(filePath);
+        String delim = inferFileDelimiter(filename);
 
-    public static void write(final String filename, List<LilacAllele> alleles) throws IOException
-    {
-        Files.write(new File(filename).toPath(), toLines(alleles));
-    }
+        List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-    static List<String> toLines(final List<LilacAllele> alleles)
-    {
-        final List<String> lines = Lists.newArrayList();
-        lines.add(header());
-        alleles.stream().map(x -> toString(x)).forEach(lines::add);
-        return lines;
-    }
-
-    private static final String FLD_ALLELE = "Allele";
-    private static final String FLD_REF_TOTAL = "RefTotal";
-    private static final String FLD_REF_UNIQUE = "RefUnique";
-    private static final String FLD_REF_SHARED = "RefShared";
-    private static final String FLD_REF_WILD = "RefWild";
-    private static final String FLD_TUMOR_TOTAL = "TumorTotal";
-    private static final String FLD_TUMOR_UNIQUE = "TumorUnique";
-    private static final String FLD_TUMOR_SHARED = "TumorShared";
-    private static final String FLD_TUMOR_WILD = "TumorWild";
-    private static final String FLD_TUMOR_CN = "TumorCopyNumber";
-    private static final String FLD_RNA_TOTAL = "RnaTotal";
-    private static final String FLD_RNA_UNIQUE = "RnaUnique";
-    private static final String FLD_RNA_SHARED = "RnaShared";
-    private static final String FLD_RNA_WILD = "RnaWild";
-    private static final String FLD_MISSENSE = "SomaticMissense";
-    private static final String FLD_NFS = "SomaticNonsenseOrFrameshift";
-    private static final String FLD_SPLICE = "SomaticSplice";
-    private static final String FLD_SYNON = "SomaticSynonymous";
-    private static final String FLD_INDEL = "SomaticInframeIndel";
-
-    static List<LilacAllele> fromLines(final List<String> lines)
-    {
         final String header = lines.get(0);
         lines.remove(0);
 
-        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header,DELIMITER);
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, delim);
 
         List<LilacAllele> alleles = Lists.newArrayList();
 
         for(int i = 0; i < lines.size(); ++i)
         {
-            String[] values = lines.get(i).split(DELIMITER);
+            String[] values = lines.get(i).split(delim);
 
             alleles.add(ImmutableLilacAllele.builder()
                     .allele(values[fieldsIndexMap.get(FLD_ALLELE)])
@@ -131,9 +116,42 @@ public abstract class LilacAllele {
         return alleles;
     }
 
+    public static void write(final String filename, List<LilacAllele> alleles) throws IOException
+    {
+        Files.write(new File(filename).toPath(), toLines(alleles));
+    }
+
+    private static List<String> toLines(final List<LilacAllele> alleles)
+    {
+        final List<String> lines = Lists.newArrayList();
+        lines.add(header());
+        alleles.stream().map(x -> toString(x)).forEach(lines::add);
+        return lines;
+    }
+
+    private static final String FLD_ALLELE = "Allele";
+    private static final String FLD_REF_TOTAL = "RefTotal";
+    private static final String FLD_REF_UNIQUE = "RefUnique";
+    private static final String FLD_REF_SHARED = "RefShared";
+    private static final String FLD_REF_WILD = "RefWild";
+    private static final String FLD_TUMOR_TOTAL = "TumorTotal";
+    private static final String FLD_TUMOR_UNIQUE = "TumorUnique";
+    private static final String FLD_TUMOR_SHARED = "TumorShared";
+    private static final String FLD_TUMOR_WILD = "TumorWild";
+    private static final String FLD_TUMOR_CN = "TumorCopyNumber";
+    private static final String FLD_RNA_TOTAL = "RnaTotal";
+    private static final String FLD_RNA_UNIQUE = "RnaUnique";
+    private static final String FLD_RNA_SHARED = "RnaShared";
+    private static final String FLD_RNA_WILD = "RnaWild";
+    private static final String FLD_MISSENSE = "SomaticMissense";
+    private static final String FLD_NFS = "SomaticNonsenseOrFrameshift";
+    private static final String FLD_SPLICE = "SomaticSplice";
+    private static final String FLD_SYNON = "SomaticSynonymous";
+    private static final String FLD_INDEL = "SomaticInframeIndel";
+
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(FLD_ALLELE)
                 .add(FLD_REF_TOTAL)
                 .add(FLD_REF_UNIQUE)
@@ -158,7 +176,7 @@ public abstract class LilacAllele {
 
     private static String toString(final LilacAllele allele)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(allele.allele())
                 .add(String.valueOf(allele.refFragments()))
                 .add(String.valueOf(allele.refUnique()))

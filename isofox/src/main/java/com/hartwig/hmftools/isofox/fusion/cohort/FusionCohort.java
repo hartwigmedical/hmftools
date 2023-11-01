@@ -2,16 +2,14 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 
 import static java.lang.Math.ceil;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.FUSION;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.PASSING_FUSION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -22,6 +20,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
@@ -48,12 +47,12 @@ public class FusionCohort
         3. run comparison of filtered/passing fusions between Isofox and external fusion files
     */
 
-    public FusionCohort(final CohortConfig config, final CommandLine cmd)
+    public FusionCohort(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
 
         KnownFusionCache knownFusionCache = new KnownFusionCache();
-        knownFusionCache.loadFromFile(cmd);
+        knownFusionCache.loadFromFile(configBuilder);
 
         mFilters = new PassingFusions(knownFusionCache, mConfig.Fusions.CohortFile);
         mExternalCompareWriter = mConfig.Fusions.ComparisonSource != null ? ExternalFusionCompare.initialiseWriter(mConfig) : null;

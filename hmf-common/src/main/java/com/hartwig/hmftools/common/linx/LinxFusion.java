@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.linx;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +23,7 @@ public abstract class LinxFusion
     public abstract String name();
     public abstract boolean reported();
     public abstract String reportedType();
+    public abstract String reportableReasons();
     public abstract FusionPhasedType phased();
     public abstract FusionLikelihoodType likelihood();
     public abstract int chainLength();
@@ -74,13 +75,16 @@ public abstract class LinxFusion
         final String header = lines.get(0);
         lines.remove(0);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
         List<LinxFusion> fusions = Lists.newArrayList();
 
         for(int i = 0; i < lines.size(); ++i)
         {
-            String[] values = lines.get(i).split(DELIMITER);
+            String[] values = lines.get(i).split(TSV_DELIM);
+
+            String reportableReasons = fieldsIndexMap.containsKey("reportableReasons") ?
+                    values[fieldsIndexMap.get("reportableReasons")] : "";
 
             fusions.add(ImmutableLinxFusion.builder()
                     .fivePrimeBreakendId(Integer.parseInt(values[fieldsIndexMap.get("fivePrimeBreakendId")]))
@@ -88,6 +92,7 @@ public abstract class LinxFusion
                     .name(values[fieldsIndexMap.get("name")])
                     .reported(Boolean.parseBoolean(values[fieldsIndexMap.get("reported")]))
                     .reportedType(values[fieldsIndexMap.get("reportedType")])
+                    .reportableReasons(reportableReasons)
                     .phased(FusionPhasedType.valueOf(values[fieldsIndexMap.get("phased")]))
                     .likelihood(FusionLikelihoodType.valueOf(values[fieldsIndexMap.get("likelihood")]))
                     .chainLength(Integer.parseInt(values[fieldsIndexMap.get("chainLength")]))
@@ -115,12 +120,13 @@ public abstract class LinxFusion
 
     private static String header()
     {
-        return new StringJoiner(LinxCluster.DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("fivePrimeBreakendId")
                 .add("threePrimeBreakendId")
                 .add("name")
                 .add("reported")
                 .add("reportedType")
+                .add("reportableReasons")
                 .add("phased")
                 .add("likelihood")
                 .add("chainLength")
@@ -144,12 +150,13 @@ public abstract class LinxFusion
 
     private static String toString(final LinxFusion fusion)
     {
-        return new StringJoiner(LinxCluster.DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(fusion.fivePrimeBreakendId()))
                 .add(String.valueOf(fusion.threePrimeBreakendId()))
                 .add(String.valueOf(fusion.name()))
                 .add(String.valueOf(fusion.reported()))
                 .add(String.valueOf(fusion.reportedType()))
+                .add(String.valueOf(fusion.reportableReasons()))
                 .add(String.valueOf(fusion.phased()))
                 .add(String.valueOf(fusion.likelihood()))
                 .add(String.valueOf(fusion.chainLength()))

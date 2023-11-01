@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -23,10 +23,8 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class ExpressionCohortDistribution
 {
@@ -48,7 +46,7 @@ public class ExpressionCohortDistribution
     private static final String TRANSCRIPT_SCOPE = "exp_by_transcript";
     private static final String WRITE_PERCENTILES = "exp_percentiles";
 
-    public ExpressionCohortDistribution(final CohortConfig config, final CommandLine cmd)
+    public ExpressionCohortDistribution(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
 
@@ -58,18 +56,18 @@ public class ExpressionCohortDistribution
         mGeneTransIds = Lists.newArrayList();
         mIdNameMap = Maps.newHashMap();
 
-        mTranscriptScope = cmd.hasOption(TRANSCRIPT_SCOPE);
-        mWritePercentiles = cmd.hasOption(WRITE_PERCENTILES);
-        mWritePerCancer = !mWritePercentiles || cmd.hasOption(DIST_BY_CANCER_TYPE);
+        mTranscriptScope = configBuilder.hasFlag(TRANSCRIPT_SCOPE);
+        mWritePercentiles = configBuilder.hasFlag(WRITE_PERCENTILES);
+        mWritePerCancer = !mWritePercentiles || configBuilder.hasFlag(DIST_BY_CANCER_TYPE);
 
         mWriter = null;
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(DIST_BY_CANCER_TYPE, false, "Produce per-cancer expression distributions");
-        options.addOption(TRANSCRIPT_SCOPE, false, "Produce per-cancer expression distributions");
-        options.addOption(WRITE_PERCENTILES, false, "Write expression percentiles");
+        configBuilder.addFlag(DIST_BY_CANCER_TYPE, "Produce per-cancer expression distributions");
+        configBuilder.addFlag(TRANSCRIPT_SCOPE, "Produce per-cancer expression distributions");
+        configBuilder.addFlag(WRITE_PERCENTILES, "Write expression percentiles");
     }
 
     public void produceCohortData()

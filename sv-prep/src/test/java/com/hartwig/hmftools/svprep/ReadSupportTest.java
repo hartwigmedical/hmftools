@@ -3,13 +3,13 @@ package com.hartwig.hmftools.svprep;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.DEFAULT_BASE_QUAL;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.DEFAULT_MAP_QUAL;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.READ_FILTERS;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.buildFlags;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
+import static com.hartwig.hmftools.svprep.TestUtils.DEFAULT_BASE_QUAL;
+import static com.hartwig.hmftools.svprep.TestUtils.DEFAULT_MAP_QUAL;
+import static com.hartwig.hmftools.svprep.TestUtils.READ_FILTERS;
+import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
+import static com.hartwig.hmftools.svprep.TestUtils.buildFlags;
+import static com.hartwig.hmftools.svprep.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.svprep.TestUtils.readIdStr;
 import static com.hartwig.hmftools.svprep.reads.JunctionTracker.hasDiscordantJunctionSupport;
 import static com.hartwig.hmftools.svprep.reads.JunctionTracker.hasExactJunctionSupport;
 import static com.hartwig.hmftools.svprep.reads.ReadFilterType.INSERT_MAP_OVERLAP;
@@ -189,7 +189,7 @@ public class ReadSupportTest
         int readId = 1;
 
         // first negative orientation
-        ReadRecord junctionRead = ReadRecord.from(SvPrepTestUtils.createSamRecord(
+        ReadRecord junctionRead = ReadRecord.from(TestUtils.createSamRecord(
                 readIdStr(readId++), CHR_1, 230, REF_BASES.substring(0, 100), "30S70M"));
 
         JunctionData junctionData = new JunctionData(230, NEG_ORIENT, junctionRead);
@@ -211,7 +211,7 @@ public class ReadSupportTest
         assertFalse(hasDiscordantJunctionSupport(supportRead, junctionData, READ_FILTERS));
 
         // other junction side
-        junctionRead = ReadRecord.from(SvPrepTestUtils.createSamRecord(
+        junctionRead = ReadRecord.from(TestUtils.createSamRecord(
                 readIdStr(readId++), CHR_1, 1500, REF_BASES.substring(0, 100), "70M30S"));
 
         junctionData = new JunctionData(1500, POS_ORIENT, junctionRead);

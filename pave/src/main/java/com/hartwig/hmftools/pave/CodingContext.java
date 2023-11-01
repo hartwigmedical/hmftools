@@ -3,10 +3,10 @@ package com.hartwig.hmftools.pave;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.StringJoiner;
 
@@ -97,14 +97,14 @@ public class CodingContext
         return bases.substring(startDiff, bases.length() - endDiff);
     }
 
-    public static String csvHeader()
+    public static String tsvHeader()
     {
-        return "HgvsCoding,RegionType,CodingType,ExonRank,CodingBase,CodingPosRange,UpstreamPhase,SpansSplice,SpliceDonorAcceptorBases,NearestExonDistance";
+        return "HgvsCoding\tRegionType\tCodingType\tExonRank\tCodingBase\tCodingPosRange\tUpstreamPhase\tSpansSplice\tSpliceDonorAcceptorBases\tNearestExonDistance";
     }
 
-    public String toCsv()
+    public String toTsv()
     {
-        StringJoiner sj = new StringJoiner(DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(Hgvs);
         sj.add(RegionType.toString());

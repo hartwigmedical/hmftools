@@ -8,11 +8,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class LinxTestFactory {
-
-    private LinxTestFactory() {
-    }
-
+public final class LinxTestFactory
+{
     @NotNull
     public static ImmutableLinxSvAnnotation.Builder svAnnotationBuilder()
     {
@@ -53,6 +50,7 @@ public final class LinxTestFactory {
                 .name(Strings.EMPTY)
                 .reported(false)
                 .reportedType(KnownFusionType.NONE.toString())
+                .reportableReasons("OK")
                 .phased(FusionPhasedType.OUT_OF_FRAME)
                 .likelihood(FusionLikelihoodType.NA)
                 .chainLength(0)
@@ -103,5 +101,16 @@ public final class LinxTestFactory {
                 .exonUp(0)
                 .exonDown(0)
                 .junctionCopyNumber(0D);
+    }
+
+    @NotNull
+    public static ImmutableHomozygousDisruption.Builder homozygousDisruptionBuilder()
+    {
+        return ImmutableHomozygousDisruption.builder()
+                .chromosome(Strings.EMPTY)
+                .chromosomeBand(Strings.EMPTY)
+                .gene(Strings.EMPTY)
+                .transcript(Strings.EMPTY)
+                .isCanonical(false);
     }
 }

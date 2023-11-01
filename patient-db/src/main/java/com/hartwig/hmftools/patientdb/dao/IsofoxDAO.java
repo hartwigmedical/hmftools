@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.qcFiltersToString;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GENEEXPRESSION;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.NOVELSPLICEJUNCTION;
@@ -67,7 +68,7 @@ public class IsofoxDAO
         inserter.values(
                 timestamp,
                 sampleId,
-                DatabaseUtil.checkStringLength(statistics.qcStatus(), RNASTATISTICS.QCSTATUS),
+                DatabaseUtil.checkStringLength(qcFiltersToString(statistics.qcStatus()), RNASTATISTICS.QCSTATUS),
                 statistics.readLength(),
                 statistics.totalFragments(),
                 statistics.duplicateFragments(),

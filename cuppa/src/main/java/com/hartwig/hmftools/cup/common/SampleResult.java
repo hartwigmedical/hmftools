@@ -8,10 +8,7 @@ import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_REF_CANCER_TYP
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_REF_VALUE;
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_RESULT_TYPE;
 import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.FLD_VALUE;
-import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.isOldCategoryClassifierType;
-import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.mapOldCategoryType;
-import static com.hartwig.hmftools.common.cuppa.CuppaDataFile.mapOldDataType;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.COMBINED;
@@ -106,27 +103,11 @@ public class SampleResult
                     continue;
 
                 String categoryStr = values[categoryIndex];
-                ResultType resultType;
+                ResultType resultType = ResultType.valueOf(values[resultTypeIndex]);
+                CategoryType category = CategoryType.valueOf(categoryStr);
 
-                CategoryType category;
-
-                if(isOldCategoryClassifierType(categoryStr)) // support for pre-1.7
-                {
-                    dataType = mapOldDataType(dataType);
+                if(category == COMBINED)
                     resultType = ResultType.CLASSIFIER;
-                    category = mapOldCategoryType(dataType);
-
-                    if(category == null)
-                        continue;
-                }
-                else
-                {
-                    category = CategoryType.valueOf(categoryStr);
-                    resultType = ResultType.valueOf(values[resultTypeIndex]);
-
-                    if(category == COMBINED)
-                        resultType = ResultType.CLASSIFIER;
-                }
 
                 if(resultType != ResultType.CLASSIFIER && category != COMBINED)
                     continue;

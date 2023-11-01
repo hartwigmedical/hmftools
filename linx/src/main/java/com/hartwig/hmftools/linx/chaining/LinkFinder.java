@@ -40,14 +40,14 @@ public class LinkFinder
 
         List<SvBreakend> multiConnectionBreakends = Lists.newArrayList();
 
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
             if(breakendList.size() == 1)
                 continue;
 
-            for (int i = 0; i < breakendList.size() -1; ++i)
+            for(int i = 0; i < breakendList.size() -1; ++i)
             {
                 final SvBreakend lowerBreakend = breakendList.get(i);
 
@@ -59,7 +59,7 @@ public class LinkFinder
                 if(lowerSV.type() == INS || lowerSV.isSglBreakend())
                     continue;
 
-                for (int j = i+1; j < breakendList.size(); ++j)
+                for(int j = i+1; j < breakendList.size(); ++j)
                 {
                     final SvBreakend upperBreakend = breakendList.get(j);
 
@@ -77,7 +77,7 @@ public class LinkFinder
                     boolean v1Start = lowerBreakend.usesStart();
                     boolean v2Start = upperBreakend.usesStart();
 
-                    if (!haveLinkedAssemblies(lowerSV, upperSV, v1Start, v2Start))
+                    if(!haveLinkedAssemblies(lowerSV, upperSV, v1Start, v2Start))
                         continue;
 
                     // it's possible for a breakend to already be in an assembled link
@@ -243,11 +243,11 @@ public class LinkFinder
 
     public static void findDeletionBridges(final Map<String, List<SvBreakend>> chrBreakendMap)
     {
-        for (final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : chrBreakendMap.entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
-            for (int i = 0; i < breakendList.size() - 1; ++i)
+            for(int i = 0; i < breakendList.size() - 1; ++i)
             {
                 SvBreakend breakend = breakendList.get(i);
                 SvBreakend nextBreakend = breakendList.get(i + 1);

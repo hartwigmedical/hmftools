@@ -2,6 +2,7 @@ package com.hartwig.hmftools.cobalt;
 
 public class CobaltConstants
 {
+    public static final int INVALID_VALUE_INDICATOR = -1;
     public static final double MIN_DIPLOID = 0.85;
     public static final double MAX_DIPLOID = 1.15;
     public static final int WINDOW_SIZE = 1000;
@@ -13,4 +14,7 @@ public class CobaltConstants
 
     public static final int ROLLING_MEDIAN_MAX_DISTANCE = 5000;
     public static final int ROLLING_MEDIAN_MIN_COVERAGE = 1000;
+
+    // when we consolidate sparse windows we use this to avoid consolidating over centromere
+    public static final int MAX_SPARSE_CONSOLIDATE_DISTANCE = 3_000_000;
 }

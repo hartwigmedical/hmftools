@@ -2,10 +2,11 @@ package com.hartwig.hmftools.neo.utils;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.io.BufferedWriter;
@@ -16,12 +17,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // class for generating amino acid frequencies from the proteome
@@ -35,15 +32,15 @@ public class GenerateAminoAcidFrequency
 
     public static final String AMINO_ACID_FREQ_FILE = "amino_acid_freq_file";
 
-    public GenerateAminoAcidFrequency(final CommandLine cmd)
+    public GenerateAminoAcidFrequency(final ConfigBuilder configBuilder)
     {
         mAminoAcidFrequencies = Maps.newHashMap();
-        mAminoAcidFreqFile = cmd.getOptionValue(AMINO_ACID_FREQ_FILE);
+        mAminoAcidFreqFile = configBuilder.getValue(AMINO_ACID_FREQ_FILE);
 
-        if(cmd.hasOption(ENSEMBL_DATA_DIR))
+        if(configBuilder.hasValue(ENSEMBL_DATA_DIR))
         {
             mTransAminoAcidMap = Maps.newHashMap();
-            String ensemblDataDir = cmd.getOptionValue(ENSEMBL_DATA_DIR);
+            String ensemblDataDir = configBuilder.getValue(ENSEMBL_DATA_DIR);
             EnsemblDataLoader.loadTranscriptAminoAcidData(ensemblDataDir, mTransAminoAcidMap, Lists.newArrayList(), true);
         }
         else
@@ -93,27 +90,17 @@ public class GenerateAminoAcidFrequency
         NE_LOGGER.info("wrote amino acid frequencies");
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addEnsemblDir(options);
-        options.addOption(AMINO_ACID_FREQ_FILE, true, "Output filename");
-        addLoggingOptions(options);
-        addOutputDir(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        addEnsemblDir(configBuilder);
+        configBuilder.addPath(AMINO_ACID_FREQ_FILE, true, "Output filename");
+        addLoggingOptions(configBuilder);
+        addOutputDir(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        GenerateAminoAcidFrequency neoBinder = new GenerateAminoAcidFrequency(cmd);
+        GenerateAminoAcidFrequency neoBinder = new GenerateAminoAcidFrequency(configBuilder);
         neoBinder.generateFrequencies();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

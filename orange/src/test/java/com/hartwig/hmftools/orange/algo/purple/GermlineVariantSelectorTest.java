@@ -7,22 +7,25 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.Hotspot;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
 
 import org.junit.Test;
 
-public class GermlineVariantSelectorTest {
-
+public class GermlineVariantSelectorTest
+{
     @Test
-    public void canHandleNullGermlineVariants() {
+    public void canHandleNullGermlineVariants()
+    {
         assertNull(GermlineVariantSelector.selectInterestingUnreportedVariants(null));
     }
 
     @Test
-    public void canSelectInterestingUnreportedVariants() {
-        PurpleVariant reportedHotspot = TestPurpleVariantFactory.builder().reported(true).hotspot(Hotspot.HOTSPOT).build();
-        PurpleVariant unreportedHotspot = TestPurpleVariantFactory.builder().reported(false).hotspot(Hotspot.HOTSPOT).build();
-        PurpleVariant unreportedNearHotspot = TestPurpleVariantFactory.builder().reported(false).hotspot(Hotspot.NEAR_HOTSPOT).build();
+    public void canSelectInterestingUnreportedVariants()
+    {
+        PurpleVariant reportedHotspot = TestPurpleVariantFactory.builder().reported(true).hotspot(HotspotType.HOTSPOT).build();
+        PurpleVariant unreportedHotspot = TestPurpleVariantFactory.builder().reported(false).hotspot(HotspotType.HOTSPOT).build();
+        PurpleVariant unreportedNearHotspot = TestPurpleVariantFactory.builder().reported(false).hotspot(HotspotType.NEAR_HOTSPOT).build();
 
         List<PurpleVariant> variants = Lists.newArrayList(reportedHotspot, unreportedHotspot, unreportedNearHotspot);
         List<PurpleVariant> interesting = GermlineVariantSelector.selectInterestingUnreportedVariants(variants);

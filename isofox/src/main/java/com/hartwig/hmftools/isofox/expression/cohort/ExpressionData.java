@@ -60,10 +60,10 @@ public class ExpressionData
     public double rawFragment() { return mRawFragmentCount; }
 
     public static ExpressionData fromIsofoxTranscript(
-            final String data, int geneIdIndex, int geneNameIndex, int transIndex,
+            final String data, final String delim, int geneIdIndex, int geneNameIndex, int transIndex,
             int fittedFragIndex, int rawFragsIndex, int tpmIndex, int effectiveLengthIndex, int lowQualIndex)
     {
-        final String[] items = data.split(",");
+        final String[] items = data.split(delim, -1);
 
         return new ExpressionData(
                 SOURCE_ISOFOX, items[geneIdIndex], items[geneNameIndex], items[transIndex],
@@ -73,9 +73,10 @@ public class ExpressionData
     }
 
     public static ExpressionData fromIsofoxGene(
-            final String data, int geneIdIndex, int geneNameIndex, int tpmIndex, int splicedIndex, int unsplicedIndex, int lowQualIndex)
+            final String data, final String delim, int geneIdIndex, int geneNameIndex, int tpmIndex, int splicedIndex, int unsplicedIndex,
+            int lowQualIndex)
     {
-        final String[] items = data.split(",");
+        final String[] items = data.split(delim, -1);
 
         return new ExpressionData(
                 SOURCE_ISOFOX, items[geneIdIndex], items[geneNameIndex], "",

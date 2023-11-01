@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.purple.tools;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedReader;
@@ -17,14 +17,10 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.purple.drivers.DeletionRegionFrequency;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class GenerateGermlineDeletionFrequency
@@ -41,17 +37,17 @@ public class GenerateGermlineDeletionFrequency
     private static final String MIN_FREQUENCY = "min_frequency";
     private static final String COHORT_DEL_FILE = "cohort_germline_del_file";
 
-    public GenerateGermlineDeletionFrequency(final CommandLine cmd)
+    public GenerateGermlineDeletionFrequency(final ConfigBuilder configBuilder)
     {
-        mCohortDeletionsFile = cmd.getOptionValue(COHORT_DEL_FILE);
-        mCohortFrequencyFile = cmd.getOptionValue(COHORT_DEL_FREQ_FILE);
-        mMinSampleFrequency = Integer.parseInt(cmd.getOptionValue(MIN_FREQUENCY, "2"));
+        mCohortDeletionsFile = configBuilder.getValue(COHORT_DEL_FILE);
+        mCohortFrequencyFile = configBuilder.getValue(COHORT_DEL_FREQ_FILE);
+        mMinSampleFrequency = configBuilder.getInteger(MIN_FREQUENCY);
 
         mChrRegionMap = Maps.newHashMap();
 
-        if(cmd.hasOption(SAMPLE_ID_FILE))
+        if(configBuilder.hasValue(SAMPLE_ID_FILE))
         {
-            mSampleIds = loadSampleIdsFile(cmd.getOptionValue(SAMPLE_ID_FILE));
+            mSampleIds = loadSampleIdsFile(configBuilder);
             PPL_LOGGER.info("loaded {} reference samples", mSampleIds.size());
         }
         else
@@ -176,33 +172,25 @@ public class GenerateGermlineDeletionFrequency
         }
         catch(IOException e)
         {
-            PPL_LOGGER.error("failed to write cohort germlime deletion frequency file: {}", e.toString());
+            PPL_LOGGER.error("failed to write cohort germline deletion frequency file: {}", e.toString());
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        options.addOption(COHORT_DEL_FILE, true, "Input germline cohort deletions file");
-        options.addOption(COHORT_DEL_FREQ_FILE, true, "Output cohort germline deletions frequency file");
-        options.addOption(MIN_FREQUENCY, true, "Min sample frequency to write a region");
-        options.addOption(SAMPLE_ID_FILE, true, "Reference de-duped sample IDs");
-        addLoggingOptions(options);
+        configBuilder.addPath(COHORT_DEL_FILE, true, "Input germline cohort deletions file");
+        configBuilder.addPath(COHORT_DEL_FREQ_FILE, true, "Output cohort germline deletions frequency file");
+        configBuilder.addInteger(MIN_FREQUENCY, "Min sample frequency to write a region", 2);
+        configBuilder.addConfigItem(SAMPLE_ID_FILE, true, "Reference de-duped sample IDs");
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        setLogLevel(configBuilder);
 
-        setLogLevel(cmd);
+        configBuilder.checkAndParseCommandLine(args);
 
-        GenerateGermlineDeletionFrequency germlineDeletionFrequency = new GenerateGermlineDeletionFrequency(cmd);
+        GenerateGermlineDeletionFrequency germlineDeletionFrequency = new GenerateGermlineDeletionFrequency(configBuilder);
         germlineDeletionFrequency.buildCohortFrequencies();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

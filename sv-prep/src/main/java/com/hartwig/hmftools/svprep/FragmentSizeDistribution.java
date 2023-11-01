@@ -5,9 +5,8 @@ import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_MAX_LENGTH;
 import static com.hartwig.hmftools.svprep.SvConstants.FRAG_LENGTH_DIST_MIN_QUAL;
@@ -25,9 +24,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
@@ -59,7 +56,7 @@ public class FragmentSizeDistribution
             String chromosome = String.valueOf(i);
             String chromosomeStr = mConfig.RefGenVersion.versionedChromosome(chromosome);
 
-            if(!mConfig.SpecificChromosomes.isEmpty() && !mConfig.SpecificChromosomes.contains(chromosomeStr))
+            if(mConfig.SpecificChrRegions.excludeChromosome(chromosomeStr))
                 continue;
 
             ChromosomeTask chrTask = new ChromosomeTask(chromosomeStr);
@@ -174,12 +171,12 @@ public class FragmentSizeDistribution
 
             BufferedWriter writer = createBufferedWriter(outputFileName, false);
 
-            writer.write("FragmentLength,Count");
+            writer.write("FragmentLength\tCount");
             writer.newLine();
 
             for(LengthFrequency lengthFrequency : mLengthFrequencies)
             {
-                writer.write(String.format("%d,%d", lengthFrequency.Length, lengthFrequency.Frequency));
+                writer.write(String.format("%d\t%d", lengthFrequency.Length, lengthFrequency.Frequency));
                 writer.newLine();
             }
 
@@ -220,10 +217,10 @@ public class FragmentSizeDistribution
         public Long call()
         {
             // slice a fixed region from each chromosome
-            ChrBaseRegion region = !mConfig.SpecificRegions.isEmpty() ?
-                mConfig.SpecificRegions.get(0) : new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
+            ChrBaseRegion region = !mConfig.SpecificChrRegions.Regions.isEmpty() ?
+                mConfig.SpecificChrRegions.Regions.get(0) : new ChrBaseRegion(mChromosome, 1_000_000, 10_000_000);
 
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(region), this::processBamRead);
+            mBamSlicer.slice(mSamReader, region, this::processBamRead);
 
             return (long)0;
         }

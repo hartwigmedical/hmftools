@@ -3,19 +3,19 @@ package com.hartwig.hmftools.neo.utils;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELES;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PATIENT_ID;
-import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.TrainConfig.REQUIRED_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
@@ -31,21 +31,14 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.PeptideData;
-import com.hartwig.hmftools.neo.bind.RandomPeptideConfig;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class GartnerDataPrep
 {
     private final String mOutputDir;
-    private final String mOutputId;
     private final List<Integer> mRequiredPeptideLengths;
 
     private final Map<String,List<String>> mPatientAlleles;
@@ -55,18 +48,17 @@ public class GartnerDataPrep
     private static final String PATIENT_ALLELES_FILE = "patient_alleles_file";
     private static final String MUTATIONS_FILE = "mutations_file";
 
-    public GartnerDataPrep(final CommandLine cmd)
+    public GartnerDataPrep(final ConfigBuilder configBuilder)
     {
         mPatientAlleles = Maps.newHashMap();
         mMutations = Lists.newArrayList();
 
-        loadPatientAlleles(cmd.getOptionValue(PATIENT_ALLELES_FILE));
-        loadMutations(cmd.getOptionValue(MUTATIONS_FILE));
+        loadPatientAlleles(configBuilder.getValue(PATIENT_ALLELES_FILE));
+        loadMutations(configBuilder.getValue(MUTATIONS_FILE));
 
         mRequiredPeptideLengths = DEFAULT_PEPTIDE_LENGTHS;
 
-        mOutputDir = FileWriterUtils.parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
+        mOutputDir = parseOutputDir(configBuilder);
     }
 
     public void run()
@@ -238,14 +230,14 @@ public class GartnerDataPrep
             String header = lines.get(0);
             lines.remove(0);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELES);
             int patientIndex = fieldsIndexMap.get(FLD_PATIENT_ID);
 
             for(String line : lines)
             {
-                String[] values = line.split(DELIM, -1);
+                String[] values = line.split(BIND_DELIM, -1);
                 String patient = values[patientIndex];
                 String allelesStr = values[alleleIndex];
 
@@ -275,7 +267,7 @@ public class GartnerDataPrep
             String header = lines.get(0);
             lines.remove(0);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             for(String line : lines)
             {
@@ -308,7 +300,7 @@ public class GartnerDataPrep
 
         public MutationData(final Map<String,Integer> fieldsIndexMap, final String line)
         {
-            String[] values = line.split(DELIM, -1);
+            String[] values = line.split(BIND_DELIM, -1);
 
             NeId = Integer.parseInt(values[fieldsIndexMap.get("NeId")]);
             VariantKey = values[fieldsIndexMap.get("VariantKey")];
@@ -326,28 +318,19 @@ public class GartnerDataPrep
                 NeId, PatientId, VariantKey, GeneName, MutationType); }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        RandomPeptideConfig.addCmdLineArgs(options);
-        options.addOption(PATIENT_ALLELES_FILE, true, "MCF predictions file");
-        options.addOption(MUTATIONS_FILE, true, "Binding validation file");
-        options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "Peptide lengths");
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        // RandomPeptideConfig.addConfig(configBuilder);
+        configBuilder.addPath(PATIENT_ALLELES_FILE, true, "MCF predictions file");
+        configBuilder.addPath(MUTATIONS_FILE, true, "Binding validation file");
+        configBuilder.addConfigItem(REQUIRED_PEPTIDE_LENGTHS, true, "Peptide lengths");
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        GartnerDataPrep gartnerDataPrep = new GartnerDataPrep(cmd);
+        GartnerDataPrep gartnerDataPrep = new GartnerDataPrep(configBuilder);
         gartnerDataPrep.run();
-    }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

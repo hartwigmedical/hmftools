@@ -9,10 +9,12 @@ import com.hartwig.hmftools.patientdb.clinical.lims.cohort.LimsCohortTestFactory
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class LimsCheckerTest {
+public class LimsCheckerTest
+{
 
     @Test
-    public void canConvertHospitalPathologySampleId() {
+    public void canConvertHospitalPathologySampleId()
+    {
         String wideSampleId = "WIDE020000001T";
         String cpctSampleId = "CPCT020000001T";
         String coreSampleId = "CORE020000001T";
@@ -49,7 +51,8 @@ public class LimsCheckerTest {
     }
 
     @Test
-    public void canCheckHospitalPatientId() {
+    public void canCheckHospitalPatientId()
+    {
         String coreSampleId = "CORE020000001T";
         String wideSampleId = "WIDE020000001T";
 

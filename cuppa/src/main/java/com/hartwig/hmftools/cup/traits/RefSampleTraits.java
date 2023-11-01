@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
@@ -22,6 +22,7 @@ import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST_TR
 import static com.hartwig.hmftools.cup.common.CupConstants.isCandidateCancerType;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.GENDER_RATES;
+import static com.hartwig.hmftools.cup.ref.RefDataConfig.GENDER_RATES_ADULT_DEFAULT;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.FLD_GENDER_FEMALE;
 import static com.hartwig.hmftools.cup.traits.SampleTraitsDataLoader.FLD_GENDER_MALE;
@@ -44,12 +45,11 @@ import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-
-import org.apache.commons.cli.CommandLine;
 
 public class RefSampleTraits implements RefClassifier
 {
@@ -62,7 +62,7 @@ public class RefSampleTraits implements RefClassifier
     private BufferedWriter mPercentilesWriter;
     private BufferedWriter mRatesWriter;
 
-    public RefSampleTraits(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefSampleTraits(final RefDataConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -73,27 +73,31 @@ public class RefSampleTraits implements RefClassifier
 
         mGenderRates = Maps.newHashMap();
 
-        if(cmd.hasOption(GENDER_RATES))
+        if(configBuilder.hasValue(GENDER_RATES))
         {
-            String[] genderEntries = cmd.getOptionValue(GENDER_RATES).split(DATA_DELIM);
-            for(String genderEntry : genderEntries)
-            {
-                String[] genderData = genderEntry.split(SUBSET_DELIM);
+            String genderRatesStr = configBuilder.getValue(GENDER_RATES);
 
-                if(genderData.length == 3)
+            if(genderRatesStr.equals(GENDER_RATES_ADULT_DEFAULT))
+            {
+                mGenderRates.put(CANCER_TYPE_BREAST, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
+                mGenderRates.put(CANCER_TYPE_BREAST_TRIPLE_NEGATIVE, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
+            }
+            else
+            {
+                String[] genderEntries = genderRatesStr.split(DATA_DELIM);
+                for(String genderEntry : genderEntries)
                 {
-                    double[] rates = new double[2];
-                    rates[GENDER_MALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_MALE_INDEX]);
-                    rates[GENDER_FEMALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_FEMALE_INDEX]);
-                    mGenderRates.put(genderData[0], rates);
+                    String[] genderData = genderEntry.split(SUBSET_DELIM);
+
+                    if(genderData.length == 3)
+                    {
+                        double[] rates = new double[2];
+                        rates[GENDER_MALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_MALE_INDEX]);
+                        rates[GENDER_FEMALE_INDEX] = Double.parseDouble(genderData[1 + GENDER_FEMALE_INDEX]);
+                        mGenderRates.put(genderData[0], rates);
+                    }
                 }
             }
-        }
-        else
-        {
-            // -gender_rates "Breast;1;0.1"
-            mGenderRates.put(CANCER_TYPE_BREAST, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
-            mGenderRates.put(CANCER_TYPE_BREAST_TRIPLE_NEGATIVE, new double[] {1.0, BREAST_MALE_GENDER_RATE} );
         }
 
         // add in the default zero-prevalence ones
@@ -116,50 +120,21 @@ public class RefSampleTraits implements RefClassifier
         return config.Categories.contains(SAMPLE_TRAIT) || !config.CohortSampleTraitsFile.isEmpty() || config.DbAccess != null;
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         if(mConfig.CohortSampleTraitsFile.isEmpty() && mConfig.DbAccess == null && mConfig.PurpleDir.isEmpty())
-            return;
+        {
+            CUP_LOGGER.error("feature ref builder missing DB config or directories");
+            return false;
+        }
 
         CUP_LOGGER.info("building sample traits reference data");
 
         final Map<String,SampleTraitsData> sampleTraitsData = Maps.newHashMap();
 
-        if(!mConfig.CohortSampleTraitsFile.isEmpty())
-        {
-            final List<String> files = parseFileSet(mConfig.CohortSampleTraitsFile);
-            files.forEach(x -> loadRefPurityData(x, sampleTraitsData));
-        }
-        else if(mConfig.DbAccess != null)
-        {
-            loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleTraitsData);
-            sampleTraitsData.values().forEach(x -> assignSampleTraitsData(x));
-        }
-        else
-        {
-            // load from per-sample files
-            for(SampleData sample : mSampleDataCache.RefSampleDataList)
-            {
-                final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
-
-                try
-                {
-                    final PurityContext purityContext = PurityContextFile.read(purpleDataDir, sample.Id);
-
-                    // CUP_LOGGER.debug("sample({}) loading sample traits from purpleDir({})", sample.Id, purpleDataDir);
-
-                    SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityContext, 0);
-                    assignSampleTraitsData(traitsData);
-                    sampleTraitsData.put(sample.Id, traitsData);
-                }
-                catch(Exception e)
-                {
-                    CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
-                            sample.Id, purpleDataDir, e.toString());
-                    break;
-                }
-            }
-        }
+        if(!loadSampleData(sampleTraitsData))
+            return false;
 
         writeCohortData(sampleTraitsData);
 
@@ -195,6 +170,55 @@ public class RefSampleTraits implements RefClassifier
 
         closeBufferedWriter(mPercentilesWriter);
         closeBufferedWriter(mRatesWriter);
+        return true;
+    }
+
+    private boolean loadSampleData(final Map<String,SampleTraitsData> sampleTraitsData)
+    {
+        if(!mConfig.CohortSampleTraitsFile.isEmpty())
+        {
+            final List<String> files = parseFileSet(mConfig.CohortSampleTraitsFile);
+
+            for(String file : files)
+            {
+                if(!loadRefPurityData(file, sampleTraitsData))
+                    return false;
+            }
+        }
+        else if(mConfig.DbAccess != null)
+        {
+            if(!loadTraitsFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleTraitsData))
+                return false;
+
+            sampleTraitsData.values().forEach(x -> assignSampleTraitsData(x));
+        }
+        else
+        {
+            // load from per-sample files
+            for(SampleData sample : mSampleDataCache.RefSampleDataList)
+            {
+                final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
+
+                try
+                {
+                    final PurityContext purityContext = PurityContextFile.read(purpleDataDir, sample.Id);
+
+                    // CUP_LOGGER.debug("sample({}) loading sample traits from purpleDir({})", sample.Id, purpleDataDir);
+
+                    SampleTraitsData traitsData = SampleTraitsData.from(sample.Id, purityContext, 0);
+                    assignSampleTraitsData(traitsData);
+                    sampleTraitsData.put(sample.Id, traitsData);
+                }
+                catch(Exception e)
+                {
+                    CUP_LOGGER.error("sample({}) sample traits - failed to load purity file from dir{}): {}",
+                            sample.Id, purpleDataDir, e.toString());
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
     
     private void initialiseRefDataWriters()
@@ -366,11 +390,12 @@ public class RefSampleTraits implements RefClassifier
         }
     }
 
-    private void loadRefPurityData(final String filename, final Map<String,SampleTraitsData> sampleTraitsData)
+    private boolean loadRefPurityData(final String filename, final Map<String,SampleTraitsData> sampleTraitsData)
     {
         final Map<String,SampleTraitsData> traitsDataMap = Maps.newHashMap();
 
-        loadTraitsFromCohortFile(filename, traitsDataMap);
+        if(!loadTraitsFromCohortFile(filename, traitsDataMap))
+            return false;
 
         CUP_LOGGER.info("loaded {} sample traits records from file({})", traitsDataMap.size(), filename);
 
@@ -383,5 +408,7 @@ public class RefSampleTraits implements RefClassifier
                 assignSampleTraitsData(traits);
             }
         }
+
+        return true;
     }
 }

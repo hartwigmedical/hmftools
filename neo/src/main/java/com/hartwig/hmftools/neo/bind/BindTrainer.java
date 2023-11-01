@@ -1,7 +1,8 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCountData.writeCounts;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
@@ -24,12 +25,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class BindTrainer
@@ -49,14 +46,14 @@ public class BindTrainer
     private final HlaSequences mHlaSequences;
     private final ExpressionLikelihood mExpressionLikelihood;
 
-    public BindTrainer(final CommandLine cmd)
+    public BindTrainer(final ConfigBuilder configBuilder)
     {
-        mConfig = new TrainConfig(cmd);
+        mConfig = new TrainConfig(configBuilder);
         mAllelePeptideData = Maps.newHashMap();
         mDistinctPeptideLengths = Sets.newHashSet();
 
         mHlaSequences = new HlaSequences();
-        mHlaSequences.load(cmd.getOptionValue(HLA_DEFINITIONS_FILE));
+        mHlaSequences.load(configBuilder.getValue(HLA_DEFINITIONS_FILE));
 
         mPosWeightModel = new PosWeightModel(mConfig.Constants, mHlaSequences);
 
@@ -380,25 +377,22 @@ public class BindTrainer
 
     private int getMaxPeptideLength() { return mDistinctPeptideLengths.stream().mapToInt(x -> x.intValue()).max().orElse(0); }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        TrainConfig.addCmdLineArgs(options);
+        TrainConfig.addConfig(configBuilder);
+        addThreadOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        BindTrainer neoBinder = new BindTrainer(cmd);
+        BindTrainer neoBinder = new BindTrainer(configBuilder);
         neoBinder.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

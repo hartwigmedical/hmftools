@@ -4,8 +4,8 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.buildPercentiles;
 import static com.hartwig.hmftools.common.utils.VectorUtils.getSortedVectorIndices;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_SV_DATA_FILE;
@@ -61,47 +61,21 @@ public class RefSvData implements RefClassifier
         return config.DbAccess != null || !config.CohortSampleSvDataFile.isEmpty() || !config.PurpleDir.isEmpty();
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         if(mConfig.CohortSampleSvDataFile.isEmpty() && mConfig.PurpleDir.isEmpty() && mConfig.DbAccess == null)
-            return;
+        {
+            CUP_LOGGER.error("feature ref builder missing DB config or directories");
+            return false;
+        }
 
         CUP_LOGGER.info("building SV reference data");
 
         final Map<String,SvData> sampleSvData = Maps.newHashMap();
 
-        if(!mConfig.CohortSampleSvDataFile.isEmpty())
-        {
-            final List<String> files = parseFileSet(mConfig.CohortSampleSvDataFile);
-            files.forEach(x -> loadCohortSvData(x, sampleSvData));
-        }
-        else if(mConfig.DbAccess != null)
-        {
-            loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleSvData);
-            sampleSvData.values().forEach(x -> assignSampleData(x));
-        }
-        else
-        {
-            // load from per-sample files
-            for(int i = 0; i < mSampleDataCache.RefSampleDataList.size(); ++i)
-            {
-                SampleData sample = mSampleDataCache.RefSampleDataList.get(i);
-
-                final String svVcfFile = purpleSvFile(mConfig.PurpleDir, sample.Id);
-                final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
-                final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id, false);
-
-                if(!loadSvDataFromFile(sample.Id, svVcfFile, clusterFile, sampleSvData))
-                    break;
-
-                if(i > 0 && (i % 100) == 0)
-                {
-                    CUP_LOGGER.debug("processed {} sample SV files", i);
-                }
-            }
-
-            sampleSvData.values().forEach(x -> assignSampleData(x));
-        }
+        if(!loadSampleData(sampleSvData))
+            return false;
 
         writeCohortData(sampleSvData);
 
@@ -151,6 +125,53 @@ public class RefSvData implements RefClassifier
         {
             CUP_LOGGER.error("failed to write ref sample SV data output: {}", e.toString());
         }
+
+        return true;
+    }
+
+    private boolean loadSampleData(final Map<String,SvData> sampleSvData)
+    {
+        if(!mConfig.CohortSampleSvDataFile.isEmpty())
+        {
+            final List<String> files = parseFileSet(mConfig.CohortSampleSvDataFile);
+
+            for(String file : files)
+            {
+                if(!loadCohortSvData(file, sampleSvData))
+                    return false;
+            }
+        }
+        else if(mConfig.DbAccess != null)
+        {
+            if(!loadSvDataFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleSvData))
+                return false;
+
+            sampleSvData.values().forEach(x -> assignSampleData(x));
+        }
+        else
+        {
+            // load from per-sample files
+            for(int i = 0; i < mSampleDataCache.RefSampleDataList.size(); ++i)
+            {
+                SampleData sample = mSampleDataCache.RefSampleDataList.get(i);
+
+                final String svVcfFile = purpleSvFile(mConfig.PurpleDir, sample.Id);
+                final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
+                final String clusterFile = LinxCluster.generateFilename(linxDataDir, sample.Id, false);
+
+                if(!loadSvDataFromFile(sample.Id, svVcfFile, clusterFile, sampleSvData))
+                    return false;
+
+                if(i > 0 && (i % 100) == 0)
+                {
+                    CUP_LOGGER.debug("processed {} sample SV files", i);
+                }
+            }
+
+            sampleSvData.values().forEach(x -> assignSampleData(x));
+        }
+
+        return true;
     }
 
     private double[] createPercentileData(final List<Double> values)
@@ -228,11 +249,12 @@ public class RefSvData implements RefClassifier
         }
     }
 
-    private void loadCohortSvData(final String filename, final Map<String,SvData> sampleSvDataMap)
+    private boolean loadCohortSvData(final String filename, final Map<String,SvData> sampleSvDataMap)
     {
         final Map<String,SvData> svDataMap = Maps.newHashMap();
 
-        loadSvDataFromCohortFile(filename, svDataMap);
+        if(!loadSvDataFromCohortFile(filename, svDataMap))
+            return false;
 
         CUP_LOGGER.info("loaded {} sample SV records from file({})", svDataMap.size(), filename);
 
@@ -245,6 +267,8 @@ public class RefSvData implements RefClassifier
                 assignSampleData(svData);
             }
         }
+
+        return true;
     }
 
 }

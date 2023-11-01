@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.cup.rna;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
 
 public class GeneExpressionDataLoader
@@ -85,7 +83,7 @@ public class GeneExpressionDataLoader
                 ++geneIndex;
             }
 
-            CUP_LOGGER.info("loaded RNA expression data for {} samples from{}", sampleTpmIndex.size(), filename);
+            CUP_LOGGER.info("loaded RNA expression data for {} samples from {}", sampleTpmIndex.size(), filename);
 
             return sampleGeneExpression;
         }

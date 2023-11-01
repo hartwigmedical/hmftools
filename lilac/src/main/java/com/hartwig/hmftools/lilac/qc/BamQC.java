@@ -72,7 +72,7 @@ public class BamQC
                 "  UNMATCHED_PON_INDEL - {} fragments excluded with unmatched PON indel {}", x.getValue(), x.getKey().toString()));
 
         return new BamQC(
-                reader.alignmentFiltered(),
+                reader.filteredReadCount(),
                 fragmentsWithUnmatchedIndel.size(),
                 fragmentsWithUnmatchedIndel.values().stream().mapToInt(x -> x).max().orElse(0),
                 geneBaseDepth);

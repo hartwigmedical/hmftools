@@ -1,7 +1,10 @@
 package com.hartwig.hmftools.svprep;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.svprep.SvCommon.DELIM;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_ORIENTATION;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.io.BufferedReader;
@@ -12,7 +15,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 
 public class ExistingJunctionCache
@@ -69,11 +72,11 @@ public class ExistingJunctionCache
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
 
             String line = fileReader.readLine();
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
 
-            int chrIndex = fieldsIndexMap.get("Chromosome");
-            int posIndex = fieldsIndexMap.get("Position");
-            int orientIndex = fieldsIndexMap.get("Orientation");
+            int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
+            int posIndex = fieldsIndexMap.get(FLD_POSITION);
+            int orientIndex = fieldsIndexMap.get(FLD_ORIENTATION);
 
             List<JunctionData> junctionDataList = null;
             String currentChromosome = "";
@@ -82,7 +85,7 @@ public class ExistingJunctionCache
 
             while ((line = fileReader.readLine()) != null)
             {
-                final String[] values = line.split(DELIM, -1);
+                final String[] values = line.split(TSV_DELIM, -1);
 
                 String chromosome = values[chrIndex];
                 int position = Integer.parseInt(values[posIndex]);

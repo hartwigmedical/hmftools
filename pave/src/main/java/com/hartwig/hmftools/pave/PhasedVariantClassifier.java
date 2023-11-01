@@ -1,32 +1,36 @@
 package com.hartwig.hmftools.pave;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.codon.Codons.CODON_LENGTH;
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
-import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_DELETION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.INFRAME_INSERTION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_MISSENSE;
+import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
-import static com.hartwig.hmftools.pave.HgvsProtein.reportProteinImpact;
 import static com.hartwig.hmftools.pave.ImpactClassifier.checkStopStartCodons;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.ProteinUtils.trimAminoAcids;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
 
@@ -81,10 +85,9 @@ public class PhasedVariantClassifier
         return completeVariants;
     }
 
-    public List<PhasedVariants> allPhasedVariants() { return mPhasedVariants; }
     public void clear() { mPhasedVariants.clear(); }
 
-    public static void reclassifyPhasedVariants(final PhasedVariants phasedVariants, final RefGenomeInterface refGenome)
+    public void reclassifyPhasedVariants(final PhasedVariants phasedVariants, final RefGenomeInterface refGenome)
     {
         if(phasedVariants.variants().size() < 2)
             return;
@@ -136,7 +139,7 @@ public class PhasedVariantClassifier
         }
     }
 
-    private static void reclassifyImpacts(
+    private void reclassifyImpacts(
             int localPhaseSet, final List<VariantData> variants, final List<VariantTransImpact> transImpacts, final RefGenomeInterface refGenome)
     {
         // ignore if not 2 or more with coding impacts
@@ -148,7 +151,7 @@ public class PhasedVariantClassifier
 
         // ignore if not phased anyway
         int indelBaseTotal = 0;
-        int indelVarCount = 0;
+        int frameshiftCount = 0;
         int minIndelIndex = transImpacts.size();
         int maxIndelIndex = 0;
 
@@ -161,7 +164,9 @@ public class PhasedVariantClassifier
                 continue;
 
             indelBaseTotal += variant.isInsert() ? variant.baseDiff() : -transImpact.codingContext().DeletedCodingBases;
-            ++indelVarCount;
+
+            if(transImpact.codingContext().IsFrameShift)
+                ++frameshiftCount;
 
             minIndelIndex = min(minIndelIndex, i);
             maxIndelIndex = max(maxIndelIndex, i);
@@ -169,7 +174,10 @@ public class PhasedVariantClassifier
 
         // ignore any SNV or MNV which is not in between INDELs and doesn't overlap another variant
         List<VariantData> ignoredVariants = Lists.newArrayList();
-        boolean hasOverlappingBaseChange = false;
+        Map<VariantTransImpact,ImpactedRefCodingData> refCodingImpacts = Maps.newHashMap();
+
+        // at the same time look for an overlap between an inframe INDEL and any SNV/MNV
+        boolean hasInframeSnvMnvOverlap = false;
 
         for(int i = 0; i < transImpacts.size(); ++i)
         {
@@ -182,26 +190,51 @@ public class PhasedVariantClassifier
             if(!transImpact.hasCodingBases() || variant.isIndel())
                 continue;
 
-            if(i > minIndelIndex && i < maxIndelIndex)
-                continue; // in between INDELs
-
             VariantTransImpact prevTransImpact = i > 0 ? transImpacts.get(i - 1) : null;
-            VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
-            boolean overlapsOnStart = prevTransImpact != null && prevTransImpact.hasCodingBases()
-                    && prevTransImpact.proteinContext().refCodingBaseEnd() >= transImpact.proteinContext().refCodingBaseStart();
+            boolean overlapsOnStart = false;
 
-            boolean overlapsOnEnd = nextTransImpact != null && nextTransImpact.hasCodingBases()
-                    && nextTransImpact.proteinContext().refCodingBaseStart() <= transImpact.proteinContext().refCodingBaseEnd();
+            ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, transImpact);
 
-            if(!overlapsOnStart && !overlapsOnEnd)
-                ignoredVariants.add(variant);
-            else
-                hasOverlappingBaseChange = true;
+            if(prevTransImpact != null && prevTransImpact.hasCodingBases())
+            {
+                ImpactedRefCodingData prevRefCodingData = getImpactedRefCodingData(refCodingImpacts, prevTransImpact);
+                overlapsOnStart = prevRefCodingData.PosEnd >= transRefCodingData.PosStart;
+            }
+
+            boolean overlapsOnEnd = false;
+            VariantTransImpact nextTransImpact = null;
+
+            if(!overlapsOnStart)
+            {
+                nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
+                if(nextTransImpact != null && nextTransImpact.hasCodingBases())
+                {
+                    ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, nextTransImpact);
+                    overlapsOnEnd = transRefCodingData.PosEnd >= nextRefCodingData.PosStart;
+                }
+            }
+
+            if(i < minIndelIndex || i > maxIndelIndex)
+            {
+                if(!overlapsOnStart && !overlapsOnEnd)
+                {
+                    // an SNV/MNV outside the INDEL range and not overlapping
+                    ignoredVariants.add(variant);
+                    continue;
+                }
+            }
+
+            // otherwise check if the overlap is with an inframe INDEL
+            if(overlapsOnStart && variants.get(i - 1).isIndel() && !prevTransImpact.codingContext().IsFrameShift)
+                hasInframeSnvMnvOverlap = true;
+
+            if(overlapsOnEnd && variants.get(i + 1).isIndel() && !nextTransImpact.codingContext().IsFrameShift)
+                hasInframeSnvMnvOverlap = true;
         }
 
         // proceed if there are 2+ out-of-frame INDELs or at least an INDEL and an overlapping SNV/MNV
-        if(!hasOverlappingBaseChange && indelVarCount <= 1)
+        if(!hasInframeSnvMnvOverlap && frameshiftCount < 2)
             return;
 
         if(!isCodonMultiple(indelBaseTotal))
@@ -217,6 +250,7 @@ public class PhasedVariantClassifier
         String combinedRefCodons = "";
         String combinedAltCodons = "";
         int minCodonIndex = -1;
+        int lastImpactedRefCodonEnd = 0;
         int lastRefCodonEnd = 0;
 
         for(int i = 0; i < transImpacts.size(); ++i)
@@ -231,20 +265,30 @@ public class PhasedVariantClassifier
             if(!transImpact.hasCodingBases())
                 continue;
 
+            // a distinction is made between the recorded ref codon bases and those actually involved in / impact by the variant
+            // for the purposes of checking for an overlap, the impacted bases are compared
+            ImpactedRefCodingData transRefCodingData = getImpactedRefCodingData(refCodingImpacts, transImpact);
+            int impactedRefCodonStart = transRefCodingData.PosStart;
+            int impactedRefCodonEnd = transRefCodingData.PosEnd;
             int refCodonStart = transImpact.proteinContext().refCodingBaseStart();
             int refCodonEnd = transImpact.proteinContext().refCodingBaseEnd();
 
             VariantTransImpact nextTransImpact = i < transImpacts.size() - 1 ? transImpacts.get(i + 1) : null;
 
-            int nextRefCodonStart = nextTransImpact != null && nextTransImpact.hasCodingBases()
-                    ? nextTransImpact.proteinContext().refCodingBaseStart() : 0;
+            int nextImpactedRefCodonStart = 0;
 
-            boolean overlapsOnStart = lastRefCodonEnd > 0 && refCodonStart <= lastRefCodonEnd;
-            boolean overlapsOnEnd = nextRefCodonStart > 0 && refCodonEnd >= nextRefCodonStart;
+            if(nextTransImpact != null && nextTransImpact.hasCodingBases())
+            {
+                ImpactedRefCodingData nextRefCodingData = getImpactedRefCodingData(refCodingImpacts, nextTransImpact);
+                nextImpactedRefCodonStart = nextRefCodingData.PosStart;
+            }
+
+            boolean overlapsOnStart = lastImpactedRefCodonEnd > 0 && impactedRefCodonStart <= lastImpactedRefCodonEnd;
+            boolean overlapsOnEnd = nextImpactedRefCodonStart > 0 && impactedRefCodonEnd >= nextImpactedRefCodonStart;
 
             PV_LOGGER.trace("lps({}) var({}) codons({} -> {}) range({} - {}) overlaps(start={} end={})",
                     localPhaseSet, variant, transImpact.proteinContext().RefCodonBases, transImpact.proteinContext().AltCodonBases,
-                    refCodonStart, refCodonEnd, overlapsOnStart, overlapsOnEnd);
+                    impactedRefCodonStart, impactedRefCodonEnd, overlapsOnStart, overlapsOnEnd);
 
             if(minCodonIndex < 0)
                 minCodonIndex = transImpact.proteinContext().CodonIndex;
@@ -253,8 +297,6 @@ public class PhasedVariantClassifier
 
             if(overlapsOnStart)
             {
-                // VariantData prevVariant = i > 0 ? variants.get(i - 1) : null;
-
                 // first build the ref codons
                 int refOverlap = lastRefCodonEnd - refCodonStart + 1;
 
@@ -282,14 +324,24 @@ public class PhasedVariantClassifier
 
                 if(combinedAltCodons.length() - prevAltBasesTrimmed <= 0)
                 {
-                    PV_LOGGER.error("phasing variants LPS({}) var({}) combinedAltCodons({}) prevAltBasesTrimmed({})",
+                    PV_LOGGER.warn("phasing variants LPS({}) var({}) combinedAltCodons({}) prevAltBasesTrimmed({})",
                             localPhaseSet, variant, combinedAltCodons, prevAltBasesTrimmed);
                     return;
+                }
+
+                String previousExtraAltBases = "";
+
+                if(lastRefCodonEnd > refCodonEnd)
+                {
+                    previousExtraAltBases = combinedAltCodons.substring(lastRefCodonEnd - refCodonEnd + 1);
                 }
 
                 combinedAltCodons = combinedAltCodons.substring(0, combinedAltCodons.length() - prevAltBasesTrimmed);
 
                 combinedAltCodons += transImpact.proteinContext().AltCodonBases.substring(currentAltBasesTrimmed);
+
+                // restore the trimmed ref bases which the previous variant(s) had
+                combinedAltCodons += previousExtraAltBases;
             }
             else
             {
@@ -305,7 +357,8 @@ public class PhasedVariantClassifier
                 combinedAltCodons += transImpact.proteinContext().AltCodonBases;
             }
 
-            lastRefCodonEnd = max(transImpact.proteinContext().refCodingBaseEnd(), lastRefCodonEnd);
+            lastRefCodonEnd = max(refCodonEnd, lastRefCodonEnd);
+            lastImpactedRefCodonEnd = max(impactedRefCodonEnd, lastImpactedRefCodonEnd);
         }
 
         if(!isCodonMultiple(combinedRefCodons.length()) || !isCodonMultiple(combinedAltCodons.length()))
@@ -334,7 +387,7 @@ public class PhasedVariantClassifier
 
         if(indelBaseTotal == 0)
         {
-            combinedEffect = combinedPc.RefAminoAcids.equals(combinedPc.AltAminoAcids) ? SYNONYMOUS : MISSENSE;
+            combinedEffect = combinedPc.RefAminoAcids.equals(combinedPc.AltAminoAcids) ? PHASED_SYNONYMOUS : PHASED_MISSENSE;
 
             PV_LOGGER.trace("lps({}) varCount({}) combinedEffect({}) from aminoAcids({} -> {})",
                     localPhaseSet, variants.size(), combinedEffect, combinedPc.RefAminoAcids, combinedPc.AltAminoAcids);
@@ -365,7 +418,7 @@ public class PhasedVariantClassifier
         combinedPc.IsPhased = true;
         combinedPc.Hgvs = HgvsProtein.generate(combinedPc, combinedEffects);
 
-        // now convert missense / synonymous to phased inframe to it's clearer what has happened
+        // now convert missense / synonymous to phased inframe so it's clearer what has happened
         if(combinedEffects.contains(SYNONYMOUS) || combinedEffects.contains(MISSENSE))
         {
             combinedEffects.remove(MISSENSE);
@@ -394,5 +447,71 @@ public class PhasedVariantClassifier
             transImpact.effects().clear();
             combinedEffects.forEach(x -> transImpact.addEffect(x));
         }
+    }
+
+    private class ImpactedRefCodingData
+    {
+        public final int PosStart;
+        public final int PosEnd;
+
+        public ImpactedRefCodingData(final int posStart, final int posEnd)
+        {
+            PosStart = posStart;
+            PosEnd = posEnd;
+        }
+
+        public String toString() { return format("%d - %d", PosStart, PosEnd); }
+    }
+
+    private ImpactedRefCodingData getImpactedRefCodingData(
+            final Map<VariantTransImpact,ImpactedRefCodingData> impactMap, final VariantTransImpact transImpact)
+    {
+        ImpactedRefCodingData impactData = impactMap.get(transImpact);
+
+        if(impactData == null)
+        {
+            impactData = impactedRefCodingBasePosition(transImpact);
+            impactMap.put(transImpact, impactData);
+        }
+
+        return impactData;
+    }
+
+    private ImpactedRefCodingData impactedRefCodingBasePosition(final VariantTransImpact transImpact)
+    {
+        boolean inframeIndel = transImpact.hasEffect(INFRAME_DELETION) || transImpact.hasEffect(INFRAME_INSERTION);
+        final ProteinContext pc = transImpact.proteinContext();
+
+        int refCodingBaseStart = pc.refCodingBasePosition(SE_START);
+        int refCodingBaseEnd = pc.refCodingBasePosition(SE_END);
+
+        if(!inframeIndel)
+        {
+            return new ImpactedRefCodingData(refCodingBaseStart, refCodingBaseEnd);
+        }
+
+        // special case for inframe INDELs which have included a full ref codon at the start and/or at end to aid with AA evaluation
+        int netCodonImpact = pc.NetCodonIndexRange[SE_END] - pc.NetCodonIndexRange[SE_START] + 1;
+        int refCodonLengthDiff = abs(pc.RefCodonBases.length() - pc.AltCodonBases.length());
+
+        if(netCodonImpact > 0 && refCodonLengthDiff == netCodonImpact * CODON_LENGTH)
+        {
+            // strip the unaffected ref codon from the start and/or end
+            if(netCodonImpact > 1)
+            {
+                refCodingBaseStart += CODON_LENGTH;
+                refCodingBaseEnd -= CODON_LENGTH;
+            }
+            else
+            {
+                if(refCodingBaseStart == transImpact.codingContext().CodingPositionRange[SE_START])
+                    refCodingBaseEnd -= CODON_LENGTH;
+                else
+                    refCodingBaseStart += CODON_LENGTH;
+            }
+        }
+
+        // no extension was required so use the standard positions
+        return new ImpactedRefCodingData(refCodingBaseStart, refCodingBaseEnd);
     }
 }

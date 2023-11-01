@@ -79,9 +79,9 @@ public final class GermlineVariantFactory
                 .worstCodingEffect(variantImpact.WorstCodingEffect)
                 .genesAffected(variantImpact.GenesAffected)
                 .germlineStatus(GermlineStatus.valueOf(context.getAttributeAsString(PURPLE_GERMLINE_INFO, "UNKNOWN")))
-                .clinvarInfo(pathogenicSummary.clinvarInfo())
-                .pathogenic(pathogenicSummary.pathogenicity().isPathogenic())
-                .pathogenicity(pathogenicSummary.pathogenicity().toString());
+                .clinvarInfo(pathogenicSummary.ClinvarInfo)
+                .pathogenic(pathogenicSummary.Status.isPathogenic())
+                .pathogenicity(pathogenicSummary.Status.toString());
 
         builder.genotypeStatus(genotypeStatus != null ? genotypeStatus : GenotypeStatus.UNKNOWN);
 

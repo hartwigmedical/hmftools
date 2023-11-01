@@ -1,0 +1,1409 @@
+{
+  "sampleId": "Test",
+  "samplingDate": {
+    "year": 2023,
+    "month": 11,
+    "day": 1
+  },
+  "experimentType": "WHOLE_GENOME",
+  "configuredPrimaryTumor": [
+    {
+      "doid": "8923",
+      "doidTerm": "skin melanoma"
+    }
+  ],
+  "refGenomeVersion": "V37",
+  "platinumVersion": "5.33",
+  "refSample": {
+    "metrics": {
+      "meanCoverage": 31.426,
+      "sdCoverage": 10.116,
+      "medianCoverage": 32,
+      "madCoverage": 5,
+      "pctExcAdapter": 0.0,
+      "pctExcMapQ": 0.04985,
+      "pctExcDupe": 0.10869,
+      "pctExcUnpaired": 7.1E-4,
+      "pctExcBaseQ": 4.0E-5,
+      "pctExcOverlap": 0.00534,
+      "pctExcCapped": 0.01236,
+      "pctExcTotal": 0.17698
+    },
+    "flagstat": {
+      "uniqueReadCount": 740406212,
+      "secondaryCount": 0,
+      "supplementaryCount": 5742696,
+      "mappedProportion": 0.993296
+    }
+  },
+  "tumorSample": {
+    "metrics": {
+      "meanCoverage": 108.058,
+      "sdCoverage": 35.03,
+      "medianCoverage": 109,
+      "madCoverage": 24,
+      "pctExcAdapter": 0.0,
+      "pctExcMapQ": 0.04736,
+      "pctExcDupe": 0.15,
+      "pctExcUnpaired": 5.5E-4,
+      "pctExcBaseQ": 4.0E-5,
+      "pctExcOverlap": 0.00749,
+      "pctExcCapped": 0.01277,
+      "pctExcTotal": 0.21821
+    },
+    "flagstat": {
+      "uniqueReadCount": 2671674230,
+      "secondaryCount": 0,
+      "supplementaryCount": 21477075,
+      "mappedProportion": 0.99683
+    }
+  },
+  "germlineMVLHPerGene": {
+    "ABCB1": 0.0
+  },
+  "purple": {
+    "fit": {
+      "qc": {
+        "status": [
+          "PASS"
+        ],
+        "germlineAberrations": [
+          "NONE"
+        ],
+        "amberMeanDepth": 111,
+        "contamination": 0.0,
+        "unsupportedCopyNumberSegments": 0,
+        "deletedGenes": 4
+      },
+      "fittedPurityMethod": "NORMAL",
+      "purity": 0.99,
+      "minPurity": 0.97,
+      "maxPurity": 1.0,
+      "ploidy": 3.1,
+      "minPloidy": 3.1,
+      "maxPloidy": 3.15
+    },
+    "characteristics": {
+      "wholeGenomeDuplication": true,
+      "microsatelliteIndelsPerMb": 0.1256,
+      "microsatelliteStatus": "MSS",
+      "tumorMutationalBurdenPerMb": 13.737,
+      "tumorMutationalBurdenStatus": "HIGH",
+      "tumorMutationalLoad": 183,
+      "tumorMutationalLoadStatus": "HIGH",
+      "svTumorMutationalBurden": 75
+    },
+    "somaticDrivers": [
+      {
+        "gene": "TERT",
+        "transcript": "ENST00000310581",
+        "type": "MUTATION",
+        "driverLikelihood": 1.0,
+        "likelihoodMethod": "HOTSPOT",
+        "isCanonical": true
+      }
+    ],
+    "germlineDrivers": [],
+    "allSomaticVariants": [
+      {
+        "type": "SNP",
+        "gene": "",
+        "chromosome": "1",
+        "position": 696644,
+        "ref": "G",
+        "alt": "A",
+        "worstCodingEffect": "UNDEFINED",
+        "canonicalImpact": {
+          "transcript": "",
+          "hgvsCodingImpact": "",
+          "hgvsProteinImpact": "",
+          "affectedCodon": null,
+          "affectedExon": null,
+          "inSpliceRegion": false,
+          "effects": [
+            "OTHER"
+          ],
+          "codingEffect": "UNDEFINED"
+        },
+        "otherImpacts": [],
+        "hotspot": "NON_HOTSPOT",
+        "reported": false,
+        "tumorDepth": {
+          "totalReadCount": 103,
+          "alleleReadCount": 82
+        },
+        "rnaDepth": null,
+        "adjustedCopyNumber": 2.81,
+        "adjustedVAF": 0.8018,
+        "minorAlleleCopyNumber": 0.813,
+        "variantCopyNumber": 2.25,
+        "biallelic": false,
+        "genotypeStatus": "HOM_REF",
+        "repeatCount": 3,
+        "subclonalLikelihood": 0.0,
+        "localPhaseSets": null
+      }
+    ],
+    "reportableSomaticVariants": [
+      {
+        "type": "SNP",
+        "gene": "SF3B1",
+        "chromosome": "2",
+        "position": 198266779,
+        "ref": "G",
+        "alt": "A",
+        "worstCodingEffect": "MISSENSE",
+        "canonicalImpact": {
+          "transcript": "ENST00000335508",
+          "hgvsCodingImpact": "c.2153C\u003eT",
+          "hgvsProteinImpact": "p.Pro718Leu",
+          "affectedCodon": null,
+          "affectedExon": null,
+          "inSpliceRegion": false,
+          "effects": [
+            "MISSENSE"
+          ],
+          "codingEffect": "MISSENSE"
+        },
+        "otherImpacts": [
+          {
+            "transcript": "ENST00000462613",
+            "hgvsCodingImpact": "n.108C\u003eT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "NON_CODING_TRANSCRIPT"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "NM_012433",
+            "hgvsCodingImpact": "c.2153C\u003eT",
+            "hgvsProteinImpact": "p.Pro718Leu",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "MISSENSE"
+            ],
+            "codingEffect": "MISSENSE"
+          }
+        ],
+        "hotspot": "NON_HOTSPOT",
+        "reported": true,
+        "tumorDepth": {
+          "totalReadCount": 111,
+          "alleleReadCount": 74
+        },
+        "rnaDepth": null,
+        "adjustedCopyNumber": 3.02,
+        "adjustedVAF": 0.6711,
+        "minorAlleleCopyNumber": 1.0,
+        "variantCopyNumber": 2.03,
+        "biallelic": false,
+        "genotypeStatus": "HOM_REF",
+        "repeatCount": 2,
+        "subclonalLikelihood": 0.0,
+        "localPhaseSets": null
+      }
+    ],
+    "additionalSuspectSomaticVariants": [
+      {
+        "type": "INDEL",
+        "gene": "ALB",
+        "chromosome": "4",
+        "position": 74280699,
+        "ref": "A",
+        "alt": "AT",
+        "worstCodingEffect": "NONE",
+        "canonicalImpact": {
+          "transcript": "ENST00000295897",
+          "hgvsCodingImpact": "c.1059-53dupT",
+          "hgvsProteinImpact": "",
+          "affectedCodon": null,
+          "affectedExon": null,
+          "inSpliceRegion": false,
+          "effects": [
+            "INTRONIC"
+          ],
+          "codingEffect": "NONE"
+        },
+        "otherImpacts": [
+          {
+            "transcript": "ENST00000415165",
+            "hgvsCodingImpact": "c.483-53dupT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000476441",
+            "hgvsCodingImpact": "c.*338-53dupT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000503124",
+            "hgvsCodingImpact": "c.609-53dupT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000509063",
+            "hgvsCodingImpact": "c.1059-53dupT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000401494",
+            "hgvsCodingImpact": "c.714-53dupT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000505649",
+            "hgvsCodingImpact": "n.745-53dupT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000511370",
+            "hgvsCodingImpact": "c.591-53dupT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000484992",
+            "hgvsCodingImpact": "n.379-53dupT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000504043",
+            "hgvsCodingImpact": "n.62-53dupT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          }
+        ],
+        "hotspot": "NON_HOTSPOT",
+        "reported": false,
+        "tumorDepth": {
+          "totalReadCount": 148,
+          "alleleReadCount": 69
+        },
+        "rnaDepth": null,
+        "adjustedCopyNumber": 3.85,
+        "adjustedVAF": 0.4687,
+        "minorAlleleCopyNumber": 1.85,
+        "variantCopyNumber": 1.8,
+        "biallelic": false,
+        "genotypeStatus": "HOM_REF",
+        "repeatCount": 6,
+        "subclonalLikelihood": 0.0,
+        "localPhaseSets": null
+      }
+    ],
+    "allGermlineVariants": [
+      {
+        "type": "SNP",
+        "gene": "TNFRSF14",
+        "chromosome": "1",
+        "position": 2488153,
+        "ref": "A",
+        "alt": "G",
+        "worstCodingEffect": "MISSENSE",
+        "canonicalImpact": {
+          "transcript": "ENST00000355716",
+          "hgvsCodingImpact": "c.50A\u003eG",
+          "hgvsProteinImpact": "p.Lys17Arg",
+          "affectedCodon": null,
+          "affectedExon": null,
+          "inSpliceRegion": false,
+          "effects": [
+            "MISSENSE"
+          ],
+          "codingEffect": "MISSENSE"
+        },
+        "otherImpacts": [
+          {
+            "transcript": "ENST00000416860",
+            "hgvsCodingImpact": "n.36-18T\u003eC",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000452793",
+            "hgvsCodingImpact": "n.56-18T\u003eC",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000426449",
+            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsProteinImpact": "p.Lys17Arg",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "MISSENSE"
+            ],
+            "codingEffect": "MISSENSE"
+          },
+          {
+            "transcript": "ENST00000434817",
+            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsProteinImpact": "p.Lys17Arg",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "MISSENSE"
+            ],
+            "codingEffect": "MISSENSE"
+          },
+          {
+            "transcript": "ENST00000435221",
+            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsProteinImpact": "p.Lys17Arg",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "MISSENSE"
+            ],
+            "codingEffect": "MISSENSE"
+          },
+          {
+            "transcript": "ENST00000451778",
+            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsProteinImpact": "p.Lys17Arg",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "MISSENSE"
+            ],
+            "codingEffect": "MISSENSE"
+          },
+          {
+            "transcript": "ENST00000409119",
+            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsProteinImpact": "p.Lys17Arg",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "MISSENSE"
+            ],
+            "codingEffect": "MISSENSE"
+          },
+          {
+            "transcript": "ENST00000475523",
+            "hgvsCodingImpact": "n.70+259A\u003eG",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000442392",
+            "hgvsCodingImpact": "n.310A\u003eG",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "NON_CODING_TRANSCRIPT"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000482074",
+            "hgvsCodingImpact": "n.309A\u003eG",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "NON_CODING_TRANSCRIPT"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000496064",
+            "hgvsCodingImpact": "n.158A\u003eG",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "NON_CODING_TRANSCRIPT"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "ENST00000463471",
+            "hgvsCodingImpact": "n.144A\u003eG",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "NON_CODING_TRANSCRIPT"
+            ],
+            "codingEffect": "NONE"
+          },
+          {
+            "transcript": "NM_003820",
+            "hgvsCodingImpact": "c.50A\u003eG",
+            "hgvsProteinImpact": "p.Lys17Arg",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "MISSENSE"
+            ],
+            "codingEffect": "MISSENSE"
+          }
+        ],
+        "hotspot": "NON_HOTSPOT",
+        "reported": false,
+        "tumorDepth": {
+          "totalReadCount": 123,
+          "alleleReadCount": 123
+        },
+        "rnaDepth": null,
+        "adjustedCopyNumber": 2.81,
+        "adjustedVAF": 1.0,
+        "minorAlleleCopyNumber": 0.813,
+        "variantCopyNumber": 2.81,
+        "biallelic": true,
+        "genotypeStatus": "HOM_ALT",
+        "repeatCount": 4,
+        "subclonalLikelihood": 0.0,
+        "localPhaseSets": null
+      }
+    ],
+    "reportableGermlineVariants": [],
+    "additionalSuspectGermlineVariants": [
+      {
+        "type": "SNP",
+        "gene": "CYP3A4",
+        "chromosome": "7",
+        "position": 99366316,
+        "ref": "G",
+        "alt": "A",
+        "worstCodingEffect": "NONE",
+        "canonicalImpact": {
+          "transcript": "ENST00000336411",
+          "hgvsCodingImpact": "c.522-191C\u003eT",
+          "hgvsProteinImpact": "",
+          "affectedCodon": null,
+          "affectedExon": null,
+          "inSpliceRegion": false,
+          "effects": [
+            "INTRONIC"
+          ],
+          "codingEffect": "NONE"
+        },
+        "otherImpacts": [
+          {
+            "transcript": "ENST00000354593",
+            "hgvsCodingImpact": "c.72-191C\u003eT",
+            "hgvsProteinImpact": "",
+            "affectedCodon": null,
+            "affectedExon": null,
+            "inSpliceRegion": false,
+            "effects": [
+              "INTRONIC"
+            ],
+            "codingEffect": "NONE"
+          }
+        ],
+        "hotspot": "HOTSPOT",
+        "reported": false,
+        "tumorDepth": {
+          "totalReadCount": 119,
+          "alleleReadCount": 73
+        },
+        "rnaDepth": null,
+        "adjustedCopyNumber": 4.01,
+        "adjustedVAF": 0.614,
+        "minorAlleleCopyNumber": 1.97,
+        "variantCopyNumber": 2.46,
+        "biallelic": false,
+        "genotypeStatus": "HET",
+        "repeatCount": 0,
+        "subclonalLikelihood": 0.0,
+        "localPhaseSets": null
+      }
+    ],
+    "allSomaticCopyNumbers": [
+      {
+        "chromosome": "1",
+        "start": 1,
+        "end": 87337011,
+        "averageTumorCopyNumber": 2.8109
+      }
+    ],
+    "allSomaticGeneCopyNumbers": [
+      {
+        "gene": "DDX11L1",
+        "chromosome": "1",
+        "chromosomeBand": "p36.33",
+        "minCopyNumber": 2.8109,
+        "minMinorAlleleCopyNumber": 0.813
+      }
+    ],
+    "suspectGeneCopyNumbersWithLOH": [],
+    "allSomaticGainsLosses": [
+      {
+        "interpretation": "FULL_LOSS",
+        "gene": "DLGAP5P1",
+        "chromosome": "Y",
+        "chromosomeBand": "p11.2",
+        "transcript": "ENST00000430307",
+        "isCanonical": true,
+        "minCopies": 0.2319,
+        "maxCopies": 0.2319
+      }
+    ],
+    "reportableSomaticGainsLosses": [
+      {
+        "interpretation": "PARTIAL_LOSS",
+        "gene": "PTEN",
+        "chromosome": "10",
+        "chromosomeBand": "q23.31",
+        "transcript": "ENST00000371953",
+        "isCanonical": true,
+        "minCopies": 0.0,
+        "maxCopies": 2.0136
+      }
+    ],
+    "nearReportableSomaticGains": [],
+    "additionalSuspectSomaticGainsLosses": [
+      {
+        "interpretation": "FULL_GAIN",
+        "gene": "CFL1P7",
+        "chromosome": "3",
+        "chromosomeBand": "p24.2",
+        "transcript": "ENST00000424759",
+        "isCanonical": true,
+        "minCopies": 12.1028,
+        "maxCopies": 12.1028
+      }
+    ],
+    "allGermlineDeletions": [
+      {
+        "gene": "NBPF17P",
+        "chromosome": "1",
+        "chromosomeBand": "q21.2",
+        "regionStart": 149072001,
+        "regionEnd": 149105000,
+        "depthWindowCount": 26,
+        "exonStart": 3,
+        "exonEnd": 16,
+        "detectionMethod": "SEGMENT",
+        "normalStatus": "HET_DELETION",
+        "tumorStatus": "HOM_DELETION",
+        "germlineCopyNumber": 0.93,
+        "tumorCopyNumber": 0.0,
+        "filter": "PASS",
+        "cohortFrequency": 0,
+        "reported": false
+      }
+    ],
+    "allGermlineFullLosses": [
+      {
+        "interpretation": "PARTIAL_LOSS",
+        "gene": "OR2T11",
+        "chromosome": "1",
+        "chromosomeBand": "q44",
+        "transcript": "trans",
+        "isCanonical": true,
+        "minCopies": 0.0,
+        "maxCopies": 3.8977
+      }
+    ],
+    "reportableGermlineFullLosses": []
+  },
+  "linx": {
+    "somaticDrivers": [
+      {
+        "gene": "CDKN2A",
+        "type": "LOH_SV_TELO"
+      }
+    ],
+    "allSomaticStructuralVariants": [
+      {
+        "vcfId": "gridss47fb_59o",
+        "svId": 2,
+        "clusterId": 24,
+        "clusterReason": "",
+        "fragileSiteStart": false,
+        "fragileSiteEnd": false,
+        "isFoldback": false,
+        "lineTypeStart": "NONE",
+        "lineTypeEnd": "NONE",
+        "junctionCopyNumberMin": 0.0403,
+        "junctionCopyNumberMax": 1.619,
+        "geneStart": "SPAG17",
+        "geneEnd": "SPAG17",
+        "localTopologyIdStart": 0,
+        "localTopologyIdEnd": 0,
+        "localTopologyStart": "DSB",
+        "localTopologyEnd": "DSB",
+        "localTICountStart": 0,
+        "localTICountEnd": 0
+      },
+      {
+        "vcfId": "gridss708fb_131o",
+        "svId": 116,
+        "clusterId": 68,
+        "clusterReason": "",
+        "fragileSiteStart": false,
+        "fragileSiteEnd": false,
+        "isFoldback": false,
+        "lineTypeStart": "NONE",
+        "lineTypeEnd": "NONE",
+        "junctionCopyNumberMin": 1.7743,
+        "junctionCopyNumberMax": 2.2365,
+        "geneStart": "PTEN;RPL11P3",
+        "geneEnd": "PTEN",
+        "localTopologyIdStart": 0,
+        "localTopologyIdEnd": 1,
+        "localTopologyStart": "ISOLATED_BE",
+        "localTopologyEnd": "ISOLATED_BE",
+        "localTICountStart": 0,
+        "localTICountEnd": 0
+      }
+    ],
+    "allGermlineStructuralVariants": [
+      {
+        "vcfId": "gridss8f_186b",
+        "svId": 0,
+        "clusterId": 17,
+        "clusterReason": "",
+        "fragileSiteStart": false,
+        "fragileSiteEnd": false,
+        "isFoldback": false,
+        "lineTypeStart": "NONE",
+        "lineTypeEnd": "NONE",
+        "junctionCopyNumberMin": 0.208,
+        "junctionCopyNumberMax": 0.208,
+        "geneStart": "MUL1",
+        "geneEnd": "",
+        "localTopologyIdStart": 0,
+        "localTopologyIdEnd": -1,
+        "localTopologyStart": "ISOLATED_BE",
+        "localTopologyEnd": "",
+        "localTICountStart": 0,
+        "localTICountEnd": 0
+      }
+    ],
+    "allSomaticFusions": [
+      {
+        "geneStart": "DMD",
+        "geneContextStart": "Exon 67",
+        "geneTranscriptStart": "ENST00000357033",
+        "geneEnd": "DMD",
+        "geneContextEnd": "Exon 70",
+        "geneTranscriptEnd": "ENST00000357033",
+        "reported": false,
+        "reportedType": "NONE",
+        "phased": "INFRAME",
+        "driverLikelihood": "NA",
+        "fusedExonUp": 67,
+        "fusedExonDown": 70,
+        "chainLinks": 0,
+        "chainTerminated": false,
+        "domainsKept": "",
+        "domainsLost": "",
+        "junctionCopyNumber": 0.94
+      }
+    ],
+    "reportableSomaticFusions": [],
+    "additionalSuspectSomaticFusions": [],
+    "allSomaticBreakends": [
+      {
+        "id": 0,
+        "svId": 2,
+        "gene": "GDAP2",
+        "chromosome": "1",
+        "chromosomeBand": "p12",
+        "transcript": "ENST00000369443",
+        "isCanonical": true,
+        "geneOrientation": "Downstream",
+        "disruptive": false,
+        "reported": false,
+        "undisruptedCopyNumber": 1.182,
+        "type": "DEL",
+        "regionType": "UPSTREAM",
+        "codingType": "UTR_5P",
+        "nextSpliceExonRank": 2,
+        "orientation": 1,
+        "exonUp": 0,
+        "exonDown": 2,
+        "junctionCopyNumber": 0.8296
+      }
+    ],
+    "allGermlineBreakends": [
+      {
+        "id": 0,
+        "svId": 16,
+        "gene": "CASP8",
+        "chromosome": "2",
+        "chromosomeBand": "q33.1",
+        "transcript": "ENST00000358485",
+        "isCanonical": true,
+        "geneOrientation": "Upstream",
+        "disruptive": true,
+        "reported": false,
+        "undisruptedCopyNumber": 3.02,
+        "type": "INV",
+        "regionType": "INTRONIC",
+        "codingType": "CODING",
+        "nextSpliceExonRank": 7,
+        "orientation": 1,
+        "exonUp": 7,
+        "exonDown": 8,
+        "junctionCopyNumber": 1.95
+      }
+    ],
+    "reportableSomaticBreakends": [
+      {
+        "id": 156,
+        "svId": 116,
+        "gene": "PTEN",
+        "chromosome": "10",
+        "chromosomeBand": "q23.31",
+        "transcript": "ENST00000371953",
+        "isCanonical": true,
+        "geneOrientation": "Upstream",
+        "disruptive": true,
+        "reported": true,
+        "undisruptedCopyNumber": 0.0,
+        "type": "DEL",
+        "regionType": "INTRONIC",
+        "codingType": "CODING",
+        "nextSpliceExonRank": 5,
+        "orientation": 1,
+        "exonUp": 5,
+        "exonDown": 6,
+        "junctionCopyNumber": 2.0054
+      }
+    ],
+    "reportableGermlineBreakends": [],
+    "additionalSuspectSomaticBreakends": [],
+    "somaticHomozygousDisruptions": [],
+    "germlineHomozygousDisruptions": []
+  },
+  "wildTypeGenes": [
+    {
+      "gene": "GENE1"
+    },
+    {
+      "gene": "GENE2"
+    }
+  ],
+  "isofox": null,
+  "lilac": {
+    "qc": "PASS",
+    "alleles": [
+      {
+        "allele": "A*01:01",
+        "tumorCopyNumber": 2.0,
+        "refFragments": 210,
+        "tumorFragments": 1602,
+        "rnaFragments": null,
+        "somaticMissense": 0.0,
+        "somaticNonsenseOrFrameshift": 0.0,
+        "somaticSplice": 0.0,
+        "somaticSynonymous": 0.0,
+        "somaticInframeIndel": 0.0
+      },
+      {
+        "allele": "A*01:01",
+        "tumorCopyNumber": 1.83,
+        "refFragments": 211,
+        "tumorFragments": 1602,
+        "rnaFragments": null,
+        "somaticMissense": 0.0,
+        "somaticNonsenseOrFrameshift": 0.0,
+        "somaticSplice": 0.0,
+        "somaticSynonymous": 0.0,
+        "somaticInframeIndel": 0.0
+      },
+      {
+        "allele": "B*08:01",
+        "tumorCopyNumber": 1.83,
+        "refFragments": 216,
+        "tumorFragments": 750,
+        "rnaFragments": null,
+        "somaticMissense": 0.0,
+        "somaticNonsenseOrFrameshift": 0.0,
+        "somaticSplice": 0.0,
+        "somaticSynonymous": 0.0,
+        "somaticInframeIndel": 0.0
+      },
+      {
+        "allele": "B*40:02",
+        "tumorCopyNumber": 2.0,
+        "refFragments": 196,
+        "tumorFragments": 721,
+        "rnaFragments": null,
+        "somaticMissense": 0.0,
+        "somaticNonsenseOrFrameshift": 0.0,
+        "somaticSplice": 0.0,
+        "somaticSynonymous": 0.0,
+        "somaticInframeIndel": 0.0
+      },
+      {
+        "allele": "C*03:04",
+        "tumorCopyNumber": 2.0,
+        "refFragments": 213,
+        "tumorFragments": 768,
+        "rnaFragments": null,
+        "somaticMissense": 0.0,
+        "somaticNonsenseOrFrameshift": 0.0,
+        "somaticSplice": 0.0,
+        "somaticSynonymous": 0.0,
+        "somaticInframeIndel": 0.0
+      },
+      {
+        "allele": "C*07:01",
+        "tumorCopyNumber": 1.83,
+        "refFragments": 225,
+        "tumorFragments": 767,
+        "rnaFragments": null,
+        "somaticMissense": 0.0,
+        "somaticNonsenseOrFrameshift": 0.0,
+        "somaticSplice": 0.0,
+        "somaticSynonymous": 0.0,
+        "somaticInframeIndel": 0.0
+      }
+    ]
+  },
+  "virusInterpreter": {
+    "allViruses": [],
+    "reportableViruses": []
+  },
+  "chord": {
+    "BRCA1Value": 0.0,
+    "BRCA2Value": 0.0,
+    "hrdValue": 0.0,
+    "hrStatus": "HR_PROFICIENT",
+    "hrdType": "none"
+  },
+  "cuppa": {
+    "predictions": [
+      {
+        "cancerType": "Melanoma",
+        "likelihood": 0.996,
+        "snvPairwiseClassifier": 0.979,
+        "genomicPositionClassifier": 0.99,
+        "featureClassifier": 0.972,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Skin: Other",
+        "likelihood": 2.08E-4,
+        "snvPairwiseClassifier": 0.0205,
+        "genomicPositionClassifier": 5.86E-4,
+        "featureClassifier": 0.0018,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Acute myeloid leukemia",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 4.92E-57,
+        "genomicPositionClassifier": 7.8E-4,
+        "featureClassifier": 5.92E-13,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Anogenital",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.91E-31,
+        "genomicPositionClassifier": 2.19E-4,
+        "featureClassifier": 3.63E-4,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Bile duct/Gallbladder",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 9.22E-33,
+        "genomicPositionClassifier": 2.52E-4,
+        "featureClassifier": 0.00309,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Bone/Soft tissue: Other",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 6.32E-4,
+        "genomicPositionClassifier": 7.22E-4,
+        "featureClassifier": 8.77E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Cartilaginous neoplasm",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 3.62E-56,
+        "genomicPositionClassifier": 6.59E-4,
+        "featureClassifier": 2.84E-13,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Colorectum/Appendix/SmallIntestine",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.43E-6,
+        "genomicPositionClassifier": 6.35E-5,
+        "featureClassifier": 4.16E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Esophagus/Stomach",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 5.51E-26,
+        "genomicPositionClassifier": 4.47E-6,
+        "featureClassifier": 4.46E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "GIST",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 3.78E-34,
+        "genomicPositionClassifier": 1.85E-4,
+        "featureClassifier": 2.55E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Glioma",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 2.39E-28,
+        "genomicPositionClassifier": 8.41E-5,
+        "featureClassifier": 0.00624,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Head and neck: other",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.13E-32,
+        "genomicPositionClassifier": 7.49E-5,
+        "featureClassifier": 0.00142,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Kidney",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 3.38E-10,
+        "genomicPositionClassifier": 1.08E-4,
+        "featureClassifier": 1.79E-4,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Kidney-ChRCC",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.27E-40,
+        "genomicPositionClassifier": 5.12E-4,
+        "featureClassifier": 3.16E-9,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Leiomyosarcoma",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 2.7E-26,
+        "genomicPositionClassifier": 4.17E-4,
+        "featureClassifier": 1.53E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Liposarcoma",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.01E-24,
+        "genomicPositionClassifier": 2.08E-4,
+        "featureClassifier": 5.19E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Liver",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 2.05E-39,
+        "genomicPositionClassifier": 3.52E-5,
+        "featureClassifier": 0.00163,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Lung: NET",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.25E-37,
+        "genomicPositionClassifier": 2.82E-4,
+        "featureClassifier": 1.44E-8,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Lung: Non-small Cell",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 4.75E-28,
+        "genomicPositionClassifier": 2.91E-5,
+        "featureClassifier": 0.00518,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Lung: Small Cell",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 7.44E-46,
+        "genomicPositionClassifier": 6.43E-6,
+        "featureClassifier": 3.7E-4,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Lymphoid tissue",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 3.62E-37,
+        "genomicPositionClassifier": 1.72E-8,
+        "featureClassifier": 3.45E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Medulloblastoma",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 3.67E-52,
+        "genomicPositionClassifier": 2.94E-4,
+        "featureClassifier": 4.8E-9,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Mesothelium",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.61E-33,
+        "genomicPositionClassifier": 3.79E-4,
+        "featureClassifier": 1.94E-7,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Myeloproliferative neoplasm",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 4.03E-53,
+        "genomicPositionClassifier": 6.67E-4,
+        "featureClassifier": 1.84E-12,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Osteosarcoma",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 9.77E-25,
+        "genomicPositionClassifier": 4.7E-4,
+        "featureClassifier": 7.55E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Pancreas",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 7.89E-29,
+        "genomicPositionClassifier": 6.05E-5,
+        "featureClassifier": 1.8E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Pancreas: NET",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 6.7E-28,
+        "genomicPositionClassifier": 2.42E-4,
+        "featureClassifier": 3.12E-7,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Pilocytic astrocytoma",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.6E-54,
+        "genomicPositionClassifier": 6.55E-4,
+        "featureClassifier": 3.15E-12,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Prostate",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.71E-42,
+        "genomicPositionClassifier": 1.67E-4,
+        "featureClassifier": 2.84E-5,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Salivary gland/Adenoid cystic",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 1.48E-4,
+        "genomicPositionClassifier": 8.89E-4,
+        "featureClassifier": 0.00416,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Small intestine/Colorectum: NET",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 5.3E-45,
+        "genomicPositionClassifier": 1.44E-4,
+        "featureClassifier": 1.49E-9,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Thyroid gland",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 2.48E-29,
+        "genomicPositionClassifier": 3.83E-4,
+        "featureClassifier": 3.08E-6,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Urothelial tract",
+        "likelihood": 1.3E-4,
+        "snvPairwiseClassifier": 3.3E-27,
+        "genomicPositionClassifier": 1.99E-4,
+        "featureClassifier": 0.0034,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Breast",
+        "likelihood": 5.84E-5,
+        "snvPairwiseClassifier": 8.06E-26,
+        "genomicPositionClassifier": 2.98E-4,
+        "featureClassifier": 1.16E-4,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Ovary/Fallopian tube",
+        "likelihood": 0.0,
+        "snvPairwiseClassifier": 0.0,
+        "genomicPositionClassifier": 0.0,
+        "featureClassifier": 0.0,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      },
+      {
+        "cancerType": "Uterus: Endometrium",
+        "likelihood": 0.0,
+        "snvPairwiseClassifier": 0.0,
+        "genomicPositionClassifier": 0.0,
+        "featureClassifier": 0.0,
+        "altSjCohortClassifier": null,
+        "expressionPairwiseClassifier": null
+      }
+    ],
+    "simpleDups32To200B": 3,
+    "maxComplexSize": 8,
+    "telomericSGLs": 0,
+    "LINECount": 3
+  },
+  "peach": [
+    {
+      "gene": "DPYD",
+      "haplotype": "*1_HOM",
+      "function": "Normal Function",
+      "linkedDrugs": "5-Fluorouracil;Capecitabine;Tegafur",
+      "urlPrescriptionInfo": "https://www.pharmgkb.org/guidelineAnnotation/PA166104939;https://www.pharmgkb.org/guidelineAnnotation/PA166104963;https://www.pharmgkb.org/guidelineAnnotation/PA166104944",
+      "panelVersion": "peach_prod_v1.3",
+      "repoVersion": "1.7"
+    },
+    {
+      "gene": "UGT1A1",
+      "haplotype": "*1_HOM",
+      "function": "Normal Function",
+      "linkedDrugs": "Irinotecan",
+      "urlPrescriptionInfo": "https://www.pharmgkb.org/guidelineAnnotation/PA166104951",
+      "panelVersion": "peach_prod_v1.3",
+      "repoVersion": "1.7"
+    }
+  ],
+  "sigAllocations": [
+    {
+      "signature": "Sig2",
+      "allocation": 3697.792,
+      "percent": 0.09813
+    },
+    {
+      "signature": "Sig4",
+      "allocation": 2057.021,
+      "percent": 0.05459
+    },
+    {
+      "signature": "Sig7",
+      "allocation": 23306.996,
+      "percent": 0.61853
+    },
+    {
+      "signature": "Sig8",
+      "allocation": 1969.653,
+      "percent": 0.05227
+    },
+    {
+      "signature": "Sig11",
+      "allocation": 1313.513,
+      "percent": 0.03486
+    },
+    {
+      "signature": "Sig12",
+      "allocation": 1136.153,
+      "percent": 0.03015
+    },
+    {
+      "signature": "Sig17",
+      "allocation": 1082.849,
+      "percent": 0.02874
+    },
+    {
+      "signature": "Sig18",
+      "allocation": 2066.846,
+      "percent": 0.05485
+    },
+    {
+      "signature": "Sig20",
+      "allocation": 248.553,
+      "percent": 0.0066
+    },
+    {
+      "signature": "Sig24",
+      "allocation": 287.619,
+      "percent": 0.00763
+    },
+    {
+      "signature": "Sig28",
+      "allocation": 514.004,
+      "percent": 0.01364
+    },
+    {
+      "signature": "MISALLOC",
+      "allocation": 4616.231,
+      "percent": 0.12251
+    }
+  ],
+  "cohortEvaluations": {
+    "SV_TMB": {
+      "cancerType": "Skin",
+      "panCancerPercentile": 0.22,
+      "cancerTypePercentile": 0.34
+    }
+  },
+  "plots": {
+    "sageReferenceBQRPlot": "plot/ref_sample.sage.bqr.png",
+    "sageTumorBQRPlot": "plot/tumor_sample.sage.bqr.png",
+    "purpleInputPlot": "plot/tumor_sample.input.png",
+    "purpleFinalCircosPlot": "plot/tumor_sample.circos.png",
+    "purpleClonalityPlot": "plot/tumor_sample.somatic.clonality.png",
+    "purpleCopyNumberPlot": "plot/tumor_sample.copynumber.png",
+    "purpleVariantCopyNumberPlot": "plot/tumor_sample.somatic.png",
+    "purplePurityRangePlot": "plot/tumor_sample.purity.range.png",
+    "purpleKataegisPlot": "plot/tumor_sample.somatic.rainfall.png",
+    "linxDriverPlots": [
+      "plot/tumor_sample.cluster3.png",
+      "plot/tumor_sample.cluster2.png",
+      "plot/tumor_sample.cluster1.png"
+    ],
+    "cuppaSummaryPlot": "plot/tumor_sample.cup.report.summary.png",
+    "cuppaFeaturePlot": null,
+    "cuppaChartPlot": "plot/tumor_sample.cuppa.chart.png"
+  }
+}

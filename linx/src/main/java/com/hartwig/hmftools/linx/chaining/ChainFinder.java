@@ -132,8 +132,8 @@ public class ChainFinder
 
         mLinkAllocator = new ChainLinkAllocator(mClusterJcnLimits, mSvBreakendPossibleLinks, mChains, mDoubleMinuteSVs);
 
-        mRuleSelector = new ChainRuleSelector(mLinkAllocator, mClusterJcnLimits,
-                mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,
+        mRuleSelector = new ChainRuleSelector(
+                mLinkAllocator, mClusterJcnLimits, mSvBreakendPossibleLinks, mFoldbacks, mComplexDupCandidates,
                 mAdjacentMatchingPairs, mAdjacentPairs, mChains);
 
         mLineChainer = new LineChainer(cohortDataWriter);
@@ -227,20 +227,20 @@ public class ChainFinder
 
         mChrBreakendMap = Maps.newHashMap();
 
-        for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = Lists.newArrayList();
 
-            for (final SvBreakend breakend : entry.getValue())
+            for(final SvBreakend breakend : entry.getValue())
             {
-                if (svList.contains(breakend.getSV()))
+                if(svList.contains(breakend.getSV()))
                 {
                     mSubsetBreakendClusterIndexMap.put(breakend, breakendList.size());
                     breakendList.add(breakend);
                 }
             }
 
-            if (!breakendList.isEmpty())
+            if(!breakendList.isEmpty())
             {
                 mChrBreakendMap.put(entry.getKey(), breakendList);
             }
@@ -258,7 +258,7 @@ public class ChainFinder
             for(int se = SE_START; se <= SE_END; ++se)
             {
                 // only add an assembled link if it has a partner in the provided SV set, and can be replicated equally
-                for (LinkedPair link : var.getAssembledLinkedPairs(isStart(se)))
+                for(LinkedPair link : var.getAssembledLinkedPairs(isStart(se)))
                 {
                     final SvVarData otherVar = link.getOtherSV(var);
 
@@ -348,7 +348,7 @@ public class ChainFinder
 
             for(final SvChain chain : mUniqueChains)
             {
-                if (identicalChain(chain, newChain, false))
+                if(identicalChain(chain, newChain, false))
                 {
                     LNX_LOGGER.debug("cluster({}) skipping duplicate chain({}) ploidy({}) vs origChain({}) ploidy({})",
                             mClusterId, newChain.id(), formatJcn(newChain.jcn()), chain.id(), formatJcn(chain.jcn()));
@@ -440,7 +440,7 @@ public class ChainFinder
             {
                 mLinkAllocator.processProposedLinks(proposedLinks);
 
-                if (mRunValidation)
+                if(mRunValidation)
                 {
                     checkChains();
                     mDiagnostics.checkHasValidState(mLinkAllocator.getLinkIndex());
@@ -455,7 +455,7 @@ public class ChainFinder
             {
                 ++iterationsWithoutNewLinks;
 
-                if (iterationsWithoutNewLinks >= 50)
+                if(iterationsWithoutNewLinks >= 50)
                 {
                     LNX_LOGGER.info("cluster({}) {} iterations without adding a link, skipped pairs: closing({}) ploidyMismatch({})",
                             mClusterId, iterationsWithoutNewLinks,
@@ -529,13 +529,13 @@ public class ChainFinder
         // do not chain past a zero cluster allele JCN
         // identify potential complex DUP candidates along the way
 
-        for (final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : mChrBreakendMap.entrySet())
         {
             final String chromosome = entry.getKey();
             final List<SvBreakend> breakendList = entry.getValue();
             final List<SegmentJcn> alleleJCNs = mClusterJcnLimits.getChrAlleleJCNs().get(chromosome);
 
-            for (int i = 0; i < breakendList.size() -1; ++i)
+            for(int i = 0; i < breakendList.size() -1; ++i)
             {
                 final SvBreakend lowerBreakend = breakendList.get(i);
 
@@ -559,7 +559,7 @@ public class ChainFinder
 
                 int skippedNonAssembledIndex = -1; // the first index of a non-assembled breakend after the current one
 
-                for (int j = i+1; j < breakendList.size(); ++j)
+                for(int j = i+1; j < breakendList.size(); ++j)
                 {
                     final SvBreakend upperBreakend = breakendList.get(j);
 
@@ -647,12 +647,12 @@ public class ChainFinder
                     if(skippedNonAssembledIndex == -1 || skippedNonAssembledIndex == j)
                     {
                         // make note of any breakends which run into a high-ploidy SV at their first opposing breakend
-                        if (!lowerBreakend.getSV().isFoldback())
+                        if(!lowerBreakend.getSV().isFoldback())
                         {
                             checkIsComplexDupSV(lowerBreakend, upperBreakend);
                         }
 
-                        if (!upperBreakend.getSV().isFoldback())
+                        if(!upperBreakend.getSV().isFoldback())
                         {
                             checkIsComplexDupSV(upperBreakend, lowerBreakend);
                         }
@@ -722,10 +722,10 @@ public class ChainFinder
             if(breakend == lowerJcnBreakend)
                 break;
 
-            if (breakend.isAssembledLink())
+            if(breakend.isAssembledLink())
                 continue;
 
-            if (breakend.orientation() == otherBreakend.orientation())
+            if(breakend.orientation() == otherBreakend.orientation())
                 break;
 
             if(Math.abs(breakend.position() - otherBreakend.position()) < getMinTemplatedInsertionLength(breakend, otherBreakend))

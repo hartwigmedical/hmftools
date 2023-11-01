@@ -7,17 +7,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class NamedBedBuilderTest {
-
+public class NamedBedBuilderTest
+{
     @Test
-    public void testNoOverlap() {
+    public void testNoOverlap()
+    {
         final NamedBedBuilder victim = new NamedBedBuilder();
 
-        final List<NamedBed> orderedInput = Lists.newArrayList();
+        final List<NamedBed> orderedInput = new ArrayList<>();
         orderedInput.add(create(101, 200, "A"));
         orderedInput.add(create(301, 400, "B"));
         orderedInput.add(create(501, 600, "C"));
@@ -27,16 +27,18 @@ public class NamedBedBuilderTest {
         randomInput.forEach(victim::addBed);
 
         final List<NamedBed> result = victim.build();
-        for (int i = 0; i < orderedInput.size(); i++) {
+        for(int i = 0; i < orderedInput.size(); i++)
+        {
             assertEquals(orderedInput.get(i), result.get(i));
         }
     }
 
     @Test
-    public void testFullyContains() {
+    public void testFullyContains()
+    {
         final NamedBedBuilder victim = new NamedBedBuilder();
 
-        final List<NamedBed> orderedInput = Lists.newArrayList();
+        final List<NamedBed> orderedInput = new ArrayList<>();
         orderedInput.add(create(101, 200, "A"));
         orderedInput.add(create(301, 400, "B"));
         orderedInput.add(create(501, 600, "C"));
@@ -49,10 +51,11 @@ public class NamedBedBuilderTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testPartialOverlap() {
+    public void testPartialOverlap()
+    {
         final NamedBedBuilder victim = new NamedBedBuilder();
 
-        final List<NamedBed> orderedInput = Lists.newArrayList();
+        final List<NamedBed> orderedInput = new ArrayList<>();
         orderedInput.add(create(101, 200, "A"));
         orderedInput.add(create(301, 400, "B"));
         orderedInput.add(create(501, 600, "C"));
@@ -62,7 +65,8 @@ public class NamedBedBuilderTest {
     }
 
     @NotNull
-    private static NamedBed create(final int start, final int end, final String name) {
+    private static NamedBed create(final int start, final int end, final String name)
+    {
         return ImmutableNamedBed.builder().chromosome("1").start(start).end(end).name(name).build();
     }
 }

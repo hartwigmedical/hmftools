@@ -3,8 +3,7 @@ package com.hartwig.hmftools.isofox.fusion.cohort;
 import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.isofox.fusion.FusionConfig.FUSION_COHORT_FILE;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class FusionCohortConfig
 {
@@ -35,35 +34,35 @@ public class FusionCohortConfig
     public final boolean FindUnknownSplice;
     public final String LineElementsFile;
 
-    public FusionCohortConfig(final CommandLine cmd)
+    public FusionCohortConfig(final ConfigBuilder configBuilder)
     {
-        MinSampleThreshold = Integer.parseInt(cmd.getOptionValue(FUSION_MIN_SAMPLES, "2"));
-        MinFragCount = Integer.parseInt(cmd.getOptionValue(FUSION_MIN_FRAGS, "2"));
-        GenerateCohort = cmd.hasOption(GENERATE_COHORT);
-        WriteFilteredFusions = cmd.hasOption(WRITE_FILTERED_FUSIONS);
-        CompareUnfiltered = cmd.hasOption(COMPARE_UNFILTERED);
-        RewriteAnnotatedFusions = cmd.hasOption(REWRITE_ANNOTATED);
-        WriteCombinedFusions = cmd.hasOption(WRITE_COMBINED_FUSIONS);
-        FindUnknownSplice = cmd.hasOption(FIND_UNKNOWN_SPLICE);
+        MinSampleThreshold = configBuilder.getInteger(FUSION_MIN_SAMPLES);
+        MinFragCount = configBuilder.getInteger(FUSION_MIN_FRAGS);
+        GenerateCohort = configBuilder.hasFlag(GENERATE_COHORT);
+        WriteFilteredFusions = configBuilder.hasValue(WRITE_FILTERED_FUSIONS);
+        CompareUnfiltered = configBuilder.hasValue(COMPARE_UNFILTERED);
+        RewriteAnnotatedFusions = configBuilder.hasValue(REWRITE_ANNOTATED);
+        WriteCombinedFusions = configBuilder.hasValue(WRITE_COMBINED_FUSIONS);
+        FindUnknownSplice = configBuilder.hasValue(FIND_UNKNOWN_SPLICE);
 
-        CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
-        ComparisonSource = cmd.getOptionValue(FUSION_COMPARISONS);
-        LineElementsFile = cmd.getOptionValue(LINE_ELEMENTS_FILE);
+        CohortFile = configBuilder.getValue(FUSION_COHORT_FILE);
+        ComparisonSource = configBuilder.getValue(FUSION_COMPARISONS);
+        LineElementsFile = configBuilder.getValue(LINE_ELEMENTS_FILE);
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(GENERATE_COHORT, false, "Generate a fusion cohort file");
-        options.addOption(WRITE_FILTERED_FUSIONS, false, "Apply filters to sample fusions and write to file");
-        options.addOption(FUSION_MIN_SAMPLES, true, "Min number of samples to support a fusion");
-        options.addOption(FUSION_MIN_FRAGS, true, "Min frag count per sample to support a fusion");
-        options.addOption(FUSION_COHORT_FILE, true, "Cohort file previously generated");
-        options.addOption(FUSION_COMPARISONS, true, "List of sources to compare fusions between");
-        options.addOption(COMPARE_UNFILTERED, false, "Included unfiltered fusions in comparison with external tools");
-        options.addOption(REWRITE_ANNOTATED, false, "Rewrtite all fusions with cohort and other annotations");
-        options.addOption(WRITE_COMBINED_FUSIONS, false, "Write a combined file with passing fusion");
-        options.addOption(FIND_UNKNOWN_SPLICE, false, "Find known splice to unknown mappings");
-        options.addOption(LINE_ELEMENTS_FILE, true, "Line elements file");
-        addKnownFusionFileOption(options);
+        configBuilder.addFlag(GENERATE_COHORT, "Generate a fusion cohort file");
+        configBuilder.addFlag(WRITE_FILTERED_FUSIONS, "Apply filters to sample fusions and write to file");
+        configBuilder.addInteger(FUSION_MIN_SAMPLES, "Min number of samples to support a fusion", 2);
+        configBuilder.addInteger(FUSION_MIN_FRAGS, "Min frag count per sample to support a fusion", 2);
+        configBuilder.addPath(FUSION_COHORT_FILE, false, "Cohort file previously generated");
+        configBuilder.addConfigItem(FUSION_COMPARISONS, "List of sources to compare fusions between");
+        configBuilder.addFlag(COMPARE_UNFILTERED, "Included unfiltered fusions in comparison with external tools");
+        configBuilder.addFlag(REWRITE_ANNOTATED, "Rewrtite all fusions with cohort and other annotations");
+        configBuilder.addFlag(WRITE_COMBINED_FUSIONS, "Write a combined file with passing fusion");
+        configBuilder.addFlag(FIND_UNKNOWN_SPLICE, "Find known splice to unknown mappings");
+        configBuilder.addPath(LINE_ELEMENTS_FILE, false, "Line elements file");
+        addKnownFusionFileOption(configBuilder);
     }
 }

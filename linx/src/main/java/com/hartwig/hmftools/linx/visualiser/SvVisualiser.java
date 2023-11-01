@@ -3,14 +3,14 @@ package com.hartwig.hmftools.linx.visualiser;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import static com.hartwig.hmftools.linx.LinxApplication.APP_NAME;
+
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -23,6 +23,7 @@ import com.hartwig.hmftools.common.circos.CircosExecution;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.linx.visualiser.circos.ChromosomeRangeExecution;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosConfigWriter;
 import com.hartwig.hmftools.linx.visualiser.circos.CircosData;
@@ -41,12 +42,6 @@ import com.hartwig.hmftools.linx.visualiser.file.VisProteinDomain;
 import com.hartwig.hmftools.linx.visualiser.file.VisSegment;
 import com.hartwig.hmftools.linx.visualiser.file.VisSvData;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -54,30 +49,6 @@ import org.jetbrains.annotations.NotNull;
 public class SvVisualiser implements AutoCloseable
 {
     public static final Logger VIS_LOGGER = LogManager.getLogger(SvVisualiser.class);
-
-    public static void main(String[] args)
-    {
-        final Options options = VisualiserConfig.createOptions();
-        CircosConfig.addOptions(options);
-
-        try(final SvVisualiser application = new SvVisualiser(options, args))
-        {
-            application.run();
-        }
-        catch(ParseException e)
-        {
-            VIS_LOGGER.warn(e);
-            e.printStackTrace();
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SvVisualiser", options);
-            System.exit(1);
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
 
     private final VisualiserConfig mConfig;
     private final SampleData mSampleData;
@@ -87,13 +58,12 @@ public class SvVisualiser implements AutoCloseable
     private final List<Callable<Object>> mCallableImages;
     private final List<Callable<Object>> mCallableConfigs;
 
-    private SvVisualiser(final Options options, final String... args) throws Exception
+    private SvVisualiser(final ConfigBuilder configBuilder) throws Exception
     {
-        final CommandLine cmd = createCommandLine(args, options);
-        VIS_LOGGER.info("Loading data");
+        VIS_LOGGER.info("loading visualiser data");
 
-        mCircosConfig = new CircosConfig(cmd);
-        mConfig = new VisualiserConfig(cmd);
+        mCircosConfig = new CircosConfig(configBuilder);
+        mConfig = new VisualiserConfig(configBuilder);
         mSampleData = new SampleData(mConfig);
         mExecutorService = Executors.newFixedThreadPool(mConfig.Threads);
 
@@ -101,7 +71,7 @@ public class SvVisualiser implements AutoCloseable
         mCallableConfigs = Lists.newArrayList();
     }
 
-    private void run() throws InterruptedException, ExecutionException
+    private void run() throws Exception
     {
         if(!mCircosConfig.isValid())
         {
@@ -116,14 +86,14 @@ public class SvVisualiser implements AutoCloseable
 
             for(Integer clusterId : reportableClusterIds)
             {
-                submitCluster(Lists.newArrayList(clusterId), true);
+                submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
             }
         }
-        else if(!mConfig.Clusters.isEmpty() || !mConfig.Chromosomes.isEmpty())
+        else if(!mConfig.ClusterIds.isEmpty() || !mConfig.Chromosomes.isEmpty())
         {
-            if(!mConfig.Clusters.isEmpty())
+            if(!mConfig.ClusterIds.isEmpty())
             {
-                submitCluster(mConfig.Clusters, false);
+                submitCluster(mConfig.ClusterIds, mConfig.ChainIds, false);
             }
 
             if(!mConfig.Chromosomes.isEmpty())
@@ -135,15 +105,15 @@ public class SvVisualiser implements AutoCloseable
         {
             final List<Integer> clusterIds = mSampleData.SvData.stream().map(x -> x.ClusterId).distinct().sorted().collect(toList());
 
-            for (Integer clusterId : clusterIds)
+            for(Integer clusterId : clusterIds)
             {
-                submitCluster(Lists.newArrayList(clusterId), true);
+                submitCluster(Lists.newArrayList(clusterId), Collections.EMPTY_LIST, true);
             }
 
             final Set<String> chromosomes = Sets.newHashSet();
             mSampleData.SvData.stream().map(x -> x.ChrStart).filter(HumanChromosome::contains).forEach(chromosomes::add);
             mSampleData.SvData.stream().map(x -> x.ChrEnd).filter(HumanChromosome::contains).forEach(chromosomes::add);
-            for (final String chromosome : chromosomes)
+            for(final String chromosome : chromosomes)
             {
                 submitChromosome(Lists.newArrayList(chromosome));
             }
@@ -156,6 +126,8 @@ public class SvVisualiser implements AutoCloseable
         {
             future.get();
         }
+
+        VIS_LOGGER.info("Linx Visualiser complete");
     }
 
     private void submitChromosome(@NotNull final List<String> chromosomes)
@@ -215,10 +187,18 @@ public class SvVisualiser implements AutoCloseable
                 Collections.emptyList(), false);
     }
 
-    private void submitCluster(final List<Integer> clusterIds, boolean skipSingles)
+    private void submitCluster(final List<Integer> clusterIds, final List<Integer> chainIds, boolean skipSingles)
     {
-        final List<VisSvData> clusterLinks = mSampleData.SvData.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
-        final List<VisSegment> clusterSegments = mSampleData.Segments.stream().filter(x -> clusterIds.contains(x.ClusterId)).collect(toList());
+        final List<VisSvData> clusterLinks = mSampleData.SvData.stream()
+                .filter(x -> clusterIds.contains(x.ClusterId))
+                .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
+                .collect(toList());
+
+        final List<VisSegment> clusterSegments = mSampleData.Segments.stream()
+                .filter(x -> clusterIds.contains(x.ClusterId))
+                .filter(x -> chainIds.isEmpty() || chainIds.contains(x.ChainId))
+                .collect(toList());
+
         final List<VisGeneExon> clusterExons =
                 mSampleData.Exons.stream().filter(x -> clusterIds.contains(x.ClusterId)).distinct().collect(toList());
 
@@ -228,13 +208,13 @@ public class SvVisualiser implements AutoCloseable
 
         if(clusterLinks.isEmpty())
         {
-            VIS_LOGGER.warn("Cluster {} not present in file", clusterIdsStr);
+            VIS_LOGGER.warn("cluster {} not present in file", clusterIdsStr);
             return;
         }
 
         if(clusterLinks.size() == 1 && skipSingles && clusterExons.isEmpty())
         {
-            VIS_LOGGER.debug("Skipping simple cluster {}", clusterIdsStr);
+            VIS_LOGGER.debug("skipping simple cluster {}", clusterIdsStr);
             return;
         }
 
@@ -262,7 +242,7 @@ public class SvVisualiser implements AutoCloseable
             fileId += clusterIds.size() > 1 ? ".clusters-" : ".cluster-";
             fileId += clusterIdsStr;
 
-            if(mConfig.Clusters.size() == 1)
+            if(mConfig.ClusterIds.size() == 1)
             {
                 final String resolvedTypeString = clusterLinks.get(0).ClusterResolvedType.toString();
                 fileId += "." + resolvedTypeString;
@@ -330,9 +310,9 @@ public class SvVisualiser implements AutoCloseable
         }
     }
 
-    private void submitFrame(int frame, boolean fusion, double labelSize, String sample, final CircosConfigWriter confWrite)
+    private void submitFrame(int frame, boolean hasFusion, double labelSize, String sample, final CircosConfigWriter confWrite)
     {
-        boolean plotFusion = !mConfig.Debug && fusion;
+        boolean plotFusion = hasFusion && !mConfig.Debug;
         boolean plotChromosome = !mConfig.Debug;
 
         mCallableConfigs.add(() -> confWrite.writeConfig(frame));
@@ -340,7 +320,7 @@ public class SvVisualiser implements AutoCloseable
     }
 
     private Object createImageFrame(
-            int frame, double labelSize, final String sample, boolean plotFusion, boolean plotChromosome) throws IOException, InterruptedException
+            int frame, double labelSize, final String sample, boolean plotFusion, boolean plotChromosome) throws Exception
     {
         final String confFileName = sample + ".circos." + String.format("%03d", frame) + ".conf";
         final String outputFileName = sample + "." + String.format("%03d", frame) + ".png";
@@ -353,37 +333,54 @@ public class SvVisualiser implements AutoCloseable
 
         if(plotFusion)
         {
-            new FusionExecution(sample, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath).executeR(mCircosConfig, rLabelSize);
+            int execution = new FusionExecution(sample, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath)
+                    .executeR(mCircosConfig, rLabelSize);
+
+            if(execution != 0)
+                throw new Exception("plotting error");
         }
 
         if(plotChromosome)
         {
-            return new ChromosomeRangeExecution(
+            int execution = new ChromosomeRangeExecution(
                     sample, mConfig.RefGenVersion, outputFileName, mConfig.OutputConfPath, mConfig.OutputPlotPath)
                     .executeR(mCircosConfig, rLabelSize);
+
+            if(execution != 0)
+                throw new Exception("plotting error");
         }
 
         return circosResult;
     }
 
-    @NotNull
-    private static CommandLine createCommandLine(final String[] args, Options options) throws ParseException
+    public static void main(String[] args)
     {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+
+        VisualiserConfig.registerConfig(configBuilder);
+        CircosConfig.registerConfig(configBuilder);
+
+        configBuilder.checkAndParseCommandLine(args);
+
+        try(final SvVisualiser application = new SvVisualiser(configBuilder))
+        {
+            application.run();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     @Override
     public void close()
     {
         mExecutorService.shutdown();
-        VIS_LOGGER.info("Complete");
     }
 
     private interface ColorPickerFactory
     {
-        @NotNull
-        ColorPicker create(@NotNull final List<VisSvData> links);
+        ColorPicker create(final List<VisSvData> links);
     }
-
 }

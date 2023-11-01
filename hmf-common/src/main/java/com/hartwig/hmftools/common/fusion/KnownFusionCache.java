@@ -2,12 +2,11 @@ package com.hartwig.hmftools.common.fusion;
 
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.EXON_DEL_DUP;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
-import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_PROMISCUOUS;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.NONE;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_3;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_5;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
@@ -22,6 +21,7 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -57,6 +57,11 @@ public class KnownFusionCache
 
         // initialise to avoid having to check for null
         Arrays.stream(KnownFusionType.values()).filter(x -> x != NONE).forEach(x -> mDataByType.put(x, Lists.newArrayList()));
+    }
+
+    public static void addKnownFusionFileOption(final ConfigBuilder configBuilder)
+    {
+        configBuilder.addPath(KNOWN_FUSIONS_FILE, false, KNOWN_FUSIONS_FILE_DESC);
     }
 
     public static void addKnownFusionFileOption(final Options options)
@@ -193,12 +198,28 @@ public class KnownFusionCache
         return mIgRegionData.stream().anyMatch(x -> x.withinGeneRegion(chromosome, position));
     }
 
+    public boolean loadFromFile(final ConfigBuilder configBuilder)
+    {
+        if(!configBuilder.hasValue(KNOWN_FUSIONS_FILE))
+            return true;
+
+        return loadFromFile(configBuilder.getValue(KNOWN_FUSIONS_FILE));
+    }
+
     public boolean loadFromFile(final CommandLine cmd)
     {
         if(cmd == null || !cmd.hasOption(KNOWN_FUSIONS_FILE))
             return true;
 
-        if(!loadFile(cmd.getOptionValue(KNOWN_FUSIONS_FILE)))
+        return loadFromFile(cmd.getOptionValue(KNOWN_FUSIONS_FILE));
+    }
+
+    public boolean loadFromFile(final String filename)
+    {
+        if(filename == null)
+            return true;
+
+        if(!loadFile(filename))
         {
             mHasValidData = false;
             return false;

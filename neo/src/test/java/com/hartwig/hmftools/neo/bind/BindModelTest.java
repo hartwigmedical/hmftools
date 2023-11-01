@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.MatrixUtils.clear;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE_LEN;
@@ -254,7 +254,7 @@ public class BindModelTest
         final List<String> lines = new BufferedReader(new InputStreamReader(
                 BindModelTest.class.getResourceAsStream(bindCountsFile))).lines().collect(Collectors.toList());
 
-        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), CSV_DELIM);
         lines.remove(0);
 
         int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
@@ -264,7 +264,7 @@ public class BindModelTest
 
         for(String line : lines)
         {
-            final String[] values = line.split(DELIMITER, -1);
+            final String[] values = line.split(CSV_DELIM, -1);
 
             BindCountData bindCounts = new BindCountData(values[alleleIndex], Integer.parseInt(values[pepLenIndex]));
             int aaCount = Integer.parseInt(values[aaCountIndex]);

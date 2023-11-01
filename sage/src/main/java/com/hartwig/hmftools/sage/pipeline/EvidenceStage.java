@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
+import com.hartwig.hmftools.sage.evidence.EvidenceStats;
 import com.hartwig.hmftools.sage.evidence.ReadContextEvidence;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
@@ -67,4 +68,5 @@ public class EvidenceStage
     public VariantPhaser getVariantPhaser() { return mVariantPhaser; }
 
     public final int[] getSyncCounts() { return mReadContextEvidence.getSynCounts(); }
+    public EvidenceStats getEvidenceStats() { return mReadContextEvidence.evidenceStats(); }
 }

@@ -25,7 +25,6 @@ public class NamedBedBuilder implements Consumer<NamedBed>
         return chromosomeMap.computeIfAbsent(bed.chromosome(), NamedBedBuilderChromosome::new).addBed(bed);
     }
 
-    @NotNull
     public List<NamedBed> build()
     {
         List<NamedBed> result = Lists.newArrayList();
@@ -47,22 +46,20 @@ public class NamedBedBuilder implements Consumer<NamedBed>
     static final class NamedBedBuilderChromosome
     {
         private final String chromosome;
-        @NotNull
         private final List<NamedBed> regions;
 
-        public NamedBedBuilderChromosome(@NotNull final String chromosome)
+        public NamedBedBuilderChromosome(final String chromosome)
         {
             this.chromosome = chromosome;
             this.regions = Lists.newArrayList();
         }
 
-        @NotNull
         public List<NamedBed> build()
         {
             return regions;
         }
 
-        public boolean addBed(@NotNull final NamedBed bed)
+        public boolean addBed(final NamedBed bed)
         {
             if(regions.isEmpty())
             {

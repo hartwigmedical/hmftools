@@ -3,16 +3,23 @@ package com.hartwig.hmftools.isofox.loader;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.ALT_SJ_FILE_ID;
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_TYPE;
-import static com.hartwig.hmftools.common.rna.GeneExpressionFile.GENE_DATA_FILE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneFusionFile.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.rna.RnaStatistics.SUMMARY_FILE_ID;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -29,13 +36,8 @@ import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_REALIGN_FLAGS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SPLIT_FRAGS;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.FLD_SV_TYPE;
 import static com.hartwig.hmftools.isofox.fusion.FusionData.formStreamField;
-import static com.hartwig.hmftools.isofox.fusion.FusionWriter.PASS_FUSION_FILE_ID;
 import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.SUMMARY_FILE;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.createDatabaseAccess;
 
 import java.io.BufferedReader;
@@ -48,10 +50,10 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionContext;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
-import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.GeneExpression;
+import com.hartwig.hmftools.common.rna.GeneExpressionFile;
+import com.hartwig.hmftools.common.rna.GeneFusionFile;
 import com.hartwig.hmftools.common.rna.ImmutableGeneExpression;
 import com.hartwig.hmftools.common.rna.ImmutableNovelSpliceJunction;
 import com.hartwig.hmftools.common.rna.ImmutableRnaFusion;
@@ -88,7 +90,7 @@ public class SampleLoaderTask implements Callable
 
         mSampleIds = Lists.newArrayList();
 
-        mDbAccess = createDatabaseAccess(mConfig.CmdLineArgs);
+        mDbAccess = createDatabaseAccess(mConfig.ConfigItems);
 
         if(mDbAccess == null)
         {
@@ -164,7 +166,8 @@ public class SampleLoaderTask implements Callable
 
             for(Record record : result)
             {
-                primaryTumorLocation = record.getValue("primaryTumorLocation").toString();
+                Object ptLocation = record.getValue("primaryTumorLocation");
+                primaryTumorLocation = ptLocation != null ? ptLocation.toString() : CANCER_TYPE_OTHER;
                 break;
             }
 
@@ -185,10 +188,9 @@ public class SampleLoaderTask implements Callable
         if(!mConfig.loadDataType(DataLoadType.STATISTICS))
             return;
 
-        final String sampleDataDir = mConfig.StatisticsDataDir.contains("*") ?
-                mConfig.StatisticsDataDir.replaceAll("\\*", sampleId) : mConfig.StatisticsDataDir;
+        final String sampleDataDir = convertWildcardSamplePath(mConfig.StatisticsDataDir, sampleId);
 
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + SUMMARY_FILE;
+        final String filename = RnaStatistics.generateFilename(sampleDataDir, sampleId);
 
         try
         {
@@ -200,7 +202,7 @@ public class SampleLoaderTask implements Callable
                 return;
             }
 
-            final RnaStatistics statistics = RnaStatistics.fromCsv(lines);
+            final RnaStatistics statistics = RnaStatistics.fromLines(lines);
 
             ISF_LOGGER.debug("sample({}) writing summary statistics to DB", sampleId);
             mRnaDAO.writeRnaStatistics(sampleId, statistics);
@@ -220,10 +222,9 @@ public class SampleLoaderTask implements Callable
 
         final List<GeneExpression> geneExpressions = Lists.newArrayList();
 
-        final String sampleDataDir = mConfig.GeneDataDir.contains("*") ?
-                mConfig.GeneDataDir.replaceAll("\\*", sampleId) : mConfig.GeneDataDir;
+        final String sampleDataDir = convertWildcardSamplePath(mConfig.GeneDataDir, sampleId);
 
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + GENE_DATA_FILE_ID;
+        final String filename = GeneExpressionFile.generateFilename(sampleDataDir,sampleId);
 
         try
         {
@@ -241,7 +242,7 @@ public class SampleLoaderTask implements Callable
                 if(!mConfig.processGeneId(geneId))
                     continue;
 
-                double tpm = Double.parseDouble(items[fieldsIndexMap.get(FLD_TPM)]);
+                double tpm = Double.parseDouble(items[fieldsIndexMap.get(FLD_ADJ_TPM)]);
 
                 double medianCancer = mGeneDistribution.getTpmMedian(geneId, cancerType);
                 double percentileCancer = mGeneDistribution.getTpmPercentile(geneId, cancerType, tpm);
@@ -277,8 +278,7 @@ public class SampleLoaderTask implements Callable
 
         final List<NovelSpliceJunction> novelJunctions = Lists.newArrayList();
 
-        final String sampleDataDir = mConfig.AltSjDataDir.contains("*") ?
-                mConfig.AltSjDataDir.replaceAll("\\*", sampleId) : mConfig.AltSjDataDir;
+        final String sampleDataDir = convertWildcardSamplePath(mConfig.AltSjDataDir, sampleId);
 
         final String filename = sampleDataDir + sampleId + ISF_FILE_ID + ALT_SJ_FILE_ID;
 
@@ -299,9 +299,9 @@ public class SampleLoaderTask implements Callable
                 int posStart = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
                 int posEnd = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
                 int type = fieldsIndexMap.get(FLD_ALT_SJ_TYPE);
-                int fragCount = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
-                int depthStart = fieldsIndexMap.get("DepthStart");
-                int depthEnd = fieldsIndexMap.get("DepthEnd");
+                int fragCount = fieldsIndexMap.get(FLD_FRAG_COUNT);
+                int depthStart = fieldsIndexMap.get(FLD_DEPTH_START);
+                int depthEnd = fieldsIndexMap.get(FLD_DEPTH_END);
                 int regionStart = fieldsIndexMap.containsKey("RegionStart") ? fieldsIndexMap.get("RegionStart") : fieldsIndexMap.get("ContextStart");
                 int regionEnd = fieldsIndexMap.containsKey("RegionEnd") ? fieldsIndexMap.get("RegionEnd") : fieldsIndexMap.get("ContextEnd");
                 int basesStart = fieldsIndexMap.get("BasesStart");
@@ -314,7 +314,7 @@ public class SampleLoaderTask implements Callable
                 if(!mConfig.processGeneId(geneId))
                     continue;
 
-                final AltSpliceJunctionFile altSJ = AltSpliceJunctionFile.fromCsv(
+                final AltSpliceJunctionFile altSJ = AltSpliceJunctionFile.parseLine(
                         items, geneIdIndex, geneName, chr, posStart, posEnd, type,
                         fragCount, depthStart, depthEnd, regionStart, regionEnd, basesStart, basesEnd, transStart, transEnd);
 
@@ -354,10 +354,9 @@ public class SampleLoaderTask implements Callable
 
         final List<RnaFusion> fusions = Lists.newArrayList();
 
-        final String sampleDataDir = mConfig.FusionDataDir.contains("*") ?
-                mConfig.FusionDataDir.replaceAll("\\*", sampleId) : mConfig.FusionDataDir;
+        final String sampleDataDir = convertWildcardSamplePath(mConfig.FusionDataDir, sampleId);
 
-        final String filename = sampleDataDir + sampleId + ISF_FILE_ID + PASS_FUSION_FILE_ID;
+        final String filename = GeneFusionFile.generateFilename(sampleDataDir, sampleId);
 
         try
         {

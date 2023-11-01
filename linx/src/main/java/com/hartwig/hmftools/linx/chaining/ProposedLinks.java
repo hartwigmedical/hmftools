@@ -134,11 +134,11 @@ public class ProposedLinks
         if(foldbackJcn == 0 || otherJcn == 0)
             return;
 
-        if (copyNumbersEqual(foldbackJcn * 2, otherJcn))
+        if(copyNumbersEqual(foldbackJcn * 2, otherJcn))
         {
             mJcnMatchType = PM_MATCHED;
         }
-        else if (jcnOverlap(foldbackJcn * 2, foldbackStart.jcnUncertainty(), otherJcn, otherUncertainty))
+        else if(jcnOverlap(foldbackJcn * 2, foldbackStart.jcnUncertainty(), otherJcn, otherUncertainty))
         {
             mJcnMatchType = PM_OVERLAP;
         }
@@ -171,11 +171,11 @@ public class ProposedLinks
         mBreakendJcn.put(breakend1, jcn1);
         mBreakendJcn.put(breakend2, jcn2);
 
-        if (copyNumbersEqual(jcn1, jcn2))
+        if(copyNumbersEqual(jcn1, jcn2))
         {
             mJcnMatchType = PM_MATCHED;
         }
-        else if (jcnOverlap(jcn1, breakend1.jcnUncertainty(), jcn2, breakend2.jcnUncertainty()))
+        else if(jcnOverlap(jcn1, breakend1.jcnUncertainty(), jcn2, breakend2.jcnUncertainty()))
         {
             mJcnMatchType = PM_OVERLAP;
         }

@@ -1,28 +1,25 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.byteToBoolean;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
 import static com.hartwig.hmftools.patientdb.dao.GermlineVariantDAO.checkTrimHgsvString;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
 
-import static org.jooq.impl.DSL.count;
-
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsMutationalLoad;
-import com.hartwig.hmftools.common.drivercatalog.dnds.DndsVariant;
-import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsMutationalLoad;
-import com.hartwig.hmftools.common.drivercatalog.dnds.ImmutableDndsVariant;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.ImmutableAllelicDepthImpl;
 import com.hartwig.hmftools.common.variant.ImmutableSomaticVariantImpl;
+import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.SomaticVariantFactory;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -30,12 +27,10 @@ import com.hartwig.hmftools.common.variant.VariantType;
 
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Record1;
-import org.jooq.Record3;
 import org.jooq.Result;
 
 public class SomaticVariantDAO
@@ -69,90 +64,6 @@ public class SomaticVariantDAO
         };
 
         return new BufferedWriter<>(consumer, DB_BATCH_INSERT_SIZE);
-    }
-
-    public DndsMutationalLoad readDndsLoad(@NotNull String sample)
-    {
-        Result<Record3<Byte, String, Integer>> result = context.select(SOMATICVARIANT.BIALLELIC, SOMATICVARIANT.TYPE, count())
-                .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.SAMPLEID.eq(sample))
-                .and(SOMATICVARIANT.TYPE.in(VariantType.INDEL.toString(), VariantType.SNP.toString()))
-                .and(SOMATICVARIANT.FILTER.eq("PASS"))
-                .groupBy(SOMATICVARIANT.BIALLELIC, SOMATICVARIANT.TYPE)
-                .fetch();
-
-        int snvBiallelic = 0;
-        int snvNonBiallelic = 0;
-        int indelBiallelic = 0;
-        int indelNonBiallelic = 0;
-
-        for(Record3<Byte, String, Integer> record : result)
-        {
-            boolean isBiallelic = byteToBoolean(record.value1());
-            VariantType type = VariantType.valueOf(record.value2());
-            int count = record.value3();
-            if(isBiallelic && type == VariantType.INDEL)
-            {
-                indelBiallelic = count;
-            }
-            if(isBiallelic && type == VariantType.SNP)
-            {
-                snvBiallelic = count;
-            }
-            if(!isBiallelic && type == VariantType.INDEL)
-            {
-                indelNonBiallelic = count;
-            }
-            if(!isBiallelic && type == VariantType.SNP)
-            {
-                snvNonBiallelic = count;
-            }
-        }
-
-        return ImmutableDndsMutationalLoad.builder()
-                .sampleId(sample)
-                .indelBiallelic(indelBiallelic)
-                .indelNonBiallelic(indelNonBiallelic)
-                .snvBiallelic(snvBiallelic)
-                .snvNonBiallelic(snvNonBiallelic)
-                .build();
-    }
-
-    @NotNull
-    public List<DndsVariant> readDndsVariants(int maxRepeatCount, @NotNull String sample)
-    {
-        List<DndsVariant> variants = Lists.newArrayList();
-
-        Result<Record> result = context.select()
-                .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.SAMPLEID.eq(sample))
-                .and(SOMATICVARIANT.FILTER.eq("PASS"))
-                .and(SOMATICVARIANT.GENE.ne(""))
-                .and(SOMATICVARIANT.REPEATCOUNT.lessOrEqual(maxRepeatCount))
-                .and(SOMATICVARIANT.TYPE.in(VariantType.INDEL.toString(), VariantType.SNP.toString()))
-                .fetch();
-
-        for(Record record : result)
-        {
-            variants.add(ImmutableDndsVariant.builder()
-                    .sampleId(record.getValue(SOMATICVARIANT.SAMPLEID))
-                    .chromosome(record.getValue(SOMATICVARIANT.CHROMOSOME))
-                    .position(record.getValue(SOMATICVARIANT.POSITION))
-                    .ref(record.getValue(SOMATICVARIANT.REF))
-                    .alt(record.getValue(SOMATICVARIANT.ALT))
-                    .gene(record.getValue(SOMATICVARIANT.GENE))
-                    .worstCodingEffect(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT).isEmpty()
-                            ? CodingEffect.UNDEFINED
-                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.WORSTCODINGEFFECT)))
-                    .canonicalCodingEffect(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT).isEmpty()
-                            ? CodingEffect.UNDEFINED
-                            : CodingEffect.valueOf(record.getValue(SOMATICVARIANT.CANONICALCODINGEFFECT)))
-                    .biallelic(byteToBoolean(record.getValue(SOMATICVARIANT.BIALLELIC)))
-                    .repeatCount(record.getValue(SOMATICVARIANT.REPEATCOUNT))
-                    .hotspot(Hotspot.valueOf(record.getValue(SOMATICVARIANT.HOTSPOT)).equals(Hotspot.HOTSPOT))
-                    .build());
-        }
-        return variants;
     }
 
     @NotNull
@@ -286,14 +197,35 @@ public class SomaticVariantDAO
                 SOMATICVARIANT.RNATOTALREADCOUNT,
                 SOMATICVARIANT.QUAL,
                 SOMATICVARIANT.LOCALPHASESET,
+                SOMATICVARIANT.CLINVARINFO,
+                SOMATICVARIANT.GNOMADFREQUENCY,
+                SOMATICVARIANT.SOMATICLIKELIHOOD,
                 SOMATICVARIANT.MODIFIED);
         variants.forEach(variant -> addRecord(timestamp, inserter, sample, variant));
         inserter.execute();
     }
 
-    private static void addRecord(
-            Timestamp timestamp, InsertValuesStepN inserter, String sample, SomaticVariant variant)
+    private static void addRecord(Timestamp timestamp, InsertValuesStepN inserter, String sample, SomaticVariant variant)
     {
+        // append reportable status for each transcript where non-canonical may be reportable
+        String otherReportedEffects = variant.otherReportedEffects();
+
+        if(variant.reportableTranscripts() != null)
+        {
+            boolean hasCanonical = false;
+
+            for(String reportedTrans : variant.reportableTranscripts())
+            {
+                if(reportedTrans.equals(variant.canonicalTranscript()))
+                    hasCanonical = true;
+                else
+                    otherReportedEffects = otherReportedEffects.replaceFirst(reportedTrans, format("%s|REPORTED", reportedTrans));
+            }
+
+            if(!hasCanonical)
+                otherReportedEffects = otherReportedEffects + ";CANONICAL_NOT_REPORTED";
+        }
+
         inserter.values(sample,
                 variant.chromosome(),
                 variant.position(),
@@ -310,7 +242,7 @@ public class SomaticVariantDAO
                 checkTrimHgsvString(variant.canonicalHgvsCodingImpact(), SOMATICVARIANT.CANONICALHGVSCODINGIMPACT),
                 checkTrimHgsvString(variant.canonicalHgvsProteinImpact(), SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT),
                 variant.spliceRegion(),
-                variant.otherReportedEffects(),
+                otherReportedEffects,
                 variant.alleleReadCount(),
                 variant.totalReadCount(),
                 DatabaseUtil.decimal(variant.adjustedCopyNumber()),
@@ -335,6 +267,9 @@ public class SomaticVariantDAO
                 Optional.ofNullable(variant.rnaDepth()).map(AllelicDepth::totalReadCount).orElse(null),
                 variant.qual(),
                 variant.localPhaseSets() != null ? checkStringLength(variant.localPhaseSetsStr(), SOMATICVARIANT.LOCALPHASESET) : null,
+                variant.clinvarInfo(),
+                variant.gnomadFrequency(),
+                variant.somaticLikelihood() == SomaticLikelihood.UNKNOWN ? Strings.EMPTY : variant.somaticLikelihood().toString(),
                 timestamp);
     }
 

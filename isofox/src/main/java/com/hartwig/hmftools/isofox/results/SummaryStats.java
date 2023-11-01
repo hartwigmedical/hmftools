@@ -1,9 +1,12 @@
 package com.hartwig.hmftools.isofox.results;
 
+import static com.hartwig.hmftools.common.rna.RnaQcFilter.qcFiltersToString;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.FORWARD_STRAND;
+import static com.hartwig.hmftools.isofox.common.FragmentType.REVERSE_STRAND;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
@@ -15,6 +18,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.rna.ImmutableRnaStatistics;
+import com.hartwig.hmftools.common.rna.RnaQcFilter;
 import com.hartwig.hmftools.common.rna.RnaStatistics;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSize;
 import com.hartwig.hmftools.isofox.adjusts.FragmentSizeCalcs;
@@ -24,7 +28,8 @@ public class SummaryStats
 {
     public static RnaStatistics createSummaryStats(
             final FragmentTypeCounts fragmentTypeCounts, long enrichedGeneFragCount, int spliceGeneCount,
-            double medianGCRatio, final List<FragmentSize> fragmentLengths, int maxReadLength)
+            double medianGCRatio, final List<FragmentSize> fragmentLengths, int maxReadLength,
+            int lowCoverageThreshold, int splicedGeneThreshold)
     {
         long totalFragments = fragmentTypeCounts.typeCount(TOTAL);
         long duplicateFragments = fragmentTypeCounts.typeCount(DUPLICATE);
@@ -33,12 +38,17 @@ public class SummaryStats
 
         double enrichedGenePercent = totalFragments > 0 ? enrichedGeneFragCount / totalFragmentsDenom : 0;
 
+        long fowardFrags = fragmentTypeCounts.typeCount(FORWARD_STRAND);
+        double totalStrandFrags = fowardFrags + fragmentTypeCounts.typeCount(REVERSE_STRAND);
+        double forwardStrandPerc = totalStrandFrags > 0 ? fowardFrags / totalStrandFrags : 0;
+
         final List<Double> fragLengths = FragmentSizeCalcs.calcPercentileData(fragmentLengths, Lists.newArrayList(0.05, 0.5, 0.95));
 
-        String qcStatus = RnaStatistics.calcQcStatus(totalFragments, duplicateFragments, spliceGeneCount);
+        List<RnaQcFilter> qcFilters = RnaStatistics.calcQcStatus(
+                totalFragments, duplicateFragments, spliceGeneCount, lowCoverageThreshold, splicedGeneThreshold);
 
         return ImmutableRnaStatistics.builder()
-                .qcStatus(qcStatus)
+                .qcStatus(qcFilters)
                 .totalFragments(totalFragments)
                 .duplicateFragments(duplicateFragments)
                 .splicedFragmentPerc(fragmentTypeCounts.typeCount(TRANS_SUPPORTING) / totalFragmentsDenom)
@@ -52,6 +62,7 @@ public class SummaryStats
                 .fragmentLength95thPercent(!fragLengths.isEmpty() ? fragLengths.get(2) : 0)
                 .enrichedGenePercent(enrichedGenePercent)
                 .medianGCRatio(medianGCRatio)
+                .forwardStrandPercent(forwardStrandPerc)
                 .build();
     }
 
@@ -66,7 +77,7 @@ public class SummaryStats
                 return null;
             }
 
-            return RnaStatistics.fromCsv(lines);
+            return RnaStatistics.fromLines(lines);
         }
         catch(IOException e)
         {

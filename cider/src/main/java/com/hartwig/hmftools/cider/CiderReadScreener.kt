@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.cider
 
+import com.google.common.collect.ImmutableCollection
 import com.hartwig.hmftools.cider.VJReadCandidate.MatchMethod
+import com.hartwig.hmftools.cider.genes.GenomicLocation
+import com.hartwig.hmftools.cider.genes.IgTcrConstantDiversityRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegion
 import com.hartwig.hmftools.common.genome.region.GenomeRegions
 import com.hartwig.hmftools.common.genome.region.Strand
@@ -10,7 +13,6 @@ import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.util.CoordMath
 import htsjdk.samtools.util.SequenceUtil
 import org.apache.logging.log4j.LogManager
-import org.eclipse.collections.api.collection.ImmutableCollection
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -114,7 +116,7 @@ class CiderReadScreener(// collect the reads and sort by types
         val rightSoftClip = CigarUtils.rightSoftClipLength(samRecord)
         if (leftSoftClip != 0 || rightSoftClip != 0)
         {
-            for (igTcrConstantRegion in mCiderGeneDatastore.getIgConstantRegions())
+            for (igTcrConstantRegion in mCiderGeneDatastore.getIgConstantDiversityRegions())
             {
                 // now try to match around location of constant regions
                 val readCandidate = tryMatchFromConstantRegion(samRecord, mapped, igTcrConstantRegion)
@@ -172,7 +174,7 @@ class CiderReadScreener(// collect the reads and sort by types
             // want to make sure same gene is not included twice
             val genes: ImmutableCollection<VJAnchorTemplate> = mCiderGeneDatastore.getByGeneLocation(anchorLocation.genomeLocation)
 
-            if (!genes.isEmpty)
+            if (!genes.isEmpty())
             {
                 return addVjReadCandidate(samRecord, genes, MatchMethod.ALIGN,
                     anchorLocation.strand === Strand.REVERSE,
@@ -191,7 +193,7 @@ class CiderReadScreener(// collect the reads and sort by types
         require(!read.mateUnmappedFlag)
 
         var relevantAnchorLocation: VJAnchorGenomeLocation? = null
-        var relavantConstantRegion: IgTcrConstantRegion? = null
+        var relevantConstantRegion: IgTcrConstantDiversityRegion? = null
 
         // look through anchor locations and find ones that we can use
         for (anchorLocation: VJAnchorGenomeLocation in mCiderGeneDatastore.getVjAnchorGeneLocations())
@@ -206,32 +208,42 @@ class CiderReadScreener(// collect the reads and sort by types
         if (relevantAnchorLocation == null)
         {
             // try the constant region
-            for (constantRegion: IgTcrConstantRegion in mCiderGeneDatastore.getIgConstantRegions())
+            for (constantRegion: IgTcrConstantDiversityRegion in mCiderGeneDatastore.getIgConstantDiversityRegions())
             {
                 if (isUnamppedReadRelevantToConstantRegion(read, constantRegion.genomeLocation, mMaxFragmentLength))
                 {
-                    relavantConstantRegion = constantRegion
+                    relevantConstantRegion = constantRegion
                     break
                 }
             }
 
-            if (relavantConstantRegion == null)
+            if (relevantConstantRegion == null)
             {
                 return false
             }
         }
 
         // get the VJ gene type we are interested in
-        val relaventVjGeneType: VJGeneType? = relevantAnchorLocation?.vjGeneType ?: relavantConstantRegion?.getCorrespondingJ()
+        // we need to match both the V and J side after an anchor region match
+        // i.e. if we match a V gene type, we want to also check for the J gene type, and vice versa
 
-        if (relaventVjGeneType == null)
+        val vjGeneTypes: List<VJGeneType> =
+
+        if (relevantAnchorLocation != null)
+        {
+            listOf(relevantAnchorLocation.vjGeneType) + relevantAnchorLocation.vjGeneType.pairedVjGeneTypes()
+        }
+        else
+        {
+            relevantConstantRegion!!.getCorrespondingVJ()
+        }
+
+        if (vjGeneTypes.isEmpty())
         {
             return false
         }
 
-        // we need to match both the V and J side after an anchor region match
-        // i.e. if we match a V gene type, we want to also check for the J gene type, and vice versa
-        val vjGeneTypes = listOf(relaventVjGeneType) + relaventVjGeneType.pairedVjGeneTypes()
+        //val vjGeneTypes = listOf(relevantVjGeneType) + relevantVjGeneType  relaventVjGeneType.pairedVjGeneTypes()
 
         // we test both reverse and not reverse, it is simpler this way
         for (reverseRead in arrayOf(true, false))
@@ -263,16 +275,16 @@ class CiderReadScreener(// collect the reads and sort by types
                 {
                     if (relevantAnchorLocation != null)
                     {
-                        sLogger.info(
+                        sLogger.trace(
                             "read({}) matched from mate mapped({}:{}) near anchor location({})",
                             read, read.mateReferenceName, read.mateAlignmentStart, relevantAnchorLocation
                         )
                     }
                     else
                     {
-                        sLogger.info(
+                        sLogger.trace(
                             "read({}) matched from mate mapped({}:{}) near constant region({})",
-                            read, read.mateReferenceName, read.mateAlignmentStart, relavantConstantRegion
+                            read, read.mateReferenceName, read.mateAlignmentStart, relevantConstantRegion
                         )
                     }
                     return true
@@ -316,11 +328,14 @@ class CiderReadScreener(// collect the reads and sort by types
     }
 
     fun tryMatchFromConstantRegion(
-        samRecord: SAMRecord, mapped: GenomeRegion, igTcrConstantRegion: IgTcrConstantRegion
+        samRecord: SAMRecord, mapped: GenomeRegion, igTcrConstantDiversityRegion: IgTcrConstantDiversityRegion
     ): VJReadCandidate?
     {
+        if (!igTcrConstantDiversityRegion.genomeLocation.inPrimaryAssembly)
+            return null
+
         val readLength = samRecord.readLength
-        val (chromosome, posStart, posEnd, strand) = igTcrConstantRegion.genomeLocation
+        val (chromosome, posStart, posEnd, strand, _) = igTcrConstantDiversityRegion.genomeLocation
 
         // see if the anchor location is mapped around here
         if (posStart - readLength < mapped.end() &&
@@ -345,7 +360,7 @@ class CiderReadScreener(// collect the reads and sort by types
                 // now try to find an anchor here
                 anchorBlosumMatch = mAnchorBlosumSearcher.searchForAnchor(
                     samRecord.readString,
-                    listOf(igTcrConstantRegion.getCorrespondingJ()),
+                    igTcrConstantDiversityRegion.getCorrespondingVJ(),
                     IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
                     0,
                     leftSoftClip)
@@ -360,12 +375,14 @@ class CiderReadScreener(// collect the reads and sort by types
 
                 anchorBlosumMatch =  mAnchorBlosumSearcher.searchForAnchor(
                     reverseCompSeq,
-                    listOf(igTcrConstantRegion.getCorrespondingJ()),
+                    igTcrConstantDiversityRegion.getCorrespondingVJ(),
                     IAnchorBlosumSearcher.Mode.DISALLOW_NEG_SIMILARITY,
                     0, rightSoftClip)
             }
             if (anchorBlosumMatch != null && anchorBlosumMatch.similarityScore > 0)
             {
+                sLogger.trace("read({}) matched from constant region({}) using blossom", samRecord, igTcrConstantDiversityRegion)
+
                 return addVjReadCandidate(
                     samRecord,
                     anchorBlosumMatch.templateGenes,
@@ -386,10 +403,10 @@ class CiderReadScreener(// collect the reads and sort by types
         useRevComp: Boolean,
         readAnchorStart: Int,
         readAnchorEnd: Int,
-        templateLocation: GenomeRegionStrand? = null)
+        templateLocation: GenomicLocation? = null)
     : VJReadCandidate?
     {
-        if (vjAnchorTemplates.isEmpty)
+        if (vjAnchorTemplates.isEmpty())
         {
             return null
         }
@@ -426,7 +443,7 @@ class CiderReadScreener(// collect the reads and sort by types
         }
 
         val geneNames = vjAnchorTemplates.map({ o: VJAnchorTemplate -> o.geneName }).distinct().toList()
-        sLogger.debug(
+        sLogger.trace(
             "genes: {} read({}) method({}) anchor range({}-{}) template loc({}) "
                     + "anchor AA({}) template AA({}) similarity({})",
             geneNames, samRecord, templateMatchMethod,
@@ -637,7 +654,7 @@ class CiderReadScreener(// collect the reads and sort by types
         //    mate       this
         //
         fun isUnamppedReadRelevantToConstantRegion(
-            read: SAMRecord, constantRegionLocation: GenomeRegionStrand, maxFragmentLength: Int): Boolean
+            read: SAMRecord, constantRegionLocation: GenomicLocation, maxFragmentLength: Int): Boolean
         {
             if (!read.readPairedFlag || read.mateUnmappedFlag)
                 return false

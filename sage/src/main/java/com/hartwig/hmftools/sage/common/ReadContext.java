@@ -33,17 +33,17 @@ public class ReadContext
 
     public static ReadContext fromReadRecord(
             final String microhomology, int repeatCount, final String repeat, final int refPosition, final int readIndex,
-            final int leftCentreIndex, final int rightCentreIndex, final int flankSize, final SAMRecord record)
+            final int leftCentreIndex, final int rightCentreIndex, final int flankSize, final byte[] readBases)
     {
         int adjLeftCentreIndex = max(leftCentreIndex, 0);
-        int adjRightCentreIndex = min(rightCentreIndex, record.getReadBases().length - 1);
+        int adjRightCentreIndex = min(rightCentreIndex, readBases.length - 1);
 
         boolean incompleteCore = adjLeftCentreIndex != leftCentreIndex || adjRightCentreIndex != rightCentreIndex;
 
-        IndexedBases readBases = new IndexedBases(
-                refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, record.getReadBases());
+        IndexedBases indexedBases = new IndexedBases(
+                refPosition, readIndex, adjLeftCentreIndex, adjRightCentreIndex, flankSize, readBases);
 
-        return new ReadContext(refPosition, repeat, repeatCount, microhomology, readBases, incompleteCore);
+        return new ReadContext(refPosition, repeat, repeatCount, microhomology, indexedBases, incompleteCore);
     }
 
     public void extendCore(int leftCentreIndex, int rightCentreIndex)

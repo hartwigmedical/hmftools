@@ -230,7 +230,7 @@ Certain cancers such as Esophagus and Stomach were combined for the categorisati
 
 # Sub cohorts
 
-The concept of sub-cohorts are also supported in CUPPA.    Classifiers are assessed at sub-cohort level, but the values are added together and results presented at cohort level.  For now the only cancer type split into sub-cohorts is Breast, which is split into Tripple Negative vs other.   This was separated due to the ALT_SJ junction classifier having poor performance for tripple negative breast cancers, since the typical alt_sj profile is very distinct for tripple negative samples and not similar to other breast samples.  
+The concept of sub-cohorts are also supported in CUPPA.    Classifiers are assessed at sub-cohort level, but the values are added together and results presented at cohort level.  For now the only cancer type split into sub-cohorts is Breast, which is split into Triple Negative vs other.   This was separated due to the ALT_SJ junction classifier having poor performance for triple negative breast cancers, since the typical alt_sj profile is very distinct for triple negative samples and not similar to other breast samples.  
 
 ## DNA Classifier logic
 
@@ -430,13 +430,15 @@ Hodgkins Lympohoma | ? | DNA | Poorly match the lymphoid cohort which is dominat
 
 
 ## Version History and Download Links
-- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.0)
-- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.1)
-- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.2)
-- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.3)
-- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.4)
-- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.5)
+- [1.8](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.8)
+- [1.7](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.7.2)
 - [1.6](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.6)
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.5)
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.4)
+- [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.3)
+- [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.2)
+- [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.1)
+- [1.0](https://github.com/hartwigmedical/hmftools/releases/tag/cuppa-v1.0)
 
 
 

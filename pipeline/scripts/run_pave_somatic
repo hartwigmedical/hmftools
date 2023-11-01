@@ -55,7 +55,6 @@ if [ "${ref_genome_version}" == "V37" ]; then
   args="${args} -gnomad_freq_file ${gnomad_path}"
 else
   args="${args} -gnomad_freq_dir ${gnomad_path} -gnomad_load_chr_on_demand"
-
 fi
 
 echo "Running Pave somatic with args: ${args}"

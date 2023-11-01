@@ -2,9 +2,9 @@ package com.hartwig.hmftools.isofox.novel.cohort;
 
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.COHORT_ALT_SJ_FILE;
 import static com.hartwig.hmftools.isofox.novel.cohort.SpliceVariantMatcher.SOMATIC_VARIANT_FILE;
@@ -24,6 +24,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
 
 import org.apache.commons.cli.CommandLine;
@@ -40,7 +41,7 @@ public class SpliceVariantCache
     private BufferedWriter mSomaticWriter;
     private BufferedWriter mSvBreakandWriter;
 
-    public SpliceVariantCache(final CohortConfig config, final CommandLine cmd)
+    public SpliceVariantCache(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mCohortAltSJs = Maps.newHashMap();
@@ -51,26 +52,26 @@ public class SpliceVariantCache
         mSvBreakandWriter = null;
 
         boolean hasCachedFiles = false;
-        if(cmd.hasOption(SOMATIC_VARIANT_FILE))
+        if(configBuilder.hasValue(SOMATIC_VARIANT_FILE))
         {
-            loadSpliceVariants(cmd.getOptionValue(SOMATIC_VARIANT_FILE));
-            hasCachedFiles = Files.exists(Paths.get(cmd.getOptionValue(SOMATIC_VARIANT_FILE)));
+            loadSpliceVariants(configBuilder.getValue(SOMATIC_VARIANT_FILE));
+            hasCachedFiles = Files.exists(Paths.get(configBuilder.getValue(SOMATIC_VARIANT_FILE)));
         }
 
-        if(cmd.hasOption(SV_BREAKEND_FILE))
+        if(configBuilder.hasValue(SV_BREAKEND_FILE))
         {
-            loadSvBreakends(cmd.getOptionValue(SV_BREAKEND_FILE));
-            hasCachedFiles |= Files.exists(Paths.get(cmd.getOptionValue(SV_BREAKEND_FILE)));
+            loadSvBreakends(configBuilder.getValue(SV_BREAKEND_FILE));
+            hasCachedFiles |= Files.exists(Paths.get(configBuilder.getValue(SV_BREAKEND_FILE)));
         }
 
-        mWriteVariantCache = !hasCachedFiles && cmd.hasOption(WRITE_VARIANT_CACHE);
+        mWriteVariantCache = !hasCachedFiles && configBuilder.hasValue(WRITE_VARIANT_CACHE);
 
         if(mWriteVariantCache)
             initialiseCacheWriters();
 
-        if(cmd.hasOption(COHORT_ALT_SJ_FILE))
+        if(configBuilder.hasValue(COHORT_ALT_SJ_FILE))
         {
-            loadCohortAltSJs(cmd.getOptionValue(COHORT_ALT_SJ_FILE));
+            loadCohortAltSJs(configBuilder.getValue(COHORT_ALT_SJ_FILE));
         }
     }
 

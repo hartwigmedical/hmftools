@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 
 import java.io.IOException;
@@ -13,12 +14,8 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.stats.AucCalc;
 import com.hartwig.hmftools.common.stats.AucData;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,20 +24,18 @@ public class AucCalcTester
     private static final String DATA_FILE = "data_file";
     private static final String IS_PERCENTILE = "percentile";
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(DATA_FILE, true, "Input filename");
-        options.addOption(IS_PERCENTILE, false, "In percentile or rank form");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        configBuilder.addPath(DATA_FILE, true, "Input filename");
+        configBuilder.addFlag(IS_PERCENTILE, "In percentile or rank form");
+        configBuilder.addConfigItem(OUTPUT_DIR, true, "Output directory");
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        String dataFile = cmd.getOptionValue(DATA_FILE);
-        boolean isPercentile = cmd.hasOption(IS_PERCENTILE);
+        String dataFile = configBuilder.getValue(DATA_FILE);
+        boolean isPercentile = configBuilder.hasFlag(IS_PERCENTILE);
 
         try
         {
@@ -72,12 +67,4 @@ public class AucCalcTester
             NE_LOGGER.error("file load failed: {}", e.toString());
         }
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

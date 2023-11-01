@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.sage.quality;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_PERC;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_SAMPLE_SIZE;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class QualityRecalibrationConfig
 {
@@ -21,7 +18,7 @@ public class QualityRecalibrationConfig
     public final int SampleSize;
     public final int MinMapQuality;
 
-    private static final String BQR_ENABLED = "bqr_enabled";
+    private static final String DISABLE_BQR = "disable_bqr";
     private static final String BQR_SAMPLE_SIZE = "bqr_sample_size";
     private static final String BQR_MAX_ALT_PERC = "bqr_max_alt_perc";
     private static final String BQR_MAX_ALT_COUNT = "bqr_max_alt_count";
@@ -30,13 +27,11 @@ public class QualityRecalibrationConfig
     private static final String WRITE_BQR_PLOT = "write_bqr_plot";
     private static final String LOAD_BQR_FILES = "load_bqr_files";
 
-    private static final boolean DEFAULT_BQR_ENABLED = true;
-
-    public QualityRecalibrationConfig(final CommandLine cmd)
+    public QualityRecalibrationConfig(final ConfigBuilder configBuilder)
     {
-        Enabled = getConfigValue(cmd, BQR_ENABLED, DEFAULT_BQR_ENABLED);
+        Enabled = !configBuilder.hasFlag(DISABLE_BQR);
 
-        if(cmd.hasOption(LOAD_BQR_FILES))
+        if(configBuilder.hasFlag(LOAD_BQR_FILES))
         {
             LoadBqrFiles = true;
             WriteFile = false;
@@ -45,14 +40,14 @@ public class QualityRecalibrationConfig
         else
         {
             LoadBqrFiles = false;
-            WriteFile = cmd.hasOption(WRITE_BQR_DATA);
-            WritePlot = cmd.hasOption(WRITE_BQR_PLOT);
+            WriteFile = configBuilder.hasFlag(WRITE_BQR_DATA);
+            WritePlot = configBuilder.hasFlag(WRITE_BQR_PLOT);
         }
 
-        MaxAltPerc = getConfigValue(cmd, BQR_MAX_ALT_PERC, DEFAULT_BQR_MAX_ALT_PERC);
-        MaxAltCount = getConfigValue(cmd, BQR_MAX_ALT_COUNT, DEFAULT_BQR_MAX_ALT_COUNT);
-        SampleSize = getConfigValue(cmd, BQR_SAMPLE_SIZE, DEFAULT_BQR_SAMPLE_SIZE);
-        MinMapQuality = getConfigValue(cmd, BQR_MIN_MAP_QUAL, DEFAULT_BQR_MIN_MAP_QUAL);
+        MaxAltPerc = configBuilder.getDecimal(BQR_MAX_ALT_PERC);
+        MaxAltCount = configBuilder.getInteger(BQR_MAX_ALT_COUNT);
+        SampleSize = configBuilder.getInteger(BQR_SAMPLE_SIZE);
+        MinMapQuality = configBuilder.getInteger(BQR_MIN_MAP_QUAL);
     }
 
     public QualityRecalibrationConfig()
@@ -67,18 +62,15 @@ public class QualityRecalibrationConfig
         MinMapQuality = DEFAULT_BQR_MIN_MAP_QUAL;
     }
 
-    @NotNull
-    public static Options createOptions()
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
-        options.addOption(BQR_ENABLED, true, "BQR (Base Quality Recalibration) enabled [" + DEFAULT_BQR_ENABLED + "]");
-        options.addOption(WRITE_BQR_DATA, false, "Write BQR output file");
-        options.addOption(WRITE_BQR_PLOT, false, "Generate BQR plot");
-        options.addOption(LOAD_BQR_FILES, false, "Attemps to find and load previously-written BQR files");
-        options.addOption(BQR_MAX_ALT_PERC, true, "BQR maximum alt percent to be an error [" + DEFAULT_BQR_MAX_ALT_PERC + "]");
-        options.addOption(BQR_MAX_ALT_COUNT, true, "BQR maximum alt count to be an error [" + DEFAULT_BQR_MAX_ALT_COUNT + "]");
-        options.addOption(BQR_SAMPLE_SIZE, true, "BQR sampling size per autosome [" + DEFAULT_BQR_SAMPLE_SIZE + "]");
-        options.addOption(BQR_MIN_MAP_QUAL, true, "BQR min base quality remap qual [" + DEFAULT_BQR_MIN_MAP_QUAL + "]");
-        return options;
+        configBuilder.addFlag(DISABLE_BQR, "Disable Base Quality Recalibration");
+        configBuilder.addFlag(WRITE_BQR_DATA, "Write BQR output file");
+        configBuilder.addFlag(WRITE_BQR_PLOT, "Generate BQR plot");
+        configBuilder.addFlag(LOAD_BQR_FILES, "Attemps to find and load previously-written BQR files");
+        configBuilder.addDecimal(BQR_MAX_ALT_PERC, "BQR maximum alt percent to be an error", DEFAULT_BQR_MAX_ALT_PERC);
+        configBuilder.addInteger(BQR_MAX_ALT_COUNT, "BQR maximum alt count to be an error", DEFAULT_BQR_MAX_ALT_COUNT);
+        configBuilder.addInteger(BQR_SAMPLE_SIZE, "BQR sampling size per autosome", DEFAULT_BQR_SAMPLE_SIZE);
+        configBuilder.addInteger(BQR_MIN_MAP_QUAL, "BQR min base quality remap qual", DEFAULT_BQR_MIN_MAP_QUAL);
     }
 }

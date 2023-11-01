@@ -3,7 +3,7 @@ package com.hartwig.hmftools.teal
 import com.beust.jcommander.*
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion
-import com.hartwig.hmftools.common.utils.FileWriterUtils
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import com.hartwig.hmftools.common.utils.config.RefGenomeVersionConverter
 
 // only options that needed to be shown in validation are put here

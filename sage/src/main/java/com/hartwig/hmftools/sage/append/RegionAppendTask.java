@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.append;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.vcf.VariantContextFactory.createGenotype;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -10,10 +11,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
@@ -31,7 +31,7 @@ public class RegionAppendTask implements Callable
     private final ChrBaseRegion mRegion;
     private final int mTaskId;
 
-    private final SageConfig mConfig;
+    private final SageAppendConfig mConfig;
     private final EvidenceStage mEvidenceStage;
     private final IndexedFastaSequenceFile mRefGenomeFile;
     private final RefGenomeSource mRefGenome;
@@ -41,7 +41,7 @@ public class RegionAppendTask implements Callable
 
     public RegionAppendTask(
             final int taskId, final ChrBaseRegion region, final List<VariantContext> variants,
-            final SageConfig config, final IndexedFastaSequenceFile refGenome,
+            final SageAppendConfig config, final IndexedFastaSequenceFile refGenome,
             final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
     {
         mTaskId = taskId;
@@ -54,9 +54,9 @@ public class RegionAppendTask implements Callable
         mRefGenome = new RefGenomeSource(mRefGenomeFile);
 
         SamSlicerFactory samSlicerFactory = new SamSlicerFactory();
-        samSlicerFactory.buildBamReaders(mConfig, mRefGenomeFile);
+        samSlicerFactory.buildBamReaders(Collections.emptyList(), Collections.emptyList(), mConfig.Common, mRefGenomeFile);
 
-        mEvidenceStage = new EvidenceStage(config, mRefGenome, qualityRecalibrationMap, new PhaseSetCounter(), samSlicerFactory);
+        mEvidenceStage = new EvidenceStage(config.Common, mRefGenome, qualityRecalibrationMap, new PhaseSetCounter(), samSlicerFactory);
     }
 
     public List<VariantContext> finalVariants() { return mFinalVariants; }
@@ -72,9 +72,9 @@ public class RegionAppendTask implements Callable
                 .map(x -> CandidateSerialization.toCandidate(x, refSequence)).collect(Collectors.toList());
 
         ReadContextCounters normalEvidence = mEvidenceStage.findEvidence
-                (mRegion, "reference", mConfig.ReferenceIds, candidates, false);
+                (mRegion, "reference", mConfig.Common.ReferenceIds, candidates, false);
 
-        createFinalVariants(normalEvidence, mConfig.ReferenceIds);
+        createFinalVariants(normalEvidence, mConfig.Common.ReferenceIds);
 
         SG_LOGGER.trace("{}: region({}) complete", mTaskId, mRegion);
 

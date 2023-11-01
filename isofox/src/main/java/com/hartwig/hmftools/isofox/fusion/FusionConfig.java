@@ -4,9 +4,7 @@ import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusion
 import static com.hartwig.hmftools.isofox.fusion.FusionConstants.DEFAULT_HARD_FILTER_MIN_FRAGS;
 
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class FusionConfig
 {
@@ -27,16 +25,16 @@ public class FusionConfig
 
     public static final String FUSION_COHORT_FILE = "fusion_cohort_file";
 
-    public FusionConfig(final CommandLine cmd)
+    public FusionConfig(final ConfigBuilder configBuilder)
     {
-        WriteChimericReads = cmd.hasOption(WRITE_CHIMERIC_READS);
-        WriteChimericFragments = cmd.hasOption(WRITE_CHIMERIC_FRAGS);
-        RunPerfChecks = cmd.hasOption(RUN_FUSION_PERF);
-        CohortFile = cmd.getOptionValue(FUSION_COHORT_FILE);
-        MinHardFilterFrags = Integer.parseInt(cmd.getOptionValue(MIN_FRAGS_HARD_FILTER, String.valueOf(DEFAULT_HARD_FILTER_MIN_FRAGS)));
+        WriteChimericReads = configBuilder.hasFlag(WRITE_CHIMERIC_READS);
+        WriteChimericFragments = configBuilder.hasFlag(WRITE_CHIMERIC_FRAGS);
+        RunPerfChecks = configBuilder.hasFlag(RUN_FUSION_PERF);
+        CohortFile = configBuilder.getValue(FUSION_COHORT_FILE);
+        MinHardFilterFrags = configBuilder.getInteger(MIN_FRAGS_HARD_FILTER);
 
         KnownFusions = new KnownFusionCache();
-        KnownFusions.loadFromFile(cmd);
+        KnownFusions.loadFromFile(configBuilder);
 
         CacheFragments = WriteChimericFragments || WriteChimericReads;
 
@@ -55,13 +53,13 @@ public class FusionConfig
         MinHardFilterFrags = 0;
     }
 
-    public static void addCommandLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(WRITE_CHIMERIC_READS, false, "Write chimeric read data");
-        options.addOption(WRITE_CHIMERIC_FRAGS, false, "Write chimeric fragment data");
-        addKnownFusionFileOption(options);
-        options.addOption(FUSION_COHORT_FILE, true, "Cohort file previously generated");
-        options.addOption(MIN_FRAGS_HARD_FILTER, true, "Hard filter chimeric translocations");
-        options.addOption(RUN_FUSION_PERF, false, "Write chimeric fragment data");
+        configBuilder.addFlag(WRITE_CHIMERIC_READS, "Write chimeric read data");
+        configBuilder.addFlag(WRITE_CHIMERIC_FRAGS, "Write chimeric fragment data");
+        addKnownFusionFileOption(configBuilder);
+        configBuilder.addPath(FUSION_COHORT_FILE, false, "Cohort file previously generated");
+        configBuilder.addInteger(MIN_FRAGS_HARD_FILTER, "Hard filter chimeric translocations", DEFAULT_HARD_FILTER_MIN_FRAGS);
+        configBuilder.addFlag(RUN_FUSION_PERF, "Write chimeric fragment data");
     }
 }

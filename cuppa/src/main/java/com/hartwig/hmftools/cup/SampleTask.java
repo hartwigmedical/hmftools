@@ -9,7 +9,7 @@ import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedClassifierScoreResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.calcCombinedFeatureResult;
 import static com.hartwig.hmftools.cup.common.CupCalcs.fillMissingCancerTypeValues;
-import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR;
+//import static com.hartwig.hmftools.cup.common.CupConstants.COMBINED_DAMPEN_FACTOR_DEFAULT;
 import static com.hartwig.hmftools.cup.common.CupConstants.DNA_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.cup.common.CupConstants.RNA_DAMPEN_FACTOR;
 import static com.hartwig.hmftools.common.cuppa.ResultType.CLASSIFIER;
@@ -96,7 +96,8 @@ public class SampleTask implements Callable
         }
 
         // combine all features into a single classifier
-        SampleResult combinedFeatureResult = calcCombinedFeatureResult(sample, allResults, mSampleDataCache.SampleIds.size() > 1);
+        SampleResult combinedFeatureResult = calcCombinedFeatureResult(
+                sample, allResults, mSampleDataCache.SampleIds.size() > 1, mConfig.FeatureDampenFactor);
 
         if(combinedFeatureResult != null)
             allResults.add(combinedFeatureResult);
@@ -154,7 +155,7 @@ public class SampleTask implements Callable
         if(hasDnaCategories && hasRnaCategories)
         {
             SampleResult classifierScoreResult =
-                    calcCombinedClassifierScoreResult(sample, allResults, DATA_TYPE_COMBINED, COMBINED_DAMPEN_FACTOR);
+                    calcCombinedClassifierScoreResult(sample, allResults, DATA_TYPE_COMBINED, mConfig.CombinedDampenFactor);
 
             if(classifierScoreResult != null)
                 allResults.add(classifierScoreResult);

@@ -18,10 +18,12 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.formstatus.FormStatus;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class BiopsyTreatmentResponseReaderTest {
+public class BiopsyTreatmentResponseReaderTest
+{
 
     @Test
-    public void canFilterOutEmptyForms() {
+    public void canFilterOutEmptyForms()
+    {
         List<BiopsyTreatmentResponseData> responses = BiopsyTreatmentResponseReader.read(buildTestPatient());
         assertEquals(1, responses.size());
         assertNotNull(responses.get(0).measurementDone());
@@ -29,7 +31,8 @@ public class BiopsyTreatmentResponseReaderTest {
     }
 
     @NotNull
-    private static EcrfPatient buildTestPatient() {
+    private static EcrfPatient buildTestPatient()
+    {
         String patient = "dummy";
 
         EcrfItemGroup response1 = new EcrfItemGroup();

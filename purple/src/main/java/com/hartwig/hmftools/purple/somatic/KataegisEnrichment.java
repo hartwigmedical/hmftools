@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.KATAEGIS_FLAG_DESCRIPTION;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.KATAEGIS_FLAG;
 
-import com.hartwig.hmftools.common.variant.enrich.SomaticRefContextEnrichment;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -14,15 +15,13 @@ import htsjdk.variant.vcf.VCFInfoHeaderLine;
 
 public class KataegisEnrichment
 {
-    private static final String KATAEGIS_FLAG_DESCRIPTION = "Forward/reverse kataegis id";
-
     private final KataegisQueue mForwardDetector;
     private final KataegisQueue mReverseDetector;
 
-    public KataegisEnrichment()
+    public KataegisEnrichment(final AtomicInteger kataegisId)
     {
-        mReverseDetector = new KataegisQueue("REV", KataegisEnrichment::isReverseCandidate, null);
-        mForwardDetector = new KataegisQueue("FWD", KataegisEnrichment::isForwardCandidate, mReverseDetector::processVariant);
+        mReverseDetector = new KataegisQueue("REV", kataegisId, KataegisEnrichment::isReverseCandidate, null);
+        mForwardDetector = new KataegisQueue("FWD", kataegisId, KataegisEnrichment::isForwardCandidate, mReverseDetector::processVariant);
     }
 
     public void processVariant(final SomaticVariant variant)

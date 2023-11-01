@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.common.ReadRecord.NO_GENE_ID;
 import static com.hartwig.hmftools.isofox.common.TransExonRef.hasMatchWithinRange;
@@ -699,17 +699,20 @@ public class FusionFinder implements Callable
 
                     if(fusion1.matchWithinHomology(fusion2))
                     {
-                        ISF_LOGGER.trace("fusion({}) homology merge with fusion({})", fusion1.id(), fusion2.id());
+                        if(ISF_LOGGER.isTraceEnabled())
+                        {
+                            ISF_LOGGER.trace("fusion({}) homology merge with fusion({})", fusion1.id(), fusion2.id());
 
-                        ISF_LOGGER.trace("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
-                                fusion1.toString(), fusion1.junctionHomology()[SE_START], fusion1.junctionHomology()[SE_END],
-                                fusion1.junctionBases()[SE_START], fusion1.adjacentJunctionBases()[SE_START],
-                                fusion1.junctionBases()[SE_END], fusion1.adjacentJunctionBases()[SE_END]);
+                            ISF_LOGGER.trace("fusion1({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
+                                    fusion1.toString(), fusion1.junctionHomology()[SE_START], fusion1.junctionHomology()[SE_END],
+                                    fusion1.junctionBases()[SE_START], fusion1.adjacentJunctionBases()[SE_START],
+                                    fusion1.junctionBases()[SE_END], fusion1.adjacentJunctionBases()[SE_END]);
 
-                        ISF_LOGGER.trace("fusion2({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
-                                fusion2.toString(), fusion2.junctionHomology()[SE_START], fusion2.junctionHomology()[SE_END],
-                                fusion2.junctionBases()[SE_START], fusion2.adjacentJunctionBases()[SE_START],
-                                fusion2.junctionBases()[SE_END], fusion2.adjacentJunctionBases()[SE_END]);
+                            ISF_LOGGER.trace("fusion2({}) homology({}/{}) start(junc={} adj={}) end(junc={} adj={})",
+                                    fusion2.toString(), fusion2.junctionHomology()[SE_START], fusion2.junctionHomology()[SE_END],
+                                    fusion2.junctionBases()[SE_START], fusion2.adjacentJunctionBases()[SE_START],
+                                    fusion2.junctionBases()[SE_END], fusion2.adjacentJunctionBases()[SE_END]);
+                        }
 
                         final FusionReadData fusion1Const = fusion1;
 

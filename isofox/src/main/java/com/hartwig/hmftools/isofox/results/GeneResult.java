@@ -1,11 +1,13 @@
 package com.hartwig.hmftools.isofox.results;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_SET_ID;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.util.StringJoiner;
 
@@ -14,7 +16,7 @@ import com.hartwig.hmftools.isofox.common.GeneReadData;
 
 public class GeneResult
 {
-    public final com.hartwig.hmftools.common.gene.GeneData GeneData;
+    public final com.hartwig.hmftools.common.gene.GeneData Gene;
     public final String CollectionId;
     public final int IntronicLength;
     public final int TransCount;
@@ -28,11 +30,11 @@ public class GeneResult
 
     public GeneResult(final GeneCollection geneCollection, final GeneReadData geneReadData)
     {
-        GeneData = geneReadData.GeneData;
+        Gene = geneReadData.GeneData;
         CollectionId = geneCollection.chrId();
 
         long exonicLength = geneReadData.calcExonicRegionLength();
-        IntronicLength = (int)(GeneData.length() - exonicLength);
+        IntronicLength = (int)(Gene.length() - exonicLength);
         TransCount = geneReadData.getTranscripts().size();
 
         mFitResiduals = 0;
@@ -55,16 +57,14 @@ public class GeneResult
         mAdjustedTpm = adjusted;
     }
 
+    public void applyTpmAdjustFactor(double factor) { mAdjustedTpm /= factor; }
+
     public void setFitResiduals(double residuals) { mFitResiduals = residuals; }
     public double getFitResiduals() { return mFitResiduals; }
     public double getSplicedAlloc() { return mSplicedAlloc; }
     public double getUnsplicedAlloc() { return mUnsplicedAlloc; }
 
     public void setLowMapQualsAllocation(double alloc) { mLowMapQualsAllocation = alloc; }
-
-    public static final String FLD_SUPPORTING_TRANS = "SupportingTrans";
-    public static final String FLD_SPLICED_FRAGS = "SplicedFragments";
-    public static final String FLD_UNSPLICED_FRAGS = "UnsplicedFragments";
 
     public static String csvHeader()
     {
@@ -78,7 +78,7 @@ public class GeneResult
                 .add(FLD_GENE_SET_ID)
                 .add(FLD_SPLICED_FRAGS)
                 .add(FLD_UNSPLICED_FRAGS)
-                .add(FLD_TPM)
+                .add(FLD_ADJ_TPM)
                 .add("RawTPM")
                 .add("FitResiduals")
                 .add("LowMapQualFrags")
@@ -88,10 +88,10 @@ public class GeneResult
     public String toCsv()
     {
         return new StringJoiner(DELIMITER)
-                .add(GeneData.GeneId)
-                .add(GeneData.GeneName)
-                .add(GeneData.Chromosome)
-                .add(String.valueOf(GeneData.length()))
+                .add(Gene.GeneId)
+                .add(Gene.GeneName)
+                .add(Gene.Chromosome)
+                .add(String.valueOf(Gene.length()))
                 .add(String.valueOf(IntronicLength))
                 .add(String.valueOf(TransCount))
                 .add(CollectionId)

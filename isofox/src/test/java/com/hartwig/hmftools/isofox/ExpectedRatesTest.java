@@ -2,14 +2,13 @@ package com.hartwig.hmftools.isofox;
 
 import static com.hartwig.hmftools.isofox.TestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.isofox.TestUtils.POS_STRAND;
-import static com.hartwig.hmftools.isofox.TestUtils.createIsofoxConfig;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.LONG;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SHORT;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.SPLICED;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.common.FragmentMatchType.UNSPLICED;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.createTransComboDataMap;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.createTransComboDataMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,8 +28,9 @@ import com.hartwig.hmftools.isofox.common.GeneReadData;
 import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
 import com.hartwig.hmftools.common.sigs.ExpectationMaxFit;
 import com.hartwig.hmftools.isofox.expression.ExpectedRatesData;
-import com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.isofox.refdata.ExpectedCountsGenerator;
+import com.hartwig.hmftools.isofox.refdata.RefDataConfig;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -38,16 +38,21 @@ import org.junit.Test;
 
 public class ExpectedRatesTest
 {
+    private static ExpectedCountsGenerator fromConfig(final int readLength, final int fragmentLength)
+    {
+        RefDataConfig config = new RefDataConfig(readLength);
+        config.FragmentSizeData.add(new FragmentSize(fragmentLength, 1));
+        ExpectedCountsGenerator expectedCountsGenerator = new ExpectedCountsGenerator(config, null);
+        expectedCountsGenerator.setFragmentLengthData(fragmentLength, 1);
+        return expectedCountsGenerator;
+    }
+
     @Test
     public void testRegionMatching()
     {
-        IsofoxConfig config = createIsofoxConfig();
         int fragmentLength = 100;
-        config.ReadLength = 20;
-
-        ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
-
-        expRatesCalc.setFragmentLengthData(fragmentLength, 1);
+        int readLength = 20;
+        ExpectedCountsGenerator expRatesCalc = fromConfig(readLength, fragmentLength);
 
         int transId1 = 1;
         TranscriptData transData = new TranscriptData(transId1, "TRANS01", GENE_NAME_1, true, (byte)1,
@@ -112,7 +117,7 @@ public class ExpectedRatesTest
 
         // within an exon then spanning a junction
         startPos = 150;
-        fragmentLength = 32 + 85 + 2 * config.ReadLength;
+        fragmentLength = 32 + 85 + 2 * readLength;
         expRatesCalc.setFragmentLengthData(fragmentLength, 1);
 
         matchType = expRatesCalc.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
@@ -129,7 +134,7 @@ public class ExpectedRatesTest
 
         // start spanning a junction, ends within an exon
         startPos = 191;
-        fragmentLength = 40 + 2 * config.ReadLength;
+        fragmentLength = 40 + 2 * readLength;
         expRatesCalc.setFragmentLengthData(fragmentLength, 1);
 
         matchType = expRatesCalc.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
@@ -159,7 +164,7 @@ public class ExpectedRatesTest
 
         // 2 sets of exon junctions
         startPos = 191;
-        fragmentLength = 81 + 5 + 2 * config.ReadLength;
+        fragmentLength = 81 + 5 + 2 * readLength;
         expRatesCalc.setFragmentLengthData(fragmentLength, 1);
 
         matchType = expRatesCalc.generateImpliedFragment(transData, startPos, readRegions, spliceJunctions);
@@ -242,9 +247,13 @@ public class ExpectedRatesTest
         assertTrue(expRatesCalc.readsSupportTranscript(transData, readRegions, matchType, spliceJunctions));
 
         // test with a transcript shorter than the read length
+        // config.ReadLength = 150;
+
         fragmentLength = 50;
-        config.ReadLength = 150;
-        expRatesCalc.setFragmentLengthData(fragmentLength, 1);
+        readLength = 150;
+        expRatesCalc = fromConfig(readLength, fragmentLength);
+
+        // expRatesCalc.setFragmentLengthData(fragmentLength, 1);
 
         int transId3 = 3;
         TranscriptData transData3 = new TranscriptData(transId3, "TRANS03", GENE_NAME_1, true, POS_STRAND,
@@ -263,8 +272,9 @@ public class ExpectedRatesTest
 
         // and with a fragment length longer than the transcript
         fragmentLength = 150;
-        config.ReadLength = 150;
-        expRatesCalc.setFragmentLengthData(fragmentLength, 1);
+        expRatesCalc = fromConfig(readLength, fragmentLength);
+        // config.ReadLength = 150;
+        // expRatesCalc.setFragmentLengthData(fragmentLength, 1);
 
         startPos = 100;
         matchType = expRatesCalc.generateImpliedFragment(transData3, startPos, readRegions, spliceJunctions);
@@ -277,11 +287,8 @@ public class ExpectedRatesTest
     @Test
     public void testSingleTranscriptCounts()
     {
-        IsofoxConfig config = createIsofoxConfig();
-        config.ReadLength = 10;
-        config.FragmentSizeData.add(new FragmentSize(30, 1));
-
-        ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
+        int fragmentLength = 30;
+        ExpectedCountsGenerator expRatesCalc = fromConfig(10, fragmentLength);
 
         String geneId = "GENE01";
 
@@ -348,11 +355,8 @@ public class ExpectedRatesTest
     @Test
     public void testMultipleTranscriptCounts()
     {
-        IsofoxConfig config = createIsofoxConfig();
-        config.FragmentSizeData.add(new FragmentSize(30, 1));
-        config.ReadLength = 10;
-
-        ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
+        int fragmentLength = 30;
+        ExpectedCountsGenerator expRatesCalc = fromConfig(10, fragmentLength);
 
         String geneId = "GENE01";
 
@@ -462,11 +466,8 @@ public class ExpectedRatesTest
     @Test
     public void testSingleExonicRegions()
     {
-        IsofoxConfig config = createIsofoxConfig();
-        config.FragmentSizeData.add(new FragmentSize(30, 1));
-        config.ReadLength = 10;
-
-        ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
+        int fragmentLength = 30;
+        ExpectedCountsGenerator expRatesCalc = fromConfig(10, fragmentLength);
 
         String geneId = "GENE01";
 
@@ -496,6 +497,7 @@ public class ExpectedRatesTest
         assertTrue(transComboData.containsKey(transName1));
         assertTrue(transComboData.containsKey(geneId));
 
+        expRatesCalc.populateExpectedRates();
         ExpectedRatesData erData = expRatesCalc.getExpectedRatesData();
 
         Matrix rates = erData.getTranscriptDefinitions();
@@ -551,11 +553,9 @@ public class ExpectedRatesTest
     @Test
     public void testOverlappingGeneCounts()
     {
-        IsofoxConfig config = createIsofoxConfig();
-        config.FragmentSizeData.add(new FragmentSize(30, 1));
-        config.ReadLength = 10;
+        int fragmentLength = 30;
+        ExpectedCountsGenerator expRatesCalc = fromConfig(10, fragmentLength);
 
-        ExpectedRatesGenerator expRatesCalc = ExpectedRatesGenerator.from(config);
 
         String geneId1 = "GENE01";
         GeneData geneData1 = new GeneData(geneId1, geneId1, "1", (byte) 1, 100, 600, "");

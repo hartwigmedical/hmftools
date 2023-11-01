@@ -23,13 +23,13 @@ public class VisCopyNumbers
     {
         final List<VisCopyNumber> results = Lists.newArrayList();
 
-        for (int i = 0; i < alterations.size(); i++)
+        for(int i = 0; i < alterations.size(); i++)
         {
             VisCopyNumber alteration = alterations.get(i);
             final String contig = alteration.chromosome();
             final List<GenomeRegion> chromosomeSegments =
                     span.stream().filter(x -> x.chromosome().equals(contig)).collect(Collectors.toList());
-            if (!chromosomeSegments.isEmpty())
+            if(!chromosomeSegments.isEmpty())
             {
                 int minTrackPosition = chromosomeSegments.stream().mapToInt(GenomeRegion::start).min().orElse(0);
                 int maxTrackPosition = chromosomeSegments.stream().mapToInt(GenomeRegion::end).max().orElse(0);
@@ -38,7 +38,7 @@ public class VisCopyNumbers
                 minTrackPosition = minTrackPosition - additional;
                 maxTrackPosition = maxTrackPosition + additional;
 
-                if (alteration.end() >= minTrackPosition && alteration.start() <= maxTrackPosition)
+                if(alteration.end() >= minTrackPosition && alteration.start() <= maxTrackPosition)
                 {
                     boolean isStartDecreasing = i > 0 && lessThan(alteration, alterations.get(i - 1));
                     int startPosition = isStartDecreasing ? alteration.start() - 1 : alteration.start();

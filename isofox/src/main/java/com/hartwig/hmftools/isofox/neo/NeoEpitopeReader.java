@@ -2,11 +2,11 @@ package com.hartwig.hmftools.isofox.neo;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
 import static com.hartwig.hmftools.isofox.common.GeneReadData.createGeneReadData;
@@ -14,7 +14,6 @@ import static com.hartwig.hmftools.isofox.common.ReadRecord.findOverlappingRegio
 import static com.hartwig.hmftools.isofox.common.RegionMatchType.validExonMatch;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.checkBaseCoverage;
 import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findFusionSupport;
-import static com.hartwig.hmftools.isofox.neo.NeoFragmentMatcher.findPointMutationSupport;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,7 +28,7 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.neo.NeoEpitopeFile;
 import com.hartwig.hmftools.common.neo.RnaNeoEpitope;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.IsofoxConfig;
 import com.hartwig.hmftools.isofox.common.GeneCollection;
 import com.hartwig.hmftools.isofox.common.GeneReadData;
@@ -37,8 +36,6 @@ import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
 import com.hartwig.hmftools.isofox.fusion.ChimericReadGroup;
-
-import org.jetbrains.annotations.NotNull;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
@@ -74,14 +71,15 @@ public class NeoEpitopeReader
         mSamReader = mConfig.BamFile != null ?
                 SamReaderFactory.makeDefault().referenceSequence(mConfig.RefGenomeFile).open(new File(mConfig.BamFile)) : null;
 
-        boolean keepDuplicates = true;
+        boolean keepDuplicates = true; // will be dropped but need them to identify groups since supplementaries aren't marked
         boolean keepSupplementaries = true;
-        boolean keepSecondaries = true;
+        boolean keepSecondaries = false;
         int minMapQuality = keepSecondaries ? 0 : SINGLE_MAP_QUALITY;
 
         mBamSlicer = new BamSlicer(minMapQuality, keepDuplicates, keepSupplementaries, keepSecondaries);
 
-        loadNeoEpitopes(mConfig.NeoEpitopeFile);
+        String neoepitopeFile = NeoEpitopeFile.generateFilename(mConfig.NeoDir, mConfig.SampleId);
+        loadNeoEpitopes(neoepitopeFile);
         initialiseWriter();
     }
 
@@ -127,14 +125,10 @@ public class NeoEpitopeReader
 
             mCurrentNeoData = neData;
 
-            if(neData.isFusion())
-            {
-                calcFusionSupport();
-            }
-            else
-            {
-                calcPointMutationSupport();
-            }
+            if(neData.isPointMutation())
+                continue;
+
+            calcFusionSupport();
 
             writeData(neData);
         }
@@ -149,24 +143,8 @@ public class NeoEpitopeReader
             initialiseGeneData(mCurrentNeoData.Source.GeneIds[fs]);
 
             final ChrBaseRegion readRegion = new ChrBaseRegion(mCurrentNeoData.Chromosomes[fs], mCurrentNeoData.Source.CodingBasePositions[fs]);
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, readRegion, this::processSamRecord);
         }
-
-        mReadGroups.values().forEach(x -> processFragmentReads(x));
-    }
-
-    private void calcPointMutationSupport()
-    {
-        initialiseGeneData(mCurrentNeoData.Source.GeneIds[FS_UP]);
-
-        if(mCurrentGenes == null)
-            return;
-
-        mCurrentNeoData.setOrientation(mCurrentGenes.genes().get(0).GeneData.Strand);
-
-        // the 'UP' stream caches the full coding base= sequence since relates to a single gene
-        final ChrBaseRegion readRegion = new ChrBaseRegion(mCurrentNeoData.Chromosomes[FS_UP],mCurrentNeoData.Source.CodingBasePositions[FS_UP]);
-        mBamSlicer.slice(mSamReader, Lists.newArrayList(readRegion), this::processSamRecord);
 
         mReadGroups.values().forEach(x -> processFragmentReads(x));
     }
@@ -188,7 +166,7 @@ public class NeoEpitopeReader
 
         if(mConfig.RefGenomeFile != null)
         {
-            for (RegionReadData region : mCurrentGenes.getExonRegions())
+            for(RegionReadData region : mCurrentGenes.getExonRegions())
             {
                 final String regionRefBases = mConfig.RefGenome.getBaseString(region.chromosome(), region.start(), region.end());
                 region.setRefBases(regionRefBases);
@@ -196,7 +174,7 @@ public class NeoEpitopeReader
         }
     }
 
-    private void processSamRecord(@NotNull final SAMRecord record)
+    private void processSamRecord(final SAMRecord record)
     {
         final ReadRecord read = ReadRecord.from(record);
 
@@ -212,7 +190,7 @@ public class NeoEpitopeReader
             return;
         }
 
-        readGroup.Reads.add(read);
+        readGroup.addRead(read);
 
         if(readGroup.isComplete())
         {
@@ -226,10 +204,10 @@ public class NeoEpitopeReader
         // ignore unspliced reads
         if(mCurrentNeoData.isFusion())
         {
-            boolean hasSplitRead = readGroup.Reads.stream().anyMatch(x -> x.containsSplit());
+            if(readGroup.hasSuppAlignment())
+                return true;
 
-            if(!hasSplitRead && !readGroup.hasSuppAlignment())
-                return false;
+            return readGroup.reads().stream().anyMatch(x -> x.containsSplit());
         }
 
         // check for support of the required transcript
@@ -239,10 +217,13 @@ public class NeoEpitopeReader
 
     private void processFragmentReads(final ChimericReadGroup readGroup)
     {
-        if(!isCandidateGroup(readGroup))
+        if(readGroup.reads().stream().anyMatch(x -> x.isDuplicate()))
             return;
 
         checkBaseCoverage(mCurrentNeoData, readGroup);
+
+        if(!isCandidateGroup(readGroup))
+            return;
 
         // each fragment must support at least one of the up & down transcripts by being fully exonic or matching an exon boundary
         // unspliced reads are skipped (in any of the transcripts in question)
@@ -263,7 +244,7 @@ public class NeoEpitopeReader
                 boolean hasTrans = false;
                 boolean hasSupport = true;
 
-                for(ReadRecord read : readGroup.Reads)
+                for(ReadRecord read : readGroup.reads())
                 {
                     // any matched transcript needs to be fully exonic in every region, not just one
                     for(Map.Entry<RegionReadData,RegionMatchType> entry : read.getMappedRegions().entrySet())
@@ -294,12 +275,15 @@ public class NeoEpitopeReader
         // work out which of the sections of the neo-epitope may be supported
         NeoFragmentSupport readGroupSupport = new NeoFragmentSupport();
 
-        if(mCurrentNeoData.isPointMutation())
+        for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
         {
-            final int[] codingBaseRange = mCurrentNeoData.getCodingBaseRange(FS_UP);
+            final int[] codingBaseRange = mCurrentNeoData.getCodingBaseRange(fs);
 
-            for(ReadRecord read : readGroup.Reads)
+            for(ReadRecord read : readGroup.reads())
             {
+                if(!read.Chromosome.equals(mCurrentNeoData.Chromosomes[fs]))
+                    continue;
+
                 // check that this read covers some part of the neo section
                 if(read.getMappedRegionCoords(false).stream()
                         .noneMatch(x -> positionsOverlap(codingBaseRange[SE_START], codingBaseRange[SE_END], x[SE_START], x[SE_END])))
@@ -307,38 +291,18 @@ public class NeoEpitopeReader
                     continue;
                 }
 
-                NeoFragmentSupport support = findPointMutationSupport(mCurrentNeoData, read);
+                NeoFragmentSupport support = findFusionSupport(mCurrentNeoData, fs, read);
                 readGroupSupport.setMax(support);
-            }
-        }
-        else
-        {
-            for(int fs = FS_UP; fs <= FS_DOWN; ++fs)
-            {
-                final int[] codingBaseRange = mCurrentNeoData.getCodingBaseRange(fs);
 
-                for(ReadRecord read : readGroup.Reads)
+                ISF_LOGGER.trace("neo({}:{}) support({}) read({})",
+                        mCurrentNeoData.Source.Id, mCurrentNeoData.Source.VariantInfo, support, readGroup.id());
+
+                /*
+                if(support.NovelFragments[EXACT_MATCH] > 0)
                 {
-                    if(!read.Chromosome.equals(mCurrentNeoData.Chromosomes[fs]))
-                        continue;
-
-                    // check that this read covers some part of the neo section
-                    if(read.getMappedRegionCoords(false).stream()
-                            .noneMatch(x -> positionsOverlap(codingBaseRange[SE_START], codingBaseRange[SE_END], x[SE_START], x[SE_END])))
-                    {
-                        continue;
-                    }
-
-                    NeoFragmentSupport support = findFusionSupport(mCurrentNeoData, fs, read);
-                    readGroupSupport.setMax(support);
-
-                    /*
-                    if(support.NovelFragments[EXACT_MATCH] > 0)
-                    {
-                        checkBaseCoverage(mCurrentNeoData, readGroup);
-                    }
-                    */
+                    checkBaseCoverage(mCurrentNeoData, readGroup);
                 }
+                */
             }
         }
 
@@ -372,6 +336,5 @@ public class NeoEpitopeReader
         {
             ISF_LOGGER.error("failed to write neo-epitope data: {}", e.toString());
         }
-
     }
 }

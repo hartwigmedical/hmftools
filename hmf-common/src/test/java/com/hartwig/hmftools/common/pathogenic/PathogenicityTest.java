@@ -18,10 +18,11 @@ import static org.junit.Assert.assertEquals;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
-public class PathogenicityTest {
-
+public class PathogenicityTest
+{
     @Test
-    public void testFromAnnotation() {
+    public void testFromAnnotation()
+    {
         assertEquals(UNKNOWN, fromClinvarAnnotation(Strings.EMPTY, Strings.EMPTY));
 
         assertEquals(PATHOGENIC, fromClinvarAnnotation(CLINVAR_STR_PATHOGENIC, Strings.EMPTY));

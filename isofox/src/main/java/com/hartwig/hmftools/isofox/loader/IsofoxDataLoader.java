@@ -2,7 +2,7 @@ package com.hartwig.hmftools.isofox.loader;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.loader.DataLoadType.GENE_EXPRESSION;
 import static com.hartwig.hmftools.isofox.loader.DataLoadType.NOVEL_JUNCTION;
@@ -13,14 +13,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.expression.cohort.CohortGenePercentiles;
 import com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortCache;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class IsofoxDataLoader
@@ -29,9 +25,9 @@ public class IsofoxDataLoader
     private final AltSjCohortCache mAltSjCohortCache;
     private final CohortGenePercentiles mGeneDistribution;
 
-    public IsofoxDataLoader(final CommandLine cmd)
+    public IsofoxDataLoader(final ConfigBuilder configBuilder)
     {
-        mConfig = new DataLoaderConfig(cmd);
+        mConfig = new DataLoaderConfig(configBuilder);
 
         if(mConfig.loadDataType(NOVEL_JUNCTION) && mConfig.AltSjCohortFile != null)
             mAltSjCohortCache = new AltSjCohortCache(mConfig.AltSjCohortFile);
@@ -85,25 +81,31 @@ public class IsofoxDataLoader
             sampleTask.call();
         }
 
+        ISF_LOGGER.info("Isofox data loading complete");
+
         return true;
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = DataLoaderConfig.createCmdLineOptions();
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        DataLoaderConfig.registerConfig(configBuilder);
 
-        setLogLevel(cmd);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        IsofoxDataLoader dataLoader = new IsofoxDataLoader(cmd);
+        setLogLevel(configBuilder);
+
+        IsofoxDataLoader dataLoader = new IsofoxDataLoader(configBuilder);
 
         if(!dataLoader.load())
         {
             ISF_LOGGER.info("Isofox data loading failed");
-            return;
+            System.exit(1);
         }
 
-        ISF_LOGGER.info("Isofox data loading complete");
     }
 }

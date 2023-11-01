@@ -2,8 +2,9 @@ package com.hartwig.hmftools.common.isofox;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,17 +33,17 @@ public final class IsofoxFusionLoader
     private static final String FLD_DISCORD_FRAGS = "DiscordantFrags";
     private static final String FLD_COHORT_COUNT = "CohortCount";
 
-    @NotNull
-    public static List<RnaFusion> load(@NotNull String isofoxFusionCsv) throws IOException
+    public static List<RnaFusion> load(final String isofoxFusionFile) throws IOException
     {
         List<RnaFusion> fusions = Lists.newArrayList();
 
-        List<String> lines = Files.readAllLines(Paths.get(isofoxFusionCsv));
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), RnaCommon.DELIMITER);
+        List<String> lines = Files.readAllLines(Paths.get(isofoxFusionFile));
+        String fileDelim = inferFileDelimiter(isofoxFusionFile);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
 
         for(String line : lines.subList(1, lines.size()))
         {
-            String[] items = line.split(RnaCommon.DELIMITER, -1);
+            String[] items = line.split(fileDelim, -1);
 
             String fusionName = String.format("%s_%s",
                     items[fieldsIndexMap.get(formStreamField(FLD_GENE_NAME, FS_UP))],
@@ -73,8 +74,7 @@ public final class IsofoxFusionLoader
         return fusions;
     }
 
-    @NotNull
-    private static String formStreamField(@NotNull String field, int stream)
+    private static String formStreamField(final String field, int stream)
     {
         return field + (stream == FS_UP ? "Up" : "Down");
     }

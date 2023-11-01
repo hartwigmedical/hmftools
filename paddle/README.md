@@ -31,7 +31,7 @@ Second step is to download the exonic somatic variants for each of the samples i
 This is done by running the PaddleExonicVariantsApplicationKt application:
 
 ```
-java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleExonicVariantsApplicationKt \
+java -cp paddle.jar com.hartwig.hmftools.dnds.builder.DndsDataBuilder \
     -output_dir /path/to/output_dir \
     -cohort_tsv /path/to/cohort_tsv_generated_by_step1.tsv \
     -db_user ${user} -db_pass ${pass} -db_url ${url}
@@ -61,7 +61,7 @@ Final step is to take the dNdS values from previous step and transform them into
 
 This is done by running the PaddleDriverApplicationKt application:
 ```
-java -cp paddle.jar com.hartwig.hmftools.paddle.PaddleDriverApplicationKt \
+java -cp paddle.jar com.hartwig.hmftools.dnds.calcs.DndsFileBuilder \
     -work_dir /path/to/work_dir
 ```  
 

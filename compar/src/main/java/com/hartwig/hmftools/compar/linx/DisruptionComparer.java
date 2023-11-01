@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.compar.linx;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantData.convertSvData;
-import static com.hartwig.hmftools.compar.Category.DISRUPTION;
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.Category.DISRUPTION;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_CODING_CONTEXT;
 import static com.hartwig.hmftools.compar.linx.DisruptionData.FLD_GENE_ORIENT;
@@ -22,14 +22,14 @@ import com.hartwig.hmftools.common.sv.StructuralVariantData;
 import com.hartwig.hmftools.common.sv.StructuralVariantFileLoader;
 import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
-import com.hartwig.hmftools.compar.Category;
-import com.hartwig.hmftools.compar.CommonUtils;
+import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.CommonUtils;
 import com.hartwig.hmftools.compar.ComparConfig;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.FileSources;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FileSources;
 import com.hartwig.hmftools.compar.ItemComparer;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.Mismatch;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DisruptionComparer implements ItemComparer

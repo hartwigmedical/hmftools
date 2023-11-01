@@ -3,6 +3,7 @@ package com.hartwig.hmftools.purple.drivers;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.GENE_NAME_1;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT;
 import static com.hartwig.hmftools.purple.TestUtils.createVariant;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_INDEL_DRIVER_REPEAT_COUNT;
 
 import static org.junit.Assert.assertEquals;
 
@@ -51,7 +52,7 @@ public class OncoDriversTest
         frameshiftNearHotspot = createVariant(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 3, Hotspot.NEAR_HOTSPOT, 0.5);
 
         inframe = createVariant(VariantType.INDEL, CodingEffect.MISSENSE, 3, Hotspot.NON_HOTSPOT, 0.5);
-        unKnownInframe = createVariant(VariantType.INDEL, CodingEffect.MISSENSE, OncoDrivers.MAX_REPEAT_COUNT + 1, Hotspot.NON_HOTSPOT, 0.5);
+        unKnownInframe = createVariant(VariantType.INDEL, CodingEffect.MISSENSE, MAX_INDEL_DRIVER_REPEAT_COUNT + 1, Hotspot.NON_HOTSPOT, 0.5);
         frameshift = createVariant(VariantType.INDEL, CodingEffect.NONSENSE_OR_FRAMESHIFT, 3, Hotspot.NON_HOTSPOT, 0.5);
         missense = createVariant(VariantType.SNP, CodingEffect.MISSENSE, 0, Hotspot.NON_HOTSPOT, 0.5);
     }

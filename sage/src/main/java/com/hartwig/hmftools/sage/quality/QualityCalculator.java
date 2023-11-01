@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
@@ -28,41 +30,52 @@ public class QualityCalculator
     }
 
     public static int modifiedMapQuality(
-            final QualityConfig config, final GenomePosition position, int mapQuality, double readEvents, boolean properPairFlag)
+            final QualityConfig config, final GenomePosition position, int mapQuality, double readEvents, boolean isImproperPair)
     {
         if(config.isHighlyPolymorphic(position))
         {
-            return Math.min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedPenalty);
+            return min(MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY, mapQuality - config.FixedPenalty);
         }
 
-        int improperPairPenalty = config.ImproperPairPenalty * (properPairFlag ? 0 : 1);
-        int eventPenalty = (int)round(Math.max(0, readEvents - 1) * config.ReadEventsPenalty);
+        int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
+        int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadEventsPenalty);
         return mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
-    }
-
-    public static double modifiedBaseQuality(final QualityConfig config, double baseQuality, int distanceFromReadEdge)
-    {
-        return Math.min(baseQuality - config.BaseQualityFixedPenalty, 3 * distanceFromReadEdge - config.DistanceFromReadEdgeFixedPenalty);
-    }
-
-    public static double jitterPenalty(final QualityConfig config, int repeatCount)
-    {
-        return config.JitterPenalty * Math.max(0, repeatCount - config.JitterMinRepeatCount);
     }
 
     public double calculateQualityScore(
             final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents)
     {
-        int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
         double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
 
         int mapQuality = record.getMappingQuality();
-        boolean properPairFlag = record.getReadPairedFlag() && record.getProperPairFlag();
-        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, properPairFlag);
+        boolean isImproperPair = isImproperPair(record);
 
-        double modifiedBaseQuality = modifiedBaseQuality(mConfig, baseQuality, distanceFromReadEdge);
-        return Math.max(0, Math.min(modifiedMapQuality, modifiedBaseQuality));
+        int modifiedMapQuality = modifiedMapQuality(mConfig, readContextCounter.variant(), mapQuality, numberOfEvents, isImproperPair);
+
+        double modifiedBaseQuality = baseQuality - mConfig.BaseQualityFixedPenalty;
+
+        if(mConfig.DistanceFromReadEdgeFactor > 0)
+        {
+            int distanceFromReadEdge = readDistanceFromEdge(readContextCounter, readBaseIndex, record);
+            int readEdgePenalty = max(mConfig.DistanceFromReadEdgeFactor * distanceFromReadEdge - mConfig.DistanceFromReadEdgeFixedPenalty, 0);
+            modifiedBaseQuality = min(modifiedBaseQuality, readEdgePenalty);
+        }
+
+        double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
+
+        /*
+        if(readContextCounter.logEvidence() && !SG_LOGGER.isTraceEnabled())
+        {
+            SG_LOGGER.trace(format("variant(%s) read(%s) distFromEdge(%d) events(%.1f) qual(map=%d rawBase=%.1f base=%.1f) modified(map=%d base=%.1f)",
+                    readContextCounter.varString(), record.getReadName(), distanceFromReadEdge, numberOfEvents,
+                    mapQuality, rawBaseQual, baseQuality, modifiedMapQuality, modifiedBaseQuality));
+        }
+        */
+
+        return modifiedQuality;
     }
+
+    public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
 
     public double baseQuality(final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record)
     {
@@ -90,7 +103,7 @@ public class QualityCalculator
 
     private double baseQuality(final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
-        int maxIndex = Math.min(startReadIndex + length, record.getBaseQualities().length) - 1;
+        int maxIndex = min(startReadIndex + length, record.getBaseQualities().length) - 1;
         int maxLength = maxIndex - startReadIndex + 1;
 
         double quality = Integer.MAX_VALUE;
@@ -101,7 +114,7 @@ public class QualityCalculator
             byte rawQuality = record.getBaseQualities()[readIndex];
 
             double recalibratedQual = recalibrateQuality(readContextCounter, refPosition, i, rawQuality);
-            quality = Math.min(quality, recalibratedQual);
+            quality = min(quality, recalibratedQual);
         }
 
         return quality;
@@ -122,6 +135,7 @@ public class QualityCalculator
 
     private int readDistanceFromEdge(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
+        // calculate the left and right core positions in the context of this read
         int index = readContextCounter.readContext().readBasesPositionIndex();
         int leftIndex = readContextCounter.readContext().readBasesLeftCentreIndex();
         int rightIndex = readContextCounter.readContext().readBasesRightCentreIndex();
@@ -132,7 +146,8 @@ public class QualityCalculator
         int adjustedLeftIndex = readIndex - leftOffset;
         int adjustedRightIndex = readIndex + rightOffset;
 
-        return Math.max(0, Math.min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
+        // take the smaller of the left and right core index
+        return max(0, min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
     }
 
 }

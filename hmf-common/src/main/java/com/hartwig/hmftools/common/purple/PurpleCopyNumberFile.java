@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,7 +61,7 @@ public final class PurpleCopyNumberFile
     @VisibleForTesting
     public static List<PurpleCopyNumber> fromLines(final List<String> lines)
     {
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
         lines.remove(0);
 
         int chrIndex = fieldsIndexMap.get("chromosome");
@@ -83,7 +83,7 @@ public final class PurpleCopyNumberFile
 
         for(final String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             final ImmutablePurpleCopyNumber.Builder builder = ImmutablePurpleCopyNumber.builder()
                     .chromosome(values[chrIndex])
@@ -109,7 +109,7 @@ public final class PurpleCopyNumberFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("chromosome")
                 .add("start")
                 .add("end")
@@ -131,7 +131,7 @@ public final class PurpleCopyNumberFile
 
     private static String toString(final PurpleCopyNumber copyNumber)
     {
-        return new StringJoiner(DELIMITER).add(copyNumber.chromosome())
+        return new StringJoiner(TSV_DELIM).add(copyNumber.chromosome())
                 .add(String.valueOf(copyNumber.start()))
                 .add(String.valueOf(copyNumber.end()))
                 .add(FORMAT.format(copyNumber.averageTumorCopyNumber()))

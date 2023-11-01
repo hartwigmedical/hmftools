@@ -1,10 +1,15 @@
 package com.hartwig.hmftools.cup.somatics;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TRINUCLEOTIDE_FLAG;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.VAR_IMPACT;
 import static com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser.fromVariantContext;
+import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SOMATICVARIANT;
+
+import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
@@ -26,6 +31,17 @@ public class SomaticVariant
     public final String TrinucleotideContext;
     public final int RepeatCount;
 
+    public static final String FLD_CHR = "Chromosome";
+    public static final String FLD_POSITION = "Position";
+    public static final String FLD_REF = "Ref";
+    public static final String FLD_ALT = "Alt";
+    public static final String FLD_TYPE = "Type";
+    public static final String FLD_REPEAT_COUNT = "RepeatCount";
+    public static final String FLD_GENE = "Gene";
+    public static final String FLD_TRINUC_CONTEXT = "TriNucContext";
+
+    public static final String SOMATIC_VAR_FILE_ID = ".somatic_variants.csv";
+
     public SomaticVariant(
             final String chromosome, final int position, final String ref, final String alt, final VariantType type,
             final String gene, final String trinucleotideContext, final int repeatCount)
@@ -38,6 +54,11 @@ public class SomaticVariant
         Gene = gene;
         TrinucleotideContext = trinucleotideContext;
         RepeatCount = repeatCount;
+    }
+
+    public static String generateFilename(final String baseDir, final String sampleId)
+    {
+        return baseDir + sampleId + SOMATIC_VAR_FILE_ID;
     }
 
     public static SomaticVariant fromContext(final VariantContext variantContext)
@@ -76,6 +97,20 @@ public class SomaticVariant
                 record.getValue(Tables.SOMATICVARIANT.GENE),
                 record.getValue(SOMATICVARIANT.TRINUCLEOTIDECONTEXT),
                 0); // features makes its own DB call for specific INDELs so isn't retrieved here
+    }
+
+    public static String csvHeader()
+    {
+        StringJoiner sj = new StringJoiner(DATA_DELIM);
+        sj.add(FLD_CHR);
+        sj.add(FLD_POSITION);
+        sj.add(FLD_REF);
+        sj.add(FLD_ALT);
+        sj.add(FLD_TYPE);
+        sj.add(FLD_GENE);
+        sj.add(FLD_TRINUC_CONTEXT);
+        sj.add(FLD_REPEAT_COUNT);
+        return sj.toString();
     }
 
     public String toString()

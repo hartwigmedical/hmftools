@@ -5,22 +5,22 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.convertAminoAcidsToGeneMap;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
-import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.FlankCounts.FLANK_AA_COUNT;
 
 import java.io.BufferedWriter;
@@ -38,16 +38,12 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class RankProteomePeptides
@@ -65,20 +61,20 @@ public class RankProteomePeptides
 
     protected static final List<Integer> RANKED_PROTEOME_PEPTIDE_LENGTHS = Lists.newArrayList(8, 9, 10, 11);
 
-    public RankProteomePeptides(final CommandLine cmd)
+    public RankProteomePeptides(final ConfigBuilder configBuilder)
     {
-        mAlleles = loadDelimitedIdFile(cmd.getOptionValue(ALLELE_FILE), FLD_ALLELE, CSV_DELIM);
+        mAlleles = loadDelimitedIdFile(configBuilder.getValue(ALLELE_FILE), FLD_ALLELE, CSV_DELIM);
 
         Map<String,TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
+        EnsemblDataLoader.loadTranscriptAminoAcidData(configBuilder.getValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
         mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
 
-        mRankCuttoff = Double.parseDouble(cmd.getOptionValue(RANK_CUTOFF, "0.01"));
-        mScorer = new BindScorer(new ScoreConfig(cmd));
+        mRankCuttoff = configBuilder.getDecimal(RANK_CUTOFF);
+        mScorer = new BindScorer(new ScoreConfig(configBuilder));
 
-        mThreads = parseThreads(cmd);
+        mThreads = parseThreads(configBuilder);
 
-        mWriter = initialiseWriter(parseOutputDir(cmd), cmd.getOptionValue(OUTPUT_ID));
+        mWriter = initialiseWriter(parseOutputDir(configBuilder), configBuilder.getValue(OUTPUT_ID));
     }
 
     public void run()
@@ -317,29 +313,20 @@ public class RankProteomePeptides
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(ALLELE_FILE, true, "Peptides to search for");
-        options.addOption(RANK_CUTOFF, true, "Number of amino acid flanks to retrieve");
-        ScoreConfig.addCmdLineArgs(options);
-        addEnsemblDir(options);
-        addLoggingOptions(options);
-        addOutputOptions(options);
-        addThreadOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        configBuilder.addPath(ALLELE_FILE, true, "Peptides to search for");
+        configBuilder.addDecimal(RANK_CUTOFF, "Number of amino acid flanks to retrieve", 0.01);
+        ScoreConfig.registerConfig(configBuilder);
+        addEnsemblDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
+        addThreadOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        RankProteomePeptides rankProteomePeptides = new RankProteomePeptides(cmd);
+        RankProteomePeptides rankProteomePeptides = new RankProteomePeptides(configBuilder);
         rankProteomePeptides.run();
-    }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

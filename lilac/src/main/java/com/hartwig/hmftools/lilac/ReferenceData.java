@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.ENSEMBL_DELIM;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V37;
+import static com.hartwig.hmftools.common.hla.HlaCommon.HLA_CHROMOSOME_V38;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
 import static com.hartwig.hmftools.lilac.LilacConstants.COMMON_ALLELES_FREQ_CUTOFF;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXCLUDED_ALLELES;
@@ -121,11 +123,12 @@ public class ReferenceData
         if(version.is38())
         {
             STOP_LOSS_ON_C_INDEL = new Indel("chr6", 31269338, "CN", "C");
-            LilacConstants.HLA_CHR = "chr6"; // should be abe to get from transcript info at time of use when get rid of NamedBed
+            LilacConstants.HLA_CHR = HLA_CHROMOSOME_V38;
         }
         else
         {
             STOP_LOSS_ON_C_INDEL = new Indel("6", 31237115, "CN", "C");
+            LilacConstants.HLA_CHR = HLA_CHROMOSOME_V37;
         }
     }
 

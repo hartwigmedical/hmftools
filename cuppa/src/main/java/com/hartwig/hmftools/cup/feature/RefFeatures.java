@@ -2,14 +2,15 @@ package com.hartwig.hmftools.cup.feature;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_FEATURE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_DRIVER_AVG;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_FEATURE_PREV;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.FEATURE;
+import static com.hartwig.hmftools.cup.common.CupConstants.loadKnownMutations;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromCohortFile;
 import static com.hartwig.hmftools.cup.feature.FeatureDataLoader.loadFeaturesFromDatabase;
@@ -19,11 +20,7 @@ import static com.hartwig.hmftools.cup.feature.FeaturePrevData.TYPE_NAME_DELIM;
 import static com.hartwig.hmftools.cup.feature.FeaturePrevData.featureTypeName;
 import static com.hartwig.hmftools.cup.feature.FeatureType.AMP;
 import static com.hartwig.hmftools.cup.feature.FeatureType.DRIVER;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.MIN_AMP_MULTIPLE;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.RESTRICT_DRIVER_AMP_GENES;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.COMBINE_DRIVER_AMP;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertAndFilterDriverAmps;
-import static com.hartwig.hmftools.cup.feature.FeaturesCommon.filterDriverAmps;
+import static com.hartwig.hmftools.cup.feature.FeaturesCommon.convertDriverAmps;
 import static com.hartwig.hmftools.cup.ref.RefDataConfig.parseFileSet;
 
 import java.io.BufferedWriter;
@@ -38,14 +35,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public class RefFeatures implements RefClassifier
 {
@@ -53,28 +47,19 @@ public class RefFeatures implements RefClassifier
     private final SampleDataCache mSampleDataCache;
 
     private final List<FeaturePrevData> mFeatureOverrides;
-    private final boolean mRestrictAmpGenes;
-    private final boolean mSplitDriverAmps;
-    private final double mMinAmpCnMultiple;
 
-    public RefFeatures(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefFeatures(final RefDataConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
-        mSampleDataCache = sampleDataCache;
 
-        mSplitDriverAmps = !cmd.hasOption(COMBINE_DRIVER_AMP);
-        mRestrictAmpGenes = cmd.hasOption(RESTRICT_DRIVER_AMP_GENES);
-        mMinAmpCnMultiple = Double.parseDouble(cmd.getOptionValue(MIN_AMP_MULTIPLE, "0"));
+        loadKnownMutations(mConfig.RefGenVersion);
+
+        mSampleDataCache = sampleDataCache;
 
         mFeatureOverrides = loadRefFeatureOverrides(mConfig.FeatureOverrideFile);
     }
 
     public CategoryType categoryType() { return FEATURE; }
-
-    public static void addCmdLineArgs(@NotNull Options options)
-    {
-        FeaturesCommon.addCmdLineArgs(options);
-    }
 
     public static boolean requiresBuild(final RefDataConfig config)
     {
@@ -84,27 +69,25 @@ public class RefFeatures implements RefClassifier
         return config.DbAccess != null || !config.CohortFeaturesFile.isEmpty() || !config.LinxDir.isEmpty();
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         if(mConfig.CohortFeaturesFile.isEmpty() && mConfig.DbAccess == null && mConfig.LinxDir.isEmpty())
-            return;
+        {
+            CUP_LOGGER.error("feature ref builder missing DB config or directories");
+            return false;
+        }
 
         CUP_LOGGER.info("building feature reference data");
 
         final Map<String,List<SampleFeatureData>> sampleFeaturesMap = Maps.newHashMap();
-        loadSampleData(sampleFeaturesMap);
+
+        if(!loadSampleData(sampleFeaturesMap))
+            return false;
 
         writeCohortData(sampleFeaturesMap);
 
-        if(mSplitDriverAmps)
-        {
-            convertAndFilterDriverAmps(sampleFeaturesMap, mRestrictAmpGenes);
-
-            if(mMinAmpCnMultiple > 0)
-            {
-                filterDriverAmps(sampleFeaturesMap, mSampleDataCache.SampleTraitsData, mMinAmpCnMultiple);
-            }
-        }
+        convertDriverAmps(sampleFeaturesMap);
 
         final Map<String,Map<String,Double>> cancerFeatureCounts = Maps.newHashMap();
 
@@ -116,16 +99,23 @@ public class RefFeatures implements RefClassifier
         writeFeaturePrevalenceFile(cancerFeatureCounts);
 
         writeAverageDriversFile(driversPerSampleMap, panCancerDriversPerSample);
+
+        return true;
     }
 
-    private void loadSampleData(final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
+    private boolean loadSampleData(final Map<String,List<SampleFeatureData>> sampleFeaturesMap)
     {
         if(!mConfig.CohortFeaturesFile.isEmpty())
         {
             final Map<String,List<SampleFeatureData>> allSampleFeatures = Maps.newHashMap();
 
-            final List<String> files = parseFileSet(mConfig.CohortFeaturesFile);
-            files.forEach(x -> loadFeaturesFromCohortFile(x, allSampleFeatures));
+            List<String> files = parseFileSet(mConfig.CohortFeaturesFile);
+
+            for(String file : files)
+            {
+                if(!loadFeaturesFromCohortFile(file, allSampleFeatures))
+                    return false;
+            }
 
             // extract only reference sample data
             for(Map.Entry<String,List<SampleFeatureData>> entry : allSampleFeatures.entrySet())
@@ -140,7 +130,8 @@ public class RefFeatures implements RefClassifier
         }
         else if(mConfig.DbAccess != null)
         {
-            loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleFeaturesMap);
+            if(!loadFeaturesFromDatabase(mConfig.DbAccess, mSampleDataCache.refSampleIds(false), sampleFeaturesMap))
+                return false;
         }
         else
         {
@@ -151,9 +142,10 @@ public class RefFeatures implements RefClassifier
 
                 final String linxDataDir = formSamplePath(mConfig.LinxDir, sample.Id);
                 final String purpleDataDir = formSamplePath(mConfig.PurpleDir, sample.Id);
+                final String virusDataDir = formSamplePath(mConfig.VirusDir, sample.Id);
 
-                if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, sampleFeaturesMap))
-                    break;
+                if(!loadFeaturesFromFile(sample.Id, linxDataDir, purpleDataDir, virusDataDir, sampleFeaturesMap))
+                    return false;
 
                 if(i > 0 && (i % 100) == 0)
                 {
@@ -161,6 +153,8 @@ public class RefFeatures implements RefClassifier
                 }
             }
         }
+
+        return true;
     }
 
     private void assignFeatures(

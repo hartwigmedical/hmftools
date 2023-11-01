@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.svtools.pon;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.svtools.pon.PonBuilder.PON_LOGGER;
@@ -17,10 +17,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.utils.ConfigUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.compress.utils.Lists;
 
 public class PonConfig
@@ -37,25 +36,25 @@ public class PonConfig
     private static final String VCF_FILE_PATTERNS = "vcf_file_patterns";
     private static final String MIN_PON_WRITE_COUNT = "min_pon_write_count";
 
-    public PonConfig(final CommandLine cmd)
+    public PonConfig(final ConfigBuilder configBuilder)
     {
         SampleIds = Lists.newArrayList();
-        OutputDir = parseOutputDir(cmd);
-        MinPonWriteCount = Integer.parseInt(cmd.getOptionValue(MIN_PON_WRITE_COUNT, "2"));
-        Threads = parseThreads(cmd);
+        OutputDir = parseOutputDir(configBuilder);
+        MinPonWriteCount = configBuilder.getInteger(MIN_PON_WRITE_COUNT);
+        Threads = parseThreads(configBuilder);
 
         SampleVcfFiles = Maps.newHashMap();
 
-        if(cmd.hasOption(SAMPLE_VCFS_FILE))
+        if(configBuilder.hasFlag(SAMPLE_VCFS_FILE))
         {
             VcfFilePatterns = Lists.newArrayList();
-            populateSampleVcfFilepaths(cmd.getOptionValue(SAMPLE_VCFS_FILE));
+            populateSampleVcfFilepaths(configBuilder.getValue(SAMPLE_VCFS_FILE));
             SampleVcfFiles.keySet().forEach(x -> SampleIds.add(x));
         }
         else
         {
-            SampleIds.addAll(ConfigUtils.loadSampleIdsFile(cmd));
-            VcfFilePatterns = Arrays.stream(cmd.getOptionValue(VCF_FILE_PATTERNS).split(";")).collect(Collectors.toList());
+            SampleIds.addAll(ConfigUtils.loadSampleIdsFile(configBuilder));
+            VcfFilePatterns = Arrays.stream(configBuilder.getValue(VCF_FILE_PATTERNS).split(";")).collect(Collectors.toList());
         }
     }
 
@@ -89,14 +88,14 @@ public class PonConfig
         }
     }
 
-    public static void addOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        addSampleIdFile(options);
-        options.addOption(SAMPLE_VCFS_FILE, true, "CSV file with 'SampleId,VcfFile' locations");
-        options.addOption(VCF_FILE_PATTERNS, true, "VCF file IDs, eg 'gridss.vcf' separated by ';'");
-        options.addOption(MIN_PON_WRITE_COUNT, true, "Min observations of SV or SGL to include in PON");
-        addThreadOptions(options);
-        ConfigUtils.addLoggingOptions(options);
-        addOutputDir(options);
+        addSampleIdFile(configBuilder, true);
+        configBuilder.addConfigItem(SAMPLE_VCFS_FILE, true, "CSV file with 'SampleId,VcfFile' locations");
+        configBuilder.addConfigItem(VCF_FILE_PATTERNS, true, "VCF file IDs, eg 'gridss.vcf' separated by ';'");
+        configBuilder.addInteger(MIN_PON_WRITE_COUNT, "Min observations of SV or SGL to include in PON", 2);
+        addThreadOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
+        addOutputDir(configBuilder);
     }
 }

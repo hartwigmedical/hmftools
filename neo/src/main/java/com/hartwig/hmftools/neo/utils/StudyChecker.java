@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
@@ -24,12 +25,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // looks for outlier studies in allele-peptide binding training data
@@ -45,11 +42,11 @@ public class StudyChecker
 
     private static final String STUDY_DATA_FILE = "study_data_file";
 
-    public StudyChecker(final CommandLine cmd)
+    public StudyChecker(final ConfigBuilder configBuilder)
     {
-        String dataFile = cmd.getOptionValue(STUDY_DATA_FILE);
+        String dataFile = configBuilder.getValue(STUDY_DATA_FILE);
 
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = parseOutputDir(configBuilder);
 
         mWriter = initProbWriter();
 
@@ -178,7 +175,7 @@ public class StudyChecker
         {
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), CSV_DELIM);
             lines.remove(0);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
@@ -192,7 +189,7 @@ public class StudyChecker
 
             for(String line : lines)
             {
-                final String[] items = line.split(DELIMITER, -1);
+                final String[] items = line.split(CSV_DELIM, -1);
 
                 String allele = items[alleleIndex];
 
@@ -222,26 +219,17 @@ public class StudyChecker
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(STUDY_DATA_FILE, true, "Study binding data");
-        addOutputDir(options);
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        configBuilder.addPath(STUDY_DATA_FILE, true, "Study binding data");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        StudyChecker studyChecker = new StudyChecker(cmd);
+        StudyChecker studyChecker = new StudyChecker(configBuilder);
         studyChecker.run();
-    }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 
     private class BindStudyData

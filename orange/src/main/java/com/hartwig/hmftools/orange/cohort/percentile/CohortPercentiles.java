@@ -8,14 +8,14 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public abstract class CohortPercentiles {
-
+public abstract class CohortPercentiles
+{
     @NotNull
     public abstract String cancerType();
 
     public abstract int cohortSize();
 
-    @NotNull 
+    @NotNull
     public abstract List<Double> values();
 
 }

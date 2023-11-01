@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.virusinterpreter.algo;
 
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 
 import org.immutables.value.Value;
@@ -9,10 +10,11 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class VirusReportingDb {
+public abstract class VirusReportingDb
+{
 
     @NotNull
-    public abstract String virusInterpretation();
+    public abstract VirusType virusInterpretation();
 
     @Nullable
     public abstract Integer integratedMinimalCoverage();

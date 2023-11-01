@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.geneutils.common;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -11,6 +12,8 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import com.google.common.io.Resources;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.version.VersionInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +24,18 @@ import org.jooq.tools.StringUtils;
 
 public final class CommonUtils
 {
+    public static final String APP_NAME = "GeneUtils";
+
     public static final Logger GU_LOGGER = LogManager.getLogger(CommonUtils.class);
+
+    public static final String RESOURCE_REPO_DIR = "resource_repo_dir";
+    public static final String RESOURCE_REPO_DIR_DESC = "The directory holding the public HMF resources repo";
+    public static final String ENSEMBL_DIR = "ensembl_data_cache";
+
+    public static String getEnsemblDirectory(final RefGenomeVersion refGenomeVersion, final String resourceRepoDir)
+    {
+        return resourceRepoDir + ENSEMBL_DIR + File.separator + refGenomeVersion.identifier();
+    }
 
     public static String readQueryString(final URL queryResource)
     {

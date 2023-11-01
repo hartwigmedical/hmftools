@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.pipeline;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.ReferenceData.loadRefGenome;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -13,10 +13,10 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.coverage.Coverage;
@@ -28,7 +28,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 public class RegionThread extends Thread
 {
     private final String mChromosome;
-    private final SageConfig mConfig;
+    private final SageCallConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenomeFile;
     private final RefGenomeSource mRefGenome;
 
@@ -48,7 +48,7 @@ public class RegionThread extends Thread
     private final SamSlicerFactory mSamSlicerFactory;
 
     public RegionThread(
-            final String chromosome, final SageConfig config,
+            final String chromosome, final SageCallConfig config,
             final Map<String,QualityRecalibrationMap> qualityRecalibrationMap, final Coverage coverage,
             final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<VariantHotspot> hotspots,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
@@ -57,7 +57,7 @@ public class RegionThread extends Thread
         mChromosome = chromosome;
         mConfig = config;
         mSamSlicerFactory = new SamSlicerFactory();
-        mRefGenomeFile = loadRefGenome(config.RefGenomeFile);
+        mRefGenomeFile = loadRefGenome(config.Common.RefGenomeFile);
         mRefGenome = new RefGenomeSource(mRefGenomeFile);
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mCoverage = coverage;
@@ -72,7 +72,7 @@ public class RegionThread extends Thread
         mPartitions = partitions;
 
         // create readers for each sample and BAM
-        mSamSlicerFactory.buildBamReaders(mConfig, mRefGenomeFile);
+        mSamSlicerFactory.buildBamReaders(mConfig.TumorIds, mConfig.TumorBams, mConfig.Common, mRefGenomeFile);
 
         start();
     }

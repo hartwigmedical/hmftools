@@ -5,14 +5,13 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_P
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 
 import java.io.BufferedWriter;
@@ -26,12 +25,9 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class GenerateEnsemblDataCache
@@ -39,17 +35,17 @@ public class GenerateEnsemblDataCache
     public static final String HGNC_GENE_DATA_FILE = "hgnc_gene_data_file";
     public static final String REF_ENSEMBL_DIR = "ref_ensembl_dir";
 
-    public static void writeEnsemblDataFiles(final CommandLine cmd)
+    public static void writeEnsemblDataFiles(final ConfigBuilder configBuilder)
     {
-        String outputDir = parseOutputDir(cmd);
+        String outputDir = parseOutputDir(configBuilder);
 
-        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, String.valueOf(V37)));
+        RefGenomeVersion refGenomeVersion = RefGenomeVersion.from(configBuilder);
 
         GU_LOGGER.info("writing Ensembl version({}) data files to {}", refGenomeVersion, outputDir);
 
-        if(EnsemblDAO.hasDatabaseConfig(cmd))
+        if(EnsemblDAO.hasDatabaseConfig(configBuilder))
         {
-            EnsemblDAO ensemblDAO = new EnsemblDAO(cmd);
+            EnsemblDAO ensemblDAO = new EnsemblDAO(configBuilder);
 
             if(!ensemblDAO.isValid())
             {
@@ -208,32 +204,19 @@ public class GenerateEnsemblDataCache
         return closestPosition;
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = createBasicOptions();
-        final CommandLine cmd = createCommandLine(args, options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        setLogLevel(cmd);
-        writeEnsemblDataFiles(cmd);
-    }
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addPath(HGNC_GENE_DATA_FILE, false, "HGNC gene data file");
+        configBuilder.addPath(REF_ENSEMBL_DIR, false, "Ensembl data dir for canonical trans to use");
+        EnsemblDAO.addCmdLineArgs(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
+        addOutputDir(configBuilder);
 
-    @NotNull
-    private static Options createBasicOptions()
-    {
-        final Options options = new Options();
-        addLoggingOptions(options);
-        addOutputDir(options);
-        options.addOption(HGNC_GENE_DATA_FILE, true, "HGNC gene data file");
-        options.addOption(REF_ENSEMBL_DIR, true, "Ensembl data dir for canonical trans to use");
-        EnsemblDAO.addCmdLineArgs(options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        return options;
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        writeEnsemblDataFiles(configBuilder);
     }
 }

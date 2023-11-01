@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-
 import org.jetbrains.annotations.NotNull;
 
 public enum VariantEffect
@@ -24,8 +22,10 @@ public enum VariantEffect
     MISSENSE("missense_variant", 40),
     PHASED_INFRAME_INSERTION("phased_inframe_insertion", 40),
     PHASED_INFRAME_DELETION("phased_inframe_deletion", 40),
+    PHASED_MISSENSE("phased_missense", 40),
 
     SYNONYMOUS("synonymous_variant", 30),
+    PHASED_SYNONYMOUS("phased_synonymous", 30),
 
     INTRONIC("intron_variant", 10),
     FIVE_PRIME_UTR("5_prime_UTR_variant", 10),
@@ -67,12 +67,14 @@ public enum VariantEffect
         return effect == FRAMESHIFT || effect == STOP_GAINED || effect == STOP_LOST || effect == START_LOST;
     }
 
+    @NotNull
     public static List<VariantEffect> effectsToList(@NotNull final String effects)
     {
         String[] variantEffectStrings = effects.split(VARIANT_EFFECTS_DELIM, -1);
         return Arrays.stream(variantEffectStrings).map(x -> fromEffect(x)).collect(Collectors.toList());
     }
 
+    @NotNull
     public static VariantEffect fromEffect(@NotNull final String name)
     {
         for(final VariantEffect variantEffect : VariantEffect.values())
@@ -84,11 +86,13 @@ public enum VariantEffect
         return VariantEffect.OTHER;
     }
 
+    @NotNull
     public static String effectsToString(final List<VariantEffect> variantEffects)
     {
         return effectsToString(variantEffects, VARIANT_EFFECTS_DELIM);
     }
 
+    @NotNull
     public static String effectsToString(final List<VariantEffect> variantEffects, final String delim)
     {
         StringJoiner sj = new StringJoiner(delim);

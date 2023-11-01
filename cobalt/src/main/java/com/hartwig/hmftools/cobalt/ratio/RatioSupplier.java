@@ -5,32 +5,24 @@ import static com.hartwig.hmftools.cobalt.CobaltUtils.toCommonChromosomeMap;
 import static com.hartwig.hmftools.cobalt.ratio.DiploidRatioSupplier.calcDiploidRatioResults;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.ArrayListMultimap;
+import tech.tablesaw.api.*;
+import tech.tablesaw.columns.Column;
+
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import com.hartwig.hmftools.cobalt.Chromosome;
-import com.hartwig.hmftools.cobalt.count.ReadCount;
-import com.hartwig.hmftools.cobalt.diploid.DiploidRatioLoader;
-import com.hartwig.hmftools.cobalt.targeted.TargetRegionEnrichment;
-import com.hartwig.hmftools.cobalt.targeted.TargetedRatioBuilder;
-import com.hartwig.hmftools.common.cobalt.CobaltRatio;
-import com.hartwig.hmftools.common.cobalt.ImmutableCobaltRatio;
+import com.hartwig.hmftools.cobalt.ChromosomePositionCodec;
+import com.hartwig.hmftools.cobalt.CobaltColumns;
+import com.hartwig.hmftools.cobalt.CobaltConstants;
+import com.hartwig.hmftools.cobalt.lowcov.LowCovBucket;
+import com.hartwig.hmftools.cobalt.lowcov.LowCoverageRatioMapper;
+import com.hartwig.hmftools.cobalt.targeted.TargetedRatioMapper;
 import com.hartwig.hmftools.common.cobalt.MedianRatio;
 import com.hartwig.hmftools.common.cobalt.MedianRatioFactory;
 import com.hartwig.hmftools.common.cobalt.MedianRatioFile;
-import com.hartwig.hmftools.common.cobalt.ReadRatio;
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadCountFile;
-import com.hartwig.hmftools.common.genome.gc.GCProfile;
-import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
+import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,61 +30,129 @@ public class RatioSupplier
 {
     private final String mTumorId;
     private final String mReferenceId;
-    private final String mOutputDir;
+    @Nullable private final String mOutputDir;
 
-    private final Collection<Chromosome> mChromosomes;
-    private final Multimap<Chromosome, GCProfile> mGcProfiles;
-    @Nullable private final Multimap<Chromosome, ReadCount> mReferenceCounts;
-    @Nullable private final Multimap<Chromosome, ReadCount> mTumorCounts;
+    private final Table mGcProfiles;
+    @Nullable private final Table mReferenceCounts;
+    @Nullable private final Table mTumorCounts;
 
-    private TargetRegionEnrichment mTargetRegionEnrichment = null;
+    // a table with chromosome, position, relativeEnrichment
+    private Table mTargetRegionEnrichment = null;
+
+    private final ChromosomePositionCodec mChromosomePosCodec;
+
+    enum SparseBucketPolicy
+    {
+        DO_NOT_CONSOLIDATE,
+        USE_PROVIDED_BUCKETS,
+        CALC_CONSOLIDATED_BUCKETS
+    }
 
     static class SampleRatios
     {
         // processing states
-        protected final GcNormalizedRatioBuilder gcNormalizedRatioBuilder;
-        protected final RatioBuilder ratioBuilder;
+        protected final GcNormalizedRatioMapper gcNormalizedRatioMapper;
 
-        ArrayListMultimap<Chromosome, ReadRatio> getRatios() { return ratioBuilder.ratios(); }
+        @Nullable Multimap<String, LowCovBucket> consolidatedBuckets;
+
+        // chromosomePositionIndex, ratio
+        Table readRatios;
+
+        Table getRatios() { return readRatios; }
 
         SampleRatios(
                 final String sampleId,
-                final Multimap<Chromosome, ReadCount> readCounts,
-                final Multimap<Chromosome, GCProfile> gcProfiles,
-                @Nullable TargetRegionEnrichment targetRegionEnrichment,
-                final String outputDir) throws IOException
+                final Table readCounts,
+                final Table gcProfiles,
+                @Nullable Table targetRegionEnrichment,
+                SparseBucketPolicy sparseBucketPolicy,
+                @Nullable Multimap<String, LowCovBucket> consolidatedBuckets,
+                @Nullable final String outputDir,
+                ChromosomePositionCodec chromosomePosCodec) throws IOException
         {
-            gcNormalizedRatioBuilder = new GcNormalizedRatioBuilder(gcProfiles, readCounts);
+            CB_LOGGER.info("calculating sample ratios for {}", sampleId);
 
+            readRatios = readCounts.copy().setName("readRatios");
+
+            CB_LOGGER.info("merging in gc profile");
+
+            // merge in the gc profile
+            readRatios = readRatios.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).leftOuter(gcProfiles);
+
+            // set column as ratio, but filter out unmappable regions
+            DoubleColumn ratioColumn = DoubleColumn.create(CobaltColumns.RATIO);
+            for (Row row : readRatios)
+            {
+                if (!row.isMissing(CobaltColumns.IS_MAPPABLE) && row.getBoolean(CobaltColumns.IS_MAPPABLE))
+                {
+                    ratioColumn.append((double)row.getInt(CobaltColumns.READ_COUNT));
+                }
+                else
+                {
+                    ratioColumn.appendMissing();
+                }
+            }
+            readRatios.addColumns(ratioColumn);
+
+            // on target ratios
             if (targetRegionEnrichment != null)
             {
-                ratioBuilder = new TargetedRatioBuilder(
-                        targetRegionEnrichment.regions(), targetRegionEnrichment.regionEnrichment(), gcNormalizedRatioBuilder.ratios());
-            }
-            else
-            {
-                ratioBuilder = gcNormalizedRatioBuilder;
+                CB_LOGGER.info("using targeted ratio");
+                readRatios = new TargetedRatioMapper(targetRegionEnrichment, chromosomePosCodec).mapRatios(readRatios);
             }
 
-            CB_LOGGER.info("Persisting {} gc read count to {}", sampleId, outputDir);
-            final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDir, sampleId);
-            GCMedianReadCountFile.write(tumorGCMedianFilename, gcNormalizedRatioBuilder.gcMedianReadCount());
+            gcNormalizedRatioMapper = new GcNormalizedRatioMapper(true);
+            readRatios = gcNormalizedRatioMapper.mapRatios(readRatios);
+
+            switch (sparseBucketPolicy)
+            {
+                case DO_NOT_CONSOLIDATE:
+                    this.consolidatedBuckets = null;
+                    break;
+                case USE_PROVIDED_BUCKETS:
+                    this.consolidatedBuckets = consolidatedBuckets;
+                    break;
+                case CALC_CONSOLIDATED_BUCKETS:
+                {
+                    // determine consolidated buckets
+                    // determine the low cov consolidation window count
+                    double medianReadCount = gcNormalizedRatioMapper.getSampleMedianReadCount();
+                    this.consolidatedBuckets = LowCoverageRatioMapper.calcConsolidateBuckets(readRatios, medianReadCount);
+                    break;
+                }
+            }
+
+            if (this.consolidatedBuckets != null)
+            {
+                CB_LOGGER.info("using low coverage ratio");
+                readRatios = new LowCoverageRatioMapper(this.consolidatedBuckets, chromosomePosCodec).mapRatios(readRatios);
+            }
+
+            if (outputDir != null)
+            {
+                CB_LOGGER.info("Persisting {} gc read count to {}", sampleId, outputDir);
+                final String tumorGCMedianFilename = GCMedianReadCountFile.generateFilename(outputDir, sampleId);
+                GCMedianReadCountFile.write(tumorGCMedianFilename, gcNormalizedRatioMapper.gcMedianReadCount());
+            }
         }
     }
 
     static class GermlineRatios extends SampleRatios
     {
         // processing states
-        private final ArrayListMultimap<Chromosome, ReadRatio> gcDiploidRatios;
+        private final Table gcDiploidRatios;
 
         GermlineRatios(final String referenceId,
-                final Multimap<Chromosome, ReadCount> readCounts,
-                final Multimap<Chromosome, GCProfile> gcProfiles,
-                @Nullable TargetRegionEnrichment targetRegionEnrichment,
-                final Collection<Chromosome> chromosomes,
-                final String outputDir) throws IOException
+                final Table readCounts,
+                final Table gcProfiles,
+                @Nullable Table targetRegionEnrichment,
+                SparseBucketPolicy sparseBucketPolicy,
+                @Nullable Multimap<String, LowCovBucket> consolidatedBuckets,
+                final String outputDir,
+                ChromosomePositionCodec chromosomePosCodec) throws IOException
         {
-            super(referenceId, readCounts, gcProfiles, targetRegionEnrichment, outputDir);
+            super(referenceId, readCounts, gcProfiles, targetRegionEnrichment, sparseBucketPolicy,
+                    consolidatedBuckets, outputDir, chromosomePosCodec);
 
             // TODO: check this
             final List<MedianRatio> medianRatios = MedianRatioFactory.createFromReadRatio(toCommonChromosomeMap(getRatios()));
@@ -102,63 +162,71 @@ public class RatioSupplier
             MedianRatioFile.write(ratioMedianFilename, medianRatios);
 
             CB_LOGGER.info("Applying ratio diploid normalization");
-            gcDiploidRatios = calcDiploidRatioResults(chromosomes, getRatios(), medianRatios);
+            gcDiploidRatios = calcDiploidRatioResults(getRatios(), medianRatios);
         }
     }
 
-    public RatioSupplier(final String reference, final String tumor, final String outputDirectory,
-            final Multimap<Chromosome, GCProfile> gcProfiles,
-            final Collection<Chromosome> chromosomes,
-            @Nullable final Multimap<Chromosome, ReadCount> referenceCounts,
-            @Nullable final Multimap<Chromosome, ReadCount> tumorCounts)
+    public RatioSupplier(final String reference, final String tumor,
+            @Nullable final String outputDirectory,
+            final Table gcProfiles,
+            @Nullable final Table referenceCounts,
+            @Nullable final Table tumorCounts,
+            ChromosomePositionCodec chromosomePosCodec)
     {
         mTumorId = tumor;
         mReferenceId = reference;
         mOutputDir = outputDirectory;
         mGcProfiles = gcProfiles;
-        mChromosomes = chromosomes;
         mReferenceCounts = referenceCounts;
         mTumorCounts = tumorCounts;
+        mChromosomePosCodec = chromosomePosCodec;
     }
     
-    public void setTargetRegionEnrichment(TargetRegionEnrichment targetRegionEnrichment)
+    public void setTargetRegionEnrichment(Table targetRegionEnrichment)
     {
         mTargetRegionEnrichment = targetRegionEnrichment;
     }
 
     @NotNull
-    public Multimap<Chromosome, CobaltRatio> tumorOnly(final String diploidBedFile) throws IOException
+    public Table tumorOnly(final Table diploidRegions) throws IOException
     {
         if (mTumorCounts == null)
         {
             CB_LOGGER.fatal("Tumor count should not be null");
             throw new RuntimeException("tumor count is null");
         }
-        var tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment, mOutputDir);
-        final ArrayListMultimap<Chromosome, ReadRatio> diploidRatios = new DiploidRatioLoader(mChromosomes, diploidBedFile).build();
+        SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ? SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
+        Table tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment, sparseBucketPolicy,
+                null, mOutputDir, mChromosomePosCodec).getRatios();
+
+        // filter tumor ratios by the diploid regions
+        // we use inner join to remove any tumor ratios that are not in the diploid regions
+        tumorRatios = tumorRatios.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS)
+                .inner(diploidRegions.selectColumns(CobaltColumns.ENCODED_CHROMOSOME_POS))
+                .sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
 
         // merge this ratios together into one cobalt ratio
-        return mergeRatios(
-                ArrayListMultimap.create(), mTumorCounts,
-                diploidRatios, tumorRatios.getRatios(), diploidRatios);
+        return mergeRatios(null, mTumorCounts, null, tumorRatios, null);
     }
 
     @NotNull
-    public Multimap<Chromosome, CobaltRatio> germlineOnly() throws IOException
+    public Table germlineOnly() throws IOException
     {
         if (mReferenceCounts == null)
         {
             CB_LOGGER.fatal("Reference count should not be null");
             throw new RuntimeException("reference count is null");
         }
-        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment, mChromosomes, mOutputDir);
+        SparseBucketPolicy sparseBucketPolicy = mTargetRegionEnrichment == null ? SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
+        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment,
+                sparseBucketPolicy, null, mOutputDir, mChromosomePosCodec);
         return mergeRatios(
-                mReferenceCounts, ArrayListMultimap.create(),
-                germlineRatios.getRatios(), ArrayListMultimap.create(), germlineRatios.gcDiploidRatios);
+                mReferenceCounts, null,
+                germlineRatios.getRatios(), null, germlineRatios.gcDiploidRatios);
     }
 
     @NotNull
-    public Multimap<Chromosome, CobaltRatio> tumorNormalPair() throws IOException
+    public Table tumorNormalPair() throws IOException
     {
         if (mReferenceCounts == null)
         {
@@ -170,8 +238,17 @@ public class RatioSupplier
             CB_LOGGER.fatal("Tumor count should not be null");
             throw new RuntimeException("tumor count is null");
         }
-        var tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment, mOutputDir);
-        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment, mChromosomes, mOutputDir);
+        SparseBucketPolicy tumorSparseBucketPolicy = mTargetRegionEnrichment == null ?
+                SparseBucketPolicy.CALC_CONSOLIDATED_BUCKETS : SparseBucketPolicy.DO_NOT_CONSOLIDATE;
+
+        var tumorRatios = new SampleRatios(mTumorId, mTumorCounts, mGcProfiles, mTargetRegionEnrichment,
+                tumorSparseBucketPolicy, null, mOutputDir, mChromosomePosCodec);
+
+        SparseBucketPolicy germlineSparseBucketPolicy = tumorRatios.consolidatedBuckets == null ?
+                SparseBucketPolicy.DO_NOT_CONSOLIDATE : SparseBucketPolicy.USE_PROVIDED_BUCKETS;
+
+        var germlineRatios = new GermlineRatios(mReferenceId, mReferenceCounts, mGcProfiles, mTargetRegionEnrichment,
+                germlineSparseBucketPolicy, tumorRatios.consolidatedBuckets, mOutputDir, mChromosomePosCodec);
 
         return mergeRatios(
                 mReferenceCounts, mTumorCounts,
@@ -180,73 +257,105 @@ public class RatioSupplier
 
     // merge everything together
     @NotNull
-    private static Multimap<Chromosome, CobaltRatio> mergeRatios(
-            @NotNull final Multimap<Chromosome, ReadCount> referenceCounts,
-            @NotNull final Multimap<Chromosome, ReadCount> tumorCounts,
-            @NotNull final ArrayListMultimap<Chromosome, ReadRatio> referenceRatios,
-            @NotNull final ArrayListMultimap<Chromosome, ReadRatio> tumorRatios,
-            @NotNull final ArrayListMultimap<Chromosome, ReadRatio> referenceDiploidRatios)
+    private static Table mergeRatios(
+            @Nullable Table referenceCounts,
+            @Nullable Table tumorCounts,
+            @Nullable Table referenceRatios,
+            @Nullable Table tumorRatios,
+            @Nullable Table referenceDiploidRatios)
     {
-        final Multimap<Chromosome, CobaltRatio> result = ArrayListMultimap.create();
+        CB_LOGGER.info("start merging ratios");
 
-        // find all the chromosomes
-        Set<Chromosome> chromosomes = Sets.newIdentityHashSet();
+        // get all the chromosome positions from the counts
+        Table result = Table.create(LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS));
 
-        chromosomes.addAll(referenceCounts.keySet());
-        chromosomes.addAll(tumorCounts.keySet());
-        chromosomes.addAll(referenceRatios.keySet());
-        chromosomes.addAll(tumorRatios.keySet());
-        chromosomes.addAll(referenceDiploidRatios.keySet());
-
-        for(Chromosome chromosome : chromosomes)
+        // now we make sure all tables are valid, by setting missing tables to empty
+        if (referenceCounts == null)
         {
-            // try to merge all 5 lists
-
-            Collection<ReadCount> refCountList = referenceCounts.get(chromosome);
-            Collection<ReadCount> tumorCountList = tumorCounts.get(chromosome);
-
-            // filter out NaN ratios
-            Collection<ReadRatio> referenceRatioList = referenceRatios.get(chromosome).stream()
-                    .filter(readRatio -> !Double.isNaN(readRatio.ratio())).collect(
-                    Collectors.toList());
-            Collection<ReadRatio> tumorRatioList = tumorRatios.get(chromosome).stream()
-                    .filter(readRatio -> !Double.isNaN(readRatio.ratio())).collect(
-                            Collectors.toList());
-            Collection<ReadRatio> diploidRatioList = referenceDiploidRatios.get(chromosome).stream()
-                    .filter(readRatio -> !Double.isNaN(readRatio.ratio())).collect(
-                            Collectors.toList());
-
-            // get all positions and add to a map
-            Map<Integer, ImmutableCobaltRatio.Builder> positionRatioBuilders = new HashMap<>();
-
-            for (Collection<? extends GenomePosition> l : List.of(refCountList, tumorCountList, referenceRatioList, tumorRatioList, diploidRatioList))
-            {
-                for (GenomePosition genomePosition : l)
-                {
-                    // set all initial values to -1
-                    positionRatioBuilders.computeIfAbsent(
-                            genomePosition.position(),
-                            k -> ImmutableCobaltRatio.builder().from(genomePosition)
-                                        .referenceReadCount(-1)
-                                        .tumorReadCount(-1)
-                                        .referenceGCRatio(-1D)
-                                        .tumorGCRatio(-1D)
-                                        .referenceGCDiploidRatio(-1D));
-                }
-            }
-
-            // populate the values
-            refCountList.forEach(rc -> positionRatioBuilders.get(rc.position()).referenceReadCount(rc.readCount()));
-            tumorCountList.forEach(rc -> positionRatioBuilders.get(rc.position()).tumorReadCount(rc.readCount()));
-            referenceRatioList.forEach(readRatio -> positionRatioBuilders.get(readRatio.position()).referenceGCRatio(readRatio.ratio()));
-            tumorRatioList.forEach(readRatio -> positionRatioBuilders.get(readRatio.position()).tumorGCRatio(readRatio.ratio()));
-            diploidRatioList.forEach(readRatio -> positionRatioBuilders.get(readRatio.position()).referenceGCDiploidRatio(readRatio.ratio()));
-
-            List<CobaltRatio> cobaltRatios = positionRatioBuilders.values().stream()
-                    .map(ImmutableCobaltRatio.Builder::build)
-                    .collect(Collectors.toList());
-            result.putAll(chromosome, cobaltRatios);
+            referenceCounts = Table.create(
+                    LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
+                    IntColumn.create(CobaltColumns.READ_COUNT));
         }
+
+        if (tumorCounts == null)
+        {
+            tumorCounts = Table.create(
+                    LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
+                    IntColumn.create(CobaltColumns.READ_COUNT));
+        }
+
+        if (referenceRatios == null)
+        {
+            referenceRatios = Table.create(
+                    LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
+                    DoubleColumn.create(CobaltColumns.RATIO));
+        }
+
+        if (tumorRatios == null)
+        {
+            tumorRatios = Table.create(
+                    LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
+                    DoubleColumn.create(CobaltColumns.RATIO));
+        }
+
+        if (referenceDiploidRatios == null)
+        {
+            referenceDiploidRatios = Table.create(
+                    LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
+                    DoubleColumn.create(CobaltColumns.RATIO));
+        }
+
+        result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
+                referenceCounts.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_COUNT));
+
+        // rename the readCount column
+        result.intColumn(CobaltColumns.READ_COUNT).setName("referenceReadCount");
+
+        result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
+                tumorCounts.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_COUNT));
+
+        // rename the readCount column
+        result.intColumn(CobaltColumns.READ_COUNT).setName("tumorReadCount");
+
+        result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
+                referenceRatios.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.RATIO));
+
+        // rename the ratio column
+        result.doubleColumn(CobaltColumns.RATIO).setName("referenceGCRatio");
+
+        result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
+                tumorRatios.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.RATIO));
+
+        // rename the ratio column
+        result.doubleColumn(CobaltColumns.RATIO).setName("tumorGCRatio");
+
+        result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
+                referenceDiploidRatios.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.RATIO));
+
+        // rename the ratio column
+        result.doubleColumn(CobaltColumns.RATIO).setName("referenceGCDiploidRatio");
+
+        Validate.isTrue(result.longColumn(CobaltColumns.ENCODED_CHROMOSOME_POS).isMissing().isEmpty());
+
+        // sort by the encoded chromosome pos
+        result = result.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
+
+        // set any missing value to -1
+        for (Column<?> c: result.columns())
+        {
+            if (c instanceof IntColumn)
+            {
+                ((IntColumn)c).setMissingTo(CobaltConstants.INVALID_VALUE_INDICATOR);
+            }
+            else if (c instanceof DoubleColumn)
+            {
+                ((DoubleColumn)c).setMissingTo((double)CobaltConstants.INVALID_VALUE_INDICATOR);
+                // ((DoubleColumn)c).map(d -> Double.isFinite(d) ? d : -1.0);
+            }
+        }
+
+        CB_LOGGER.info("finish merging ratios");
+
         return result;
     }
 }

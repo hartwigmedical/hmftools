@@ -11,29 +11,34 @@ import com.hartwig.hmftools.patientdb.clinical.context.RunContext;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class RunsJsonReaderTest {
+public class RunsJsonReaderTest
+{
 
     @SuppressWarnings("UnstableApiUsage")
     private static final String JSON_DIR = Resources.getResource("context" + File.separator + "RunJson").getPath();
 
     @Test(expected = IllegalArgumentException.class)
-    public void throwsIllegalArgumentIfFileDoesntExist() {
+    public void throwsIllegalArgumentIfFileDoesntExist()
+    {
         RunsJsonReader.extractRunContexts(new File("/does/not/exist"));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void throwsIllegalArgumentOnEmptyFile() {
+    public void throwsIllegalArgumentOnEmptyFile()
+    {
         RunsJsonReader.extractRunContexts(testJson("empty.json"));
     }
 
     @Test
-    public void readsRunContextsFromJsonFile() {
+    public void readsRunContextsFromJsonFile()
+    {
         List<RunContext> runContexts = RunsJsonReader.extractRunContexts(testJson("two_somatic.json"));
         assertEquals(2, runContexts.size());
     }
 
     @NotNull
-    private File testJson(final String filename) {
+    private File testJson(final String filename)
+    {
         return new File(JSON_DIR + File.separator + filename);
     }
 }

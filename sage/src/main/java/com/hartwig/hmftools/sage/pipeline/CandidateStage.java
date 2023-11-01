@@ -6,12 +6,12 @@ import static com.hartwig.hmftools.sage.pipeline.ChromosomePartition.getPanelReg
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.candidate.Candidates;
-import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.AltContext;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
@@ -21,7 +21,7 @@ import com.hartwig.hmftools.sage.common.RefSequence;
 
 public class CandidateStage
 {
-    private final SageConfig mConfig;
+    private final SageCallConfig mConfig;
     private final List<VariantHotspot> mHotspots;
     private final List<BaseRegion> mPanelRegions;
     private final CandidateEvidence mCandidateEvidence;
@@ -29,7 +29,7 @@ public class CandidateStage
     private final SamSlicerFactory mSamSlicerFactory;
 
     public CandidateStage(
-            final SageConfig config, final List<VariantHotspot> hotspots,
+            final SageCallConfig config, final List<VariantHotspot> hotspots,
             final List<BaseRegion> panelRegions, final List<BaseRegion> highConfidenceRegions, final Coverage coverage,
             final SamSlicerFactory samSlicerFactory)
     {
@@ -39,7 +39,7 @@ public class CandidateStage
         mHighConfidenceRegions = highConfidenceRegions;
         mSamSlicerFactory = samSlicerFactory;
 
-        mCandidateEvidence = new CandidateEvidence(config, hotspots, panelRegions, coverage);
+        mCandidateEvidence = new CandidateEvidence(config.Common, hotspots, panelRegions, coverage);
     }
 
     public int totalReadsProcessed() { return mCandidateEvidence.totalReadsProcessed(); }
@@ -64,7 +64,7 @@ public class CandidateStage
                 initialCandidates.addOfMultipleSamples(altContexts);
         }
 
-        List<Candidate> candidates = initialCandidates.candidates(mConfig.SpecificPositions);
+        List<Candidate> candidates = initialCandidates.candidates(mConfig.Common.SpecificPositions);
 
         SG_LOGGER.trace("region({}) found {} candidates", region.toString(), candidates.size());
 

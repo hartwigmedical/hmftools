@@ -8,19 +8,21 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
-import com.hartwig.hmftools.common.variant.CodingEffect;
-import com.hartwig.hmftools.common.variant.Hotspot;
-import com.hartwig.hmftools.common.variant.VariantType;
+import com.hartwig.hmftools.datamodel.purple.HotspotType;
+import com.hartwig.hmftools.datamodel.purple.PurpleCodingEffect;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantType;
 
 import org.junit.Test;
 
-public class SomaticVariantSelectorTest {
-
+public class SomaticVariantSelectorTest
+{
     @Test
-    public void canSelectUnreportedNearHotspots() {
-        PurpleVariant hotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.HOTSPOT).reported(false).build();
-        PurpleVariant nearHotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.NEAR_HOTSPOT).reported(false).build();
-        PurpleVariant nonHotspot = TestPurpleVariantFactory.builder().hotspot(Hotspot.NON_HOTSPOT).reported(false).build();
+    public void canSelectUnreportedNearHotspots()
+    {
+        PurpleVariant hotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.HOTSPOT).reported(false).build();
+        PurpleVariant nearHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.NEAR_HOTSPOT).reported(false).build();
+        PurpleVariant nonHotspot = TestPurpleVariantFactory.builder().hotspot(HotspotType.NON_HOTSPOT).reported(false).build();
 
         List<PurpleVariant> variants =
                 SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(hotspot, nearHotspot, nonHotspot),
@@ -33,7 +35,8 @@ public class SomaticVariantSelectorTest {
     }
 
     @Test
-    public void canSelectVariantsWithReportedPhaseSet() {
+    public void canSelectVariantsWithReportedPhaseSet()
+    {
         PurpleVariant withMatch = TestPurpleVariantFactory.builder().gene("gene").reported(false).addLocalPhaseSets(1).build();
         PurpleVariant withoutMatch = TestPurpleVariantFactory.builder().gene("gene").reported(false).addLocalPhaseSets(2).build();
         PurpleVariant withoutPhase = TestPurpleVariantFactory.builder().gene("gene").reported(false).build();
@@ -51,16 +54,17 @@ public class SomaticVariantSelectorTest {
     }
 
     @Test
-    public void canSelectVariantsRelevantForCuppa() {
+    public void canSelectVariantsRelevantForCuppa()
+    {
         String cuppaGene = SomaticVariantSelector.CUPPA_GENES.iterator().next();
         PurpleVariant cuppaRelevant =
-                TestPurpleVariantFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(4).reported(false).build();
+                TestPurpleVariantFactory.builder().gene(cuppaGene).type(PurpleVariantType.INDEL).repeatCount(4).reported(false).build();
 
         PurpleVariant cuppaTooManyRepeats =
-                TestPurpleVariantFactory.builder().gene(cuppaGene).type(VariantType.INDEL).repeatCount(10).reported(false).build();
+                TestPurpleVariantFactory.builder().gene(cuppaGene).type(PurpleVariantType.INDEL).repeatCount(10).reported(false).build();
 
         PurpleVariant wrongGene =
-                TestPurpleVariantFactory.builder().gene("wrong gene").type(VariantType.INDEL).repeatCount(4).reported(false).build();
+                TestPurpleVariantFactory.builder().gene("wrong gene").type(PurpleVariantType.INDEL).repeatCount(4).reported(false).build();
 
         List<PurpleVariant> variants = SomaticVariantSelector.selectInterestingUnreportedVariants(Lists.newArrayList(cuppaRelevant,
                 cuppaTooManyRepeats,
@@ -71,7 +75,8 @@ public class SomaticVariantSelectorTest {
     }
 
     @Test
-    public void canSelectSynonymousVariantsForDriverGenes() {
+    public void canSelectSynonymousVariantsForDriverGenes()
+    {
         String gene = "driver";
         DriverGene driverGene = DriverGeneTestFactory.builder()
                 .gene(gene)
@@ -82,26 +87,26 @@ public class SomaticVariantSelectorTest {
 
         PurpleVariant nonsense = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
-                .worstCodingEffect(CodingEffect.NONSENSE_OR_FRAMESHIFT)
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
+                .worstCodingEffect(PurpleCodingEffect.NONSENSE_OR_FRAMESHIFT)
                 .build();
 
         PurpleVariant splice = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
-                .worstCodingEffect(CodingEffect.SPLICE)
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
+                .worstCodingEffect(PurpleCodingEffect.SPLICE)
                 .build();
 
         PurpleVariant missense = TestPurpleVariantFactory.builder()
                 .gene(gene)
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
-                .worstCodingEffect(CodingEffect.MISSENSE)
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
+                .worstCodingEffect(PurpleCodingEffect.MISSENSE)
                 .build();
 
         PurpleVariant wrongGene = TestPurpleVariantFactory.builder()
                 .gene("wrong gene")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(CodingEffect.SYNONYMOUS).build())
-                .worstCodingEffect(CodingEffect.MISSENSE)
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().codingEffect(PurpleCodingEffect.SYNONYMOUS).build())
+                .worstCodingEffect(PurpleCodingEffect.MISSENSE)
                 .build();
 
         List<PurpleVariant> variants =
@@ -115,23 +120,24 @@ public class SomaticVariantSelectorTest {
     }
 
     @Test
-    public void canSelectSpliceRegionVariants() {
+    public void canSelectSpliceRegionVariants()
+    {
         DriverGene driverGeneYes = DriverGeneTestFactory.builder().gene("driver 1").reportSplice(true).build();
         DriverGene driverGeneNo = DriverGeneTestFactory.builder().gene("driver 2").reportSplice(false).build();
 
         PurpleVariant reportedGene = TestPurpleVariantFactory.builder()
                 .gene(driverGeneYes.gene())
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().inSpliceRegion(true).build())
                 .build();
 
         PurpleVariant nonReportedGene = TestPurpleVariantFactory.builder()
                 .gene(driverGeneNo.gene())
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().inSpliceRegion(true).build())
                 .build();
 
         PurpleVariant otherGene = TestPurpleVariantFactory.builder()
                 .gene("other gene")
-                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().spliceRegion(true).build())
+                .canonicalImpact(TestPurpleVariantFactory.impactBuilder().inSpliceRegion(true).build())
                 .build();
 
         List<PurpleVariant> variants =

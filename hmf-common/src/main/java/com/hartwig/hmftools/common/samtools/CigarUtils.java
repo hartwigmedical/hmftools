@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static htsjdk.samtools.CigarOperator.D;
+import static htsjdk.samtools.CigarOperator.N;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,6 +36,11 @@ public final class CigarUtils
         }
 
         return cigar;
+    }
+
+    public static int cigarBaseLength(final Cigar cigar)
+    {
+        return cigar.getCigarElements().stream().filter(x -> x.getOperator() != N && x.getOperator() != D).mapToInt(x -> x.getLength()).sum();
     }
 
     public static int calcCigarLength(final String cigarStr)
@@ -94,10 +102,9 @@ public final class CigarUtils
     public static String leftSoftClipBases(@NotNull final SAMRecord record)
     {
         int leftClip = leftSoftClipLength(record);
-        if (leftClip == 0)
-        {
+        if(leftClip == 0)
             return null;
-        }
+
         return record.getReadString().substring(0, leftClip);
     }
 
@@ -105,10 +112,9 @@ public final class CigarUtils
     public static String rightSoftClipBases(@NotNull final SAMRecord record)
     {
         int rightClip = rightSoftClipLength(record);
-        if (rightClip == 0)
-        {
+        if(rightClip == 0)
             return null;
-        }
+
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
 }

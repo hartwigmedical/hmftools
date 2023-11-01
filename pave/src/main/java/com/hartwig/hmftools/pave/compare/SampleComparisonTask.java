@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.pave.compare;
 
-import static com.hartwig.hmftools.pave.PaveApplication.findVariantImpacts;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
+import static com.hartwig.hmftools.pave.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasHgvsCodingDiff;
@@ -18,15 +18,12 @@ import java.util.concurrent.Callable;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
-import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 import com.hartwig.hmftools.pave.GeneDataCache;
 import com.hartwig.hmftools.pave.ImpactClassifier;
-import com.hartwig.hmftools.pave.Reportability;
+import com.hartwig.hmftools.pave.annotation.Reportability;
 import com.hartwig.hmftools.pave.VariantData;
 import com.hartwig.hmftools.pave.VariantImpactBuilder;
 import com.hartwig.hmftools.pave.VariantTransImpact;
@@ -40,13 +37,11 @@ public class SampleComparisonTask implements Callable
     private final GeneDataCache mGeneDataCache;
     private final Reportability mReportability;
 
-    private final DatabaseAccess mDbAccess;
     private final ComparisonWriter mWriter;
 
     private final List<String> mSampleIds;
     private final Map<String,List<RefVariantData>> mSampleVariantsCache;
 
-    private static final String PC_QUERY = "Query";
     private static final String PC_PROCESS = "Process";
     private final Map<String,PerformanceCounter> mPerfCounters;
 
@@ -54,13 +49,12 @@ public class SampleComparisonTask implements Callable
     private int mMatchedCount;
 
     public SampleComparisonTask(
-            int taskId, final ComparisonConfig config, RefGenomeInterface refGenome, final DatabaseAccess dbAccess,
+            int taskId, final ComparisonConfig config, RefGenomeInterface refGenome,
             final ComparisonWriter writer, final GeneDataCache geneDataCache, final Map<String,List<RefVariantData>> sampleVariantsCache)
     {
         mTaskId = taskId;
         mGeneDataCache = geneDataCache;
         mConfig = config;
-        mDbAccess = dbAccess;
         mWriter = writer;
         mSampleVariantsCache = sampleVariantsCache;
 
@@ -73,7 +67,6 @@ public class SampleComparisonTask implements Callable
         mMatchedCount = 0;
 
         mPerfCounters = Maps.newHashMap();
-        mPerfCounters.put(PC_QUERY, new PerformanceCounter(PC_QUERY));
         mPerfCounters.put(PC_PROCESS, new PerformanceCounter(PC_PROCESS));
     }
 
@@ -105,13 +98,7 @@ public class SampleComparisonTask implements Callable
 
     private void checkSampleDiffs(final String sampleId)
     {
-        mPerfCounters.get(PC_QUERY).start();
-
-        List<RefVariantData> refVariants = mDbAccess != null ?
-                DataLoader.loadSampleDatabaseRecords(sampleId, mDbAccess, mConfig.OnlyDriverGenes ? mGeneDataCache : null)
-                : mSampleVariantsCache.get(sampleId);
-
-        mPerfCounters.get(PC_QUERY).stop();
+        List<RefVariantData> refVariants = mSampleVariantsCache.get(sampleId);
 
         if(refVariants == null || refVariants.isEmpty())
             return;
@@ -125,8 +112,6 @@ public class SampleComparisonTask implements Callable
                     refVariant.Chromosome, refVariant.Position, refVariant.Ref, refVariant.Alt);
 
             variant.setVariantDetails(refVariant.LocalPhaseSet, refVariant.Microhomology, refVariant.RepeatSequence, refVariant.RepeatCount);
-            variant.setSampleId(sampleId);
-            variant.setRefData(refVariant);
 
             try
             {
@@ -134,7 +119,7 @@ public class SampleComparisonTask implements Callable
 
                 findVariantImpacts(variant, mImpactClassifier, mGeneDataCache);
 
-                processPhasedVariants(variant.localPhaseSet());
+                processPhasedVariants(variant.localPhaseSet(), sampleId);
 
                 if(!variant.hasLocalPhaseSet())
                     processVariant(sampleId, variant, refVariant);
@@ -146,7 +131,7 @@ public class SampleComparisonTask implements Callable
             }
         }
 
-        processPhasedVariants(NO_LOCAL_PHASE_SET);
+        processPhasedVariants(NO_LOCAL_PHASE_SET, sampleId);
         mImpactClassifier.phasedVariants().clear();
 
         mPerfCounters.get(PC_PROCESS).stop();
@@ -154,12 +139,20 @@ public class SampleComparisonTask implements Callable
         PV_LOGGER.debug("{}: sample({}) processed {} variants", mTaskId, sampleId, refVariants.size());
     }
 
-    private void processPhasedVariants(int currentLocalPhaseSet)
+    private void processPhasedVariants(int currentLocalPhaseSet, final String sampleId)
     {
         List<VariantData> variants = mImpactClassifier.processPhasedVariants(currentLocalPhaseSet);
 
+        List<RefVariantData> refVariants = mSampleVariantsCache.get(sampleId);
+
         if(variants != null)
-            variants.forEach(x -> processVariant(x.sampleId(), x, x.refData()));
+        {
+            for(VariantData variant : variants)
+            {
+                RefVariantData refVariant = refVariants.stream().filter(x -> x.matches(variant)).findFirst().orElse(null);
+                processVariant(sampleId, variant, refVariant);
+            }
+        }
     }
 
     private void processVariant(final String sampleId, final VariantData variant, final RefVariantData refVariant)

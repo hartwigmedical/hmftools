@@ -2,14 +2,14 @@ package com.hartwig.hmftools.lilac;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.lilac.read.Indel;
 
 public class LilacConstants
 {
+    public static final String APP_NAME = "Lilac";
+
     public static final int DEFAULT_MIN_BASE_QUAL = 30;
     public static final int DEFAULT_MIN_EVIDENCE = 2;
     public static final int DEFAULT_FRAGS_PER_ALLELE = 7;
@@ -55,7 +55,8 @@ public class LilacConstants
 
     public static final List<String> GENE_IDS = Lists.newArrayList(GENE_A, GENE_B, GENE_C);
     public static final List<String> HLA_GENES = Lists.newArrayList(HLA_A, HLA_B, HLA_C);
-    public static String HLA_CHR = "6";
+
+    public static String HLA_CHR = "6"; // note this is set as a versioned chromosome during initialisation
 
     public static final int EXPECTED_ALLELE_COUNT = 6;
 
@@ -80,10 +81,6 @@ public class LilacConstants
 
     public static final int COMPLEX_PERMS_THRESHOLD = 100000;
 
-    // technical
-    public static final String DELIM = ",";
-    public static final String ITEM_DELIM = ";";
-
     // common routines using constants
     public static List<Integer> getAminoAcidExonBoundaries(final String gene)
     {
@@ -106,14 +103,15 @@ public class LilacConstants
     }
 
     // output file IDs
-    public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.csv";
-    public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.csv";
-    public static String LILAC_FILE_ALL_FRAGMENTS = "fragments.csv";
+    public static String LILAC_FILE_CANDIDATE_COVERAGE = "candidates.coverage.tsv";
+    public static String LILAC_FILE_CANDIDATE_FRAGS = "candidates.fragments.tsv";
+    public static String LILAC_FILE_FRAGMENTS = "fragments.tsv";
+    public static String LILAC_FILE_READS = "reads.tsv";
 
     public static String LILAC_FILE_CANDIDATE_AA = "candidates.aminoacids.txt";
     public static String LILAC_FILE_CANDIDATE_NUC = "candidates.nucleotides.txt";
 
-    public static String LILAC_FILE_SOMATIC_VCF = "lilac.somatic.vcf.gz";
-    public static String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.csv";
-    public static String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.csv";
+    public static String LILAC_FILE_SOMATIC_VCF = "somatic.vcf.gz";
+    public static String LILAC_FILE_HLA_Y_COVERAGE = "hlay.coverage.tsv";
+    public static String LILAC_FILE_HLA_Y_FRAGMENTS = "hlay.fragments.tsv";
 }

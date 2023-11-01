@@ -35,13 +35,10 @@ Argument | Description
 ---|---
 sample  | Required: Specific sample ID
 purple_dir | Directory with sample data for structural variant VCF, copy number and purity data files as written by GRIDSS and Purple.
-sv_vcf | Full path and filename for the SV VCF, otherwill will use the Purple SV VCF (ie SAMPLE_ID.purple.vcf.gz) in the configured Purple directory
 output_dir | Required: directory where all output files are written
 ref_genome_version | Defaults to version 37, valid values are 37 or 38 
-check_drivers | Run driver annotation logic
 driver_gene_panel | A panel of driver genes to annotate, matching the format in the DriverGenePanel.tsv resource file from the HMFTools resources
-check_fusions | Discover and annotate gene fusions
-known_fusion_file | known_fusion_data.csv 
+known_fusion_file | The known fusion data file, describing their types and characteristics 
 fragile_site_file | Linx has in-built default set of known fragile sites, but override as required (format: Chromosome,PosStart,PosEnd)
 line_element_file | Linx has in-built default set of LINE source regions, but override as required (format: Chromosome,PosStart,PosEnd)
 ensembl_data_dir | Directory for Ensembl reference files
@@ -63,9 +60,7 @@ java -jar linx.jar
     -purple_dir /path_to_purple_data_files/
     -output_dir /path_to_sample_data/ 
     -ensembl_data_dir /path_to_ensembl_data_cache/ 
-    -check_fusions 
     -known_fusion_file known_fusion_data.csv 
-    -check_drivers
     -driver_gene_panel DriverGenePanel.tsv
     -log_debug
 ```
@@ -73,44 +68,17 @@ java -jar linx.jar
 ### Optional additional parameters
 Argument  | Description
 ---|---
+sv_vcf | Full path and filename for the SV VCF, otherwill will use the Purple SV VCF (ie SAMPLE_ID.purple.vcf.gz) in the configured Purple directory
 proximity_distance | minimum distance to cluster SVs (default = 5000)
 chaining_sv_limit | threshold for # SVs in clusters to skip chaining routine (default = 0, ie no limit)
-write_vis_data | write output to for generation of Circos clustering and chaining plots
 write_all_vis_fusions | Write visualiser data for all fusions including non-reportable 
+no_vis_files | Disable writing visualiser files
 annotations | Multi-sample annotations for specific analyses: DOUBLE_MINUTES, CANDIDATE_VIS_DOUBLE_MINUTES, LINE_CHAINS, UNDER_CLUSTERING
 log_reportable_fusion | only log reportable fusions
 fusion_gene_distance | distance upstream of gene to consider a breakend applicable (default = 100K)
 restricted_fusion_genes | restrict fusion search to specified genes, separated by ';'
 log_debug | logs in debug mode
 
-### Running LINX from the HMF MySQL database
-Linx can source structural variants, copy number and purity data from the HMF MySQL database instead of from the VCF and TSV files.
-In this case specify database connection config: db_user, db_pass and db_url.
-
-Linx will read sample data from the following HMF tables:
-* copyNumber
-* structuralVariant
-* purity
-* geneCopyNumber and driverCatalog - if running driver annotation
-
-and upload samples data to the following HMF tables:
-* svAnnotation, svCluster and svLink
-* svBreakend, svFusion and svDriver
-
-Example usage sourcing from mysql database:
-
-```
-java -jar linx.jar 
-    -sample SAMPLE_ID 
-    -db_url [db_url] -db_user [username] -db_pass [password] 
-    -output_dir /path_to_sample_data/ 
-    -ensembl_data_dir /path_to_ensembl_data_cache/ 
-    -check_fusions 
-    -known_fusion_file known_fusion_data.csv 
-    -check_drivers
-    -driver_gene_panel DriverGenePanel.tsv
-    -log_debug
-```
 
 ### Running LINX in multi sample batch mode
 Linx can run in a batch mode where it processes multiple samples at once. In this case it downloads SV and copy number data for each sample from the HMF MySQL database.
@@ -128,9 +96,7 @@ java -jar linx.jar
     -db_url [db_url] -db_user [username] -db_pass [password] 
     -output_dir /path_to_sample_data/ 
     -ensembl_data_dir /path_to_ensembl_data_cache/ 
-    -check_fusions 
     -known_fusion_file known_fusion_data.csv 
-    -check_drivers
     -driver_gene_panel DriverGenePanel.tsv
     -threads 10
     -write_all
@@ -539,7 +505,7 @@ Merge any pair of breakends which both have JCN> max(5, 2.3x the adjacent major 
 ##### Major allele copy number bounds (MACN_BOUNDS)
 The major allele copy number of a segment is the maximum copy number any derivative chromosome which includes that segment can have. Hence a breakend cannot chain completely across a region with major allele copy number < JCN of the breakend, or partially across the region with a chain of JCN more than the major allele.
 
-Therefore any breakend is clustered with the next 1 or more facing breakends (excluding LINE & assembled & simple non overlapping DEL/DUP) IF the major allele copy number in the segment immediately after the facing breakend is lower than the breakend JCN, after discounting facing breakends in the original cluster. In the case of there being more than 1 facing breakend, the highest JCN breakend is clustered and the process repeated. This clustering is limited to a proximity of 5 million bases and bounded by the centromere, since although more distal events on the same chromosome may be definitely on the same derivative chromosome, this does necessarily imply they occurred concurrently.
+Therefore any breakend is clustered with the next 1 or more facing breakends (excluding LINE & assembled & simple non overlapping DEL/DUP) IF the major allele copy number in the segment immediately after the facing breakend is lower than the breakend JCN, after discounting facing breakends in the original cluster. In the case of there being more than 1 facing breakend, the highest JCN breakend is clustered and the process repeated. This clustering is limited to a proximity of 5 million bases and bounded by the centromere, since although more distal events on the same chromosome may be definitely on the same derivative chromosome, this doesn't necessarily imply they occurred concurrently.
 
 
 ##### Local Overlap (OVERLAP)
@@ -861,8 +827,19 @@ Shown below is an example of a SS18-SSX1 fusion:
     <img src="../extended-docs/linx/default.png" width="800" alt="default">
 </p>
 
+## Known issues / points for improvement
+
+Fusion calling improvements
+- **Chained fusions disrupted by exons of other genes**  - Currently we don't call a fusion if it passes through an exon splice acceptor or donor of another gene.  But this exon may be skipped (especially if from a non-canonical transcript), or the exon may even be inserted into a 3 gene A-B-C fusion.
+
+Filtering
+- **Late calling of Artifacts** - Some samples have many false positive translocations and single breakends.   Whilst we try to detect these in LINX based on lack of copy number support, it would be better if these could be identified earlier in the pipeline, to reduce noise in the output.   
+
+LINE annotation
+- **PolyA tail can map to long A or T homopolymers** - LINX uses the polyA tail to identify LINE elements, but these tails sometimes are mapped to regions of the genome with long polyA repeats.  In this case LINX does not recognise the PolyA tail
 
 ## Version History
+- [1.23](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.23.6)
 - [1.22](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.22)
 - [1.21](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.21)
 - [1.20](https://github.com/hartwigmedical/hmftools/releases/tag/linx-v1.20)

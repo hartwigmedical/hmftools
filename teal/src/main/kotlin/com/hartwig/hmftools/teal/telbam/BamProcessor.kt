@@ -6,7 +6,7 @@ import java.lang.InterruptedException
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ConcurrentHashMap
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 import com.hartwig.hmftools.teal.ReadGroup
 import org.apache.logging.log4j.LogManager
 import java.util.*

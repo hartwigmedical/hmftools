@@ -7,8 +7,8 @@ import org.jetbrains.annotations.Nullable;
 @Value.Immutable
 @Value.Style(allParameters = true,
              passAnnotations = { NotNull.class, Nullable.class })
-public abstract class AnnotatedVirus {
-
+public abstract class AnnotatedVirus
+{
     public abstract int taxid();
 
     @NotNull
@@ -20,7 +20,7 @@ public abstract class AnnotatedVirus {
     public abstract int integrations();
 
     @Nullable
-    public abstract String interpretation();
+    public abstract VirusType interpretation();
 
     public abstract double percentageCovered();
 

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.teal
 
 import htsjdk.samtools.SAMRecord
 import htsjdk.samtools.SAMTag
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion
+import com.hartwig.hmftools.common.region.ChrBaseRegion
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import java.util.ArrayList
@@ -208,7 +208,7 @@ class ReadGroup(val name: String)
                     {
                         baseRegions.add(ChrBaseRegion(sa.chromosome, sa.position, sa.position))
                         logger.trace(
-                            "{} Missing supplementary read: aligned to {}:{}", Reads[0],
+                            "{} Missing supplementary read: aligned to {}:{}", read,
                             sa.chromosome, sa.position)
                     }
                 }

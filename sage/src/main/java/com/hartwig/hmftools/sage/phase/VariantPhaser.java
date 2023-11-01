@@ -19,7 +19,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -179,9 +179,12 @@ public class VariantPhaser
             }
         }
 
-        SG_LOGGER.trace("region({}) phasing groups(coll={} start={} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={} uniqueRCs={})",
-                mRegion, mPhasedGroupCollections.size(), startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
-                passingCounters.size(), validCounters.size(), uniqueRCs != null ? uniqueRCs.size() : 0);
+        if(SG_LOGGER.isTraceEnabled())
+        {
+            SG_LOGGER.trace("region({}) phasing groups(coll={} start={} filtered={}) postMerge({}) assigned({}) rc(pass={} valid={} uniqueRCs={})",
+                    mRegion, mPhasedGroupCollections.size(), startCount, startFilteredCount, finalPhasedGroups.size(), assignedLps,
+                    passingCounters.size(), validCounters.size(), uniqueRCs != null ? uniqueRCs.size() : 0);
+        }
 
         // mPerfCounters.get(PC_FORM_LPS).stop();
     }

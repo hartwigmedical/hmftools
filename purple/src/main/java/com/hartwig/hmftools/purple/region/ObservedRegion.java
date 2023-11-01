@@ -1,5 +1,8 @@
 package com.hartwig.hmftools.purple.region;
 
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_DIPLOID_COPY_NUMBER;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_DIPLOID_COPY_NUMBER;
+
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -39,9 +42,6 @@ public class ObservedRegion implements GenomeRegion
     private double mTumorBAF;
     private double mFittedTumorCopyNumber;
     private double mFittedBAF;
-
-    private static final double MAX_DIPLOID_COPY_NUMBER = 1.2;
-    private static final double MIN_DIPLOID_COPY_NUMBER = 0.8;
 
     public ObservedRegion(final String chromosome, final int posStart, final int posEnd, final boolean ratioSupport,
             final SegmentSupport support, final int bafCount, final double observedBAF, final int depthWindowCount,
@@ -90,7 +90,8 @@ public class ObservedRegion implements GenomeRegion
                 other.refNormalisedCopyNumber(), other.tumorCopyNumber(), other.tumorBAF(), other.fittedTumorCopyNumber(), other.fittedBAF());
     }
 
-    public ObservedRegion(final String chromosome, final int posStart, final int posEnd, final boolean ratioSupport,
+    public ObservedRegion(
+            final String chromosome, final int posStart, final int posEnd, final boolean ratioSupport,
             final SegmentSupport support, final int bafCount, final double observedBAF, final int depthWindowCount,
             final double observedTumorRatio, final double observedNormalRatio, final double unnormalisedObservedNormalRatio,
             final GermlineStatus germlineStatus, final boolean svCluster, final double gcContent, final int minStart, final int maxStart)

@@ -11,13 +11,17 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.purple.GeneCopyNumberTestFactory;
+import com.hartwig.hmftools.datamodel.purple.CopyNumberInterpretation;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleGainLoss;
+import com.hartwig.hmftools.datamodel.purple.PurpleGainLoss;
 
 import org.junit.Test;
 
-public class CopyNumberSelectorTest {
-
+public class CopyNumberSelectorTest
+{
     @Test
-    public void canSelectNearReportableGains() {
+    public void canSelectNearReportableGains()
+    {
         DriverGene driver1 = DriverGeneTestFactory.builder().gene("driver 1").reportAmplification(true).build();
         DriverGene driver2 = DriverGeneTestFactory.builder().gene("driver 2").reportAmplification(true).build();
         DriverGene driver3 = DriverGeneTestFactory.builder().gene("driver 3").reportAmplification(false).build();
@@ -39,7 +43,8 @@ public class CopyNumberSelectorTest {
     }
 
     @Test
-    public void warnIfNearReportableIsReported() {
+    public void warnIfNearReportableIsReported()
+    {
         DriverGene driver = DriverGeneTestFactory.builder().gene("driver 1").reportAmplification(true).build();
 
         GeneCopyNumber match = GeneCopyNumberTestFactory.builder().geneName(driver.gene()).minCopyNumber(11D).build();
@@ -53,38 +58,39 @@ public class CopyNumberSelectorTest {
     }
 
     @Test
-    public void canSelectPotentiallyInterestingGains() {
+    public void canSelectPotentiallyInterestingGains()
+    {
         PurpleGainLoss gain = TestPurpleGainLossFactory.builder()
                 .chromosome("chr1")
                 .chromosomeBand("band 1")
                 .gene("gene 1")
                 .interpretation(CopyNumberInterpretation.FULL_GAIN)
-                .minCopies(12)
-                .maxCopies(12)
+                .minCopies(12.1)
+                .maxCopies(12.1)
                 .build();
         PurpleGainLoss lowerGainSameBand = TestPurpleGainLossFactory.builder()
                 .chromosome("chr1")
                 .chromosomeBand("band 1")
                 .gene("gene 2")
                 .interpretation(CopyNumberInterpretation.FULL_GAIN)
-                .minCopies(11)
-                .maxCopies(11)
+                .minCopies(11.1)
+                .maxCopies(11.1)
                 .build();
         PurpleGainLoss lowestGainOtherBand = TestPurpleGainLossFactory.builder()
                 .chromosome("chr1")
                 .chromosomeBand("band 2")
                 .gene("gene 3")
                 .interpretation(CopyNumberInterpretation.FULL_GAIN)
-                .minCopies(10)
-                .maxCopies(10)
+                .minCopies(10.1)
+                .maxCopies(10.1)
                 .build();
         PurpleGainLoss partialGain = TestPurpleGainLossFactory.builder()
                 .chromosome("chr1")
                 .chromosomeBand("band 3")
                 .gene("gene 4")
                 .interpretation(CopyNumberInterpretation.PARTIAL_GAIN)
-                .minCopies(4)
-                .maxCopies(15)
+                .minCopies(4.1)
+                .maxCopies(15.1)
                 .build();
 
         List<PurpleGainLoss> allGains = Lists.newArrayList(gain, lowerGainSameBand, lowestGainOtherBand, partialGain);
@@ -97,7 +103,8 @@ public class CopyNumberSelectorTest {
     }
 
     @Test
-    public void canSelectPotentiallyInterestingLosses() {
+    public void canSelectPotentiallyInterestingLosses()
+    {
         ImmutablePurpleGainLoss.Builder lossBuilder =
                 TestPurpleGainLossFactory.builder().interpretation(CopyNumberInterpretation.FULL_LOSS).minCopies(0).maxCopies(0);
 

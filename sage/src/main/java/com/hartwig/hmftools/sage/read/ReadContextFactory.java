@@ -32,11 +32,11 @@ public class ReadContextFactory
     }
 
     public ReadContext createDelContext(
-            final String ref, int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
+            final String ref, int refPosition, int readIndex, final byte[] readBases, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
 
-        final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, record.getReadBases());
+        final MicrohomologyContext microhomologyContext = microhomologyAtDeleteFromReadSequence(readIndex, ref, readBases);
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
 
         int startIndex = microhomologyContextWithRepeats.position() - MIN_CORE_DISTANCE;
@@ -54,7 +54,7 @@ public class ReadContextFactory
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
-        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
+        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, readBases);
         if(readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = readRepeatContext.get();
@@ -66,15 +66,15 @@ public class ReadContextFactory
                 microhomologyContext.toString(),
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
-                refPosition, readIndex, startIndex, endIndex, mFlankSize, record);
+                refPosition, readIndex, startIndex, endIndex, mFlankSize, readBases);
     }
 
     public ReadContext createInsertContext(
-            final String alt, int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
+            final String alt, int refPosition, int readIndex, final byte[] readBases, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
 
-        final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), record.getReadBases());
+        final MicrohomologyContext microhomologyContext = microhomologyAtInsert(readIndex, alt.length(), readBases);
         final MicrohomologyContext microhomologyContextWithRepeats = expandMicrohomologyRepeats(microhomologyContext);
 
         int startIndex = microhomologyContextWithRepeats.position() - MIN_CORE_DISTANCE;
@@ -92,7 +92,7 @@ public class ReadContextFactory
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
-        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, record.getReadBases());
+        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex + 1, readBases);
         if(readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = readRepeatContext.get();
@@ -107,18 +107,15 @@ public class ReadContextFactory
                 microhomologyContext.toString(),
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
-                refPosition, readIndex, startIndex, endIndex, mFlankSize, record);
+                refPosition, readIndex, startIndex, endIndex, mFlankSize, readBases);
     }
 
-    @NotNull
     public ReadContext createSNVContext(int refPosition, int readIndex, final SAMRecord record, final IndexedBases refBases)
     {
-        return createMNVContext(refPosition, readIndex, 1, record, refBases);
+        return createMNVContext(refPosition, readIndex, 1, record.getReadBases(), refBases);
     }
 
-    @NotNull
-    public ReadContext createMNVContext(
-            int refPosition, int readIndex, int length, final SAMRecord record, final IndexedBases refBases)
+    public ReadContext createMNVContext(int refPosition, int readIndex, int length, final byte[] readBases, final IndexedBases refBases)
     {
         int refIndex = refBases.index(refPosition);
         int startIndex = readIndex - MIN_CORE_DISTANCE;
@@ -144,7 +141,7 @@ public class ReadContextFactory
             endIndex = max(endIndex, repeatEndIndexInReadSpace + 1);
         }
 
-        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex, record.getReadBases());
+        final Optional<RepeatContext> readRepeatContext = RepeatContextFactory.repeats(readIndex, readBases);
         if(readRepeatContext.filter(x -> x.count() >= MIN_REPEAT_COUNT).isPresent())
         {
             final RepeatContext repeat = readRepeatContext.get();
@@ -156,6 +153,6 @@ public class ReadContextFactory
                 Strings.EMPTY,
                 readRepeatContext.map(RepeatContext::count).orElse(0),
                 readRepeatContext.map(RepeatContext::sequence).orElse(Strings.EMPTY),
-                refPosition, readIndex, startIndex, endIndex, mFlankSize, record);
+                refPosition, readIndex, startIndex, endIndex, mFlankSize, readBases);
     }
 }

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.PARTIAL_AMP;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -58,7 +58,8 @@ public class DriverGeneAnnotator implements CohortFileInterface
     private Map<String, List<SvBreakend>> mChrBreakendMap;
     private final VisSampleData mVisSampleData;
 
-    public DriverGeneAnnotator(DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache, final LinxConfig config,
+    public DriverGeneAnnotator(
+            final DatabaseAccess dbAccess, final EnsemblDataCache geneTransCache, final LinxConfig config,
             final CnDataLoader cnDataLoader, final CohortDataWriter cohortDataWriter, final VisSampleData visSampleData)
     {
         mDbAccess = dbAccess;
@@ -69,11 +70,11 @@ public class DriverGeneAnnotator implements CohortFileInterface
 
         mCohortDataWriter = cohortDataWriter;
 
-        mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache);
+        mDataCache = new DriverDataCache(dbAccess, cnDataLoader, mGeneTransCache, config.DriverGenes);
         mAmpDrivers = new AmplificationDrivers(mDataCache);
 
-        mDelDrivers = new DeletionDrivers(
-                getDisruptionGeneTranscripts(config.DriverGenes, true, geneTransCache), mDataCache, mConfig.HomDisAllGenes);
+        Map<String,List<String>> disruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes, true, geneTransCache);
+        mDelDrivers = new DeletionDrivers(disruptionGeneTranscripts, mDataCache);
 
         mVisSampleData = visSampleData;
 
@@ -149,7 +150,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
             {
                 geneMinCopyNumber = calcGeneCopyNumberRegion(transcriptData, mDataCache.CopyNumberData.getChrCnDataMap().get(geneData.Chromosome));
 
-                if (geneMinCopyNumber == null)
+                if(geneMinCopyNumber == null)
                 {
                     LNX_LOGGER.warn("sample({}) gene({}) min copy number data not found for driver",
                             mDataCache.sampleId(), driverGene.gene());
@@ -168,7 +169,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
             {
                 mDelDrivers.annotateBiallelicEvent(dgData);
             }
-            else if (driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
+            else if(driverGene.driver() == DriverType.AMP || driverGene.driver() == PARTIAL_AMP)
             {
                 final List<SvBreakend> breakendList = mChrBreakendMap.get(dgData.GeneInfo.Chromosome);
                 mAmpDrivers.annotateAmplification(dgData, breakendList);
@@ -235,7 +236,7 @@ public class DriverGeneAnnotator implements CohortFileInterface
         // convert to a sample driver record
         if(mVisSampleData != null)
         {
-            for (final DriverGeneEvent driverEvent : dgData.getEvents())
+            for(final DriverGeneEvent driverEvent : dgData.getEvents())
             {
                 int clusterId = driverEvent.getCluster() != null ? driverEvent.getCluster().id() : -1;
 

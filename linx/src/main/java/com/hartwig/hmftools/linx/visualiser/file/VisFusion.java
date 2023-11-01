@@ -1,18 +1,18 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber.DELIMITER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getValue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-
-import org.jetbrains.annotations.NotNull;
 
 public class VisFusion
 {
@@ -69,26 +69,24 @@ public class VisFusion
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_fusion.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_fusion.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
     }
 
-    @NotNull
     public static List<VisFusion> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisFusion> dataList) throws IOException
+    public static void write(final String filename, List<VisFusion> dataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(dataList));
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final List<VisFusion> dataList)
+    private static List<String> toLines(final List<VisFusion> dataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -96,16 +94,44 @@ public class VisFusion
         return lines;
     }
 
-    @NotNull
-    static List<VisFusion> fromLines(@NotNull List<String> lines)
+    private static List<VisFusion> fromLines(List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisFusion::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        lines.remove(0);
+
+        List<VisFusion> data = Lists.newArrayList();
+
+        for(String line : lines)
+        {
+            String[] values = line.split(TSV_DELIM);
+
+            data.add(new VisFusion(
+                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getIntValue(fieldsIndexMap, "ClusterId", 0, values),
+                    Boolean.parseBoolean(values[fieldsIndexMap.get("Reportable")]),
+                    getValue(fieldsIndexMap, "GeneNameUp", "", values),
+                    getValue(fieldsIndexMap, "TranscriptUp", "", values),
+                    getValue(fieldsIndexMap, "ChrUp", "", values),
+                    getIntValue(fieldsIndexMap, "PosUp", 0, values),
+                    getIntValue(fieldsIndexMap, "StrandUp", 0, values),
+                    getValue(fieldsIndexMap, "RegionTypeUp", "", values),
+                    getIntValue(fieldsIndexMap, "FusedExonUp", 0, values),
+                    getValue(fieldsIndexMap, "GeneNameDown", "", values),
+                    getValue(fieldsIndexMap, "TranscriptDown", "", values),
+                    getValue(fieldsIndexMap, "ChrDown", "", values),
+                    getIntValue(fieldsIndexMap, "PosDown", 0, values),
+                    getIntValue(fieldsIndexMap, "StrandDown", 0, values),
+                    getValue(fieldsIndexMap, "RegionTypeDown", "", values),
+                    getIntValue(fieldsIndexMap, "FusedExonDown", 0, values)));
+        }
+
+        return data;
     }
 
-    @NotNull
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("SampleId")
                 .add("ClusterId")
                 .add("Reportable")
@@ -126,10 +152,9 @@ public class VisFusion
                 .toString();
     }
 
-    @NotNull
-    public static String toString(@NotNull final VisFusion data)
+    public static String toString(final VisFusion data)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(data.SampleId))
                 .add(String.valueOf(data.ClusterId))
                 .add(String.valueOf(data.Reportable))
@@ -149,32 +174,4 @@ public class VisFusion
                 .add(String.valueOf(data.FusedExonDown))
                 .toString();
     }
-
-    @NotNull
-    private static VisFusion fromString(@NotNull final String data)
-    {
-        String[] values = data.split(DELIMITER);
-
-        int index = 0;
-
-        return new VisFusion(
-                values[index++],
-                Integer.parseInt(values[index++]),
-                Boolean.parseBoolean(values[index++]),
-                values[index++],
-                values[index++],
-                values[index++],
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                values[index++],
-                Integer.parseInt(values[index++]),
-                values[index++],
-                values[index++],
-                values[index++],
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                values[index++],
-                Integer.parseInt(values[index++]));
-    }
-
 }

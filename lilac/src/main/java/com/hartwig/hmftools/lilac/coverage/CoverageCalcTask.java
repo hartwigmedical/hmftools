@@ -61,7 +61,6 @@ public class CoverageCalcTask implements Callable<Long>
                         mId, i, mLowScoreCount, 100.0 * mLowScoreCount / i));
 
                 mPerfCounter.stop();
-                System.gc();
                 mPerfCounter.start();
             }
 

@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_LIKE_RANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
@@ -56,7 +56,7 @@ public class RankedProteomePeptides
             BufferedReader fileReader = new BufferedReader(new FileReader(filename));
             String header = fileReader.readLine();
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
@@ -66,7 +66,7 @@ public class RankedProteomePeptides
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] values = line.split(DELIMITER, -1);
+                final String[] values = line.split(CSV_DELIM, -1);
 
                 String allele = cleanAllele(values[alleleIndex]);
                 String peptide = values[peptideIndex];

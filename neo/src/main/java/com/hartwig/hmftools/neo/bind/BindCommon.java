@@ -4,8 +4,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-import org.jetbrains.annotations.Nullable;
-
 public final class BindCommon
 {
     public static final String FLD_ALLELE = "Allele";
@@ -43,8 +41,7 @@ public final class BindCommon
     public static final List<String> COUNT_DATA_TYPES = Lists.newArrayList(
             DATA_TYPE_BIND_COUNTS, DATA_TYPE_NOISE, DATA_TYPE_LENGTH_WEIGHTED, DATA_TYPE_ALLELE_WEIGHTED);
 
-    public static final String DELIM = ",";
-    public static final String ITEM_DELIM = ";";
+    public static final String BIND_DELIM = ",";
     public static final String RANDOM_SOURCE = "Random";
 
     public static final String AMINO_ACID_21ST = "X";

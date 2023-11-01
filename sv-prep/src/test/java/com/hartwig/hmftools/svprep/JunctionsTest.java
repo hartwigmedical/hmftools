@@ -4,16 +4,14 @@ import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_MAX_FRAGMENT_LENGTH;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.BLACKLIST_LOCATIONS;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_1;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.CHR_2;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.HOTSPOT_CACHE;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.REGION_1;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.buildFlags;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.createSamRecord;
-import static com.hartwig.hmftools.svprep.SvPrepTestUtils.readIdStr;
-import static com.hartwig.hmftools.svprep.reads.ReadFilters.isRepetitiveSectionBreak;
-import static com.hartwig.hmftools.svprep.reads.ReadRecord.hasPolyATSoftClip;
+import static com.hartwig.hmftools.svprep.TestUtils.BLACKLIST_LOCATIONS;
+import static com.hartwig.hmftools.svprep.TestUtils.CHR_1;
+import static com.hartwig.hmftools.svprep.TestUtils.CHR_2;
+import static com.hartwig.hmftools.svprep.TestUtils.HOTSPOT_CACHE;
+import static com.hartwig.hmftools.svprep.TestUtils.REGION_1;
+import static com.hartwig.hmftools.svprep.TestUtils.buildFlags;
+import static com.hartwig.hmftools.svprep.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.svprep.TestUtils.readIdStr;
 import static com.hartwig.hmftools.svprep.reads.ReadType.CANDIDATE_SUPPORT;
 import static com.hartwig.hmftools.svprep.reads.ReadType.JUNCTION;
 import static com.hartwig.hmftools.svprep.reads.ReadType.NO_SUPPORT;
@@ -25,8 +23,8 @@ import static junit.framework.TestCase.assertTrue;
 
 import java.util.List;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.svprep.reads.DiscordantGroups;
 import com.hartwig.hmftools.svprep.reads.JunctionData;
 import com.hartwig.hmftools.svprep.reads.JunctionTracker;

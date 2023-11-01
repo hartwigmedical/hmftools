@@ -83,16 +83,16 @@ public class JunctionRacFragments
                 // check that none of the other reads are on the incorrect side of this fusion junction
                 if(juncOrientation == POS_ORIENT)
                 {
-                    if(readGroup.Reads.stream().anyMatch(x -> x.getCoordsBoundary(SE_END) > juncPosition + SOFT_CLIP_JUNC_BUFFER))
+                    if(readGroup.reads().stream().anyMatch(x -> x.getCoordsBoundary(SE_END) > juncPosition + SOFT_CLIP_JUNC_BUFFER))
                         continue;
                 }
                 else
                 {
-                    if(readGroup.Reads.stream().anyMatch(x -> x.getCoordsBoundary(SE_START) < juncPosition - SOFT_CLIP_JUNC_BUFFER))
+                    if(readGroup.reads().stream().anyMatch(x -> x.getCoordsBoundary(SE_START) < juncPosition - SOFT_CLIP_JUNC_BUFFER))
                         continue;
                 }
 
-                List<FusionRead> fusionReads = convertReads(readGroup.Reads);
+                List<FusionRead> fusionReads = convertReads(readGroup.reads());
 
                 if(fusionReads.stream().anyMatch(x -> softClippedReadSupportsJunction(x, seIndex, juncPosition, juncOrientation, null)))
                 {

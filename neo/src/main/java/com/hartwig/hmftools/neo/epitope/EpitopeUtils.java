@@ -11,19 +11,22 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_0;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_1;
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_2;
+import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.NON_CODING;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.DOWNSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
+import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.tickPhaseForward;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.AA_SELENOCYSTEINE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.convertDnaCodonToAminoAcid;
 import static com.hartwig.hmftools.common.codon.Nucleotides.reverseStrandBases;
@@ -50,6 +53,21 @@ public class EpitopeUtils
     {
         // determine phasing, coding and region context
         boolean isUpstream = stream == FS_UP;
+
+        if(position < transData.TransStart)
+        {
+            neData.ExonRank[stream] = transData.posStrand() ? 0 : transData.exons().size() - 1;
+            neData.RegionType[stream] = transData.posStrand() ? UPSTREAM : DOWNSTREAM;
+            neData.Phases[stream] = PHASE_NONE;
+            return;
+        }
+        else if(position > transData.TransEnd)
+        {
+            neData.ExonRank[stream] = transData.posStrand() ? transData.exons().size() - 1 : 0;
+            neData.RegionType[stream] = transData.posStrand() ? DOWNSTREAM : UPSTREAM;
+            neData.Phases[stream] = PHASE_NONE;
+            return;
+        }
 
         for(ExonData exon : transData.exons())
         {
@@ -357,7 +375,7 @@ public class EpitopeUtils
             startPos = 0;
             endPos = 0;
 
-            for (int i = 0; i < exonDataList.size(); ++i)
+            for(int i = 0; i < exonDataList.size(); ++i)
             {
                 final ExonData exon = exonDataList.get(i);
 

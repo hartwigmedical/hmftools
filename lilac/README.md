@@ -2,7 +2,7 @@
 
 LILAC is a WGS tool to determine the HLA Class I types for the germline of each patient as well as determining the status of each of those alleles in the tumor including complete loss of one or more alleles, allele specific somatic mutations and allelic imbalance.  Lilac is described in this preprint(https://www.biorxiv.org/content/10.1101/2022.02.23.481444v1.full.pdf).
 
-LILAC uses the IMGT/HLA database (https://www.ebi.ac.uk/ipd/imgt/hla/download.html) as a reference set of Human MHC class I alleles, and performs typing to 4-digits, which means it uniquely identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences (8 digits).
+LILAC uses the IMGT/HLA database (https://www.ebi.ac.uk/ipd/imgt/hla/download) as a reference set of Human MHC class I alleles, and performs typing to 4-digits, which means it uniquely identifies a specific protein, but ignores synonymous variants (6 digits) and intronic differences (8 digits).
 
 There are many existing tools which can perform HLA class 1 typing notably Polysolver, xHLA and Optitype. LILAC offers a number of potential advantages including:
 - Estimated 99.8% accuracy on 30x - 100x WGS, with improved accuracy particularly for rare alleles.
@@ -89,6 +89,7 @@ threads | 1 | Number of threads to use for complex evaluation
 java -jar lilac.jar \
    -sample COLO829T 
    -ref_genome /path_to_ref_genome_fasta_file/ \
+   -ref_genome_version V37 \
    -resource_dir /path_to_lilac_resource_files/ \ 
    -reference_bam /sample_data_path/COLO829R.bam \
    -output_dir /output_dir/ \
@@ -101,6 +102,7 @@ java -jar lilac.jar \
    -sample COLO829T 
    -ref_genome /path_to_ref_genome_fasta_file/ \
    -resource_dir /path_to_lilac_resource_files/ \ 
+   -ref_genome_version V37 \
    -reference_bam /sample_data_path/COLO829R.bam \
    -tumor_bam /sample_data_path/COLO829T.bam \
    -somatic_vcf /sample_data_path/COLO829T.purple.somatic.vcf.gz \
@@ -121,7 +123,7 @@ java -jar lilac.jar \
 
 
 ## Algorithm
-The starting point for the LILAC algorithm is the complete set of possible 4 digit alleles and all the fragments aligned to HLA-A, HLA-B and HLA-C. Where multiple 6 digit or 8 digit types are present in the IMGT/HLA database, LILAC uses the numerically lowest type for all calculations. Note that 3 HLA-A alleles {A*31:135, A*33:191,A*02:783} and 1 HLA-B gene {B*08:282} have been removed from the database due to it frequently being found as a low level artefact (likely due to the high similarity to closely related genes and pseudogenes such as HLA-H). 
+The starting point for the LILAC algorithm is the complete set of possible 4 digit alleles and all the fragments aligned to HLA-A, HLA-B and HLA-C. Where multiple 6 digit or 8 digit types are present in the IMGT/HLA database, LILAC uses the numerically lowest type for all calculations. Note that 3 HLA-A alleles {A\*31:135, A\*33:191,A\*02:783} and 1 HLA-B gene {B\*08:282} have been removed from the database due to it frequently being found as a low level artefact (likely due to the high similarity to closely related genes and pseudogenes such as HLA-H).
 
 LILAC algorithm begins with collecting all fragments which are not duplicates and have:
 - At least one read with an alignment overlapping a coding base of HLA-A, HLA-B or HLA-C; and
@@ -142,14 +144,14 @@ At each coding position, create a matrix of (high quality) nucleotide count and 
 
 We do this 3 separate times for HLA-A, B and C. Each time we consider fragments from any of the alignment records that have similar exon boundaries to the type in question. For instance, fragments from the earlier exons which have identical boundaries across all 3 genes will be used to construct the A, B and C matrices, but fragments from the later exons may only contribute to A and B or perhaps only C.  The counts of supporting fragments are then aggregated at each position to construct the nucleotide matrix. 
 
-Fragments with in-frame indels are only included if the indel matches an existing hla type allowing for realignment. Fragments with out-of-frame indels are always excluded (note for the special case of C*04:09N, a relatively common allele with out of frame indel, it is explicitly rescued at a later stage
+Fragments with in-frame indels are only included if the indel matches an existing hla type allowing for realignment. Fragments with out-of-frame indels are always excluded (note for the special case of C\*04:09N, a relatively common allele with out of frame indel, it is explicitly rescued at a later stage
 
-During the elimination phase, nucleotide candidates are filtered to include only those with at least max(1,0.000375 * FragmentCount) high quality (base qual > min(30,medianBaseQuality)) fragment and at least max(2,0.00075 * FragmentCount) fragments overall support. Subsequently, base quality is not considered.   Sites with more than 1 nucleotide candidate are deemed heterozygous and sites with only 1 are considered to be homozygous across all 6 alleles.
+During the elimination phase, nucleotide candidates are filtered to include only those with at least max(1,0.000375 \* FragmentCount) high quality (base qual > min(30,medianBaseQuality)) fragment and at least max(2,0.00075 \* FragmentCount) fragments overall support. Subsequently, base quality is not considered.   Sites with more than 1 nucleotide candidate are deemed heterozygous and sites with only 1 are considered to be homozygous across all 6 alleles.
 
 Any alleles with bases that do not match both the heterozygous and homozygous locations of the nucleotide matrix are eliminated.
 
 #### 2. Amino acid matrix
-Similarly to the nucleotide matrix, LILAC also constructs a matrix of amino acid candidates.   Again, amino acid candidates are filtered to those where at least max(1,0.000375 * FragmentCount) fragments support with high base quality (all 3 nucleotides) and at least max(2,0.00075 * FragmentCount)  fragments over all.  The codon matrix can include inframe insertions and deletions where these match at least one known allele (base quality is not considered).
+Similarly to the nucleotide matrix, LILAC also constructs a matrix of amino acid candidates.   Again, amino acid candidates are filtered to those where at least max(1,0.000375 \* FragmentCount) fragments support with high base quality (all 3 nucleotides) and at least max(2,0.00075 \* FragmentCount)  fragments over all.  The codon matrix can include inframe insertions and deletions where these match at least one known allele (base quality is not considered).
 
 Exon boundary ‘enrichment’ is applied for all shared amino acids across all 3 genes (amino acids index < 298). This enriches any fragment with nucleotides on one side of an exon boundary with any homozygous nucleotides from the other side so that an amino acid is able to be constructed. 
 
@@ -173,7 +175,7 @@ Once complete, we can eliminate any alleles that do not match the phased evidenc
 #### 4. Recover common alleles
 As a fail safe for phasing, any ‘common alleles’ with more than 0.1% population frequency are recovered. The frequencies of alleles are specified in a resource file and are derived from the Hartwig cohort.   
 
-Additionally, C*04:09N (the most common HLA allele with a frameshift variant) specifically is also rescued if the out of frame indel 6:31237115 CN>C (hg38: chr6:31269338 CN>C) is present.
+Additionally, C\*04:09N (the most common HLA allele with a frameshift variant) specifically is also rescued if the out of frame indel 6:31237115 CN>C (hg38: chr6:31269338 CN>C) is present.
 
 #### 5. Detect HLA-Y presence 
 HLA-Y is a pseudogene that is highly similar to HLA-A and is not present in the human ref genome but is found in approximately 17% of the Hartwig cohort.    The presence of HLA-Y can cause confusion in typing particularly in determining the HLA-A types.    To detect HLA-Y,  LILAC counts the number of fragments that can be assigned uniquely to one of the 3 known HLA-Y alleles and no other candidate alleles.  If at least 1% of fragments align uniquely to HLA-Y then HLA-Y is considered to be present in the sample.   If HLA-Y is found to be present ANY fragment which matches exactly to a HLA-Y allele (uniquely or shared with other alleles) are excluded from further analysis to prevent confusion with highly similar HLA-A alleles. 
@@ -182,7 +184,7 @@ HLA-Y is a pseudogene that is highly similar to HLA-A and is not present in the 
 To further reduce the number of candidate alleles, If any 2-digit types are sufficiently unique (i.e. uniquely supported by at least 2% of fragments, they are required to contain at least one 4 digit type belonging to that 2 digit type in the evidence phase.   If two 2 digit types from the same gene are found to be sufficiently unique all other alleles are discarded at this point.   If more than two groups are found to be unique the 2 with the highest evidence are supported Any recovered alleles are also discarded at this point unless the 2 digit group has at least one fragment of unique support.   
 
 #### 7. Remove incomplete alleles with insufficient unique evidence
-Many alleles in the IMGT database are incomplete (ie contain ‘*’ characters), all of which are rare in population frequency.  To prevent spurious matches to these wildcard containing alleles in the evidence phase, we eliminate unlikely candidates.  Wildcard containing alleles are eliminated unless they contain at least 2 fragments support for the non wildcard sequence which do not support any remaining candidate allele with a complete sequence defined.  
+Many alleles in the IMGT database are incomplete (ie contain ‘\*’ characters), all of which are rare in population frequency.  To prevent spurious matches to these wildcard containing alleles in the evidence phase, we eliminate unlikely candidates.  Wildcard containing alleles are eliminated unless they contain at least 2 fragments support for the non wildcard sequence which do not support any remaining candidate allele with a complete sequence defined.
 
 ### Evidence phase
 In the evidence phase, LILAC evaluates all possible ‘complexes’ (ie. combinations) of remaining alleles that satisfy the following conditions
@@ -270,7 +272,7 @@ Start | Haplotype | Curation
 262 | GIFQKWAAVVVPSGEEQRYTCHVQHEGLPKPLTLRWE | HLA-Y
 298 | EPSSQPTIPIVGILAGLVLFGAVIAGAVVAAVMWRRKS | Likely HLA-Y
 299 | PSSHPTIPIVGILAGLVLFGAVIAGAVVAAVMWRRKS | HLA-Y
-299 | IPNLGIVSGPAVLAVLAVLAVLAV | Alignment issue with C*17 indel
+299 | IPNLGIVSGPAVLAVLAVLAVLAV | Alignment issue with C\*17 indel
 337 | DRKGGSYSQAAS | HLA-Y or HLA-H
 351 | IAQGSDVSLTAC | HLA-Y
 
@@ -352,13 +354,14 @@ The log file contains additional detailed information about the fit including de
 
 ## Known issues / future improvements
 
-- **HG38 reference genome with alt contigs are not supported** - LILAC currently only obtains reads aligned to the HLA Class 1 genes.  Also need to get all the contigs with ref_name =~ /^HLA|chr6.*alt/"
+- **HG38 reference genome with alt contigs are not supported** - LILAC currently only obtains reads aligned to the HLA Class 1 genes.  Also need to get all the contigs with ref_name =~ /^HLA|chr6.\*alt/"
+- **LILAC should obtain all read with mates that map at or near HLA class I genes** - Some reads may have been mismapped to pseudogenes or HLA-H and can be rescued by their mates and remapped to HLA class I genes
 - **Support for explicit novel allele prediction** - LILAC reports unmatched_haplotype, but do not explicitly predict the AA sequence of novel alleles.
 - **Allele elimination in tumor samples with high purity & LOH** -  Where there is a LOH in the tumor combined with a high purity one of the germline alleles may have very little support in the tumor.  In such cases it is possible that LILAC eliminate the correct allele and end up choosing another similar but incorrect allele (generally either a rare allele which escaped elimination or a common allele that was recovered), instead of calling the LOH.   Depending on the coverage pattern, this  could occur at amino acid elimination or during phasing.   It may make sense to use lower thresholds at the heterozygous amino acid stage and impose higher minimum coverage requirements in the phasing stage to counter this.
 - **Recovery** - LILAC currently only recover a common allele if the allele is part of a uniquely supported 2 digit type.   However where alleles are similar across groups, we may not always find unique support for a single 2 digit type.
 - **Elimination of alleles where coverage is very weak** - If coverage is very weak for a specific base (say <8 reads) in a gene we should mark that location as heterozygous AND not phase or eliminate alleles based on that location.  This may impact low or variable coverage samples, especially where base quality is low.
-- **Indel realignment** - Sometimes we miss evidence supporting INDELs due to realignment issues.  In particular if a fragment does not have a soft clip or an INDEL it is not considered for realignment.  This can be a problem for C*17 indels which have long homology and sometimes align without soft clip or INDEL.
-- **Generic handling of out-of-frame indel** - We currently have special handling for C*04:09N only.    At least 2 other alleles are relatively common: B*51:11N, A*24:09N.   We should handle this more generically.
+- **Indel realignment** - Sometimes we miss evidence supporting INDELs due to realignment issues.  In particular if a fragment does not have a soft clip or an INDEL it is not considered for realignment.  This can be a problem for C\*17 indels which have long homology and sometimes align without soft clip or INDEL.
+- **Generic handling of out-of-frame indel** - We currently have special handling for C\*04:09N only.    At least 2 other alleles are relatively common: B\*51:11N, A\*24:09N.   We should handle this more generically.
 - **Quality trimming** - We currently quality trim all heterozygous amino acids which have at least 1 nt with base qual <min(30,medianBaseQuality).   A more optimal logic would be to fuzzy match the amino acids.  A better algorithm would be the following:
  <pre>
 If a fragment has an amino acid which does not match ANY of the amino acid candidates at a heterozygous location, but has at 
@@ -369,7 +372,8 @@ nucleotide matches are permitted.
  </pre>
 
 ## Version History and Download Links
-- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4)
+- [1.5](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.5.2)
+- [1.4](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.4.2)
 - [1.3](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.3)
 - [1.2](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.2)
 - [1.1](https://github.com/hartwigmedical/hmftools/releases/tag/lilac-v1.1)

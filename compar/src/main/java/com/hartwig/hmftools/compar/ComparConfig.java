@@ -4,24 +4,29 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION;
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.DRIVER_GENE_PANEL_OPTION_DESC;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.SAMPLE_ID_FILE;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE;
+import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.compar.Category.ALL_CATEGORIES;
-import static com.hartwig.hmftools.compar.Category.LINX_CATEGORIES;
-import static com.hartwig.hmftools.compar.Category.PURPLE_CATEGORIES;
-import static com.hartwig.hmftools.compar.Category.purpleCategories;
-import static com.hartwig.hmftools.compar.Category.linxCategories;
-import static com.hartwig.hmftools.compar.CommonUtils.DATA_DELIM;
-import static com.hartwig.hmftools.compar.CommonUtils.ITEM_DELIM;
-import static com.hartwig.hmftools.compar.FileSources.fromConfig;
-import static com.hartwig.hmftools.compar.MatchLevel.REPORTABLE;
+import static com.hartwig.hmftools.compar.common.Category.ALL_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.Category.DRIVER;
+import static com.hartwig.hmftools.compar.common.Category.GENE_COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.Category.LINX_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.Category.PANEL_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.Category.PURPLE_CATEGORIES;
+import static com.hartwig.hmftools.compar.common.Category.purpleCategories;
+import static com.hartwig.hmftools.compar.common.Category.linxCategories;
+import static com.hartwig.hmftools.compar.common.FileSources.fromConfig;
+import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
 
@@ -39,10 +44,15 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneFile;
+import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
+import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.FileSources;
+import com.hartwig.hmftools.compar.common.MatchLevel;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -50,7 +60,7 @@ public class ComparConfig
 {
     public final List<String> SampleIds;
 
-    public final Map<Category,MatchLevel> Categories;
+    public final Map<Category, MatchLevel> Categories;
 
     public final List<String> SourceNames; // list of sources to compare, eg prod vs pilot, or pipeline_1 vs pipeline_2
 
@@ -59,6 +69,7 @@ public class ComparConfig
 
     public final Set<String> DriverGenes;
     public final Set<String> AlternateTranscriptDriverGenes;
+    public final boolean RestrictToDrivers;
 
     public final DiffThresholds Thresholds;
 
@@ -68,6 +79,8 @@ public class ComparConfig
     public final boolean WriteDetailed;
     public final int Threads;
 
+    public final GenomeLiftoverCache LiftoverCache;
+
     private final Map<String,SampleIdMapping> mSampleIdMappings; // if required, mapping from original to new sampleId
     private boolean mIsValid;
 
@@ -76,18 +89,17 @@ public class ComparConfig
     public static final String MATCH_LEVEL = "match_level";
 
     public static final String DB_SOURCE = "db_source";
-    public static final String FILE_SOURCE = "file_source";
     public static final String THRESHOLDS = "thresholds";
 
-    public static final String SAMPLE = "sample";
     public static final String WRITE_DETAILED_FILES = "write_detailed";
+    public static final String RESTRICT_TO_DRIVERS = "restrict_to_drivers";
 
     public static final Logger CMP_LOGGER = LogManager.getLogger(ComparConfig.class);
 
     public static final String REF_SOURCE = "ref";
     public static final String NEW_SOURCE = "new";
 
-    public ComparConfig(final CommandLine cmd)
+    public ComparConfig(final ConfigBuilder configBuilder)
     {
         mIsValid = true;
 
@@ -96,9 +108,9 @@ public class ComparConfig
 
         Categories = Maps.newHashMap();
 
-        MatchLevel matchLevel = MatchLevel.valueOf(cmd.getOptionValue(MATCH_LEVEL, REPORTABLE.toString()));
+        MatchLevel matchLevel = MatchLevel.valueOf(configBuilder.getValue(MATCH_LEVEL));
 
-        String categoriesStr = cmd.getOptionValue(CATEGORIES, ALL_CATEGORIES);
+        String categoriesStr = configBuilder.getValue(CATEGORIES);
 
         CMP_LOGGER.info("default match level {}, categories: {}", matchLevel, categoriesStr);
 
@@ -106,17 +118,22 @@ public class ComparConfig
         {
             Arrays.stream(Category.values()).forEach(x -> Categories.put(x, matchLevel));
         }
+        else if(categoriesStr.contains(PANEL_CATEGORIES))
+        {
+            if(categoriesStr.contains(PANEL_CATEGORIES))
+                Category.panelCategories().forEach(x -> Categories.put(x, matchLevel));
+        }
         else if(categoriesStr.contains(PURPLE_CATEGORIES) || categoriesStr.contains(LINX_CATEGORIES))
         {
             if(categoriesStr.contains(PURPLE_CATEGORIES))
                 purpleCategories().forEach(x -> Categories.put(x, matchLevel));
 
             if(categoriesStr.contains(LINX_CATEGORIES))
-                linxCategories(). forEach(x -> Categories.put(x, matchLevel));
+                linxCategories().forEach(x -> Categories.put(x, matchLevel));
         }
         else
         {
-            final String[] catDataList = cmd.getOptionValue(CATEGORIES).split(DATA_DELIM);
+            final String[] catDataList = configBuilder.getValue(CATEGORIES).split(CSV_DELIM);
 
             for(String catData : catDataList)
             {
@@ -141,42 +158,41 @@ public class ComparConfig
             }
         }
 
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
-        WriteDetailed = cmd.hasOption(WRITE_DETAILED_FILES);
-        Threads = parseThreads(cmd);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
+        WriteDetailed = configBuilder.hasFlag(WRITE_DETAILED_FILES);
+        Threads = parseThreads(configBuilder);
 
         SourceNames = Lists.newArrayList(REF_SOURCE, NEW_SOURCE);
-        loadSampleIds(cmd);
+        loadSampleIds(configBuilder);
 
         DbConnections = Maps.newHashMap();
         FileSources = Maps.newHashMap();
 
-        if(cmd.hasOption(formConfigSourceStr(DB_SOURCE, REF_SOURCE)) && cmd.hasOption(formConfigSourceStr(DB_SOURCE, NEW_SOURCE)))
+        if(configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, REF_SOURCE)) && configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, NEW_SOURCE)))
         {
-            loadDatabaseSources(cmd);
-        }
-        else if(cmd.hasOption(formConfigSourceStr(FILE_SOURCE, REF_SOURCE)) && cmd.hasOption(formConfigSourceStr(FILE_SOURCE, NEW_SOURCE)))
-        {
-            loadFileSources(cmd);
+            loadDatabaseSources(configBuilder);
         }
         else
         {
-            CMP_LOGGER.error("missing DB or file source ref and new config");
-            mIsValid = false;
+            if(!loadFileSources(configBuilder))
+            {
+                mIsValid = false;
+                CMP_LOGGER.error("missing DB or file source ref and new config");
+            }
         }
 
         Thresholds = new DiffThresholds();
-        Thresholds.loadConfig(cmd.getOptionValue(THRESHOLDS, ""));
+        Thresholds.loadConfig(configBuilder.getValue(THRESHOLDS, ""));
 
         DriverGenes = Sets.newHashSet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
 
-        if(cmd.hasOption(DRIVER_GENE_PANEL_OPTION))
+        if(configBuilder.hasValue(DRIVER_GENE_PANEL_OPTION))
         {
             try
             {
-                List<DriverGene> driverGenes = DriverGeneFile.read(cmd.getOptionValue(DRIVER_GENE_PANEL_OPTION));
+                List<DriverGene> driverGenes = DriverGeneFile.read(configBuilder.getValue(DRIVER_GENE_PANEL_OPTION));
 
                 for(DriverGene driverGene : driverGenes)
                 {
@@ -191,7 +207,18 @@ public class ComparConfig
                 CMP_LOGGER.error("failed to load driver gene panel file: {}", e.toString());
             }
         }
+
+        RestrictToDrivers = !DriverGenes.isEmpty() && configBuilder.hasFlag(RESTRICT_TO_DRIVERS);
+
+        if(RestrictToDrivers)
+        {
+            CMP_LOGGER.info("restricting comparison to {} driver genes", DriverGenes.size());
+        }
+
+        LiftoverCache = new GenomeLiftoverCache(true, true);
     }
+
+    public boolean runCopyNumberGeneComparer() { return Categories.containsKey(DRIVER) && !Categories.containsKey(GENE_COPY_NUMBER); }
 
     public String sourceSampleId(final String source, final String sampleId)
     {
@@ -229,15 +256,15 @@ public class ComparConfig
     private static final String COL_REF_SAMPLE_ID = "RefSampleId";
     private static final String COL_NEW_SAMPLE_ID = "NewSampleId";
 
-    private void loadSampleIds(final CommandLine cmd)
+    private void loadSampleIds(final ConfigBuilder configBuilder)
     {
-        if(cmd.hasOption(SAMPLE))
+        if(configBuilder.hasValue(SAMPLE))
         {
-            SampleIds.add(cmd.getOptionValue(SAMPLE));
+            SampleIds.add(configBuilder.getValue(SAMPLE));
             return;
         }
 
-        if(!cmd.hasOption(SAMPLE_ID_FILE))
+        if(!configBuilder.hasValue(SAMPLE_ID_FILE))
         {
             CMP_LOGGER.error("missing sample_id_file or sample config");
             mIsValid = false;
@@ -246,11 +273,11 @@ public class ComparConfig
 
         try
         {
-            List<String> lines = Files.readAllLines(Paths.get(cmd.getOptionValue(SAMPLE_ID_FILE)));
+            List<String> lines = Files.readAllLines(Paths.get(configBuilder.getValue(SAMPLE_ID_FILE)));
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
             int sampleIndex = fieldsIndexMap.get(COL_SAMPLE_ID);
             Integer refSampleIndex = fieldsIndexMap.get(COL_REF_SAMPLE_ID);
@@ -258,7 +285,7 @@ public class ComparConfig
 
             for(String line : lines)
             {
-                String[] values = line.split(DATA_DELIM, -1);
+                String[] values = line.split(CSV_DELIM, -1);
 
                 String sampleId = values[sampleIndex];
 
@@ -296,17 +323,17 @@ public class ComparConfig
         return format("%s_%s", sourceType, sourceName);
     }
 
-    private void loadDatabaseSources(final CommandLine cmd)
+    private void loadDatabaseSources(final ConfigBuilder configBuilder)
     {
-        if(!cmd.hasOption(formConfigSourceStr(DB_SOURCE, REF_SOURCE)) || !cmd.hasOption(formConfigSourceStr(DB_SOURCE, NEW_SOURCE)))
+        if(!configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, REF_SOURCE)) || !configBuilder.hasValue(formConfigSourceStr(DB_SOURCE, NEW_SOURCE)))
             return;
 
         // form DB1;db_url;db_user;db_pass DB2;db_url;db_user;db_pass etc
 
         for(String sourceName : SourceNames)
         {
-            String dbConfigValue = cmd.getOptionValue(formConfigSourceStr(DB_SOURCE, sourceName));
-            String[] dbItems = dbConfigValue.split(ITEM_DELIM, -1);
+            String dbConfigValue =  configBuilder.getValue(formConfigSourceStr(DB_SOURCE, sourceName));
+            String[] dbItems = dbConfigValue.split(CSV_DELIM, -1);
 
             if(dbItems.length != 3)
             {
@@ -331,49 +358,52 @@ public class ComparConfig
         }
     }
 
-    private void loadFileSources(final CommandLine cmd)
+    private boolean loadFileSources(final ConfigBuilder configBuilder)
     {
-        // form: sample_dir=pipe_v1;/path_to_sample_dir/;linx_dir=linx;purple_dir=purple etc OR
-        // form: linx_dir=pipe_v1;/path_to_linx_data/;purple_dir/path_to_purple_data/ etc OR
-
         for(String sourceName : SourceNames)
         {
-            String fileConfigValue = cmd.getOptionValue(formConfigSourceStr(FILE_SOURCE, sourceName));
-
-            FileSources fileSources = fromConfig(sourceName, fileConfigValue);
+            FileSources fileSources = fromConfig(sourceName, configBuilder);
 
             if(fileSources == null)
             {
                 FileSources.clear();
-                return;
+                return false;
             }
 
             FileSources.put(fileSources.Source, fileSources);
         }
+
+        return true;
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(
-                CATEGORIES, true,
-                "Categories to check separated by ';' from: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, FUSION, DISRUPTION");
+        configBuilder.addConfigItem(
+                CATEGORIES, false,
+                "Categories to check separated by ';' from: PURITY, DRIVER, SOMATIC_VARIANT, GERMLINE_VARIANT, FUSION, DISRUPTION",
+                ALL_CATEGORIES);
 
-        options.addOption(MATCH_LEVEL, true, "Match level from REPORTABLE (default) or DETAILED");
-        options.addOption(SAMPLE, true, "Sample data file");
-        addSampleIdFile(options);
-        options.addOption(DRIVER_GENE_PANEL_OPTION, true, DRIVER_GENE_PANEL_OPTION_DESC);
-        options.addOption(THRESHOLDS, true, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
+        configBuilder.addConfigItem(
+                MATCH_LEVEL, false, "Match level from REPORTABLE (default) or DETAILED", REPORTABLE.toString());
 
-        options.addOption(formConfigSourceStr(DB_SOURCE, REF_SOURCE), true, "Database configurations for reference data");
-        options.addOption(formConfigSourceStr(DB_SOURCE, NEW_SOURCE), true, "Database configurations for new data");
-        options.addOption(formConfigSourceStr(FILE_SOURCE, REF_SOURCE), true, "File locations for reference data");
-        options.addOption(formConfigSourceStr(FILE_SOURCE, NEW_SOURCE), true, "File locations for new data");
-        options.addOption(WRITE_DETAILED_FILES, false, "Write per-type details files");
-        addThreadOptions(options);
+        configBuilder.addConfigItem(SAMPLE, SAMPLE_DESC);
+        addSampleIdFile(configBuilder, false);
+        configBuilder.addConfigItem(DRIVER_GENE_PANEL_OPTION, DRIVER_GENE_PANEL_OPTION_DESC);
+        configBuilder.addConfigItem(THRESHOLDS, "In form: Field,AbsoluteDiff,PercentDiff, separated by ';'");
 
-        addDatabaseCmdLineArgs(options);
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, REF_SOURCE), false, "Database configurations for reference data");
+        configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, NEW_SOURCE), false, "Database configurations for new data");
+
+        com.hartwig.hmftools.compar.common.FileSources.registerConfig(configBuilder);
+
+        configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
+        configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
+        configBuilder.addConfigItem(LIFTOVER_MAPPING_FILE, LIFTOVER_MAPPING_FILE_DESC);
+
+        addDatabaseCmdLineArgs(configBuilder, false);
+        addOutputOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
     }
 
     public ComparConfig()
@@ -394,6 +424,8 @@ public class ComparConfig
         Thresholds = new DiffThresholds();
         DriverGenes = Sets.newHashSet();
         AlternateTranscriptDriverGenes = Sets.newHashSet();
+        RestrictToDrivers = false;
         mSampleIdMappings = Maps.newHashMap();
+        LiftoverCache = new GenomeLiftoverCache();
     }
 }

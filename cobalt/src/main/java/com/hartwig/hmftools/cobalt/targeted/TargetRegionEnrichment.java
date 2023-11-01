@@ -1,79 +1,73 @@
 package com.hartwig.hmftools.cobalt.targeted;
 
-import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.genome.position.GenomePositions;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class TargetRegionEnrichment
 {
-    private final List<GenomePosition> mTargetedRegions;
-    private final Map<GenomePosition, Double> mTargetRelativeEnrichment;
+    private final List<GenomePosition> mTargetedRegions = new ArrayList<>();
+    private final Map<GenomePosition, Double> mTargetRelativeEnrichment = new TreeMap<>(GenomePosition::compare);
 
-    private static final String DELIM = "\t";
-
-    public TargetRegionEnrichment(final List<GenomePosition> targetedRegions, final Map<GenomePosition, Double> targetRelativeEnrichment)
+    public List<GenomePosition> getTargetedRegions()
     {
-        mTargetedRegions = targetedRegions;
-        mTargetRelativeEnrichment = targetRelativeEnrichment;
-        // mTargetRelativeEnrichment: MutableMap<GenomePosition, Double> = TreeMap(GenomePosition::compare);
+        return mTargetedRegions;
     }
 
-    public List<GenomePosition> regions() { return mTargetedRegions; }
-    public Map<GenomePosition,Double> regionEnrichment() { return mTargetRelativeEnrichment; }
+    public Map<GenomePosition, Double> getTargetRelativeEnrichment()
+    {
+        return mTargetRelativeEnrichment;
+    }
 
-    public static TargetRegionEnrichment load(final String filename)
+    private static final char DELIMITER = '\t';
+
+    public static TargetRegionEnrichment fromTsv(String fileName) throws IOException
+    {
+        TargetRegionEnrichment targetRegionEnrichment = new TargetRegionEnrichment();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName)))
+        {
+            CSVFormat format = CSVFormat.Builder.create()
+                    .setDelimiter(DELIMITER)
+                    .setRecordSeparator('\n')
+                    .setHeader().setSkipHeaderRecord(true)
+                    .build();
+            Iterable<CSVRecord> records = format.parse(reader);
+
+            for (CSVRecord record : records)
+            {
+                String chromosome = record.get("chromosome").intern();
+                int position = (int) Double.parseDouble(record.get("position"));
+                Double relativeEnrichment = parseDoubleOrNull(record.get("relativeEnrichment"));
+                GenomePosition genomePosition = GenomePositions.create(chromosome, position);
+                targetRegionEnrichment.mTargetedRegions.add(genomePosition);
+                if (relativeEnrichment != null && !Double.isNaN(relativeEnrichment))
+                {
+                    targetRegionEnrichment.mTargetRelativeEnrichment.put(genomePosition, relativeEnrichment);
+                }
+            }
+        }
+
+        return targetRegionEnrichment;
+    }
+
+    private static Double parseDoubleOrNull(String value)
     {
         try
         {
-            List<String> lines = Files.readAllLines(Paths.get(filename));
-            String header = lines.get(0);
-
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
-
-            int chrIndex = fieldsIndexMap.get("chromosome");
-            int posIndex = fieldsIndexMap.get("position");
-            int reIndex = fieldsIndexMap.get("relativeEnrichment");
-
-            lines.remove(0);
-
-            List<GenomePosition> targetedRegions = Lists.newArrayList();
-            Map<GenomePosition,Double> targetRelativeEnrichment = Maps.newTreeMap(GenomePosition::compare);
-            // Map<GenomePosition, Double> targetRelativeEnrichment = Maps.newHashMap();
-
-            for(String line : lines)
-            {
-                String[] values = line.split(DELIM, -1);
-
-                String chromosome = values[chrIndex];
-                int position = Integer.parseInt(values[posIndex]);
-
-                GenomePosition genomePosition = GenomePositions.create(chromosome, position);
-
-                targetedRegions.add(genomePosition);
-
-                try
-                {
-                    double relativeEnrichment = Double.parseDouble(values[reIndex]);
-
-                    if(!Double.isNaN(relativeEnrichment))
-                        targetRelativeEnrichment.put(genomePosition, relativeEnrichment);
-                }
-                catch(Exception e)
-                {}
-            }
-
-            return new TargetRegionEnrichment(targetedRegions, targetRelativeEnrichment);
+            return Double.parseDouble(value);
         }
-        catch(Exception e)
+        catch (NumberFormatException e)
         {
-            CB_LOGGER.error("failed to load target enrichment regions: {}", e.toString());
             return null;
         }
     }

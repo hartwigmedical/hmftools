@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.linx;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.linx.ImmutableLinxLink;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
@@ -71,7 +70,7 @@ public abstract class LinxLink
     private static List<LinxLink> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         List<LinxLink> links = Lists.newArrayList();
@@ -81,7 +80,7 @@ public abstract class LinxLink
 
         for(int i = 0; i < lines.size(); ++i)
         {
-            String[] values = lines.get(i).split(DELIMITER);
+            String[] values = lines.get(i).split(TSV_DELIM);
 
             links.add(ImmutableLinxLink.builder()
                     .clusterId(Integer.parseInt(values[fieldsIndexMap.get("clusterId")]))
@@ -109,7 +108,7 @@ public abstract class LinxLink
 
     @NotNull
     private static String header() {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("clusterId")
                 .add("chainId")
                 .add("chainIndex")
@@ -133,7 +132,7 @@ public abstract class LinxLink
     @NotNull
     private static String toString(final LinxLink svData)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(svData.clusterId()))
                 .add(String.valueOf(svData.chainId()))
                 .add(String.valueOf(svData.chainIndex()))

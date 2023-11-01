@@ -17,10 +17,11 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class BreakendSelectorTest {
-
+public class BreakendSelectorTest
+{
     @Test
-    public void canSelectInterestingUnreportedBreakends() {
+    public void canSelectInterestingUnreportedBreakends()
+    {
         LinxBreakend fiveGeneExon10 = createFive("five", "canonical", 10);
         LinxBreakend fiveGeneExon11 = createFive("five", "canonical", 11);
         LinxBreakend fiveGeneExon10NonCanonical = createFive("five", "non-canonical", 10);
@@ -60,17 +61,20 @@ public class BreakendSelectorTest {
     }
 
     @NotNull
-    private static LinxBreakend createFive(@NotNull String gene, @NotNull String transcript, int exon) {
-        return create(gene, transcript, BreakendSelector.UPSTREAM_ORIENTATION, exon);
+    private static LinxBreakend createFive(@NotNull String gene, @NotNull String transcript, int exon)
+    {
+        return create(gene, transcript, LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM, exon);
     }
 
     @NotNull
-    private static LinxBreakend createThree(@NotNull String gene, @NotNull String transcript, int exon) {
-        return create(gene, transcript, BreakendSelector.DOWNSTREAM_ORIENTATION, exon);
+    private static LinxBreakend createThree(@NotNull String gene, @NotNull String transcript, int exon)
+    {
+        return create(gene, transcript, LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM, exon);
     }
 
     @NotNull
-    private static LinxBreakend create(@NotNull String gene, @NotNull String transcript, @NotNull String geneOrientation, int exon) {
+    private static LinxBreakend create(@NotNull String gene, @NotNull String transcript, @NotNull String geneOrientation, int exon)
+    {
         return LinxTestFactory.breakendBuilder()
                 .gene(gene)
                 .transcriptId(transcript)

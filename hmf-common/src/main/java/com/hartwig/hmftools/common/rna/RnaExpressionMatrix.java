@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.common.rna;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
 import static com.hartwig.hmftools.common.rna.RnaCommon.RNA_LOGGER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 
 import java.io.File;
@@ -85,14 +85,14 @@ public class RnaExpressionMatrix
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
             String header = fileData.get(0);
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
             fileData.remove(0);
 
             int idCol = mTranscriptScope ? fieldsIndexMap.get(FLD_TRANS_NAME) : fieldsIndexMap.get(FLD_GENE_ID);
 
             for(int i = 0; i < fileData.size(); ++i)
             {
-                final String[] items = fileData.get(i).split(DELIMITER, -1);
+                final String[] items = fileData.get(i).split(CSV_DELIM, -1);
                 final String idValue = items[idCol];
                 mGeneTransIdIndexMap.put(idValue, i);
             }
@@ -103,8 +103,8 @@ public class RnaExpressionMatrix
             return null;
         }
 
-        RNA_LOGGER.info("loaded expression for {} {}s and {} samples from file({})",
-                mGeneTransIdIndexMap.size(), scopeType(), mSampleIdIndexMap.size(), filename);
+        // RNA_LOGGER.info("loaded expression for {} {}s and {} samples from file({})",
+        //        mGeneTransIdIndexMap.size(), scopeType(), mSampleIdIndexMap.size(), filename);
 
         return matrix;
     }

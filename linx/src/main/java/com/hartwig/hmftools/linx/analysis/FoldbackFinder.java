@@ -178,14 +178,14 @@ public class FoldbackFinder
             if(chain != null)
             {
                 int bndLinks = 0;
-                for (final LinkedPair pair : chain.getLinkedPairs())
+                for(final LinkedPair pair : chain.getLinkedPairs())
                 {
-                    if (pair.first() == varEnd && pair.second().type() == BND)
+                    if(pair.first() == varEnd && pair.second().type() == BND)
                         ++bndLinks;
-                    else if (pair.second() == varEnd && pair.first().type() == BND)
+                    else if(pair.second() == varEnd && pair.first().type() == BND)
                         ++bndLinks;
 
-                    if (bndLinks == 2)
+                    if(bndLinks == 2)
                         return false;
                 }
             }

@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_TRANS_NAME;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_SPLICED_FRAGS;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_UNSPLICED_FRAGS;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_TRANS_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.GENE_EXPRESSION_MATRIX;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.TRANSCRIPT_EXPRESSION_MATRIX;
@@ -18,13 +22,10 @@ import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromR
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromRsemTranscript;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.fromSalmon;
 import static com.hartwig.hmftools.isofox.expression.cohort.ExpressionData.getExternalSourceFilename;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_SPLICED_FRAGS;
-import static com.hartwig.hmftools.isofox.results.GeneResult.FLD_UNSPLICED_FRAGS;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_EFFECTIVE_LENGTH;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_FITTED_FRAGMENTS;
 import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_RAW_FRAGMENTS;
-import static com.hartwig.hmftools.isofox.results.TranscriptResult.FLD_TPM;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -206,12 +207,13 @@ public class ExternalExpressionCompare
         {
             final List<String> lines = Files.readAllLines(filename);
 
-            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            String fileDelim = inferFileDelimiter(filename.toString());
+            final Map<String,Integer> fieldsMap = createFieldsIndexMap(lines.get(0), fileDelim);
             lines.remove(0);
 
             int geneIdIndex = fieldsMap.get(FLD_GENE_ID);
             int geneNameIndex = fieldsMap.get(FLD_GENE_NAME);
-            int tpmIndex = fieldsMap.get(FLD_TPM);
+            int tpmIndex = fieldsMap.get(FLD_ADJ_TPM);
 
             Integer fittedFragsIndex = fieldsMap.get(FLD_FITTED_FRAGMENTS);
             Integer rawFragsIndex = fieldsMap.get(FLD_RAW_FRAGMENTS);
@@ -225,9 +227,9 @@ public class ExternalExpressionCompare
             {
                 ExpressionData expData = mTransScope ?
                         fromIsofoxTranscript(
-                                data, geneIdIndex, geneNameIndex, transNameIndex, fittedFragsIndex, rawFragsIndex,
+                                data, fileDelim, geneIdIndex, geneNameIndex, transNameIndex, fittedFragsIndex, rawFragsIndex,
                                 tpmIndex, effectiveLengthIndex, lowQualIndex) :
-                        fromIsofoxGene(data, geneIdIndex, geneNameIndex, tpmIndex, splicedIndex, unsplicedIndex, lowQualIndex);
+                        fromIsofoxGene(data, fileDelim, geneIdIndex, geneNameIndex, tpmIndex, splicedIndex, unsplicedIndex, lowQualIndex);
 
                 if(expData == null)
                     continue;

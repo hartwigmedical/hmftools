@@ -77,12 +77,12 @@ public class RnaFusionData
     private String mChainInfo;
 
     public RnaFusionData(
-            final String sampleId, final String source, final String fusionId, final String[] geneIds, final String[] geneNames,
+            final String sampleId, final String fusionId, final String[] geneIds, final String[] geneNames,
             final String[] chromosomes, final int[] positions, final byte[] orientations,
             int junctionReadCount, int spanningFragCount, final RnaJunctionType[] junctionTypes, int cohortCount, final String otherData)
     {
         SampleId = sampleId;
-        Source = source;
+        Source = "ISOFOX"; // previously could have been Arriba
         FusionId = fusionId;
         GeneIds = geneIds;
         GeneNames = geneNames;
@@ -249,7 +249,7 @@ public class RnaFusionData
                 // check for a matching chain if the clusters are the same
                 matchingChain = clusterUp.findSameChainForSVs(varUp, varDown);
 
-                if (matchingChain != null)
+                if(matchingChain != null)
                 {
                     final int chainData[] = breakendsAreChained(
                             matchingChain, varUp, !mBreakends[FS_UP].usesStart(), varDown, !mBreakends[FS_DOWN].usesStart());

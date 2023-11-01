@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.healthchecker.result;
 
-public enum QCValueType {
+public enum QCValueType
+{
     REF_COVERAGE_10X,
     REF_COVERAGE_20X,
     TUM_COVERAGE_30X,

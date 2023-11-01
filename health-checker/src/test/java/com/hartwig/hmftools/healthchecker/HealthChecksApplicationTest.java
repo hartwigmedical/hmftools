@@ -8,41 +8,40 @@ import com.hartwig.hmftools.healthchecker.runners.HealthCheckSampleConfiguration
 
 import org.junit.Test;
 
-public class HealthChecksApplicationTest {
-
+public class HealthChecksApplicationTest
+{
     private static final String BASE_DIR = Resources.getResource("").getPath();
 
     private static final String OUTPUT_DIR = System.getProperty("user.home") + File.separator + "hmf" + File.separator + "tmp";
-    private static final boolean WRITE_EVALUATION_FILE = false;
+
+    private static final HealthCheckSampleConfiguration REF_CONFIG = new HealthCheckSampleConfiguration(
+            "reference",
+            BASE_DIR + "metrics/reference.wgsmetrics",
+            BASE_DIR + "flagstat/reference.flagstat");
+
+    private static final HealthCheckSampleConfiguration TUMOR_CONFIG = new HealthCheckSampleConfiguration(
+            "tumor",
+            BASE_DIR + "metrics/tumor.wgsmetrics",
+            BASE_DIR + "flagstat/tumor.flagstat");
 
     @Test
-    public void runHealthCheckerInSomaticMode() throws IOException {
-        HealthChecksApplication app = new HealthChecksApplication(HealthCheckSampleConfiguration.of("reference",
-                BASE_DIR + "metrics/reference.wgsmetrics",
-                BASE_DIR + "flagstat/reference.flagstat"),
-                HealthCheckSampleConfiguration.of("tumor", BASE_DIR + "metrics/tumor.wgsmetrics", BASE_DIR + "flagstat/tumor.flagstat"),
-                BASE_DIR + "purple",
-                OUTPUT_DIR);
-
-        app.run(WRITE_EVALUATION_FILE);
+    public void runHealthCheckerInSomaticMode() throws IOException
+    {
+        HealthChecksApplication app = new HealthChecksApplication(REF_CONFIG, TUMOR_CONFIG, BASE_DIR + "purple", OUTPUT_DIR);
+        app.run();
     }
 
     @Test
-    public void runHealthCheckerInGermlineOnlyMode() throws IOException {
-        HealthChecksApplication app = new HealthChecksApplication(HealthCheckSampleConfiguration.of("reference",
-                BASE_DIR + "metrics" + "/reference.wgsmetrics",
-                BASE_DIR + "flagstat/reference.flagstat"), null, null, OUTPUT_DIR);
-
-        app.run(WRITE_EVALUATION_FILE);
+    public void runHealthCheckerInGermlineOnlyMode() throws IOException
+    {
+        HealthChecksApplication app = new HealthChecksApplication(REF_CONFIG, null, null, OUTPUT_DIR);
+        app.run();
     }
 
     @Test
-    public void runHealthCheckerInTumorOnlyMode() throws IOException {
-        HealthChecksApplication app = new HealthChecksApplication(null,
-                HealthCheckSampleConfiguration.of("tumor", BASE_DIR + "metrics/tumor.wgsmetrics", BASE_DIR + "flagstat/tumor.flagstat"),
-                BASE_DIR + "purple",
-                OUTPUT_DIR);
-
-        app.run(WRITE_EVALUATION_FILE);
+    public void runHealthCheckerInTumorOnlyMode() throws IOException
+    {
+        HealthChecksApplication app = new HealthChecksApplication(null, TUMOR_CONFIG, BASE_DIR + "purple", OUTPUT_DIR);
+        app.run();
     }
 }

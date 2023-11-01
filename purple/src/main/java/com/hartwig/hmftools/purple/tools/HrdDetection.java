@@ -4,9 +4,11 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.purple.PurpleCopyNumber.buildChromosomeMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
+import static com.hartwig.hmftools.purple.copynumber.LohCalcs.LOH_SHORT_INSERT_LENGTH;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,9 @@ import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.purple.copynumber.LohCalcData;
+import com.hartwig.hmftools.purple.copynumber.LohCalcs;
 
 public class HrdDetection
 {
@@ -33,13 +37,8 @@ public class HrdDetection
     private static final int DEFAULT_SEGMENT_BREAK_COMBINE_LENGTH = 3_000_000;
     private static final double DEFAULT_PLOIDY_FACTOR = 15.5;
 
-    private static final int LOH_SHORT_INSERT_LENGTH = 1000;
-    private static final double MIN_LOH_CN = 0.5;
     private static final double MAX_COPY_NUM_DIFF = 0.5;
     private static final double MAX_COPY_NUM_DIFF_PERC = 0.15;
-
-    private static final List<String> LOH_SHORT_ARM_CHROMOSOMES = Lists.newArrayList("13", "14", "15", "21", "22");
-    private static final List<String> LOH_IGNORE_CHROMOSOMES = Lists.newArrayList("X", "Y");
 
     public HrdDetection()
     {
@@ -56,28 +55,47 @@ public class HrdDetection
 
     public HrdData calculateHrdData(final List<PurpleCopyNumber> copyNumbers, final double samplePloidy)
     {
-        int lohSegments = calcLohSegments(copyNumbers);
+        // build a chr-segment map
+        Map<String,List<PurpleCopyNumber>> chrCopyNumberMap = buildChromosomeMap(copyNumbers);
 
-        int unbalancedSegments = calcSegmentImbalances(copyNumbers);
+        int totalLohSegments = 0;
+        int totalUnbalancedSegments = 0;
+        double totalSegmentBreaks = 0;
 
-        double segmentBreaks = calcSegmentBreaks(copyNumbers, samplePloidy);
+        for(Map.Entry<String,List<PurpleCopyNumber>> entry : chrCopyNumberMap.entrySet())
+        {
+            String chromosome = entry.getKey();
+            List<PurpleCopyNumber> chrCopyNumbers = entry.getValue();
 
-        return new HrdData(lohSegments, unbalancedSegments, segmentBreaks);
+            totalLohSegments += calcLohSegments(chromosome, chrCopyNumbers);
+
+            totalUnbalancedSegments += calcSegmentImbalances(chrCopyNumbers);
+
+            totalSegmentBreaks += calcSegmentBreaks(chrCopyNumbers, samplePloidy);
+        }
+
+        return new HrdData(totalLohSegments, totalUnbalancedSegments, totalSegmentBreaks);
     }
 
-    public int calcLohSegments(final List<PurpleCopyNumber> copyNumbers)
+    public int calcLohSegments(final String chromosome, final List<PurpleCopyNumber> copyNumbers)
     {
+        LohCalcData lohCalcData = LohCalcs.calcLohSegments(chromosome, copyNumbers, mLohMinLength, false);
+
+        return lohCalcData.Segments;
+
+        /*
+        if(LOH_IGNORE_CHROMOSOMES.contains(chromosome))
+            return 0;
+
         int lohCount = 0;
         boolean inLohSegment = false;
         int lohSegmentStart = 0;
         boolean beforeCentromere = false;
+        boolean hasNonLohSegment = false;
 
         for(int i = 0; i < copyNumbers.size(); ++i)
         {
             PurpleCopyNumber copyNumber = copyNumbers.get(i);
-
-            if(LOH_IGNORE_CHROMOSOMES.contains(RefGenomeFunctions.stripChrPrefix(copyNumber.chromosome())))
-                continue;
 
             if(copyNumber.segmentStartSupport() == SegmentSupport.TELOMERE)
             {
@@ -97,9 +115,9 @@ public class HrdDetection
 
             double minAlleleCn = copyNumber.minorAlleleCopyNumber();
             boolean isLohSegment = minAlleleCn < MIN_LOH_CN;
+            hasNonLohSegment |= !isLohSegment;
 
             boolean isLohNextSegment = nextCopyNumber != null && nextCopyNumber.minorAlleleCopyNumber() < MIN_LOH_CN;
-
 
             if(!inLohSegment && isLohSegment)
             {
@@ -144,7 +162,9 @@ public class HrdDetection
             }
         }
 
-        return lohCount;
+        // return lohCount;
+        return hasNonLohSegment ? lohCount : 0;
+        */
     }
 
     public int calcSegmentImbalances(final List<PurpleCopyNumber> copyNumbers)

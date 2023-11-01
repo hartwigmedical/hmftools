@@ -44,6 +44,18 @@ public abstract class SampleData implements Comparable<SampleData> {
     @Nullable
     public abstract String limsPrimaryTumor();
 
+    @Nullable
+    public abstract String limsTumorLocation();
+
+    @Nullable
+    public abstract String limsTumorType();
+
+    @Nullable
+    public abstract String limsTumorExtra();
+
+    @Nullable
+    public abstract String limsTumorDoids();
+
     @NotNull
     public abstract String pathologyTumorPercentage();
 

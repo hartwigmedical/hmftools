@@ -91,10 +91,10 @@ public class ReportablePredicateTest
                 .reportAmplification(true)
                 .reportSomaticHotspot(true)
                 .likelihoodType(ONCO)
-                .reportGermlineDisruption(false)
+                .reportGermlineDisruption(DriverGeneGermlineReporting.NONE)
+                .reportGermlineDeletion(DriverGeneGermlineReporting.NONE)
                 .reportGermlineHotspot(DriverGeneGermlineReporting.NONE)
                 .reportGermlineVariant(DriverGeneGermlineReporting.NONE)
-                .reportGermlineDisruption(false)
                 .reportPGX(false)
                 .build());
 

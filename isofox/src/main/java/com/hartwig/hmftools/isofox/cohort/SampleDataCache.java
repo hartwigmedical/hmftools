@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.isofox.cohort;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
@@ -23,9 +23,6 @@ public class SampleDataCache
     public final Map<String,List<String>> SampleGeneIds; // list of genes per sample
 
     private boolean mIsValid;
-
-    public static final String COHORT_A = "CohortA"; // 'cohort A' being evaluated, may be arbitrary
-    public static final String COHORT_B = "CohortB"; // 'cohort A' being evaluated, may be arbitrary
 
     public SampleDataCache(final String inputFile)
     {

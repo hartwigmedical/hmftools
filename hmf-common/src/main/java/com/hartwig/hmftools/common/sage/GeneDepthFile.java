@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.sage;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,8 +14,6 @@ import com.google.common.collect.Lists;
 
 public final class GeneDepthFile
 {
-    public static final String DELIM = "\t";
-
     public static final String COL_GENE = "gene";
     public static final String COL_CHROMOSOME = "chromosome";
     public static final String COL_POS_START = "posStart";
@@ -49,7 +49,7 @@ public final class GeneDepthFile
 
     private static String header(final List<Integer> depthBuckets)
     {
-        StringJoiner joiner = new StringJoiner(DELIM);
+        StringJoiner joiner = new StringJoiner(TSV_DELIM);
 
         joiner.add(COL_GENE);
         joiner.add(COL_CHROMOSOME);
@@ -80,7 +80,7 @@ public final class GeneDepthFile
 
     private static String toString(final GeneDepth depth)
     {
-        StringJoiner joiner = new StringJoiner(DELIM);
+        StringJoiner joiner = new StringJoiner(TSV_DELIM);
         joiner.add(depth.Gene);
         joiner.add(depth.Chromosome);
         joiner.add(String.valueOf(depth.PosStart));

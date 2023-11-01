@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.linx;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
@@ -17,16 +17,6 @@ import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.analysis.ClusterClassification.getClusterCategory;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_LINE;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_COMPLEX_OTHER;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_FOLDBACK_DSB;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_ISOLATED_BE;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_SAME_ORIENT;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_SIMPLE_DUP;
-import static com.hartwig.hmftools.linx.types.ArmCluster.ARM_CL_TI_ONLY;
 import static com.hartwig.hmftools.linx.types.ArmCluster.getArmClusterData;
 import static com.hartwig.hmftools.linx.types.LinxConstants.NO_DB_MARKER;
 import static com.hartwig.hmftools.linx.types.LinxConstants.SHORT_TI_LENGTH;
@@ -44,6 +34,7 @@ import com.hartwig.hmftools.linx.analysis.ClusterMetrics;
 import com.hartwig.hmftools.linx.annotators.LineElementType;
 import com.hartwig.hmftools.linx.chaining.ChainMetrics;
 import com.hartwig.hmftools.linx.chaining.SvChain;
+import com.hartwig.hmftools.linx.types.ArmClusterType;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.ResolvedType;
 import com.hartwig.hmftools.linx.types.ArmCluster;
@@ -73,7 +64,7 @@ public class CohortDataWriter
         mWriters = Maps.newHashMap();
 
         mVisWriter = new VisDataWriter(
-                config.OutputDataPath, geneDataCache, config.Output.WriteVisualisationData, config.hasMultipleSamples());
+                config.OutputDataPath, geneDataCache, config.Output.WriteVisualisationData, config.hasMultipleSamples(), config.IsGermline);
 
         mWriters.put(COHORT_WRITER_SV, createSvDataFile());
         mWriters.put(COHORT_WRITER_CLUSTER, createClusterFile());
@@ -237,11 +228,11 @@ public class CohortDataWriter
                         LineElementType.toString(var.getLineElement(true)), LineElementType.toString(var.getLineElement(false))));
 
                 // linked pair info
-                for (int be = SE_START; be <= SE_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
                     boolean isStart = isStart(be);
                     final LinkedPair link = var.getLinkedPair(isStart);
-                    if (link != null)
+                    if(link != null)
                     {
                         writer.write(String.format(",%s,%d",
                                 link.first() == var ? link.second().id() : link.first().id(), link.length()));
@@ -260,7 +251,7 @@ public class CohortDataWriter
                 final SvChain chain = cluster.findChain(var);
                 String chainStr = "";
 
-                if (chain != null)
+                if(chain != null)
                 {
                     chainStr = String.format(",%d,%d,%s", chain.id(), chain.getSvCount(), chain.getSvIndices(var));
                 }
@@ -295,11 +286,11 @@ public class CohortDataWriter
                         var.getFoldbackId(true), var.getFoldbackLength(true), var.getFoldbackInfo(true),
                         var.getFoldbackId(false), var.getFoldbackLength(false), var.getFoldbackInfo(false)));
 
-                for (int be = SE_START; be <= SE_END; ++be)
+                for(int be = SE_START; be <= SE_END; ++be)
                 {
                     ArmCluster armCluster = be == SE_START ? armClusterStart : armClusterEnd;
 
-                    if (armCluster != null)
+                    if(armCluster != null)
                         writer.write(String.format(",%d,%s,%d", armCluster.id(), armCluster.getTypeStr(), armCluster.getTICount()));
                     else
                         writer.write(",-1,,0");
@@ -364,9 +355,6 @@ public class CohortDataWriter
             writer.write(",ArmClusterCount,AcTotalTIs,AcIsolatedBE,AcTIOnly,AcDsb,AcSimpleDup");
             writer.write(",AcSingleFb,AcFbDsb,AcComplexFb,AcComplexLine,AcSameOrient,AcComplexOther");
 
-            if(mConfig.IndelAnnotation)
-                writer.write(",IndelCount,IndelProb");
-
             writer.newLine();
             return writer;
         }
@@ -417,12 +405,12 @@ public class CohortDataWriter
 
                 double foldbackCount = 0;
 
-                for (final SvVarData var : cluster.getFoldbacks())
+                for(final SvVarData var : cluster.getFoldbacks())
                 {
                     // avoid double-count chained foldbacks
-                    if (var.getFoldbackBreakend(true) != null)
+                    if(var.getFoldbackBreakend(true) != null)
                         foldbackCount += 0.5;
-                    if (var.getFoldbackBreakend(false) != null)
+                    if(var.getFoldbackBreakend(false) != null)
                         foldbackCount += 0.5;
                 }
 
@@ -459,15 +447,12 @@ public class CohortDataWriter
                 long armClusterTIs = cluster.getArmClusters().stream().mapToInt(x -> x.getTICount()).sum();
 
                 writer.write(String.format(",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                        cluster.getArmClusters().size(), armClusterTIs, armClusterData[ARM_CL_ISOLATED_BE],
-                        armClusterData[ARM_CL_TI_ONLY], armClusterData[ARM_CL_DSB], armClusterData[ARM_CL_SIMPLE_DUP],
-                        armClusterData[ARM_CL_FOLDBACK], armClusterData[ARM_CL_FOLDBACK_DSB], armClusterData[ARM_CL_COMPLEX_FOLDBACK],
-                        armClusterData[ARM_CL_COMPLEX_LINE], armClusterData[ARM_CL_SAME_ORIENT], armClusterData[ARM_CL_COMPLEX_OTHER]));
-
-                if(mConfig.IndelAnnotation)
-                {
-                    writer.write(String.format(",%d,%f", metrics.IndelCount, metrics.IndelProbability));
-                }
+                        cluster.getArmClusters().size(), armClusterTIs, armClusterData[ArmClusterType.ISOLATED_BE.ordinal()],
+                        armClusterData[ArmClusterType.TI_ONLY.ordinal()], armClusterData[ArmClusterType.DSB.ordinal()],
+                        armClusterData[ArmClusterType.SIMPLE_DUP.ordinal()], armClusterData[ArmClusterType.FOLDBACK.ordinal()],
+                        armClusterData[ArmClusterType.FOLDBACK_DSB.ordinal()], armClusterData[ArmClusterType.COMPLEX_FOLDBACK.ordinal()],
+                        armClusterData[ArmClusterType.COMPLEX_LINE.ordinal()], armClusterData[ArmClusterType.SAME_ORIENT.ordinal()],
+                        armClusterData[ArmClusterType.COMPLEX_OTHER.ordinal()]));
 
                 writer.newLine();
 
@@ -524,7 +509,7 @@ public class CohortDataWriter
 
                 List<SvChain> chains = cluster.getChains();
 
-                for (final SvChain chain : chains)
+                for(final SvChain chain : chains)
                 {
                     int chainSvCount = chain.getSvCount();
                     boolean chainConsistent = chain.isConsistent();
@@ -533,7 +518,7 @@ public class CohortDataWriter
                     List<LinkedPair> uniquePairs = Lists.newArrayList();
                     final List<LinkedPair> chainLinks = chain.getLinkedPairs();
 
-                    for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
+                    for(int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                     {
                         final LinkedPair pair = chainLinks.get(chainIndex);
 

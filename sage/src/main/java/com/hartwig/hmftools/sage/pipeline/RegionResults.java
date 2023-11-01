@@ -12,7 +12,8 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
-import com.hartwig.hmftools.sage.evidence.SyncFragmentType;
+import com.hartwig.hmftools.sage.evidence.EvidenceStats;
+import com.hartwig.hmftools.sage.evidence.FragmentSyncType;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 public class RegionResults
@@ -23,6 +24,7 @@ public class RegionResults
     private int mMaxMemoryUsage;
     private final List<PerformanceCounter> mPerfCounters;
     private final int[] mSyncCounts;
+    private final EvidenceStats mEvidenceStats;
 
     public RegionResults(final VcfWriter vcfWriter)
     {
@@ -31,7 +33,8 @@ public class RegionResults
         mTotaVariants = 0;
         mMaxMemoryUsage = 0;
         mPerfCounters = Lists.newArrayList();
-        mSyncCounts = new int[SyncFragmentType.values().length];
+        mSyncCounts = new int[FragmentSyncType.values().length];
+        mEvidenceStats = new EvidenceStats();
     }
 
     public synchronized void addFinalVariants(final int taskId, final List<SageVariant> variants)
@@ -69,7 +72,12 @@ public class RegionResults
 
     public synchronized void addSynCounts(final int[] counts)
     {
-        Arrays.stream(SyncFragmentType.values()).forEach(x -> mSyncCounts[x.ordinal()] += counts[x.ordinal()]);
+        Arrays.stream(FragmentSyncType.values()).forEach(x -> mSyncCounts[x.ordinal()] += counts[x.ordinal()]);
+    }
+
+    public synchronized void addEvidenceStats(final EvidenceStats stats)
+    {
+        mEvidenceStats.merge(stats);
     }
 
     public int totalReads() { return mTotalReads; }
@@ -80,11 +88,15 @@ public class RegionResults
     {
         mPerfCounters.forEach(x -> x.logStats());
     }
+    public EvidenceStats evidenceStats() { return mEvidenceStats; }
 
     public void logSynCounts()
     {
+        if(!SG_LOGGER.isDebugEnabled())
+            return;
+
         StringJoiner sj = new StringJoiner(", ");
-        Arrays.stream(SyncFragmentType.values()).forEach(x -> sj.add(format("%s=%d", x, mSyncCounts[x.ordinal()])));
-        SG_LOGGER.info("fragment sync counts: {}", sj);
+        Arrays.stream(FragmentSyncType.values()).forEach(x -> sj.add(format("%s=%d", x, mSyncCounts[x.ordinal()])));
+        SG_LOGGER.debug("fragment sync counts: {}", sj);
     }
 }

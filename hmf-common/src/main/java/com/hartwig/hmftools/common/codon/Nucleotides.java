@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.common.codon;
 
-public class Nucleotides
+public final class Nucleotides
 {
     public static final char[] DNA_BASES = {'G', 'A', 'T', 'C'};
 
@@ -12,6 +12,22 @@ public class Nucleotides
         if(base == 'G') return 'C';
         return base;
     }
+
+    public static int baseIndex(final char base)
+    {
+        if(base == 'G')
+            return 0;
+        if(base == 'A')
+            return 1;
+        if(base == 'T')
+            return 2;
+        if(base == 'C')
+            return 3;
+        else
+            return -1;
+    }
+
+    public static String swapDnaBase(final String base) { return String.valueOf(swapDnaBase(base.charAt(0))); }
 
     public static char complement(final char base)
     {
@@ -32,5 +48,4 @@ public class Nucleotides
 
         return newBases.toString();
     }
-
 }

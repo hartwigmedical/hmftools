@@ -6,13 +6,13 @@ import static com.hartwig.hmftools.common.drivercatalog.DriverType.HOM_DUP_DISRU
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.analysis.SvUtilities.formatJcn;
 import static com.hartwig.hmftools.linx.annotators.PseudoGeneFinder.isPseudogeneDeletion;
 import static com.hartwig.hmftools.linx.types.ResolvedType.LINE;
@@ -50,12 +50,12 @@ import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
 import com.hartwig.hmftools.linx.visualiser.file.VisSampleData;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 public class DisruptionFinder implements CohortFileInterface
 {
     private final EnsemblDataCache mGeneTransCache;
     private final Map<String,List<String>> mDisruptionGeneTranscripts;
+    private final List<DriverGene> mDriverGenes;
     private final VisSampleData mVisSampleData;
 
     private final List<SvDisruptionData> mDisruptions;
@@ -76,6 +76,7 @@ public class DisruptionFinder implements CohortFileInterface
 
         mIsGermline = config.IsGermline;
         mGermlineDisruptions = mIsGermline ? new GermlineDisruptions(config, geneTransCache) : null;
+        mDriverGenes = config.DriverGenes;
 
         mDisruptionGeneTranscripts = getDisruptionGeneTranscripts(config.DriverGenes, !mIsGermline, geneTransCache);
 
@@ -305,9 +306,6 @@ public class DisruptionFinder implements CohortFileInterface
             // ignore if the other breakend may be in a different gene (eg making a fusion)
             if(!otherBreakendGenes.isEmpty())
             {
-                //if(otherBreakendGenes.stream().noneMatch(x -> genesList.stream().anyMatch(y -> y.geneName().equals(x.geneName()))))
-                //    continue;
-
                 if(otherBreakendGenes.stream().anyMatch(x -> genesList.stream().anyMatch(y -> !y.geneName().equals(x.geneName()))))
                     continue;
             }
@@ -568,7 +566,7 @@ public class DisruptionFinder implements CohortFileInterface
 
                 if(!otherTransList.isEmpty())
                 {
-                    if (markNonDisruptiveTranscripts(transList, otherTransList, NON_DISRUPT_REASON_SAME_INTRON))
+                    if(markNonDisruptiveTranscripts(transList, otherTransList, NON_DISRUPT_REASON_SAME_INTRON))
                     {
                         foundSameIntronBreakend = true;
 
@@ -703,18 +701,18 @@ public class DisruptionFinder implements CohortFileInterface
                 {
                     for(final ExonData exonData : transData.exons())
                     {
-                        if (exonData.Rank == 1)
+                        if(exonData.Rank == 1)
                             continue;
 
-                        if ((geneData.Strand == 1 && lowerPos <= exonData.Start && upperPos >= exonData.Start)
+                        if((geneData.Strand == 1 && lowerPos <= exonData.Start && upperPos >= exonData.Start)
                         || (geneData.Strand == -1 && lowerPos <= exonData.End && upperPos >= exonData.End))
                         {
                             // allow an exon to be fully traversed if the upstream transcript is pre-coding
-                            if (isPrecodingUpstream && lowerPos <= exonData.Start && upperPos >= exonData.End)
+                            if(isPrecodingUpstream && lowerPos <= exonData.Start && upperPos >= exonData.End)
                             {
-                                if (geneData.Strand == 1 && (transData.CodingStart == null || upperPos < transData.CodingStart))
+                                if(geneData.Strand == 1 && (transData.CodingStart == null || upperPos < transData.CodingStart))
                                     continue;
-                                else if (geneData.Strand == -1 && (transData.CodingEnd == null || lowerPos > transData.CodingEnd))
+                                else if(geneData.Strand == -1 && (transData.CodingEnd == null || lowerPos > transData.CodingEnd))
                                     continue;
                             }
 
@@ -762,14 +760,13 @@ public class DisruptionFinder implements CohortFileInterface
 
                         SvBreakend breakend = var.getBreakend(be);
 
-                        LNX_LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
-                                var.id(), breakend, gene.geneName(), transcript.transName(),
-                                formatJcn(transcript.undisruptedCopyNumber()));
-
-                        transcript.setReportableDisruption(true);
-
                         if(!transcript.undisruptedCopyNumberSet())
                             transcript.setUndisruptedCopyNumber(getUndisruptedCopyNumber(breakend));
+
+                        LNX_LOGGER.debug("var({}) breakend({}) gene({}) transcript({}) is disrupted, cnLowside({})",
+                                var.id(), breakend, gene.geneName(), transcript.transName(), formatJcn(transcript.undisruptedCopyNumber()));
+
+                        transcript.setReportableDisruption(true);
 
                         SvDisruptionData disruptionData = new SvDisruptionData(
                                 var,  gene.isStart(), gene.GeneData, transcript.TransData,
@@ -816,9 +813,11 @@ public class DisruptionFinder implements CohortFileInterface
                 continue;
             }
 
+            DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(disruptionData.Gene.GeneName)).findFirst().orElse(null);
+
             DriverCatalog driverCatalog = ImmutableDriverCatalog.builder()
                     .driver(DriverType.DISRUPTION)
-                    .category(TSG)
+                    .category(driverGene != null ? driverGene.likelihoodType() : TSG)
                     .gene(disruptionData.Gene.GeneName)
                     .transcript(disruptionData.Transcript.TransName)
                     .isCanonical(disruptionData.Transcript.IsCanonical)
@@ -840,9 +839,9 @@ public class DisruptionFinder implements CohortFileInterface
         }
     }
 
-    public void writeGermlineDisruptions(final String sampleId, final String outputDir, final DatabaseAccess dbAccess)
+    public void writeGermlineDisruptions(final String sampleId, final String outputDir)
     {
-        mGermlineDisruptions.writeGermlineSVs(mDisruptions, sampleId, outputDir, dbAccess);
+        mGermlineDisruptions.writeGermlineSVs(mDisruptions, sampleId, outputDir);
     }
 
     public static double getUndisruptedCopyNumber(final SvBreakend breakend)

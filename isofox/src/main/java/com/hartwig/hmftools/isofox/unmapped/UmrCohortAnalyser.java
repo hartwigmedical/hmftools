@@ -1,19 +1,21 @@
 package com.hartwig.hmftools.isofox.unmapped;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.rna.RnaExpressionMatrix.EXPRESSION_SCOPE_GENE;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.LINX_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.START_STR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.startEndStr;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.UNMAPPED_READS;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.UMR_NO_MATE;
 import static com.hartwig.hmftools.isofox.unmapped.UnmappedRead.baseQualsFromString;
 
@@ -33,12 +35,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.rna.RnaExpressionMatrix;
-import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class UmrCohortAnalyser
 {
@@ -59,11 +58,9 @@ public class UmrCohortAnalyser
     private final BlatMatcher mBlatMatcher;
     private int mSequenceId;
 
-    private static final String LINX_DIRECTORY = "linx_dir";
     private static final String GENE_EXPRESSION_FILE = "gene_expression_file";
     private static final String COMBINE_FREQUENCIES = "combine_frequencies";
     private static final String GROUP_BY_SEQUENCE = "group_by_sequence";
-    private static final String LINX_DIR = "linx_dir";
     private static final String SV_VCF_FILE = "sv_vcf";
     private static final String WRITE_BLAT_FILE = "write_blat";
     private static final String BLAT_RESULTS_FILE = "blat_results_file";
@@ -73,36 +70,35 @@ public class UmrCohortAnalyser
     private static final int MIN_BLAT_SEQEUNCE_LENGTH = 20;
     private static final int REF_EXONIC_BASE_LENGTH = 20;
 
-    public UmrCohortAnalyser(final CohortConfig config, final CommandLine cmd)
+    public UmrCohortAnalyser(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mUnmappedReads = Maps.newHashMap();
 
-        mGeneExpression = cmd.hasOption(GENE_EXPRESSION_FILE) ?
-                new RnaExpressionMatrix(cmd.getOptionValue(GENE_EXPRESSION_FILE), EXPRESSION_SCOPE_GENE) : null;
+        mGeneExpression = configBuilder.hasValue(GENE_EXPRESSION_FILE) ?
+                new RnaExpressionMatrix(configBuilder.getValue(GENE_EXPRESSION_FILE), EXPRESSION_SCOPE_GENE) : null;
 
-        mLineElementMatcher = cmd.hasOption(LINX_DIR) && cmd.hasOption(SV_VCF_FILE) ?
-                new LineElementMatcher(cmd.getOptionValue(LINX_DIR), cmd.getOptionValue(SV_VCF_FILE)) : null;
+        mLineElementMatcher = configBuilder.hasValue(LINX_DIR_CFG) && configBuilder.hasValue(SV_VCF_FILE) ?
+                new LineElementMatcher(configBuilder.getValue(LINX_DIR_CFG), configBuilder.getValue(SV_VCF_FILE)) : null;
 
-        mCombineFrequencies = cmd.hasOption(COMBINE_FREQUENCIES);
-        mGroupBySequence = cmd.hasOption(GROUP_BY_SEQUENCE);
-        mBlatMatcher = cmd.hasOption(BLAT_RESULTS_FILE) ? new BlatMatcher(cmd.getOptionValue(BLAT_RESULTS_FILE)) : null;
+        mCombineFrequencies = configBuilder.hasFlag(COMBINE_FREQUENCIES);
+        mGroupBySequence = configBuilder.hasFlag(GROUP_BY_SEQUENCE);
+        mBlatMatcher = configBuilder.hasValue(BLAT_RESULTS_FILE) ? new BlatMatcher(configBuilder.getValue(BLAT_RESULTS_FILE)) : null;
 
         mWriter = initialiseWriter();
-        mBlatWriter = cmd.hasOption(WRITE_BLAT_FILE) ? initialiseBlatWriter() : null;
+        mBlatWriter = configBuilder.hasFlag(WRITE_BLAT_FILE) ? initialiseBlatWriter() : null;
         mSequenceId = 0;
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(LINX_DIRECTORY, true, "Path to Linx files");
-        options.addOption(GENE_EXPRESSION_FILE, true, "Gene expression file for cohort");
-        options.addOption(COMBINE_FREQUENCIES, false, "Determine cohort frequencies for slice candidates");
-        options.addOption(GROUP_BY_SEQUENCE, false, "Form consensus soft-clip sequences");
-        options.addOption(WRITE_BLAT_FILE, false, "Write fasta file for BLAT consensue sequence search");
-        options.addOption(LINX_DIR, true, "Linx data directory");
-        options.addOption(SV_VCF_FILE, true, "Structural variant VCF");
-        options.addOption(BLAT_RESULTS_FILE, true, "BLAT results file");
+        configBuilder.addPath(LINX_DIR_CFG, false, LINX_DIR_DESC);
+        configBuilder.addPath(GENE_EXPRESSION_FILE, false, "Gene expression file for cohort");
+        configBuilder.addFlag(COMBINE_FREQUENCIES, "Determine cohort frequencies for slice candidates");
+        configBuilder.addFlag(GROUP_BY_SEQUENCE, "Form consensus soft-clip sequences");
+        configBuilder.addFlag(WRITE_BLAT_FILE, "Write fasta file for BLAT consensue sequence search");
+        configBuilder.addPath(SV_VCF_FILE, false, "Structural variant VCF");
+        configBuilder.addConfigItem(BLAT_RESULTS_FILE, false, "BLAT results file");
     }
 
     public void processSampleFiles()

@@ -2,7 +2,7 @@ package com.hartwig.hmftools.svtools.cohort;
 
 import static java.lang.Math.abs;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class RepeatMaskerData
 {

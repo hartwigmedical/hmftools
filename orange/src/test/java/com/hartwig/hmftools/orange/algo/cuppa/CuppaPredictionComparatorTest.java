@@ -5,14 +5,17 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class CuppaPredictionComparatorTest {
-
+public class CuppaPredictionComparatorTest
+{
     @Test
-    public void canSortCuppaPredictions() {
+    public void canSortCuppaPredictions()
+    {
         CuppaPrediction prediction1 = create("cancer C", 0.4);
         CuppaPrediction prediction2 = create("cancer A", 0.3);
         CuppaPrediction prediction3 = create("cancer B", 0.3);
@@ -26,7 +29,8 @@ public class CuppaPredictionComparatorTest {
     }
 
     @NotNull
-    private static CuppaPrediction create(@NotNull String cancerType, double likelihood) {
+    private static CuppaPrediction create(@NotNull String cancerType, double likelihood)
+    {
         return ImmutableCuppaPrediction.builder().cancerType(cancerType).likelihood(likelihood).build();
     }
 }

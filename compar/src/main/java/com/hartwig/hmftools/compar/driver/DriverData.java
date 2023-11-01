@@ -2,20 +2,19 @@ package com.hartwig.hmftools.compar.driver;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.Category.DRIVER;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.Category.DRIVER;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
-import com.hartwig.hmftools.common.drivercatalog.DriverType;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.MatchLevel;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class DriverData implements ComparableItem
 {
@@ -67,8 +66,14 @@ public class DriverData implements ComparableItem
         if(DriverCatalog.driver() != otherDriver.DriverCatalog.driver())
             return false;
 
-        if(mCheckTranscript && !DriverCatalog.transcript().equals(otherDriver.DriverCatalog.transcript()))
-            return false;
+        if(mCheckTranscript)
+        {
+            if(!DriverCatalog.transcript().equals(otherDriver.DriverCatalog.transcript())
+            && DriverCatalog.isCanonical() != otherDriver.DriverCatalog.isCanonical())
+            {
+                return false;
+            }
+        }
 
         return true;
     }

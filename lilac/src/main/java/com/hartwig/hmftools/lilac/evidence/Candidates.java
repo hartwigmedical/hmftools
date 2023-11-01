@@ -50,7 +50,7 @@ public final class Candidates
         List<HlaAllele> aminoAcidSpecificAllelesCandidates = aminoAcidCandidateAlleles.stream()
                 .map(x -> x.asFourDigit()).collect(Collectors.toList());
 
-        if (aminoAcidSpecificAllelesCandidates.isEmpty())
+        if(aminoAcidSpecificAllelesCandidates.isEmpty())
         {
             LL_LOGGER.warn("  no candidates after amino acid filtering - reverting to common allele gene candidates");
             return commonAllles.stream().filter(x -> x.Gene.equals(context.Gene)).collect(Collectors.toList());
@@ -71,7 +71,7 @@ public final class Candidates
         List<HlaAllele> nucleotideSpecificAllelesCandidates = HlaAllele.dedup
                 (nucleotideSpecificSequences.stream().map(x -> x.Allele.asFourDigit()).collect(Collectors.toList()));
 
-        if (nucleotideSpecificAllelesCandidates.isEmpty())
+        if(nucleotideSpecificAllelesCandidates.isEmpty())
         {
             LL_LOGGER.warn("  0 candidates after exon boundary filtering - reverting to amino acid candidates");
             return aminoAcidCandidateAlleles;

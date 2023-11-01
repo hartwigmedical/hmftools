@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
+import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.DEFAULT_PEPTIDE_LENGTHS;
 import static com.hartwig.hmftools.neo.bind.BindConstants.MIN_PEPTIDE_LENGTH;
 import static com.hartwig.hmftools.neo.bind.BindConstants.REF_PEPTIDE_LENGTH;
@@ -19,12 +20,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class TrainConfig
 {
@@ -62,10 +62,13 @@ public class TrainConfig
 
     public static final String FILE_ID_POS_WEIGHT = "pos_weight";
     public static final String FILE_ID_LIKELIHOOD = "likelihood";
+    public static final String FILE_ID_FLANK_POS_WEIGHT = "flank_pos_weight";
+    public static final String FILE_ID_RECOGNITION = "recognition";
+    public static final String FILE_ID_EXPRESSION_DIST = "expression_dist";
+
     public static final String FILE_ID_RAND_DIST = "rand_dist";
     public static final String FILE_ID_LIKELIHOOD_DIST = "likelihood_rand_dist";
     public static final String FILE_ID_EXP_LIKELIHOOD_DIST = "exp_likelihood_rand_dist";
-    public static final String FILE_ID_FLANK_POS_WEIGHT = "flank_pos_weight";
 
     private static final String APPLY_FLANKS = "apply_flanks";
 
@@ -81,24 +84,24 @@ public class TrainConfig
     public static final String REQUIRED_OUTPUT_ALLELES = "required_output_alleles";
     public static final String REQUIRED_PEPTIDE_LENGTHS = "required_peptide_lengths";
 
-    public TrainConfig(final CommandLine cmd)
+    public TrainConfig(final ConfigBuilder configBuilder)
     {
-        TrainingDataFile = cmd.getOptionValue(TRAINING_DATA_FILE);
-        RecognitionDataFile = cmd.getOptionValue(RECOGNITION_DATA_FILE);
-        ExpressionLikelihoodFile = cmd.getOptionValue(EXP_LIKELIHOOD_FILE);
+        TrainingDataFile = configBuilder.getValue(TRAINING_DATA_FILE);
+        RecognitionDataFile = configBuilder.getValue(RECOGNITION_DATA_FILE);
+        ExpressionLikelihoodFile = configBuilder.getValue(EXP_LIKELIHOOD_FILE);
 
-        OutputDir = parseOutputDir(cmd);
-        OutputId = cmd.getOptionValue(OUTPUT_ID);
+        OutputDir = parseOutputDir(configBuilder);
+        OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        Constants = new CalcConstants(cmd);
+        Constants = new CalcConstants(configBuilder);
 
-        RequiredOutputAlleles = loadRequiredOutputAlleles(cmd.getOptionValue(REQUIRED_OUTPUT_ALLELES));
+        RequiredOutputAlleles = loadRequiredOutputAlleles(configBuilder.getValue(REQUIRED_OUTPUT_ALLELES));
 
         RequiredPeptideLengths = Lists.newArrayList();
 
-        if(cmd.hasOption(REQUIRED_PEPTIDE_LENGTHS))
+        if(configBuilder.hasValue(REQUIRED_PEPTIDE_LENGTHS))
         {
-            String[] pepLenStrings = cmd.getOptionValue(REQUIRED_PEPTIDE_LENGTHS).split(ITEM_DELIM, -1);
+            String[] pepLenStrings = configBuilder.getValue(REQUIRED_PEPTIDE_LENGTHS).split(ITEM_DELIM, -1);
 
             for(String pepLenStr : pepLenStrings)
             {
@@ -120,23 +123,23 @@ public class TrainConfig
             RequiredPeptideLengths.addAll(DEFAULT_PEPTIDE_LENGTHS);
         }
 
-        CalcPairs = cmd.hasOption(WRITE_PAIRS_DATA);
-        ApplyFlanks = cmd.hasOption(APPLY_FLANKS);
-        RunValidation = cmd.hasOption(RUN_VALIDATION);
+        CalcPairs = configBuilder.hasFlag(WRITE_PAIRS_DATA);
+        ApplyFlanks = configBuilder.hasFlag(APPLY_FLANKS);
+        RunValidation = configBuilder.hasFlag(RUN_VALIDATION);
 
-        RandomPeptides = new RandomPeptideConfig(cmd);
+        RandomPeptides = RandomPeptideConfig.forWriting(configBuilder);
 
-        WritePosWeightMatrix = cmd.hasOption(WRITE_PW_MATRIX);
-        WriteBindCounts = cmd.hasOption(WRITE_BIND_COUNTS);
-        WriteFrequencyData = cmd.hasOption(WRITE_FREQ_DATA);
-        WriteLikelihood = cmd.hasOption(WRITE_LIKELIHOOD);
-        WritePanLengthDistribution = cmd.hasOption(WRITE_PAN_LENGTH_DIST);
+        WritePosWeightMatrix = configBuilder.hasFlag(WRITE_PW_MATRIX);
+        WriteBindCounts = configBuilder.hasFlag(WRITE_BIND_COUNTS);
+        WriteFrequencyData = configBuilder.hasFlag(WRITE_FREQ_DATA);
+        WriteLikelihood = configBuilder.hasFlag(WRITE_LIKELIHOOD);
+        WritePanLengthDistribution = configBuilder.hasFlag(WRITE_PAN_LENGTH_DIST);
 
         LogCalcAlleles = Lists.newArrayList();
 
-        if(cmd.hasOption(LOG_CALC_ALLELES))
+        if(configBuilder.hasValue(LOG_CALC_ALLELES))
         {
-            LogCalcAlleles.addAll(Arrays.stream(cmd.getOptionValue(LOG_CALC_ALLELES).split(ITEM_DELIM)).collect(Collectors.toList()));
+            LogCalcAlleles.addAll(Arrays.stream(configBuilder.getValue(LOG_CALC_ALLELES).split(ITEM_DELIM)).collect(Collectors.toList()));
         }
     }
 
@@ -158,8 +161,24 @@ public class TrainConfig
         {
             try
             {
-                requiredAlleles.addAll(Files.readAllLines(Paths.get(filename)).stream()
-                        .filter(x -> !x.equals("Allele")).collect(Collectors.toList()));
+                List<String> lines = Files.readAllLines(Paths.get(filename));
+                String header = lines.get(0);
+                lines.remove(0);
+
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
+                int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
+
+                for(String line : lines)
+                {
+                    if(line.startsWith("#"))
+                        continue;
+
+                    String[] values = line.split(CSV_DELIM, -1);
+                    String allele = values[alleleIndex];
+
+                    // convert from Lilac naming convention if required
+                    requiredAlleles.add(allele);
+                }
 
                 NE_LOGGER.info("loaded {} required output alleles from file({})", requiredAlleles.size(), filename);
             }
@@ -172,29 +191,29 @@ public class TrainConfig
         return requiredAlleles;
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(TRAINING_DATA_FILE, true, "Training data file");
-        options.addOption(RECOGNITION_DATA_FILE, true, "Immunogenic recognition data file");
-        options.addOption(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
-        options.addOption(EXP_LIKELIHOOD_FILE, true, "Expression likelihood file");
+        configBuilder.addPath(TRAINING_DATA_FILE, true, "Training data file");
+        configBuilder.addPath(RECOGNITION_DATA_FILE, false, "Immunogenic recognition data file");
+        configBuilder.addPath(HLA_DEFINITIONS_FILE, true, "HLA allele definitions file");
+        configBuilder.addPath(EXP_LIKELIHOOD_FILE, false, "Expression likelihood file");
 
-        RandomPeptideConfig.addCmdLineArgs(options);
-        CalcConstants.addCmdLineArgs(options);
+        RandomPeptideConfig.addConfigForWriting(configBuilder);
+        CalcConstants.addConfig(configBuilder);
 
-        options.addOption(APPLY_FLANKS, false, "Use flanks for scoring if present");
-        options.addOption(WRITE_PAIRS_DATA, false, "Calculate amino-acid pairs and their coocurrence");
-        options.addOption(WRITE_PW_MATRIX, false, "Write computed amino-acid + position matrix data");
-        options.addOption(WRITE_BIND_COUNTS, false, "Write interim bind counts data");
-        options.addOption(WRITE_FREQ_DATA, false, "Write amino-acid + position frequency data");
-        options.addOption(WRITE_LIKELIHOOD, false, "Write relative likelihood data");
-        options.addOption(WRITE_PAN_LENGTH_DIST, false, "Write pan-peptide length distribution data");
+        configBuilder.addFlag(APPLY_FLANKS, "Use flanks for scoring if present");
+        configBuilder.addFlag(WRITE_PAIRS_DATA, "Calculate amino-acid pairs and their coocurrence");
+        configBuilder.addFlag(WRITE_PW_MATRIX, "Write computed amino-acid + position matrix data");
+        configBuilder.addFlag(WRITE_BIND_COUNTS, "Write interim bind counts data");
+        configBuilder.addFlag(WRITE_FREQ_DATA, "Write amino-acid + position frequency data");
+        configBuilder.addFlag(WRITE_LIKELIHOOD, "Write relative likelihood data");
+        configBuilder.addFlag(WRITE_PAN_LENGTH_DIST, "Write pan-peptide length distribution data");
 
-        options.addOption(REQUIRED_PEPTIDE_LENGTHS, true, "List of peptide-lengths separated by ';'");
-        options.addOption(LOG_CALC_ALLELES, true, "Log verbose calcs for alleles separated by ';'");
+        configBuilder.addConfigItem(REQUIRED_PEPTIDE_LENGTHS, false, "List of peptide-lengths separated by ';'");
+        configBuilder.addConfigItem(LOG_CALC_ALLELES, false, "Log verbose calcs for alleles separated by ';'");
 
-        options.addOption(RUN_VALIDATION, false, "Run validation routines");
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        configBuilder.addFlag(RUN_VALIDATION, "Run validation routines");
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
     }
 }

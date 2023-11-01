@@ -1,6 +1,4 @@
-
 args <- commandArgs(trailing = T)
-
 work_dir <- args[1]
 
 somatics_input_dir <- paste0(work_dir, "/somatics")
@@ -24,7 +22,7 @@ exonic_somatics <- function(somatics, gr_genes) {
 
 data("cancergenes_cgc81", package="dndscv")
 data("covariates_hg19", package="dndscv")
-refdb="/data/resources/custom/dnds/HmfRefCDS.RData"
+refdb="/data/resources/crunch/dnds/HmfRefCDS.RData"
 load(refdb)
 
 summary = read.table(file = mutation_load_input_file, header = T)
@@ -53,7 +51,7 @@ cv = covs[oldgenes,]
 rownames(cv) = newgenes
 kc = newgenes[oldgenes %in% known_cancergenes]
 
-output = dndscv(allSomatics, refdb=refdb, kc=kc, cv=cv, stop_loss_is_nonsense = TRUE)
+output = dndscv(allSomatics, refdb=refdb, kc=kc, cv=cv) # stop_loss_is_nonsense = TRUE no longer exists
 HmfRefCDSCv <- output$sel_cv
 save(HmfRefCDSCv, file = ref_cdscv_output_rdata)
 write.table(HmfRefCDSCv, file = ref_cdscv_output_tsv, quote = F, row.names = F, sep = "\t")

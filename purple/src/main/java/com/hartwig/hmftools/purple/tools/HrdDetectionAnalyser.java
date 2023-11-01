@@ -1,23 +1,34 @@
 package com.hartwig.hmftools.purple.tools;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.THREADS;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.chord.ChordStatus;
@@ -26,12 +37,9 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumberFile;
+import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class HrdDetectionAnalyser
@@ -41,23 +49,20 @@ public class HrdDetectionAnalyser
     private final String mChordDir;
     private final int mThreads;
 
-    private final HrdDetection mHrdDetection;
-
     private final BufferedWriter mWriter;
 
-    private static final String PURPLE_DATA_DIR = "purple_dir";
-    private static final String CHORD_DIR = "chord_dir";
-
-    public HrdDetectionAnalyser(final CommandLine cmd)
+    public HrdDetectionAnalyser(final ConfigBuilder configBuilder)
     {
-        mSampleIds = loadSampleIdsFile(cmd);
-        mPurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIR);
-        mChordDir = cmd.getOptionValue(CHORD_DIR);
-        mThreads = parseThreads(cmd);
+        if(configBuilder.hasValue(SAMPLE))
+            mSampleIds = Lists.newArrayList(configBuilder.getValue(SAMPLE));
+        else
+            mSampleIds = loadSampleIdsFile(configBuilder);
 
-        mHrdDetection = new HrdDetection();
+        mPurpleDataDir = configBuilder.getValue(PURPLE_DIR_CFG);
+        mChordDir = configBuilder.getValue(CHORD_DIR_CFG);
+        mThreads = configBuilder.getInteger(THREADS);
 
-        mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_DIR));
+        mWriter = initialiseWriter(parseOutputDir(configBuilder));
     }
 
     public void run()
@@ -76,83 +81,129 @@ public class HrdDetectionAnalyser
 
         PPL_LOGGER.info("running Purple HRD analysis for {} samples", mSampleIds.size());
 
-        int processed = 0;
+        List<SampleTask> sampleTasks = Lists.newArrayList();
 
-        for(String sampleId : mSampleIds)
+        for(int i = 0; i < min(mSampleIds.size(), mThreads); ++i)
         {
-            processSample(sampleId);
-
-            ++processed;
-
-            if((processed % 100) == 0)
-                PPL_LOGGER.info("processed {} samples", processed);
+            sampleTasks.add(new SampleTask(i));
         }
+
+        // allocate samples to threads
+        int taskIndex = 0;
+        for(String sample : mSampleIds)
+        {
+            if(taskIndex >= sampleTasks.size())
+                taskIndex = 0;
+
+            sampleTasks.get(taskIndex).SampleIds.add(sample);
+
+            ++taskIndex;
+        }
+
+        final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
+        TaskExecutor.executeTasks(callableList, mThreads);
 
         closeBufferedWriter(mWriter);
 
         PPL_LOGGER.info("Purple HRD analysis complete");
     }
 
-    private void processSample(final String sampleId)
+    private class SampleTask implements Callable
     {
-        List<PurpleCopyNumber> copyNumbers = null;
-        PurityContext purityContext = null;
-        ChordData chordData = null;
+        private final int mTaskId;
+        public final List<String> SampleIds;
 
-        try
+        public SampleTask(int taskId)
         {
-            if(mChordDir != null)
+            mTaskId = taskId;
+            SampleIds = Lists.newArrayList();
+        }
+
+        @Override
+        public Long call()
+        {
+            for(int i = 0; i < SampleIds.size(); ++i)
             {
-                String sampleChordDirectory = mChordDir.replaceAll("\\*", sampleId);
-                chordData = ChordDataFile.read(ChordDataFile.generateFilename(sampleChordDirectory, sampleId));
-            }
-            else
-            {
-                chordData = ImmutableChordData.builder()
-                        .BRCA1Value(0)
-                        .BRCA2Value(0)
-                        .hrdType("N/A")
-                        .hrdValue(0)
-                        .hrStatus(ChordStatus.UNKNOWN)
-                        .remarksHrdType("")
-                        .remarksHrStatus("").build();
+                processSample(SampleIds.get(i));
+
+                if((i % 100) == 0)
+                    PPL_LOGGER.info("{}: processed {} samples", mTaskId, i);
+
             }
 
-            String samplePurpleDirectory = mPurpleDataDir.replaceAll("\\*", sampleId);
-            copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDirectory, sampleId));
-            purityContext = PurityContextFile.read(samplePurpleDirectory, sampleId);
+            return (long)0;
         }
-        catch(IOException e)
+
+        private void processSample(final String sampleId)
         {
-            PPL_LOGGER.error("failed to load file data {}", e.toString());
-            return;
+            List<PurpleCopyNumber> copyNumbers = null;
+            PurityContext purityContext = null;
+            ChordData chordData = null;
+
+            try
+            {
+                if(mChordDir != null)
+                {
+                    String sampleChordDirectory =  convertWildcardSamplePath(mChordDir, sampleId);
+                    chordData = ChordDataFile.read(ChordDataFile.generateFilename(sampleChordDirectory, sampleId));
+                }
+                else
+                {
+                    chordData = ImmutableChordData.builder()
+                            .BRCA1Value(0)
+                            .BRCA2Value(0)
+                            .hrdType("N/A")
+                            .hrdValue(0)
+                            .hrStatus(ChordStatus.UNKNOWN)
+                            .remarksHrdType("")
+                            .remarksHrStatus("").build();
+                }
+
+                String samplePurpleDirectory = convertWildcardSamplePath(mPurpleDataDir, sampleId);
+                copyNumbers = PurpleCopyNumberFile.read(PurpleCopyNumberFile.generateFilenameForReading(samplePurpleDirectory, sampleId));
+                purityContext = PurityContextFile.read(samplePurpleDirectory, sampleId);
+            }
+            catch(IOException e)
+            {
+                PPL_LOGGER.error("failed to load file data {}", e.toString());
+                return;
+            }
+
+            if(chordData == null || purityContext == null)
+            {
+                PPL_LOGGER.info("sample({}) invalid purity({}) or chord({}) data",
+                        sampleId, purityContext != null ? "valid" : "missing", chordData != null ? "valid" : "missing");
+                return;
+            }
+
+            PPL_LOGGER.debug(format("sample(%s) ploidy(%.1f) cnRecords(%d) chord(%s %.3f)",
+                    sampleId, purityContext.bestFit().ploidy(), copyNumbers.size(), chordData.hrStatus(), chordData.hrdValue()));
+
+            HrdDetection hrdDetection = new HrdDetection();
+            final HrdData hrdData = hrdDetection.calculateHrdData(copyNumbers, purityContext.bestFit().ploidy());
+
+            writeSampleData(sampleId, chordData, hrdData);
         }
-
-        if(chordData == null || purityContext == null)
-        {
-            PPL_LOGGER.info("sample({}) invalid purity({}) or chord({}) data",
-                    sampleId, purityContext != null ? "valid" : "missing", chordData != null ? "valid" : "missing");
-            return;
-        }
-
-        PPL_LOGGER.debug(format("sample(%s) ploidy(%.1f) cnRecords(%d) chord(%s %.3f)",
-                sampleId, purityContext.bestFit().ploidy(), copyNumbers.size(), chordData.hrStatus(), chordData.hrdValue()));
-
-        final HrdData hrdData = mHrdDetection.calculateHrdData(copyNumbers, purityContext.bestFit().ploidy());
-
-        writeSampleData(sampleId, chordData, hrdData);
     }
 
-    private BufferedWriter initialiseWriter(final String outputDir)
+    private synchronized BufferedWriter initialiseWriter(final String outputDir)
     {
         try
         {
-            String fileName = outputDir + "purple_hrd_analysis.csv";
+            String fileName = outputDir;
+
+            if(mSampleIds.size() == 1)
+                fileName += mSampleIds.get(0) + ".purple.hrd.tsv";
+            else
+                fileName += "cohort_purple_hrd_analysis.tsv";
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("SampleId,HRDStatus,HRD,BRCA1,BRCA2");
-            writer.write(",LohSegments,SegmentBreaks,SegmentImbalances,Score");
+            if(mSampleIds.size() > 1)
+                writer.write("SampleId\t");
+
+            writer.write("HRDStatus\tHRD\tBRCA1\tBRCA2");
+            writer.write("\tLohSegments\tSegmentBreaks\tSegmentImbalances\tScore");
             writer.newLine();
 
             return writer;
@@ -168,10 +219,15 @@ public class HrdDetectionAnalyser
     {
         try
         {
-            mWriter.write(format("%s,%s,%.3f,%.3f,%.3f",
-                    sampleId, chordData.hrStatus(), chordData.hrdValue(), chordData.BRCA1Value(), chordData.BRCA2Value()));
+            if(mSampleIds.size() > 1)
+            {
+                mWriter.write(format("%s\t", sampleId));
+            }
 
-            mWriter.write(format(",%d,%.1f,%d,%.1f",
+            mWriter.write(format("%s\t%.3f\t%.3f\t%.3f",
+                    chordData.hrStatus(), chordData.hrdValue(), chordData.BRCA1Value(), chordData.BRCA2Value()));
+
+            mWriter.write(format("\t%d\t%.1f\t%d\t%.1f",
                     hrdData.LohSegments, hrdData.SegmentBreaks, hrdData.SegmentImbalances, hrdData.score()));
 
             mWriter.newLine();
@@ -182,30 +238,26 @@ public class HrdDetectionAnalyser
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addSampleIdFile(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addSampleIdFile(configBuilder, false);
+        configBuilder.addConfigItem(SAMPLE, false, SAMPLE_DESC);
+        configBuilder.addPath(PURPLE_DIR_CFG, true, PURPLE_DIR_DESC);
+        configBuilder.addPath(CHORD_DIR_CFG, false, CHORD_DIR_DESC);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
+        addThreadOptions(configBuilder);
 
-        options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");
-        addLoggingOptions(options);
-        addOutputOptions(options);
-        addThreadOptions(options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        final CommandLine cmd = createCommandLine(args, options);
+        setLogLevel(configBuilder);
 
-        setLogLevel(cmd);
-
-        HrdDetectionAnalyser hrdDetectionAnalyser = new HrdDetectionAnalyser(cmd);
+        HrdDetectionAnalyser hrdDetectionAnalyser = new HrdDetectionAnalyser(configBuilder);
         hrdDetectionAnalyser.run();
     }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
-
 }

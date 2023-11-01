@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.linx.visualiser.data.VisExons.sortedUpstreamE
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -48,7 +49,10 @@ public class FusedExons
                 .gene(fusion.GeneNameUp)
                 .geneStart(convertedUpGeneRegion.start())
                 .geneEnd(convertedUpGeneRegion.end())
+                .isUpstream(true)
                 .transcript(fusion.TranscriptUp);
+
+        boolean hasUpExons = false;
 
         for(final VisGeneExon exon : upStreamExons)
         {
@@ -63,6 +67,7 @@ public class FusedExons
                         .skipped(exon.ExonRank > fusion.FusedExonUp)
                         .build();
                 result.add(fusedExon);
+                hasUpExons = true;
             }
         }
 
@@ -79,9 +84,11 @@ public class FusedExons
                 .gene(fusion.GeneNameDown)
                 .geneStart(convertedDownGeneRegion.start() + convertedUpGeneRegion.end())
                 .geneEnd(convertedDownGeneRegion.end() + convertedUpGeneRegion.end())
+                .isUpstream(false)
                 .transcript(fusion.TranscriptDown);
 
         boolean intronicToExonicFusion = fusion.RegionTypeUp.equals("Intronic") && fusion.RegionTypeDown.equals("Exonic");
+        boolean hasDownExons = false;
 
         for(int i = 0; i < downStreamExons.size(); i++)
         {
@@ -97,8 +104,12 @@ public class FusedExons
                         .skipped(exon.ExonRank < fusion.FusedExonDown || (i == 0 && intronicToExonicFusion))
                         .build();
                 result.add(fusedExon);
+                hasDownExons = true;
             }
         }
+
+        if(!hasUpExons || !hasDownExons)
+            return Collections.emptyList();
 
         return result;
     }
@@ -135,7 +146,7 @@ public class FusedExons
             builder.transcript(fusion.TranscriptDown);
             builder.strand(fusion.StrandDown);
 
-            if(fusion.StrandUp > 0)
+            if(fusion.StrandDown > 0)
             {
                 builder.start(fusion.PosDown);
                 builder.end(firstExon.ExonEnd);
@@ -184,6 +195,7 @@ public class FusedExons
                 .add("gene")
                 .add("geneStart")
                 .add("geneEnd")
+                .add("isUpstream")
                 .add("chromosome")
                 .add("start")
                 .add("end")
@@ -202,6 +214,7 @@ public class FusedExons
                 .add(exon.gene())
                 .add(String.valueOf(exon.geneStart()))
                 .add(String.valueOf(exon.geneEnd()))
+                .add(String.valueOf(exon.isUpstream()))
                 .add(exon.chromosome())
                 .add(String.valueOf(exon.start()))
                 .add(String.valueOf(exon.end()))

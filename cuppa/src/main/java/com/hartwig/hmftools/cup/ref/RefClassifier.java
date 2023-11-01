@@ -6,5 +6,5 @@ public interface RefClassifier
 {
     CategoryType categoryType();
 
-    void buildRefDataSets();
+    boolean buildRefDataSets();
 }

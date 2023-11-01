@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.ANY;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +61,9 @@ public final class DriverGeneFile
         int germlineVariantIndex = fieldsIndexMap.get("reportGermlineVariant");
         int germlineHotspotIndex = fieldsIndexMap.get("reportGermlineHotspot");
         int germlineDisruptionIndex = fieldsIndexMap.get("reportGermlineDisruption");
+
+        Integer germlineDeletionIndex = fieldsIndexMap.get("reportGermlineDeletion");
+
         int altTransIndex = fieldsIndexMap.get("additionalReportedTranscripts");
         Integer reportPGXIndex = fieldsIndexMap.get("reportPGX");
 
@@ -72,6 +77,20 @@ public final class DriverGeneFile
                     .filter(x -> !x.isEmpty())
                     .collect(Collectors.toList());
 
+            // backwards compatibility prior to pipeline v5.32
+            String reportGermlineDisruptionStr = values[germlineDisruptionIndex];
+            DriverGeneGermlineReporting reportGermlineDisruption;
+
+            if(reportGermlineDisruptionStr.toLowerCase().equals(Boolean.TRUE.toString()))
+                reportGermlineDisruption = ANY;
+            else if(reportGermlineDisruptionStr.toLowerCase().equals(Boolean.FALSE.toString()))
+                reportGermlineDisruption = NONE;
+            else
+                reportGermlineDisruption = DriverGeneGermlineReporting.valueOf(reportGermlineDisruptionStr);
+
+            DriverGeneGermlineReporting reportGermlineDeletion = germlineDeletionIndex != null ?
+                    DriverGeneGermlineReporting.valueOf(values[germlineDeletionIndex]) : reportGermlineDisruption;
+
             builder.gene(values[geneIndex])
                     .reportMissenseAndInframe(Boolean.parseBoolean(values[missenseIndex]))
                     .reportNonsenseAndFrameshift(Boolean.parseBoolean(values[nonsenseIndex]))
@@ -83,7 +102,8 @@ public final class DriverGeneFile
                     .likelihoodType(DriverCategory.valueOf(values[likelihoodTypeIndex]))
                     .reportGermlineVariant(DriverGeneGermlineReporting.valueOf(values[germlineVariantIndex].toUpperCase()))
                     .reportGermlineHotspot(DriverGeneGermlineReporting.valueOf(values[germlineHotspotIndex].toUpperCase()))
-                    .reportGermlineDisruption(Boolean.parseBoolean(values[germlineDisruptionIndex]))
+                    .reportGermlineDisruption(reportGermlineDisruption)
+                    .reportGermlineDeletion(reportGermlineDeletion)
                     .additionalReportedTranscripts(otherReportableTrans)
                     .reportPGX(reportPGXIndex != null ? Boolean.parseBoolean(values[reportPGXIndex]) : false);
 
@@ -117,6 +137,7 @@ public final class DriverGeneFile
                 .add("reportGermlineVariant")
                 .add("reportGermlineHotspot")
                 .add("reportGermlineDisruption")
+                .add("reportGermlineDeletion")
                 .add("additionalReportedTranscripts")
                 .add("reportPGX")
                 .toString();
@@ -137,6 +158,7 @@ public final class DriverGeneFile
                 .add(String.valueOf(gene.reportGermlineVariant()))
                 .add(String.valueOf(gene.reportGermlineHotspot()))
                 .add(String.valueOf(gene.reportGermlineDisruption()))
+                .add(String.valueOf(gene.reportGermlineDeletion()))
                 .add(otherReportableTransStr(gene.additionalReportedTranscripts()))
                 .add(String.valueOf(gene.reportPGX()))
                 .toString();

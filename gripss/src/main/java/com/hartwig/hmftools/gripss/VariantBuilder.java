@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.createSingleBreakend;
-
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.common.variant.filter.AlwaysPassFilter;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HardFilters;
@@ -23,15 +21,16 @@ public class VariantBuilder
     private final HardFilters mHardFilters;
     private final HotspotCache mHotspotCache;
     private final TargetRegions mTargetRegions;
-    private StructuralVariantFactory mSvFactory;
+    private final StructuralVariantFactory mSvFactory;
     private final Set<String> mHotspotCandidateVcfIds;
     private final Set<String> mHardFilteredVcfIds;
 
     private int mHardFilteredCount;
 
-    public VariantBuilder(final FilterConstants filterConstants, final HotspotCache hotspotCache, final TargetRegions targetRegions)
+    public VariantBuilder(
+            final FilterConstants filterConstants, final HotspotCache hotspotCache, final TargetRegions targetRegions, final boolean germlineMode)
     {
-        mHardFilters = filterConstants != null ? new HardFilters(filterConstants) : null;
+        mHardFilters = filterConstants != null ? new HardFilters(filterConstants, germlineMode) : null;
         mHotspotCache = hotspotCache;
         mTargetRegions = targetRegions;
 
@@ -39,6 +38,11 @@ public class VariantBuilder
         mHardFilteredVcfIds = Sets.newHashSet();
         mHotspotCandidateVcfIds = Sets.newHashSet();
         mHardFilteredCount = 0;
+    }
+
+    public void setGenotypeOrdinals(final GenotypeIds genotypeIds)
+    {
+        mSvFactory.setGenotypeOrdinals(genotypeIds.ReferenceOrdinal, genotypeIds.TumorOrdinal);
     }
 
     public int hardFilteredCount() { return mHardFilteredCount; }
@@ -54,6 +58,9 @@ public class VariantBuilder
 
     public SvData checkCreateVariant(final VariantContext variant, final GenotypeIds genotypeIds)
     {
+        if(!HumanChromosome.contains(variant.getContig()))
+            return null;
+
         // each SV breakend can be a) not hard-filtered, b) hard-filtered but a hotspot candidate or c) neither
         // and if it's not a single then these 3 scenarios need to be considered together for the pair of breakends
         // if either are hard-filtered and not hotspot candidates, then drop them both
@@ -79,7 +86,7 @@ public class VariantBuilder
                 return null;
             }
 
-            StructuralVariant sv = createSingleBreakend(variant);
+            StructuralVariant sv = mSvFactory.createSingleBreakend(variant);
             return new SvData(sv, genotypeIds);
         }
 
@@ -164,7 +171,7 @@ public class VariantBuilder
         return new SvData(sv, genotypeIds);
     }
 
-    private final StructuralVariant popLastSv()
+    private StructuralVariant popLastSv()
     {
         if(mSvFactory.results().isEmpty())
             return null;

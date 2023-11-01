@@ -260,22 +260,22 @@ public class SvChain {
             // if ends on a different arm it needs to go through a centromere once and have 2 telomeres
             boolean traversesCentromere = false;
 
-            for (final LinkedPair pair : mLinkedPairs)
+            for(final LinkedPair pair : mLinkedPairs)
             {
-                if (pair.firstBreakend().arm() != pair.secondBreakend().arm())
+                if(pair.firstBreakend().arm() != pair.secondBreakend().arm())
                 {
-                    if (traversesCentromere)
+                    if(traversesCentromere)
                         return false;
 
                     traversesCentromere = true;
                 }
             }
 
-            if (traversesCentromere) // orientations don't matter if exactly one centromere is included
+            if(traversesCentromere) // orientations don't matter if exactly one centromere is included
                 return true;
 
             // must start and end on same arm with consistent breakends
-            if (!mOpenBreakends[SE_START].getChrArm().equals(mOpenBreakends[SE_END].getChrArm()))
+            if(!mOpenBreakends[SE_START].getChrArm().equals(mOpenBreakends[SE_END].getChrArm()))
                 return false;
 
             return mOpenBreakends[SE_START].orientation() != mOpenBreakends[SE_END].orientation();
@@ -354,10 +354,10 @@ public class SvChain {
             if(chainEnd != null && chainStart != null)
             {
                 // skip the special single DUP case
-                if (mLinkedPairs.size() == 1 && chainEnd.getSV() == chainStart.getSV())
+                if(mLinkedPairs.size() == 1 && chainEnd.getSV() == chainStart.getSV())
                     return length;
 
-                if (chainStart.chromosome().equals(chainEnd.chromosome()))
+                if(chainStart.chromosome().equals(chainEnd.chromosome()))
                 {
                     length += abs(chainStart.position() - chainEnd.position());
                 }

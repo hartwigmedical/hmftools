@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.linx;
 
-import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_LINX_SOMATIC;
 import static com.hartwig.hmftools.common.purple.Gender.MALE;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
@@ -13,11 +12,10 @@ import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-
-import javax.sound.midi.SysexMessage;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -119,8 +117,7 @@ public class SampleAnalyser implements Callable
         mDriverGeneAnnotator = mConfig.RunDrivers ?
                 new DriverGeneAnnotator(dbAccess, ensemblDataCache, config, mCnDataLoader, cohortDataWriter, mVisSampleData) : null;
 
-        mFusionAnalyser = new FusionDisruptionAnalyser(
-                config.CmdLineArgs, config, ensemblDataCache, dbAccess, fusionResources, cohortDataWriter, mVisSampleData);
+        mFusionAnalyser = new FusionDisruptionAnalyser(config, ensemblDataCache, fusionResources, cohortDataWriter, mVisSampleData);
 
         mAllVariants = Lists.newArrayList();
 
@@ -188,8 +185,12 @@ public class SampleAnalyser implements Callable
             catch(Exception e)
             {
                 LNX_LOGGER.error("sample({}) processing failed: {}", mSampleIds.get(i), e.toString());
-                e.printStackTrace();
-                System.exit(1);
+
+                if(mConfig.FailOnMissing || mConfig.isSingleSample())
+                {
+                    e.printStackTrace();
+                    System.exit(1);
+                }
             }
 
             if(i > 10 && (i % 10) == 0)
@@ -212,7 +213,7 @@ public class SampleAnalyser implements Callable
         mVisSampleData.setSampleId(sampleId);
 
         final List<StructuralVariantData> svRecords = mConfig.loadSampleDataFromFile() ?
-                loadSampleSvDataFromFile(mConfig, mCurrentSampleId, mConfig.CmdLineArgs) : mDbAccess.readStructuralVariantData(mCurrentSampleId);
+                loadSampleSvDataFromFile(mConfig, mCurrentSampleId) : mDbAccess.readStructuralVariantData(mCurrentSampleId);
 
         final List<SvVarData> svDataList = createSvData(svRecords, mConfig);
 
@@ -314,8 +315,6 @@ public class SampleAnalyser implements Callable
             buildGermlineCopyNumberData();
         }
 
-        mSvAnnotators.KataegisAnnotator.annotateVariants(mCurrentSampleId, mAnalyser.getState().getChrBreakendMap());
-
         mPerfCounters.get(PERF_COUNTER_PREP).stop();
 
         mPerfCounters.get(PERF_COUNTER_CLUSTER).start();
@@ -333,14 +332,6 @@ public class SampleAnalyser implements Callable
 
         mSvAnnotators.PseudoGeneFinder.checkPseudoGeneAnnotations(mAnalyser.getClusters(), mVisSampleData);
 
-        if(mSvAnnotators.IndelAnnotator != null)
-        {
-            mSvAnnotators.IndelAnnotator.loadIndels(mCurrentSampleId);
-
-            if(!mSvAnnotators.IndelAnnotator.exceedsThresholds())
-                mAnalyser.getClusters().forEach(x -> mSvAnnotators.IndelAnnotator.annotateCluster(x));
-        }
-
         mPerfCounters.get(PERF_COUNTER_ANNOTATE).stop();
     }
 
@@ -353,7 +344,7 @@ public class SampleAnalyser implements Callable
 
         mPerfCounters.get(PERF_COUNTER_WRITE).start();
 
-        boolean prepareSampleData = mConfig.isSingleSample() || mConfig.UploadToDB;
+        boolean prepareSampleData = mConfig.isSingleSample();
 
         List<SvCluster> allClusters = mAnalyser.getAllClusters();
 
@@ -412,58 +403,51 @@ public class SampleAnalyser implements Callable
             }
         }
 
-        if(!mConfig.IsGermline && mConfig.UploadToDB && mDbAccess != null)
-        {
-            writeToDatabase(mCurrentSampleId, mDbAccess, linxSvData, clusterData, linksData, driverCatalogs, linxDrivers);
-        }
-
         mPerfCounters.get(PERF_COUNTER_WRITE).stop();
-    }
-
-    private synchronized static void writeToDatabase(
-            final String sampleId, final DatabaseAccess dbAccess,
-            final List<LinxSvAnnotation> linxSvData, final List<LinxCluster> clusterData, final List<LinxLink> linksData,
-            final List<DriverCatalog> driverCatalogs, final List<LinxDriver> linxDrivers)
-    {
-        dbAccess.writeSvLinxData(sampleId, linxSvData);
-        dbAccess.writeSvClusters(sampleId, clusterData);
-        dbAccess.writeSvLinks(sampleId, linksData);
-        dbAccess.writeLinxDriverCatalog(sampleId, driverCatalogs, DRIVERS_LINX_SOMATIC);
-        dbAccess.writeSvDrivers(sampleId, linxDrivers);
     }
 
     public void writeSampleWithNoSVs()
     {
         try
         {
-            LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-            LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+            LinxSvAnnotation.write(LinxSvAnnotation.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+            LinxCluster.write(LinxCluster.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+            LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+            LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
 
-            DriverCatalogFile.write(LinxDriver.generateCatalogFilename(
-                    mConfig.OutputDataPath, mCurrentSampleId, !mConfig.IsGermline), Lists.newArrayList());
+            // write out the Purple drivers again as would usually be done with SVs
+            List<DriverCatalog> purpleDrivers = Lists.newArrayList();
+
+            if(!mConfig.IsGermline) // germline doesn't re-write Purple drivers, and somatic may soon follow suit
+            {
+                String purpleDriverFile = DriverCatalogFile.generateSomaticFilename(mConfig.PurpleDataPath, mCurrentSampleId);
+                purpleDrivers.addAll(DriverCatalogFile.read(purpleDriverFile));
+            }
+
+            DriverCatalogFile.write(LinxDriver.generateCatalogFilename(mConfig.OutputDataPath, mCurrentSampleId, !mConfig.IsGermline), purpleDrivers);
 
             if(mConfig.IsGermline)
             {
-                LinxGermlineSv.write(LinxGermlineSv.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                LinxGermlineSv.write(LinxGermlineSv.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
             }
             else
             {
-                LinxLink.write(LinxLink.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                LinxBreakend.write(LinxBreakend.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                LinxFusion.write(LinxFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
+                LinxDriver.write(LinxDriver.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Collections.EMPTY_LIST);
 
-                VisSvData.write(VisSvData.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisCopyNumber.write(VisCopyNumber.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisSegment.write(VisSegment.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisFusion.write(VisFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
-                VisProteinDomain.write(VisProteinDomain.generateFilename(mConfig.OutputDataPath, mCurrentSampleId), Lists.newArrayList());
+                VisSvData.write(VisSvData.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisCopyNumber.write(VisCopyNumber.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisGeneExon.write(VisGeneExon.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisSegment.write(VisSegment.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisFusion.write(VisFusion.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
+                VisProteinDomain.write(VisProteinDomain.generateFilename(mConfig.OutputDataPath, mCurrentSampleId, mConfig.IsGermline), Collections.EMPTY_LIST);
             }
         }
         catch (IOException e)
         {
             LNX_LOGGER.error("failed to write sample SV data: {}", e.toString());
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -500,7 +484,7 @@ public class SampleAnalyser implements Callable
         CnSegmentBuilder cnSegmentBuilder = new CnSegmentBuilder();
         cnSegmentBuilder.setAllelePloidies(1, 1);
 
-        cnSegmentBuilder.createIndependentCopyNumberData(mCnDataLoader, mAnalyser.getState().getChrBreakendMap());
+        cnSegmentBuilder.createGermlineCopyNumberData(mCnDataLoader, mAnalyser.getState().getChrBreakendMap());
 
         cnSegmentBuilder.setSamplePurity(mCnDataLoader, 1, 2, MALE);
 
@@ -596,7 +580,7 @@ public class SampleAnalyser implements Callable
         {
             List<SvChain> chains = cluster.getChains();
 
-            for (final SvChain chain : chains)
+            for(final SvChain chain : chains)
             {
                 int chainSvCount = chain.getSvCount();
 
@@ -604,7 +588,7 @@ public class SampleAnalyser implements Callable
                 final List<LinkedPair> chainLinks = chain.getLinkedPairs();
                 boolean isDoubleMinute = chain.isDoubleMinute();
 
-                for (int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
+                for(int chainIndex = 0; chainIndex < chainLinks.size(); ++chainIndex)
                 {
                     final LinkedPair pair = chainLinks.get(chainIndex);
 

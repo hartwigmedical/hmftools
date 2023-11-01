@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.panel;
 
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.NONE;
+
 import java.util.List;
 
 import com.hartwig.hmftools.common.drivercatalog.DriverCategory;
@@ -38,7 +40,11 @@ public interface DriverGene extends Comparable<DriverGene>
     @NotNull
     DriverCategory likelihoodType();
 
-    boolean reportGermlineDisruption();
+    @NotNull
+    DriverGeneGermlineReporting reportGermlineDeletion();
+
+    @NotNull
+    DriverGeneGermlineReporting reportGermlineDisruption();
 
     List<String> additionalReportedTranscripts();
 
@@ -57,6 +63,7 @@ public interface DriverGene extends Comparable<DriverGene>
 
     default boolean reportGermline()
     {
-        return reportGermlineVariant() != DriverGeneGermlineReporting.NONE || reportGermlineHotspot() != DriverGeneGermlineReporting.NONE;
+        return reportGermlineVariant() != NONE || reportGermlineHotspot() != NONE || reportGermlineDeletion() != NONE
+                || reportGermlineDisruption() != NONE;
     }
 }

@@ -1,18 +1,22 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
-import static com.hartwig.hmftools.sage.evidence.ReadContextCounter.RC_FULL;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -21,6 +25,11 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 
 public class TestUtils
 {
+    public static final SageConfig TEST_CONFIG = new SageConfig();
+    private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
+    private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
+    public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_BASES);
+
     public static SageVariant createVariant(int position, final String ref, final String alt)
     {
         String readBases = buildReadContextBases(alt);
@@ -43,8 +52,9 @@ public class TestUtils
 
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
-        ReadContextCounter readCounter =  new ReadContextCounter(0, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1);
+        ReadContextCounter readCounter = new ReadContextCounter(
+                0, variant, readContext, VariantTier.LOW_CONFIDENCE, 100, 1,
+                TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         List<ReadContextCounter> tumorCounters = Lists.newArrayList(readCounter);
 
@@ -56,10 +66,18 @@ public class TestUtils
         return new SageVariant(candidate, normalCounters, tumorCounters);
     }
 
+    public static void setBaseQualities(final SAMRecord record, int baseQual)
+    {
+        for(int i = 0; i < record.getBaseQualities().length; ++i)
+        {
+            record.getBaseQualities()[i] = (byte)baseQual;
+        }
+    }
+
     public static void setTumorQuality(final SageVariant variant, int count, int quality)
     {
-        variant.tumorReadCounters().get(0).counts()[RC_FULL] = count;
-        variant.tumorReadCounters().get(0).quality()[RC_FULL] = quality;
+        variant.tumorReadCounters().get(0).readSupportCounts().Full = count;
+        variant.tumorReadCounters().get(0).readSupportQualityCounts().Full = quality;
     }
 
     public static void addLocalPhaseSet(final SageVariant variant, int lps, int readCount)
@@ -107,8 +125,9 @@ public class TestUtils
         IndexedBases indexBases = new IndexedBases(position, index, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
-        return new ReadContextCounter(0, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1);
+        return new ReadContextCounter(
+                0, variant, readContext, VariantTier.LOW_CONFIDENCE,
+                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, null);
     }
 
     public static ReadContext createReadContext(
@@ -147,7 +166,7 @@ public class TestUtils
         record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
 
         // to be correct this should match the cigar element count
-        record.setAttribute("NM", 1);
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);
         record.setFirstOfPairFlag(true);
 
         record.setReadPairedFlag(true);

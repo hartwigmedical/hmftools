@@ -5,7 +5,6 @@ tumor_id=$1 && shift
 sv_vcf=$1 && shift
 output_dir=$1 && shift
 ref_genome_version=$1 && shift
-line_element_file=$1 && shift
 ensembl_dir=$1 && shift
 driver_gene_panel=$1 && shift
 
@@ -13,7 +12,7 @@ if [[ ! -d "${output_dir}" ]]; then
   mkdir ${output_dir}
 fi
 
-svs_tsv=${output_dir}/${tumor_id}.linx.svs.tsv
+svs_tsv=${output_dir}/${tumor_id}.linx.germline.svs.tsv
 
 if [[ -f "${svs_tsv}" ]]; then
   echo "Skipping Linx germline for ${tumor_id}, since SV annotations file ${svs_tsv} exists"
@@ -29,7 +28,6 @@ args="-sample ${tumor_id} \
   -germline \
   -sv_vcf ${sv_vcf} \
   -ref_genome_version ${ref_genome_version} \
-  -line_element_file ${line_element_file} \
   -ensembl_data_dir ${ensembl_dir} \
   -driver_gene_panel ${driver_gene_panel} \
   -output_dir ${output_dir}"

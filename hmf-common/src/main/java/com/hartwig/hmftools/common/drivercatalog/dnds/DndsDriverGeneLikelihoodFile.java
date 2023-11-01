@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.drivercatalog.dnds;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,20 +12,13 @@ import org.jetbrains.annotations.NotNull;
 
 public final class DndsDriverGeneLikelihoodFile
 {
-    private static final String DELIMITER = "\t";
     private static final String HEADER_PREFIX = "gene";
 
-    private DndsDriverGeneLikelihoodFile()
-    {
-    }
-
-    @NotNull
     public static List<DndsDriverGeneLikelihood> fromInputStream(@NotNull final InputStream genomeInputStream)
     {
         return fromLines(new BufferedReader(new InputStreamReader(genomeInputStream)).lines().collect(Collectors.toList()));
     }
 
-    @NotNull
     private static List<DndsDriverGeneLikelihood> fromLines(@NotNull final List<String> lines)
     {
         return lines.stream()
@@ -32,7 +27,6 @@ public final class DndsDriverGeneLikelihoodFile
                 .collect(Collectors.toList());
     }
 
-    @NotNull
     private static DndsDriverImpactLikelihood fromString(int offset, @NotNull final String[] values)
     {
         int current = offset;
@@ -42,10 +36,9 @@ public final class DndsDriverGeneLikelihoodFile
                 .build();
     }
 
-    @NotNull
     private static ModifiableDndsDriverGeneLikelihood fromString(@NotNull final String line)
     {
-        String[] values = line.split(DELIMITER);
+        String[] values = line.split(TSV_DELIM);
         DndsDriverImpactLikelihood missense = fromString(1, values);
 
         return ModifiableDndsDriverGeneLikelihood.create()

@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.analysis;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
@@ -81,7 +81,7 @@ public class SimpleClustering implements CohortFileInterface
         int proximityDistance = mConfig.ProximityDistance;
 
         // walk through each chromosome and breakend list
-        for (final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
@@ -94,17 +94,17 @@ public class SimpleClustering implements CohortFileInterface
                 SvBreakend nextBreakend = null;
                 int nextIndex = currentIndex + 1;
 
-                for (; nextIndex < breakendList.size(); ++nextIndex)
+                for(; nextIndex < breakendList.size(); ++nextIndex)
                 {
                     final SvBreakend nextBe = breakendList.get(nextIndex);
                     nextBreakend = nextBe;
                     break;
                 }
 
-                if (nextBreakend == null)
+                if(nextBreakend == null)
                 {
                     // no more breakends on this chromosome
-                    if (var.getCluster() == null)
+                    if(var.getCluster() == null)
                     {
                         SvCluster cluster = new SvCluster(getNextClusterId());
                         cluster.addVariant(var);
@@ -118,14 +118,14 @@ public class SimpleClustering implements CohortFileInterface
                 SvVarData nextVar = nextBreakend.getSV();
                 SvCluster nextCluster = nextVar.getCluster();
 
-                if (cluster != null && cluster == nextCluster)
+                if(cluster != null && cluster == nextCluster)
                 {
                     // already clustered
                 }
-                else if (abs(nextBreakend.position() - breakend.position()) > proximityDistance)
+                else if(abs(nextBreakend.position() - breakend.position()) > proximityDistance)
                 {
                     // too far between the breakends
-                    if (cluster == null)
+                    if(cluster == null)
                     {
                         cluster = new SvCluster(getNextClusterId());
                         cluster.addVariant(var);
@@ -139,9 +139,9 @@ public class SimpleClustering implements CohortFileInterface
                 else
                 {
                     // 2 breakends are close enough to cluster
-                    if (var == nextVar)
+                    if(var == nextVar)
                     {
-                        if (cluster == null)
+                        if(cluster == null)
                         {
                             cluster = new SvCluster(getNextClusterId());
                             cluster.addVariant(var);
@@ -151,7 +151,7 @@ public class SimpleClustering implements CohortFileInterface
                     else
                     {
                         // one or both SVs could already be a part of clusters, or neither may be
-                        if (cluster == null && nextCluster == null)
+                        if(cluster == null && nextCluster == null)
                         {
                             cluster = new SvCluster(getNextClusterId());
                             cluster.addVariant(var);
@@ -159,7 +159,7 @@ public class SimpleClustering implements CohortFileInterface
                             cluster.addClusterReason(PROXIMITY);
                             clusters.add(cluster);
                         }
-                        else if (cluster != null && nextCluster != null)
+                        else if(cluster != null && nextCluster != null)
                         {
                             // keep one and remove the other
                             cluster.mergeOtherCluster(nextCluster, false);
@@ -168,7 +168,7 @@ public class SimpleClustering implements CohortFileInterface
                         }
                         else
                         {
-                            if (cluster == null)
+                            if(cluster == null)
                             {
                                 nextCluster.addVariant(var);
                                 nextCluster.addClusterReason(PROXIMITY);
@@ -180,10 +180,10 @@ public class SimpleClustering implements CohortFileInterface
                             }
                         }
 
-                        if (!var.hasClusterReason(PROXIMITY))
+                        if(!var.hasClusterReason(PROXIMITY))
                             var.addClusterReason(PROXIMITY, nextVar.id());
 
-                        if (!nextVar.hasClusterReason(PROXIMITY))
+                        if(!nextVar.hasClusterReason(PROXIMITY))
                             nextVar.addClusterReason(PROXIMITY, var.id());
 
                         // checkClusteringClonalDiscrepancy(var, nextVar, PROXIMITY);
@@ -314,13 +314,13 @@ public class SimpleClustering implements CohortFileInterface
 
     private void mergeOnLOHEvents(List<SvCluster> clusters)
     {
-        if (mState.getLohEventList().isEmpty() && mState.getHomLossList().isEmpty())
+        if(mState.getLohEventList().isEmpty() && mState.getHomLossList().isEmpty())
             return;
 
         // first link up breakends joined by an LOH with no multi-SV hom-loss events within
-        for (final LohEvent lohEvent : mState.getLohEventList())
+        for(final LohEvent lohEvent : mState.getLohEventList())
         {
-            if (!lohEvent.matchedBothSVs() || lohEvent.hasIncompleteHomLossEvents())
+            if(!lohEvent.matchedBothSVs() || lohEvent.hasIncompleteHomLossEvents())
                 continue; // cannot be used for clustering
 
             SvBreakend lohBeStart = lohEvent.getBreakend(true);
@@ -330,9 +330,9 @@ public class SimpleClustering implements CohortFileInterface
             SvCluster lohClusterEnd = lohBeEnd.getCluster();
             SvVarData lohSvEnd = lohBeEnd.getSV();
 
-            if (lohClusterStart != lohClusterEnd)
+            if(lohClusterStart != lohClusterEnd)
             {
-                if (lohClusterStart.hasLinkingLineElements() || lohClusterEnd.hasLinkingLineElements())
+                if(lohClusterStart.hasLinkingLineElements() || lohClusterEnd.hasLinkingLineElements())
                     continue;
 
                 if(variantsHaveDifferentJcn(lohBeStart, lohBeEnd))
@@ -351,9 +351,9 @@ public class SimpleClustering implements CohortFileInterface
 
         // search for LOH events which are clustered but which contain hom-loss events which aren't clustered
         // (other than simple DELs) which already will have been handled
-        for (final LohEvent lohEvent : mState.getLohEventList())
+        for(final LohEvent lohEvent : mState.getLohEventList())
         {
-            if (!lohEvent.hasIncompleteHomLossEvents())
+            if(!lohEvent.hasIncompleteHomLossEvents())
                 continue;
 
             // already clustered - search for hom-loss events contained within this LOH that isn't clustered
@@ -367,7 +367,7 @@ public class SimpleClustering implements CohortFileInterface
                         .filter(x -> !x.clustered())
                         .collect(Collectors.toList());
 
-                for (final HomLossEvent homLoss : unclusteredHomLossEvents)
+                for(final HomLossEvent homLoss : unclusteredHomLossEvents)
                 {
                     SvBreakend homLossBeStart = homLoss.getBreakend(true);
                     SvBreakend homLossBeEnd = homLoss.getBreakend(false);
@@ -395,10 +395,10 @@ public class SimpleClustering implements CohortFileInterface
                 continue;
             }
 
-            if (!lohEvent.matchedBothSVs() || lohEvent.clustered())
+            if(!lohEvent.matchedBothSVs() || lohEvent.clustered())
                 continue;
 
-            if (lohEvent.getBreakend(true).getCluster().hasLinkingLineElements()
+            if(lohEvent.getBreakend(true).getCluster().hasLinkingLineElements()
             || lohEvent.getBreakend(false).getCluster().hasLinkingLineElements())
             {
                 continue;
@@ -541,7 +541,7 @@ public class SimpleClustering implements CohortFileInterface
         if(cluster.isResolved() && cluster.getResolvedType().isSimple())
             return;
 
-        for (final SvVarData var : cluster.getSVs())
+        for(final SvVarData var : cluster.getSVs())
         {
             if(var.type() == INV && !var.isCrossArm())
             {
@@ -557,10 +557,10 @@ public class SimpleClustering implements CohortFileInterface
         {
             int syntheticLength = getSyntheticLength(cluster);
 
-            if ((cluster.getResolvedType() == ResolvedType.DEL && syntheticLength >= mState.getDelCutoffLength())
+            if((cluster.getResolvedType() == ResolvedType.DEL && syntheticLength >= mState.getDelCutoffLength())
             || (cluster.getResolvedType() == ResolvedType.DUP && syntheticLength >= mState.getDupCutoffLength()))
             {
-                for (final SvVarData var : cluster.getSVs())
+                for(final SvVarData var : cluster.getSVs())
                 {
                     cluster.registerLongDelDup(var);
                 }
@@ -655,9 +655,9 @@ public class SimpleClustering implements CohortFileInterface
                 int delDupOverlapCount = 0;
                 int closeLinkPairs = 0;
 
-                for (final SvVarData var1 : cluster1Svs)
+                for(final SvVarData var1 : cluster1Svs)
                 {
-                    for (final SvVarData var2 : cluster2Svs)
+                    for(final SvVarData var2 : cluster2Svs)
                     {
                         boolean pairContainsInv = var1.type() == INV || var2.type() == INV;
 
@@ -920,7 +920,7 @@ public class SimpleClustering implements CohortFileInterface
 
             boolean mergedOtherClusters = false;
 
-            for (final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+            for(final Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
             {
                 List<SvBreakend> breakendList = entry.getValue();
 
@@ -1056,7 +1056,7 @@ public class SimpleClustering implements CohortFileInterface
         // has continuous major allele copy number at or above this same threshold
         final List<SvCluster> mergedClusters = Lists.newArrayList();
 
-        for (Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
@@ -1278,11 +1278,11 @@ public class SimpleClustering implements CohortFileInterface
     public boolean validateClustering(final List<SvCluster> clusters)
     {
         // validation that every SV was put into a cluster
-        for (final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
+        for(final Map.Entry<String, List<SvBreakend>> entry : mState.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
-            for (int i = 0; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
                 SvVarData var = breakend.getSV();

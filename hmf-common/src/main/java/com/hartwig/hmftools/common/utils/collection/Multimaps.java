@@ -12,16 +12,15 @@ import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class Multimaps {
-
-    private Multimaps() {
-    }
-
-    @NotNull
-    public static <T extends GenomeRegion> ListMultimap<Chromosome, T> fromRegions(@NotNull final Collection<T> regions) {
+public final class Multimaps
+{
+    public static <T extends GenomeRegion> ListMultimap<Chromosome, T> fromRegions(@NotNull final Collection<T> regions)
+    {
         final ListMultimap<Chromosome, T> result = ArrayListMultimap.create();
-        for (T region : regions) {
-            if (HumanChromosome.contains(region.chromosome())) {
+        for(T region : regions)
+        {
+            if(HumanChromosome.contains(region.chromosome()))
+            {
                 result.put(HumanChromosome.fromString(region.chromosome()), region);
             }
         }
@@ -29,11 +28,13 @@ public final class Multimaps {
         return result;
     }
 
-    @NotNull
-    public static <T extends GenomePosition> ListMultimap<Chromosome, T> fromPositions(@NotNull final Collection<T> regions) {
+    public static <T extends GenomePosition> ListMultimap<Chromosome, T> fromPositions(@NotNull final Collection<T> regions)
+    {
         final ListMultimap<Chromosome, T> result = ArrayListMultimap.create();
-        for (T region : regions) {
-            if (HumanChromosome.contains(region.chromosome())) {
+        for(T region : regions)
+        {
+            if(HumanChromosome.contains(region.chromosome()))
+            {
                 result.put(HumanChromosome.fromString(region.chromosome()), region);
             }
         }
@@ -41,12 +42,15 @@ public final class Multimaps {
         return result;
     }
 
-    @NotNull
-    public static <T,U> ListMultimap<T, U> filterEntries(@NotNull final ListMultimap<T, U> map, @NotNull final Predicate<U> predicate) {
+    public static <T, U> ListMultimap<T, U> filterEntries(final ListMultimap<T, U> map, final Predicate<U> predicate)
+    {
         final ListMultimap<T, U> result = ArrayListMultimap.create();
-        for (T key : map.keySet()) {
-            for (U value : map.get(key)) {
-                if (predicate.test(value)) {
+        for(T key : map.keySet())
+        {
+            for(U value : map.get(key))
+            {
+                if(predicate.test(value))
+                {
                     result.put(key, value);
                 }
             }

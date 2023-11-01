@@ -32,9 +32,6 @@ public class GermlineVariantEnrichment
             @Nullable final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers,
             final Multimap<Chromosome, VariantHotspot> germlineHotspots, final Set<String> somaticReportedGenes)
     {
-        final Set<String> germlineGenes = refData.DriverGenes.driverGenes().stream()
-                .filter(DriverGene::reportGermline).map(DriverGene::gene).collect(Collectors.toSet());
-
         mReportableEnrichment = new GermlineReportedEnrichment(refData.DriverGenes.driverGenes(), somaticReportedGenes);
         mRefGenomeEnrichment = new SomaticRefContextEnrichment(refData.RefGenome, null);
 

@@ -6,23 +6,15 @@ import com.hartwig.hmftools.common.metrics.WGSMetrics;
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile;
 import com.hartwig.hmftools.common.purple.PurityContext;
 
-import org.jetbrains.annotations.NotNull;
-
-public final class CoveragesAnalyzer {
-
-    private CoveragesAnalyzer() {
+public final class CoveragesAnalyzer
+{
+    public static CoveragesAnalysis run(final PurityContext purityContext, final String tumorSampleWGSMetricsFile) throws IOException
+    {
+        return new CoveragesAnalysis(calculateExpectedClonalCoverage(purityContext, tumorSampleWGSMetricsFile));
     }
 
-    @NotNull
-    public static CoveragesAnalysis run(@NotNull PurityContext purityContext,
-            @NotNull String tumorSampleWGSMetricsFile) throws IOException {
-        return ImmutableCoveragesAnalysis.builder()
-                .expectedClonalCoverage(calculateExpectedClonalCoverage(purityContext, tumorSampleWGSMetricsFile))
-                .build();
-    }
-
-    static Double calculateExpectedClonalCoverage(@NotNull PurityContext purityContext,
-            @NotNull String tumorSampleWGSMetricsFile) throws IOException {
+    static Double calculateExpectedClonalCoverage(final PurityContext purityContext, final String tumorSampleWGSMetricsFile) throws IOException
+    {
         double ploidy = purityContext.bestFit().ploidy();
         double purity = purityContext.bestFit().purity();
 

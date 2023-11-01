@@ -13,12 +13,12 @@ import static com.hartwig.hmftools.purple.config.PurpleConstants.BIALLELIC_PROBA
 import java.util.List;
 import java.util.Optional;
 
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelector;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionSelectorFactory;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Multimaps;
-import com.hartwig.hmftools.common.variant.PurpleVcfTags;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
@@ -26,20 +26,16 @@ import com.hartwig.hmftools.purple.region.ObservedRegion;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
 import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.vcf.VCFHeader;
 
 public class SomaticPurityEnrichment
 {
     private final PurityAdjuster mPurityAdjuster;
     private final GenomeRegionSelector<PurpleCopyNumber> mCopyNumberSelector;
     private final GenomeRegionSelector<ObservedRegion> mObservedRegionSelector;
-    private final String mPurpleVersion;
 
-    public SomaticPurityEnrichment(final String purpleVersion, final PurityAdjuster purityAdjuster,
-            final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
+    public SomaticPurityEnrichment(
+            final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers, final List<ObservedRegion> fittedRegions)
     {
-        mPurpleVersion = purpleVersion;
-
         mPurityAdjuster = purityAdjuster;
         mCopyNumberSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(copyNumbers));
         mObservedRegionSelector = GenomeRegionSelectorFactory.createImproved(Multimaps.fromRegions(fittedRegions));
@@ -47,6 +43,9 @@ public class SomaticPurityEnrichment
 
     public void processVariant(final SomaticVariant variant)
     {
+        if(!HumanChromosome.contains(variant.chromosome()))
+            return;
+
         Optional<ObservedRegion> observedRegion = mObservedRegionSelector.select(variant);
         GermlineStatus germlineStatus = GermlineStatus.UNKNOWN;
 
@@ -92,7 +91,7 @@ public class SomaticPurityEnrichment
         or the variant is on both alleles. Therefore, we add an extra check for biallelic:
 
         If minorAlleleCopyNumber > 0.5 then only call as biallelic if:
-            Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN),AlleleReadCount)<0.005
+            Poisson(AlleleReadCount / variantCN * [CN – min(1,minorAlleleCN)],AlleleReadCount)<0.005
         */
         double copyNumber = purpleCopyNumber.averageTumorCopyNumber();
 
@@ -110,10 +109,5 @@ public class SomaticPurityEnrichment
         double poissonProb = 1 - poissonDist.cumulativeProbability(alleleReadCount - 1);
 
         return poissonProb < BIALLELIC_PROBABILITY;
-    }
-
-    public VCFHeader enrichHeader(final VCFHeader template)
-    {
-        return PurpleVcfTags.addSomaticHeader(mPurpleVersion, template);
     }
 }

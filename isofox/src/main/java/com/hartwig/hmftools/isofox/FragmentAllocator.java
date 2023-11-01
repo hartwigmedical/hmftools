@@ -3,9 +3,11 @@ package com.hartwig.hmftools.isofox;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.firstInPair;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MULTI_MAP_QUALITY_THRESHOLD;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.SINGLE_MAP_QUALITY;
@@ -17,6 +19,8 @@ import static com.hartwig.hmftools.isofox.common.FragmentMatchType.DISCORDANT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.ALT;
 import static com.hartwig.hmftools.isofox.common.FragmentType.CHIMERIC;
 import static com.hartwig.hmftools.isofox.common.FragmentType.DUPLICATE;
+import static com.hartwig.hmftools.isofox.common.FragmentType.FORWARD_STRAND;
+import static com.hartwig.hmftools.isofox.common.FragmentType.REVERSE_STRAND;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TOTAL;
 import static com.hartwig.hmftools.isofox.common.FragmentType.TRANS_SUPPORTING;
 import static com.hartwig.hmftools.isofox.common.FragmentType.UNSPLICED;
@@ -50,7 +54,7 @@ import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.samtools.BamSlicer;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.isofox.common.BaseDepth;
 import com.hartwig.hmftools.isofox.common.FragmentMatchType;
 import com.hartwig.hmftools.isofox.common.FragmentTracker;
@@ -61,6 +65,7 @@ import com.hartwig.hmftools.isofox.common.GeneRegionFilters;
 import com.hartwig.hmftools.isofox.common.ReadRecord;
 import com.hartwig.hmftools.isofox.common.RegionMatchType;
 import com.hartwig.hmftools.isofox.common.RegionReadData;
+import com.hartwig.hmftools.isofox.common.TransExonRef;
 import com.hartwig.hmftools.isofox.common.TransMatchType;
 import com.hartwig.hmftools.isofox.expression.CategoryCountsData;
 import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
@@ -220,12 +225,12 @@ public class FragmentAllocator
             mExcludedRegion = mConfig.Filters.ExcludedRegion;
             final ChrBaseRegion preRegion = new ChrBaseRegion(geneRegion.Chromosome, geneRegion.start(), mExcludedRegion.start() - 100);
             final ChrBaseRegion postRegion = new ChrBaseRegion(geneRegion.Chromosome, mExcludedRegion.end() + 100, geneRegion.end());
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(preRegion), this::processSamRecord);
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(postRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, preRegion, this::processSamRecord);
+            mBamSlicer.slice(mSamReader, postRegion, this::processSamRecord);
         }
         else
         {
-            mBamSlicer.slice(mSamReader, Lists.newArrayList(geneRegion), this::processSamRecord);
+            mBamSlicer.slice(mSamReader, geneRegion, this::processSamRecord);
         }
 
         if(mEnrichedGeneFragments > 0)
@@ -286,7 +291,7 @@ public class FragmentAllocator
         if(record.getSupplementaryAlignmentFlag() || record.isSecondaryAlignment())
             return;
 
-        if(!record.getMateUnmappedFlag() && !record.getFirstOfPairFlag())
+        if(!firstInPair(record))
             return;
 
         mCurrentGenes.addCount(TOTAL, 1);
@@ -304,7 +309,6 @@ public class FragmentAllocator
         {
             mNextGeneCountLog += GENE_LOG_COUNT;
             ISF_LOGGER.info("chr({}) genes({}) bamRecordCount({})", mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
-            System.gc(); // attempting to reduce allocation to discarded SAMRecords and ReadRecords
         }
 
         if(reachedGeneReadLimit())
@@ -568,14 +572,23 @@ public class FragmentAllocator
 
             // now set counts for each valid transcript
             boolean isUniqueTrans = validTranscripts.size() == 1;
+            Boolean supportedGeneIsForward = null;
 
             FragmentMatchType comboTransMatchType = FragmentMatchType.SHORT;
 
-            for (int transId : validTranscripts)
+            for(int transId : validTranscripts)
             {
                 int regionCount = (int)validRegions.stream().filter(x -> x.hasTransId(transId)).count();
 
                 FragmentMatchType transMatchType;
+
+                if(supportedGeneIsForward == null)
+                {
+                    supportedGeneIsForward = findGeneStrand(read1, validTranscripts);
+
+                    if(supportedGeneIsForward == null)
+                        supportedGeneIsForward = findGeneStrand(read2, validTranscripts);
+                }
 
                 if(read1.getTranscriptClassification(transId) == SPLICE_JUNCTION || read2.getTranscriptClassification(transId) == SPLICE_JUNCTION)
                 {
@@ -598,14 +611,33 @@ public class FragmentAllocator
                 mCurrentGenes.addTranscriptReadMatch(transId, isUniqueTrans, transMatchType);
 
                 // separately record discordant reads spanning 2+ exons
-                if(!read1.containsSplit() && read2.containsSplit())
+                if(!read1.containsSplit() && !read2.containsSplit())
                 {
-                    final RegionReadData region1 =
-                            read1.getMappedRegions().keySet().stream().filter(x -> x.hasTransId(transId)).findFirst().orElse(null);
-                    final RegionReadData region2 =
-                            read2.getMappedRegions().keySet().stream().filter(x -> x.hasTransId(transId)).findFirst().orElse(null);
+                    boolean hasExonRankMatch = false;
 
-                    if(region1 != region2 && region1.getExonRank(transId) != region2.getExonRank(transId))
+                    for(RegionReadData region1 : read1.getMappedRegions().keySet())
+                    {
+                        TransExonRef transExonRef1 = region1.getTransExonRefs().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+
+                        if(transExonRef1 == null)
+                            continue;
+
+                        for(RegionReadData region2 : read2.getMappedRegions().keySet())
+                        {
+                            TransExonRef transExonRef2 = region2.getTransExonRefs().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+
+                            if(transExonRef2 != null && transExonRef1.ExonRank == transExonRef2.ExonRank)
+                            {
+                                hasExonRankMatch = true;
+                                break;
+                            }
+                        }
+
+                        if(hasExonRankMatch)
+                            break;
+                    }
+
+                    if(!hasExonRankMatch) // region1 != region2 && region1.getExonRank(transId) != region2.getExonRank(transId)
                     {
                         mCurrentGenes.addTranscriptReadMatch(transId, DISCORDANT);
                     }
@@ -616,6 +648,21 @@ public class FragmentAllocator
             }
 
             mExpressionReadTracker.processUnsplicedGenes(comboTransMatchType, overlapGenes, validTranscripts, commonMappings, minMapQuality);
+
+            if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment() && supportedGeneIsForward != null)
+            {
+                // track fragment strandedness
+                boolean firstIsForward = read1.isFirstOfPair() ? !read1.isReadReversed() : !read2.isReadReversed();
+                boolean secondIsForward = !read1.isFirstOfPair() ? !read1.isReadReversed() : !read2.isReadReversed();
+
+                if(firstIsForward != secondIsForward)
+                {
+                    if(firstIsForward == supportedGeneIsForward)
+                        mCurrentGenes.addCount(FORWARD_STRAND, 1);
+                    else
+                        mCurrentGenes.addCount(REVERSE_STRAND, 1);
+                }
+            }
         }
 
         if(!read1.isSecondaryAlignment() && !read2.isSecondaryAlignment())
@@ -631,6 +678,27 @@ public class FragmentAllocator
                 writeReadData(mReadDataWriter, geneReadData, 1, read2, read1, fragmentType, validTranscripts.size());
             }
         }
+    }
+
+    private Boolean findGeneStrand(final ReadRecord read, final List<Integer> transcripts)
+    {
+        for(int transId : transcripts)
+        {
+            for(RegionReadData regionReadData : read.getMappedRegions().keySet())
+            {
+                TransExonRef transExonRef = regionReadData.getTransExonRefs().stream().filter(x -> x.TransId == transId).findFirst().orElse(null);
+                if(transExonRef != null)
+                {
+                    GeneReadData geneData = mCurrentGenes.genes().stream()
+                            .filter(x -> x.GeneData.GeneId.equals(transExonRef.GeneId)).findFirst().orElse(null);
+
+                    if(geneData != null)
+                        return geneData.GeneData.Strand == POS_ORIENT;
+                }
+            }
+        }
+
+        return null;
     }
 
     private int calcFragmentLength(int transId, final ReadRecord read1, final ReadRecord read2)
@@ -721,7 +789,6 @@ public class FragmentAllocator
             mNextGeneCountLog += GENE_LOG_COUNT;
             ISF_LOGGER.info("chr({}) genes({}) enriched bamRecordCount({})",
                     mCurrentGenes.chromosome(), mCurrentGenes.geneNames(), mGeneReadCount);
-            System.gc();
         }
 
         if(reachedGeneReadLimit())

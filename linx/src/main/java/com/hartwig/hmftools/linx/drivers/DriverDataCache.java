@@ -2,7 +2,7 @@ package com.hartwig.hmftools.linx.drivers;
 
 import static com.hartwig.hmftools.common.drivercatalog.DriverCategory.TSG;
 import static com.hartwig.hmftools.common.drivercatalog.DriverType.DRIVERS_PURPLE_SOMATIC;
-import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.DEL;
+import static com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod.DISRUPTION;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.cn.CnDataLoader.isMaleSample;
 import static com.hartwig.hmftools.linx.drivers.GeneCopyNumberRegion.calcGeneCopyNumberRegion;
@@ -16,6 +16,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.drivercatalog.DriverCatalogFile;
 import com.hartwig.hmftools.common.drivercatalog.DriverType;
 import com.hartwig.hmftools.common.drivercatalog.ImmutableDriverCatalog;
+import com.hartwig.hmftools.common.drivercatalog.panel.DriverGene;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
@@ -31,6 +32,7 @@ public class DriverDataCache
 {
     public final EnsemblDataCache GeneTransCache;
     public final CnDataLoader CopyNumberData;
+    private final List<DriverGene> mDriverGenes;
 
     private final DatabaseAccess mDbAccess;
 
@@ -43,10 +45,13 @@ public class DriverDataCache
     private double mSamplePloidy;
     private boolean mIsMale;
 
-    public DriverDataCache(final DatabaseAccess dbAccess, final CnDataLoader cnDataLoader, final EnsemblDataCache mGeneTransCache)
+    public DriverDataCache(
+            final DatabaseAccess dbAccess, final CnDataLoader cnDataLoader, final EnsemblDataCache mGeneTransCache,
+            final List<DriverGene> driverGenes)
     {
         CopyNumberData = cnDataLoader;
         GeneTransCache = mGeneTransCache;
+        mDriverGenes = driverGenes;
 
         mDbAccess = dbAccess;
         mDriverCatalog = Lists.newArrayList();
@@ -119,7 +124,7 @@ public class DriverDataCache
                             .collect(Collectors.toList()));
 
             mGeneCopyNumberData.addAll(
-                    GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilenameForReading(purpleDataPath, mSampleId)));
+                    GeneCopyNumberFile.read(GeneCopyNumberFile.generateFilename(purpleDataPath, mSampleId)));
         }
         catch(IOException e)
         {
@@ -161,15 +166,17 @@ public class DriverDataCache
             gcnData = findGeneCopyNumber(gene.geneName());
         }
 
+        DriverGene driverGene = mDriverGenes.stream().filter(x -> x.gene().equals(gene.geneName())).findFirst().orElse(null);
+
         final DriverCatalog driverRecord = ImmutableDriverCatalog.builder()
                 .driver(driverType)
-                .category(TSG)
+                .category(driverGene != null ? driverGene.likelihoodType() : TSG)
                 .gene(gene.geneName())
                 .transcript(transData.TransName)
                 .isCanonical(transData.IsCanonical)
                 .chromosome(gene.chromosome())
                 .chromosomeBand(gene.GeneData.KaryotypeBand)
-                .likelihoodMethod(DEL)
+                .likelihoodMethod(DISRUPTION)
                 .driverLikelihood(1.0)
                 .missense(0)
                 .nonsense(0)
@@ -185,7 +192,7 @@ public class DriverDataCache
 
         final GeneData geneData = GeneTransCache.getGeneDataByName(gene.geneName());
 
-        if (geneData == null)
+        if(geneData == null)
         {
             LNX_LOGGER.warn("gene({}) no Ensembl gene data found", gene.geneName());
             return null;

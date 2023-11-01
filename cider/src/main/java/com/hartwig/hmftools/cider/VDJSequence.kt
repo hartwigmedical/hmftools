@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.cider
 
+import com.google.common.collect.ImmutableCollection
 import com.hartwig.hmftools.cider.layout.ReadLayout
 import com.hartwig.hmftools.common.codon.Codons
-import org.eclipse.collections.api.collection.ImmutableCollection
 
 interface VJAnchor
 {
@@ -69,7 +69,7 @@ class VDJSequence(
 
     val sequence: String get()
     {
-        return layout.consensusSequence().substring(layoutSliceStart, layoutSliceEnd)
+        return layout.consensusSequenceString().substring(layoutSliceStart, layoutSliceEnd)
     }
 
     val isFullyRearranged: Boolean get()
@@ -144,16 +144,17 @@ class VDJSequence(
         return length - (jAnchor?.anchorBoundary ?: 0)
     }
 
-    val vAnchorSequence: String get()
+    val vAnchorSequence: String? get()
     {
-        return sequence.take(vAnchorBoundary ?: 0)
+        return if (vAnchor == null) null else sequence.take(vAnchorBoundary!!)
     }
 
-    val jAnchorSequence: String get()
+    val jAnchorSequence: String? get()
     {
-        return if (jAnchor == null) String() else sequence.substring(jAnchorBoundary!!)
+        return if (jAnchor == null) null else sequence.substring(jAnchorBoundary!!)
     }
 
+    /*
     val vAnchorAA: String get()
     {
         val vAnchorSeq = vAnchorSequence
@@ -165,7 +166,7 @@ class VDJSequence(
     val jAnchorAA: String get()
     {
         return Codons.aminoAcidFromBases(jAnchorSequence)
-    }
+    }*/
 
     // does not include the C and W
     val cdr3SequenceShort: String get()
@@ -229,7 +230,7 @@ class VDJSequence(
         return Math.floorMod(jAnchorBoundary!! - vAnchorBoundary!!, 3) == 0
     }
 
-    fun getSupportAt(index: Int) : Map.Entry<Char, Int>
+    fun getSupportAt(index: Int) : Map.Entry<Byte, Int>
     {
         return layout.getHighQualSequenceSupportAt(layoutSliceStart + index)
     }

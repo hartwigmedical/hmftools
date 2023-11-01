@@ -4,11 +4,11 @@ import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
@@ -30,13 +30,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +57,7 @@ public class RefGeneExpression implements RefClassifier
 
     private static final String TPM_IN_LOG_FORM = "tpm_as_log";
 
-    public RefGeneExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public RefGeneExpression(final RefDataConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -70,12 +70,12 @@ public class RefGeneExpression implements RefClassifier
         mCancerTypes = Lists.newArrayList();
         mSampleNames = Lists.newArrayList();
 
-        mTpmInLogForm = cmd.hasOption(TPM_IN_LOG_FORM);
+        mTpmInLogForm = configBuilder.hasFlag(TPM_IN_LOG_FORM);
     }
 
-    public static void addCmdLineArgs(@NotNull Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(TPM_IN_LOG_FORM, false, "Expect TPM in log form");
+        configBuilder.addFlag(TPM_IN_LOG_FORM, "Expect TPM in log form");
     }
 
     public CategoryType categoryType() { return GENE_EXP; }
@@ -85,7 +85,8 @@ public class RefGeneExpression implements RefClassifier
         return config.Categories.contains(GENE_EXP) || !config.GeneExpMatrixFile.isEmpty();
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         CUP_LOGGER.debug("loading RNA gene expression data");
 
@@ -102,7 +103,7 @@ public class RefGeneExpression implements RefClassifier
         if(mSampleGeneExpression == null)
         {
             CUP_LOGGER.warn("RNA gene expression data load failed");
-            return;
+            return false;
         }
 
         double[][] sampleData = mSampleGeneExpression.getData();
@@ -197,6 +198,7 @@ public class RefGeneExpression implements RefClassifier
         CUP_LOGGER.debug("writing RNA gene expression cohort data");
 
         writeMatrix(mCancerGeneExpression, mCancerTypes, REF_FILE_GENE_EXP_CANCER);
+        return true;
     }
 
     private void loadRefRnaGeneExpression(final String filename)

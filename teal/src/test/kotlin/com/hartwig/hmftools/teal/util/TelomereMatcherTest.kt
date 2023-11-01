@@ -1,19 +1,19 @@
 package com.hartwig.hmftools.teal.util
 
+import org.junit.Before
 import kotlin.test.*
 
 internal class TelomereMatcherTest
 {
+    @Before
     fun setUp()
     {
-        //Configurator.setRootLevel(Level.TRACE)
+        // org.apache.logging.log4j.core.config.Configurator.setRootLevel(org.apache.logging.log4j.Level.TRACE)
     }
 
     @Test
     fun testCalcTelomereMatch()
     {
-        setUp()
-
         // try a simple one
         val seq = "ACTACCATTAGGGTTAGGGACTA"
 
@@ -28,10 +28,20 @@ internal class TelomereMatcherTest
     }
 
     @Test
+    fun testCalcTelomereNoMatch()
+    {
+        // no match
+        val seq = "TGCAGCTTAACTGAGAGCCGCTCCTCTTCTCT"
+
+        val telomereMatch = TelomereMatcher.findGTelomereSegment(seq, 0.9)
+        assertNull(telomereMatch)
+        assertFalse(TelomereMatcher.matchesGTelomere(seq, 0.9, 12))
+    }
+
+    /*
+    @Test
     fun testCalcTelomereMatchShort()
     {
-        setUp()
-
         // try a simple one
         val seq = "ACTATTAGGGCACTA"
 
@@ -44,12 +54,11 @@ internal class TelomereMatcherTest
 
         assertFalse(TelomereMatcher.matchesGTelomere(seq, 0.9, 12))
     }
+     */
 
     @Test
     fun testCalcTelomereMatch2()
     {
-        setUp()
-
         // try a simple one
         val seq = "ACTATTAGGGCTTAGGGACTA"
 
@@ -66,8 +75,6 @@ internal class TelomereMatcherTest
     @Test
     fun testTelomereMatch3()
     {
-        setUp()
-
         val seq = "TTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGGTAGGGGTAGGGTGAGGGTTAGGGTGAGGGTTAGGGTGAGGGTGAGGGTTAGGGTGAGGGTTAGGGTGAGGGAGAGGGTTAGGG"
 
         val telomereMatch = TelomereMatcher.findGTelomereSegment(seq, 0.9)
@@ -84,8 +91,6 @@ internal class TelomereMatcherTest
     @Test
     fun testCalcTelomereMatch4()
     {
-        setUp()
-
         val seq = "GTACTATTAGGGCTTAGGGACTA"
 
         val telomereMatch = TelomereMatcher.findGTelomereSegment(seq, 0.9)

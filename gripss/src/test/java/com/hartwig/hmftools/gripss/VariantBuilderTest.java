@@ -6,18 +6,17 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_REF_ID;
 import static com.hartwig.hmftools.gripss.GripssTestApp.TEST_SAMPLE_ID;
-import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_1;
-import static com.hartwig.hmftools.gripss.GripssTestUtils.CHR_2;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_A;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.LINE_INSERT_SEQ_T;
-import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSglBreakend;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSvBreakends;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.defaultFilterConstants;
@@ -31,8 +30,9 @@ import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.KnownHotspot;
@@ -53,11 +53,13 @@ public class VariantBuilderTest
 
     public VariantBuilderTest()
     {
-        mHotspotCache = new HotspotCache(null);
-        mTargetRegions = new TargetRegions(null);
-        mBuilder = new VariantBuilder(defaultFilterConstants(), mHotspotCache, mTargetRegions);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        GripssConfig.addConfig(configBuilder);
+        mHotspotCache = new HotspotCache(configBuilder);
+        mTargetRegions = new TargetRegions(configBuilder);
+        mBuilder = new VariantBuilder(defaultFilterConstants(), mHotspotCache, mTargetRegions, false);
         mIdGenerator = new VcfIdGenerator();
-        mGenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID, false);
+        mGenotypeIds = new GenotypeIds(0, 1, TEST_REF_ID, TEST_SAMPLE_ID);
     }
 
     @Test

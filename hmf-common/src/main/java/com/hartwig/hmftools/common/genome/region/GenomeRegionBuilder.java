@@ -2,8 +2,8 @@ package com.hartwig.hmftools.common.genome.region;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface GenomeRegionBuilder<T extends GenomeRegion> {
-
+public interface GenomeRegionBuilder<T extends GenomeRegion>
+{
     @NotNull
     GenomeRegionBuilder<T> chromosome(@NotNull String chromosome);
 

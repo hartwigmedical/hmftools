@@ -1,10 +1,11 @@
 package com.hartwig.hmftools.common.cobalt;
 
-import static com.hartwig.hmftools.common.cobalt.CobaltCommon.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedReader;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createGzipBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -41,13 +42,13 @@ public final class CobaltRatioFile
     @NotNull
     public static String generateFilenameForWriting(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + EXTENSION;
     }
 
     @NotNull
     public static String generateFilenameForReading(final String basePath, final String sample)
     {
-        String filename = basePath + File.separator + sample + EXTENSION;
+        String filename = checkAddDirSeparator(basePath) + sample + EXTENSION;
         if(new File(filename).exists())
         {
             return filename;
@@ -58,7 +59,6 @@ public final class CobaltRatioFile
         return filename;
     }
 
-    @NotNull
     public static ListMultimap<Chromosome,CobaltRatio> read(final String filename) throws IOException
     {
         Map<Chromosome,List<CobaltRatio>> chrRatiosMap = read(filename, null, true);
@@ -74,7 +74,6 @@ public final class CobaltRatioFile
         return result;
     }
 
-    @NotNull
     public static Map<Chromosome,List<CobaltRatio>> readWithGender(final String filename, final Gender gender, boolean hasTumor)
             throws IOException
     {
@@ -97,7 +96,7 @@ public final class CobaltRatioFile
         try(BufferedReader reader = filename.endsWith(".gz") ? createGzipBufferedReader(filename) : createBufferedReader(filename))
         {
             String line = reader.readLine();
-            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, DELIMITER);
+            Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, TSV_DELIM);
 
             int chrIndex = fieldsIndexMap.get(CHROMOSOME);
             int posIndex = fieldsIndexMap.get(POSITION);
@@ -112,21 +111,32 @@ public final class CobaltRatioFile
 
             while((line = reader.readLine()) != null)
             {
-                String[] values = line.split(DELIMITER, -1);
+                String[] values = line.split(TSV_DELIM, -1);
 
                 String chromosome = values[chrIndex];
+
+                int refReadCount = Integer.parseInt(values[refReadCountIndex]);
+
                 double initialRefGCRatio = Double.parseDouble(values[refGcRatioIndex]);
                 double initialRefGCDiploidRatio = Double.parseDouble(values[refGcDiplodRatioIndex]);
+
+                if(refReadCount == -1)
+                {
+                    // revert to a default ref ratio where no information is available (ie in tumor/panel only)
+                    initialRefGCRatio = 1;
+                    initialRefGCDiploidRatio = 1;
+                }
 
                 double refGcRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCRatio);
                 double refGcDiploadRatio = genderAdjustedDiploidRatio(gender, chromosome, initialRefGCDiploidRatio);
                 double tumorGCRatio = hasTumor ? Double.parseDouble(values[tumorGcRatioIndex]) : refGcDiploadRatio;
+                int tumorReadCount = Integer.parseInt(values[tumorReadCountIndex]);
 
                 CobaltRatio ratio = ImmutableCobaltRatio.builder()
                         .chromosome(chromosome)
                         .position(Integer.parseInt(values[posIndex]))
-                        .referenceReadCount(Integer.parseInt(values[refReadCountIndex]))
-                        .tumorReadCount(Integer.parseInt(values[tumorReadCountIndex]))
+                        .referenceReadCount(refReadCount)
+                        .tumorReadCount(tumorReadCount)
                         .tumorGCRatio(tumorGCRatio)
                         .referenceGCRatio(refGcRatio)
                         .referenceGCDiploidRatio(refGcDiploadRatio)
@@ -146,6 +156,26 @@ public final class CobaltRatioFile
         return chrRatiosMap;
     }
 
+    private static double genderAdjustedDiploidRatio(@Nullable final Gender gender, final String contig, double initialRatio)
+    {
+        if(gender == null || !HumanChromosome.contains(contig))
+        {
+            return initialRatio;
+        }
+
+        HumanChromosome chromosome = HumanChromosome.fromString(contig);
+        if(chromosome.equals(HumanChromosome._X))
+        {
+            return gender.equals(Gender.FEMALE) ? 1 : 0.5;
+        }
+
+        if(chromosome.equals(HumanChromosome._Y))
+        {
+            return gender.equals(Gender.FEMALE) ? 0 : 0.5;
+        }
+
+        return initialRatio;
+    }
     public static void write(final String fileName, Collection<CobaltRatio> ratios) throws IOException
     {
         List<CobaltRatio> sorted = new ArrayList<>(ratios);
@@ -169,7 +199,7 @@ public final class CobaltRatioFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(CHROMOSOME)
                 .add(POSITION)
                 .add(REF_READ_COUNT)
@@ -182,7 +212,7 @@ public final class CobaltRatioFile
 
     private static String toString(final CobaltRatio position)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(position.chromosome())
                 .add(String.valueOf(position.position()))
                 .add(String.valueOf(position.referenceReadCount()))
@@ -191,26 +221,5 @@ public final class CobaltRatioFile
                 .add(FORMAT.format(position.tumorGCRatio()))
                 .add(FORMAT.format(position.referenceGCDiploidRatio()))
                 .toString();
-    }
-
-    private static double genderAdjustedDiploidRatio(@Nullable final Gender gender, final String contig, double initialRatio)
-    {
-        if(gender == null || !HumanChromosome.contains(contig))
-        {
-            return initialRatio;
-        }
-
-        HumanChromosome chromosome = HumanChromosome.fromString(contig);
-        if(chromosome.equals(HumanChromosome._X))
-        {
-            return gender.equals(Gender.FEMALE) ? 1 : 0.5;
-        }
-
-        if(chromosome.equals(HumanChromosome._Y))
-        {
-            return gender.equals(Gender.FEMALE) ? 0 : 0.5;
-        }
-
-        return initialRatio;
     }
 }

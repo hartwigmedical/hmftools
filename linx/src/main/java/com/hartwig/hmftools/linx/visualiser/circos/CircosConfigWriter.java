@@ -65,7 +65,7 @@ public class CircosConfigWriter
         int mapGainTracks = Math.max(1, (int) Math.round(Math.ceil(data.maxMinorAllelePloidy() - 1)));
         double purpleTrackSize = purpleSpaceAvailable / (1 + 2 + cnaGainTracks + mapGainTracks);
 
-        if (displayGenes)
+        if(displayGenes)
         {
             exonOuterRadius = 1 - gapSize - config.ExonRankRadius;
             exonInnerRadius = exonOuterRadius - geneRelativeSize / totalRelativeSize * totalSpaceAvailable;
@@ -158,7 +158,6 @@ public class CircosConfigWriter
         return fileName;
     }
 
-    @NotNull
     private String readResource(final String resource) throws IOException
     {
         InputStream in = getClass().getResourceAsStream(resource);
@@ -166,7 +165,6 @@ public class CircosConfigWriter
         return IOUtils.toString(reader);
     }
 
-    @NotNull
     static String cnaAxisPositions(int maxTracks)
     {
         StringJoiner builder = new StringJoiner(",");
@@ -174,12 +172,12 @@ public class CircosConfigWriter
         final double rel = 1d / maxTracks;
         final Function<Integer, String> relString = i -> (Math.round(i * rel * 10000) / 10000D) + "r";
 
-        for (int i = 1; i <= Math.min(7, maxTracks); i++)
+        for(int i = 1; i <= Math.min(7, maxTracks); i++)
         {
             builder.add(relString.apply(i));
         }
 
-        for (int i = 8; i <= maxTracks; i += 10)
+        for(int i = 8; i <= maxTracks; i += 10)
         {
             builder.add(relString.apply(i));
         }

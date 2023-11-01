@@ -2,7 +2,8 @@ package com.hartwig.hmftools.pave;
 
 import static java.lang.Math.abs;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.MICROHOMOLOGY_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_COUNT_FLAG;
@@ -10,7 +11,6 @@ import static com.hartwig.hmftools.common.variant.SageVcfTags.REPEAT_SEQUENCE_FL
 import static com.hartwig.hmftools.common.variant.VariantType.INDEL;
 import static com.hartwig.hmftools.common.variant.VariantType.MNP;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
 
 import java.util.List;
 import java.util.Map;
@@ -20,12 +20,10 @@ import java.util.StringJoiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.CommonVcfTags;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.pave.compare.RefVariantData;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -69,8 +67,6 @@ public class VariantData
 
     // associated data
     private VariantContext mVariantContext;
-    private String mSampleId;
-    private RefVariantData mRefVariantData;
 
     private boolean mReportable;
 
@@ -222,12 +218,6 @@ public class VariantData
     public VariantContext context() { return mVariantContext; }
     public void setContext(final VariantContext context) { mVariantContext = context; }
 
-    public String sampleId() { return mSampleId; }
-    public void setSampleId(final String sampleId) { mSampleId = sampleId; }
-
-    public RefVariantData refData() { return mRefVariantData; }
-    public void setRefData(final RefVariantData refData) { mRefVariantData = refData; }
-
     public boolean reported() { return mReportable; }
     public void markReported() { mReportable = true; }
 
@@ -356,9 +346,9 @@ public class VariantData
             return String.format("pos(%s:%d-%d) variant(%s>%s)", Chromosome, Position, EndPosition, Ref, Alt);
     }
 
-    public static String csvHeader()
+    public static String tsvHeader()
     {
-        StringJoiner sj = new StringJoiner(DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("Chromosome");
         sj.add("Position");
         sj.add("Type");
@@ -368,9 +358,9 @@ public class VariantData
         return sj.toString();
     }
 
-    public String csvData()
+    public String tsvData()
     {
-        StringJoiner sj = new StringJoiner(DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(Chromosome);
         sj.add(String.valueOf(Position));
         sj.add(String.valueOf(type()));
@@ -381,9 +371,9 @@ public class VariantData
         return sj.toString();
     }
 
-    public static String extraDataCsvHeader()
+    public static String extraDataHeader()
     {
-        StringJoiner sj = new StringJoiner(DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("Microhomology");
         sj.add("RepeatSequence");
         sj.add("RepeatCount");
@@ -396,9 +386,9 @@ public class VariantData
         return sj.toString();
     }
 
-    public String extraDataCsv(final String sampleId)
+    public String extraDataTsv(final String sampleId)
     {
-        StringJoiner sj = new StringJoiner(DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(mMicrohomology);
         sj.add(mRepeatSequence);
         sj.add(String.valueOf(mRepeatCount));

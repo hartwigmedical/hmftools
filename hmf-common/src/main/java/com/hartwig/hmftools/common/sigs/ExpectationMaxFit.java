@@ -87,14 +87,14 @@ public final class ExpectationMaxFit
                 double residualChange = lastResiduals - residuals[RESIDUAL_TOTAL];
                 double residualsChangePerc = residualChange / totalCounts;
 
-                if(residualsChangePerc < RESIDUALS_EXIT_PERC)
+                if(residualsChangePerc < minResidualsPerc)
                     break;
             }
             */
 
             lastResiduals = residuals.Total;
 
-            if(residuals.Percent < RESIDUALS_EXIT_PERC)
+            if(residuals.Percent < minResidualsPerc)
                 break;
 
             for(int transId = 0; transId < definitionCount; ++transId)

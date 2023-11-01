@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
@@ -16,7 +17,6 @@ import static com.hartwig.hmftools.common.sv.StructuralVariantType.INF;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM;
 import static com.hartwig.hmftools.linx.LinxOutput.ITEM_DELIM_CHR;
 import static com.hartwig.hmftools.linx.types.SglMapping.convertFromInsertSequenceAlignments;
 
@@ -379,7 +379,7 @@ public class SvVarData
 
         if(mCluster != null)
         {
-            if (mFoldbackBreakends[SE_START] == null && mFoldbackBreakends[SE_END] == null)
+            if(mFoldbackBreakends[SE_START] == null && mFoldbackBreakends[SE_END] == null)
             {
                 mCluster.deregisterFoldback(this);
             }
@@ -487,7 +487,7 @@ public class SvVarData
 
                 for(String assembly : assemblyList)
                 {
-                    if (assembly.contains(ASSEMBLY_TYPE_TI) || assembly.contains(TRANSITIVE_TYPE_TI))
+                    if(assembly.contains(ASSEMBLY_TYPE_TI) || assembly.contains(TRANSITIVE_TYPE_TI))
                         mTIAssemblies.get(se).add(assembly);
                 }
             }
@@ -536,7 +536,7 @@ public class SvVarData
 
         if(mSVData.insertSequenceRepeatClass().equals("Simple_repeat"))
         {
-            if (mSVData.insertSequenceRepeatType().equals("(CCCTAA)n") || mSVData.insertSequenceRepeatType().equals("(TTAGGG)n"))
+            if(mSVData.insertSequenceRepeatType().equals("(CCCTAA)n") || mSVData.insertSequenceRepeatType().equals("(TTAGGG)n"))
                 return true;
         }
 

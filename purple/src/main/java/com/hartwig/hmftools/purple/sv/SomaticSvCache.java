@@ -20,6 +20,8 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.purity.PurityAdjuster;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
 import com.hartwig.hmftools.common.purple.SegmentSupport;
@@ -55,6 +57,7 @@ public class SomaticSvCache
 
     private final String mOutputVcfFilename;
     private final Optional<VCFHeader> mVcfHeader;
+    private final GenotypeIds mGenotypeIds;
     private final VariantContextCollection mVariantCollection;
     private final IndexedFastaSequenceFile mRefGenomeFile;
 
@@ -66,16 +69,19 @@ public class SomaticSvCache
         mOutputVcfFilename = Strings.EMPTY;
         mVariantCollection = new VariantContextCollection(null);
         mRefGenomeFile = null;
+        mGenotypeIds = null;
     }
 
     public SomaticSvCache(
-            final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData)
+            final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData, final PurpleConfig config)
     {
         final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
         mOutputVcfFilename = outputVcf;
         mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
         mVariantCollection = new VariantContextCollection(mVcfHeader.get());
         mRefGenomeFile = referenceData.RefGenome;
+
+        mGenotypeIds = mVcfHeader.isPresent() ? GenotypeIds.fromVcfHeader(mVcfHeader.get(), config.ReferenceId, config.TumorId) : null;
 
         for(VariantContext context : vcfReader)
         {
@@ -187,7 +193,8 @@ public class SomaticSvCache
 
     private VariantContextCollection getEnrichedCollection(final PurityAdjuster purityAdjuster, final List<PurpleCopyNumber> copyNumbers)
     {
-        final StructuralVariantFactory svFactory = new StructuralVariantFactory(x -> true);
+        StructuralVariantFactory svFactory = StructuralVariantFactory.build(x -> true);
+        svFactory.setGenotypeOrdinals(mGenotypeIds.ReferenceOrdinal, mGenotypeIds.TumorOrdinal);
 
         Iterator<VariantContext> variantIter = mVariantCollection.iterator();
 

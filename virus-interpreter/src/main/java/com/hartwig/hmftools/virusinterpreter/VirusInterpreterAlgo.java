@@ -11,38 +11,37 @@ import com.hartwig.hmftools.common.virus.AnnotatedVirus;
 import com.hartwig.hmftools.common.virus.ImmutableAnnotatedVirus;
 import com.hartwig.hmftools.common.virus.VirusBreakend;
 import com.hartwig.hmftools.common.virus.VirusBreakendQCStatus;
+import com.hartwig.hmftools.common.virus.VirusType;
 import com.hartwig.hmftools.virusinterpreter.algo.VirusReportingDbModel;
 import com.hartwig.hmftools.common.virus.VirusLikelihoodType;
 import com.hartwig.hmftools.virusinterpreter.coverages.CoveragesAnalysis;
 import com.hartwig.hmftools.virusinterpreter.taxonomy.TaxonomyDb;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VirusInterpreterAlgo {
-
-    @NotNull
+public class VirusInterpreterAlgo
+{
     private final TaxonomyDb taxonomyDb;
-    @NotNull
     private final VirusReportingDbModel virusReportingDbModel;
-    @NotNull
     private final CoveragesAnalysis coveragesAnalysis;
 
-    public VirusInterpreterAlgo(@NotNull final TaxonomyDb taxonomyDb, @NotNull final VirusReportingDbModel virusReportingDbModel,
-            @NotNull final CoveragesAnalysis coveragesAnalysis) {
+    public VirusInterpreterAlgo(
+            final TaxonomyDb taxonomyDb, final VirusReportingDbModel virusReportingDbModel, final CoveragesAnalysis coveragesAnalysis)
+    {
         this.taxonomyDb = taxonomyDb;
         this.virusReportingDbModel = virusReportingDbModel;
         this.coveragesAnalysis = coveragesAnalysis;
     }
 
-    @NotNull
-    public List<AnnotatedVirus> analyze(@NotNull List<VirusBreakend> virusBreakends, @NotNull PurityContext purityContext) {
+    public List<AnnotatedVirus> analyze(final List<VirusBreakend> virusBreakends, final PurityContext purityContext)
+    {
         List<AnnotatedVirus> annotatedViruses = Lists.newArrayList();
-        for (VirusBreakend virusBreakend : virusBreakends) {
-            String interpretation = virusReportingDbModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
+        for(VirusBreakend virusBreakend : virusBreakends)
+        {
+            VirusType interpretation = virusReportingDbModel.interpretVirusSpecies(virusBreakend.taxidSpecies());
 
             int taxid = virusBreakend.referenceTaxid();
-            boolean reported = report(virusBreakend, coveragesAnalysis.expectedClonalCoverage(), purityContext.qc().status());
+            boolean reported = report(virusBreakend, coveragesAnalysis.ExpectedClonalCoverage, purityContext.qc().status());
             annotatedViruses.add(ImmutableAnnotatedVirus.builder()
                     .taxid(taxid)
                     .name(taxonomyDb.lookupName(taxid))
@@ -52,7 +51,7 @@ public class VirusInterpreterAlgo {
                     .percentageCovered(virusBreakend.coverage())
                     .meanCoverage(virusBreakend.meanDepth())
                     .expectedClonalCoverage(hasAcceptablePurpleQuality(purityContext.qc().status())
-                            ? coveragesAnalysis.expectedClonalCoverage()
+                            ? coveragesAnalysis.ExpectedClonalCoverage
                             : null)
                     .reported(reported)
                     .virusDriverLikelihoodType(virusLikelihoodType(virusBreakend, reported))
@@ -62,30 +61,40 @@ public class VirusInterpreterAlgo {
         return annotatedViruses;
     }
 
-    @NotNull
     @VisibleForTesting
-    VirusLikelihoodType virusLikelihoodType(@NotNull VirusBreakend virusBreakend, Boolean reported) {
-        return reported ? virusReportingDbModel.virusLikelihoodType(virusBreakend.taxidSpecies()) :  VirusLikelihoodType.UNKNOWN;
+    VirusLikelihoodType virusLikelihoodType(VirusBreakend virusBreakend, Boolean reported)
+    {
+        return reported ? virusReportingDbModel.virusLikelihoodType(virusBreakend.taxidSpecies()) : VirusLikelihoodType.UNKNOWN;
     }
 
     @VisibleForTesting
-    boolean report(@NotNull VirusBreakend virusBreakend, double expectedClonalCoverage, @NotNull Set<PurpleQCStatus> purpleQCStatuses) {
+    boolean report(VirusBreakend virusBreakend, double expectedClonalCoverage, final Set<PurpleQCStatus> purpleQCStatuses)
+    {
         boolean reported = false;
-        if (virusReportingDbModel.hasInterpretation(virusBreakend.taxidSpecies())) {
+        if(virusReportingDbModel.hasInterpretation(virusBreakend.taxidSpecies()))
+        {
             Integer minimalCoveragePercentage = determineMinimalCoverageVirus(virusBreakend.integrations(), virusBreakend.taxidSpecies());
             double viralPercentageCovered = virusBreakend.coverage();
             double viralCoverage = virusBreakend.meanDepth();
 
-            if (hasAcceptablePurpleQuality(purpleQCStatuses)) {
-                if (minimalCoveragePercentage != null) {
-                    if (viralPercentageCovered > minimalCoveragePercentage && viralCoverage > expectedClonalCoverage) {
+            if(hasAcceptablePurpleQuality(purpleQCStatuses))
+            {
+                if(minimalCoveragePercentage != null)
+                {
+                    if(viralPercentageCovered > minimalCoveragePercentage && viralCoverage > expectedClonalCoverage)
+                    {
                         reported = true;
                     }
-                } else {
+                }
+                else
+                {
                     reported = true;
                 }
-            } else {
-                if (minimalCoveragePercentage == null) {
+            }
+            else
+            {
+                if(minimalCoveragePercentage == null)
+                {
                     reported = true;
                 }
             }
@@ -97,16 +106,21 @@ public class VirusInterpreterAlgo {
 
     @Nullable
     @VisibleForTesting
-    Integer determineMinimalCoverageVirus(int integrations, int taxidSpecies) {
-        if (integrations >= 1) {
+    Integer determineMinimalCoverageVirus(int integrations, int taxidSpecies)
+    {
+        if(integrations >= 1)
+        {
             return virusReportingDbModel.integratedMinimalCoverage(taxidSpecies);
-        } else {
+        }
+        else
+        {
             return virusReportingDbModel.nonIntegratedMinimalCoverage(taxidSpecies);
         }
     }
 
     @VisibleForTesting
-    static boolean hasAcceptablePurpleQuality(@NotNull Set<PurpleQCStatus> purpleQCStatus) {
+    static boolean hasAcceptablePurpleQuality(final Set<PurpleQCStatus> purpleQCStatus)
+    {
         return !purpleQCStatus.contains(PurpleQCStatus.FAIL_NO_TUMOR) && !purpleQCStatus.contains(PurpleQCStatus.FAIL_CONTAMINATION);
     }
 }

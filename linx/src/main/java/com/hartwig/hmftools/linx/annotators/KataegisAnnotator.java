@@ -3,8 +3,8 @@ package com.hartwig.hmftools.linx.annotators;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 
 import java.io.BufferedReader;
@@ -71,20 +71,20 @@ public class KataegisAnnotator
         SvBreakend closestBreakend = null;
         int shortestDistance = 0;
 
-        for (final SvBreakend breakend : breakendList)
+        for(final SvBreakend breakend : breakendList)
         {
-            if (breakend.position() < katData.PosStart)
+            if(breakend.position() < katData.PosStart)
             {
-                if (breakend.orientation() == 1)
+                if(breakend.orientation() == 1)
                     continue;
 
-                if (katData.PosStart - breakend.position() > PROXIMITY_THRESHOLD)
+                if(katData.PosStart - breakend.position() > PROXIMITY_THRESHOLD)
                     continue;
 
                 closestBreakend = breakend;
                 shortestDistance = katData.PosStart - breakend.position();
             }
-            else if (breakend.position() <= katData.PosEnd)
+            else if(breakend.position() <= katData.PosEnd)
             {
                 continue;
             }
@@ -92,13 +92,13 @@ public class KataegisAnnotator
             {
                 int distance = breakend.position() - katData.PosEnd;
 
-                if (distance > PROXIMITY_THRESHOLD)
+                if(distance > PROXIMITY_THRESHOLD)
                     break;
 
-                if (breakend.orientation() == -1)
+                if(breakend.orientation() == -1)
                     continue;
 
-                if (closestBreakend == null || shortestDistance > distance)
+                if(closestBreakend == null || shortestDistance > distance)
                 {
                     closestBreakend = breakend;
                 }

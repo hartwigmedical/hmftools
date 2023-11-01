@@ -4,18 +4,19 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.common.variant.VariantTier.HOTSPOT;
 import static com.hartwig.hmftools.pave.PaveConfig.PON_FILE;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.PonAnnotation.PON_DELIM;
+import static com.hartwig.hmftools.pave.PaveConstants.APP_NAME;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -23,17 +24,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.pave.PonAnnotation;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.pave.annotation.PonAnnotation;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 import htsjdk.tribble.AbstractFeatureReader;
@@ -62,27 +59,27 @@ public class PonBuilder
     private static final String MIN_SAMPLES = "min_samples";
     private static final String MANUAL_ENTRIES = "manual_entries";
 
-    public PonBuilder(final CommandLine cmd)
+    public PonBuilder(final ConfigBuilder configBuilder)
     {
-        mSampleIds = loadSampleIdsFile(cmd);
-        mVcfPath = cmd.getOptionValue(VCF_PATH);
-        mOutputDir = parseOutputDir(cmd);
+        mSampleIds = loadSampleIdsFile(configBuilder);
+        mVcfPath = configBuilder.getValue(VCF_PATH);
+        mOutputDir = parseOutputDir(configBuilder);
 
-        mQualCutoff = Integer.parseInt(cmd.getOptionValue(QUAL_CUTOFF));
-        mMinSamples = Integer.parseInt(cmd.getOptionValue(MIN_SAMPLES));
+        mQualCutoff = configBuilder.getInteger(QUAL_CUTOFF);
+        mMinSamples = configBuilder.getInteger(MIN_SAMPLES);
 
-        mRefGenomeVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION));
+        mRefGenomeVersion = RefGenomeVersion.from(configBuilder);
 
-        mExistingPon = new PonAnnotation(cmd.getOptionValue(PON_FILE), true);
+        mExistingPon = new PonAnnotation(configBuilder.getValue(PON_FILE), false);
 
         mChrVariantsMap = Maps.newHashMap();
 
         mLastChromosome = "";
         mLastIndex = 0;
 
-        if(cmd.hasOption(MANUAL_ENTRIES))
+        if(configBuilder.hasValue(MANUAL_ENTRIES))
         {
-            String[] entries = cmd.getOptionValue(MANUAL_ENTRIES).split(";", -1);
+            String[] entries = configBuilder.getValue(MANUAL_ENTRIES).split(ITEM_DELIM, -1);
 
             for(String entry : entries)
             {
@@ -178,7 +175,7 @@ public class PonBuilder
 
             BufferedWriter writer = createBufferedWriter(fileName);
 
-            StringJoiner sj = new StringJoiner(PON_DELIM);
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
             sj.add("Chromosome");
             sj.add("Position");
             sj.add("Ref");
@@ -204,7 +201,7 @@ public class PonBuilder
                     if(mExistingPon.hasEntry(variant.Chromosome, variant.Position, variant.Ref, variant.Alt))
                         continue;
 
-                    sj = new StringJoiner(PON_DELIM);
+                    sj = new StringJoiner(TSV_DELIM);
                     sj.add(variant.Chromosome);
                     sj.add(String.valueOf(variant.Position));
                     sj.add(variant.Ref);
@@ -290,34 +287,25 @@ public class PonBuilder
         public String toString() { return format("var(%s:%d %s>%s) samples(%d)", Chromosome, Position, Ref, Alt, SampleCount); }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addSampleIdFile(options);
-        options.addOption(VCF_PATH, true, "VCF path for samples");
-        options.addOption(MIN_SAMPLES, true, "Min samples for variant to be included in PON");
-        options.addOption(QUAL_CUTOFF, true, "Qual cut-off for variant inclusion");
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(MANUAL_ENTRIES, true, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
-        options.addOption(PON_FILE, true, "PON entries");
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        addSampleIdFile(configBuilder, true);
+        configBuilder.addConfigItem(VCF_PATH, true, "VCF path for samples");
+        configBuilder.addInteger(MIN_SAMPLES, "Min samples for variant to be included in PON", 3);
+        configBuilder.addInteger(QUAL_CUTOFF, "Qual cut-off for variant inclusion", 100);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addConfigItem(MANUAL_ENTRIES, false, "Manual PON entries in form Chr:Pos:Ref:Alt separated by ';'");
+        configBuilder.addPath(PON_FILE, false, "PON entries");
 
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        PonBuilder ponBuilder = new PonBuilder(cmd);
+        PonBuilder ponBuilder = new PonBuilder(configBuilder);
         ponBuilder.run();
 
         PV_LOGGER.info("Pave PON building from VCFs complete");
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

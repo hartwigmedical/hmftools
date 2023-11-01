@@ -1,16 +1,12 @@
 package com.hartwig.hmftools.sage.coverage;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.hartwig.hmftools.common.genome.bed.NamedBed;
+import com.google.common.collect.Lists;
 
-import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.math3.distribution.PoissonDistribution;
+import htsjdk.samtools.SAMRecord;
 
 public class GeneCoverage
 {
@@ -19,12 +15,14 @@ public class GeneCoverage
     private final List<ExonCoverage> mExonCoverage;
     private final int mMinPosition;
     private final int mMaxPosition;
+    private final int mMinMapQuality;
 
-    public GeneCoverage(final String geneName, final List<ExonCoverage> exons)
+    public GeneCoverage(final String geneName, final List<ExonCoverage> exons, int minMapQuality)
     {
         mChromosome = exons.get(0).chromosome();
         mGene = geneName;
-        mExonCoverage = exons; // .stream().map(ExonCoverage::new).collect(Collectors.toList());
+        mExonCoverage = exons;
+        mMinMapQuality = minMapQuality;
 
         int tmpMin = exons.get(0).start();
         int tmpMax = exons.get(0).end();
@@ -47,14 +45,23 @@ public class GeneCoverage
     public GeneCoverage clone()
     {
         List<ExonCoverage> exonCoverages = Lists.newArrayList();
-        GeneCoverage coverage = new GeneCoverage(mGene, exonCoverages);
+        GeneCoverage coverage = new GeneCoverage(mGene, exonCoverages, mMinMapQuality);
         mExonCoverage.stream().forEach(x -> exonCoverages.add(new ExonCoverage(x.region(), x.exonRank())));
         return coverage;
     }
 
-    public void processRead(final String chromosome, int readStartPos, int readEndPos)
+    public void processRead(final SAMRecord record)
     {
-        if(!chromosome.equals(mChromosome) || !positionsOverlap(readStartPos, readEndPos, mMinPosition, mMaxPosition))
+        if(record.getMappingQuality() < mMinMapQuality)
+            return;
+
+        if(!record.getContig().equals(mChromosome))
+            return;
+
+        int readStartPos = record.getAlignmentStart();
+        int readEndPos = record.getAlignmentEnd();
+
+        if(!positionsOverlap(readStartPos, readEndPos, mMinPosition, mMaxPosition))
             return;
 
         mExonCoverage.forEach(x -> x.processRead(readStartPos, readEndPos));
@@ -64,5 +71,4 @@ public class GeneCoverage
     {
         return mChromosome;
     }
-
 }

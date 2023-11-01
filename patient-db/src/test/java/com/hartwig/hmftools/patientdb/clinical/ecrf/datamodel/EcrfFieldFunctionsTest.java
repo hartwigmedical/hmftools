@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class EcrfFieldFunctionsTest {
+public class EcrfFieldFunctionsTest
+{
 
     @Test
-    public void canConvertToName() {
+    public void canConvertToName()
+    {
         String studyEventOID = "SE.Study";
         String formOID = "FRM.Form";
         String itemGroupOID = "GRP.ItemGroup";

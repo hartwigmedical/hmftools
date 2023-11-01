@@ -2,17 +2,13 @@ package com.hartwig.hmftools.cup.somatics;
 
 import static java.lang.Math.pow;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.MatrixFile.DEFAULT_MATRIX_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.common.CupCalcs.convertToPercentages;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Matrix;
@@ -28,25 +24,15 @@ public final class SomaticsCommon
     public static final String EXCLUDE_GEN_POS_CHR_X = "exclude_gen_pos_chr_x";
     public static final String EXCLUDE_GEN_POS_CHR_X_DESC = "Exclude chromosome X from genomic position";
 
+    public static final String GEN_POS_MAX_SAMPLE_COUNT_CFG = "gen_pos_max_sample_count";
+    public static final String GEN_POS_MAX_SAMPLE_COUNT_DESC = "Max SNV count per sample for genomic position";
+
+    public static final String GEN_POS_BUCKET_SIZE_CFG = "gen_pos_bucket_size";
+    public static final String GEN_POS_BUCKET_SIZE_DESC = "Genomic position bucket size (default: 500K)";
+
     public static final String INTEGER_FORMAT = "%.0f";
     public static final String DEC_1_FORMAT = "%.1f";
     public static final String DEC_3_FORMAT = "%.3f";
-
-    public static void applyMaxCssAdjustment(double maxCssScore, final Map<String,Double> cancerCssTotals, double adjustFactor)
-    {
-        if(adjustFactor == 0)
-            return;
-
-        double adjustedFactor = pow(maxCssScore, adjustFactor);
-
-        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
-        {
-            double adjCancerScore = pow(entry.getValue(), adjustedFactor);
-            cancerCssTotals.put(entry.getKey(), adjCancerScore);
-        }
-
-        convertToPercentages(cancerCssTotals);
-    }
 
     public static Matrix loadMultipleMatrixFiles(
             final List<String> filenames, final List<String> refSampleIds, final Map<String,Integer> sampleCountsIndex, final String type)

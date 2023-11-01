@@ -1,20 +1,22 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber.DELIMITER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getBoolValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getDoubleValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getValue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.linx.visualiser.circos.SegmentTerminal;
-
-import org.jetbrains.annotations.NotNull;
 
 public class VisSegment implements GenomeRegion
 {
@@ -92,26 +94,24 @@ public class VisSegment implements GenomeRegion
     }
 
     private static final String FILE_EXTENSION = ".linx.vis_segments.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_segments.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
     }
 
-    @NotNull
     public static List<VisSegment> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisSegment> svDataList) throws IOException
+    public static void write(final String filename, List<VisSegment> svDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(svDataList));
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final List<VisSegment> segments)
+    private static List<String> toLines(final List<VisSegment> segments)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -119,16 +119,36 @@ public class VisSegment implements GenomeRegion
         return lines;
     }
 
-    @NotNull
-    static List<VisSegment> fromLines(@NotNull List<String> lines)
+    private static List<VisSegment> fromLines(final List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisSegment::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        lines.remove(0);
+
+        List<VisSegment> data = Lists.newArrayList();
+
+        for(String line : lines)
+        {
+            String[] values = line.split(TSV_DELIM);
+
+            data.add(new VisSegment(
+                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getIntValue(fieldsIndexMap, "ClusterId", 0, values),
+                    getIntValue(fieldsIndexMap, "ChainId", 0, values),
+                    getValue(fieldsIndexMap, "Chromosome", "", values),
+                    getValue(fieldsIndexMap, "PosStart", "", values),
+                    getValue(fieldsIndexMap, "PosEnd", "", values),
+                    getDoubleValue(fieldsIndexMap, "LinkPloidy", 0, values),
+                    getBoolValue(fieldsIndexMap, "InDoubleMinute", false, values)));
+
+        }
+
+        return data;
     }
 
-    @NotNull
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("SampleId")
                 .add("ClusterId")
                 .add("ChainId")
@@ -140,10 +160,9 @@ public class VisSegment implements GenomeRegion
                 .toString();
     }
 
-    @NotNull
-    public static String toString(@NotNull final VisSegment segment)
+    public static String toString(final VisSegment segment)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(segment.SampleId))
                 .add(String.valueOf(segment.ClusterId))
                 .add(String.valueOf(segment.ChainId))
@@ -154,23 +173,4 @@ public class VisSegment implements GenomeRegion
                 .add(String.valueOf(segment.InDoubleMinute))
                 .toString();
     }
-
-    @NotNull
-    private static VisSegment fromString(@NotNull final String segment)
-    {
-        String[] values = segment.split(DELIMITER);
-
-        int index = 0;
-
-        return new VisSegment(
-                values[index++],
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                values[index++],
-                values[index++],
-                values[index++],
-                Double.parseDouble(values[index++]),
-                index < values.length ? Boolean.parseBoolean(values[index++]) : false);
-    }
-
 }

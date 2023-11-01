@@ -1,17 +1,21 @@
 package com.hartwig.hmftools.purple.purity;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.Doubles.lessOrEqual;
 import static com.hartwig.hmftools.common.utils.Doubles.positiveOrZero;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
@@ -21,64 +25,65 @@ import com.hartwig.hmftools.common.purple.FittedPurity;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.purple.ImmutableFittedPurity;
 import com.hartwig.hmftools.purple.config.FittingConfig;
-import com.hartwig.hmftools.purple.region.FittedRegionFactory;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.collection.Downsample;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
-import org.jetbrains.annotations.NotNull;
-
 public class FittedPurityFactory
 {
-    private final double mMinPurity;
-    private final double mMaxPurity;
-    private final double mPurityIncrements;
+    private final PurpleConfig mConfig;
     private final double mSomaticPenaltyWeight;
-    private final CobaltChromosomes mCobaltChromosomes;
+    private final Map<String,Double> mObservedRatioMap;
 
     private final int mTotalBAFCount;
     private final double mAverageFittingRatio;
 
-    @NotNull
-    private final FittedRegionFactory mFittedRegionFactory;
+    private final RegionFitCalculator mRegionFitCalculator;
     private final ExecutorService mExecutorService;
-    private final List<SomaticVariant> mVariants;
 
-    private final List<FittedPurity> mAll = Lists.newArrayList();
-    private final List<ObservedRegion> mFilteredRegions = Lists.newArrayList();
+    private final List<FittedPurity> mFittedPurities;
+    private final List<ObservedRegionData> mFilteredObservedRegions;
     private final List<Double> mPloidyRange;
 
     private static final int MAX_SOMATICS_TO_FIT = 1000;
     private static final double MAX_TUMOR_RATIO_TO_FIT = 3;
 
     public FittedPurityFactory(
-            final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes, final double minPurity,
-            final double maxPurity, final double purityIncrements, final double minPloidy, final double maxPloidy,
-            final double somaticPenaltyWeight, final boolean tumorOnlyMode, final FittedRegionFactory fittedRegionFactory,
-            final Collection<ObservedRegion> observedRegions, final List<SomaticVariant> variants)
-            throws ExecutionException, InterruptedException
+            final PurpleConfig config, final ExecutorService executorService, final CobaltChromosomes cobaltChromosomes,
+            final RegionFitCalculator regionFitCalculator, final Collection<ObservedRegion> observedRegions, final List<SomaticVariant> variants)
     {
+        mConfig = config;
         mExecutorService = executorService;
-        mMinPurity = minPurity;
-        mMaxPurity = maxPurity;
-        mPurityIncrements = purityIncrements;
-        mSomaticPenaltyWeight = somaticPenaltyWeight;
-        mFittedRegionFactory = fittedRegionFactory;
-        mCobaltChromosomes = cobaltChromosomes;
-        mPloidyRange = ploidyRange(minPloidy, maxPloidy);
+
+        mSomaticPenaltyWeight = config.SomaticFitting.SomaticPenaltyWeight;
+
+        mRegionFitCalculator = regionFitCalculator;
+        mObservedRatioMap = cobaltChromosomes.chromosomes().stream()
+                .collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::actualRatio));
+
+        mPloidyRange = ploidyRange(mConfig.Fitting.MinPloidy, mConfig.Fitting.MaxPloidy);
+
+        mFittedPurities = Lists.newArrayList();
+        mFilteredObservedRegions = Lists.newArrayList();
 
         final List<SomaticVariant> filteredVariants = Lists.newArrayList();
         final GenomePositionSelector<SomaticVariant> variantSelector = GenomePositionSelectorFactory.create(variants);
 
+        boolean tumorOnlyMode = mConfig.tumorOnlyMode();
         int accumulatedBafCount = 0;
         double accumulatedWeightedRatio = 0;
+
         for(final ObservedRegion region : observedRegions)
         {
             if(useRegionToFitPurity(tumorOnlyMode, cobaltChromosomes, region))
             {
-                mFilteredRegions.add(region);
                 variantSelector.select(region, filteredVariants::add);
+
+                ObservedRegionData observedRegion = new ObservedRegionData(region);
+                mFilteredObservedRegions.add(observedRegion);
+
                 accumulatedBafCount += region.bafCount();
                 accumulatedWeightedRatio += region.bafCount() * region.observedTumorRatio();
             }
@@ -86,26 +91,131 @@ public class FittedPurityFactory
 
         mTotalBAFCount = accumulatedBafCount;
         mAverageFittingRatio = accumulatedWeightedRatio / accumulatedBafCount;
-        mVariants = Downsample.downsample(MAX_SOMATICS_TO_FIT, filteredVariants);
 
-        fitPurity();
+        List<SomaticVariant> downsampleVariants = Downsample.downsample(MAX_SOMATICS_TO_FIT, filteredVariants);
+
+        // assign down-sampled variants to the filtered regions
+        final GenomePositionSelector<SomaticVariant> filteredVariantSelector = GenomePositionSelectorFactory.create(downsampleVariants);
+
+        for(ObservedRegionData regionData : mFilteredObservedRegions)
+        {
+            filteredVariantSelector.select(regionData.Region, regionData::addVariant);
+        }
     }
 
-    public static FittedRegionFactory createFittedRegionFactory(
+    public List<FittedPurity> getFittedPurities() { return mFittedPurities; }
+
+    public void fitPurity() throws ExecutionException, InterruptedException
+    {
+        FittingConfig config = mConfig.Fitting;
+
+        if(mConfig.Threads <= 1)
+        {
+            for(double purity = config.MinPurity; lessOrEqual(purity, config.MaxPurity); purity += config.PurityIncrement)
+            {
+                mFittedPurities.addAll(fitPurity(purity));
+            }
+        }
+        else
+        {
+            final List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
+            for(double purity = config.MinPurity; lessOrEqual(purity, config.MaxPurity); purity += config.PurityIncrement)
+            {
+                futures.add(mExecutorService.submit(callableFitPurity(purity)));
+            }
+
+            for(Future<List<FittedPurity>> future : futures)
+            {
+                List<FittedPurity> fittedPurities = future.get();
+
+                if(!fittedPurities.isEmpty())
+                {
+                    mFittedPurities.addAll(fittedPurities);
+                }
+            }
+        }
+
+        Collections.sort(mFittedPurities);
+    }
+
+    private Callable<List<FittedPurity>> callableFitPurity(final double purity)
+    {
+        return () -> fitPurity(purity);
+    }
+
+    private List<FittedPurity> fitPurity(final double purity)
+    {
+        final List<FittedPurity> fittedPurities = Lists.newArrayList();
+        for(Double ploidy : mPloidyRange)
+        {
+            double impliedNormFactor = PurityAdjuster.impliedNormFactor(mAverageFittingRatio, purity, ploidy);
+            fittedPurities.add(fitPurity(purity, impliedNormFactor));
+        }
+
+        return fittedPurities;
+    }
+
+    private FittedPurity fitPurity(final double purity, final double normFactor)
+    {
+        ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
+        double eventPenalty = 0;
+        double deviationPenalty = 0;
+        double diploidProportion = 0;
+        double averagePloidy = 0;
+
+        double somaticPenaltyTotal = 0;
+        int somaticVariantCount = 0;
+        final SomaticDeviation somaticDeviation = SomaticDeviation.INSTANCE;
+        PurityAdjuster purityAdjuster = new PurityAdjuster(mObservedRatioMap, purity, normFactor);
+
+        for(ObservedRegionData regionData : mFilteredObservedRegions)
+        {
+            ObservedRegion region = regionData.Region;
+            RegionFitCalcs regionFitCalcs = mRegionFitCalculator.calculateRegionFit(purity, normFactor, region);
+
+            int bafCount = region.bafCount();
+            eventPenalty += weightWithBaf(regionFitCalcs.EventPenalty, bafCount);
+            deviationPenalty += weightWithBaf(regionFitCalcs.DeviationPenalty, bafCount);
+            averagePloidy += weightWithBaf(regionFitCalcs.TumorCopyNumber, bafCount);
+
+            if(regionFitCalcs.isDiploid())
+            {
+                diploidProportion += weightWithBaf(1, bafCount);
+            }
+
+            for(SomaticVariant variant : regionData.Variants)
+            {
+                ++somaticVariantCount;
+
+                double variantPenalty = somaticDeviation.deviationFromMax(
+                        purityAdjuster, region.chromosome(), regionFitCalcs.majorAlleleCopyNumber(), regionFitCalcs.TumorCopyNumber, variant);
+
+                somaticPenaltyTotal += mSomaticPenaltyWeight * variantPenalty;
+            }
+
+            /*
+            PPL_LOGGER.trace(format("region(%s:%d-%d) fit(purity=%.2f norm=%.4f) somaticPenTotal(%.4f) devPen(%.4f) eventPen(%.4f) avgPloidy(%.4f)",
+                    region.chromosome(), region.start(), region.end(),
+                    purity, normFactor, somaticPenaltyTotal, deviationPenalty, eventPenalty, averagePloidy));
+            */
+        }
+
+        double somaticPenalty = mSomaticPenaltyWeight > 0 && somaticVariantCount > 0 ? somaticPenaltyTotal / somaticVariantCount : 0;
+
+        return builder.score(eventPenalty * deviationPenalty + somaticPenalty)
+                .diploidProportion(diploidProportion)
+                .ploidy(averagePloidy)
+                .somaticPenalty(somaticPenalty)
+                .build();
+    }
+
+    public static RegionFitCalculator createFittedRegionFactory(
             final int averageTumorDepth, final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig)
     {
-        return new FittedRegionFactory(cobaltChromosomes,
-                averageTumorDepth,
-                fitScoreConfig.PloidyPenaltyFactor,
-                fitScoreConfig.PloidyPenaltyStandardDeviation,
-                fitScoreConfig.PloidyPenaltyMinStandardDeviationPerPloidy,
-                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneMultiplier,
-                fitScoreConfig.PloidyPenaltyMajorAlleleSubOneAdditional,
-                fitScoreConfig.PloidyPenaltyBaselineDeviation);
+        return new RegionFitCalculator(cobaltChromosomes, fitScoreConfig, averageTumorDepth);
     }
 
-    @VisibleForTesting
-    static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes, final ObservedRegion region)
+    private static boolean useRegionToFitPurity(boolean tumorOnlyMode, final CobaltChromosomes cobaltChromosomes, final ObservedRegion region)
     {
         if(region.bafCount() <= 0)
             return false;
@@ -119,7 +229,7 @@ public class FittedPurityFactory
         if(Doubles.greaterThan(region.observedTumorRatio(), MAX_TUMOR_RATIO_TO_FIT))
             return false;
 
-        if(!cobaltChromosomes.contains(region.chromosome()))
+        if(!cobaltChromosomes.hasChromosome(region.chromosome()))
             return false;
 
         CobaltChromosome chromosome = cobaltChromosomes.get(region.chromosome());
@@ -129,90 +239,9 @@ public class FittedPurityFactory
         return chromosome.isNormal() && chromosome.isDiploid();
     }
 
-    public List<FittedPurity> all()
-    {
-        return mAll;
-    }
-
-    private void fitPurity() throws ExecutionException, InterruptedException
-    {
-        final List<Future<List<FittedPurity>>> futures = Lists.newArrayList();
-        for(double purity = mMinPurity; lessOrEqual(purity, mMaxPurity); purity += mPurityIncrements)
-        {
-            futures.add(mExecutorService.submit(callableFitPurity(purity)));
-        }
-
-        for(Future<List<FittedPurity>> future : futures)
-        {
-            List<FittedPurity> fittedPurities = future.get();
-
-            if(!fittedPurities.isEmpty())
-            {
-                mAll.addAll(fittedPurities);
-            }
-        }
-
-        Collections.sort(mAll);
-    }
-
-    @NotNull
-    private Callable<List<FittedPurity>> callableFitPurity(final double purity)
-    {
-        return () -> fitPurity(purity);
-    }
-
-    @NotNull
-    private List<FittedPurity> fitPurity(final double purity)
-    {
-        final List<FittedPurity> fittedPurities = Lists.newArrayList();
-        for(Double ploidy : mPloidyRange)
-        {
-            double impliedNormFactor = PurityAdjuster.impliedNormFactor(mAverageFittingRatio, purity, ploidy);
-            fittedPurities.add(fitPurity(purity, impliedNormFactor));
-        }
-
-        Collections.sort(fittedPurities);
-        return fittedPurities;
-    }
-
     private double weightWithBaf(double value, int bafCount)
     {
         return 1d * value * bafCount / mTotalBAFCount;
-    }
-
-    private FittedPurity fitPurity(final double purity, final double normFactor)
-    {
-        ImmutableFittedPurity.Builder builder = ImmutableFittedPurity.builder().purity(purity).normFactor(normFactor);
-        double eventPenalty = 0;
-        double deviationPenalty = 0;
-        double diploidProportion = 0;
-        double averagePloidy = 0;
-
-        final List<ObservedRegion> fittedRegions = Lists.newArrayList();
-        for(final ObservedRegion enrichedRegion : mFilteredRegions)
-        {
-            final ObservedRegion fittedRegion = mFittedRegionFactory.fitRegion(purity, normFactor, enrichedRegion);
-            eventPenalty += weightWithBaf(fittedRegion.eventPenalty(), enrichedRegion.bafCount());
-            deviationPenalty += weightWithBaf(fittedRegion.deviationPenalty(), enrichedRegion.bafCount());
-            averagePloidy += weightWithBaf(fittedRegion.tumorCopyNumber(), enrichedRegion.bafCount());
-            if(fittedRegion.isDiploid())
-            {
-                diploidProportion += weightWithBaf(1, enrichedRegion.bafCount());
-            }
-
-            fittedRegions.add(fittedRegion);
-        }
-
-        final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
-
-        final double somaticPenalty = Doubles.greaterThan(mSomaticPenaltyWeight, 0) ?
-                mSomaticPenaltyWeight * SomaticPenaltyFactory.calcPenalty(purityAdjuster, fittedRegions, mVariants) : 0;
-
-        return builder.score(eventPenalty * deviationPenalty + somaticPenalty)
-                .diploidProportion(diploidProportion)
-                .ploidy(averagePloidy)
-                .somaticPenalty(somaticPenalty)
-                .build();
     }
 
     protected static List<Double> ploidyRange(double minPloidy, double maxPloidy)

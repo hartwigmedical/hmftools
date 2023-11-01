@@ -135,12 +135,14 @@ public final class LimsFactory {
             String barcode = jsonSample.getKey();
             JsonObject jsonSampleObject = jsonSample.getValue().getAsJsonObject();
             String analysisType = jsonSampleObject.get("analysis_type").getAsString();
+            String dataSource = jsonSampleObject.get("data_source").getAsString();
             String label = jsonSampleObject.get("label").getAsString();
 
             // DEV-252 - Filter on somatic to get rid of RNA samples
             // Also, we are not interested in research-labeled samples.
             if (analysisType != null && (analysisType.toLowerCase().contains("somatic") || analysisType.toLowerCase()
-                    .contains("targeted_tumor_only")) && !label.equalsIgnoreCase("research")) {
+                    .contains("targeted_tumor_only")) && !label.equalsIgnoreCase("research") &&
+                    dataSource.equalsIgnoreCase("lama")) {
                 try {
                     LimsJsonSampleData limsJsonSampleData = gson.fromJson(jsonSample.getValue(), LimsJsonSampleData.class);
                     if (limsDataPerSampleBarcode.containsKey(barcode)) {

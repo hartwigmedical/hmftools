@@ -1,16 +1,19 @@
 package com.hartwig.hmftools.isofox.novel.cohort;
 
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.ALT_SPLICE_JUNCTION;
+import static com.hartwig.hmftools.isofox.cohort.AnalysisType.CANONICAL_SPLICE_JUNCTION;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
+import static com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser.ALT_SJ_LOAD_CANONICAL;
+import static com.hartwig.hmftools.isofox.novel.cohort.AltSjCohortAnalyser.ALT_SJ_LOAD_CANONICAL_DESC;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
 import java.io.BufferedReader;
@@ -25,10 +28,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.isofox.cohort.AnalysisType;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class AltSjCohortMatrix
 {
@@ -49,23 +51,26 @@ public class AltSjCohortMatrix
     private int[][] mSampleMatrixData;
     private int[][] mCancerMatrixData;
 
+    private final boolean mLoadCanonical;
+
     private static final String ALT_SJ_COHORT_SITES_FILE = "alt_sj_cohort_sites_file";
     private static final String ALT_SJ_WRITE_CANCER_MATRIX = "alt_sj_write_cancer_matrix";
     private static final String ALT_SJ_WRITE_SAMPLE_MATRIX = "alt_sj_write_sample_matrix";
     private static final String ALT_SJ_MIN_FRAGS = "alt_sj_min_frags";
 
-    public AltSjCohortMatrix(final CohortConfig config, final CommandLine cmd)
+    public AltSjCohortMatrix(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mAltSjDataMap = Maps.newHashMap();
         mAltSjMatrixIndexMap = Maps.newHashMap();
         mAltSjDataList = Lists.newArrayList();
 
-        mMinFragments = Integer.parseInt(cmd.getOptionValue(ALT_SJ_MIN_FRAGS, "1"));
+        mMinFragments = configBuilder.getInteger(ALT_SJ_MIN_FRAGS);
+        mLoadCanonical = configBuilder.hasFlag(ALT_SJ_LOAD_CANONICAL);
 
-        if(cmd.hasOption(ALT_SJ_COHORT_SITES_FILE))
+        if(configBuilder.hasValue(ALT_SJ_COHORT_SITES_FILE))
         {
-            loadCohortSites(cmd.getOptionValue(ALT_SJ_COHORT_SITES_FILE));
+            loadCohortSites(configBuilder.getValue(ALT_SJ_COHORT_SITES_FILE));
         }
 
         int altSjSiteCount = mAltSjDataMap.size();
@@ -75,7 +80,7 @@ public class AltSjCohortMatrix
 
         mCancerTypes = mConfig.SampleData.CancerTypeSamples.keySet().stream().collect(Collectors.toList());
 
-        if(cmd.hasOption(ALT_SJ_WRITE_CANCER_MATRIX))
+        if(configBuilder.hasFlag(ALT_SJ_WRITE_CANCER_MATRIX))
         {
             int cancerCount = mCancerTypes.size();
             mCancerMatrixData = new int[altSjSiteCount][cancerCount];
@@ -90,7 +95,7 @@ public class AltSjCohortMatrix
         mSampleMatrixIndexMap = Maps.newHashMap();
         mSampleMatrixData = null;
 
-        if(cmd.hasOption(ALT_SJ_WRITE_SAMPLE_MATRIX))
+        if(configBuilder.hasFlag(ALT_SJ_WRITE_SAMPLE_MATRIX))
         {
             int sampleCount = mConfig.SampleData.SampleIds.size();
             mSampleMatrixData = new int[altSjSiteCount][sampleCount];
@@ -103,12 +108,13 @@ public class AltSjCohortMatrix
         }
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(ALT_SJ_COHORT_SITES_FILE, true, "Alt-SJ reoccurring sites in cohort to filter by");
-        options.addOption(ALT_SJ_WRITE_CANCER_MATRIX, false, "Write cancer matrix for cohort alt-SJs");
-        options.addOption(ALT_SJ_WRITE_SAMPLE_MATRIX, false, "Write sample matrix for cohort alt-SJs");
-        options.addOption(ALT_SJ_MIN_FRAGS, true, "Min frag count supporting alt-SJs");
+        configBuilder.addPath(ALT_SJ_COHORT_SITES_FILE, false, "Alt-SJ reoccurring sites in cohort to filter by");
+        configBuilder.addFlag(ALT_SJ_WRITE_CANCER_MATRIX, "Write cancer matrix for cohort alt-SJs");
+        configBuilder.addFlag(ALT_SJ_WRITE_SAMPLE_MATRIX, "Write sample matrix for cohort alt-SJs");
+        configBuilder.addInteger(ALT_SJ_MIN_FRAGS, "Min frag count supporting alt-SJs", 1);
+        configBuilder.addFlag(ALT_SJ_LOAD_CANONICAL, ALT_SJ_LOAD_CANONICAL_DESC);
     }
 
     private static final int LOG_CHECK = 100;
@@ -117,7 +123,8 @@ public class AltSjCohortMatrix
     {
         final List<Path> filenames = Lists.newArrayList();
 
-        if(!formSampleFilenames(mConfig, ALT_SPLICE_JUNCTION, filenames))
+        AnalysisType analysisType = mLoadCanonical ? CANONICAL_SPLICE_JUNCTION : ALT_SPLICE_JUNCTION;
+        if(!formSampleFilenames(mConfig, analysisType, filenames))
             return;
 
         int nextLog = LOG_CHECK;
@@ -199,7 +206,7 @@ public class AltSjCohortMatrix
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
             int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
-            int fragCountIndex = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
+            int fragCountIndex = fieldsIndexMap.get(FLD_FRAG_COUNT);
 
             Integer sampleMatrixIndex = mSampleMatrixIndexMap.get(sampleId);
             String cancerType = mConfig.SampleData.SampleCancerType.get(sampleId);
@@ -246,12 +253,12 @@ public class AltSjCohortMatrix
                 }
             }
 
-            ISF_LOGGER.debug("sample({}) loaded {} alt-SJ records, added({})",
+            ISF_LOGGER.debug("sample({}) loaded {} splice-junction records, added({})",
                     sampleId, lines.size() - 1, matrixAdded);
         }
         catch(IOException e)
         {
-            ISF_LOGGER.error("failed to alt splice junction load file({}): {}", filename.toString(), e.toString());
+            ISF_LOGGER.error("failed to load splice junction file({}): {}", filename.toString(), e.toString());
             return;
         }
     }

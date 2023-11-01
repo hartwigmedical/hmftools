@@ -4,10 +4,10 @@ import static com.hartwig.hmftools.common.sigs.DataUtils.convertList;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.calcPercentileValues;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.cohort.AnalysisType.SPLICE_SITE_PERCENTILES;
 import static com.hartwig.hmftools.isofox.cohort.CohortConfig.formSampleFilenames;
@@ -28,10 +28,8 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.isofox.cohort.CohortConfig;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class SpliceSiteCache
 {
@@ -53,7 +51,7 @@ public class SpliceSiteCache
     public static final int SS_TRAVERSED = 0;
     public static final int SS_SUPPORT = 1;
 
-    public SpliceSiteCache(final CohortConfig config, final CommandLine cmd)
+    public SpliceSiteCache(final CohortConfig config, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSpliceSiteRates = Maps.newHashMap();
@@ -75,15 +73,15 @@ public class SpliceSiteCache
             mGeneTransCache = null;
         }
 
-        if(cmd.hasOption(COHORT_SPLICE_SITE_FILE))
+        if(configBuilder.hasValue(COHORT_SPLICE_SITE_FILE))
         {
-            loadSpliceSitePercentiles(cmd.getOptionValue(COHORT_SPLICE_SITE_FILE));
+            loadSpliceSitePercentiles(configBuilder.getValue(COHORT_SPLICE_SITE_FILE));
         }
     }
 
-    public static void addCmdLineOptions(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(COHORT_SPLICE_SITE_FILE, true, "Cohort splice site percentiles");
+        configBuilder.addPath(COHORT_SPLICE_SITE_FILE, false, "Cohort splice site percentiles");
     }
 
     public void createPercentiles()

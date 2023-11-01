@@ -3,10 +3,11 @@
 purple_jar=$1 && shift
 tumor_id=$1 && shift
 reference_id=$1 && shift
-sv_vcf=$1 && shift
-sv_unfiltered_vcf=$1 && shift
 somatic_vcf=$1 && shift
+somatic_sv_vcf=$1 && shift
+sv_unfiltered_vcf=$1 && shift
 germline_vcf=$1 && shift
+germline_sv_vcf=$1 && shift
 amber_dir=$1 && shift
 cobalt_dir=$1 && shift
 output_dir=$1 && shift
@@ -37,7 +38,7 @@ if [[ -f "${purity_tsv}" ]]; then
   exit
 fi
 
-if [[ ! -f "${sv_vcf}" ]]; then
+if [[ ! -f "${somatic_sv_vcf}" ]]; then
   echo "Missing Gripss VCF, not running Purple for ${tumor_id}"
   exit
 fi
@@ -51,9 +52,8 @@ args="-tumor ${tumor_id} \
   -ensembl_data_dir ${ensembl_data_dir} \
   -amber ${amber_dir} \
   -cobalt ${cobalt_dir} \
-  -structural_vcf ${sv_vcf} \
+  -somatic_sv_vcf ${somatic_sv_vcf} \
   -somatic_vcf ${somatic_vcf} \
-  -run_drivers \
   -circos ${circos} \
   -threads ${threads} \
   -output_dir ${output_dir}"
@@ -62,6 +62,7 @@ if [ "${reference_id}" != "none" ]; then
   args="${args} -reference ${reference_id} 
     -germline_hotspots ${germline_hotspots} 
     -germline_vcf ${germline_vcf}
+    -germline_sv_vcf ${germline_sv_vcf}
     -germline_del_freq_file ${germline_del_freq_file}"
 fi  
 
@@ -69,7 +70,8 @@ if [ "${run_mode}" == "PANEL" ]; then
   args="${args} -target_regions_bed ${target_regions_definition} \
     -target_regions_ratios ${target_regions_ratios} \
     -target_regions_msi_indels ${target_regions_msi_indels}
-    -min_diploid_tumor_ratio_count 3 -min_diploid_tumor_ratio_count_centromere 3"
+    -min_diploid_tumor_ratio_count 3 -min_diploid_tumor_ratio_count_centromere 3 \
+    -ploidy_penalty_factor 0.6 -ploidy_penalty_standard_deviation 0.15"
 else
   args="${args} -sv_recovery_vcf ${sv_unfiltered_vcf}"
 fi

@@ -8,13 +8,12 @@ import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.streamStr;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_KNOWN;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_OTHER;
 import static com.hartwig.hmftools.linx.fusion.FusionFinder.checkFusionLogic;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.RNA_FUSION_SOURCE_ISOFOX;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.getRnaSourceDelimiter;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaDataLoader.loadRnaFusion;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.checkRnaPhasedTranscripts;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionAnnotator.findExonMatch;
@@ -36,18 +35,16 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.linx.fusion.FusionConfig;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
 import com.hartwig.hmftools.common.utils.sv.StartEndPair;
 import com.hartwig.hmftools.linx.chaining.SvChain;
 import com.hartwig.hmftools.linx.fusion.FusionFinder;
-import com.hartwig.hmftools.linx.fusion.FusionParameters;
 import com.hartwig.hmftools.linx.fusion.GeneFusion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
-
-import org.apache.commons.cli.CommandLine;
 
 public class RnaFusionMapper
 {
@@ -64,9 +61,8 @@ public class RnaFusionMapper
     private final Map<GeneFusion,String> mDnaInvalidFusions;
 
     public static final String RNA_FUSIONS_FILE = "rna_fusions_file";
-    public static final String RNA_FILE_SOURCE = "rna_file_source";
 
-    public RnaFusionMapper(final String outputDir, final CommandLine cmdLineArgs, final EnsemblDataCache geneTransCache,
+    public RnaFusionMapper(final String outputDir, final ConfigBuilder configBuilder, final EnsemblDataCache geneTransCache,
             FusionFinder fusionFinder, final List<GeneFusion> dnaFusions, final Map<GeneFusion,String> dnaInvalidFusions)
     {
         mSampleRnaData = Maps.newHashMap();
@@ -76,22 +72,14 @@ public class RnaFusionMapper
         mDnaInvalidFusions = dnaInvalidFusions;
         mAnnotator = new RnaFusionAnnotator(geneTransCache);
 
-        final String fileSource = cmdLineArgs.getOptionValue(RNA_FILE_SOURCE, RNA_FUSION_SOURCE_ISOFOX);
+        loadSampleRnaData(configBuilder.getValue(RNA_FUSIONS_FILE));
 
-        if(cmdLineArgs != null)
-        {
-            final String rnaDataFile = cmdLineArgs.getOptionValue(RNA_FUSIONS_FILE);
-            loadSampleRnaData(fileSource, rnaDataFile);
-        }
-
-        mWriter = new RnaMatchWriter(outputDir, fileSource);
+        mWriter = new RnaMatchWriter(outputDir);
 
         mFusionConfig = new FusionConfig();
         mFusionConfig.RequirePhaseMatch = false;
         mFusionConfig.AllowExonSkipping = false;
     }
-
-    public final Map<String, List<RnaFusionData>> getSampleRnaData() { return mSampleRnaData; }
 
     public void assessRnaFusions(final String sampleId, Map<String, List<SvBreakend>> chrBreakendMap)
     {
@@ -99,12 +87,12 @@ public class RnaFusionMapper
 
         final List<RnaFusionData> rnaFusionList = mSampleRnaData.get(mSampleId);
 
-        if (rnaFusionList == null || rnaFusionList.isEmpty())
+        if(rnaFusionList == null || rnaFusionList.isEmpty())
             return;
 
         LNX_LOGGER.debug("assessing {} RNA fusions", rnaFusionList.size());
 
-        for (final RnaFusionData rnaFusion : rnaFusionList)
+        for(final RnaFusionData rnaFusion : rnaFusionList)
         {
             setRnaFusionData(rnaFusion);
 
@@ -259,7 +247,7 @@ public class RnaFusionMapper
             SvBreakend topDownBreakend = null;
             boolean topCandidateFusionViable = false;
 
-            for (int i = 0; i < viableBreakendPair.get(FS_UP).size(); ++i)
+            for(int i = 0; i < viableBreakendPair.get(FS_UP).size(); ++i)
             {
                 final SvBreakend upBreakend = viableBreakendPair.get(FS_UP).get(i);
                 final BreakendTransData upTrans = viableTranscriptPair.get(FS_UP).get(i);
@@ -267,7 +255,7 @@ public class RnaFusionMapper
                 if(upBreakend.getSV().isSglBreakend())
                     continue;
 
-                for (int j = 0; j < viableBreakendPair.get(FS_DOWN).size(); ++j)
+                for(int j = 0; j < viableBreakendPair.get(FS_DOWN).size(); ++j)
                 {
                     final SvBreakend downBreakend = viableBreakendPair.get(FS_DOWN).get(j);
                     final BreakendTransData downTrans = viableTranscriptPair.get(FS_DOWN).get(j);
@@ -284,7 +272,7 @@ public class RnaFusionMapper
                         possibleFusion = new GeneFusion(upTrans, downTrans, false);
                     }
 
-                    if (topCandidateFusion == null
+                    if(topCandidateFusion == null
                     || isCandidateBetter(topCandidateFusion, topUpBreakend, topDownBreakend, possibleFusion, upBreakend, downBreakend,
                             rnaFusion, topCandidateFusionViable, viableFusion))
                     {
@@ -349,7 +337,7 @@ public class RnaFusionMapper
                 SvBreakend closestBreakend = null;
                 int closestDistance = 0;
 
-                for (int j = 0; j < transcriptList.size(); ++j)
+                for(int j = 0; j < transcriptList.size(); ++j)
                 {
                     final BreakendTransData trans = transcriptList.get(j);
                     final SvBreakend breakend = breakendList.get(j);
@@ -473,12 +461,12 @@ public class RnaFusionMapper
         // if all else is equal, take a viable fusion over one that isn't
         if(beCurrentStart == beCandidateStart && beCurrentEnd == beCandidateEnd)
         {
-            if (currentFusionViable != candidateFusionViable)
+            if(currentFusionViable != candidateFusionViable)
             {
                 return candidateFusionViable;
             }
 
-            if (currentFusion.phaseMatched() != candidateFusion.phaseMatched())
+            if(currentFusion.phaseMatched() != candidateFusion.phaseMatched())
             {
                 return candidateFusion.phaseMatched();
             }
@@ -594,13 +582,13 @@ public class RnaFusionMapper
         checkRnaPhasedTranscripts(rnaFusion);
     }
 
-    public boolean loadSampleRnaData(final String source, final String filename)
+    public boolean loadSampleRnaData(final String filename)
     {
         try
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(lines.get(0), getRnaSourceDelimiter(source));
+            final Map<String,Integer> fieldIndexMap = createFieldsIndexMap(lines.get(0), CSV_DELIM);
 
             lines.remove(0);
 
@@ -610,7 +598,7 @@ public class RnaFusionMapper
 
             for(String data : lines)
             {
-                RnaFusionData rnaData = loadRnaFusion(source, recordCount, data, fieldIndexMap);
+                RnaFusionData rnaData = loadRnaFusion(data, fieldIndexMap);
                 ++recordCount;
 
                 if(currentSampleId.isEmpty() || !currentSampleId.equals(rnaData.SampleId))

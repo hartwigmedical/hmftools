@@ -60,6 +60,23 @@ abstract class LimsJsonSampleData {
     @SerializedName("ptum")
     public abstract String primaryTumor();
 
+    // tumor_location/tumor_type/tumor_extra/tumor_doids are only present for samples already curated in LAMA
+    @Nullable
+    @SerializedName("tumor_location")
+    public abstract String tumorLocation();
+
+    @Nullable
+    @SerializedName("tumor_type")
+    public abstract String tumorType();
+
+    @Nullable
+    @SerializedName("tumor_extra")
+    public abstract String tumorExtra();
+
+    @Nullable
+    @SerializedName("tumor_doids")
+    public abstract String tumorDoids();
+
     // Biopsy Location is only known for COREDB samples
     @Nullable
     @SerializedName("biopsy_site")
@@ -97,7 +114,7 @@ abstract class LimsJsonSampleData {
     @SerializedName("report_pgx")
     public abstract boolean reportPgx();
 
-    @Nullable
+    @NotNull
     @SerializedName("cohort")
     public abstract String cohort();
 

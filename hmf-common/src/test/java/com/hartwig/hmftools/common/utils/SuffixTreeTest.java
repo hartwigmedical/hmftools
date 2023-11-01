@@ -8,29 +8,33 @@ import com.hartwig.hmftools.common.codon.Codons;
 
 import org.junit.Test;
 
-public class SuffixTreeTest {
-
+public class SuffixTreeTest
+{
     @Test
-    public void testHavanaBanana() {
+    public void testHavanaBanana()
+    {
         SuffixTree tree = new SuffixTree("havanabanana");
         assertTrue(tree.contains("banana"));
         assertFalse(tree.contains("bananad"));
     }
 
     @Test
-    public void testRealExample() {
+    public void testRealExample()
+    {
         final String dna = "AATGTAGGTGCTGCTGTGAAGGGATTTAGCAGATATAATTAAGGGTCTCAATTAGTTGACTTTATGCTGCGTTTAT"
                 + "CCTGCTTGGACTGTCCTAATCAGGTGAGCCCTTGAAAGGACTGGGTTCTTCATGAGCATAGAGACTTACAGTGTG";
         final String aminoAcids = Codons.aminoAcidFromBases(dna);
 
         SuffixTree tree = new SuffixTree(aminoAcids);
-        for (int i = 0; i < aminoAcids.length() - 10; i++) {
+        for(int i = 0; i < aminoAcids.length() - 10; i++)
+        {
             assertTrue(tree.contains(aminoAcids.substring(i, i + 10)));
         }
     }
 
     @Test
-    public void testEndsWith() {
+    public void testEndsWith()
+    {
         final String read = "NVTENCGAAXAVKGFSRYNXTENGAA";
         SuffixTree tree = new SuffixTree(read);
         assertEquals(0, tree.endsWith("GA"));
@@ -50,14 +54,16 @@ public class SuffixTreeTest {
     }
 
     @Test
-    public void testExamples() {
+    public void testExamples()
+    {
         SuffixTree tree = new SuffixTree("GGGGRNS");
         assertEquals(0, tree.endsWith("RCGLGWSGVGRAGQ"));
         assertEquals(3, tree.endsWith("RNSLGWSGVGRAGQ"));
     }
 
     @Test
-    public void testExamples2() {
+    public void testExamples2()
+    {
         SuffixTree tree = new SuffixTree("GGGGRNST");
         assertEquals(0, tree.endsWith("RCGLGWSGVGRAGQ"));
         assertEquals(0, tree.endsWith("RNSLGWSGVGRAGQ"));

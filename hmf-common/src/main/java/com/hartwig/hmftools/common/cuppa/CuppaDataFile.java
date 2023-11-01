@@ -11,7 +11,8 @@ import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.EXPRESSION_PAIRWISE;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.GENOMIC_POSITION_COHORT;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.SNV_96_PAIRWISE;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -43,11 +44,9 @@ public class CuppaDataFile
     public static final String FLD_REF_VALUE = "RefValue";
 
     public static final String CUPPA_DATAFILE = ".cup.data.csv";
-
-    // support for pre-1.7
-    public static final String OLD_CATEGORY_CLASSIFIER = "CLASSIFIER";
-    public static final String OLD_DATATYPE_SNV_PAIRWISE = "SNV_96_PAIRWISE_SIMILARITY";
-    public static final String OLD_DATATYPE_GEN_POS_SIMILARITY = "GENOMIC_POSITION_SIMILARITY";
+    public static final String CUPPA_REPORT_SUMMARY_PLOT = ".cup.report.summary.png";
+    public static final String CUPPA_REPORT_FEATURES_PLOT = ".cup.report.features.png";
+    public static final String CUPPA_CHART_PLOT = ".cuppa.chart.png";
 
     public CuppaDataFile(
             final CategoryType category, final ResultType resultType,
@@ -62,7 +61,22 @@ public class CuppaDataFile
 
     public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + CUPPA_DATAFILE;
+        return checkAddDirSeparator(basePath) + sample + CUPPA_DATAFILE;
+    }
+
+    public static String generateReportSummaryPlotFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + CUPPA_REPORT_SUMMARY_PLOT;
+    }
+
+    public static String generateReportFeaturesPlotFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + CUPPA_REPORT_FEATURES_PLOT;
+    }
+
+    public static String generateChartPlotFilename(final String basePath, final String sample)
+    {
+        return checkAddDirSeparator(basePath) + sample + CUPPA_CHART_PLOT;
     }
 
     public static String header()
@@ -117,26 +131,11 @@ public class CuppaDataFile
 
             String categoryStr = values[categoryIndex];
 
-            CategoryType category;
-            ResultType resultType;
+            CategoryType category = CategoryType.valueOf(categoryStr);;
+            ResultType resultType = ResultType.valueOf(values[resultTypeIndex]);
 
-            if(isOldCategoryClassifierType(categoryStr)) // support for pre-1.7
-            {
-                dataType = mapOldDataType(dataType);
+            if(category == COMBINED)
                 resultType = ResultType.CLASSIFIER;
-                category = mapOldCategoryType(dataType);
-
-                if(category == null)
-                    continue;
-            }
-            else
-            {
-                category = CategoryType.valueOf(categoryStr);
-                resultType = ResultType.valueOf(values[resultTypeIndex]);
-
-                if(category == COMBINED)
-                    resultType = ResultType.CLASSIFIER;
-            }
 
             String value = values[valueIndex];
             String refCancerType = values[refCancerTypeIndex];
@@ -154,6 +153,7 @@ public class CuppaDataFile
         return results;
     }
 
+    /*
     public static boolean isOldCategoryClassifierType(final String categoryStr)
     {
         return categoryStr.equals(OLD_CATEGORY_CLASSIFIER);
@@ -185,6 +185,7 @@ public class CuppaDataFile
         else
             return null;
     }
+    */
 
     public static List<String> getRankedCancerTypes(final Map<String,Double> cancerTypeValues)
     {

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
 import static com.hartwig.hmftools.common.purple.FittedPurityMethod.NORMAL;
 
 import java.io.File;
@@ -14,7 +13,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.GermlineAberration;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.getValue;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getValue;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -24,19 +24,17 @@ public final class PurpleQCFile
 
     private static final String EXTENSION = ".purple.qc";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + EXTENSION;
     }
 
-    @NotNull
-    public static PurpleQC read(@NotNull final String filename) throws IOException
+    public static PurpleQC read(final String filename) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(@NotNull final String fileName, @NotNull final PurpleQC check) throws IOException
+    public static void write(final String fileName, final PurpleQC check) throws IOException
     {
         Files.write(new File(fileName).toPath(), toLines(check));
     }
@@ -52,47 +50,49 @@ public final class PurpleQCFile
     private static final String CONTAMINATION = "Contamination";
     private static final String GERMLINE_ABERRATIONS = "GermlineAberrations";
     private static final String AMBER_MEAN_DEPTH = "AmberMeanDepth";
+    private static final String LOH_PERCENT = "LohPercent";
 
-    private static PurpleQC fromLines(@NotNull final List<String> lines)
+    private static PurpleQC fromLines(final List<String> lines)
     {
         final ImmutablePurpleQC.Builder builder = ImmutablePurpleQC.builder();
 
-        String qcStatusValues = getValue(lines, QC_STATUS, "", DELIMITER);
+        String qcStatusValues = getValue(lines, QC_STATUS, "", TSV_DELIM);
         Set<PurpleQCStatus> statusSet = PurpleQCStatus.fromString(qcStatusValues);
 
-        builder.method(FittedPurityMethod.valueOf(getValue(lines, METHOD, NORMAL.toString(), DELIMITER)))
+        builder.method(FittedPurityMethod.valueOf(getValue(lines, METHOD, NORMAL.toString(), TSV_DELIM)))
                 .status(statusSet)
-                .copyNumberSegments(Integer.parseInt(getValue(lines, CN_SEGMENTS, "0", DELIMITER)))
-                .unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines, UNSUPPORTED_CN_SEGMENTS, "0", DELIMITER)))
-                .purity(Double.parseDouble(getValue(lines, PURITY, "0", DELIMITER)))
-                .amberGender(Gender.valueOf(getValue(lines, AMBER_GENDER, null, DELIMITER)))
-                .cobaltGender(Gender.valueOf(getValue(lines, COBALT_GENDER, null, DELIMITER)))
-                .deletedGenes(Integer.parseInt(getValue(lines, DELETED_GENES, "0", DELIMITER)))
-                .contamination(Double.parseDouble(getValue(lines, CONTAMINATION, "0", DELIMITER)))
+                .copyNumberSegments(Integer.parseInt(getValue(lines, CN_SEGMENTS, "0", TSV_DELIM)))
+                .unsupportedCopyNumberSegments(Integer.parseInt(getValue(lines, UNSUPPORTED_CN_SEGMENTS, "0", TSV_DELIM)))
+                .purity(Double.parseDouble(getValue(lines, PURITY, "0", TSV_DELIM)))
+                .amberGender(Gender.valueOf(getValue(lines, AMBER_GENDER, null, TSV_DELIM)))
+                .cobaltGender(Gender.valueOf(getValue(lines, COBALT_GENDER, null, TSV_DELIM)))
+                .deletedGenes(Integer.parseInt(getValue(lines, DELETED_GENES, "0", TSV_DELIM)))
+                .contamination(Double.parseDouble(getValue(lines, CONTAMINATION, "0", TSV_DELIM)))
                 .germlineAberrations(GermlineAberration.fromString(getValue(
-                        lines, GERMLINE_ABERRATIONS, GermlineAberration.NONE.toString(), DELIMITER)))
-                .amberMeanDepth(Integer.parseInt(getValue(lines, AMBER_MEAN_DEPTH, "0", DELIMITER)));
+                        lines, GERMLINE_ABERRATIONS, GermlineAberration.NONE.toString(), TSV_DELIM)))
+                .amberMeanDepth(Integer.parseInt(getValue(lines, AMBER_MEAN_DEPTH, "0", TSV_DELIM)))
+                .lohPercent(Double.parseDouble(getValue(lines, LOH_PERCENT, "-1", TSV_DELIM))); // indicating not calculated
 
         return builder.build();
     }
 
-    @NotNull
     @VisibleForTesting
-    static List<String> toLines(@NotNull final PurpleQC check)
+    static List<String> toLines(final PurpleQC purpleQC)
     {
         final List<String> result = Lists.newArrayList();
 
-        result.add(QC_STATUS + DELIMITER + check.toString());
-        result.add(METHOD + DELIMITER + check.method());
-        result.add(CN_SEGMENTS + DELIMITER + check.copyNumberSegments());
-        result.add(UNSUPPORTED_CN_SEGMENTS + DELIMITER + check.unsupportedCopyNumberSegments());
-        result.add(PURITY + DELIMITER + FORMAT.format(check.purity()));
-        result.add(AMBER_GENDER + DELIMITER + check.amberGender());
-        result.add(COBALT_GENDER + DELIMITER + check.cobaltGender());
-        result.add(DELETED_GENES + DELIMITER + check.deletedGenes());
-        result.add(CONTAMINATION + DELIMITER + check.contamination());
-        result.add(GERMLINE_ABERRATIONS + DELIMITER + GermlineAberration.toString(check.germlineAberrations()));
-        result.add(AMBER_MEAN_DEPTH + DELIMITER + check.amberMeanDepth());
+        result.add(QC_STATUS + TSV_DELIM + purpleQC.toString());
+        result.add(METHOD + TSV_DELIM + purpleQC.method());
+        result.add(CN_SEGMENTS + TSV_DELIM + purpleQC.copyNumberSegments());
+        result.add(UNSUPPORTED_CN_SEGMENTS + TSV_DELIM + purpleQC.unsupportedCopyNumberSegments());
+        result.add(PURITY + TSV_DELIM + FORMAT.format(purpleQC.purity()));
+        result.add(AMBER_GENDER + TSV_DELIM + purpleQC.amberGender());
+        result.add(COBALT_GENDER + TSV_DELIM + purpleQC.cobaltGender());
+        result.add(DELETED_GENES + TSV_DELIM + purpleQC.deletedGenes());
+        result.add(CONTAMINATION + TSV_DELIM + purpleQC.contamination());
+        result.add(GERMLINE_ABERRATIONS + TSV_DELIM + GermlineAberration.toString(purpleQC.germlineAberrations()));
+        result.add(AMBER_MEAN_DEPTH + TSV_DELIM + purpleQC.amberMeanDepth());
+        result.add(LOH_PERCENT + TSV_DELIM + FORMAT.format(purpleQC.lohPercent()));
         return result;
     }
 }

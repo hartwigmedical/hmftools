@@ -13,10 +13,9 @@ import com.hartwig.hmftools.common.rna.RnaStatistics;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
-public final class IsofoxDataLoader {
-
+public final class IsofoxDataLoader
+{
     private static final Logger LOGGER = LogManager.getLogger(IsofoxDataLoader.class);
 
     public static IsofoxData load(final String isofoxCancerType, final String isofoxGeneDistributionCsv,
@@ -26,7 +25,7 @@ public final class IsofoxDataLoader {
         LOGGER.info("Loading ISOFOX data from {} using cancer type '{}'", new File(isofoxSummaryCsv).getParent(), isofoxCancerType);
 
         List<String> summaryLines = Files.readAllLines(Paths.get(isofoxSummaryCsv));
-        RnaStatistics summary = RnaStatistics.fromCsv(summaryLines);
+        RnaStatistics summary = RnaStatistics.fromLines(summaryLines);
 
         LOGGER.info((" Loaded summary from " + isofoxSummaryCsv));
 
@@ -39,7 +38,7 @@ public final class IsofoxDataLoader {
         LOGGER.info(" Loaded {} fusions from {}", fusions.size(), isofoxFusionCsv);
 
         AltSjCohortData altSjData = new AltSjCohortData(isofoxAltSjCohortCsv);
-        List<NovelSpliceJunction> novelSpliceJunctions = IsofoxNovelSpliceJunctionLoader.load(isofoxAltSpliceJunctionCsv, altSjData);
+        List<NovelSpliceJunction> novelSpliceJunctions = NovelSpliceJunctionLoader.load(isofoxAltSpliceJunctionCsv, altSjData);
         LOGGER.info(" Loaded {} novel splice junctions from {}", novelSpliceJunctions.size(), isofoxAltSpliceJunctionCsv);
 
         return ImmutableIsofoxData.builder()

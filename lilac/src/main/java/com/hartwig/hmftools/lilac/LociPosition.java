@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.lilac;
 
 import static com.hartwig.hmftools.common.gene.TranscriptUtils.calcCodingBases;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.gene.ExonData;

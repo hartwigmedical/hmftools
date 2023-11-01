@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.lilac.variant;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacConstants.EXPECTED_ALLELE_COUNT;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_GENES;
 import static com.hartwig.hmftools.lilac.LilacConstants.longGeneName;
@@ -16,9 +14,7 @@ import com.hartwig.hmftools.lilac.coverage.AlleleCoverage;
 import com.hartwig.hmftools.lilac.coverage.ComplexCoverage;
 import com.hartwig.hmftools.lilac.hla.HlaAllele;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,79 +35,14 @@ public class CopyNumberAssignment
 
         try
         {
-            if(config.CopyNumberFile.contains(config.Sample))
-            {
-                List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(config.CopyNumberFile).stream()
-                        .filter(x -> HLA_GENES.contains(x.geneName())).collect(Collectors.toList());
+            List<GeneCopyNumber> hlaGeneCopyNumbers = GeneCopyNumberFile.read(config.CopyNumberFile).stream()
+                    .filter(x -> HLA_GENES.contains(x.geneName())).collect(Collectors.toList());
 
-                List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
-                        .map(x -> new CopyNumberData(x.geneName(), x.minCopyNumber(), x.minMinorAlleleCopyNumber()))
-                        .collect(Collectors.toList());
+            List<CopyNumberData> cnDataList = hlaGeneCopyNumbers.stream()
+                    .map(x -> new CopyNumberData(x.geneName(), x.minCopyNumber(), x.minMinorAlleleCopyNumber()))
+                    .collect(Collectors.toList());
 
-                mSampleCopyNumberData.put(config.Sample, cnDataList);
-            }
-            else
-            {
-                // load a cohort file - for now only retain the required sample's data
-                final List<String> fileData = Files.readAllLines(new File(config.CopyNumberFile).toPath());
-                String header = fileData.get(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
-                fileData.remove(0); // remove header
-                int sampleIndex = fieldsIndexMap.get("SampleId");
-                int geneIndex = fieldsIndexMap.get("Gene");
-                int minorIndex = fieldsIndexMap.get("MinCopyNumber");
-                int minorMinIndex = fieldsIndexMap.get("MinMinorAlleleCopyNumber");
-
-                boolean loadAll = false;
-
-                if(loadAll)
-                {
-                    List<CopyNumberData> cnDataList = null;
-                    String currentSample = "";
-
-                    for(final String line : fileData)
-                    {
-                        String[] items = line.split(DELIM, -1);
-
-                        String sampleId = items[sampleIndex];
-
-                        if(!currentSample.equals(sampleId))
-                        {
-                            cnDataList = Lists.newArrayList();
-                            currentSample = sampleId;
-                            mSampleCopyNumberData.put(sampleId, cnDataList);
-                        }
-
-                        cnDataList.add(new CopyNumberData(
-                                items[geneIndex], Double.parseDouble(items[minorIndex]), Double.parseDouble(items[minorMinIndex])));
-                    }
-                }
-                else
-                {
-                    // only load the configured sample
-                    List<CopyNumberData> cnDataList = Lists.newArrayList();
-
-                    for(final String line : fileData)
-                    {
-                        String[] items = line.split(DELIM, -1);
-
-                        String sampleId = items[sampleIndex];
-
-                        if(!sampleId.equals(config.Sample))
-                        {
-                            if(!cnDataList.isEmpty())
-                                break;
-                            else
-                                continue;
-                        }
-
-                        cnDataList.add(new CopyNumberData(
-                                items[geneIndex], Double.parseDouble(items[minorIndex]), Double.parseDouble(items[minorMinIndex])));
-                    }
-
-                    mSampleCopyNumberData.put(config.Sample, cnDataList);
-                }
-            }
+            mSampleCopyNumberData.put(config.Sample, cnDataList);
         }
         catch(IOException e)
         {

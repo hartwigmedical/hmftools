@@ -2,19 +2,19 @@ package com.hartwig.hmftools.compar.purple;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.compar.Category.COPY_NUMBER;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.Category.COPY_NUMBER;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.MatchLevel;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class CopyNumberData implements ComparableItem
 {
@@ -71,8 +71,8 @@ public class CopyNumberData implements ComparableItem
         final List<String> diffs = Lists.newArrayList();
 
         checkDiff(diffs, FLD_COPY_NUMBER, CopyNumber.averageTumorCopyNumber(), otherCn.CopyNumber.averageTumorCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_COPY_NUMBER, CopyNumber.majorAlleleCopyNumber(), otherCn.CopyNumber.majorAlleleCopyNumber(), thresholds);
-        checkDiff(diffs, FLD_COPY_NUMBER, CopyNumber.method().toString(), otherCn.CopyNumber.method().toString());
+        checkDiff(diffs, FLD_MAJOR_ALLELE_CN, CopyNumber.majorAlleleCopyNumber(), otherCn.CopyNumber.majorAlleleCopyNumber(), thresholds);
+        checkDiff(diffs, FLD_METHOD, CopyNumber.method().toString(), otherCn.CopyNumber.method().toString());
 
         return !diffs.isEmpty() ? new Mismatch(this, other, VALUE, diffs) : null;
     }

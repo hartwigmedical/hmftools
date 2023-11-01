@@ -3,17 +3,19 @@ package com.hartwig.hmftools.patientdb.dao;
 import static com.hartwig.hmftools.common.genotype.GenotypeStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.SGL;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseUtil.checkStringLength;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.GERMLINEVARIANT;
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.STRUCTURALVARIANTGERMLINE;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Germlinevariant.GERMLINEVARIANT;
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.SVBREAKENDGERMLINE;
 
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
+import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.pathogenic.PathogenicSummary;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
-import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.GermlineVariant;
@@ -28,6 +30,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
+import org.jooq.InsertValuesStep19;
 import org.jooq.InsertValuesStepN;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -48,7 +51,7 @@ public class GermlineVariantDAO
     @NotNull
     public BufferedWriter<VariantContext> writer(String tumorSample, String referenceSample, String rnaSample)
     {
-        BufferedWriterConsumer<VariantContext> consumer = new BufferedWriterConsumer<VariantContext>()
+        BufferedWriterConsumer<VariantContext> consumer = new BufferedWriterConsumer<>()
         {
             @Override
             public void initialise()
@@ -166,8 +169,8 @@ public class GermlineVariantDAO
                 decorator.adjustedCopyNumber(),
                 decorator.biallelic(),
                 decorator.minorAlleleCopyNumber(),
-                pathogenicSummary.clinvarInfo(),
-                pathogenicSummary.pathogenicity().toString(),
+                pathogenicSummary.ClinvarInfo,
+                pathogenicSummary.Status.toString(),
                 decorator.isPathogenic(),
                 variantImpact.CanonicalGeneName,
                 variantImpact.GenesAffected,
@@ -208,13 +211,14 @@ public class GermlineVariantDAO
         InsertValuesStepN inserter = context.insertInto(STRUCTURALVARIANTGERMLINE,
                 STRUCTURALVARIANTGERMLINE.SAMPLEID,
                 STRUCTURALVARIANTGERMLINE.MODIFIED,
+                STRUCTURALVARIANTGERMLINE.SVID,
+                STRUCTURALVARIANTGERMLINE.VCFID,
                 STRUCTURALVARIANTGERMLINE.CHROMOSOMESTART,
                 STRUCTURALVARIANTGERMLINE.CHROMOSOMEEND,
                 STRUCTURALVARIANTGERMLINE.POSITIONSTART,
                 STRUCTURALVARIANTGERMLINE.POSITIONEND,
                 STRUCTURALVARIANTGERMLINE.ORIENTATIONSTART,
                 STRUCTURALVARIANTGERMLINE.ORIENTATIONEND,
-                STRUCTURALVARIANTGERMLINE.GENE,
                 STRUCTURALVARIANTGERMLINE.TYPE,
                 STRUCTURALVARIANTGERMLINE.FILTER,
                 STRUCTURALVARIANTGERMLINE.EVENT,
@@ -243,8 +247,7 @@ public class GermlineVariantDAO
                 STRUCTURALVARIANTGERMLINE.RESOLVEDTYPE,
                 STRUCTURALVARIANTGERMLINE.LINKEDBYSTART,
                 STRUCTURALVARIANTGERMLINE.LINKEDBYEND,
-                STRUCTURALVARIANTGERMLINE.COHORTFREQUENCY,
-                STRUCTURALVARIANTGERMLINE.REPORTED);
+                STRUCTURALVARIANTGERMLINE.COHORTFREQUENCY);
 
         for(LinxGermlineSv germlineSV : germlineSVs)
         {
@@ -259,15 +262,16 @@ public class GermlineVariantDAO
     {
         inserter.values(sample,
                 timestamp,
+                germlineSV.SvId,
+                germlineSV.VcfId,
                 germlineSV.ChromosomeStart,
                 germlineSV.Type != SGL ? germlineSV.ChromosomeEnd : null,
                 germlineSV.PositionStart,
                 germlineSV.Type != SGL ? germlineSV.PositionEnd : null,
                 germlineSV.OrientStart,
                 germlineSV.Type != SGL ? germlineSV.OrientEnd : null,
-                germlineSV.GeneName,
                 germlineSV.Type,
-                germlineSV.Filter,
+                checkStringLength(germlineSV.Filter, STRUCTURALVARIANTGERMLINE.FILTER),
                 germlineSV.EventId,
                 DatabaseUtil.decimal(germlineSV.QualScore),
                 germlineSV.HomologyStart,
@@ -294,8 +298,66 @@ public class GermlineVariantDAO
                 germlineSV.ResolvedType,
                 germlineSV.LinkedByStart,
                 germlineSV.LinkedByEnd,
-                germlineSV.CohortFrequency,
-                germlineSV.Reported);
+                germlineSV.CohortFrequency);
+    }
+
+    public void writeGermlineBreakends(final String sample, final List<LinxBreakend> germlineBreakends)
+    {
+        Timestamp timestamp = new Timestamp(new Date().getTime());
+
+        context.delete(SVBREAKENDGERMLINE).where(SVBREAKENDGERMLINE.SAMPLEID.eq(sample)).execute();
+
+        InsertValuesStep19 inserter = context.insertInto(SVBREAKENDGERMLINE,
+                SVBREAKENDGERMLINE.SAMPLEID,
+                SVBREAKENDGERMLINE.MODIFIED,
+                SVBREAKENDGERMLINE.SVID,
+                SVBREAKENDGERMLINE.STARTBREAKEND,
+                SVBREAKENDGERMLINE.GENE,
+                SVBREAKENDGERMLINE.TRANSCRIPTID,
+                SVBREAKENDGERMLINE.CANONICALTRANSCRIPT,
+                SVBREAKENDGERMLINE.GENEORIENTATION,
+                SVBREAKENDGERMLINE.DISRUPTIVE,
+                SVBREAKENDGERMLINE.REPORTEDDISRUPTION,
+                SVBREAKENDGERMLINE.UNDISRUPTEDCOPYNUMBER,
+                SVBREAKENDGERMLINE.REGIONTYPE,
+                SVBREAKENDGERMLINE.CODINGTYPE,
+                SVBREAKENDGERMLINE.BIOTYPE,
+                SVBREAKENDGERMLINE.EXONICBASEPHASE,
+                SVBREAKENDGERMLINE.NEXTSPLICEEXONRANK,
+                SVBREAKENDGERMLINE.NEXTSPLICEEXONPHASE,
+                SVBREAKENDGERMLINE.NEXTSPLICEDISTANCE,
+                SVBREAKENDGERMLINE.TOTALEXONCOUNT);
+
+        for(LinxBreakend germlineBreakend : germlineBreakends)
+        {
+            addRecord(timestamp, inserter, sample, germlineBreakend);
+        }
+
+        inserter.execute();
+    }
+
+    private static void addRecord(
+            final Timestamp timestamp, final InsertValuesStep19 inserter, final String sample, final LinxBreakend germlineBreakend)
+    {
+        inserter.values(sample,
+                timestamp,
+                germlineBreakend.svId(),
+                germlineBreakend.isStart(),
+                germlineBreakend.gene(),
+                germlineBreakend.transcriptId(),
+                germlineBreakend.canonical(),
+                germlineBreakend.geneOrientation(),
+                germlineBreakend.disruptive(),
+                germlineBreakend.reportedDisruption(),
+                DatabaseUtil.decimal(germlineBreakend.undisruptedCopyNumber()),
+                germlineBreakend.regionType(),
+                germlineBreakend.codingType(),
+                germlineBreakend.biotype(),
+                germlineBreakend.exonicBasePhase(),
+                germlineBreakend.nextSpliceExonRank(),
+                germlineBreakend.nextSpliceExonPhase(),
+                germlineBreakend.nextSpliceDistance(),
+                germlineBreakend.totalExonCount());
     }
 
     @NotNull

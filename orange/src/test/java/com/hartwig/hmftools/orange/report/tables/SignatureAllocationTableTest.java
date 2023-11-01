@@ -5,16 +5,17 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.sigs.ImmutableSignatureAllocation;
-import com.hartwig.hmftools.common.sigs.SignatureAllocation;
+import com.hartwig.hmftools.datamodel.sigs.ImmutableSignatureAllocation;
+import com.hartwig.hmftools.datamodel.sigs.SignatureAllocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class SignatureAllocationTableTest {
-
+public class SignatureAllocationTableTest
+{
     @Test
-    public void canSortSignatureAllocations() {
+    public void canSortSignatureAllocations()
+    {
         SignatureAllocation allocation1 = create("Sig1");
         SignatureAllocation allocation2 = create("Sig2");
         SignatureAllocation allocation3 = create("Sig10");
@@ -31,7 +32,8 @@ public class SignatureAllocationTableTest {
     }
 
     @NotNull
-    private static SignatureAllocation create(@NotNull String signature) {
+    private static SignatureAllocation create(@NotNull String signature)
+    {
         return ImmutableSignatureAllocation.builder().signature(signature).allocation(0D).percent(0D).build();
     }
 }

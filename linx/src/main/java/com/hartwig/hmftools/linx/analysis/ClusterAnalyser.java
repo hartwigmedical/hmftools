@@ -356,16 +356,16 @@ public class ClusterAnalyser {
 
     private void findLinksAndChains()
     {
-        for (SvCluster cluster : mClusters)
+        for(SvCluster cluster : mClusters)
         {
-            if (cluster.getResolvedType() == LINE) // only simple assembly links for LINE clusters
+            if(cluster.getResolvedType() == LINE) // only simple assembly links for LINE clusters
                 continue;
 
-            if (cluster.getResolvedType() != NONE) // any cluster previously resolved and not modified does not need to be chained again
+            if(cluster.getResolvedType() != NONE) // any cluster previously resolved and not modified does not need to be chained again
                 continue;
 
             // these are either already chained or no need to chain
-            if (isSimpleSingleSV(cluster) || cluster.isFullyChained(false) || cluster.getSvCount() < 2)
+            if(isSimpleSingleSV(cluster) || cluster.isFullyChained(false) || cluster.getSvCount() < 2)
             {
                 setClusterResolvedState(cluster, true);
                 continue;

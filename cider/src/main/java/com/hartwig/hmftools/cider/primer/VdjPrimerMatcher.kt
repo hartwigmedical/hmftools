@@ -17,7 +17,7 @@ class VdjPrimerMatcher(private val maxMismatch: Int)
             val fullLayout: ReadLayout = vdj.layout
 
             // now go through each list and see if anything matches
-            val sequence = fullLayout.consensusSequence()
+            val sequence = fullLayout.consensusSequenceString()
 
             for (primer in primerList)
             {

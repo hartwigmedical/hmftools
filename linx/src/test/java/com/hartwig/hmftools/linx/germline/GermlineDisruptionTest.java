@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.drivercatalog.DriverCatalog;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.common.linx.LinxBreakend;
 import com.hartwig.hmftools.common.linx.LinxGermlineSv;
 import com.hartwig.hmftools.linx.fusion.DisruptionFinder;
 import com.hartwig.hmftools.linx.fusion.SvDisruptionData;
@@ -73,9 +74,13 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        List<LinxGermlineSv> germlineSVs = getGermlineSVs();
+        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
+        List<DriverCatalog> drivers = Lists.newArrayList();
+        List<LinxBreakend> breakends = Lists.newArrayList();
+
+        populateGermlineResults(germlineSVs, drivers, breakends);
         assertEquals(1, germlineSVs.size());
-        assertTrue(germlineSVs.get(0).Reported);
+        assertTrue(drivers.isEmpty());
     }
 
     @Test
@@ -92,9 +97,13 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        List<LinxGermlineSv> germlineSVs = getGermlineSVs();
+        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
+        List<DriverCatalog> drivers = Lists.newArrayList();
+        List<LinxBreakend> breakends = Lists.newArrayList();
+
+        populateGermlineResults(germlineSVs, drivers, breakends);
         assertEquals(1, germlineSVs.size());
-        assertTrue(germlineSVs.get(0).Reported);
+        assertTrue(drivers.isEmpty());
 
         mLinx.clearClustersAndSVs();
 
@@ -109,9 +118,9 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        germlineSVs = getGermlineSVs();
+        populateGermlineResults(germlineSVs, drivers, breakends);
         assertEquals(1, germlineSVs.size());
-        assertTrue(germlineSVs.get(0).Reported);
+        assertTrue(drivers.isEmpty());
 
         mLinx.clearClustersAndSVs();
 
@@ -126,9 +135,9 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        germlineSVs = getGermlineSVs();
+        populateGermlineResults(germlineSVs, drivers, breakends);
         assertEquals(1, germlineSVs.size());
-        assertTrue(germlineSVs.get(0).Reported);
+        assertTrue(drivers.isEmpty());
 
         mLinx.clearClustersAndSVs();
 
@@ -143,7 +152,7 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        germlineSVs = getGermlineSVs();
+        populateGermlineResults(germlineSVs, drivers, breakends);
         assertTrue(germlineSVs.isEmpty());
 
         // evaluate on its own even if clustered with something else
@@ -164,9 +173,9 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        germlineSVs = getGermlineSVs();
+        populateGermlineResults(germlineSVs, drivers, breakends);
         assertEquals(1, germlineSVs.size());
-        assertTrue(germlineSVs.get(0).Reported);
+        assertTrue(drivers.isEmpty());
     }
 
     @Test
@@ -183,9 +192,13 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        List<LinxGermlineSv> germlineSVs = getGermlineSVs();
+        List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
+        List<DriverCatalog> drivers = Lists.newArrayList();
+        List<LinxBreakend> breakends = Lists.newArrayList();
+
+        populateGermlineResults(germlineSVs, drivers, breakends);
         assertEquals(1, germlineSVs.size());
-        assertTrue(germlineSVs.get(0).Reported);
+        assertTrue(drivers.isEmpty());
 
         mLinx.clearClustersAndSVs();
 
@@ -200,7 +213,7 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        germlineSVs = getGermlineSVs();
+        populateGermlineResults(germlineSVs, drivers, breakends);
         assertTrue(germlineSVs.isEmpty());
     }
 
@@ -220,19 +233,24 @@ public class GermlineDisruptionTest
 
         mDisruptionFinder.findReportableDisruptions(mLinx.AllVariants, mLinx.Analyser.getClusters());
 
-        List<LinxGermlineSv> germlineSVs = getGermlineSVs();
-        assertEquals(1, germlineSVs.size());
-        assertFalse(germlineSVs.get(0).Reported);
-    }
-
-    private List<LinxGermlineSv> getGermlineSVs()
-    {
-        List<SvDisruptionData> standardDisruptions = mDisruptionFinder.getDisruptions();
         List<LinxGermlineSv> germlineSVs = Lists.newArrayList();
         List<DriverCatalog> drivers = Lists.newArrayList();
+        List<LinxBreakend> breakends = Lists.newArrayList();
 
-        mDisruptionFinder.germlineDisruptions().populateGermlineSVs(standardDisruptions, germlineSVs, drivers);
-        return germlineSVs;
+        populateGermlineResults(germlineSVs, drivers, breakends);
+        assertEquals(1, germlineSVs.size());
+        assertTrue(drivers.isEmpty());
+    }
+
+    private void populateGermlineResults(
+            final List<LinxGermlineSv> germlineSVs, final List<DriverCatalog> drivers, final List<LinxBreakend> breakends)
+    {
+        germlineSVs.clear();
+        drivers.clear();
+        breakends.clear();
+        List<SvDisruptionData> standardDisruptions = mDisruptionFinder.getDisruptions();
+
+        mDisruptionFinder.germlineDisruptions().populateGermlineSVs(standardDisruptions, germlineSVs, breakends, drivers);
     }
 
     private void addTestGeneData(EnsemblDataCache geneTransCache, final String chromosome, final String geneId, final String geneName)

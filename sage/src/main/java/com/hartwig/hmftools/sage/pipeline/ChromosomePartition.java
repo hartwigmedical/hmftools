@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.SageConfig;
 
 import htsjdk.samtools.reference.ReferenceSequenceFile;
@@ -23,9 +23,11 @@ public class ChromosomePartition
 
     public List<ChrBaseRegion> partition(final String chromosome)
     {
-        if(!mConfig.SpecificRegions.isEmpty())
+        if(!mConfig.SpecificChrRegions.Regions.isEmpty())
         {
-            List<ChrBaseRegion> chrRegions = mConfig.SpecificRegions.stream().filter(x -> x.Chromosome.equals(chromosome)).collect(Collectors.toList());
+            List<ChrBaseRegion> chrRegions = mConfig.SpecificChrRegions.Regions.stream()
+                    .filter(x -> x.Chromosome.equals(chromosome)).collect(Collectors.toList());
+
             return partitionRegions(chrRegions);
         }
 

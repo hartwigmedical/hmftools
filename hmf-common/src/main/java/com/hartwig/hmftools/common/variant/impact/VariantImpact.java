@@ -1,14 +1,6 @@
 package com.hartwig.hmftools.common.variant.impact;
 
-import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_DELIM;
-import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_ITEM_COUNT;
-import static com.hartwig.hmftools.common.variant.impact.AltTranscriptReportableInfo.VAR_IMPACT_OTHER_REPORT_ITEM_DELIM;
-
-import java.util.List;
-
 import com.hartwig.hmftools.common.variant.CodingEffect;
-
-import org.apache.commons.compress.utils.Lists;
 
 public class VariantImpact
 {

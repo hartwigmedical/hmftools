@@ -1,18 +1,20 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static java.util.stream.Collectors.toList;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getDoubleValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getValue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-
-import org.jetbrains.annotations.NotNull;
 
 public class VisCopyNumber implements GenomeRegion
 {
@@ -52,36 +54,30 @@ public class VisCopyNumber implements GenomeRegion
     @Override
     public int end() { return End; }
 
-
     public double minorAlleleCopyNumber()
     {
         return Math.max(0, (1 - BAF) * CopyNumber);
     }
 
-
-    public static final String DELIMITER = "\t";
-    public static final DecimalFormat FORMAT = new DecimalFormat("0.0000");
     private static final String FILE_EXTENSION = ".linx.vis_copy_number.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_copy_number.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
     }
 
-    @NotNull
     public static List<VisCopyNumber> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisCopyNumber> cnDataList) throws IOException
+    public static void write(final String filename, List<VisCopyNumber> cnDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(cnDataList));
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final List<VisCopyNumber> cnDataList)
+    private static List<String> toLines(final List<VisCopyNumber> cnDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -89,16 +85,33 @@ public class VisCopyNumber implements GenomeRegion
         return lines;
     }
 
-    @NotNull
-    static List<VisCopyNumber> fromLines(@NotNull List<String> lines)
+    private static List<VisCopyNumber> fromLines(final List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisCopyNumber::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        lines.remove(0);
+
+        List<VisCopyNumber> data = Lists.newArrayList();
+
+        for(String line : lines)
+        {
+            String[] values = line.split(TSV_DELIM);
+
+            data.add(new VisCopyNumber(
+                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getValue(fieldsIndexMap, "Chromosome", "", values),
+                    getIntValue(fieldsIndexMap, "Start", 0, values),
+                    getIntValue(fieldsIndexMap, "End", 0, values),
+                    getDoubleValue(fieldsIndexMap, "CopyNumber", 0, values),
+                    getDoubleValue(fieldsIndexMap, "BAF", 0, values)));
+        }
+
+        return data;
     }
 
-    @NotNull
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("SampleId")
                 .add("Chromosome")
                 .add("Start")
@@ -108,32 +121,15 @@ public class VisCopyNumber implements GenomeRegion
                 .toString();
     }
 
-    @NotNull
-    public static String toString(@NotNull final VisCopyNumber cnData)
+    public static String toString(final VisCopyNumber cnData)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(cnData.SampleId))
                 .add(String.valueOf(cnData.Chromosome))
                 .add(String.valueOf(cnData.Start))
                 .add(String.valueOf(cnData.End))
-                .add(FORMAT.format(cnData.CopyNumber))
-                .add(FORMAT.format(cnData.BAF))
+                .add(VisDataWriter.FORMAT.format(cnData.CopyNumber))
+                .add(VisDataWriter.FORMAT.format(cnData.BAF))
                 .toString();
-    }
-
-    @NotNull
-    private static VisCopyNumber fromString(@NotNull final String tiData)
-    {
-        String[] values = tiData.split(DELIMITER);
-
-        int index = 0;
-
-        return new VisCopyNumber(
-                values[index++],
-                values[index++],
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                Double.parseDouble(values[index++]),
-                Double.parseDouble(values[index++]));
     }
 }

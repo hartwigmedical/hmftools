@@ -14,8 +14,6 @@ import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.Integers;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class TumorContaminationModel
@@ -25,11 +23,13 @@ public class TumorContaminationModel
     public double contamination(@NotNull final List<TumorContamination> unfiltered)
     {
         final List<TumorContamination> contamination =
-                unfiltered.stream().filter(x -> x.normal().readDepth() > MIN_NORMAL_READ_DEPTH).collect(Collectors.toList());
+                unfiltered.stream().filter(x -> x.Normal.readDepth() > MIN_NORMAL_READ_DEPTH).collect(Collectors.toList());
         long medianTumorReadDepth = medianDepth(contamination);
-        AMB_LOGGER.info("Median tumor depth at potential contamination sites is {} reads", medianTumorReadDepth);
-        final Map<Integer, Long> map =
-                contamination.stream().collect(Collectors.groupingBy(x -> x.tumor().altSupport(), Collectors.counting()));
+
+        AMB_LOGGER.info("contamination sites median tumor depth({})", medianTumorReadDepth);
+
+        final Map<Integer, Long> map = contamination.stream()
+                .collect(Collectors.groupingBy(x -> x.Tumor.altSupport(), Collectors.counting()));
         return contamination(medianTumorReadDepth, map);
     }
 
@@ -57,7 +57,7 @@ public class TumorContaminationModel
             return contamination;
         }
 
-        AMB_LOGGER.info("No evidence of contamination.");
+        AMB_LOGGER.info("no evidence of contamination");
         return 0;
     }
 
@@ -110,6 +110,6 @@ public class TumorContaminationModel
     @VisibleForTesting
     static int medianDepth(@NotNull final List<TumorContamination> contamination)
     {
-        return Integers.medianPositiveValue(contamination.stream().map(x -> x.tumor().readDepth()).collect(Collectors.toList()));
+        return Integers.medianPositiveValue(contamination.stream().map(x -> x.Tumor.readDepth()).collect(Collectors.toList()));
     }
 }

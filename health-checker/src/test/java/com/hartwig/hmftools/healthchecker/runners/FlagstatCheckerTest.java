@@ -22,30 +22,30 @@ public class FlagstatCheckerTest {
 
     @Test
     public void extractDataFromFlagstatWorksForSomatic() throws IOException {
-        FlagstatChecker checker = new FlagstatChecker(REF_FLAGSTAT, TUMOR_FLAGSTAT);
+        TestFlagstatChecker checker = new TestFlagstatChecker(REF_FLAGSTAT, TUMOR_FLAGSTAT);
         List<QCValue> values = checker.run();
 
         assertEquals(4, values.size());
         for (QCValue value : values) {
-            if (value.type() == QCValueType.REF_PROPORTION_MAPPED) {
-                assertEquals("0.993296", value.value());
-            } else if (value.type() == QCValueType.TUM_PROPORTION_MAPPED) {
-                assertEquals("0.99683", value.value());
-            } else if (value.type() == QCValueType.REF_PROPORTION_DUPLICATE) {
-                assertEquals("0.116625", value.value());
-            } else if (value.type() == QCValueType.TUM_PROPORTION_DUPLICATE) {
-                assertEquals("0.163053", value.value());
+            if (value.Type == QCValueType.REF_PROPORTION_MAPPED) {
+                assertEquals("0.993296", value.Value);
+            } else if (value.Type == QCValueType.TUM_PROPORTION_MAPPED) {
+                assertEquals("0.99683", value.Value);
+            } else if (value.Type == QCValueType.REF_PROPORTION_DUPLICATE) {
+                assertEquals("0.116625", value.Value);
+            } else if (value.Type == QCValueType.TUM_PROPORTION_DUPLICATE) {
+                assertEquals("0.163053", value.Value);
             }
         }
     }
 
     @Test(expected = IOException.class)
     public void malformedYieldsIOException() throws IOException {
-        new FlagstatChecker(MALFORMED_FLAGSTAT, MALFORMED_FLAGSTAT).run();
+        new TestFlagstatChecker(MALFORMED_FLAGSTAT, MALFORMED_FLAGSTAT).run();
     }
 
     @Test(expected = IOException.class)
     public void missingYieldsIOException() throws IOException {
-        new FlagstatChecker(MISSING_FLAGSTAT, MISSING_FLAGSTAT).run();
+        new TestFlagstatChecker(MISSING_FLAGSTAT, MISSING_FLAGSTAT).run();
     }
 }

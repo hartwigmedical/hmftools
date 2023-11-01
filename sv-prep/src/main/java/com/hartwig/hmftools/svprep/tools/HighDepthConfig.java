@@ -1,14 +1,12 @@
 package com.hartwig.hmftools.svprep.tools;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.SPECIFIC_REGIONS;
+import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.region.SpecificRegions.loadSpecificRegions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.loadSpecificRegions;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 import static com.hartwig.hmftools.svprep.SvConstants.DEFAULT_CHR_PARTITION_SIZE;
 
@@ -16,10 +14,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 public class HighDepthConfig
@@ -41,21 +38,21 @@ public class HighDepthConfig
     public static final int DEFAULT_HIGH_DEPTH_THRESHOLD = 200;
     public static final int HIGH_DEPTH_REGION_MAX_GAP = 100;
 
-    public HighDepthConfig(final CommandLine cmd)
+    public HighDepthConfig(final ConfigBuilder configBuilder)
     {
-        BamFile = cmd.getOptionValue(BAM_FILE);
-        OutputFile = cmd.getOptionValue(OUTPUT_FILE);
-        RefGenome = cmd.getOptionValue(REF_GENOME);
-        RefGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
-        Threads = parseThreads(cmd);
-        PartitionSize = Integer.parseInt(cmd.getOptionValue(PARTITION_SIZE, String.valueOf(DEFAULT_CHR_PARTITION_SIZE)));
-        HighDepthThreshold = Integer.parseInt(cmd.getOptionValue(HIGH_DEPTH_THRESHOLD, String.valueOf(DEFAULT_HIGH_DEPTH_THRESHOLD)));
+        BamFile = configBuilder.getValue(BAM_FILE);
+        OutputFile = configBuilder.getValue(OUTPUT_FILE);
+        RefGenome = configBuilder.getValue(REF_GENOME);
+        RefGenVersion = RefGenomeVersion.from(configBuilder);
+        Threads = parseThreads(configBuilder);
+        PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
+        HighDepthThreshold = configBuilder.getInteger(HIGH_DEPTH_THRESHOLD);
 
         SpecificRegions = Lists.newArrayList();
 
         try
         {
-            SpecificRegions.addAll(loadSpecificRegions(cmd));
+            SpecificRegions.addAll(loadSpecificRegions(configBuilder));
         }
         catch(ParseException e)
         {
@@ -63,15 +60,17 @@ public class HighDepthConfig
         }
     }
 
-    public static void addOptions(final Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(BAM_FILE, true, "BAM file to slice for high-depth");
-        options.addOption(OUTPUT_FILE, true, "Output file");
-        options.addOption(REF_GENOME, true, REF_GENOME_CFG_DESC);
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
-        options.addOption(HIGH_DEPTH_THRESHOLD, true, "Level for indicating high-depth");
-        options.addOption(PARTITION_SIZE, true, "Partition size, default = " + DEFAULT_CHR_PARTITION_SIZE);
-        addThreadOptions(options);
-        addSpecificChromosomesRegionsConfig(options);
+        configBuilder.addPath(BAM_FILE, true, "BAM file to slice for high-depth");
+        configBuilder.addConfigItem(OUTPUT_FILE, true, "Output file");
+        addRefGenomeConfig(configBuilder, true);
+
+        configBuilder.addInteger(
+                HIGH_DEPTH_THRESHOLD, "Level for indicating high-depth", DEFAULT_HIGH_DEPTH_THRESHOLD);
+
+        configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_CHR_PARTITION_SIZE);
+        addThreadOptions(configBuilder);
+        addSpecificChromosomesRegionsConfig(configBuilder);
     }
 }

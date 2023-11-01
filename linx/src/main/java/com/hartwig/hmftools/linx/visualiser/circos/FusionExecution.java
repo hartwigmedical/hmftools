@@ -33,9 +33,10 @@ public class FusionExecution
                 String.valueOf(config.FusionLegendHeightPerRow),
                 String.valueOf(config.FusionHeight)
         );
-        if (result != 0)
+
+        if(result != 0)
         {
-            VIS_LOGGER.warn("Error adding fusion plots.");
+            VIS_LOGGER.error("error adding fusion plots");
         }
 
         return result;

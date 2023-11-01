@@ -4,26 +4,27 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.orange.algo.ImmutableOrangeReport;
-import com.hartwig.hmftools.orange.algo.OrangeReport;
-import com.hartwig.hmftools.orange.algo.isofox.ImmutableIsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.ImmutableLinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.linx.LinxInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.ImmutablePurpleInterpretedData;
-import com.hartwig.hmftools.orange.algo.purple.PurpleInterpretedData;
+import com.hartwig.hmftools.datamodel.isofox.ImmutableIsofoxRecord;
+import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
+import com.hartwig.hmftools.datamodel.linx.ImmutableLinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxBreakend;
+import com.hartwig.hmftools.datamodel.linx.LinxRecord;
+import com.hartwig.hmftools.datamodel.linx.LinxSvAnnotation;
+import com.hartwig.hmftools.datamodel.orange.ImmutableOrangeRecord;
+import com.hartwig.hmftools.datamodel.orange.OrangeRecord;
+import com.hartwig.hmftools.datamodel.purple.ImmutablePurpleRecord;
+import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 
+import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ReportLimiter {
-
-    private ReportLimiter() {
-    }
-
+public final class ReportLimiter
+{
     @NotNull
-    public static OrangeReport limitAllListsToMaxOne(@NotNull OrangeReport report) {
-        return ImmutableOrangeReport.builder()
+    public static OrangeRecord limitAllListsToMaxOne(@NotNull OrangeRecord report)
+    {
+        return ImmutableOrangeRecord.builder()
                 .from(report)
                 .germlineMVLHPerGene(limitGermlineMVLHToOne(report.germlineMVLHPerGene()))
                 .purple(limitPurpleDataToOne(report.purple()))
@@ -33,13 +34,16 @@ public final class ReportLimiter {
     }
 
     @Nullable
-    private static Map<String, Double> limitGermlineMVLHToOne(@Nullable Map<String, Double> germlineMVLHPerGene) {
-        if (germlineMVLHPerGene == null) {
+    private static Map<String, Double> limitGermlineMVLHToOne(@Nullable Map<String, Double> germlineMVLHPerGene)
+    {
+        if(germlineMVLHPerGene == null)
+        {
             return null;
         }
 
         Map<String, Double> filtered = Maps.newHashMap();
-        if (!germlineMVLHPerGene.isEmpty()) {
+        if(!germlineMVLHPerGene.isEmpty())
+        {
             String firstKey = germlineMVLHPerGene.keySet().iterator().next();
             filtered.put(firstKey, germlineMVLHPerGene.get(firstKey));
         }
@@ -47,8 +51,9 @@ public final class ReportLimiter {
     }
 
     @NotNull
-    private static PurpleInterpretedData limitPurpleDataToOne(@NotNull PurpleInterpretedData purple) {
-        return ImmutablePurpleInterpretedData.builder()
+    private static PurpleRecord limitPurpleDataToOne(@NotNull PurpleRecord purple)
+    {
+        return ImmutablePurpleRecord.builder()
                 .from(purple)
                 .somaticDrivers(max1(purple.somaticDrivers()))
                 .germlineDrivers(max1(purple.germlineDrivers()))
@@ -66,34 +71,81 @@ public final class ReportLimiter {
                 .nearReportableSomaticGains(max1(purple.nearReportableSomaticGains()))
                 .additionalSuspectSomaticGainsLosses(max1(purple.additionalSuspectSomaticGainsLosses()))
                 .allGermlineDeletions(max1(purple.allGermlineDeletions()))
-                .reportableGermlineDeletions(max1(purple.reportableGermlineDeletions()))
+                .allGermlineFullLosses(max1(purple.allGermlineFullLosses()))
+                .reportableGermlineFullLosses(max1(purple.reportableGermlineFullLosses()))
                 .build();
     }
 
     @NotNull
-    private static LinxInterpretedData limitLinxDataToOne(@NotNull LinxInterpretedData linx) {
-        return ImmutableLinxInterpretedData.builder()
+    private static LinxRecord limitLinxDataToOne(@NotNull LinxRecord linx)
+    {
+        List<LinxBreakend> filteredAllSomaticBreakends = max1(linx.allSomaticBreakends());
+        List<LinxBreakend> filteredReportableSomaticBreakends = max1(linx.reportableSomaticBreakends());
+        List<LinxBreakend> filteredAllGermlineBreakends = max1(linx.allGermlineBreakends());
+        List<LinxBreakend> filteredReportableGermlineBreakends = max1(linx.reportableGermlineBreakends());
+
+        return ImmutableLinxRecord.builder()
                 .from(linx)
-                .allStructuralVariants(max1(linx.allStructuralVariants()))
-                .allFusions(max1(linx.allFusions()))
-                .reportableFusions(max1(linx.reportableFusions()))
-                .additionalSuspectFusions(max1(linx.additionalSuspectFusions()))
-                .allBreakends(max1(linx.allBreakends()))
-                .reportableBreakends(max1(linx.reportableBreakends()))
-                .additionalSuspectBreakends(max1(linx.additionalSuspectBreakends()))
-                .homozygousDisruptions(max1(linx.homozygousDisruptions()))
-                .allGermlineDisruptions(max1(linx.allGermlineDisruptions()))
-                .reportableGermlineDisruptions(max1(linx.reportableGermlineDisruptions()))
+                .somaticDrivers(max1(linx.somaticDrivers()))
+                .allSomaticStructuralVariants(filterStructuralVariants(linx.allSomaticStructuralVariants(),
+                        filteredAllSomaticBreakends, filteredReportableSomaticBreakends))
+                .allGermlineStructuralVariants(filterStructuralVariants(linx.allGermlineStructuralVariants(),
+                        filteredAllGermlineBreakends, filteredReportableGermlineBreakends))
+                .allSomaticFusions(max1(linx.allSomaticFusions()))
+                .reportableSomaticFusions(max1(linx.reportableSomaticFusions()))
+                .additionalSuspectSomaticFusions(max1(linx.additionalSuspectSomaticFusions()))
+                .allSomaticBreakends(filteredAllSomaticBreakends)
+                .reportableSomaticBreakends(filteredReportableSomaticBreakends)
+                .additionalSuspectSomaticBreakends(max1(linx.additionalSuspectSomaticBreakends()))
+                .somaticHomozygousDisruptions(max1(linx.somaticHomozygousDisruptions()))
+                .allGermlineStructuralVariants(max1(linx.allGermlineStructuralVariants()))
+                .allGermlineBreakends(filteredAllGermlineBreakends)
+                .reportableGermlineBreakends(filteredReportableGermlineBreakends)
+                .germlineHomozygousDisruptions(max1(linx.germlineHomozygousDisruptions()))
                 .build();
     }
 
     @Nullable
-    private static IsofoxInterpretedData limitIsofoxDataToOne(@Nullable IsofoxInterpretedData isofox) {
-        if (isofox == null) {
+    private static List<LinxSvAnnotation> filterStructuralVariants(@Nullable List<LinxSvAnnotation> allStructuralVariants,
+            @Nullable List<LinxBreakend> filteredAllBreakends, @Nullable List<LinxBreakend> filteredReportableBreakends)
+    {
+        if(allStructuralVariants == null || filteredAllBreakends == null || filteredReportableBreakends == null)
+        {
             return null;
         }
 
-        return ImmutableIsofoxInterpretedData.builder()
+        List<Integer> structuralVariantsToRetain = Lists.newArrayList();
+        for(LinxBreakend breakend : filteredAllBreakends)
+        {
+            structuralVariantsToRetain.add(breakend.svId());
+        }
+
+        for(LinxBreakend breakend : filteredReportableBreakends)
+        {
+            structuralVariantsToRetain.add(breakend.svId());
+        }
+
+        List<LinxSvAnnotation> filteredStructuralVariants = Lists.newArrayList();
+        for(LinxSvAnnotation structuralVariant : allStructuralVariants)
+        {
+            if(structuralVariantsToRetain.contains(structuralVariant.svId()))
+            {
+                filteredStructuralVariants.add(structuralVariant);
+            }
+        }
+
+        return filteredStructuralVariants;
+    }
+
+    @Nullable
+    private static IsofoxRecord limitIsofoxDataToOne(@Nullable IsofoxRecord isofox)
+    {
+        if(isofox == null)
+        {
+            return null;
+        }
+
+        return ImmutableIsofoxRecord.builder()
                 .from(isofox)
                 .allGeneExpressions(max1(isofox.allGeneExpressions()))
                 .reportableHighExpression(max1(isofox.reportableHighExpression()))
@@ -108,7 +160,8 @@ public final class ReportLimiter {
     }
 
     @Nullable
-    private static <T> List<T> max1(@Nullable List<T> elements) {
+    private static <T> List<T> max1(@Nullable List<T> elements)
+    {
         return elements != null ? elements.subList(0, Math.min(1, elements.size())) : null;
     }
 }

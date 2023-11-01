@@ -8,13 +8,11 @@ import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipped;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipped;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.properPair;
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_C_INSERT;
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_INSERT;
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_LENGTH;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_LENGTH;
 import static com.hartwig.hmftools.common.sv.LineElements.isMobileLineElement;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;

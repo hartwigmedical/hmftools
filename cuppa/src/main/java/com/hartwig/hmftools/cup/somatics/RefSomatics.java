@@ -7,10 +7,12 @@ import static com.hartwig.hmftools.common.sigs.SnvSigUtils.SNV_TRINUCLEOTIDE_BUC
 import static com.hartwig.hmftools.common.sigs.SnvSigUtils.populateBucketMap;
 import static com.hartwig.hmftools.common.utils.MatrixFile.DEFAULT_MATRIX_DELIM;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.convertWildcardSamplePath;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
+import static com.hartwig.hmftools.cup.CuppaConfig.formSamplePath;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.COHORT_REF_SIG_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_CANCER_POS_FREQ_COUNTS;
 import static com.hartwig.hmftools.cup.CuppaRefFiles.REF_FILE_SAMPLE_POS_FREQ_COUNTS;
@@ -29,13 +31,16 @@ import static com.hartwig.hmftools.cup.somatics.GenomicPositions.excludeChromoso
 import static com.hartwig.hmftools.cup.somatics.GenomicPositions.extractPositionFrequencyCounts;
 import static com.hartwig.hmftools.cup.somatics.SigContributions.buildCancerSignatureContributions;
 import static com.hartwig.hmftools.cup.somatics.SigContributions.buildSampleSignatureContributions;
-import static com.hartwig.hmftools.cup.somatics.SomaticClassifier.SNV_POS_FREQ_POS_SIZE;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadRefSampleCounts;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSigContribsFromCohortFile;
 import static com.hartwig.hmftools.cup.somatics.SomaticDataLoader.loadSomaticVariants;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.DEC_3_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_GEN_POS_CHR_X;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.EXCLUDE_GEN_POS_CHR_X_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.GEN_POS_BUCKET_SIZE_CFG;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.GEN_POS_BUCKET_SIZE_DESC;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.GEN_POS_MAX_SAMPLE_COUNT_CFG;
+import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.GEN_POS_MAX_SAMPLE_COUNT_DESC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INTEGER_FORMAT;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC;
 import static com.hartwig.hmftools.cup.somatics.SomaticsCommon.INCLUDE_AID_APOBEC_DESC;
@@ -57,14 +62,11 @@ import com.hartwig.hmftools.common.sigs.PositionFrequencies;
 import com.hartwig.hmftools.common.utils.Matrix;
 import com.hartwig.hmftools.common.utils.VectorUtils;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.NoiseRefCache;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.ref.RefDataConfig;
 import com.hartwig.hmftools.cup.ref.RefClassifier;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.jetbrains.annotations.NotNull;
 
 public class RefSomatics implements RefClassifier
 {
@@ -81,9 +83,6 @@ public class RefSomatics implements RefClassifier
     private final Map<String,Integer> mGenPosCountsIndex;
     private boolean mWriteGenPosMatrixData;
 
-    private final boolean mIncludeAidApobec;
-    private final boolean mExcludeGenPosChrX;
-
     private final PositionFrequencies mPosFrequencies;
 
     private BufferedWriter mRefDataWriter;
@@ -93,7 +92,7 @@ public class RefSomatics implements RefClassifier
     private static final String MATRIX_TYPE_GEN_POS = "GEN_POS";
 
     public RefSomatics(
-            final RefDataConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+            final RefDataConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -110,12 +109,10 @@ public class RefSomatics implements RefClassifier
         mGenPosCountsIndex = Maps.newHashMap();
         mWriteGenPosMatrixData = false;
 
-        mIncludeAidApobec = cmd.hasOption(INCLUDE_AID_APOBEC);
-        mExcludeGenPosChrX = cmd.hasOption(EXCLUDE_GEN_POS_CHR_X);
+        int posFreqBucketSize = configBuilder.getInteger(GEN_POS_BUCKET_SIZE_CFG);
+        int genPosMaxSampleCount = configBuilder.getInteger(GEN_POS_MAX_SAMPLE_COUNT_CFG);
 
-        int posFreqBucketSize = Integer.parseInt(cmd.getOptionValue(SNV_POS_FREQ_POS_SIZE, String.valueOf(GEN_POS_BUCKET_SIZE)));
-
-        mPosFrequencies = new PositionFrequencies(posFreqBucketSize, GEN_POS_MAX_SAMPLE_COUNT);
+        mPosFrequencies = new PositionFrequencies(mConfig.RefGenVersion, posFreqBucketSize, genPosMaxSampleCount);
     }
 
     public CategoryType categoryType() { return SNV; }
@@ -128,17 +125,18 @@ public class RefSomatics implements RefClassifier
         if(config.Categories.contains(SNV))
             return true;
 
-        return !config.CohortSigContribsFile.isEmpty() || !config.Snv96MatrixFile.isEmpty() || !config.PurpleDir.isEmpty();
+        return !config.CohortSigContribsFile.isEmpty() || !config.Snv96MatrixFile.isEmpty() || !config.PurpleDir.isEmpty()
+                || !config.SomaticVariantsDir.isEmpty();
     }
 
-    public static void addCmdLineArgs(@NotNull Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(SNV_POS_FREQ_POS_SIZE, true, "Genomic position bucket size (default: 20000)");
-        options.addOption(INCLUDE_AID_APOBEC, false, INCLUDE_AID_APOBEC_DESC);
-        options.addOption(EXCLUDE_GEN_POS_CHR_X, false, EXCLUDE_GEN_POS_CHR_X_DESC);
+        configBuilder.addInteger(GEN_POS_BUCKET_SIZE_CFG, GEN_POS_BUCKET_SIZE_DESC, GEN_POS_BUCKET_SIZE);
+        configBuilder.addInteger(GEN_POS_MAX_SAMPLE_COUNT_CFG, GEN_POS_MAX_SAMPLE_COUNT_DESC, GEN_POS_MAX_SAMPLE_COUNT);
     }
 
-    public void buildRefDataSets()
+    @Override
+    public boolean buildRefDataSets()
     {
         CUP_LOGGER.info("building SNV and signatures reference data");
 
@@ -159,18 +157,12 @@ public class RefSomatics implements RefClassifier
             mSnv96Counts = loadReferenceSnvCounts(mConfig.Snv96MatrixFile, mSnv96CountsIndex, MATRIX_TYPE_SNV_96);
             mGenPosCounts = loadReferenceSnvCounts(mConfig.GenPosMatrixFile, mGenPosCountsIndex, MATRIX_TYPE_GEN_POS);
 
-            retrieveMissingSampleCounts();
-        }
-
-        if(mExcludeGenPosChrX)
-        {
-            String chrX = mPosFrequencies.isValidChromosome("X") ? "X" : "chrX";
-            excludeChromosome(mGenPosCounts, mPosFrequencies, chrX);
-            mWriteGenPosMatrixData = true;
+            if(!retrieveMissingSampleCounts())
+                return false;
         }
 
         // always exclude Y, if not already when the counts were made
-        String chrY = mPosFrequencies.isValidChromosome("Y") ? "Y" : "chrY";
+        String chrY = mConfig.RefGenVersion.versionedChromosome("Y");
         excludeChromosome(mGenPosCounts, mPosFrequencies, chrY);
 
         // write out sample matrix data unless they were already correct
@@ -210,6 +202,7 @@ public class RefSomatics implements RefClassifier
         writeCancerGenPosMatrix(cancerGenPosMatrix, cancerTypes, mConfig.OutputDir + REF_FILE_CANCER_POS_FREQ_COUNTS, DEC_3_FORMAT);
 
         closeBufferedWriter(mRefDataWriter);
+        return true;
     }
 
     private Matrix loadReferenceSnvCounts(final String refFilename, final Map<String,Integer> sampleCountsIndex, final String type)
@@ -280,7 +273,7 @@ public class RefSomatics implements RefClassifier
         return refMatrix;
     }
 
-    private void retrieveMissingSampleCounts()
+    private boolean retrieveMissingSampleCounts()
     {
         // returns true if both types of counts are already exactly accounted for in the loaded matrix data
         final List<String> refSampleIds = mSampleDataCache.refSampleIds(false);
@@ -289,7 +282,7 @@ public class RefSomatics implements RefClassifier
                 .filter(x -> !mSnv96CountsIndex.containsKey(x) || !mGenPosCountsIndex.containsKey(x)).count();
 
         if(missingSamples == 0)
-            return;
+            return true;
 
         int refSampleCount = refSampleIds.size();
         CUP_LOGGER.debug("retrieving SNV data for {} samples from refSampleCount({})", missingSamples, refSampleCount);
@@ -333,10 +326,16 @@ public class RefSomatics implements RefClassifier
             {
                 variants.addAll(loadSomaticVariants(sampleId, mConfig.DbAccess));
             }
+            else if(!mConfig.PurpleDir.isEmpty())
+            {
+                String samplePurpleDir = formSamplePath(mConfig.PurpleDir, sampleId);
+                final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(samplePurpleDir, sampleId);
+                variants.addAll(SomaticDataLoader.loadSomaticVariantsFromVcf(somaticVcfFile, Lists.newArrayList(SNP)));
+            }
             else
             {
-                final String somaticVcfFile = PurpleCommon.purpleSomaticVcfFile(mConfig.PurpleDir, sampleId);
-                variants.addAll(loadSomaticVariants(somaticVcfFile, Lists.newArrayList(SNP)));
+                final String somaticGenericFile = SomaticVariant.generateFilename(mConfig.SomaticVariantsDir, sampleId);
+                variants.addAll(SomaticDataLoader.loadGenericSomaticVariants(somaticGenericFile, Lists.newArrayList(SNP)));
             }
 
             if(needsTriNucCounts)
@@ -353,11 +352,13 @@ public class RefSomatics implements RefClassifier
                 int refSampleIndex = mGenPosCountsIndex.size();
                 mGenPosCountsIndex.put(sampleId, refSampleIndex);
 
-                AidApobecStatus aidApobecStatus = mIncludeAidApobec ? AidApobecStatus.ALL : AidApobecStatus.FALSE_ONLY;
+                AidApobecStatus aidApobecStatus = AidApobecStatus.FALSE_ONLY;
                 extractPositionFrequencyCounts(variants, mPosFrequencies, aidApobecStatus);
                 mGenPosCounts.setRow(refSampleIndex, mPosFrequencies.getCounts());
             }
         }
+
+        return true;
     }
 
     private void buildSignaturePercentiles()

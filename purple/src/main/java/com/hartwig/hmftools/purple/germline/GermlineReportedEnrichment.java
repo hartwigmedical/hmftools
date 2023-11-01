@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermline
 import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.WILDTYPE_LOST;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_DESC;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.addReportableTranscriptList;
 
 import java.util.Collections;
 import java.util.List;
@@ -63,7 +64,7 @@ public class GermlineReportedEnrichment
 
             DriverGene driverGene = mDriverGeneMap.get(variant.gene());
 
-            if(report(
+            if(isReportable(
                     variant.decorator(), downgradeWildType(driverGene.reportGermlineHotspot()),
                     downgradeWildType(driverGene.reportGermlineVariant()), Collections.emptySet()))
             {
@@ -88,6 +89,8 @@ public class GermlineReportedEnrichment
             if(report(variant.decorator(), genesWithMultipleUnphasedHits))
             {
                 variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+
+                addReportableTranscriptList(variant.type(), variant.context(), variant.variantImpact());
             }
         }
 
@@ -99,7 +102,7 @@ public class GermlineReportedEnrichment
         return reporting == WILDTYPE_LOST ? VARIANT_NOT_LOST : reporting;
     }
 
-    private boolean report(final VariantContextDecorator variant, final Set<String> genesWithMultipleUnphasedHits)
+    public boolean report(final VariantContextDecorator variant, final Set<String> genesWithMultipleUnphasedHits)
     {
         if(variant.gene().isEmpty())
             return false;
@@ -109,10 +112,10 @@ public class GermlineReportedEnrichment
 
         final DriverGene driverGene = mDriverGeneMap.get(variant.gene());
 
-        return report(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), genesWithMultipleUnphasedHits);
+        return isReportable(variant, driverGene.reportGermlineHotspot(), driverGene.reportGermlineVariant(), genesWithMultipleUnphasedHits);
     }
 
-    private boolean report(
+    public static boolean isReportable(
             final VariantContextDecorator variant, final DriverGeneGermlineReporting hotspotReporting,
             final DriverGeneGermlineReporting variantReporting, final Set<String> genesWithMultipleUnphasedHits)
     {

@@ -1,13 +1,17 @@
 package com.hartwig.hmftools.svtools.sequence;
 
+import static java.lang.Math.min;
+
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
 import static com.hartwig.hmftools.common.utils.Strings.reverseString;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.svtools.simulation.ShatteringConfig.registerConfig;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -19,12 +23,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -40,15 +40,18 @@ public class RefSequenceGenerator
 
     private static final Logger LOGGER = LogManager.getLogger(RefSequenceGenerator.class);
 
-    public RefSequenceGenerator(final CommandLine cmd)
+    private static final boolean mWriteFastaFormat = true;
+    private static final int FASTA_LINE_LIMIT = 60;
+
+    public RefSequenceGenerator(final ConfigBuilder configBuilder)
     {
-        mOutputDir = parseOutputDir(cmd);
-        mBedFile = cmd.getOptionValue(BED_FILE);
-        mKmerInputFile = cmd.getOptionValue(KMER_INPUT_FILE);
+        mOutputDir = parseOutputDir(configBuilder);
+        mBedFile = configBuilder.getValue(BED_FILE);
+        mKmerInputFile = configBuilder.getValue(KMER_INPUT_FILE);
 
         try
         {
-            final String refGenomeFile = cmd.getOptionValue(REF_GENOME);
+            final String refGenomeFile = configBuilder.getValue(REF_GENOME);
             IndexedFastaSequenceFile refGenome = new IndexedFastaSequenceFile(new File(refGenomeFile));
             mRefGenome = new RefGenomeSource(refGenome);
         }
@@ -83,13 +86,23 @@ public class RefSequenceGenerator
         {
             BufferedWriter writer;
 
-            final String outputFileName = mOutputDir + "REF_GENOME_SEQUENCES.csv";
+            String outputFileName = mOutputDir;
+
+            if(mWriteFastaFormat)
+                outputFileName += "REF_GENOME_SEQUENCES.fastq";
+            else
+                outputFileName += "REF_GENOME_SEQUENCES.csv";
 
             writer = createBufferedWriter(outputFileName, false);
-            writer.write("SequenceName,Chromosome,PosStart,PosEnd,Sequence");
-            writer.newLine();
+
+            if(!mWriteFastaFormat)
+            {
+                writer.write("SequenceName,Chromosome,PosStart,PosEnd,Sequence");
+                writer.newLine();
+            }
 
             final List<String> bedFileData = Files.readAllLines(new File(mBedFile).toPath());
+            String currentChromosome = "";
 
             for(String line : bedFileData)
             {
@@ -108,12 +121,35 @@ public class RefSequenceGenerator
 
                 LOGGER.debug("writing ref-genome sequence for {}: for chr({}) pos({} -> {})", seqName, chromosome, posStart, posEnd);
 
-                final String reqSequence = mRefGenome.getBaseString(chromosome, posStart, posEnd);;
+                final String reqSequence = mRefGenome.getBaseString(chromosome, posStart, posEnd);
 
-                writer.write(String.format("%s,%s,%d,%d,%s",
-                        seqName, chromosome, posStart, posEnd, reqSequence));
-                writer.newLine();
+                if(mWriteFastaFormat)
+                {
+                    if(!currentChromosome.equals(chromosome))
+                    {
+                        currentChromosome = chromosome;
+                        writer.write(String.format(">%s", chromosome));
+                        writer.newLine();
+                    }
 
+                    int sequenceLength = reqSequence.length();
+
+                    int index = 0;
+                    while(index < sequenceLength)
+                    {
+                        int endIndex = min(index + FASTA_LINE_LIMIT, sequenceLength);
+                        writer.write(reqSequence.substring(index, endIndex));
+                        writer.newLine();
+                        index += FASTA_LINE_LIMIT;
+                    }
+                }
+                else
+                {
+
+                    writer.write(String.format("%s,%s,%d,%d,%s",
+                            seqName, chromosome, posStart, posEnd, reqSequence));
+                    writer.newLine();
+                }
             }
 
             closeBufferedWriter(writer);
@@ -205,22 +241,20 @@ public class RefSequenceGenerator
     private static final String KMER_INPUT_FILE = "kmer_input_file";
     private static final String BED_FILE = "bed_file";
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(KMER_INPUT_FILE, true, "File specifying locations for which to produce K-mers");
-        options.addOption(BED_FILE, true, "File specifying locations for which to produce ref-genome sequences");
-        addRefGenomeConfig(options);
-        addOutputDir(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        configBuilder.addConfigItem(KMER_INPUT_FILE, true, "File specifying locations for which to produce K-mers");
+        configBuilder.addConfigItem(BED_FILE, true, "File specifying locations for which to produce ref-genome sequences");
+        addRefGenomeConfig(configBuilder, true);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        RefSequenceGenerator refSequenceGenerator = new RefSequenceGenerator(cmd);
+        RefSequenceGenerator refSequenceGenerator = new RefSequenceGenerator(configBuilder);
         refSequenceGenerator.run();
     }
-
-
 }

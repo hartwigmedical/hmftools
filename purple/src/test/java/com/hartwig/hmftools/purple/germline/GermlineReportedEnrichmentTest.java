@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.purple.germline;
 
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneGermlineReporting.ANY;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_BIALLELIC_FLAG;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PURPLE_VARIANT_CN;
 import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
@@ -32,7 +33,7 @@ public class GermlineReportedEnrichmentTest
     @Test
     public void testReportHotspot()
     {
-        DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.ANY);
+        DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, ANY);
 
         GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
 
@@ -47,7 +48,7 @@ public class GermlineReportedEnrichmentTest
     @Test
     public void testDoNotReportFailedHotspot()
     {
-        DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, DriverGeneGermlineReporting.ANY);
+        DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.NONE, ANY);
         GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
 
         GermlineVariant var1 = createGermline("PASS", "KD53", false, true, "UNKNOWN", CodingEffect.NONE, 0.5);
@@ -143,7 +144,7 @@ public class GermlineReportedEnrichmentTest
     @Test
     public void testReportUnknownFrameshift()
     {
-        DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.NONE);
+        DriverGene driverGene = createDriverGene("KD53", ANY, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
 
         GermlineVariant var = createGermline("PASS", "KD53", false, false, "UNKNOWN", CodingEffect.NONSENSE_OR_FRAMESHIFT, 0.5);
@@ -156,7 +157,7 @@ public class GermlineReportedEnrichmentTest
     @Test
     public void testReportPathogenic()
     {
-        DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.NONE);
+        DriverGene driverGene = createDriverGene("KD53", ANY, DriverGeneGermlineReporting.NONE);
         GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
 
         GermlineVariant var = createGermline("PASS", "KD53", false, false, "Pathogenic", CodingEffect.NONE, 0.5);
@@ -169,7 +170,7 @@ public class GermlineReportedEnrichmentTest
     @Test
     public void testReportBiallelicAsMultipleHit()
     {
-        DriverGene driverGene = createDriverGene("KD53", DriverGeneGermlineReporting.ANY, DriverGeneGermlineReporting.WILDTYPE_LOST);
+        DriverGene driverGene = createDriverGene("KD53", ANY, DriverGeneGermlineReporting.WILDTYPE_LOST);
         GermlineReportedEnrichment victim = new GermlineReportedEnrichment(Lists.newArrayList(driverGene), Collections.emptySet());
 
         GermlineVariant var = createGermline("PASS", "KD53", true, false, "Pathogenic", CodingEffect.NONE, 0.5);
@@ -277,7 +278,8 @@ public class GermlineReportedEnrichmentTest
                 .reportAmplification(false)
                 .reportSomaticHotspot(false)
                 .reportSplice(false)
-                .reportGermlineDisruption(false)
+                .reportGermlineDisruption(ANY)
+                .reportGermlineDeletion(ANY)
                 .reportPGX(false)
                 .build();
     }

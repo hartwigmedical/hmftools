@@ -4,34 +4,29 @@ import static java.lang.Math.exp;
 import static java.lang.Math.log;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
 
-import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedReader;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
-import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.common.cuppa.CategoryType.ALT_SJ;
 import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_COHORT;
-import static com.hartwig.hmftools.common.cuppa.ClassifierType.ALT_SJ_PAIRWISE;
-import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_CUTOFF;
-import static com.hartwig.hmftools.cup.common.CupConstants.CSS_SIMILARITY_MAX_MATCHES;
 import static com.hartwig.hmftools.cup.common.CupConstants.ALT_SJ_DIFF_EXPONENT;
 import static com.hartwig.hmftools.cup.common.CupConstants.GENE_EXP_CSS_THRESHOLD;
 import static com.hartwig.hmftools.common.cuppa.ResultType.CLASSIFIER;
-import static com.hartwig.hmftools.cup.common.SampleData.RNA_READ_LENGTH_NONE;
 import static com.hartwig.hmftools.cup.common.SampleData.isKnownCancerType;
 import static com.hartwig.hmftools.cup.common.SampleResult.checkIsValidCancerType;
-import static com.hartwig.hmftools.cup.common.SampleSimilarity.recordCssSimilarity;
+import static com.hartwig.hmftools.cup.rna.AltSpliceJunctionPrep.loadRefAltSjIndices;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_END;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.FLD_POS_START;
 import static com.hartwig.hmftools.cup.rna.RefAltSpliceJunctions.loadSampleAltSjMatrixData;
@@ -48,6 +43,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionFile;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -55,9 +51,6 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class AltSjClassifier implements CuppaClassifier
 {
@@ -75,23 +68,15 @@ public class AltSjClassifier implements CuppaClassifier
 
     private final Map<String,RnaCohortData> mCancerDataMap; // number of samples with specific read length in each cancer type
 
-    private final double mFragCountLogValue;
-    private final int mMinSampleFragments;
     private final double mWeightExponent;
-    private final boolean mRunPairwise;
 
     private BufferedWriter mCssWriter;
 
-    private static final String FRAG_COUNT_LOG_VALUE = "alt_sj_log_value";
     private static final String LOG_CSS_VALUES = "alt_sj_log_css";
     private static final String WEIGHT_EXPONENT = "alt_sj_weight_exp";
-    private static final String RUN_PAIRWISE = "alt_sj_pairwise";
-    private static final String MIN_SAMPLE_FRAGS = "alt_sj_min_sample_frags";
-
-    private static final String READ_LENGTH_DELIM = "_";
 
     public AltSjClassifier(
-            final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+            final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -105,35 +90,18 @@ public class AltSjClassifier implements CuppaClassifier
         mSampleFragCounts = null;
         mCssWriter = null;
 
-        mWeightExponent = Double.parseDouble(cmd.getOptionValue(WEIGHT_EXPONENT, String.valueOf(ALT_SJ_DIFF_EXPONENT)));
+        mWeightExponent = configBuilder.getDecimal(WEIGHT_EXPONENT);
 
-        if(cmd.hasOption(FRAG_COUNT_LOG_VALUE))
-        {
-            // zero will mean not applied, ie using averages as-is, otherwise value must be >= 1
-            mFragCountLogValue = max(Double.parseDouble(cmd.getOptionValue(FRAG_COUNT_LOG_VALUE)), 1.0);
-        }
-        else
-        {
-            mFragCountLogValue = 1;
-        }
-
-        mMinSampleFragments = Integer.parseInt(cmd.getOptionValue(MIN_SAMPLE_FRAGS, "0"));
-
-        mRunPairwise = cmd.hasOption(RUN_PAIRWISE);
-
-        if(cmd.hasOption(LOG_CSS_VALUES))
+        if(configBuilder.hasValue(LOG_CSS_VALUES))
         {
             initialiseCssWriter();
         }
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addCmdLineArgs(final ConfigBuilder configBuilder)
     {
-        options.addOption(FRAG_COUNT_LOG_VALUE, true, "Use log of frag counts plus this value");
-        options.addOption(WEIGHT_EXPONENT, true, "Exponent for weighting pair-wise calcs");
-        options.addOption(RUN_PAIRWISE, false, "Run pair-wise classifier");
-        options.addOption(MIN_SAMPLE_FRAGS, true, "Min sample fragments to use a site");
-        options.addOption(LOG_CSS_VALUES, false, "Log CSS values");
+        configBuilder.addDecimal(WEIGHT_EXPONENT, "Exponent for weighting pair-wise calcs", ALT_SJ_DIFF_EXPONENT);
+        configBuilder.addFlag(LOG_CSS_VALUES, "Log CSS values");
     }
 
     public CategoryType categoryType() { return ALT_SJ; }
@@ -167,19 +135,11 @@ public class AltSjClassifier implements CuppaClassifier
             int sampleCount = mSampleDataCache.SampleDataList.size();
             mSampleFragCounts = new short[sampleCount][mRefCancerTypeMatrix.Cols];
 
-
             for(int i = 0; i < mSampleDataCache.SampleDataList.size(); ++i)
             {
                 SampleData sample = mSampleDataCache.SampleDataList.get(i);
                 loadSampleAltSJs(sample.Id, i);
                 mSampleIndexMap.put(sample.Id, i);
-
-                /*
-                final String isofoxDir = mConfig.getIsofoxDataDir(sample.Id);
-                final String filename = GeneExpressionFile.generateFilename(isofoxDir, sample.Id);
-                CUP_LOGGER.debug("loading sample alt-SJ data file({})", filename);
-                mSampleFragCounts = loadSampleAltSjMatrixData(filename, mSampleIndexMap, mRefCancerTypeMatrix.Cols);
-                */
             }
         }
 
@@ -221,9 +181,6 @@ public class AltSjClassifier implements CuppaClassifier
 
         addCancerCssResults(sample, rawSampleFragCounts, adjSampleFragCounts, results);
 
-        if(mRunPairwise)
-            addSampleCssResults(sample, adjSampleFragCounts, results, similarities);
-
         return true;
     }
 
@@ -233,12 +190,7 @@ public class AltSjClassifier implements CuppaClassifier
 
         for(int i = 0; i < sampleFragCounts.length; ++i)
         {
-            int fragCount = rawSampleFragCounts[i];
-
-            if(fragCount < mMinSampleFragments)
-                continue;
-
-            sampleFragCounts[i] = convertFragCount(fragCount);
+            sampleFragCounts[i] = convertFragCount(rawSampleFragCounts[i]);
         }
 
         return sampleFragCounts;
@@ -258,13 +210,10 @@ public class AltSjClassifier implements CuppaClassifier
         {
             for(int i = 0; i < rawSampleFragCounts.length; ++i)
             {
-                if(rawSampleFragCounts[i] >= mMinSampleFragments)
-                {
-                    totalFrags += rawSampleFragCounts[i];
+                totalFrags += rawSampleFragCounts[i];
 
-                    if(adjSampleFragCounts[i] > 0)
-                        ++altSjSites;
-                }
+                if(adjSampleFragCounts[i] > 0)
+                    ++altSjSites;
             }
         }
 
@@ -285,11 +234,8 @@ public class AltSjClassifier implements CuppaClassifier
             if(!checkIsValidCancerType(sample, cohortData.CancerType, cancerCssTotals))
                 continue;
 
-            if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && cohortData.ReadLength != RNA_READ_LENGTH_NONE)
-            {
-                if(sample.rnaReadLength() != cohortData.ReadLength)
-                    continue;
-            }
+            if(!sample.hasRna())
+                continue;
 
             boolean matchesCancerType = sample.cancerType().equals(cohortData.CancerType);
 
@@ -297,7 +243,7 @@ public class AltSjClassifier implements CuppaClassifier
                     adjustRefCounts(mRefCancerTypeMatrix.getRow(i), rawSampleFragCounts, cohortData.SampleCount) : mRefCancerTypeMatrix.getRow(i);
 
             // now any adjustments have been made, zero out any low-fragment-count sites
-            double css = calcCosineSim(refAsjFragCounts, adjSampleFragCounts, false, mMinSampleFragments > 0);
+            double css = calcCosineSim(refAsjFragCounts, adjSampleFragCounts, false, false);
 
             if(css < GENE_EXP_CSS_THRESHOLD)
                 continue;
@@ -344,81 +290,6 @@ public class AltSjClassifier implements CuppaClassifier
                 sample.Id, ALT_SJ, CLASSIFIER, ALT_SJ_COHORT.toString(), String.format("%.4g", totalCss), cancerCssTotals));
     }
 
-    private void addSampleCssResults(
-            final SampleData sample, final double[] sampleFragCounts, final List<SampleResult> results, final List<SampleSimilarity> similarities)
-    {
-        final Map<String,Double> cancerCssTotals = Maps.newHashMap();
-
-        final List<SampleSimilarity> topMatches = Lists.newArrayList();
-
-        int readLength = sample.rnaReadLength();
-
-        for(Map.Entry<String,Integer> entry : mSampleIndexMap.entrySet())
-        {
-            final String refSampleId = entry.getKey();
-
-            if(refSampleId.equals(sample.Id))
-                continue;
-
-            if(readLength != RNA_READ_LENGTH_NONE && readLength != mSampleDataCache.getRefSampleRnaReadLength(refSampleId))
-                continue;
-
-            final String refCancerType = mSampleDataCache.RefSampleCancerTypeMap.get(refSampleId);
-
-            if(refCancerType == null)
-                continue;
-
-            if(!checkIsValidCancerType(sample, refCancerType, cancerCssTotals))
-                continue;
-
-            int refSampleCountsIndex = entry.getValue();
-
-            // TODO: cache the converted ref counts to avoid repeating this step?
-            final short[] refRawSampleFragCounts = mSampleFragCounts[refSampleCountsIndex];
-            final double[] refSampleFragCounts = convertSampleFragCounts(refRawSampleFragCounts);
-
-            double css = calcCosineSim(sampleFragCounts, refSampleFragCounts);
-
-            if(css < GENE_EXP_CSS_THRESHOLD)
-                continue;
-
-            if(mConfig.WriteSimilarities)
-            {
-                recordCssSimilarity(
-                        topMatches, sample.Id, refSampleId, css, ALT_SJ_PAIRWISE.toString(),
-                        CSS_SIMILARITY_MAX_MATCHES, CSS_SIMILARITY_CUTOFF);
-            }
-
-            if(!isKnownCancerType(refCancerType))
-                continue;
-
-            double cssWeight = pow(mWeightExponent, -100 * (1 - css));
-
-            int cancerSampleCount = mSampleDataCache.getCancerSampleCount(refCancerType);
-            double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
-
-            Double total = cancerCssTotals.get(refCancerType);
-
-            if(total == null)
-                cancerCssTotals.put(refCancerType, weightedCss);
-            else
-                cancerCssTotals.put(refCancerType, total + weightedCss);
-        }
-
-        double totalCss = cancerCssTotals.values().stream().mapToDouble(x -> x).sum();
-
-        for(Map.Entry<String,Double> entry : cancerCssTotals.entrySet())
-        {
-            double prob = totalCss > 0 ? entry.getValue() / totalCss : 0;
-            cancerCssTotals.put(entry.getKey(), prob);
-        }
-
-        results.add(new SampleResult(
-                sample.Id, ALT_SJ, CLASSIFIER, ALT_SJ_PAIRWISE.toString(), String.format("%.4g", totalCss), cancerCssTotals));
-
-        similarities.addAll(topMatches);
-    }
-
     private double[] adjustRefCounts(final double[] refCounts, final short[] sampleCounts, int cancerSampleCount)
     {
         // remove the sample's counts - which since now keep raw counts does not need to be de-logged
@@ -426,18 +297,13 @@ public class AltSjClassifier implements CuppaClassifier
 
         for(int b = 0; b < refCounts.length; ++b)
         {
-            if(mFragCountLogValue == 0)
-            {
-                double actualRefCount = refCounts[b] * cancerSampleCount;
-                adjustedCounts[b] = max(actualRefCount - sampleCounts[b], 0) / (cancerSampleCount - 1);
-            }
-            else if(refCounts[b] == 0 || sampleCounts[b] == 0)
+            if(refCounts[b] == 0)
             {
                 adjustedCounts[b] = refCounts[b];
             }
             else
             {
-                double actualRefCount = (exp(refCounts[b]) - mFragCountLogValue) * cancerSampleCount;
+                double actualRefCount = (exp(refCounts[b]) - 1) * cancerSampleCount;
                 double adjustedRefAvg = max(actualRefCount - sampleCounts[b], 0) / (cancerSampleCount - 1);
                 adjustedCounts[b] = convertFragCount(adjustedRefAvg);
             }
@@ -448,17 +314,14 @@ public class AltSjClassifier implements CuppaClassifier
 
     private double convertFragCount(double fragCount)
     {
-        if(mFragCountLogValue < 1)
-            return fragCount;
-
-        return log(fragCount + mFragCountLogValue);
+        return log(fragCount + 1);
     }
 
     private void loadRefCancerFragCounts()
     {
         final List<String> ignoreFields = Lists.newArrayList(FLD_GENE_ID, FLD_CHROMOSOME, FLD_POS_START, FLD_POS_END);
 
-        if(!loadRefAltSjIndices(mConfig.RefAltSjCancerFile))
+        if(!loadRefAltSjIndices(mConfig.RefAltSjCancerFile, mRefAsjIndexMap))
             return;
 
         mRefCancerTypeMatrix = loadMatrixDataFile(mConfig.RefAltSjCancerFile, mRefCancerTypes, ignoreFields, true);
@@ -473,35 +336,16 @@ public class AltSjClassifier implements CuppaClassifier
             int cancerSampleCount = 0;
             final String cancerType = mRefCancerTypes.get(r);
 
-            if(cancerType.contains(READ_LENGTH_DELIM))
+            // only count those samples with RNA
+            final List<SampleData> samples = mSampleDataCache.RefCancerSampleData.get(cancerType);
+
+            if(samples != null)
             {
-                // count up the samples matching the specified read length for this cancer cohort
-                final String[] cohortData = cancerType.split(READ_LENGTH_DELIM);
-                final String refCancerType = cohortData[0];
-                int cohortReadLength = Integer.parseInt(cohortData[1]);
-
-                for(SampleData sample : mSampleDataCache.RefCancerSampleData.get(refCancerType))
-                {
-                    if(sample.rnaReadLength() != RNA_READ_LENGTH_NONE && sample.rnaReadLength() == cohortReadLength)
-                        ++cancerSampleCount;
-                }
-
-                CUP_LOGGER.debug("alt-SJ cancerType({}) readLength({}) samples({})", refCancerType, cohortReadLength, cancerSampleCount);
-                mCancerDataMap.put(cancerType, new RnaCohortData(refCancerType, cohortReadLength, cancerSampleCount));
+                cancerSampleCount = (int)samples.stream().filter(x -> x.hasRna()).count();
             }
-            else
-            {
-                // only count those samples with RNA
-                final List<SampleData> samples = mSampleDataCache.RefCancerSampleData.get(cancerType);
 
-                if(samples != null)
-                {
-                    cancerSampleCount = (int)samples.stream().filter(x -> x.rnaReadLength() != RNA_READ_LENGTH_NONE).count();
-                }
-
-                CUP_LOGGER.debug("alt-SJ cancerType({}) no specific read length, samples({})", cancerType, cancerSampleCount);
-                mCancerDataMap.put(cancerType, new RnaCohortData(cancerType, RNA_READ_LENGTH_NONE, cancerSampleCount));
-            }
+            CUP_LOGGER.debug("alt-SJ cancerType({}) RNA samples({})", cancerType, cancerSampleCount);
+            mCancerDataMap.put(cancerType, new RnaCohortData(cancerType, cancerSampleCount));
 
             for(int bucketIndex = 0; bucketIndex < mRefCancerTypeMatrix.Cols; ++bucketIndex)
             {
@@ -512,6 +356,7 @@ public class AltSjClassifier implements CuppaClassifier
         }
     }
 
+    /*
     private boolean loadRefAltSjIndices(final String filename)
     {
         try
@@ -519,7 +364,8 @@ public class AltSjClassifier implements CuppaClassifier
             BufferedReader fileReader = createBufferedReader(filename);
 
             String header = fileReader.readLine();
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DATA_DELIM);
+            String fileDelim = inferFileDelimiter(filename);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posStartIndex = fieldsIndexMap.get(FLD_POS_START);
@@ -530,7 +376,7 @@ public class AltSjClassifier implements CuppaClassifier
 
             while(line != null)
             {
-                final String[] items = line.split(DATA_DELIM, -1);
+                final String[] items = line.split(fileDelim, -1);
 
                 final String asjKey = formKey(
                         items[chrIndex], Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]));
@@ -548,6 +394,7 @@ public class AltSjClassifier implements CuppaClassifier
 
         return true;
     }
+    */
 
     private boolean loadSampleAltSJs(final String sampleId, int sampleIndex)
     {
@@ -559,20 +406,21 @@ public class AltSjClassifier implements CuppaClassifier
         try
         {
             final List<String> lines = Files.readAllLines(Paths.get(filename));
+            String fileDelim = inferFileDelimiter(filename);
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DATA_DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
             lines.remove(0);
 
             int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
             int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
             int posEndIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_END);
-            int fragCountIndex = fieldsIndexMap.get(FLD_ALT_SJ_FRAG_COUNT);
+            int fragCountIndex = fieldsIndexMap.get(FLD_FRAG_COUNT);
 
             int matchedRefAltSJs = 0;
 
             for(String data : lines)
             {
-                final String items[] = data.split(DATA_DELIM, -1);
+                final String items[] = data.split(fileDelim, -1);
 
                 String chromosome = items[chrIndex];
                 int posStart = Integer.parseInt(items[posStartIndex]);

@@ -11,5 +11,6 @@ public enum AltSpliceJunctionType
     INTRONIC,
     EXON_INTRON,
     CIRCULAR,
+    CANONICAL, // used to put known splice sites into the same form as alt-SJs for Cuppa
     UNKNOWN
 }

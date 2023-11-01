@@ -2,15 +2,15 @@ package com.hartwig.hmftools.geneutils.mapping;
 
 import static com.hartwig.hmftools.common.gene.GeneData.SYNONYM_DELIM;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeFunctions.enforceChrPrefix;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
 import static com.hartwig.hmftools.geneutils.mapping.MappingType.GENE_ID;
 import static com.hartwig.hmftools.geneutils.mapping.MappingType.GENE_NAME;
@@ -26,10 +26,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.compress.utils.Lists;
 
@@ -47,13 +46,13 @@ public class EnsemblGeneMapper
 
     private static final int GENE_COORD_BUFFER = 100;
 
-    public EnsemblGeneMapper(final CommandLine cmd)
+    public EnsemblGeneMapper(final ConfigBuilder configBuilder)
     {
-        String outputDir = parseOutputDir(cmd);
-        String outputId = cmd.getOptionValue(OUTPUT_ID);
-        String ensemblDir37 = cmd.getOptionValue(ENSEMBL_DIR_37);
-        String ensemblDir38 = cmd.getOptionValue(ENSEMBL_DIR_38);
-        String liftOverFile = cmd.getOptionValue(LIFT_OVER_INFO_FILE);
+        String outputDir = parseOutputDir(configBuilder);
+        String outputId =  configBuilder.getValue(OUTPUT_ID);
+        String ensemblDir37 = configBuilder.getValue(ENSEMBL_DIR_37);
+        String ensemblDir38 = configBuilder.getValue(ENSEMBL_DIR_38);
+        String liftOverFile = configBuilder.getValue(LIFT_OVER_INFO_FILE);
 
         if(outputDir == null || ensemblDir37 == null || ensemblDir38 == null)
         {
@@ -271,25 +270,17 @@ public class EnsemblGeneMapper
 
     public static void main(String[] args) throws ParseException
     {
-        final Options options = createOptions();
-        final CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        configBuilder.addConfigItem(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addPath(ENSEMBL_DIR_37, true, "Ensembl data cache dir for ref-genome v37");
+        configBuilder.addPath(ENSEMBL_DIR_38, true, "Ensembl data cache dir for ref-genome v38");
+        configBuilder.addPath(LIFT_OVER_INFO_FILE, false, "Unmatched v37 locations lifted-over to v38");
+        addOutputDir(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
-        setLogLevel(cmd);
+        configBuilder.checkAndParseCommandLine(args);
 
-        EnsemblGeneMapper geneMapper = new EnsemblGeneMapper(cmd);
+        EnsemblGeneMapper geneMapper = new EnsemblGeneMapper(configBuilder);
         geneMapper.run();
     }
-
-    private static Options createOptions()
-    {
-        final Options options = new Options();
-        options.addOption(RefGenomeVersion.REF_GENOME_VERSION, true, "Ref genome version (V37 or V38))");
-        options.addOption(ENSEMBL_DIR_37, true, "Ensembl data cache dir for ref-genome v37");
-        options.addOption(ENSEMBL_DIR_38, true, "Ensembl data cache dir for ref-genome v38");
-        options.addOption(LIFT_OVER_INFO_FILE, true, "Unmatched v37 locations lifted-over to v38");
-        addOutputOptions(options);
-        options.addOption(LOG_DEBUG, false, "Log verbose");
-        return options;
-    }
-
 }

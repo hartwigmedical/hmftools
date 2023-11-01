@@ -1,28 +1,65 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 public class CombinedStats
 {
-    private final Metrics mMetrics;
+    private final CoverageMetrics mCoverageMetrics;
+    private final FragmentLengths mFragmentLengths;
+    private final ReadCounts mReadCounts;
+    private final FlagStats mFlagStats;
+
+    private final List<TargetRegionStats> mTargetRegions;
+
     private final PerformanceCounter mPerfCounter;
-    private long mTotalReads;
 
     public CombinedStats(int maxCoverage)
     {
-        mMetrics = new Metrics(maxCoverage);
+        mCoverageMetrics = new CoverageMetrics(maxCoverage);
+        mFragmentLengths = new FragmentLengths();
         mPerfCounter = new PerformanceCounter("Coverage");
-        mTotalReads = 0;
+        mReadCounts = new ReadCounts();
+        mFlagStats = new FlagStats();
+        mTargetRegions = Lists.newArrayList();
     }
 
-    public Metrics metrics() { return mMetrics; }
-    public PerformanceCounter perfCounter() { return mPerfCounter; }
-    public long totalReads() { return mTotalReads; }
+    public CoverageMetrics coverageMetrics() { return mCoverageMetrics; }
+    public FragmentLengths fragmentLengths() { return mFragmentLengths; }
 
-    public synchronized void addStats(final Metrics metrics, int totalReads, final PerformanceCounter perfCounter)
+    public PerformanceCounter perfCounter() { return mPerfCounter; }
+    public ReadCounts readCounts() { return mReadCounts; }
+
+    public FlagStats flagStats()
     {
-        mMetrics.merge(metrics);
-        mTotalReads += totalReads;
+        return mFlagStats;
+    }
+    public List<TargetRegionStats> targetRegions() { return mTargetRegions; }
+
+    public synchronized void addStats(
+            final CoverageMetrics metrics, final FragmentLengths fragmentLengths, final ReadCounts readCounts,
+            final FlagStats flagStats, final List<TargetRegionStats> targetRegions, final PerformanceCounter perfCounter)
+    {
+        mCoverageMetrics.merge(metrics);
+        mFragmentLengths.merge(fragmentLengths);
+        mReadCounts.merge(readCounts);
         mPerfCounter.merge(perfCounter);
+        mFlagStats.merge(flagStats);
+
+        for(TargetRegionStats targetRegion : targetRegions)
+        {
+            TargetRegionStats matchedRegion = mTargetRegions.stream().filter(x -> x.Region.matches(targetRegion.Region)).findFirst().orElse(null);
+
+            if(matchedRegion != null)
+            {
+                matchedRegion.Counts.merge(targetRegion.Counts);
+            }
+            else
+            {
+                mTargetRegions.add(targetRegion);
+            }
+        }
     }
 }

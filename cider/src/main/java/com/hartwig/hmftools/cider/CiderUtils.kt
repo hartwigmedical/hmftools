@@ -13,6 +13,18 @@ object CiderUtils
 {
     private val sLogger = LogManager.getLogger(javaClass)
 
+    fun calcBaseHash(base: Char): Int
+    {
+        return when (base)
+        {
+            'A' -> 0
+            'T' -> 1
+            'C' -> 2
+            'G' -> 3
+            else -> throw IllegalArgumentException("unknown base: $base")
+        }
+    }
+
     fun conservedAA(vjGeneType: VJGeneType): Char
     {
         if (vjGeneType.vj == VJ.V)

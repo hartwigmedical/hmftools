@@ -4,14 +4,14 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.common.utils.Strings.appendStr;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.linx.LinxConfig.LNX_LOGGER;
-import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.P_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.Q_ARM;
 import static com.hartwig.hmftools.common.purple.ChromosomeArm.asStr;
+import static com.hartwig.hmftools.linx.LinxConfig.REF_GENOME_VERSION;
 
 import java.util.List;
 import java.util.Map;
@@ -22,13 +22,13 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.sv.StructuralVariantType;
 import com.hartwig.hmftools.common.purple.ChromosomeArm;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvVarData;
 
 // common utility methods for SVs
 
-public class SvUtilities {
+public final class SvUtilities {
 
     public static final int NO_LENGTH = -1;
 
@@ -68,12 +68,6 @@ public class SvUtilities {
         return chrLength - centromerePos.intValue();
     }
 
-    public static boolean isShortArmChromosome(final String chromosome)
-    {
-        return chromosome.equals("13") || chromosome.equals("14") || chromosome.equals("15")
-                || chromosome.equals("21") || chromosome.equals("22");
-    }
-
     public static void addSvToChrBreakendMap(final SvVarData var, Map<String, List<SvBreakend>> chrBreakendMap)
     {
         for(int be = SE_START; be <= SE_END; ++be)
@@ -87,7 +81,7 @@ public class SvUtilities {
 
             List<SvBreakend> breakendList = chrBreakendMap.get(breakend.chromosome());
 
-            if (breakendList == null)
+            if(breakendList == null)
             {
                 breakendList = Lists.newArrayList();
                 chrBreakendMap.put(breakend.chromosome(), breakendList);
@@ -95,11 +89,11 @@ public class SvUtilities {
 
             // add the variant in order by ascending position
             int index = 0;
-            for (; index < breakendList.size(); ++index)
+            for(; index < breakendList.size(); ++index)
             {
                 final SvBreakend otherBreakend = breakendList.get(index);
 
-                if (position < otherBreakend.position())
+                if(position < otherBreakend.position())
                     break;
 
                 // special case of inferred placed at another SV's location to explain a CN change
@@ -265,7 +259,7 @@ public class SvUtilities {
         double copyNumDiff = abs(cn2 - cn1);
         double copyNumDiffPerc = copyNumDiff / max(abs(cn1), abs(cn2));
 
-        if (copyNumDiff > maxDiff && copyNumDiffPerc > maxDiffPerc)
+        if(copyNumDiff > maxDiff && copyNumDiffPerc > maxDiffPerc)
             return false;
 
         return true;

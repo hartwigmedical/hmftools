@@ -24,12 +24,14 @@ import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class BiopsyReaderTest {
+public class BiopsyReaderTest
+{
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Test
-    public void canFilterOutEmptyAndDuplicateForms() {
+    public void canFilterOutEmptyAndDuplicateForms()
+    {
         BiopsyReader biopsyReader = new BiopsyReader(CuratorTestFactory.biopsySiteCurator());
         List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(), noCuration());
         assertEquals(1, biopsies.size());
@@ -38,7 +40,8 @@ public class BiopsyReaderTest {
     }
 
     @Test
-    public void canReadCpctPatientBiopsies() {
+    public void canReadCpctPatientBiopsies()
+    {
         BiopsyReader biopsyReader = new BiopsyReader(CuratorTestFactory.biopsySiteCurator());
         List<BiopsyData> biopsies = biopsyReader.read(buildTestPatient(), noCuration());
 
@@ -49,7 +52,8 @@ public class BiopsyReaderTest {
     }
 
     @NotNull
-    private static EcrfPatient buildTestPatient() {
+    private static EcrfPatient buildTestPatient()
+    {
         String patient = "dummy";
 
         EcrfItemGroup biopsy = new EcrfItemGroup();
@@ -95,7 +99,8 @@ public class BiopsyReaderTest {
     }
 
     @NotNull
-    private static CuratedPrimaryTumor noCuration() {
+    private static CuratedPrimaryTumor noCuration()
+    {
         return ImmutableCuratedPrimaryTumor.builder().searchTerm(Strings.EMPTY).isOverridden(false).build();
     }
 }

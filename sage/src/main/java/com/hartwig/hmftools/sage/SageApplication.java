@@ -2,15 +2,24 @@ package com.hartwig.hmftools.sage;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
+import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageCommon.calcMemoryUsage;
 import static com.hartwig.hmftools.sage.SageCommon.logMemoryUsage;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
+import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
+import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.samtools.BamSampler;
+import com.hartwig.hmftools.common.utils.MemoryCalcs;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
@@ -18,13 +27,6 @@ import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -34,18 +36,16 @@ import htsjdk.samtools.cram.ref.ReferenceSource;
 
 public class SageApplication implements AutoCloseable
 {
-    private final SageConfig mConfig;
+    private final SageCallConfig mConfig;
     private final ReferenceData mRefData;
 
     private final PhaseSetCounter mPhaseSetCounter;
     private final VcfWriter mVcfWriter;
 
-    private SageApplication(final CommandLine cmd)
+    private SageApplication(final ConfigBuilder configBuilder)
     {
         final VersionInfo version = new VersionInfo("sage.version");
-        SG_LOGGER.info("Sage version: {}", version.version());
-
-        mConfig = new SageConfig(false, version.version(), cmd);
+        mConfig = new SageCallConfig(version.version(), configBuilder);
 
         if(!mConfig.isValid())
         {
@@ -53,7 +53,7 @@ public class SageApplication implements AutoCloseable
             SG_LOGGER.error("invalid config, exiting");
         }
 
-        mRefData = new ReferenceData(mConfig, cmd);
+        mRefData = new ReferenceData(mConfig, configBuilder);
 
         if(!mRefData.load())
         {
@@ -63,17 +63,21 @@ public class SageApplication implements AutoCloseable
 
         mPhaseSetCounter = new PhaseSetCounter();
 
-        mVcfWriter = new VcfWriter(mConfig, mRefData);
+        mVcfWriter = new VcfWriter(
+                mConfig.Common.Version, mConfig.Common.OutputFile, mConfig.TumorIds, mConfig.Common.ReferenceIds, mRefData.RefGenome);
 
-        SG_LOGGER.info("writing to file: {}", mConfig.OutputFile);
+        SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
     }
 
     private void run() throws IOException
     {
-        long startTime = System.currentTimeMillis();
-        final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values());
+        long startTimeMs = System.currentTimeMillis();
+        final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values(), mConfig.Common);
 
-        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(mConfig, mRefData.RefGenome);
+        setReadLength();
+
+        BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
+                mConfig.Common, mRefData.RefGenome, mConfig.PanelBed, mConfig.TumorIds, mConfig.TumorBams);
         baseQualityRecalibration.produceRecalibrationMap();
 
         if(!baseQualityRecalibration.isValid())
@@ -81,9 +85,8 @@ public class SageApplication implements AutoCloseable
 
         final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
-        int initMemory = calcMemoryUsage(false);
-        logMemoryUsage(mConfig, "BQR", initMemory);
-        System.gc();
+        int initMemory = MemoryCalcs.calcMemoryUsage();
+        logMemoryUsage(mConfig.Common.PerfWarnTime, "BQR", initMemory);
 
         int maxTaskMemory = 0;
 
@@ -92,7 +95,7 @@ public class SageApplication implements AutoCloseable
         {
             final String chromosome = samSequenceRecord.getSequenceName();
 
-            if(!mConfig.processChromosome(chromosome))
+            if(!mConfig.Common.processChromosome(chromosome))
                 continue;
 
             final ChromosomePipeline pipeline = new ChromosomePipeline(
@@ -100,24 +103,61 @@ public class SageApplication implements AutoCloseable
 
             pipeline.process();
             maxTaskMemory = max(pipeline.maxMemoryUsage(), maxTaskMemory);
-            System.gc();
         }
 
-        coverage.writeFiles(mConfig.OutputFile);
+        coverage.writeFiles(mConfig.Common.OutputFile);
 
-        long timeTakenMs = System.currentTimeMillis() - startTime;
-        double timeTakeMins = timeTakenMs / 60000.0;
-
-        SG_LOGGER.info("Sage complete, mins({})", String.format("%.3f", timeTakeMins));
+        SG_LOGGER.info("Sage complete, mins({})", runTimeMinsStr(startTimeMs));
         SG_LOGGER.debug("Sage memory init({}mb) max({}mb)", initMemory, maxTaskMemory);
+    }
+
+    private void setReadLength()
+    {
+        if(mConfig.Common.getReadLength() > 0) // skip if set in config
+            return;
+
+        BamSampler bamSampler = new BamSampler(mConfig.Common.RefGenomeFile);
+
+        ChrBaseRegion sampleRegion = null;
+
+        if(!mConfig.Common.SpecificChrRegions.Regions.isEmpty())
+        {
+            sampleRegion = mConfig.Common.SpecificChrRegions.Regions.get(0);
+        }
+        else if(!mRefData.PanelWithHotspots.isEmpty())
+        {
+            for(Map.Entry<Chromosome, List<BaseRegion>> entry : mRefData.PanelWithHotspots.entrySet())
+            {
+                BaseRegion region = entry.getValue().get(0);
+
+                sampleRegion = new ChrBaseRegion(
+                        mConfig.Common.RefGenVersion.versionedChromosome(entry.getKey().toString()), region.start(), region.end());
+
+                break;
+            }
+        }
+        else
+        {
+            sampleRegion = bamSampler.defaultRegion();
+        }
+
+        if(bamSampler.calcBamCharacteristics(mConfig.TumorBams.get(0), sampleRegion) && bamSampler.maxReadLength() > 0)
+        {
+            mConfig.Common.setReadLength(bamSampler.maxReadLength());
+        }
+        else
+        {
+            SG_LOGGER.warn("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
+            mConfig.Common.setReadLength(DEFAULT_READ_LENGTH);
+        }
     }
 
     private SAMSequenceDictionary dictionary() throws IOException
     {
-        final String bam = mConfig.ReferenceBams.isEmpty() ? mConfig.TumorBams.get(0) : mConfig.ReferenceBams.get(0);
+        final String bam = mConfig.Common.ReferenceBams.isEmpty() ? mConfig.TumorBams.get(0) : mConfig.Common.ReferenceBams.get(0);
 
         SamReader tumorReader = SamReaderFactory.makeDefault()
-                .validationStringency(mConfig.Stringency)
+                .validationStringency(mConfig.Common.BamStringency)
                 .referenceSource(new ReferenceSource(mRefData.RefGenome))
                 .open(new File(bam));
 
@@ -137,30 +177,13 @@ public class SageApplication implements AutoCloseable
 
     public static void main(final String... args) throws IOException
     {
-        final Options options = SageConfig.createSageOptions();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        SageCallConfig.registerConfig(configBuilder);
 
-        try
-        {
-            final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-            setLogLevel(cmd);
-
-            final SageApplication application = new SageApplication(cmd);
-            application.run();
-            application.close();
-        }
-        catch(ParseException e)
-        {
-            SG_LOGGER.warn(e);
-            final HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("SageApplication", options);
-            System.exit(1);
-        }
-    }
-
-    public static CommandLine createCommandLine(final String[] args, final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
+        SageApplication application = new SageApplication(configBuilder);
+        application.run();
+        application.close();
     }
 }

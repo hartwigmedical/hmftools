@@ -7,16 +7,11 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calcResiduals;
 import static com.hartwig.hmftools.common.sigs.SigUtils.calculateFittedCounts;
 import static com.hartwig.hmftools.common.utils.VectorUtils.sumVector;
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.IsofoxConstants.MAX_GENE_PERC_CONTRIBUTION;
 import static com.hartwig.hmftools.isofox.expression.CategoryCountsData.hasGeneIdentifier;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.formTranscriptDefinitions;
-import static com.hartwig.hmftools.isofox.expression.ExpectedRatesGenerator.writeExpectedRates;
-
-import static org.apache.logging.log4j.Level.DEBUG;
-import static org.apache.logging.log4j.Level.WARN;
+import static com.hartwig.hmftools.isofox.expression.ExpectedRatesCommon.formTranscriptDefinitions;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -34,8 +29,6 @@ import com.hartwig.hmftools.isofox.adjusts.GcRatioCounts;
 import com.hartwig.hmftools.isofox.results.GeneResult;
 import com.hartwig.hmftools.isofox.results.ResultsWriter;
 import com.hartwig.hmftools.isofox.results.TranscriptResult;
-
-import org.apache.logging.log4j.Level;
 
 public class TranscriptExpression
 {
@@ -139,7 +132,7 @@ public class TranscriptExpression
 
             double transAllocation = fitAllocations[transIndex];
 
-            if(transAllocation > 0)
+            if(transAllocation > 0 && ISF_LOGGER.isTraceEnabled())
             {
                 ISF_LOGGER.trace("transcript({}) allocated count({})", transName, String.format("%.2f", transAllocation));
             }
@@ -246,14 +239,13 @@ public class TranscriptExpression
         return results;
     }
 
-    public static void setTranscriptsPerMillion(
-            final List<GeneCollectionSummary> geneSummaryData, double[] tmpFactors)
+    public static void setTranscriptsPerMillion(final List<GeneCollectionSummary> allGeneSummaries, double[] tmpFactors)
     {
-        for(final GeneCollectionSummary summaryData : geneSummaryData)
+        for(final GeneCollectionSummary geneSummary : allGeneSummaries)
         {
             Map<String,double[]> geneTPMs = Maps.newHashMap();
 
-            for(TranscriptResult transResult : summaryData.TranscriptResults)
+            for(TranscriptResult transResult : geneSummary.TranscriptResults)
             {
                 double fragsPerKb = transResult.fragmentsPerKb();
 
@@ -273,9 +265,9 @@ public class TranscriptExpression
                 }
             }
 
-            for(GeneResult geneResult : summaryData.GeneResults)
+            for(GeneResult geneResult : geneSummary.GeneResults)
             {
-                final double[] geneTpm = geneTPMs.get(geneResult.GeneData.GeneId);
+                final double[] geneTpm = geneTPMs.get(geneResult.Gene.GeneId);
                 geneResult.setTPM(geneTpm[RAW_TPM], geneTpm[ADJUSTED_TPM]);
             }
         }
@@ -302,11 +294,6 @@ public class TranscriptExpression
             applyFragmentLengthDistributionToExpectedCounts(geneSetCountsData);
 
         formTranscriptDefinitions(geneSetCountsData, mCurrentExpRatesData);
-
-        if(mConfig.WriteExpectedRates)
-        {
-            writeExpectedRates(mResultsWriter.getExpRatesWriter(), mCurrentExpRatesData);
-        }
     }
 
     private double[] generateReadCounts(final GeneCollectionSummary geneSummaryData)
@@ -424,5 +411,4 @@ public class TranscriptExpression
             ISF_LOGGER.error("failed to write category counts data file: {}", e.toString());
         }
     }
-
 }

@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.sage.select;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.select.ReadPanelStatus.MIXED;
 import static com.hartwig.hmftools.sage.select.ReadPanelStatus.OUTSIDE_PANEL;
 import static com.hartwig.hmftools.sage.select.ReadPanelStatus.WITHIN_PANEL;
@@ -9,7 +9,7 @@ import java.util.List;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 @NotThreadSafe
 public class PanelSelector

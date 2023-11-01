@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.neo.bind;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_DOWN_FLANK;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_TPM;
@@ -117,6 +117,10 @@ public class RandomPeptideDistribution
 
         if((isAscending && score < distribution.get(0).Score) || (!isAscending && score > distribution.get(0).Score))
             return 0; // zero-th percentile if the score is better than any in the random distribution
+
+        int distSize = distribution.size();
+        if((isAscending && score > distribution.get(distSize - 1).Score) || (!isAscending && score < distribution.get(distSize - 1).Score))
+            return 1; // return the 100th percentile if outside the distribution
 
         for(int i = 0; i < distribution.size(); ++i)
         {
@@ -355,7 +359,7 @@ public class RandomPeptideDistribution
         {
             final List<String> lines = Files.readAllLines(new File(mConfig.ScoreDistributionFile).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             for(String line : lines)
@@ -405,7 +409,7 @@ public class RandomPeptideDistribution
         {
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             for(String line : lines)
@@ -449,7 +453,7 @@ public class RandomPeptideDistribution
         {
             List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIM);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), BIND_DELIM);
             lines.remove(0);
 
             int peptideIndex = fieldsIndexMap.get(FLD_PEPTIDE);
@@ -463,7 +467,7 @@ public class RandomPeptideDistribution
 
                 for(String line : lines)
                 {
-                    String[] values = line.split(DELIM, -1);
+                    String[] values = line.split(BIND_DELIM, -1);
                     String peptide = values[peptideIndex];
 
                     int peptideLength = peptide.length();
@@ -490,7 +494,7 @@ public class RandomPeptideDistribution
 
                     for(String line : lines)
                     {
-                        String[] values = line.split(DELIM, -1);
+                        String[] values = line.split(BIND_DELIM, -1);
                         String peptide = values[peptideIndex].substring(0, peptideLength);
                         peptideList.add(new PeptideData(peptide, "", "", 0));
                     }

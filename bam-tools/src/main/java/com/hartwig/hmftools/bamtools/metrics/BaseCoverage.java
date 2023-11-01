@@ -1,67 +1,73 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
 import static htsjdk.samtools.CigarOperator.M;
 
-import com.hartwig.hmftools.bamtools.BmConfig;
+import java.util.List;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
 
 public class BaseCoverage
 {
-    private final BmConfig mConfig;
+    private final MetricsConfig mConfig;
     private final int mRegionSize;
     private int mRegionStart;
+    private final List<ChrBaseRegion> mUnmappableRegions;
 
     private final int[] mBaseDepth;
     private final long[] mFilterTypeCounts;
 
-    public BaseCoverage(final BmConfig config, int regionStart, int regionEnd)
+    public BaseCoverage(final MetricsConfig config, int regionStart, int regionEnd, final List<ChrBaseRegion> unmappableRegions)
     {
         mConfig = config;
         mRegionSize = regionEnd - regionStart + 1;
         mRegionStart = regionStart;
         mBaseDepth = new int[mRegionSize];
         mFilterTypeCounts = new long[FilterType.values().length];
+        mUnmappableRegions = unmappableRegions;
     }
 
-    public void processRead(final SAMRecord record, final int[] mateBaseCoords)
+    public void processRead(final SAMRecord read, final List<int[]> mateBaseCoords)
     {
         // some filters exclude all matched bases
-        int alignedBases = record.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
+        int alignedBases = read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == M).mapToInt(x -> x.getLength()).sum();
 
-        if(record.getMappingQuality() < mConfig.MapQualityThreshold)
+        // the order in which the filters are applied matters and matches Picard CollectWgsMetrics
+
+        if(read.getMappingQuality() < mConfig.MapQualityThreshold)
         {
             mFilterTypeCounts[FilterType.LOW_MAP_QUAL.ordinal()] += alignedBases;
             return;
         }
 
-        if(record.getDuplicateReadFlag())
+        if(read.getDuplicateReadFlag())
         {
             mFilterTypeCounts[FilterType.DUPLICATE.ordinal()] += alignedBases;
             return;
         }
 
-        if(mateUnmapped(record))
+        if(!read.getReadPairedFlag() || read.getMateUnmappedFlag())
         {
             mFilterTypeCounts[FilterType.MATE_UNMAPPED.ordinal()] += alignedBases;
             return;
         }
 
-        int position = record.getAlignmentStart();
+        int position = read.getAlignmentStart();
         int readIndex = 0;
 
-        for(CigarElement element : record.getCigar().getCigarElements())
+        for(CigarElement element : read.getCigar().getCigarElements())
         {
             switch(element.getOperator())
             {
                 case S:
-                case H:
                     readIndex += element.getLength();
                     break;
 
@@ -70,13 +76,18 @@ public class BaseCoverage
                     position += element.getLength();
                     break;
 
+                case H:
+                    break;
+
                 case I:
                     readIndex += element.getLength();
                     break;
 
                 case M:
-                    processMatchedBases(
-                            record, position, readIndex, element.getLength(), mateBaseCoords);
+                    processMatchedBases(read, position, readIndex, element.getLength(), mateBaseCoords);
+
+                    position += element.getLength();
+                    readIndex += element.getLength();
                     break;
 
                 default:
@@ -86,8 +97,11 @@ public class BaseCoverage
     }
 
     private void processMatchedBases(
-            final SAMRecord record, int posStart, int readIndexStart, int matchLength, final int[] mateBaseCoords)
+            final SAMRecord read, int posStart, int readIndexStart, int matchLength, final List<int[]> mateBaseCoords)
     {
+        boolean checkUnmappable = !mUnmappableRegions.isEmpty()
+                && mUnmappableRegions.stream().anyMatch(x -> positionsOverlap(x.start(), x.end(), posStart, read.getAlignmentEnd()));
+
         for(int i = 0; i < matchLength; ++i)
         {
             int position = posStart + i;
@@ -98,12 +112,15 @@ public class BaseCoverage
             if(position >= mRegionStart + mRegionSize)
                 break;
 
+            if(checkUnmappable && mUnmappableRegions.stream().anyMatch(x -> x.containsPosition(position)))
+                continue;
+
             int readIndex = readIndexStart + i;
             int baseIndex = position - mRegionStart;
 
-            boolean lowBaseQual = record.getBaseQualities()[readIndex] < mConfig.BaseQualityThreshold;
+            boolean lowBaseQual = read.getBaseQualities()[readIndex] < mConfig.BaseQualityThreshold;
 
-            boolean overlapped = mateBaseCoords != null && positionWithin(position, mateBaseCoords[SE_START], mateBaseCoords[SE_END]);
+            boolean overlapped = mateBaseCoords != null && mateBaseCoords.stream().anyMatch(x -> positionWithin(position, x[SE_START], x[SE_END]));
 
             boolean exceedsCoverage = mBaseDepth[baseIndex] >= mConfig.MaxCoverage;
 
@@ -126,15 +143,23 @@ public class BaseCoverage
         }
     }
 
-    public Metrics createMetrics()
+    public CoverageMetrics createMetrics()
     {
-        Metrics metrics = new Metrics(mConfig.MaxCoverage);
+        CoverageMetrics metrics = new CoverageMetrics(mConfig.MaxCoverage);
 
         long coverageBases = 0;
 
         for(int i = 0; i < mBaseDepth.length; ++i)
         {
             int coverage = mBaseDepth[i];
+
+            if(!mUnmappableRegions.isEmpty())
+            {
+                int position = mRegionStart + i;
+
+                if(mUnmappableRegions.stream().anyMatch(x -> x.containsPosition(position)))
+                    continue;
+            }
 
             if(coverage == 0)
             {
@@ -158,4 +183,20 @@ public class BaseCoverage
 
         return metrics;
     }
+
+    public void clear()
+    {
+        for(int i = 0; i < mBaseDepth.length; ++i)
+        {
+            mBaseDepth[i] = 0;
+        }
+
+        for(int i = 0; i < mFilterTypeCounts.length; ++i)
+        {
+            mFilterTypeCounts[i] = 0;
+        }
+    }
+
+    @VisibleForTesting
+    public int[] baseDepth() { return mBaseDepth; }
 }

@@ -7,8 +7,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.genome.region.Strand.NEG_STRAND;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
-import static com.hartwig.hmftools.isofox.results.ResultsWriter.ITEM_DELIM;
 
 import java.util.StringJoiner;
 
@@ -42,7 +42,7 @@ public class BlatResult
         match   mis-    rep.    N's     Q gap   Q gap   T gap   T gap   strand  Q               Q       Q       Q       T               T       T       T       block   blockSizes      qStarts  tStarts
                 match   match           count   bases   count   bases           name            size    start   end     name            size    start   end     count
         ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-        49      2       0       0       0       0       0       0       +       CPCT02010786T_65720606_12345    63      12      63      L1HS    6018    4081    4132    1       51,     12,     4081,
+        49      2       0       0       0       0       0       0       +       SAMPLEID_65720606_12345    63      12      63      L1HS    6018    4081    4132    1       51,     12,     4081,
          */
 
         String[] values = data.split("\t", -1);
@@ -71,12 +71,6 @@ public class BlatResult
     public static String csvHeader()
     {
         return "Match,Mismatch,Score,QGapCount,QGapBases,TGapCount,TGapBases,Strand,QStart,QEnd,TStart,TEnd,BlockCount,BlockSizes,QStarts,TStarts";
-
-        /*
-        StringJoiner sj = new StringJoiner(DELIMITER);
-        sj.add()
-        return sj.toString();
-        */
     }
 
     public String toCsv()

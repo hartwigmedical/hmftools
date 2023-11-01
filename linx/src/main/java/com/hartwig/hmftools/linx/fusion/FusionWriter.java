@@ -2,7 +2,9 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_DOWNSTREAM;
+import static com.hartwig.hmftools.common.linx.LinxBreakend.BREAKEND_ORIENTATION_UPSTREAM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.linx.LinxFusion.context;
@@ -57,7 +59,7 @@ public class FusionWriter implements CohortFileInterface
                     .gene(transcript.geneName())
                     .transcriptId(transcript.transName())
                     .canonical(transcript.isCanonical())
-                    .geneOrientation(transcript.isUpstream() ? "Upstream" : "Downstream")
+                    .geneOrientation(transcript.isUpstream() ? BREAKEND_ORIENTATION_UPSTREAM : BREAKEND_ORIENTATION_DOWNSTREAM)
                     .disruptive(transcript.isDisruptive())
                     .reportedDisruption(transcript.reportableDisruption())
                     .junctionCopyNumber(gene.jcn())
@@ -90,6 +92,7 @@ public class FusionWriter implements CohortFileInterface
                     .name(geneFusion.name())
                     .reported(geneFusion.reportable())
                     .reportedType(geneFusion.knownTypeStr())
+                    .reportableReasons(geneFusion.reportableReasonsStr())
                     .phased(geneFusion.phaseType())
                     .likelihood(geneFusion.likelihoodType())
                     .chainLength(geneFusion.getChainLength())
@@ -205,7 +208,7 @@ public class FusionWriter implements CohortFileInterface
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format("%s,%s,%s,%s",
-                sampleId, fusion.reportable(), fusion.reportableReason(), fusion.knownTypeStr()));
+                sampleId, fusion.reportable(), fusion.reportableReasonsStr(), fusion.knownTypeStr()));
 
         sb.append(String.format(",%s,%s,%d,%d,%s",
                 fusion.phaseType(), fusion.knownExons(),

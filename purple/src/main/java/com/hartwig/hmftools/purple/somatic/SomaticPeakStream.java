@@ -1,6 +1,9 @@
 package com.hartwig.hmftools.purple.somatic;
 
+import static java.lang.String.format;
+
 import static com.google.common.collect.Lists.newArrayList;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_BIN_WIDTH;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CLONALITY_MAX_PLOIDY;
 
@@ -10,21 +13,16 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.variant.AllelicDepth;
 import com.hartwig.hmftools.purple.fitting.ModifiableWeightedPloidy;
-import com.hartwig.hmftools.purple.fitting.PeakModel;
+import com.hartwig.hmftools.purple.fitting.PeakModelData;
 import com.hartwig.hmftools.purple.fitting.PeakModelFactory;
 import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.SomaticFitConfig;
 
 public class SomaticPeakStream
 {
-    private final SomaticFitConfig mSomaticFitConfig;
+    public SomaticPeakStream() {}
 
-    public SomaticPeakStream(final PurpleConfig config)
-    {
-        mSomaticFitConfig = config.SomaticFitting;
-    }
-
-    public List<PeakModel> somaticPeakModel(final SomaticVariantCache somaticVariants)
+    public List<PeakModelData> somaticPeakModel(final SomaticVariantCache somaticVariants)
     {
         if(!somaticVariants.hasData())
             return Lists.newArrayList();
@@ -53,6 +51,21 @@ public class SomaticPeakStream
             }
         }
 
-        return new PeakModelFactory(CLONALITY_MAX_PLOIDY, CLONALITY_BIN_WIDTH).model(weightedPloidies);
+        PPL_LOGGER.debug("somatic peak uses {} variants", weightedPloidies.size());
+
+        PeakModelFactory modelFactory = new PeakModelFactory(CLONALITY_MAX_PLOIDY, CLONALITY_BIN_WIDTH);
+
+        List<PeakModelData> peakModels = modelFactory.model(weightedPloidies);
+
+        /*
+        for(PeakModelData peakModel : peakModels)
+        {
+            PPL_LOGGER.trace(format("somatic peak(%.4f wgt=%.4f) bucket(%.4f wgt=%.4f) valid(%s) subclonal(%s)",
+                    peakModel.Peak, peakModel.PeakAvgWeight, peakModel.Bucket, peakModel.BucketWeight,
+                    peakModel.IsValid, peakModel.IsSubclonal));
+        }
+        */
+
+        return peakModels;
     }
 }

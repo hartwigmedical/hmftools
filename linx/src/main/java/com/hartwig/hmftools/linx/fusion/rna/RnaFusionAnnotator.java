@@ -38,12 +38,12 @@ public class RnaFusionAnnotator
     {
         RnaExonMatchData exonMatch = new RnaExonMatchData(transData.TransName);
 
-        for (int i = 0; i < transData.exons().size(); ++i)
+        for(int i = 0; i < transData.exons().size(); ++i)
         {
             final ExonData exonData = transData.exons().get(i);
             final ExonData nextExonData = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
-            if (rnaPosition == exonData.End || rnaPosition == exonData.Start)
+            if(rnaPosition == exonData.End || rnaPosition == exonData.Start)
             {
                 // skip matches on the last exon
                 if(i == 0 && transData.Strand == -1 && rnaPosition == exonData.Start)
@@ -56,7 +56,7 @@ public class RnaFusionAnnotator
                 exonMatch.BoundaryMatch = true;
                 exonMatch.ExonRank = exonData.Rank;
 
-                if ((transData.Strand == POS_STRAND) == (rnaPosition == exonData.Start))
+                if((transData.Strand == POS_STRAND) == (rnaPosition == exonData.Start))
                 {
                     exonMatch.ExonPhase = exonData.PhaseStart;
                 }
@@ -67,7 +67,7 @@ public class RnaFusionAnnotator
                 break;
             }
 
-            if (rnaPosition > exonData.Start && rnaPosition < exonData.End)
+            if(rnaPosition > exonData.Start && rnaPosition < exonData.End)
             {
                 // position is within the bounds of an exon
                 exonMatch.ExonFound = true;
@@ -76,11 +76,11 @@ public class RnaFusionAnnotator
                 break;
             }
 
-            if (nextExonData != null && rnaPosition > exonData.End && rnaPosition < nextExonData.Start)
+            if(nextExonData != null && rnaPosition > exonData.End && rnaPosition < nextExonData.Start)
             {
                 exonMatch.ExonFound = true;
 
-                if (transData.Strand == POS_STRAND)
+                if(transData.Strand == POS_STRAND)
                 {
                     exonMatch.ExonRank = exonData.Rank;
                     exonMatch.ExonPhase = exonData.PhaseEnd;
@@ -103,7 +103,7 @@ public class RnaFusionAnnotator
         if(rnaFusion.getTransExonData(FS_UP).isEmpty() || rnaFusion.getTransExonData(FS_DOWN).isEmpty())
             return;
 
-        for (RnaExonMatchData exonDataUp : rnaFusion.getTransExonData(FS_UP))
+        for(RnaExonMatchData exonDataUp : rnaFusion.getTransExonData(FS_UP))
         {
             if(rnaFusion.JunctionTypes[FS_UP] == KNOWN && !exonDataUp.BoundaryMatch)
                 continue;
@@ -364,28 +364,28 @@ public class RnaFusionAnnotator
         // be upstream as far the previous gene or 100K
         final TranscriptData transData = mGeneTransCache.getTranscriptData(trans.gene().geneId(), trans.transName());
 
-        if (transData == null || transData.exons().isEmpty())
+        if(transData == null || transData.exons().isEmpty())
             return false;
 
         int strand = trans.gene().strand();
 
         // first find the matching exon boundary for this RNA fusion boundary
-        for (int i = 0; i < transData.exons().size(); ++i)
+        for(int i = 0; i < transData.exons().size(); ++i)
         {
             final ExonData exonData = transData.exons().get(i);
             final ExonData prevExonData = i > 0 ? transData.exons().get(i - 1) : null;
             final ExonData nextExonData = i < transData.exons().size() - 1 ? transData.exons().get(i + 1) : null;
 
-            if (isUpstream)
+            if(isUpstream)
             {
                 // first check if at an exon boundary or before the start of the next exon and after the start of this one
                 if(strand == POS_STRAND)
                 {
-                    if ((rnaPosition == exonData.End)
+                    if((rnaPosition == exonData.End)
                     || (!exactRnaPosition && nextExonData != null && rnaPosition > exonData.Start && rnaPosition < nextExonData.Start))
                     {
                         // in which case check whether the breakend is before the next exon's splice acceptor
-                        if (nextExonData != null)
+                        if(nextExonData != null)
                         {
                             return breakendPosition < nextExonData.Start;
                         }
@@ -396,7 +396,7 @@ public class RnaFusionAnnotator
                 }
                 else
                 {
-                    if ((rnaPosition == exonData.Start)
+                    if((rnaPosition == exonData.Start)
                             || (!exactRnaPosition && prevExonData != null && rnaPosition < exonData.End && rnaPosition > prevExonData.End))
                     {
                         if(prevExonData != null)
@@ -423,7 +423,7 @@ public class RnaFusionAnnotator
 
                 if(strand == POS_STRAND)
                 {
-                    if ((rnaPosition == exonData.Start)
+                    if((rnaPosition == exonData.Start)
                     || (!exactRnaPosition && prevExonData != null && rnaPosition > prevExonData.Start && rnaPosition < exonData.Start))
                     {
                         if(prevExonData != null)
@@ -437,7 +437,7 @@ public class RnaFusionAnnotator
                 }
                 else
                 {
-                    if ((rnaPosition == exonData.End)
+                    if((rnaPosition == exonData.End)
                     || (!exactRnaPosition && nextExonData != null && rnaPosition < nextExonData.End && rnaPosition > exonData.End))
                     {
                         if(nextExonData != null)

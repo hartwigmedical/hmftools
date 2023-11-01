@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.flagstat;
 
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -12,13 +14,17 @@ import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class FlagstatFile {
+public final class FlagstatFile
+{
+    public static final String FILE_EXTENSION = ".flagstat";
 
-    private FlagstatFile() {
+    public static String generateFilename(final String basePath, final String sampleId)
+    {
+        return checkAddDirSeparator(basePath) + sampleId + FILE_EXTENSION;
     }
 
-    @NotNull
-    public static Flagstat read(@NotNull String flagstatPath) throws IOException {
+    public static Flagstat read(final String flagstatPath) throws IOException
+    {
         List<String> lines = Files.readAllLines(new File(flagstatPath).toPath());
         String total = valueBySubstring(lines, "total");
         String secondary = valueBySubstring(lines, "secondary");
@@ -29,7 +35,7 @@ public final class FlagstatFile {
         String properlyPaired = valueBySubstring(lines, "properly paired");
         String withItselfAndMateMapped = valueBySubstring(lines, "with itself and mate mapped");
         String singletons = valueBySubstring(lines, "singletons");
-        if (anyNull(total,
+        if(anyNull(total,
                 secondary,
                 supplementary,
                 duplicates,
@@ -37,7 +43,8 @@ public final class FlagstatFile {
                 pairedInSequencing,
                 properlyPaired,
                 withItselfAndMateMapped,
-                singletons)) {
+                singletons))
+        {
             throw new IOException("Unable to parse flagstat file correctly");
         }
 
@@ -62,35 +69,44 @@ public final class FlagstatFile {
                 .build();
     }
 
-    private static double divideTwoStrings(@NotNull String string1, @NotNull String string2) {
+    private static double divideTwoStrings(final String string1, final String string2)
+    {
         long value1 = Long.parseLong(string1);
         long value2 = Long.parseLong(string2);
-        return roundToSixDecimals((double) value1 / value2);
+        return roundToSixDecimals((double)value1 / value2);
     }
 
-    private static double roundToSixDecimals(double value) {
+    private static double roundToSixDecimals(double value)
+    {
         BigDecimal bd = BigDecimal.valueOf(value);
         bd = bd.setScale(6, RoundingMode.HALF_UP);
         return bd.doubleValue();
     }
 
     @Nullable
-    private static String valueBySubstring(@NotNull List<String> lines, @NotNull String subString) {
+    private static String valueBySubstring(final List<String> lines, final String subString)
+    {
         List<String> matchLines = Lists.newArrayList();
-        for (String line : lines) {
-            if (line.contains(subString)) {
+        for(String line : lines)
+        {
+            if(line.contains(subString))
+            {
                 matchLines.add(line);
             }
         }
-        if (matchLines.size() == 1) {
+        if(matchLines.size() >= 1)
+        {
             return matchLines.get(0).split(" ")[0];
         }
         return null;
     }
 
-    private static boolean anyNull(@NotNull Object... arguments) {
-        for (Object object : arguments) {
-            if (object == null) {
+    private static boolean anyNull(final Object... arguments)
+    {
+        for(Object object : arguments)
+        {
+            if(object == null)
+            {
                 return true;
             }
         }

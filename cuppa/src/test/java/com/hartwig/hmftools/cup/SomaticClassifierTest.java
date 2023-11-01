@@ -16,6 +16,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
@@ -32,8 +33,10 @@ public class SomaticClassifierTest
         SampleDataCache dataCache = new SampleDataCache();
 
         CuppaConfig config = new CuppaConfig();
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        SomaticClassifier.registerConfig(configBuilder);
 
-        SomaticClassifier classifier = new SomaticClassifier(config, dataCache, null);
+        SomaticClassifier classifier = new SomaticClassifier(config, dataCache, configBuilder);
 
         CuppaUtilsTest.addRefSample(dataCache, TEST_SAMPLE_001, TEST_CT_001);
         CuppaUtilsTest.addRefSample(dataCache, TEST_SAMPLE_002, TEST_CT_002);
@@ -87,7 +90,7 @@ public class SomaticClassifierTest
         results.clear();
         classifier.processSample(refSample1, results, similarities);
 
-        // cannot match it's own cancer type
+        // cannot match its own cancer type
         result = results.stream().filter(x -> x.DataType.equals(SNV_96_PAIRWISE.toString())).findFirst().orElse(null);
         assertTrue(result != null);
         assertEquals(1.0, result.CancerTypeValues.get(TEST_CT_002), 0.01);

@@ -9,5 +9,6 @@ public enum FragmentType
     CHIMERIC,
     DUPLICATE,
     LOW_MAP_QUAL,
-    MAX;
+    FORWARD_STRAND,
+    REVERSE_STRAND;
 }

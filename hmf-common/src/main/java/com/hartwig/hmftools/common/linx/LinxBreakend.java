@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.linx;
 
-import static com.hartwig.hmftools.common.linx.LinxCluster.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,27 +33,38 @@ public abstract class LinxBreakend
     public abstract TranscriptRegionType regionType();
     public abstract TranscriptCodingType codingType();
     public abstract String biotype();
+    public abstract int exonUp();
+    public abstract int exonDown();
     public abstract int exonicBasePhase();
     public abstract int nextSpliceExonRank();
     public abstract int nextSpliceExonPhase();
     public abstract int nextSpliceDistance();
     public abstract int totalExonCount();
 
-    // additional fields for patient report
+    // TODO Property can be removed (see also ACTIN-353)
+    public abstract int strand();
+
+    // TODO Derive properties from other sources (see also ACTIN-346)
     public abstract StructuralVariantType type();
     public abstract String chromosome();
     public abstract int orientation();
-    public abstract int strand();
     public abstract String chrBand();
-    public abstract int exonUp();
-    public abstract int exonDown();
     public abstract double junctionCopyNumber();
 
     private static final String FILE_EXTENSION = ".linx.breakend.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.breakend.tsv";
+
+    public static final String BREAKEND_ORIENTATION_UPSTREAM = "Upstream";
+    public static final String BREAKEND_ORIENTATION_DOWNSTREAM = "Downstream";
 
     public static String generateFilename(final String basePath, final String sample)
     {
         return basePath + File.separator + sample + FILE_EXTENSION;
+    }
+
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
+    {
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
     }
 
     public static List<LinxBreakend> read(final String filePath) throws IOException
@@ -77,18 +88,18 @@ public abstract class LinxBreakend
     private static List<LinxBreakend> fromLines(final List<String> lines)
     {
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         List<LinxBreakend> breakends = Lists.newArrayList();
 
         // backwards compatibility on old column name
-        Integer codingTypeIndex = fieldsIndexMap.containsValue("codingType") ?
+        Integer codingTypeIndex = fieldsIndexMap.containsKey("codingType") ?
                 fieldsIndexMap.get("codingType") : fieldsIndexMap.get("codingContext");
 
-        for(int i = 0; i < lines.size(); ++i)
+        for(String line : lines)
         {
-            String[] values = lines.get(i).split(DELIMITER);
+            String[] values = line.split(TSV_DELIM);
 
             breakends.add(ImmutableLinxBreakend.builder()
                     .id(Integer.parseInt(values[fieldsIndexMap.get("id")]))
@@ -125,7 +136,7 @@ public abstract class LinxBreakend
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("id")
                 .add("svId")
                 .add("isStart")
@@ -157,7 +168,7 @@ public abstract class LinxBreakend
 
     private static String toString(final LinxBreakend breakend)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(breakend.id()))
                 .add(String.valueOf(breakend.svId()))
                 .add(String.valueOf(breakend.isStart()))

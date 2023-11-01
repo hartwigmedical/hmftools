@@ -5,12 +5,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.BUCKET_MAX;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.BUCKET_MIN;
 import static com.hartwig.hmftools.svtools.fusion_likelihood.CohortExpFusions.GENE_PAIR_DELIM;
@@ -51,12 +51,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache;
 import com.hartwig.hmftools.common.gene.GeneData;
-import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -98,44 +94,44 @@ public class FusionLikelihood
         mGeneFusionPairs = Lists.newArrayList();
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(DEL_DUP_BUCKET_LENGTHS, true, "Semi-colon separated DEL bucket lengths");
-        options.addOption(SHORT_INV_BUCKET_LENGTH, true, "INV bucket length");
-        options.addOption(LIMITED_GENE_IDS, true, "List of geneIds to test with");
-        options.addOption(LIMITED_CHROMOSOMES, true, "List of chromosomes to test with");
-        options.addOption(GENE_PAIR_FILE, true, "List of gene-pairs to calculate likelihood for");
+        configBuilder.addConfigItem(DEL_DUP_BUCKET_LENGTHS, true, "Semi-colon separated DEL bucket lengths");
+        configBuilder.addConfigItem(SHORT_INV_BUCKET_LENGTH, true, "INV bucket length");
+        configBuilder.addConfigItem(LIMITED_GENE_IDS, true, "List of geneIds to test with");
+        configBuilder.addConfigItem(LIMITED_CHROMOSOMES, true, "List of chromosomes to test with");
+        configBuilder.addConfigItem(GENE_PAIR_FILE, true, "List of gene-pairs to calculate likelihood for");
     }
 
-    public void initialise(final CommandLine cmdLineArgs, final EnsemblDataCache geneTransCache)
+    public void initialise(final ConfigBuilder configBuilder, final EnsemblDataCache geneTransCache)
     {
         mGeneTransCache = geneTransCache;
 
-        if(cmdLineArgs.hasOption(DEL_DUP_BUCKET_LENGTHS))
+        if(configBuilder.hasValue(DEL_DUP_BUCKET_LENGTHS))
         {
-            setBucketLengths(cmdLineArgs.getOptionValue(DEL_DUP_BUCKET_LENGTHS), mProximateBucketLengths);
+            setBucketLengths(configBuilder.getValue(DEL_DUP_BUCKET_LENGTHS), mProximateBucketLengths);
         }
 
-        if(cmdLineArgs.hasOption(LIMITED_CHROMOSOMES))
+        if(configBuilder.hasValue(LIMITED_CHROMOSOMES))
         {
-            mRestrictedChromosomes.addAll(Arrays.stream(cmdLineArgs.getOptionValue(LIMITED_CHROMOSOMES)
+            mRestrictedChromosomes.addAll(Arrays.stream(configBuilder.getValue(LIMITED_CHROMOSOMES)
                     .split(";"))
                     .collect(Collectors.toList()));
         }
 
-        mOutputDir = parseOutputDir(cmdLineArgs);
+        mOutputDir = parseOutputDir(configBuilder);
 
         mCohortCalculator.initialiseLengths(mProximateBucketLengths, mRestrictedChromosomes);
 
-        if(cmdLineArgs.hasOption(LIMITED_GENE_IDS))
+        if(configBuilder.hasValue(LIMITED_GENE_IDS))
         {
-            mRestrictedGeneIds.addAll(Arrays.stream(cmdLineArgs.getOptionValue(LIMITED_GENE_IDS)
+            mRestrictedGeneIds.addAll(Arrays.stream(configBuilder.getValue(LIMITED_GENE_IDS)
                     .split(";"))
                     .collect(Collectors.toList()));
         }
-        else if(cmdLineArgs.hasOption(GENE_PAIR_FILE))
+        else if(configBuilder.hasValue(GENE_PAIR_FILE))
         {
-            final String genePairFile = cmdLineArgs.getOptionValue(GENE_PAIR_FILE);
+            final String genePairFile = configBuilder.getValue(GENE_PAIR_FILE);
 
             FLC_LOGGER.info("calculating fusion likelihood for gene-pairs in file: {}", genePairFile);
 
@@ -188,6 +184,8 @@ public class FusionLikelihood
             generateGlobalExpectedFusionCounts();
             // fusionLikelihood.generateGlobalStats(outputDir);
         }
+
+        FLC_LOGGER.info("gene-fusion likelihood calcs complete");
     }
 
     @VisibleForTesting
@@ -631,25 +629,22 @@ public class FusionLikelihood
 
     public static void main(@NotNull final String[] args) throws ParseException
     {
-        final Options options = new Options();
-        addCmdLineArgs(options);
-        addOutputDir(options);
-        addLoggingOptions(options);
-        addEnsemblDir(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        registerConfig(configBuilder);
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        addEnsemblDir(configBuilder);
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
         FusionLikelihood fusionLikelihood = new FusionLikelihood();
 
-        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(cmd, RefGenomeVersion.V37);
+        EnsemblDataCache ensemblDataCache = new EnsemblDataCache(configBuilder);
 
-        fusionLikelihood.initialise(cmd, ensemblDataCache);
+        fusionLikelihood.initialise(configBuilder, ensemblDataCache);
 
         fusionLikelihood.run();
-
-        FLC_LOGGER.info("gene-fusion likelihood calcs complete");
     }
 }

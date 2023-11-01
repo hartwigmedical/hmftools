@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.filter;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.getConfigValue;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY;
@@ -10,21 +9,22 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_CONFIDENCE_FI
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HOTSPOT_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_LOW_CONFIDENCE_FILTER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_PANEL_FILTER;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class FilterConfig
 {
-    public final boolean HardFilter;
-    public final boolean SoftFilter;
+    public final boolean DisableHardFilter;
+    public final boolean DisableSoftFilter;
     public final int HardMinTumorQual;
     public final double HardMinTumorVaf;
     public final int HardMinTumorRawAltSupport;
     public final int HardMinTumorRawBaseQuality;
     public final int FilteredMaxNormalAltSupport;
     public final int MinAvgBaseQual;
+    public final int MinAvgBaseQualHotspot;
     public final int ReferenceSampleCount;
 
     public final SoftFilterConfig SoftHotspotFilter;
@@ -32,8 +32,8 @@ public class FilterConfig
     public final SoftFilterConfig SoftHighConfidenceFilter;
     public final SoftFilterConfig SoftLowConfidenceFilter;
 
-    private static final String SOFT_FILTER = "soft_filter_enabled";
-    private static final String HARD_FILTER = "hard_filter_enabled";
+    private static final String DISABLE_SOFT_FILTER = "disable_soft_filter";
+    private static final String DISABLE_HARD_FILTER = "disable_hard_filter";
 
     private static final String HARD_MIN_TUMOR_QUAL = "hard_min_tumor_qual";
     private static final String HARD_MIN_TUMOR_VAF = "hard_min_tumor_vaf";
@@ -41,32 +41,31 @@ public class FilterConfig
     private static final String HARD_MIN_TUMOR_RAW_BASE_QUALITY = "hard_min_tumor_raw_base_quality";
     private static final String FILTERED_MAX_NORMAL_ALT_SUPPORT = "filtered_max_normal_alt_support";
     private static final String MIN_AVG_BASE_QUAL = "min_avg_base_qual";
+    private static final String MIN_AVG_BASE_QUAL_HOTSPOT = "min_avg_base_qual_hotspot";
     private static final String REF_SAMPLE_COUNT = "ref_sample_count";
 
-    private static final boolean DEFAULT_SOFT_FILTER_ENABLED = true;
-    private static final boolean DEFAULT_HARD_FILTER_ENABLED = false;
-
-    public FilterConfig(final CommandLine cmd)
+    public FilterConfig(final ConfigBuilder configBuilder)
     {
-        SoftFilter = getConfigValue(cmd, SOFT_FILTER, DEFAULT_SOFT_FILTER_ENABLED);
-        HardFilter = getConfigValue(cmd, HARD_FILTER, DEFAULT_HARD_FILTER_ENABLED);
-        FilteredMaxNormalAltSupport = getConfigValue(cmd, FILTERED_MAX_NORMAL_ALT_SUPPORT, DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT);
-        HardMinTumorQual = getConfigValue(cmd, HARD_MIN_TUMOR_QUAL, DEFAULT_HARD_MIN_TUMOR_QUAL);
-        HardMinTumorVaf = getConfigValue(cmd, HARD_MIN_TUMOR_VAF, DEFAULT_HARD_MIN_TUMOR_VAF);
-        HardMinTumorRawAltSupport = getConfigValue(cmd, HARD_MIN_TUMOR_RAW_ALT_SUPPORT, DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT);
-        HardMinTumorRawBaseQuality = getConfigValue(cmd, HARD_MIN_TUMOR_RAW_BASE_QUALITY, DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY);
-        MinAvgBaseQual = getConfigValue(cmd, MIN_AVG_BASE_QUAL, DEFAULT_MIN_AVG_BASE_QUALITY);
-        SoftHotspotFilter = new SoftFilterConfig(cmd, "hotspot", DEFAULT_HOTSPOT_FILTER);
-        SoftPanelFilter = new SoftFilterConfig(cmd, "panel", DEFAULT_PANEL_FILTER);
-        SoftHighConfidenceFilter = new SoftFilterConfig(cmd, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER);
-        SoftLowConfidenceFilter = new SoftFilterConfig(cmd, "low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER);
-        ReferenceSampleCount = getConfigValue(cmd, REF_SAMPLE_COUNT, 1);
+        DisableSoftFilter = configBuilder.hasFlag(DISABLE_SOFT_FILTER);
+        DisableHardFilter = configBuilder.hasFlag(DISABLE_HARD_FILTER);
+        FilteredMaxNormalAltSupport = configBuilder.getInteger(FILTERED_MAX_NORMAL_ALT_SUPPORT);
+        HardMinTumorQual = configBuilder.getInteger(HARD_MIN_TUMOR_QUAL);
+        HardMinTumorVaf = configBuilder.getDecimal(HARD_MIN_TUMOR_VAF);
+        HardMinTumorRawAltSupport = configBuilder.getInteger(HARD_MIN_TUMOR_RAW_ALT_SUPPORT);
+        HardMinTumorRawBaseQuality = configBuilder.getInteger(HARD_MIN_TUMOR_RAW_BASE_QUALITY);
+        MinAvgBaseQual = configBuilder.getInteger(MIN_AVG_BASE_QUAL);
+        MinAvgBaseQualHotspot = configBuilder.getInteger(MIN_AVG_BASE_QUAL_HOTSPOT);
+        SoftHotspotFilter = new SoftFilterConfig(configBuilder, "hotspot", DEFAULT_HOTSPOT_FILTER);
+        SoftPanelFilter = new SoftFilterConfig(configBuilder, "panel", DEFAULT_PANEL_FILTER);
+        SoftHighConfidenceFilter = new SoftFilterConfig(configBuilder, "high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER);
+        SoftLowConfidenceFilter = new SoftFilterConfig(configBuilder, "low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER);
+        ReferenceSampleCount = configBuilder.getInteger(REF_SAMPLE_COUNT);
     }
 
     public FilterConfig()
     {
-        HardFilter = false;
-        SoftFilter = true;
+        DisableHardFilter = true;
+        DisableSoftFilter = false;
         HardMinTumorQual = DEFAULT_HARD_MIN_TUMOR_QUAL;
         HardMinTumorVaf = DEFAULT_HARD_MIN_TUMOR_VAF;
         HardMinTumorRawAltSupport = DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT;
@@ -77,32 +76,40 @@ public class FilterConfig
         SoftLowConfidenceFilter = DEFAULT_LOW_CONFIDENCE_FILTER;
         FilteredMaxNormalAltSupport = DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT;
         MinAvgBaseQual = DEFAULT_MIN_AVG_BASE_QUALITY;
+        MinAvgBaseQualHotspot = DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT;
         ReferenceSampleCount = 1;
     }
 
-    public static Options createOptions()
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        final Options options = new Options();
+        configBuilder.addFlag(DISABLE_SOFT_FILTER, "Disable soft filters");
+        configBuilder.addFlag(DISABLE_HARD_FILTER, "Disable hard filters");
 
-        options.addOption(SOFT_FILTER, false, "Enable soft filters [" + DEFAULT_SOFT_FILTER_ENABLED + "]");
-        options.addOption(HARD_FILTER, false, "All filters are hard [" + DEFAULT_HARD_FILTER_ENABLED + "]");
-        options.addOption(HARD_MIN_TUMOR_QUAL, true, "Hard minimum tumor quality [" + DEFAULT_HARD_MIN_TUMOR_QUAL + "]");
-        options.addOption(HARD_MIN_TUMOR_VAF, true, "Hard minimum tumor VAF [" + DEFAULT_HARD_MIN_TUMOR_VAF + "]");
-        options.addOption(HARD_MIN_TUMOR_RAW_ALT_SUPPORT, true,
-                "Hard minimum tumor raw alt support [" + DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT + "]");
-        options.addOption(HARD_MIN_TUMOR_RAW_BASE_QUALITY, true,
-                "Hard minimum tumor raw base quality [" + DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY + "]");
-        options.addOption(MIN_AVG_BASE_QUAL, true, "Min average base qual [" + DEFAULT_MIN_AVG_BASE_QUALITY + "]");
+        configBuilder.addInteger(
+                FILTERED_MAX_NORMAL_ALT_SUPPORT, "Filtered max normal alt support", DEFAULT_FILTERED_MAX_NORMAL_ALT_SUPPORT);
 
-        options.addOption(
-                REF_SAMPLE_COUNT, true,
-                "Number of reference samples for applying tumor-reference filters (default=1), use 0 in 'germline' mode");
+        configBuilder.addInteger(HARD_MIN_TUMOR_QUAL, "Hard minimum tumor quality", DEFAULT_HARD_MIN_TUMOR_QUAL);
+        configBuilder.addDecimal(HARD_MIN_TUMOR_VAF, "Hard minimum tumor VAF", DEFAULT_HARD_MIN_TUMOR_VAF);
 
-        SoftFilterConfig.createOptions("hotspot", DEFAULT_HOTSPOT_FILTER).getOptions().forEach(options::addOption);
-        SoftFilterConfig.createOptions("panel", DEFAULT_PANEL_FILTER).getOptions().forEach(options::addOption);
-        SoftFilterConfig.createOptions("high_confidence", DEFAULT_HIGH_CONFIDENCE_FILTER).getOptions().forEach(options::addOption);
-        SoftFilterConfig.createOptions("low_confidence", DEFAULT_LOW_CONFIDENCE_FILTER).getOptions().forEach(options::addOption);
+        configBuilder.addInteger(HARD_MIN_TUMOR_RAW_ALT_SUPPORT,
+                "Hard minimum tumor raw alt support", DEFAULT_HARD_MIN_TUMOR_ALT_SUPPORT);
 
-        return options;
+        configBuilder.addInteger(HARD_MIN_TUMOR_RAW_BASE_QUALITY,
+                "Hard minimum tumor raw base quality", DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY);
+
+        configBuilder.addInteger(MIN_AVG_BASE_QUAL, "Min average base qua", DEFAULT_MIN_AVG_BASE_QUALITY);
+
+        configBuilder.addInteger(
+                MIN_AVG_BASE_QUAL_HOTSPOT,
+                "Min average base qual for hotspots", DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT);
+
+        configBuilder.addInteger(
+                REF_SAMPLE_COUNT,
+                "Number of reference samples for applying tumor-reference filters, use 0 in 'germline' mode", 1);
+
+        SoftFilterConfig.registerConfig(configBuilder, DEFAULT_HOTSPOT_FILTER);
+        SoftFilterConfig.registerConfig(configBuilder, DEFAULT_PANEL_FILTER);
+        SoftFilterConfig.registerConfig(configBuilder, DEFAULT_HIGH_CONFIDENCE_FILTER);
+        SoftFilterConfig.registerConfig(configBuilder, DEFAULT_LOW_CONFIDENCE_FILTER);
     }
 }

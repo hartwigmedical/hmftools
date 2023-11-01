@@ -2,7 +2,8 @@ package com.hartwig.hmftools.common.chord;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +35,7 @@ public final class ChordDataFile
 
     public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + FILE_EXTENSION;
     }
 
     @NotNull

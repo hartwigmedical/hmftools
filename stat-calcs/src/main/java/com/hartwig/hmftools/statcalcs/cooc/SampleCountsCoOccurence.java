@@ -10,10 +10,9 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,7 +47,7 @@ public class SampleCountsCoOccurence
 
     private static final Logger LOGGER = LogManager.getLogger(SampleCountsCoOccurence.class);
 
-    public SampleCountsCoOccurence(final CommandLine cmd, final String outputDir)
+    public SampleCountsCoOccurence(final ConfigBuilder configBuilder, final String outputDir)
     {
         mCancerTypes = Lists.newArrayList();
         mSamples = Lists.newArrayList();
@@ -62,8 +61,8 @@ public class SampleCountsCoOccurence
 
         mFisherET = new FisherExactTest();
 
-        final String sampleCountsFile = cmd.getOptionValue(SAMPLE_COUNTS_FILE);
-        final String driverDataFile = cmd.getOptionValue(DRIVER_GENES_FILE);
+        final String sampleCountsFile = configBuilder.getValue(SAMPLE_COUNTS_FILE);
+        final String driverDataFile = configBuilder.getValue(DRIVER_GENES_FILE);
 
         loadDriverGeneData(driverDataFile);
         loadSampleCountsData(sampleCountsFile);
@@ -72,15 +71,15 @@ public class SampleCountsCoOccurence
         initialiseOutputFile(outputFile);
     }
 
-    public static void addCmdLineOptions(Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(DRIVER_GENES_FILE, true, "Drive genes file");
-        options.addOption(SAMPLE_COUNTS_FILE, true, "Sample counts file");
+        configBuilder.addPath(DRIVER_GENES_FILE, false, "Drive genes file");
+        configBuilder.addPath(SAMPLE_COUNTS_FILE, false, "Sample counts file");
     }
 
-    public static boolean hasConfig(final CommandLine cmd)
+    public static boolean hasConfig(final ConfigBuilder configBuilder)
     {
-        return cmd.hasOption(DRIVER_GENES_FILE) && cmd.hasOption(SAMPLE_COUNTS_FILE);
+        return configBuilder.hasValue(DRIVER_GENES_FILE) && configBuilder.hasValue(SAMPLE_COUNTS_FILE);
     }
 
     // non-generic 2-variable test, using 2 distinct data sets

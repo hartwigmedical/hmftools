@@ -15,7 +15,6 @@ import org.jetbrains.annotations.Nullable;
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
 public abstract class PurpleQC
 {
-
     public abstract Set<PurpleQCStatus> status();
 
     public abstract FittedPurityMethod method();
@@ -45,6 +44,8 @@ public abstract class PurpleQC
 
     @NotNull
     public abstract Set<GermlineAberration> germlineAberrations();
+
+    public abstract double lohPercent();
 
     @Override
     public String toString()

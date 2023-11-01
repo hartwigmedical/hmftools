@@ -42,18 +42,6 @@ public class SomaticRefContextEnrichment implements VariantContextEnrichment
     @Override
     public VCFHeader enrichHeader(final VCFHeader template) { return SageVcfTags.addRefContextHeader(template); }
 
-    /*
-    public static VCFHeader addHeader(final VCFHeader template)
-    {
-        template.addMetaDataLine(new VCFInfoHeaderLine(TRINUCLEOTIDE_FLAG, 1, VCFHeaderLineType.String, TRINUCLEOTIDE_FLAG_DESCRIPTION));
-        template.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_SEQUENCE_FLAG, 1, VCFHeaderLineType.String, REPEAT_FLAG_DESCRIPTION));
-        template.addMetaDataLine(new VCFInfoHeaderLine(REPEAT_COUNT_FLAG, 1, VCFHeaderLineType.Integer, REPEAT_COUNT_DESCRIPTION));
-        template.addMetaDataLine(new VCFInfoHeaderLine(MICROHOMOLOGY_FLAG, 1, VCFHeaderLineType.String, MICROHOMOLOGY_FLAG_DESCRIPTION));
-
-        return template;
-    }
-    */
-
     @Override
     public void accept(final VariantContext context)
     {

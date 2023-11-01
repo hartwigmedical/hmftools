@@ -1,9 +1,7 @@
 package com.hartwig.hmftools.pave.compare;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
-import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.PASS_FILTER;
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.tables.Somaticvariant.SOMATICVARIANT;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 
@@ -18,52 +16,9 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantType;
-import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-import com.hartwig.hmftools.pave.GeneDataCache;
-
-import org.jooq.Record;
-import org.jooq.Record18;
-import org.jooq.Result;
 
 public final class DataLoader
 {
-    public static List<RefVariantData> loadSampleDatabaseRecords(
-            final String sampleId, final DatabaseAccess dbAccess, final GeneDataCache geneDataCache)
-    {
-        List<RefVariantData> variants = Lists.newArrayList();
-
-        Result<Record18<String, String, Integer, String, String, String, String, String, String, String, String, String, String,
-                                String, Integer, String, Byte, String>>
-                result = dbAccess.context()
-                .select(SOMATICVARIANT.GENE, SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION,
-                        SOMATICVARIANT.REF, SOMATICVARIANT.ALT, SOMATICVARIANT.TYPE, SOMATICVARIANT.GENE,
-                        SOMATICVARIANT.CANONICALEFFECT, SOMATICVARIANT.CANONICALCODINGEFFECT, SOMATICVARIANT.WORSTCODINGEFFECT,
-                        SOMATICVARIANT.CANONICALHGVSCODINGIMPACT, SOMATICVARIANT.CANONICALHGVSPROTEINIMPACT,
-                        SOMATICVARIANT.MICROHOMOLOGY, SOMATICVARIANT.REPEATSEQUENCE, SOMATICVARIANT.REPEATCOUNT,
-                        SOMATICVARIANT.LOCALPHASESET, SOMATICVARIANT.REPORTED, SOMATICVARIANT.HOTSPOT)
-                .from(SOMATICVARIANT)
-                .where(SOMATICVARIANT.FILTER.eq(PASS_FILTER))
-                .and(SOMATICVARIANT.SAMPLEID.eq(sampleId))
-                .and(SOMATICVARIANT.GENE.isNotNull())
-                .orderBy(SOMATICVARIANT.CHROMOSOME, SOMATICVARIANT.POSITION)
-                .fetch();
-
-        for(Record record : result)
-        {
-            if(geneDataCache != null)
-            {
-                String gene = record.getValue(SOMATICVARIANT.GENE);
-
-                if(!geneDataCache.isDriverPanelGene(gene))
-                    continue;
-            }
-
-            variants.add(RefVariantData.fromRecord(record));
-        }
-
-        return variants;
-    }
-
     public static Map<String,List<RefVariantData>> processRefVariantFile(final String filename)
     {
         Map<String,List<RefVariantData>> sampleVariantsMap = Maps.newHashMap();

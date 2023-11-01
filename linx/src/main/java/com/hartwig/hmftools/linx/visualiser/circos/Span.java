@@ -36,7 +36,7 @@ public class Span
         final List<GenomeRegion> result = Lists.newArrayList();
 
         final List<String> chromosomes = positions.stream().map(GenomePosition::chromosome).distinct().collect(Collectors.toList());
-        for (final String contig : chromosomes)
+        for(final String contig : chromosomes)
         {
             int min = positions.stream().filter(x -> x.chromosome().equals(contig)).mapToInt(GenomePosition::position).min().orElse(0);
             int max = positions.stream().filter(x -> x.chromosome().equals(contig)).mapToInt(GenomePosition::position).max().orElse(0);
@@ -54,7 +54,7 @@ public class Span
         final List<GenomeRegion> result = Lists.newArrayList();
 
         final Set<String> chromosomes = regions.stream().map(GenomeRegion::chromosome).collect(Collectors.toSet());
-        for (final String chromosome : chromosomes)
+        for(final String chromosome : chromosomes)
         {
             int min = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToInt(GenomeRegion::start).min().orElse(0);
             int max = regions.stream().filter(x -> x.chromosome().equals(chromosome)).mapToInt(GenomeRegion::end).max().orElse(0);
@@ -70,7 +70,7 @@ public class Span
     public static List<GenomePosition> minMaxPositions(@NotNull final Collection<? extends GenomeRegion> regions)
     {
         final List<GenomePosition> result = Lists.newArrayList();
-        for (GenomeRegion genomeRegion : spanRegions(regions))
+        for(GenomeRegion genomeRegion : spanRegions(regions))
         {
             result.add(GenomePositions.create(genomeRegion.chromosome(), genomeRegion.start()));
             result.add(GenomePositions.create(genomeRegion.chromosome(), genomeRegion.end()));
@@ -84,9 +84,9 @@ public class Span
     {
         final List<GenomePosition> results = Lists.newArrayList();
 
-        for (final GenomeRegion segment : segments)
+        for(final GenomeRegion segment : segments)
         {
-            if (HumanChromosome.contains(segment.chromosome()))
+            if(HumanChromosome.contains(segment.chromosome()))
             {
                 results.add(GenomePositions.create(segment.chromosome(), segment.start()));
                 results.add(GenomePositions.create(segment.chromosome(), segment.end()));

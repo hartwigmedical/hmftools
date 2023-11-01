@@ -4,7 +4,8 @@ import com.hartwig.hmftools.common.sv.StructuralVariantType;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum SegmentSupport {
+public enum SegmentSupport
+{
     BND(true),
     INV(true),
     DEL(true),
@@ -20,24 +21,35 @@ public enum SegmentSupport {
 
     private final boolean isSV;
 
-    SegmentSupport(boolean isSV) {
+    SegmentSupport(boolean isSV)
+    {
         this.isSV = isSV;
     }
 
-    public boolean isSV() {
+    public boolean isSV()
+    {
         return isSV;
     }
 
     @NotNull
-    public static SegmentSupport fromVariant(@NotNull StructuralVariantType type) {
-        switch (type) {
-            case INF: return INF;
-            case BND: return BND;
-            case DEL: return DEL;
-            case INS: return INS;
-            case DUP: return DUP;
-            case INV: return INV;
-            case SGL: return SGL;
+    public static SegmentSupport fromVariant(@NotNull StructuralVariantType type)
+    {
+        switch(type)
+        {
+            case INF:
+                return INF;
+            case BND:
+                return BND;
+            case DEL:
+                return DEL;
+            case INS:
+                return INS;
+            case DUP:
+                return DUP;
+            case INV:
+                return INV;
+            case SGL:
+                return SGL;
         }
 
         throw new IllegalArgumentException("Unknown variant type: " + type);

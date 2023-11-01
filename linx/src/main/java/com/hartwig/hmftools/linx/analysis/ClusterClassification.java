@@ -62,10 +62,10 @@ public class ClusterClassification
     {
         ResolvedType resolvedType = cluster.getResolvedType();
 
-        if (resolvedType == LINE)
+        if(resolvedType == LINE)
             return SUPER_TYPE_INSERTION;
 
-        if (resolvedType.isSimple() || resolvedType == UNBAL_TRANS)
+        if(resolvedType.isSimple() || resolvedType == UNBAL_TRANS)
             return SUPER_TYPE_SIMPLE;
 
         if(isFilteredResolvedType(resolvedType))
@@ -142,7 +142,7 @@ public class ClusterClassification
             return;
         }
 
-        if (cluster.getSvCount() <= 2 && !cluster.getSVs().stream().anyMatch(x -> !x.isSimpleType()))
+        if(cluster.getSvCount() <= 2 && !cluster.getSVs().stream().anyMatch(x -> !x.isSimpleType()))
         {
             if(cluster.getChains().size() == 1)
             {
@@ -187,8 +187,7 @@ public class ClusterClassification
         }
         else
         {
-            // to be reworked once new inferred changes are complete
-            if (cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getSglBreakendCount() == 2)
+            if(cluster.getSvCount() == 2 && cluster.isConsistent() && cluster.getSglBreakendCount() == 2)
             {
                 final SvVarData sgl1 = cluster.getSV(0);
                 final SvVarData sgl2 = cluster.getSV(1);
@@ -312,7 +311,7 @@ public class ClusterClassification
     public static void markSyntheticIncompletes(SvCluster cluster)
     {
         // look for chains of short TIs which when reduced form a SGL, INF INV or unbalanced TRANS (ie a BND)
-        if (cluster.getSvCount() > 5 || !cluster.isFullyChained(false) || cluster.getChains().size() != 1)
+        if(cluster.getSvCount() > 5 || !cluster.isFullyChained(false) || cluster.getChains().size() != 1)
             return;
 
         SvChain chain = cluster.getChains().get(0);
@@ -320,9 +319,9 @@ public class ClusterClassification
         // test the chain for short TIs only
         int totalChainLength = 0;
         int longestTILength = 0;
-        for (LinkedPair pair : chain.getLinkedPairs())
+        for(LinkedPair pair : chain.getLinkedPairs())
         {
-            if (pair.length() > SHORT_TI_LENGTH)
+            if(pair.length() > SHORT_TI_LENGTH)
                 return;
 
             longestTILength = max(pair.length(), longestTILength);
@@ -345,7 +344,7 @@ public class ClusterClassification
             final SvBreakend startBreakend = chain.getOpenBreakend(true);
             final SvBreakend endBreakend = chain.getOpenBreakend(false);
 
-            if (!startBreakend.chromosome().equals(endBreakend.chromosome()) || startBreakend.arm() != endBreakend.arm())
+            if(!startBreakend.chromosome().equals(endBreakend.chromosome()) || startBreakend.arm() != endBreakend.arm())
             {
                 resolvedType = UNBAL_TRANS;
             }
@@ -355,7 +354,7 @@ public class ClusterClassification
             }
         }
 
-        if (resolvedType == NONE)
+        if(resolvedType == NONE)
             return;
 
         LNX_LOGGER.debug("cluster({}) chain(links=({} len={} tiLen({}) marked as {}",

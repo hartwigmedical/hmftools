@@ -1,10 +1,9 @@
 package com.hartwig.hmftools.purple.drivers;
 
-import static com.hartwig.hmftools.purple.drivers.OncoDrivers.NO_GENE_DNDS_LIKELIHOOD;
+import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.getWorstReportableCodingEffect;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.groupByImpact;
 import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.hasTranscriptCodingEffect;
-import static com.hartwig.hmftools.purple.drivers.SomaticVariantDrivers.isReportable;
 
 import java.util.List;
 import java.util.Map;
@@ -21,37 +20,16 @@ import com.hartwig.hmftools.common.drivercatalog.LikelihoodMethod;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverGeneLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.dnds.DndsDriverImpactLikelihood;
 import com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanel;
-import com.hartwig.hmftools.common.drivercatalog.panel.ReportablePredicate;
 import com.hartwig.hmftools.common.purple.GeneCopyNumber;
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.purple.somatic.SomaticVariant;
 
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.Nullable;
-
-public class TsgDrivers
+public class TsgDrivers extends SomaticVariantDriverFinder
 {
-    private final ReportablePredicate mReportablePredicate;
-    private final Map<String, DndsDriverGeneLikelihood> mLikelihoodsByGene;
-    private final List<SomaticVariant> mReportableVariants;
-
     public TsgDrivers(final DriverGenePanel genePanel)
     {
-        mLikelihoodsByGene = genePanel.tsgLikelihood();
-        mReportablePredicate = new ReportablePredicate(DriverCategory.TSG, genePanel.driverGenes());
-        mReportableVariants = Lists.newArrayList();
-    }
-
-    public boolean checkVariant(final SomaticVariant variant)
-    {
-        if(isReportable(mReportablePredicate, variant))
-        {
-            mReportableVariants.add(variant);
-            return true;
-        }
-
-        return false;
+        super(genePanel, DriverCategory.TSG);
     }
 
     public List<DriverCatalog> findDrivers(
@@ -162,8 +140,7 @@ public class TsgDrivers
 
         final DndsDriverImpactLikelihood secondImpactLikelihood = likelihood.select(secondImpact);
 
-        final int secondVariantTypeCount =
-                variantCount(secondVariant.biallelic(), secondVariant, standardCounts, biallelicCounts);
+        final int secondVariantTypeCount = variantCount(secondVariant.biallelic(), secondVariant, standardCounts, biallelicCounts);
 
         double multiHit = multiHit(firstVariantTypeCount, secondVariantTypeCount, firstImpactLikelihood, secondImpactLikelihood);
 
@@ -200,7 +177,7 @@ public class TsgDrivers
 
     private static int variantCount(
             boolean useBiallelic, final SomaticVariant variant,
-            final Map<VariantType, Integer> standard, final Map<VariantType, Integer> biallelic)
+            final Map<VariantType, Integer> standard, final Map<VariantType,Integer> biallelic)
     {
         final Map<VariantType, Integer> map;
         if(!useBiallelic)

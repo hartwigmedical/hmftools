@@ -17,12 +17,10 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.links.LinkRescue;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -32,13 +30,13 @@ public class HotspotCache
 
     private static final String KNOWN_HOTSPOT_FILE = "known_hotspot_file";
 
-    public HotspotCache(final CommandLine cmd)
+    public HotspotCache(final ConfigBuilder configBuilder)
     {
         mHotspotRegions = Maps.newHashMap();
 
-        if(cmd != null)
+        if(configBuilder.hasValue(KNOWN_HOTSPOT_FILE))
         {
-            loadFile(cmd.getOptionValue(KNOWN_HOTSPOT_FILE));
+            loadFile(configBuilder.getValue(KNOWN_HOTSPOT_FILE));
         }
     }
 
@@ -192,8 +190,8 @@ public class HotspotCache
         }
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(KNOWN_HOTSPOT_FILE, true, "Known fusion BED file");
+        configBuilder.addPath(KNOWN_HOTSPOT_FILE, false, "Known fusion BED file");
     }
 }

@@ -6,22 +6,23 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.variant.impact.VariantEffect;
-import com.hartwig.hmftools.orange.algo.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariant;
+import com.hartwig.hmftools.datamodel.purple.PurpleVariantEffect;
 import com.hartwig.hmftools.orange.algo.purple.TestPurpleVariantFactory;
 
 import org.junit.Test;
 
-public class VariantDedupTest {
-
+public class VariantDedupTest
+{
     @Test
-    public void canDedupVariants() {
+    public void canDedupVariants()
+    {
         PurpleVariant variant1 = TestPurpleVariantFactory.builder()
                 .gene("EGFR")
                 .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsCodingImpact("c.1")
                         .hgvsProteinImpact("p.Glu746_Pro753delinsMetSer")
-                        .addEffects(VariantEffect.PHASED_INFRAME_DELETION)
+                        .addEffects(PurpleVariantEffect.PHASED_INFRAME_DELETION)
                         .build())
                 .variantCopyNumber(0.9)
                 .build();
@@ -42,7 +43,7 @@ public class VariantDedupTest {
                 .gene("APC")
                 .canonicalImpact(TestPurpleVariantFactory.impactBuilder()
                         .hgvsProteinImpact("p.Met1fs")
-                        .addEffects(VariantEffect.FRAMESHIFT)
+                        .addEffects(PurpleVariantEffect.FRAMESHIFT)
                         .build())
                 .variantCopyNumber(0.8)
                 .build();

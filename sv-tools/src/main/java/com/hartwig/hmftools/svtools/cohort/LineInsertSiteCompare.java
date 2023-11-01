@@ -1,12 +1,12 @@
 package com.hartwig.hmftools.svtools.cohort;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.INSERT_TYPE_PSD;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.PROGRAM_LINX;
 import static com.hartwig.hmftools.svtools.cohort.LineInsertSiteData.PROGRAM_PCAWG;
@@ -21,11 +21,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,13 +39,13 @@ public class LineInsertSiteCompare
     private final String mExtDataFile;
     private BufferedWriter mWriter;
 
-    public LineInsertSiteCompare(final CommandLine cmd)
+    public LineInsertSiteCompare(final ConfigBuilder configBuilder)
     {
         mSampleInsertSiteData = Maps.newHashMap();
 
-        mOutputDir = parseOutputDir(cmd);
-        mLinxDataFile = cmd.getOptionValue(LINX_DATA_FILE);
-        mExtDataFile = cmd.getOptionValue(EXT_DATA_FILE);
+        mOutputDir = parseOutputDir(configBuilder);
+        mLinxDataFile = configBuilder.getValue(LINX_DATA_FILE);
+        mExtDataFile = configBuilder.getValue(EXT_DATA_FILE);
         mWriter = null;
     }
 
@@ -58,6 +55,8 @@ public class LineInsertSiteCompare
         loadExternalDataFile(mExtDataFile);
 
         produceResults();
+
+        LOGGER.info("LINE insert site comparision complete");
     }
 
     private void loadLinxDataFile(final String filename)
@@ -221,34 +220,21 @@ public class LineInsertSiteCompare
         }
     }
 
-
     private static final String LINX_DATA_FILE = "linx_data_file";
     private static final String EXT_DATA_FILE = "ext_data_file";
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        options.addOption(LINX_DATA_FILE, true, "Path to the Linx cohort SVs file");
-        options.addOption(EXT_DATA_FILE, true, "External LINE data sample counts");
-        addLoggingOptions(options);
-        addOutputDir(options);
+        configBuilder.addPath(LINX_DATA_FILE, true, "Path to the Linx cohort SVs file");
+        configBuilder.addPath(EXT_DATA_FILE, true, "External LINE data sample counts");
+        addLoggingOptions(configBuilder);
+        addOutputDir(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        setLogLevel(configBuilder);
 
-        setLogLevel(cmd);
-
-        LineInsertSiteCompare lineInsertSiteCompare = new LineInsertSiteCompare(cmd);
+        LineInsertSiteCompare lineInsertSiteCompare = new LineInsertSiteCompare(configBuilder);
         lineInsertSiteCompare.run();
-
-        LOGGER.info("LINE insert site comparision complete");
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

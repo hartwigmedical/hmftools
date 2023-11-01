@@ -2,6 +2,11 @@ package com.hartwig.hmftools.cider.layout
 
 import com.hartwig.hmftools.cider.CiderUtils
 import com.hartwig.hmftools.cider.ReadKey
+import htsjdk.samtools.util.SequenceUtil.N
+import htsjdk.samtools.util.SequenceUtil.A
+import htsjdk.samtools.util.SequenceUtil.T
+import htsjdk.samtools.util.SequenceUtil.C
+import htsjdk.samtools.util.SequenceUtil.G
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -17,16 +22,17 @@ open class ReadLayout(var id: String = String())
 
     abstract class Read (
         val readKey: ReadKey,
-        val sequence: String,
+        val sequence: ByteArray,
         val baseQualities: ByteArray,
         val alignedPosition: Int)
     {
         init
         {
-            require(sequence.length == baseQualities.size, { "sequence.length != baseQualities.size" })
+            require(sequence.size == baseQualities.size, { "sequence.length != baseQualities.size" })
         }
 
-        val readLength: Int get() { return sequence.length }
+        val readLength: Int get() { return sequence.size }
+        val sequenceString: String get() { return String(sequence) }
 
         // this function allows us to copy the layout read with different aligned position
         abstract fun copy(alignedPosition: Int): Read
@@ -35,7 +41,7 @@ open class ReadLayout(var id: String = String())
     private val mutableReads: MutableList<Read> = ArrayList()
     private val mutableReadSet: MutableSet<ReadKey> = HashSet()
     val reads: List<Read> get() = mutableReads
-    private var sequenceCache: String? = null
+    private var sequenceCache: ByteArray? = null
 
     val length: Int get() { return allSequenceSupport.support.size }
 
@@ -44,11 +50,16 @@ open class ReadLayout(var id: String = String())
 
     // consensus sequence is high qual sequence but N replace with
     // the low quality sequence
-    fun consensusSequence(): String
+    fun consensusSequence(): ByteArray
     {
         if (sequenceCache == null)
             updateConsensusSequence()
         return sequenceCache!!
+    }
+
+    fun consensusSequenceString(): String
+    {
+        return String(consensusSequence())
     }
 
     //
@@ -56,25 +67,25 @@ open class ReadLayout(var id: String = String())
     // i.e. if there are 1000 reads in this layout, and highQualReadFraction = 0.01
     //      then each base needs to be supported by 10 high quality reads or it will be set
     //      to N
-    fun highConfidenceSequence(highQualReadFraction: Double): String
+    fun highConfidenceSequence(highQualReadFraction: Double): ByteArray
     {
         val minHighQualCount = Math.max((reads.size * highQualReadFraction).toInt(), 1)
         val highQualCounts = highQualSupportCounts()
-        val stringBuilder = StringBuilder(highQualSequenceSupport.sequence.length)
+        val seq = ByteArray(highQualSequenceSupport.sequence.size)
         for (i in highQualSequenceSupport.sequence.indices)
         {
             val base = highQualSequenceSupport.sequence[i]
 
             if (highQualCounts[i] >= minHighQualCount)
             {
-                stringBuilder.append(base)
+                seq[i] = base
             }
             else
             {
-                stringBuilder.append('N')
+                seq[i] = N
             }
         }
-        return stringBuilder.toString()
+        return seq
     }
 
     fun highQualSupportString(): String
@@ -87,12 +98,12 @@ open class ReadLayout(var id: String = String())
         return highQualSequenceSupport.counts()
     }
 
-    fun getAllSequenceSupportAt(index: Int) : Map.Entry<Char, Int>
+    fun getAllSequenceSupportAt(index: Int) : Map.Entry<Byte, Int>
     {
         return allSequenceSupport.support[index].likelyBaseSupport()
     }
 
-    fun getHighQualSequenceSupportAt(index: Int) : Map.Entry<Char, Int>
+    fun getHighQualSequenceSupportAt(index: Int) : Map.Entry<Byte, Int>
     {
         return highQualSequenceSupport.support[index].likelyBaseSupport()
     }
@@ -122,17 +133,17 @@ open class ReadLayout(var id: String = String())
 
     class BaseSupport
     {
-        internal var likelyBase: Char = 'N'
+        internal var likelyBase: Byte = N
         private var aCount: Int = 0
         private var cCount: Int = 0
         private var gCount: Int = 0
         private var tCount: Int = 0
 
-        fun generateCountMap() : Map<Char, Int>
+        fun generateCountMap() : Map<Byte, Int>
         {
-            val countMap: MutableMap<Char, Int> = HashMap()
+            val countMap: MutableMap<Byte, Int> = HashMap()
 
-            for (base in arrayOf('A', 'C', 'G', 'T'))
+            for (base in arrayOf(A, C, G, T))
             {
                 val baseCount = count(base)
 
@@ -143,32 +154,32 @@ open class ReadLayout(var id: String = String())
             return countMap
         }
 
-        fun count(base: Char): Int
+        fun count(base: Byte): Int
         {
             return when (base)
                 {
-                    'A' -> aCount
-                    'C' -> cCount
-                    'G' -> gCount
-                    'T' -> tCount
+                    A -> aCount
+                    C -> cCount
+                    G -> gCount
+                    T -> tCount
                     else -> 0
                 }
         }
 
         // return true if the likely base has changed, false otherwise
-        fun addToCount(base: Char) : Boolean
+        fun addToCount(base: Byte) : Boolean
         {
             when (base)
             {
-                'A' -> ++aCount
-                'C' -> ++cCount
-                'G' -> ++gCount
-                'T' -> ++tCount
+                A -> ++aCount
+                C -> ++cCount
+                G -> ++gCount
+                T -> ++tCount
             }
             return updateLikelyBase(base)
         }
 
-        private fun updateLikelyBase(baseWithAddedCount: Char) : Boolean
+        private fun updateLikelyBase(baseWithAddedCount: Byte) : Boolean
         {
             if (likelyBase != baseWithAddedCount &&
                 count(baseWithAddedCount) > count(likelyBase))
@@ -179,9 +190,9 @@ open class ReadLayout(var id: String = String())
             return false
         }
 
-        fun likelyBaseSupport(): Map.Entry<Char, Int>
+        fun likelyBaseSupport(): Map.Entry<Byte, Int>
         {
-            if (likelyBase == 'N')
+            if (likelyBase == N)
                 return sNullSupport
             return AbstractMap.SimpleImmutableEntry(likelyBase, likelyBaseSupportCount())
         }
@@ -193,7 +204,7 @@ open class ReadLayout(var id: String = String())
     }
 
     class SequenceSupport (
-        var sequence: String = String())
+        var sequence: ByteArray = ByteArray(0))
     {
         private val mMutableSupport: MutableList<BaseSupport> = ArrayList()
         val support: List<BaseSupport> get() { return mMutableSupport }
@@ -207,7 +218,7 @@ open class ReadLayout(var id: String = String())
                 {
                     mMutableSupport.add(BaseSupport())
                 }
-                sequence += "N".repeat(lengthChange)
+                sequence += ByteArray(lengthChange) { N }
             }
         }
 
@@ -222,17 +233,18 @@ open class ReadLayout(var id: String = String())
             }
             // rotate the new items to the front
             Collections.rotate(support, s)
-            sequence = "N".repeat(s) + sequence
+            sequence = ByteArray(s) { N } + sequence
         }
 
         internal fun updateSequence()
         {
-            val stringBuilder = StringBuilder(support.size)
-            for (baseSupport in support)
+            if (sequence.size != support.size)
+                sequence = ByteArray(support.size)
+
+            for (i in support.indices)
             {
-                stringBuilder.append(baseSupport.likelyBase)
+                sequence[i] = support[i].likelyBase
             }
-            sequence = stringBuilder.toString()
         }
 
         fun supportString(): String
@@ -242,13 +254,11 @@ open class ReadLayout(var id: String = String())
 
         fun counts(): IntArray
         {
-            val countArray = IntArray(sequence.length)
+            val countArray = IntArray(sequence.size)
 
             for (i in sequence.indices)
             {
-                val base: Char = sequence[i]
-                val readCount: Int = support[i].count(base)
-                countArray[i] = readCount
+                countArray[i] = support[i].count(sequence[i])
             }
             return countArray
         }
@@ -282,7 +292,7 @@ open class ReadLayout(var id: String = String())
 
         // now use the aligned position to line up the read with the group
         val seqOffset = getReadOffset(read)
-        val readSeqEnd = read.sequence.length + seqOffset
+        val readSeqEnd = read.sequence.size + seqOffset
 
         allSequenceSupport.ensureLength(readSeqEnd)
         highQualSequenceSupport.ensureLength(readSeqEnd)
@@ -298,8 +308,8 @@ open class ReadLayout(var id: String = String())
         {
             val baseQual = read.baseQualities[i]
 
-            val b: Char = read.sequence[i]
-            if (b != 'N')
+            val b: Byte = read.sequence[i]
+            if (b != N)
             {
                 allSequenceChanged = allSequenceSupport.support[seqOffset + i].addToCount(b) or allSequenceChanged
 
@@ -323,22 +333,24 @@ open class ReadLayout(var id: String = String())
 
     private fun updateConsensusSequence()
     {
+        val size = length
+        if (sequenceCache == null || sequenceCache!!.size != size)
+            sequenceCache = ByteArray(size)
+
         // combine high qual with low qual
-        val stringBuilder = StringBuilder(allSequenceSupport.sequence.length)
         for (i in allSequenceSupport.sequence.indices)
         {
             val base = highQualSequenceSupport.sequence[i]
-            if (base == 'N')
+            if (base == N)
             {
                 // if high quality sequence is not sure, use the low qual one
-                stringBuilder.append(allSequenceSupport.sequence[i])
+                sequenceCache!![i] = allSequenceSupport.sequence[i]
             }
             else
             {
-                stringBuilder.append(base)
+                sequenceCache!![i] = base
             }
         }
-        sequenceCache = stringBuilder.toString()
     }
 
     private fun getReadOffset(read: Read) : Int
@@ -361,7 +373,7 @@ open class ReadLayout(var id: String = String())
 
     companion object
     {
-        val sNullSupport : Map.Entry<Char, Int> = AbstractMap.SimpleImmutableEntry('N', 0)
+        val sNullSupport : Map.Entry<Byte, Int> = AbstractMap.SimpleImmutableEntry(N, 0)
 
         // merge in another layout to this layout, and create a new layout
         // the new layout will have the same aligned position as this layout

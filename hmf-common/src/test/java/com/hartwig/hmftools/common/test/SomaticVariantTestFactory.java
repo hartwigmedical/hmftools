@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.test;
 
+import static com.hartwig.hmftools.common.variant.SomaticLikelihood.UNKNOWN;
+
 import com.hartwig.hmftools.common.genotype.GenotypeStatus;
 import com.hartwig.hmftools.common.purple.GermlineStatus;
 import com.hartwig.hmftools.common.variant.CodingEffect;
@@ -11,13 +13,11 @@ import com.hartwig.hmftools.common.variant.VariantType;
 import org.apache.logging.log4j.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
-public final class SomaticVariantTestFactory {
-
-    private SomaticVariantTestFactory() {
-    }
-
+public final class SomaticVariantTestFactory
+{
     @NotNull
-    public static ImmutableSomaticVariantImpl.Builder builder() {
+    public static ImmutableSomaticVariantImpl.Builder builder()
+    {
         return ImmutableSomaticVariantImpl.builder()
                 .qual(100)
                 .chromosome(Strings.EMPTY)
@@ -55,6 +55,9 @@ public final class SomaticVariantTestFactory {
                 .repeatCount(0)
                 .subclonalLikelihood(0)
                 .tier(VariantTier.UNKNOWN)
-                .mappability(0D);
+                .mappability(0D)
+                .clinvarInfo("")
+                .gnomadFrequency(0)
+                .somaticLikelihood(UNKNOWN);
     }
 }

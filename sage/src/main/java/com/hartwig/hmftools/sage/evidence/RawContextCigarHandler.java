@@ -1,11 +1,15 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageConstants.MATCHING_BASE_QUALITY;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_SOFT_CLIP_LOW_QUAL_COUNT;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_HIGH_QUAL_PERC;
+import static com.hartwig.hmftools.sage.SageConstants.MIN_SOFT_CLIP_MIN_BASE_QUAL;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 
 import com.hartwig.hmftools.common.samtools.CigarHandler;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
-import com.hartwig.hmftools.sage.read.ExpandedBasesFactory;
+import com.hartwig.hmftools.sage.read.SplitReadUtils;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.SAMRecord;
@@ -41,6 +45,9 @@ public class RawContextCigarHandler implements CigarHandler
         if(ignoreSoftClipAdapter(record))
             return;
 
+        if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), 0, element.getLength()))
+            return;
+
         int readStartPos = record.getReadPositionAtReferencePosition(record.getAlignmentStart());
         int readIndex = readStartPos - 1 - record.getAlignmentStart()
                 + mVariant.position() - mVariant.alt().length() + mVariant.ref().length();
@@ -63,6 +70,11 @@ public class RawContextCigarHandler implements CigarHandler
 
          if(ignoreSoftClipAdapter(record))
              return;
+
+        int scStartIndex = record.getBaseQualities().length - element.getLength();
+
+        if(exceedsSoftClipLowBaseQual(record.getBaseQualities(), scStartIndex, element.getLength()))
+            return;
 
         if(mIsInsert)
         {
@@ -145,7 +157,7 @@ public class RawContextCigarHandler implements CigarHandler
             int baseQuality = altSupport ? avgBaseQuality(readIndex, record, 2) : 0;
             mResult = RawContext.indel(readIndex, altSupport, baseQuality);
         }
-        else if(refPositionEnd >= mVariant.position())
+        else if(positionWithin(mVariant.position(), refPosition, refPositionEnd))
         {
             mResult = RawContext.inDelete(readIndex);
         }
@@ -157,7 +169,7 @@ public class RawContextCigarHandler implements CigarHandler
         if(mResult != null)
             return;
 
-        if(e.getLength() > ExpandedBasesFactory.MAX_SKIPPED_REFERENCE_REGIONS)
+        if(e.getLength() > SplitReadUtils.MAX_SKIPPED_REFERENCE_REGIONS)
         {
             int refPositionEnd = refPosition + e.getLength();
             if(refPositionEnd >= mVariant.position())
@@ -209,5 +221,28 @@ public class RawContextCigarHandler implements CigarHandler
 
         int baseLength = maxIndex - readIndex + 1;
         return qualityTotal > 0 ? (int)(qualityTotal / baseLength) : 0;
+    }
+
+    public static boolean exceedsSoftClipLowBaseQual(final byte[] baseQualities, int startIndex, int scLength)
+    {
+        if(scLength < MAX_SOFT_CLIP_LOW_QUAL_COUNT)
+            return false;
+
+        double requiredHighQual = MIN_SOFT_CLIP_HIGH_QUAL_PERC * scLength;
+        int aboveQual = 0;
+
+        for(int i = startIndex; i < startIndex + scLength; ++i)
+        {
+            if(baseQualities[i] >= MIN_SOFT_CLIP_MIN_BASE_QUAL)
+            {
+                ++aboveQual;
+
+                if(aboveQual >= requiredHighQual)
+                    return false;
+            }
+        }
+
+        int lowQualCount = scLength - aboveQual;
+        return lowQualCount >= MAX_SOFT_CLIP_LOW_QUAL_COUNT;
     }
 }

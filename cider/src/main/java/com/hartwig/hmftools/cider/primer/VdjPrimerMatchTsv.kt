@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.cider.primer
 
 import com.hartwig.hmftools.cider.*
-import com.hartwig.hmftools.common.utils.FileWriterUtils
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import java.io.File

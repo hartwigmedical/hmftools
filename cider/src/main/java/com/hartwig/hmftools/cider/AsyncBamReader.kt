@@ -72,7 +72,7 @@ object AsyncBamReader
 
             for (genomeRegion in genomeRegionList)
             {
-                logger.debug("querying genome region: {}", genomeRegion)
+                logger.trace("querying genome region: {}", genomeRegion)
                 mSamReader.queryOverlapping(genomeRegion.chromosome(), genomeRegion.start(), genomeRegion.end())
                     .use({ iterator -> processRecords(iterator) })
             }

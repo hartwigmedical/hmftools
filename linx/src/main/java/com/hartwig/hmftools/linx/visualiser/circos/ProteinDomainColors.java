@@ -34,7 +34,7 @@ public class ProteinDomainColors
         final List<String> newProteinDomains =
                 proteinDomains.stream().filter(x -> !proteinColorMap.containsKey(x)).collect(Collectors.toList());
 
-        for (int i = 0; i < newProteinDomains.size(); i++)
+        for(int i = 0; i < newProteinDomains.size(); i++)
         {
             proteinColorMap.put(newProteinDomains.get(i), getFloatingColor(i, newProteinDomains.size()));
         }
@@ -44,7 +44,7 @@ public class ProteinDomainColors
     @NotNull
     public Color color(final VisProteinDomain proteinDomain)
     {
-        if (proteinDomain.name().equals(VisProteinDomain.UTR))
+        if(proteinDomain.name().equals(VisProteinDomain.UTR))
         {
             return proteinDomain.start() == 1 ? UTR_DOWN : UTR_UP;
         }
@@ -71,7 +71,7 @@ public class ProteinDomainColors
     {
         final StringBuilder builder = new StringBuilder();
         final List<Color> colors = Lists.newArrayList(proteinColorMap.values());
-        for (int i = 0; i < colors.size(); i++)
+        for(int i = 0; i < colors.size(); i++)
         {
             final Color color = colors.get(i);
             builder.append("private static final Color COLOR").append(i).append(" = new Color(")

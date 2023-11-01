@@ -12,8 +12,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.codon.Nucleotides;
-import com.hartwig.hmftools.common.genome.chromosome.MitochondrialChromosome;
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.EvictingArray;
 import com.hartwig.hmftools.sage.SageConfig;
@@ -38,8 +37,9 @@ public class RefContextCache
 
         final Consumer<RefContext> evictionHandler = (refContext) -> processAltContexts(refContext);
 
-        int minCapacity = config.ExpectedReadLength == DEFAULT_READ_LENGTH ?
-                MIN_CAPACITY : max(MIN_CAPACITY, config.ExpectedReadLength * 2);
+        int minCapacity = config.getReadLength() == DEFAULT_READ_LENGTH ?
+                MIN_CAPACITY : max(MIN_CAPACITY, config.getReadLength() * 2);
+
         mEvictingArray = new EvictingArray(minCapacity, evictionHandler);
     }
 

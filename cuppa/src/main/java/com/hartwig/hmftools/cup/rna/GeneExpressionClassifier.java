@@ -5,8 +5,11 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.rna.GeneExpressionFile.FLD_ADJ_TPM;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.CosineSimilarity.calcCosineSim;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.common.utils.MatrixFile.loadMatrixDataFile;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
@@ -37,6 +40,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.rna.GeneExpressionFile;
 import com.hartwig.hmftools.common.utils.Matrix;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.CuppaConfig;
 import com.hartwig.hmftools.common.cuppa.CategoryType;
 import com.hartwig.hmftools.cup.common.CuppaClassifier;
@@ -45,9 +49,6 @@ import com.hartwig.hmftools.cup.common.SampleData;
 import com.hartwig.hmftools.cup.common.SampleDataCache;
 import com.hartwig.hmftools.cup.common.SampleResult;
 import com.hartwig.hmftools.cup.common.SampleSimilarity;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 public class GeneExpressionClassifier implements CuppaClassifier
 {
@@ -69,15 +70,13 @@ public class GeneExpressionClassifier implements CuppaClassifier
     private final boolean mRunPairwiseCss;
     private final boolean mRunCancerCss;
     private final double mCssExponent;
-    private final boolean mMatchReadLength;
 
     private static final String RNA_METHODS = "gene_exp_rna_methods";
     private static final String CSS_METHOD_PAIRWISE = "pairwise_css";
     private static final String CSS_METHOD_CANCER = "cancer_css";
     private static final String CSS_EXPONENT = "gene_exp_css_exp";
-    private static final String MATCH_READ_LENGTH = "gene_exp_match_read_length";
 
-    public GeneExpressionClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final CommandLine cmd)
+    public GeneExpressionClassifier(final CuppaConfig config, final SampleDataCache sampleDataCache, final ConfigBuilder configBuilder)
     {
         mConfig = config;
         mSampleDataCache = sampleDataCache;
@@ -94,38 +93,21 @@ public class GeneExpressionClassifier implements CuppaClassifier
         mSampleGeneExpression = null;
         mSampleIndexMap = Maps.newHashMap();
 
-        final String rnaMethods = cmd.getOptionValue(RNA_METHODS);
+        final String rnaMethods = configBuilder.getValue(RNA_METHODS);
 
         mRunPairwiseCss = rnaMethods == null || rnaMethods.contains(CSS_METHOD_PAIRWISE);
         mRunCancerCss = rnaMethods != null && rnaMethods.contains(CSS_METHOD_CANCER);
-        mCssExponent = Double.parseDouble(cmd.getOptionValue(CSS_EXPONENT, String.valueOf(GENE_EXP_DIFF_EXPONENT)));
-        mMatchReadLength = cmd.hasOption(MATCH_READ_LENGTH);
-
-        if(mRunPairwiseCss && mConfig.RefGeneExpSampleFile.isEmpty())
-            return;
-
-        if(mRunCancerCss && mConfig.RefGeneExpCancerFile.isEmpty())
-            return;
-
+        mCssExponent = configBuilder.getDecimal(CSS_EXPONENT);
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addCmdLineArgs(final ConfigBuilder configBuilder)
     {
-        options.addOption(RNA_METHODS, true, "Types of RNA gene expression methods");
-        options.addOption(CSS_EXPONENT, true, "Gene expression CSS exponent");
-        options.addOption(MATCH_READ_LENGTH, false, "Gene expression pairwise only amongst matching read-length samples");
+        configBuilder.addConfigItem(RNA_METHODS, false, "Types of RNA gene expression methods");
+        configBuilder.addDecimal(CSS_EXPONENT, "Gene expression CSS exponent", GENE_EXP_DIFF_EXPONENT);
     }
 
     public CategoryType categoryType() { return GENE_EXP; }
     public void close() {}
-
-    private String formCancerType(final SampleData sample)
-    {
-        if(mMatchReadLength)
-            return format("%s_%d", sample.cancerType(), sample.rnaReadLength());
-        else
-            return sample.cancerType();
-    }
 
     @Override
     public boolean loadData()
@@ -207,7 +189,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
                 if(!mRefSampleGeneExpIndexMap.containsKey(refSample.Id))
                     continue;
 
-                final String cancerType = formCancerType(refSample);
+                final String cancerType = refSample.cancerType();
 
                 Integer sampleCount = mRefCancerSampleCounts.get(cancerType);
                 if(sampleCount == null)
@@ -273,7 +255,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
                 if(refSample.Id.equals(sample.Id))
                     continue;
 
-                if(mMatchReadLength && refSample.rnaReadLength() != sample.rnaReadLength())
+                if(!refSample.hasRna())
                     continue;
 
                 Integer refSampleIndex = mRefSampleGeneExpIndexMap.get(refSample.Id);
@@ -297,7 +279,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
                 double cssWeight = pow(mCssExponent, -100 * (1 - css));
 
-                int cancerSampleCount = mRefCancerSampleCounts.get(formCancerType(refSample));
+                int cancerSampleCount = mRefCancerSampleCounts.get(refSample.cancerType());
                 double weightedCss = css * cssWeight / sqrt(cancerSampleCount);
 
                 totalWeightedCss += weightedCss;
@@ -367,30 +349,34 @@ public class GeneExpressionClassifier implements CuppaClassifier
     {
         final String isofoxDir = mConfig.getIsofoxDataDir(sampleId);
         final String filename = GeneExpressionFile.generateFilename(isofoxDir, sampleId);
+        String fileDelim = inferFileDelimiter(filename);
 
         CUP_LOGGER.debug("loading sample gene-expression data file({})", filename);
 
         if(!Files.exists(Paths.get(filename)))
+        {
+            CUP_LOGGER.warn("sample({}) file({}) missing", sampleId, filename);
             return false;
+        }
 
         try
         {
             final List<String> fileData = Files.readAllLines(new File(filename).toPath());
             String header = fileData.get(0);
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, ",");
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, fileDelim);
             fileData.remove(0);
 
             // GeneId,GeneName, etc AdjTPM
             double[][] matrixData = mSampleGeneExpression.getData();
 
-            int geneIdCol = fieldsIndexMap.get("GeneId");
-            int adjTPM = fieldsIndexMap.get("AdjTPM");
+            int geneIdCol = fieldsIndexMap.get(FLD_GENE_ID);
+            int adjTPM = fieldsIndexMap.get(FLD_ADJ_TPM);
 
             int unknownGeneCount = 0;
 
             for(String line : fileData)
             {
-                final String[] items = line.split(DATA_DELIM, -1);
+                final String[] items = line.split(fileDelim, -1);
 
                 String geneId = items[geneIdCol];
                 double adjTpm = Double.parseDouble(items[adjTPM]);
@@ -415,7 +401,7 @@ public class GeneExpressionClassifier implements CuppaClassifier
 
             return true;
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             CUP_LOGGER.error("failed to read RNA sample gene data file({}): {}", filename, e.toString());
             return false;

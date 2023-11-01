@@ -1,17 +1,18 @@
 package com.hartwig.hmftools.common.rna;
 
 import static com.hartwig.hmftools.common.rna.RnaCommon.DELIMITER;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_END;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_DEPTH_START;
+import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_FRAG_COUNT;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_NAME;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 
-import java.io.File;
 import java.util.StringJoiner;
-
-import org.jetbrains.annotations.NotNull;
 
 public class AltSpliceJunctionFile
 {
@@ -31,7 +32,6 @@ public class AltSpliceJunctionFile
     public static final String FLD_ALT_SJ_POS_START = "SjStart";
     public static final String FLD_ALT_SJ_POS_END = "SjEnd";
     public static final String FLD_ALT_SJ_TYPE = "Type";
-    public static final String FLD_ALT_SJ_FRAG_COUNT = "FragCount";
 
     public static final String ALT_SJ_FILE_ID = "alt_splice_junc.csv";
 
@@ -52,10 +52,9 @@ public class AltSpliceJunctionFile
         BaseContexts = baseContexts;
     }
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + ISF_FILE_ID + ALT_SJ_FILE_ID;
+        return checkAddDirSeparator(basePath) + sample + ISF_FILE_ID + ALT_SJ_FILE_ID;
     }
 
     public static String csvHeader()
@@ -67,9 +66,9 @@ public class AltSpliceJunctionFile
                 .add(FLD_ALT_SJ_POS_START)
                 .add(FLD_ALT_SJ_POS_END)
                 .add(FLD_ALT_SJ_TYPE)
-                .add(FLD_ALT_SJ_FRAG_COUNT)
-                .add("DepthStart")
-                .add("DepthEnd")
+                .add(FLD_FRAG_COUNT)
+                .add(FLD_DEPTH_START)
+                .add(FLD_DEPTH_END)
                 .add("RegionStart")
                 .add("RegionEnd")
                 .add("BasesStart")
@@ -116,9 +115,9 @@ public class AltSpliceJunctionFile
                 .toString();
     }
 
-    public static AltSpliceJunctionFile fromCsv(final String data)
+    public static AltSpliceJunctionFile parseLine(final String data, final String delim)
     {
-        final String[] items = data.split(DELIMITER);
+        final String[] items = data.split(delim);
 
         int index = 0;
 
@@ -146,7 +145,7 @@ public class AltSpliceJunctionFile
                 regionContexts, baseContexts, transNames);
     }
 
-    public static AltSpliceJunctionFile fromCsv(
+    public static AltSpliceJunctionFile parseLine(
             final String[] items,
             int geneId, int geneName, int chr, int posStart, int posEnd, int type,
             int fragCount, int depthStart, int depthEnd, int regionStart, int regionEnd, int basesStart, int basesEnd, int transStart, int transEnd)

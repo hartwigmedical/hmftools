@@ -1,13 +1,14 @@
 package com.hartwig.hmftools.neo.utils;
 
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindConstants.AMINO_ACIDS;
@@ -24,12 +25,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 // runs Fisher exact test to look for co-occurrence in amino-acid position vs peptide length
@@ -45,11 +42,11 @@ public class PeptideLengthAnalyser
 
     private static final String NMER_FREQ_FILE = "nmer_freq_file";
 
-    public PeptideLengthAnalyser(final CommandLine cmd)
+    public PeptideLengthAnalyser(final ConfigBuilder configBuilder)
     {
-        String dataFile = cmd.getOptionValue(NMER_FREQ_FILE);
+        String dataFile = configBuilder.getValue(NMER_FREQ_FILE);
 
-        mOutputDir = parseOutputDir(cmd);
+        mOutputDir = parseOutputDir(configBuilder);
 
         mWriter = initProbWriter();
 
@@ -178,7 +175,7 @@ public class PeptideLengthAnalyser
         {
             final List<String> lines = Files.readAllLines(new File(filename).toPath());
 
-            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+            final Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), CSV_DELIM);
             lines.remove(0);
 
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
@@ -192,7 +189,7 @@ public class PeptideLengthAnalyser
 
             for(String line : lines)
             {
-                final String[] items = line.split(DELIMITER, -1);
+                final String[] items = line.split(CSV_DELIM, -1);
 
                 String allele = items[alleleIndex];
 
@@ -223,26 +220,17 @@ public class PeptideLengthAnalyser
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(NMER_FREQ_FILE, true, "N-mer frequency data file");
-        options.addOption(OUTPUT_DIR, true, "Output directory");
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        configBuilder.addPath(NMER_FREQ_FILE, true, "N-mer frequency data file");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        PeptideLengthAnalyser peptideLengthAnalyser = new PeptideLengthAnalyser(cmd);
+        PeptideLengthAnalyser peptideLengthAnalyser = new PeptideLengthAnalyser(configBuilder);
         peptideLengthAnalyser.run();
-    }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 
     private class BindPositionData

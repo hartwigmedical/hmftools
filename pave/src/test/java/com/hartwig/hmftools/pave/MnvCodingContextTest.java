@@ -246,6 +246,7 @@ public class MnvCodingContextTest
         // then the protein context
         assertTrue(impact.proteinContext() != null);
         assertEquals(3, impact.proteinContext().CodonIndex);
+        assertEquals("p.Ser3_Ile4delinsArgPhe", impact.proteinContext().Hgvs);
 
         String altCodonBases = alt + refCodonBases.substring(4, 6);
         assertEquals(altCodonBases, impact.proteinContext().AltCodonBases);

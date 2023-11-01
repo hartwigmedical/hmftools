@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.metrics;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
+
+// Picard WgsMetrics file output, internally superceded with BamMetricsSummary
 
 public final class WGSMetricsFile
 {
@@ -35,11 +39,10 @@ public final class WGSMetricsFile
     private static final String COVERAGE_60X_COLUMN = "PCT_60X";
 
     public static final String FILE_EXTENSION = ".wgsmetrics";
-    public static final String DELIM = "\t";
 
     public static String generateFilename(final String basePath, final String sampleId)
     {
-        return basePath + File.separator + sampleId + FILE_EXTENSION;
+        return checkAddDirSeparator(basePath) + sampleId + FILE_EXTENSION;
     }
 
     @NotNull
@@ -61,18 +64,20 @@ public final class WGSMetricsFile
         }
 
         if(headerLine == null)
+        {
             throw new IOException("invalid WGS metrics file: " + filename);
+        }
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(headerLine, DELIM);
-        String[] values = valuesLine.split(DELIM, -1);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(headerLine, TSV_DELIM);
+        String[] values = valuesLine.split(TSV_DELIM, -1);
 
         // NOTE: adapter and 1x coverage not exist in older versions
 
         return ImmutableWGSMetrics.builder()
                 .meanCoverage(Double.parseDouble(values[fieldsIndexMap.get(MEAN_COVERAGE_COLUMN)]))
                 .sdCoverage(Double.parseDouble(values[fieldsIndexMap.get(SD_COVERAGE_COLUMN)]))
-                .medianCoverage(Integer.parseInt(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))
-                .madCoverage(Integer.parseInt(values[fieldsIndexMap.get(MAD_COVERAGE_COLUMN)]))
+                .medianCoverage((int) Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_COVERAGE_COLUMN)]))
+                .madCoverage((int) Double.parseDouble(values[fieldsIndexMap.get(MAD_COVERAGE_COLUMN)]))
                 .pctExcAdapter(fieldsIndexMap.containsKey(PCT_EXC_ADAPTER_COLUMN) ?
                         Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_ADAPTER_COLUMN)]) : null)
                 .pctExcMapQ(Double.parseDouble(values[fieldsIndexMap.get(PCT_EXC_MAPQ_COLUMN)]))

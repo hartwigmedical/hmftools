@@ -4,21 +4,21 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
-import static com.hartwig.hmftools.neo.bind.BindCommon.ITEM_DELIM;
 import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE;
 import static com.hartwig.hmftools.neo.bind.TranscriptExpression.IMMUNE_EXPRESSION_FILE_CFG;
 
@@ -37,14 +37,10 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.TranscriptExpression;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class PeptideProteomeLocator
@@ -64,20 +60,20 @@ public class PeptideProteomeLocator
     private static final String PEPTIDE_FILE = "peptide_file";
     private static final String FIND_REPEATS = "find_repeats";
 
-    public PeptideProteomeLocator(final CommandLine cmd)
+    public PeptideProteomeLocator(final ConfigBuilder configBuilder)
     {
-        mPeptides = loadDelimitedIdFile(cmd.getOptionValue(PEPTIDE_FILE), FLD_PEPTIDE, CSV_DELIM);
+        mPeptides = loadDelimitedIdFile(configBuilder.getValue(PEPTIDE_FILE), FLD_PEPTIDE, CSV_DELIM);
 
         mTransAminoAcidMap = Maps.newHashMap();
-        EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList(), false);
+        EnsemblDataLoader.loadTranscriptAminoAcidData(configBuilder.getValue(ENSEMBL_DATA_DIR), mTransAminoAcidMap, Lists.newArrayList(), false);
 
-        mTranscriptExpression = new TranscriptExpression(cmd.getOptionValue(IMMUNE_EXPRESSION_FILE));
+        mTranscriptExpression = new TranscriptExpression(configBuilder.getValue(IMMUNE_EXPRESSION_FILE));
 
-        mFlankLength = Integer.parseInt(cmd.getOptionValue(FLANK_LENGTH));
-        mThreads = parseThreads(cmd);
-        mFindRepeats = cmd.hasOption(FIND_REPEATS);
+        mFlankLength = Integer.parseInt(configBuilder.getValue(FLANK_LENGTH));
+        mThreads = parseThreads(configBuilder);
+        mFindRepeats = configBuilder.hasFlag(FIND_REPEATS);
 
-        mWriter = initialiseWriter(parseOutputDir(cmd), cmd.getOptionValue(OUTPUT_ID));
+        mWriter = initialiseWriter(parseOutputDir(configBuilder), configBuilder.getValue(OUTPUT_ID));
     }
 
     public void run()
@@ -308,31 +304,21 @@ public class PeptideProteomeLocator
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(PEPTIDE_FILE, true, "Peptides to search for");
-        options.addOption(FLANK_LENGTH, true, "Number of amino acid flanks to retrieve");
-        options.addOption(FIND_REPEATS, false, "Look for repeated matches, default false");
-        options.addOption(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
-        addEnsemblDir(options);
-        addLoggingOptions(options);
-        addOutputOptions(options);
-        addThreadOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        configBuilder.addPath(PEPTIDE_FILE, true, "Peptides to search for");
+        configBuilder.addInteger(FLANK_LENGTH, "Number of amino acid flanks to retrieve", 0);
+        configBuilder.addFlag(FIND_REPEATS, "Look for repeated matches");
+        configBuilder.addPath(IMMUNE_EXPRESSION_FILE, true, IMMUNE_EXPRESSION_FILE_CFG);
+        addEnsemblDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
+        addThreadOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        PeptideProteomeLocator peptideProteomeLocator = new PeptideProteomeLocator(cmd);
+        PeptideProteomeLocator peptideProteomeLocator = new PeptideProteomeLocator(configBuilder);
         peptideProteomeLocator.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

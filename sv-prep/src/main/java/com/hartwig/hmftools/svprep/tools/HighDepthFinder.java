@@ -2,12 +2,11 @@ package com.hartwig.hmftools.svprep.tools;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.sv.ChrBaseRegion.addSpecificChromosomesRegionsConfig;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.svprep.SvCommon.APP_NAME;
 import static com.hartwig.hmftools.svprep.SvCommon.SV_LOGGER;
 
 import java.io.BufferedWriter;
@@ -19,12 +18,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class HighDepthFinder
@@ -32,9 +28,9 @@ public class HighDepthFinder
     private final HighDepthConfig mConfig;
     private final BufferedWriter mWriter;
 
-    public HighDepthFinder(final CommandLine cmd)
+    public HighDepthFinder(final ConfigBuilder configBuilder)
     {
-        mConfig = new HighDepthConfig(cmd);
+        mConfig = new HighDepthConfig(configBuilder);
         mWriter = initialiseWriter(mConfig.OutputFile);
     }
 
@@ -75,7 +71,7 @@ public class HighDepthFinder
         {
             BufferedWriter writer = createBufferedWriter(filename, false);
 
-            writer.write("Chromosome,PosStart,PosEnd,BaseDepthMin,BaseDepthMax");
+            writer.write("Chromosome\tPosStart\tPosEnd\tBaseDepthMin\tBaseDepthMax");
             writer.newLine();
 
             return writer;
@@ -97,7 +93,7 @@ public class HighDepthFinder
         {
             for(HighDepthRegion region : regions)
             {
-                writer.write(format("%s,%d,%d,%d,%d",
+                writer.write(format("%s\t%d\t%d\t%d\t%d",
                         region.Chromosome, region.start(), region.end(), region.DepthMin, region.DepthMax));
                 writer.newLine();
             }
@@ -108,26 +104,16 @@ public class HighDepthFinder
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        HighDepthConfig.addOptions(options);
-        addSpecificChromosomesRegionsConfig(options);
-        addOutputOptions(options);
-        addLoggingOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        HighDepthConfig.addConfig(configBuilder);
+        addOutputOptions(configBuilder);
+        ConfigUtils.addLoggingOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        HighDepthFinder highDepthFinder = new HighDepthFinder(cmd);
+        HighDepthFinder highDepthFinder = new HighDepthFinder(configBuilder);
         highDepthFinder.run();
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

@@ -8,11 +8,11 @@ import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface VirusInterpreterData {
+public abstract class VirusInterpreterData
+{
+    @NotNull
+    public abstract List<AnnotatedVirus> allViruses();
 
     @NotNull
-    List<AnnotatedVirus> allViruses();
-
-    @NotNull
-    List<AnnotatedVirus> reportableViruses();
+    public abstract List<AnnotatedVirus> reportableViruses();
 }

@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.purple.copynumber;
 
 import static com.hartwig.hmftools.purple.TestUtils.createDefaultFittedRegion;
+import static com.hartwig.hmftools.purple.TestUtils.buildPurityAdjuster;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -20,7 +21,7 @@ public class AlleleToleranceTest
     @Before
     public void setup()
     {
-        victim = new AlleleTolerance(new PurityAdjuster(Gender.FEMALE, 1, 1));
+        victim = new AlleleTolerance(buildPurityAdjuster(Gender.FEMALE, 1, 1));
     }
 
     @Test

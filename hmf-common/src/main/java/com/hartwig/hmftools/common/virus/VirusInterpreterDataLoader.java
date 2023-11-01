@@ -10,21 +10,21 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public final class VirusInterpreterDataLoader {
-
+public final class VirusInterpreterDataLoader
+{
     private static final Logger LOGGER = LogManager.getLogger(VirusInterpreterDataLoader.class);
 
-    private VirusInterpreterDataLoader() {
-    }
-
     @NotNull
-    public static VirusInterpreterData load(@NotNull String annotatedVirusTsv) throws IOException {
-        LOGGER.info("Loading annotated virus data from {}", new File(annotatedVirusTsv).getParent());
+    public static VirusInterpreterData load(@NotNull String annotatedVirusTsv) throws IOException
+    {
+        LOGGER.info("Loading VirusInterpreter data from {}", new File(annotatedVirusTsv).getParent());
         List<AnnotatedVirus> viruses = AnnotatedVirusFile.read(annotatedVirusTsv);
 
         List<AnnotatedVirus> reportable = Lists.newArrayList();
-        for (AnnotatedVirus virus : viruses) {
-            if (virus.reported()) {
+        for(AnnotatedVirus virus : viruses)
+        {
+            if(virus.reported())
+            {
                 reportable.add(virus);
             }
         }

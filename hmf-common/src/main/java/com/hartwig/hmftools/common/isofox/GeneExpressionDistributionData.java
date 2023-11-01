@@ -1,9 +1,10 @@
 package com.hartwig.hmftools.common.isofox;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 public class GeneExpressionDistributionData
 {
     private static final Logger LOGGER = LogManager.getLogger(GeneExpressionDistributionData.class);
+    public static final int NOT_AVAILABLE = -1;
 
     private final Map<String, Map<String, double[]>> mGenePercentiles; // by geneId and then cancer type
     private final Map<String, Map<String, Double>> mGeneMedians;
@@ -38,7 +40,8 @@ public class GeneExpressionDistributionData
     {
         final List<String> lines = Files.readAllLines(Paths.get(filename));
 
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), RnaCommon.DELIMITER);
+        String fileDelim = inferFileDelimiter(filename);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), fileDelim);
         lines.remove(0);
 
         int geneIdIndex = fieldsIndexMap.get(FLD_GENE_ID);
@@ -52,7 +55,7 @@ public class GeneExpressionDistributionData
 
         for(String line : lines)
         {
-            final String[] items = line.split(RnaCommon.DELIMITER, -1);
+            final String[] items = line.split(fileDelim, -1);
 
             final String geneId = items[geneIdIndex];
             final String cancerType = items[cancerIndex];
@@ -89,7 +92,7 @@ public class GeneExpressionDistributionData
 
         if(medianMap == null || !medianMap.containsKey(cancerType))
         {
-            return -1;
+            return NOT_AVAILABLE;
         }
 
         return medianMap.get(cancerType);
@@ -101,7 +104,7 @@ public class GeneExpressionDistributionData
 
         if(percentileMap == null || !percentileMap.containsKey(cancerType))
         {
-            return -1;
+            return NOT_AVAILABLE;
         }
 
         return getPercentile(percentileMap.get(cancerType), sampleTpm);

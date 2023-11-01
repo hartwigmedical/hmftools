@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.utils;
 
 import static java.util.stream.Collectors.toList;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
 import static com.hartwig.hmftools.linx.utils.SvTestUtils.initialiseSV;
 
@@ -52,7 +53,7 @@ public class SampleDataLoader
             svList.add(var);
             initialiseSV(var);
 
-            final String[] items = inputData.get(i).split(StructuralVariantFile.DELIMITER);
+            final String[] items = inputData.get(i).split(TSV_DELIM);
 
             if(items.length < COL_EXPECTED)
                 return svList;

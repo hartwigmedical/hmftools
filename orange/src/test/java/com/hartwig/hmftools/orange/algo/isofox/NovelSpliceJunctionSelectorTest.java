@@ -10,18 +10,19 @@ import com.hartwig.hmftools.common.drivercatalog.panel.DriverGeneTestFactory;
 import com.hartwig.hmftools.common.fusion.KnownFusionCache;
 import com.hartwig.hmftools.common.fusion.KnownFusionCacheTestFactory;
 import com.hartwig.hmftools.common.isofox.IsofoxTestFactory;
-import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.common.linx.LinxTestFactory;
 import com.hartwig.hmftools.common.rna.AltSpliceJunctionType;
 import com.hartwig.hmftools.common.rna.NovelSpliceJunction;
+import com.hartwig.hmftools.datamodel.linx.LinxFusion;
+import com.hartwig.hmftools.orange.algo.linx.LinxOrangeTestFactory;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class NovelSpliceJunctionSelectorTest {
-
+public class NovelSpliceJunctionSelectorTest
+{
     @Test
-    public void canSelectSkippedExons() {
+    public void canSelectSkippedExons()
+    {
         NovelSpliceJunction match = create("gene 1", AltSpliceJunctionType.SKIPPED_EXONS, 10, 1);
         NovelSpliceJunction tooFewFragments = create("gene 1", AltSpliceJunctionType.SKIPPED_EXONS, 2, 1);
         NovelSpliceJunction tooHighCohortFreq = create("gene 1", AltSpliceJunctionType.SKIPPED_EXONS, 20, 50);
@@ -34,7 +35,8 @@ public class NovelSpliceJunctionSelectorTest {
         knownFusionCache.addData(KnownFusionCacheTestFactory.createExonDelDup("gene 1"));
         knownFusionCache.addData(KnownFusionCacheTestFactory.createExonDelDup("gene 2"));
 
-        List<LinxFusion> linxFusions = Lists.newArrayList(LinxTestFactory.fusionBuilder().geneStart("gene 2").geneEnd("gene 2").build());
+        List<LinxFusion> linxFusions =
+                Lists.newArrayList(LinxOrangeTestFactory.fusionBuilder().geneStart("gene 2").geneEnd("gene 2").build());
 
         List<NovelSpliceJunction> skippedExons = NovelSpliceJunctionSelector.selectSkippedExons(junctions, linxFusions, knownFusionCache);
         assertEquals(1, skippedExons.size());
@@ -42,7 +44,8 @@ public class NovelSpliceJunctionSelectorTest {
     }
 
     @Test
-    public void canSelectNovelExonIntrons() {
+    public void canSelectNovelExonIntrons()
+    {
         NovelSpliceJunction match = create("gene 1", AltSpliceJunctionType.NOVEL_INTRON, 10, 1);
         NovelSpliceJunction tooFewFragments = create("gene 1", AltSpliceJunctionType.NOVEL_INTRON, 2, 1);
         NovelSpliceJunction tooHighCohortFreq = create("gene 1", AltSpliceJunctionType.NOVEL_INTRON, 10, 20);
@@ -58,7 +61,8 @@ public class NovelSpliceJunctionSelectorTest {
 
     @NotNull
     private static NovelSpliceJunction create(@NotNull String gene, @NotNull AltSpliceJunctionType type, int fragmentCount,
-            int cohortFrequency) {
+            int cohortFrequency)
+    {
         return IsofoxTestFactory.novelSpliceJunctionBuilder()
                 .geneName(gene)
                 .type(type)
@@ -66,5 +70,4 @@ public class NovelSpliceJunctionSelectorTest {
                 .cohortFrequency(cohortFrequency)
                 .build();
     }
-
 }

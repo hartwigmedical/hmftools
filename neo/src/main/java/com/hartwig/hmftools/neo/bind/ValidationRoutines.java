@@ -2,13 +2,14 @@ package com.hartwig.hmftools.neo.bind;
 
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadDelimitedIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadDelimitedIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindData.loadBindData;
 import static com.hartwig.hmftools.neo.bind.HlaSequences.HLA_DEFINITIONS_FILE;
@@ -26,12 +27,8 @@ import com.hartwig.hmftools.common.stats.AucCalc;
 import com.hartwig.hmftools.common.stats.AucData;
 import com.hartwig.hmftools.common.utils.MatrixUtils;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.NotNull;
 
@@ -53,22 +50,22 @@ public class ValidationRoutines
 
     private static final String TEST_ALLELES_FILE = "test_alleles_file";
 
-    public ValidationRoutines(final CommandLine cmd)
+    public ValidationRoutines(final ConfigBuilder configBuilder)
     {
-        mConfig = new TrainConfig(cmd);
+        mConfig = new TrainConfig(configBuilder);
 
         mValidationAlleles = Lists.newArrayList();
 
-        if(cmd.hasOption(TEST_ALLELES_FILE))
-            mValidationAlleles.addAll(loadDelimitedIdFile(cmd.getOptionValue(TEST_ALLELES_FILE), FLD_ALLELE, DELIM));
+        if(configBuilder.hasValue(TEST_ALLELES_FILE))
+            mValidationAlleles.addAll(loadDelimitedIdFile(configBuilder.getValue(TEST_ALLELES_FILE), FLD_ALLELE, BIND_DELIM));
 
         mAlleleTrainingData = Maps.newHashMap();
         mAlleleBindCounts = Maps.newHashMap();
 
         mHlaSequences = new HlaSequences();
-        mHlaSequences.load(cmd.getOptionValue(HLA_DEFINITIONS_FILE));
+        mHlaSequences.load(configBuilder.getValue(HLA_DEFINITIONS_FILE));
         mPosWeightModel = new PosWeightModel(mConfig.Constants, mHlaSequences);
-        mThreads = parseThreads(cmd);
+        mThreads = parseThreads(configBuilder);
 
         mSummaryWriter = initialiseSummaryWriter();
         mPeptideWriter = initialisePeptideWriter();
@@ -472,25 +469,23 @@ public class ValidationRoutines
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
+        ConfigBuilder configBuilder = new ConfigBuilder();
 
-        TrainConfig.addCmdLineArgs(options);
-        options.addOption(TEST_ALLELES_FILE, true, "List of alleles to leave out, otherwise will do all in training set");
+        TrainConfig.addConfig(configBuilder);
+        configBuilder.addPath(TEST_ALLELES_FILE, false, "List of alleles to leave out, otherwise will do all in training set");
+        addThreadOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        if(!configBuilder.parseCommandLine(args))
+        {
+            configBuilder.logInvalidDetails();
+            System.exit(1);
+        }
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        ValidationRoutines validation = new ValidationRoutines(cmd);
+        ValidationRoutines validation = new ValidationRoutines(configBuilder);
         validation.run();
-    }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.compar;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.compar.CommonUtils.buildComparers;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.compar.common.CommonUtils.buildComparers;
 import static com.hartwig.hmftools.compar.ComparConfig.CMP_LOGGER;
 
 import java.io.BufferedWriter;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.compar.common.Category;
+import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class MismatchWriter
 {
@@ -30,41 +33,29 @@ public class MismatchWriter
         String filePrefix = mConfig.OutputDir;
 
         if(mConfig.singleSample())
-            filePrefix += mConfig.SampleIds.get(0) + ".cmp.";
+            filePrefix += mConfig.SampleIds.get(0) + ".cmp";
         else
-            filePrefix += "compar_cohort.";
+            filePrefix += "compar_cohort";
 
         if(mConfig.OutputId != null)
-            filePrefix += mConfig.OutputId + ".";
+            filePrefix += "." + mConfig.OutputId;
 
         try
         {
-            String outputFile = filePrefix + "combined.csv";
-
-            CMP_LOGGER.info("writing output results: {}", outputFile);
-
-            mCombinedWriter = createBufferedWriter(outputFile, false);
-
-            if(mConfig.multiSample())
-                mCombinedWriter.write("SampleId,");
-
-            mCombinedWriter.write(Mismatch.header());
-            mCombinedWriter.newLine();
-
             if(mConfig.WriteDetailed)
             {
                 List<ItemComparer> comparers = buildComparers(mConfig);
 
                 for(ItemComparer comparer : comparers)
                 {
-                    String detailedFile = filePrefix + comparer.category().toString().toLowerCase() + ".csv";
+                    String detailedFile = filePrefix + "." + comparer.category().toString().toLowerCase() + TSV_EXTENSION;
 
                     CMP_LOGGER.info("writing output results: {}", detailedFile);
 
                     BufferedWriter writer = createBufferedWriter(detailedFile, false);
 
                     if(mConfig.multiSample())
-                        writer.write("SampleId,");
+                        writer.write("SampleId\t");
 
                     writer.write(Mismatch.commonHeader());
 
@@ -72,12 +63,26 @@ public class MismatchWriter
 
                     for(String field : compareFields)
                     {
-                        writer.write(String.format(",Ref%s,New%s", field, field));
+                        writer.write(String.format("\tRef%s\tNew%s", field, field));
                     }
 
                     writer.newLine();
                     mCategoryWriters.put(comparer.category(), writer);
                 }
+            }
+            else
+            {
+                String outputFile = filePrefix + TSV_EXTENSION;
+
+                CMP_LOGGER.info("writing output results: {}", outputFile);
+
+                mCombinedWriter = createBufferedWriter(outputFile, false);
+
+                if(mConfig.multiSample())
+                    mCombinedWriter.write("SampleId\t");
+
+                mCombinedWriter.write(Mismatch.header());
+                mCombinedWriter.newLine();
             }
         }
         catch(IOException e)
@@ -113,9 +118,9 @@ public class MismatchWriter
             for(Mismatch mismatch : mismatches)
             {
                 if(sampleId != null && mConfig.multiSample())
-                    writer.write(String.format("%s,", sampleId));
+                    writer.write(String.format("%s\t", sampleId));
 
-                writer.write(mismatch.toCsv(hasSpecificWriter, comparer.comparedFieldNames()));
+                writer.write(mismatch.toTsv(hasSpecificWriter, comparer.comparedFieldNames()));
                 writer.newLine();
             }
         }

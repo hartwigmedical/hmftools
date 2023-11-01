@@ -4,8 +4,6 @@ import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.SomaticVariant;
 import com.hartwig.hmftools.common.variant.VariantType;
 
-import org.jetbrains.annotations.NotNull;
-
 public enum DriverImpact
 {
     MISSENSE,
@@ -15,13 +13,11 @@ public enum DriverImpact
     FRAMESHIFT,
     UNKNOWN;
 
-    @NotNull
-    public static DriverImpact select(@NotNull SomaticVariant variant)
+    public static DriverImpact select(SomaticVariant variant)
     {
         return select(variant.type(), variant.canonicalCodingEffect());
     }
 
-    @NotNull
     public static DriverImpact select(final VariantType variantType, final CodingEffect canonicalCodingEffect)
     {
         if(isFrameshift(variantType, canonicalCodingEffect))

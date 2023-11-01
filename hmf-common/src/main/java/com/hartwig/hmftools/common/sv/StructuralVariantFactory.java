@@ -1,6 +1,8 @@
 package com.hartwig.hmftools.common.sv;
 
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.BND;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -18,7 +20,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.variant.filter.ExcludeCNVFilter;
 import com.hartwig.hmftools.common.variant.filter.HumanChromosomeFilter;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.Cigar;
@@ -53,17 +54,23 @@ public class StructuralVariantFactory
 
     private static final String INS_SEQ = "SVINSSEQ";
     private static final String HOM_SEQ = "HOMSEQ";
-    private static final String BPI_AF = "BPI_AF";
     private static final String SOMATIC_SCORE = "SOMATICSCORE"; // only applicable for Manta and will be removed when fully on GRIDSS
     public static final String IHOMPOS = "IHOMPOS";
 
     public static final String ALLELE_FRACTION = "AF";
     public static final String ALLELE_FRACTION_DESC = "Allele fraction";
 
-    public static final String VARIANT_FRAGMENT_BREAKPOINT_COVERAGE = "VF";
-    public static final String VARIANT_FRAGMENT_BREAKEND_COVERAGE = "BVF";
-    public static final String REFERENCE_BREAKEND_READ_COVERAGE = "REF";
-    public static final String REFERENCE_BREAKEND_READPAIR_COVERAGE = "REFPAIR";
+    public static final String SV_FRAGMENT_COUNT = "VF";
+    public static final String SGL_FRAGMENT_COUNT = "BVF";
+
+    public static final String REF_READ_COVERAGE = "REF";
+    public static final String REF_READ_COVERAGE_DESC = "Count of reads mapping across this breakend";
+
+    public static final String REF_READPAIR_COVERAGE = "REFPAIR";
+
+    public static final String REF_READPAIR_COVERAGE_DESC =
+            "Count of reference read pairs spanning this breakend supporting the reference allele";
+
     private static final String EVENT = "EVENT";
 
     public static final String UNTEMPLATED_SEQUENCE_ALIGNMENTS = "BEALN";
@@ -84,22 +91,42 @@ public class StructuralVariantFactory
     public static final Pattern SINGLE_BREAKEND_REGEX = Pattern.compile("^(([.].*)|(.*[.]))$");
     private static final byte SINGLE_BREAKEND_BYTE = 46;
 
-    private final Map<String,VariantContext> mUnmatchedVariants = Maps.newHashMap();
-    private final List<StructuralVariant> mCompleteVariants = Lists.newArrayList();
+    private final Map<String,VariantContext> mUnmatchedVariants;
+    private final List<StructuralVariant> mCompleteVariants;
 
     private final CompoundFilter mFilter;
 
-    public StructuralVariantFactory(final @NotNull VariantContextFilter filter)
+    private boolean mOrdinalsSet;
+    private int mReferenceGenotypeOrdinal;
+    private int mTumorGenotypeOrdinal;
+
+    private static final int GENOTYPE_ORDINAL_NONE = -1;
+
+    public static StructuralVariantFactory build(final VariantContextFilter filter)
     {
-        mFilter = new CompoundFilter(true);
-        mFilter.add(new HumanChromosomeFilter());
-        mFilter.add(new ExcludeCNVFilter());
-        mFilter.add(filter);
+        CompoundFilter compoundfilter = new CompoundFilter(true);
+        compoundfilter.add(new HumanChromosomeFilter());
+        compoundfilter.add(new ExcludeCNVFilter());
+        compoundfilter.add(filter);
+        return new StructuralVariantFactory(compoundfilter);
     }
 
     public StructuralVariantFactory(final CompoundFilter filter)
     {
         mFilter = filter;
+
+        mUnmatchedVariants = Maps.newHashMap();
+        mCompleteVariants = Lists.newArrayList();
+        mReferenceGenotypeOrdinal = GENOTYPE_ORDINAL_NONE;
+        mTumorGenotypeOrdinal = GENOTYPE_ORDINAL_NONE;
+        mOrdinalsSet = false;
+    }
+
+    public void setGenotypeOrdinals(int referenceOrdinal, int tumorOrdinal)
+    {
+        mOrdinalsSet = true;
+        mReferenceGenotypeOrdinal = referenceOrdinal;
+        mTumorGenotypeOrdinal = tumorOrdinal;
     }
 
     public void clear()
@@ -111,7 +138,29 @@ public class StructuralVariantFactory
     public static boolean isSingleBreakend(final VariantContext context)
     {
         final byte[] altBases = context.getAlternateAllele(0).getDisplayBases();
+        return isSingleBreakend(altBases);
+    }
+
+    public static boolean isSingleBreakend(final byte[] altBases)
+    {
         return altBases.length > 0 && (altBases[0] == SINGLE_BREAKEND_BYTE || altBases[altBases.length - 1] == SINGLE_BREAKEND_BYTE);
+    }
+
+    public static byte parseSingleOrientation(final VariantContext context)
+    {
+        final String alt = context.getAlternateAllele(0).getDisplayString();
+        return alt.startsWith(".") ? NEG_ORIENT : POS_ORIENT;
+    }
+
+    public static byte parseSvOrientation(final VariantContext context)
+    {
+        final String alt = context.getAlternateAllele(0).getDisplayString();
+        final Matcher match = BREAKEND_REGEX.matcher(alt);
+
+        if(!match.matches())
+            return (byte)0;
+
+        return match.group(1).length() > 0 ? POS_ORIENT : NEG_ORIENT;
     }
 
     public void addVariantContext(final VariantContext context)
@@ -130,7 +179,7 @@ public class StructuralVariantFactory
                     String mate = mateId(context);
                     if(mUnmatchedVariants.containsKey(mate))
                     {
-                        mCompleteVariants.add(create(mUnmatchedVariants.remove(mate), context));
+                        mCompleteVariants.add(createSV(mUnmatchedVariants.remove(mate), context));
                     }
                     else
                     {
@@ -146,7 +195,7 @@ public class StructuralVariantFactory
     }
 
     @Nullable
-    public static String mateId(@NotNull VariantContext context)
+    public static String mateId(final VariantContext context)
     {
         String mate = context.getAttributeAsString(MATE_ID, null);
 
@@ -156,7 +205,6 @@ public class StructuralVariantFactory
         return mate;
     }
 
-    @NotNull
     public List<StructuralVariant> results() { return mCompleteVariants; }
 
     public List<VariantContext> unmatched() { return Lists.newArrayList(mUnmatchedVariants.values()); }
@@ -164,8 +212,7 @@ public class StructuralVariantFactory
     public void removeUnmatchedVariant(final String id) { mUnmatchedVariants.remove(id); }
     public boolean hasUnmatchedVariant(final String id) { return mUnmatchedVariants.containsKey(id); }
 
-    @NotNull
-    public static StructuralVariant create(@NotNull VariantContext first, @NotNull VariantContext second)
+    public StructuralVariant createSV(final VariantContext first, final VariantContext second)
     {
         Preconditions.checkArgument(BND.equals(type(first)));
         Preconditions.checkArgument(BND.equals(type(second)));
@@ -181,28 +228,31 @@ public class StructuralVariantFactory
         }
 
         // Local orientation determined by the positioning of the anchoring bases
-        final byte startOrientation = (byte) (match.group(1).length() > 0 ? 1 : -1);
+        final byte startOrientation = (byte) (match.group(1).length() > 0 ? POS_ORIENT : NEG_ORIENT);
+
         // Other orientation determined by the direction of the brackets
-        final byte endOrientation = (byte) (match.group(2).equals("]") ? 1 : -1);
+        final byte endOrientation = (byte) (match.group(2).equals("]") ? POS_ORIENT : NEG_ORIENT);
+
         // Grab the inserted sequence by removing 1 base from the reference anchoring bases
-        String insertedSequence =
-                match.group(1).length() > 0 ? match.group(1).substring(1) : match.group(4).substring(0, match.group(4).length() - 1);
+        String insertedSequence = match.group(1).length() > 0 ?
+                match.group(1).substring(1) : match.group(4).substring(0, match.group(4).length() - 1);
+
         if(Strings.isNullOrEmpty(insertedSequence))
         {
             insertedSequence = first.getAttributeAsString(INS_SEQ, "");
         }
 
-        final boolean isSmallDelDup =
-                first.getContig().equals(second.getContig()) && Math.abs(first.getStart() - second.getStart()) <= SMALL_DELDUP_SIZE
-                        && startOrientation != endOrientation;
+        final boolean isSmallDelDup = first.getContig().equals(second.getContig())
+                && Math.abs(first.getStart() - second.getStart()) <= SMALL_DELDUP_SIZE
+                && startOrientation != endOrientation;
 
-        final StructuralVariantLeg startLeg =
-                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), first, isSmallDelDup, startOrientation).position(start)
-                        .homology(first.getAttributeAsString(HOM_SEQ, ""))
-                        .alleleFrequency(unadjustedAllelicFrequency(first))
-                        .build();
+        final StructuralVariantLeg startLeg = setLegCommon(first, isSmallDelDup, startOrientation)
+                .position(start)
+                .homology(first.getAttributeAsString(HOM_SEQ, ""))
+                .alleleFrequency(unadjustedAllelicFrequency(first))
+                .build();
 
-        final StructuralVariantLeg endLeg = setLegCommon(ImmutableStructuralVariantLegImpl.builder(), second, isSmallDelDup, endOrientation)
+        final StructuralVariantLeg endLeg = setLegCommon(second, isSmallDelDup, endOrientation)
                 .position(end)
                 .homology(second.getAttributeAsString(HOM_SEQ, ""))
                 .alleleFrequency(unadjustedAllelicFrequency(second))
@@ -229,7 +279,9 @@ public class StructuralVariantFactory
                 inferredType = StructuralVariantType.DEL;
             }
         }
-        return setCommon(ImmutableStructuralVariantImpl.builder(), first).start(startLeg)
+
+        return setCommon(first)
+                .start(startLeg)
                 .end(endLeg)
                 .mateId(second.getID())
                 .insertSequence(insertedSequence)
@@ -240,42 +292,26 @@ public class StructuralVariantFactory
                 .build();
     }
 
-    public static Double unadjustedAllelicFrequency(@NotNull VariantContext context)
+    public StructuralVariant createSingleBreakend(final VariantContext context)
     {
-        if(context.hasAttribute(TAF))
-        {
-            return context.getAttributeAsDoubleList(TAF, 0.0).get(0);
-        }
-
-        if(context.hasAttribute(BPI_AF))
-        {
-            return context.getAttributeAsDoubleList(BPI_AF, 0.0).get(0);
-        }
-
-        return null;
-    }
-
-    @NotNull
-    public static StructuralVariant createSingleBreakend(@NotNull VariantContext context)
-    {
-        final List<Double> af = context.hasAttribute(BPI_AF)
-                ? context.getAttributeAsDoubleList(BPI_AF, 0.0)
-                : context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
+        final List<Double> af = context.hasAttribute(TAF) ? context.getAttributeAsDoubleList(TAF, 0.0) : Collections.emptyList();
 
         final String alt = context.getAlternateAllele(0).getDisplayString();
 
         // local orientation determined by the positioning of the anchoring bases
-        final byte orientation = (byte) (alt.startsWith(".") ? -1 : 1);
+        final byte orientation = alt.startsWith(".") ? NEG_ORIENT : POS_ORIENT;
         final int refLength = context.getReference().length();
-        final String insertedSequence =
-                orientation == -1 ? alt.substring(1, alt.length() - refLength) : alt.substring(refLength, alt.length() - 1);
 
-        final StructuralVariantLeg startLeg =
-                setLegCommon(ImmutableStructuralVariantLegImpl.builder(), context, false, orientation).homology("")
-                        .alleleFrequency(af.size() >= 1 ? af.get(0) : null)
-                        .build();
+        final String insertedSequence = orientation == -1 ?
+                alt.substring(1, alt.length() - refLength) : alt.substring(refLength, alt.length() - 1);
 
-        return setCommon(ImmutableStructuralVariantImpl.builder(), context).start(startLeg)
+        final StructuralVariantLeg startLeg = setLegCommon(context, false, orientation)
+                .homology("")
+                .alleleFrequency(af.size() >= 1 ? af.get(0) : null)
+                .build();
+
+        return setCommon(context)
+                .start(startLeg)
                 .insertSequence(insertedSequence)
                 .type(context.hasAttribute(INFERRED) ? StructuralVariantType.INF : StructuralVariantType.SGL)
                 .filter(filters(context, null))
@@ -283,9 +319,10 @@ public class StructuralVariantFactory
                 .build();
     }
 
-    private static ImmutableStructuralVariantImpl.Builder setCommon(final ImmutableStructuralVariantImpl.Builder builder,
-            final VariantContext context)
+    private ImmutableStructuralVariantImpl.Builder setCommon(final VariantContext context)
     {
+        ImmutableStructuralVariantImpl.Builder builder = ImmutableStructuralVariantImpl.builder();
+
         // backwards compatibility for Manta until fully over to GRIDSS
         int somaticScore = context.getAttributeAsInt(SOMATIC_SCORE, 0);
         double qualityScore = context.getPhredScaledQual();
@@ -327,9 +364,9 @@ public class StructuralVariantFactory
         return builder;
     }
 
-    private static ImmutableStructuralVariantLegImpl.Builder setLegCommon(final ImmutableStructuralVariantLegImpl.Builder builder,
-            final VariantContext context, boolean ignoreRefpair, byte orientation)
+    private ImmutableStructuralVariantLegImpl.Builder setLegCommon(final VariantContext context, boolean ignoreRefpair, byte orientation)
     {
+        ImmutableStructuralVariantLegImpl.Builder builder = ImmutableStructuralVariantLegImpl.builder();
         builder.chromosome(context.getContig());
         builder.position(context.getStart());
         builder.orientation(orientation);
@@ -345,8 +382,10 @@ public class StructuralVariantFactory
                 ciRight = cipos.get(1);
             }
         }
+
         builder.startOffset(ciLeft);
         builder.endOffset(ciRight);
+
         int supportWidth = 0;
         if(context.hasAttribute(ANCHOR_SUPPORT_CIGAR))
         {
@@ -369,6 +408,7 @@ public class StructuralVariantFactory
                 }
             }
         }
+
         if(supportWidth > 0)
         {
             builder.anchoringSupportDistance((orientation == -1 ? -ciLeft : ciRight) + supportWidth);
@@ -390,40 +430,61 @@ public class StructuralVariantFactory
             }
         }
 
-        int normalOrdinal = context.getGenotypes().size() == 1 ? -1 : 0;
-        int tumorOrdinal = context.getGenotypes().size() == 1 ? 0 : 1;
+        int referenceOrdinal;
+        int tumorOrdinal;
 
-        if(normalOrdinal >= 0 && context.getGenotype(normalOrdinal) != null)
+        if(mOrdinalsSet)
         {
-            Genotype geno = context.getGenotype(normalOrdinal);
-            if(geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
-                    VARIANT_FRAGMENT_BREAKEND_COVERAGE))
+            referenceOrdinal = mReferenceGenotypeOrdinal;
+            tumorOrdinal = mTumorGenotypeOrdinal;
+        }
+        else
+        {
+            referenceOrdinal = context.getGenotypes().size() == 1 ? GENOTYPE_ORDINAL_NONE : 0;
+            tumorOrdinal = context.getGenotypes().size() == 1 ? 0 : 1;
+        }
+
+        if(referenceOrdinal >= 0 && context.getGenotype(referenceOrdinal) != null)
+        {
+            Genotype geno = context.getGenotype(referenceOrdinal);
+            if(geno.hasExtendedAttribute(SV_FRAGMENT_COUNT) || geno.hasExtendedAttribute(
+                    SGL_FRAGMENT_COUNT))
             {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
-                        ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
-                        : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
-                Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
-                Integer refpair = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE));
+                        ? SV_FRAGMENT_COUNT
+                        : SGL_FRAGMENT_COUNT));
+                Integer ref = asInteger(geno.getExtendedAttribute(REF_READ_COVERAGE));
+                Integer refpair = asInteger(geno.getExtendedAttribute(REF_READPAIR_COVERAGE));
                 builder.normalVariantFragmentCount(var);
                 builder.normalReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
         }
+
         if(context.getGenotype(tumorOrdinal) != null)
         {
             Genotype geno = context.getGenotype(tumorOrdinal);
-            if(geno.hasExtendedAttribute(VARIANT_FRAGMENT_BREAKPOINT_COVERAGE) || geno.hasExtendedAttribute(
-                    VARIANT_FRAGMENT_BREAKEND_COVERAGE))
+            if(geno.hasExtendedAttribute(SV_FRAGMENT_COUNT) || geno.hasExtendedAttribute(
+                    SGL_FRAGMENT_COUNT))
             {
                 Integer var = asInteger(geno.getExtendedAttribute(context.hasAttribute(PAR_ID) | context.hasAttribute(MATE_ID)
-                        ? VARIANT_FRAGMENT_BREAKPOINT_COVERAGE
-                        : VARIANT_FRAGMENT_BREAKEND_COVERAGE));
-                Integer ref = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READ_COVERAGE));
-                Integer refpair = asInteger(geno.getExtendedAttribute(REFERENCE_BREAKEND_READPAIR_COVERAGE));
+                        ? SV_FRAGMENT_COUNT
+                        : SGL_FRAGMENT_COUNT));
+                Integer ref = asInteger(geno.getExtendedAttribute(REF_READ_COVERAGE));
+                Integer refpair = asInteger(geno.getExtendedAttribute(REF_READPAIR_COVERAGE));
                 builder.tumorVariantFragmentCount(var);
                 builder.tumorReferenceFragmentCount(ref + (ignoreRefpair ? 0 : refpair));
             }
         }
+
         return builder;
+    }
+
+    private static Double unadjustedAllelicFrequency(final VariantContext context)
+    {
+        if(context.hasAttribute(TAF))
+            return context.getAttributeAsDoubleList(TAF, 0.0).get(0);
+
+        return null;
     }
 
     private static Integer asInteger(Object obj)

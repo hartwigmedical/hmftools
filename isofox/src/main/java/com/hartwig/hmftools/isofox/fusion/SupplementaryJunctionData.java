@@ -55,11 +55,11 @@ public class SupplementaryJunctionData
 
     public static SupplementaryJunctionData fromReads(final ChimericReadGroup readGroup)
     {
-        ReadRecord read = readGroup.Reads.stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
+        ReadRecord read = readGroup.reads().stream().filter(x -> x.hasSuppAlignment()).findFirst().orElse(null);
         if(read == null)
             return null;
 
-        SupplementaryReadData suppData = SupplementaryReadData.from(read.getSuppAlignment());
+        SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read.getSuppAlignment());
 
         if(suppData == null)
             return null;

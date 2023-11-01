@@ -3,8 +3,9 @@ package com.hartwig.hmftools.common.isofox;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_END;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.FLD_ALT_SJ_POS_START;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionFile.formKey;
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_CHROMOSOME;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.inferFileDelimiter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -39,7 +40,8 @@ public class AltSjCohortData
         BufferedReader fileReader = new BufferedReader(new FileReader(cohortFile));
 
         String line = fileReader.readLine();
-        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, RnaCommon.DELIMITER);
+        String fileDelim = inferFileDelimiter(cohortFile);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(line, fileDelim);
 
         int chrIndex = fieldsIndexMap.get(FLD_CHROMOSOME);
         int posStartIndex = fieldsIndexMap.get(FLD_ALT_SJ_POS_START);
@@ -48,7 +50,7 @@ public class AltSjCohortData
 
         while((line = fileReader.readLine()) != null)
         {
-            String[] items = line.split(RnaCommon.DELIMITER, -1);
+            String[] items = line.split(fileDelim, -1);
 
             int sampleCount = Integer.parseInt(items[sampleCountIndex]);
             final String asjKey = formKey(items[chrIndex], Integer.parseInt(items[posStartIndex]), Integer.parseInt(items[posEndIndex]));

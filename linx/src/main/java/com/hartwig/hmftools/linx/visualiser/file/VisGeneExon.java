@@ -1,20 +1,20 @@
 package com.hartwig.hmftools.linx.visualiser.file;
 
-import static java.util.stream.Collectors.toList;
-
-import static com.hartwig.hmftools.linx.visualiser.file.VisCopyNumber.DELIMITER;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getIntValue;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.getValue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.region.GenomeRegion;
 import com.hartwig.hmftools.common.genome.region.GenomeRegionBuilder;
-
-import org.jetbrains.annotations.NotNull;
 
 public class VisGeneExon implements GenomeRegion
 {
@@ -55,26 +55,24 @@ public class VisGeneExon implements GenomeRegion
     public int end() { return ExonEnd; }
 
     private static final String FILE_EXTENSION = ".linx.vis_gene_exon.tsv";
+    private static final String GERMLINE_FILE_EXTENSION = ".linx.germline.vis_gene_exon.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample, boolean isGermline)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return basePath + File.separator + sample + (isGermline ? GERMLINE_FILE_EXTENSION : FILE_EXTENSION);
     }
 
-    @NotNull
     public static List<VisGeneExon> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<VisGeneExon> cnDataList) throws IOException
+    public static void write(final String filename, List<VisGeneExon> cnDataList) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(cnDataList));
     }
 
-    @NotNull
-    static List<String> toLines(@NotNull final List<VisGeneExon> cnDataList)
+    private static List<String> toLines(final List<VisGeneExon> cnDataList)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -82,16 +80,36 @@ public class VisGeneExon implements GenomeRegion
         return lines;
     }
 
-    @NotNull
-    static List<VisGeneExon> fromLines(@NotNull List<String> lines)
+    private static List<VisGeneExon> fromLines(final List<String> lines)
     {
-        return lines.stream().filter(x -> !x.startsWith("SampleId")).map(VisGeneExon::fromString).collect(toList());
+        String header = lines.get(0);
+        Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        lines.remove(0);
+
+        List<VisGeneExon> data = Lists.newArrayList();
+
+        for(String line : lines)
+        {
+            String[] values = line.split(TSV_DELIM);
+
+            data.add(new VisGeneExon(
+                    getValue(fieldsIndexMap, "SampleId", "", values),
+                    getIntValue(fieldsIndexMap, "ClusterId", 0, values),
+                    getValue(fieldsIndexMap, "Gene", "", values),
+                    getValue(fieldsIndexMap, "Transcript", "", values),
+                    getValue(fieldsIndexMap, "Chromosome", "", values),
+                    VisGeneAnnotationType.valueOf(values[fieldsIndexMap.get("AnnotationType")]),
+                    getIntValue(fieldsIndexMap, "ExonRank", 0, values),
+                    getIntValue(fieldsIndexMap, "ExonStart", 0, values),
+                    getIntValue(fieldsIndexMap, "ExonEnd", 0, values)));
+        }
+
+        return data;
     }
 
-    @NotNull
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add("SampleId")
                 .add("ClusterId")
                 .add("Gene")
@@ -104,10 +122,9 @@ public class VisGeneExon implements GenomeRegion
                 .toString();
     }
 
-    @NotNull
-    public static String toString(@NotNull final VisGeneExon geData)
+    public static String toString(final VisGeneExon geData)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(String.valueOf(geData.SampleId))
                 .add(String.valueOf(geData.ClusterId))
                 .add(String.valueOf(geData.Gene))
@@ -119,24 +136,4 @@ public class VisGeneExon implements GenomeRegion
                 .add(String.valueOf(geData.ExonEnd))
                 .toString();
     }
-
-    @NotNull
-    private static VisGeneExon fromString(@NotNull final String tiData)
-    {
-        String[] values = tiData.split(DELIMITER);
-
-        int index = 0;
-
-        return new VisGeneExon(
-                values[index++],
-                Integer.parseInt(values[index++]),
-                values[index++],
-                values[index++],
-                values[index++],
-                VisGeneAnnotationType.valueOf(values[index++]),
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]),
-                Integer.parseInt(values[index++]));
-    }
-
 }

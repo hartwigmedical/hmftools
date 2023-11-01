@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.lilac.LilacConstants.HLA_B;
 import static com.hartwig.hmftools.lilac.LilacConstants.HLA_C;
 import static com.hartwig.hmftools.lilac.LilacUtils.namesMatch;
 import static com.hartwig.hmftools.lilac.fragment.FragmentUtils.expandIndices;
+import static com.hartwig.hmftools.lilac.misc.LilacTestUtils.createReadRecord;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -52,7 +53,7 @@ public class NucleotideGeneEnrichmentTest
     {
         List<Integer> qualities = Lists.newArrayList();
         qualities.add(0);
-        return new Fragment("id", "", gene, Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
+        return new Fragment(createReadRecord("01"), gene, Sets.newHashSet(gene), indices, qualities, Lists.newArrayList("G"));
     }
 
 }

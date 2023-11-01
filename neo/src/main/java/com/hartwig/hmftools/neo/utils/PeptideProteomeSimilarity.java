@@ -5,21 +5,20 @@ import static java.lang.Math.min;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.ENSEMBL_DATA_DIR;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader.convertAminoAcidsToGeneMap;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.LOG_DEBUG;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.neo.NeoCommon.APP_NAME;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.neo.bind.BindCommon.AMINO_ACID_21ST;
-import static com.hartwig.hmftools.neo.bind.BindCommon.DELIM;
+import static com.hartwig.hmftools.neo.bind.BindCommon.BIND_DELIM;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_ALLELE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.FLD_PEPTIDE;
 import static com.hartwig.hmftools.neo.bind.BindCommon.cleanAllele;
@@ -43,16 +42,12 @@ import com.hartwig.hmftools.common.aminoacid.BlosumMapping;
 import com.hartwig.hmftools.common.ensemblcache.EnsemblDataLoader;
 import com.hartwig.hmftools.common.gene.TranscriptAminoAcids;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.neo.bind.BindCommon;
 import com.hartwig.hmftools.neo.bind.BindData;
 import com.hartwig.hmftools.neo.bind.BindScorer;
 import com.hartwig.hmftools.neo.bind.ScoreConfig;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class PeptideProteomeSimilarity
@@ -69,15 +64,15 @@ public class PeptideProteomeSimilarity
 
     private static final String PEPTIDES_FILE = "peptides_file";
 
-    public PeptideProteomeSimilarity(final CommandLine cmd)
+    public PeptideProteomeSimilarity(final ConfigBuilder configBuilder)
     {
         mPeptideSimilarities = Lists.newArrayList();
-        loadPeptides(cmd.getOptionValue(PEPTIDES_FILE));
+        loadPeptides(configBuilder.getValue(PEPTIDES_FILE));
 
-        if(cmd.hasOption(ENSEMBL_DATA_DIR))
+        if(configBuilder.hasValue(ENSEMBL_DATA_DIR))
         {
             Map<String, TranscriptAminoAcids> transAminoAcidMap = Maps.newHashMap();
-            EnsemblDataLoader.loadTranscriptAminoAcidData(cmd.getOptionValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
+            EnsemblDataLoader.loadTranscriptAminoAcidData(configBuilder.getValue(ENSEMBL_DATA_DIR), transAminoAcidMap, Lists.newArrayList(), false);
             mTransAminoAcidMap = convertAminoAcidsToGeneMap(transAminoAcidMap);
         }
         else
@@ -85,20 +80,20 @@ public class PeptideProteomeSimilarity
             mTransAminoAcidMap = null;
         }
 
-        if(cmd.hasOption(PROTEOME_RANKS_FILE))
+        if(configBuilder.hasValue(PROTEOME_RANKS_FILE))
         {
-            mRankedProteomePeptides = new RankedProteomePeptides(cmd.getOptionValue(PROTEOME_RANKS_FILE));
+            mRankedProteomePeptides = new RankedProteomePeptides(configBuilder.getValue(PROTEOME_RANKS_FILE));
         }
         else
         {
             mRankedProteomePeptides = null;
         }
 
-        mScorer = new BindScorer(new ScoreConfig(cmd));
+        mScorer = new BindScorer(new ScoreConfig(configBuilder));
 
-        mOutputDir = parseOutputDir(cmd);
-        mOutputId = cmd.getOptionValue(OUTPUT_ID);
-        mThreads = parseThreads(cmd);
+        mOutputDir = parseOutputDir(configBuilder);
+        mOutputId = configBuilder.getValue(OUTPUT_ID);
+        mThreads = parseThreads(configBuilder);
     }
 
     public void run()
@@ -260,7 +255,7 @@ public class PeptideProteomeSimilarity
             String header = lines.get(0);
             lines.remove(0);
 
-            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIM);
+            Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, BIND_DELIM);
 
             // Peptide,Allele,Foreignness,WtPeptide,DisToSelf,DtsPeptide,Immunogenic,PRIME
             int alleleIndex = fieldsIndexMap.get(FLD_ALLELE);
@@ -269,7 +264,7 @@ public class PeptideProteomeSimilarity
 
             for(String line :lines)
             {
-                final String[] values = line.split(DELIMITER, -1);
+                final String[] values = line.split(CSV_DELIM, -1);
 
                 String allele = cleanAllele(values[alleleIndex]);
                 String peptide = values[peptideIndex];
@@ -499,30 +494,20 @@ public class PeptideProteomeSimilarity
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addEnsemblDir(options);
-        options.addOption(PEPTIDES_FILE, true, "Peptides file");
-        options.addOption(PROTEOME_RANKS_FILE, true, "Proteome ranks file");
-        ScoreConfig.addCmdLineArgs(options);
-        addLoggingOptions(options);
-        addThreadOptions(options);
-        addOutputOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
+        addEnsemblDir(configBuilder);
+        configBuilder.addPath(PEPTIDES_FILE, true, "Peptides file");
+        configBuilder.addPath(PROTEOME_RANKS_FILE, true, "Proteome ranks file");
+        ScoreConfig.registerConfig(configBuilder);
+        addLoggingOptions(configBuilder);
+        addThreadOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        PeptideProteomeSimilarity peptideProteomeSimilarity = new PeptideProteomeSimilarity(cmd);
+        PeptideProteomeSimilarity peptideProteomeSimilarity = new PeptideProteomeSimilarity(configBuilder);
         peptideProteomeSimilarity.run();
     }
-
-    @NotNull
-    public static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
-    }
-
 }

@@ -5,7 +5,7 @@ import com.hartwig.hmftools.cider.ReadKey
 class TestLayoutRead(
     val readId: String,
     readKey: ReadKey,
-    sequence: String,
+    sequence: ByteArray,
     baseQualities: ByteArray,
     alignedPosition: Int)
     : ReadLayout.Read(readKey, sequence, baseQualities, alignedPosition)

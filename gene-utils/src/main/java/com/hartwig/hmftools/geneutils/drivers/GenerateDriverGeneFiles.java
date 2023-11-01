@@ -4,13 +4,17 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputDir;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.drivercatalog.panel.DriverGenePanelConfig.addGenePanelOption;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.geneutils.common.CommonUtils.GU_LOGGER;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.RESOURCE_REPO_DIR_DESC;
+import static com.hartwig.hmftools.geneutils.common.CommonUtils.getEnsemblDirectory;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -33,14 +38,8 @@ import com.hartwig.hmftools.common.genome.bed.NamedBed;
 import com.hartwig.hmftools.common.genome.bed.NamedBedFile;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegion;
-import com.hartwig.hmftools.common.genome.region.GenomeRegions;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 import htsjdk.variant.variantcontext.VariantContext;
 
@@ -53,26 +52,24 @@ public class GenerateDriverGeneFiles
 
     // config
     private static final String DRIVER_GENE_PANEL_TSV = "driver_gene_panel";
-    private static final String RESOURCE_REPO_DIR = "resource_repo_dir";
 
     private static final String GENE_PANEL_DIR = "gene_panel";
     private static final String SAGE_DIR = "sage";
-    private static final String ENSEMBL_DIR = "ensembl_data_cache";
     private static final String PANEL_GENE_OVERRIDES = "panel_gene_overrides";
 
-    public GenerateDriverGeneFiles(final CommandLine cmd)
+    public GenerateDriverGeneFiles(final ConfigBuilder configBuilder)
     {
         GU_LOGGER.info("starting driver gene panel generation");
 
-        mDriverGenePanelFile = cmd.getOptionValue(DRIVER_GENE_PANEL_TSV);
-        mResourceRepoDir = checkAddDirSeparator(cmd.getOptionValue(RESOURCE_REPO_DIR));
-        mOutputDir = parseOutputDir(cmd);
+        mDriverGenePanelFile = configBuilder.getValue(DRIVER_GENE_PANEL_TSV);
+        mResourceRepoDir = checkAddDirSeparator(configBuilder.getValue(RESOURCE_REPO_DIR));
+        mOutputDir = parseOutputDir(configBuilder);
 
         mPanelGeneOverrides = Lists.newArrayList();
 
-        if(cmd.hasOption(PANEL_GENE_OVERRIDES))
+        if(configBuilder.hasValue(PANEL_GENE_OVERRIDES))
         {
-            Arrays.stream(cmd.getOptionValue(PANEL_GENE_OVERRIDES).split(",", -1)).forEach(x -> mPanelGeneOverrides.add(x));
+            Arrays.stream(configBuilder.getValue(PANEL_GENE_OVERRIDES).split(",", -1)).forEach(x -> mPanelGeneOverrides.add(x));
         }
     }
 
@@ -100,7 +97,7 @@ public class GenerateDriverGeneFiles
         return format("%s/%s", outputDir, refGenomeVersion.addVersionToFilePath(filename));
     }
 
-    public void process(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes) throws IOException
+    public void process(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes)
     {
         Collections.sort(driverGenes);
         writeDriverGeneFiles(refGenomeVersion, driverGenes);
@@ -132,16 +129,41 @@ public class GenerateDriverGeneFiles
 
     private void writeGenePanelRegions(final RefGenomeVersion refGenomeVersion, final List<DriverGene> driverGenes, final String sageDir)
     {
-        String ensemblDir = mResourceRepoDir + ENSEMBL_DIR + File.separator + refGenomeVersion.identifier();
+        String ensemblDir = getEnsemblDirectory(refGenomeVersion, mResourceRepoDir);
 
         EnsemblDataCache ensemblDataCache = new EnsemblDataCache(ensemblDir, refGenomeVersion);
         ensemblDataCache.setRequiredData(true, false, false, true);
         ensemblDataCache.load(false);
 
+        Set<String> actionablePanel = driverGenes.stream()
+                .filter(x -> x.reportSomatic() || x.reportGermline() || x.reportPGX() || mPanelGeneOverrides.contains(x.gene()))
+                .map(x -> x.gene())
+                .collect(Collectors.toSet());
+
+        String codingWithUtr = formVersionFile(sageDir, "ActionableCodingPanel.bed.gz", refGenomeVersion);
+
+        GU_LOGGER.info("writing {} panel coding regions file({}) for {} genes",
+                refGenomeVersion, codingWithUtr, actionablePanel.size());
+
+        writeGenePanelRegions(refGenomeVersion, ensemblDataCache, actionablePanel, true, codingWithUtr);
+
+        Set<String> coveragePanel = driverGenes.stream().map(x -> x.gene()).collect(Collectors.toSet());
+
+        String coverageWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
+
+        GU_LOGGER.info("writing {} panel coverage regions file({}) for {} genes",
+                refGenomeVersion, coverageWithoutUtr, coveragePanel.size());
+
+        writeGenePanelRegions(refGenomeVersion, ensemblDataCache, coveragePanel, false, coverageWithoutUtr);
+    }
+
+    private void writeGenePanelRegions(
+            final RefGenomeVersion refGenomeVersion, final EnsemblDataCache ensemblDataCache,
+            final Set<String> geneSet, boolean includeUTR, final String outputFile)
+    {
         final Map<String,List<GeneData>> chrGeneDataMap = ensemblDataCache.getChrGeneDataMap();
 
-        List<CodingRegion> panelRegionsWithUtr = Lists.newArrayList();
-        List<CodingRegion> panelRegionsWithoutUtr = Lists.newArrayList();
+        List<CodingRegion> panelRegions = Lists.newArrayList();
 
         for(HumanChromosome chromosome : HumanChromosome.values())
         {
@@ -150,89 +172,89 @@ public class GenerateDriverGeneFiles
 
             for(GeneData geneData : geneDataList)
             {
-                DriverGene driverGene = driverGenes.stream().filter(x -> x.gene().equals(geneData.GeneName)).findFirst().orElse(null);
-
-                if(driverGene == null)
-                    continue;
-
-                boolean includeGene = driverGene.reportSomatic() || driverGene.reportGermline() || driverGene.reportPGX()
-                        || mPanelGeneOverrides.contains(geneData.GeneName);
-
-                if(!includeGene)
+                if(!geneSet.contains(geneData.GeneName))
                     continue;
 
                 TranscriptData transData = ensemblDataCache.getTranscriptData(geneData.GeneId, "");
 
-                List<CodingRegion> regionsWithUtr = getTranscriptRegions(geneData, transData, true);
-                List<CodingRegion> regionsWithoutUtr = getTranscriptRegions(geneData, transData, false);
+                List<CodingRegion> transcriptRegions = getTranscriptRegions(geneData, transData, includeUTR);
 
                 // merge any overlap with the previous gene region
-                for(int i = 0; i <= 1; ++i)
+                CodingRegion lastRegion = !panelRegions.isEmpty() ? panelRegions.get(panelRegions.size() - 1) : null;
+
+                if(!transcriptRegions.isEmpty())
                 {
-                    List<CodingRegion> newRegions = i == 0 ? regionsWithUtr : regionsWithoutUtr;
+                    int regionsRemoved = 0;
 
-                    if(newRegions.isEmpty())
-                        continue;
+                    // check for overlaps with the previous region
+                    for(CodingRegion newRegion : transcriptRegions)
+                    {
+                        if(lastRegion != null && lastRegion.Chromosome.equals(chromosomeStr))
+                        {
+                            if(newRegion.start() <= lastRegion.end())
+                            {
+                                GU_LOGGER.trace("gene({}) merged region({}) with previous({})",
+                                        geneData.GeneName, newRegion, lastRegion);
 
-                    List<CodingRegion> allRegions = i == 0 ? panelRegionsWithUtr : panelRegionsWithoutUtr;
+                                lastRegion.setEnd(newRegion.end());
+                                ++regionsRemoved;
+                                continue;
+                            }
+                        }
 
-                    if(allRegions.isEmpty())
-                        continue;
+                        panelRegions.add(newRegion);
+                        lastRegion = newRegion;
+                    }
 
-                    CodingRegion lastRegion = allRegions.get(allRegions.size() - 1);
-                    if(!lastRegion.Chromosome.equals(chromosomeStr))
-                        continue;
+                    if(regionsRemoved > 0)
+                    {
+                        GU_LOGGER.debug("gene({}) merged {} regions from overlaps", geneData.GeneName, regionsRemoved);
+                    }
+                }
 
+                /*
+                if(!transcriptRegions.isEmpty() && lastRegion != null && lastRegion.Chromosome.equals(chromosomeStr))
+                {
                     int newLastRegionEnd = 0;
                     int regionsRemoved = 0;
-                    while(!newRegions.isEmpty())
+                    while(!transcriptRegions.isEmpty())
                     {
-                        CodingRegion newRegion = newRegions.get(0);
+                        CodingRegion newRegion = transcriptRegions.get(0);
                         if(newRegion.start() > lastRegion.end() + 1)
                             break;
 
                         // otherwise remove the new region and merge
                         newLastRegionEnd = max(newRegion.end(), lastRegion.end());
-                        newRegions.remove(0);
+                        transcriptRegions.remove(0);
                         ++regionsRemoved;
                     }
 
                     if(newLastRegionEnd > 0)
                     {
                         CodingRegion newLastRegion = new CodingRegion(
-                                lastRegion.Chromosome, lastRegion.start(), newLastRegionEnd,
-                                lastRegion.GeneName, lastRegion.ExonRank);
+                                lastRegion.Chromosome, lastRegion.start(), newLastRegionEnd, lastRegion.GeneName, lastRegion.ExonRank);
 
-                        // NamedBed newLastRegion = ImmutableNamedBed.builder().from(lastRegion).end(newLastRegionEnd).build();
-                        allRegions.set(allRegions.size() - 1, newLastRegion);
+                        panelRegions.set(panelRegions.size() - 1, newLastRegion);
 
                         GU_LOGGER.debug("gene({}) removed {} regions from overlap with previous region(gene={} range={}->{})",
                                 geneData.GeneName, regionsRemoved, lastRegion.GeneName, lastRegion.start(), lastRegion.end());
                     }
                 }
 
-                panelRegionsWithUtr.addAll(regionsWithUtr);
-                panelRegionsWithoutUtr.addAll(regionsWithoutUtr);
+                panelRegions.addAll(transcriptRegions);
+                */
             }
         }
 
-        String codingWithUtr = formVersionFile(sageDir, "ActionableCodingPanel.bed.gz", refGenomeVersion);
-        GU_LOGGER.info("writing {} panel coding regions file({})", refGenomeVersion, codingWithUtr);
-
-        String coverageWithoutUtr = formVersionFile(sageDir, "CoverageCodingPanel.bed.gz", refGenomeVersion);
-        GU_LOGGER.info("writing {} panel coverage regions file({})", refGenomeVersion, coverageWithoutUtr);
-
         try
         {
-            List<NamedBed> bedWithUtr = panelRegionsWithUtr.stream().map(x -> x.asBed()).collect(Collectors.toList());
-            List<NamedBed> bedWithoutUtr = panelRegionsWithoutUtr.stream().map(x -> x.asBed()).collect(Collectors.toList());
+            List<NamedBed> bedRegions = panelRegions.stream().map(x -> x.asBed()).collect(Collectors.toList());
 
-            NamedBedFile.writeBedFile(codingWithUtr, bedWithUtr);
-            NamedBedFile.writeBedFile(coverageWithoutUtr, bedWithoutUtr);
+            NamedBedFile.writeBedFile(outputFile, bedRegions);
         }
         catch(IOException e)
         {
-            GU_LOGGER.error("failed to write gene panel files: {}", e.toString());
+            GU_LOGGER.error("failed to write gene panel file: {}", e.toString());
         }
     }
 
@@ -340,27 +362,19 @@ public class GenerateDriverGeneFiles
         return true;
     }
 
-    public static void main(String[] args) throws IOException, ParseException
+    public static void main(String[] args) throws IOException
     {
-        Options options = createOptions();
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        setLogLevel(cmd);
+        addGenePanelOption(configBuilder, true);
+        configBuilder.addPath(RESOURCE_REPO_DIR, true, RESOURCE_REPO_DIR_DESC);
+        configBuilder.addConfigItem(PANEL_GENE_OVERRIDES, "List of comma-separated genes to include in panel");
+        addOutputDir(configBuilder);
+        addLoggingOptions(configBuilder);
 
-        GenerateDriverGeneFiles generator = new GenerateDriverGeneFiles(cmd);
+        configBuilder.checkAndParseCommandLine(args);
+
+        GenerateDriverGeneFiles generator = new GenerateDriverGeneFiles(configBuilder);
         generator.run();
-    }
-
-    private static Options createOptions()
-    {
-        Options options = new Options();
-
-        options.addOption(DRIVER_GENE_PANEL_TSV, true, "File containing the driver gene panel for 37");
-        options.addOption(RESOURCE_REPO_DIR, true, "The directory holding the public hmf resources repo");
-        options.addOption(PANEL_GENE_OVERRIDES, true, "List of comma-separated genes to include in panel");
-        addOutputDir(options);
-        addLoggingOptions(options);
-
-        return options;
     }
 }

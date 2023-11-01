@@ -1,15 +1,15 @@
 package com.hartwig.hmftools.statcalcs.common;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class StatsCommon
 {
-    public static final String LOG_DEBUG = "log_debug";
-
     public static final String OUTPUT_FILE_ID = "output_file_id";
 
     public static final Logger STAT_LOGGER = LogManager.getLogger(StatsCommon.class);
@@ -22,11 +22,10 @@ public class StatsCommon
             return outputDir + fileId  + ".csv";
     }
 
-    public static void addCmdLineArgs(final Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(OUTPUT_DIR, true, "Path to output files");
-        options.addOption(OUTPUT_FILE_ID, true, "Output file ID");
-        options.addOption(LOG_DEBUG, false, "Sets log level to Debug, off by default");
+        addOutputOptions(configBuilder);
+        addLoggingOptions(configBuilder);
     }
 
 }

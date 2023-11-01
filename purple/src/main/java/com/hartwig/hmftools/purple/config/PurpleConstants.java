@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.config;
 
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 
 public class PurpleConstants
 {
@@ -8,6 +8,7 @@ public class PurpleConstants
 
     // common
     public static final int WINDOW_SIZE = 1000;
+    public static final double BAF_PNT_5 = 0.5;
 
     // TMB calcs
     public static final double MB_PER_GENOME = 2859;
@@ -18,7 +19,23 @@ public class PurpleConstants
     public static final double NO_TUMOR_DEPTH_RATIO_MIN = 0.8;
     public static final double NO_TUMOR_DEPTH_RATIO_MAX = 1.2;
 
+    // target regions
     public static final int TARGET_REGIONS_MAX_DELETED_GENES = 1500;
+    public static final double ASSUMED_BIALLELIC_FRACTION = 0.2;
+
+    // purity fitting
+    public static final double MAX_DIPLOID_COPY_NUMBER = 1.2;
+    public static final double MIN_DIPLOID_COPY_NUMBER = 0.8;
+
+    // segmentation and regions
+    public static final int CENTROMERIC_WIDTH = 4_000_000;
+    public static final double GERMLINE_AMP_RATIO = 1.3;
+    public static final double GERMLINE_DEL_RATIO = 0.7;
+    public static final int GERMLINE_DEL_MIN_LENGTH = 5_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_1 = 30_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_9 = 135_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_17 = 75_000_000;
+    public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_19 = 10_000_000;
 
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
@@ -35,11 +52,10 @@ public class PurpleConstants
     public static final double CLONALITY_BIN_WIDTH = 0.05;
     public static final double CLONALITY_MAX_PLOIDY = 10;
     public static final int MIN_TOTAL_SV_FRAGMENT_COUNT = 1000;
-    public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 2000;
+    public static final int MIN_TOTAL_SOMATIC_VAR_ALLELE_READ_COUNT = 1000;
 
     // somatic enrichment
     public static final double BIALLELIC_PROBABILITY = 0.005;
-
 
     // SV recovery
     public static final int DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE = 300;
@@ -79,5 +95,7 @@ public class PurpleConstants
     public static final double PEAK_BIN_CLONAL_PLOIDY = 0.85;
     public static final double MAX_UNEXPLAINED_WEIGHT_PERCENT = 0.01;
 
+    // drivers
+    public static final int MAX_INDEL_DRIVER_REPEAT_COUNT = 7;
 
 }

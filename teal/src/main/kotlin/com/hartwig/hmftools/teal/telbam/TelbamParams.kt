@@ -14,9 +14,6 @@ class SemiColonSplitter : IParameterSplitter
 
 class TelbamParams
 {
-    //@Parameter(names = ["-sample_id"], required = true, description = "ID of tumor sample")
-    //lateinit var sampleId: String
-
     @Parameter(names = ["-bam_file"], required = true, description = "Path to bam/cram file")
     lateinit var bamFile: String
 

@@ -6,10 +6,12 @@ import com.hartwig.hmftools.patientdb.clinical.curators.CuratorTestFactory;
 
 import org.junit.Test;
 
-public class ColoPatientReaderTest {
+public class ColoPatientReaderTest
+{
 
     @Test
-    public void canReadColo() {
+    public void canReadColo()
+    {
         assertNotNull(new ColoPatientReader(CuratorTestFactory.primaryTumorCurator()).read("COLO829T", "Melanoma"));
     }
 }

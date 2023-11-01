@@ -11,7 +11,8 @@ import com.hartwig.hmftools.common.purple.PurityContextFile;
 
 import org.junit.Test;
 
-public class CoveragesAnalyzerTest {
+public class CoveragesAnalyzerTest
+{
 
     private static final String GENOMIC_DIR = Resources.getResource("genomic").getPath();
 
@@ -22,7 +23,8 @@ public class CoveragesAnalyzerTest {
     private static final double EPSILON = 1.0E-10;
 
     @Test
-    public void canCalculateExpectedClonalCoverage() throws IOException {
+    public void canCalculateExpectedClonalCoverage() throws IOException
+    {
         PurityContext purityContext = PurityContextFile.readWithQC(PURPLE_QC_FILE, PURPLE_PURITY_TSV);
 
         double expectedClonalCoverage =

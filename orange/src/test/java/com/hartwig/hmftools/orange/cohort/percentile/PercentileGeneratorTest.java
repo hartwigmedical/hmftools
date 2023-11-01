@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.datamodel.orange.PercentileType;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableObservation;
 import com.hartwig.hmftools.orange.cohort.datamodel.ImmutableSample;
 import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
@@ -14,19 +15,21 @@ import com.hartwig.hmftools.orange.cohort.datamodel.Observation;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
-public class PercentileGeneratorTest {
-
+public class PercentileGeneratorTest
+{
     private static final double EPSILON = 1.0E-10;
 
     @Test
-    public void canGeneratePercentilesForEmptyData() {
+    public void canGeneratePercentilesForEmptyData()
+    {
         PercentileGenerator generator = new PercentileGenerator(sample -> "type");
 
         assertTrue(generator.run(Lists.newArrayList()).isEmpty());
     }
 
     @Test
-    public void canGeneratePercentilesForLimitedData() {
+    public void canGeneratePercentilesForLimitedData()
+    {
         PercentileGenerator generator = new PercentileGenerator(sample -> "type");
 
         ImmutableObservation.Builder builder = createTestBuilder();
@@ -46,7 +49,8 @@ public class PercentileGeneratorTest {
     }
 
     @Test
-    public void doNotCrashOnMissingCancerTypes() {
+    public void doNotCrashOnMissingCancerTypes()
+    {
         PercentileGenerator generator = new PercentileGenerator(sample -> null);
 
         ImmutableObservation.Builder builder = createTestBuilder();
@@ -57,14 +61,16 @@ public class PercentileGeneratorTest {
     }
 
     @Test
-    public void canGeneratePercentilesForExactBucketCount() {
+    public void canGeneratePercentilesForExactBucketCount()
+    {
         PercentileGenerator generator = new PercentileGenerator(sample -> "type");
 
         ImmutableObservation.Builder builder = createTestBuilder();
 
         List<Observation> observations = Lists.newArrayList();
-        for (int i = 0; i < PercentileConstants.BUCKET_COUNT; i++) {
-            observations.add(builder.value(i+1).build());
+        for(int i = 0; i < PercentileConstants.BUCKET_COUNT; i++)
+        {
+            observations.add(builder.value(i + 1).build());
         }
 
         List<CohortPercentiles> percentiles = generator.run(observations);
@@ -75,15 +81,17 @@ public class PercentileGeneratorTest {
     }
 
     @Test
-    public void canGeneratePercentilesForMoreDataThanBucketCount() {
+    public void canGeneratePercentilesForMoreDataThanBucketCount()
+    {
         PercentileGenerator generator = new PercentileGenerator(sample -> "type");
 
         ImmutableObservation.Builder builder = createTestBuilder();
 
         List<Observation> observations = Lists.newArrayList();
         int count = PercentileConstants.BUCKET_COUNT * 20;
-        for (int i = 0; i < count; i++) {
-            observations.add(builder.value(i+1).build());
+        for(int i = 0; i < count; i++)
+        {
+            observations.add(builder.value(i + 1).build());
         }
 
         List<CohortPercentiles> percentiles = generator.run(observations);
@@ -94,11 +102,13 @@ public class PercentileGeneratorTest {
     }
 
     @NotNull
-    private static ImmutableObservation.Builder createTestBuilder() {
+    private static ImmutableObservation.Builder createTestBuilder()
+    {
         return ImmutableObservation.builder().type(PercentileType.SV_TMB).sample(ImmutableSample.builder().sampleId("test").build());
     }
 
-    private static void assertPercentilesForObservations(@NotNull List<Observation> observations, @NotNull List<Double> percentiles) {
+    private static void assertPercentilesForObservations(@NotNull List<Observation> observations, @NotNull List<Double> percentiles)
+    {
         // Percentiles should always have the same number of buckets.
         assertEquals(PercentileConstants.BUCKET_COUNT, percentiles.size());
 

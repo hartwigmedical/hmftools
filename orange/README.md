@@ -1,21 +1,27 @@
 # Oncogenic Results of Analyzing the Genome
 
-ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into a single PDF and JSON file:
+ORANGE summarizes the key outputs from all algorithms in the Hartwig suite into a single PDF and JSON file (
+see [orange-datamodel](../orange-datamodel)).
 
-1. The algo depends exclusively on config and data produced by the [Hartwig platinum pipeline](https://github.com/hartwigmedical/platinum)
+1. The algo depends exclusively on config and data produced by the [Hartwig genomic pipeline](../pipeline)
    and hence can always be run as final step without any additional local data or config required.
-2. ORANGE respects the mode in which the pipeline has been run (tumor-only, panel, whole genome).
+2. ORANGE respects the mode in which the pipeline has been run (tumor-only vs tumor-reference, targeted (panel) vs whole genome).
    In case RNA data is provided, the algo combines the RNA and DNA data to present an integrated DNA/RNA analysis of a tumor sample.
 3. ORANGE can be configured to convert all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part
    of the analysis without actually loosing this data.
-4. Everything that is labeled as a driver by any of the Hartwig algorithms is displayed in the PDF along with the driver likelihood.
+4. Every event that is labeled as a driver by any of the Hartwig algorithms is displayed in the PDF along with the driver likelihood.
 5. An additional exhaustive WGS and WTS scan is performed for anything interesting that may be potentially relevant but not picked up as a
    driver. Details of what is considered interesting are described in below.
 6. A comprehensive range of QC measures and plots is displayed which provides in-depth details about the data quality of the samples
    provided.
 
-An example tumor + reference report based on the publicly available melanoma cell line COLO829 can be
-found [here](src/main/resources/Test.orange.pdf).
+Example reports based on the publicly available melanoma cell line COLO829 can be found here:
+
+| Type                 | File                                                                                       | Note                                    | 
+|----------------------|--------------------------------------------------------------------------------------------|-----------------------------------------|
+| WGTS Tumor-reference | (please inquire at Hartwig)                                                                | We have no RNA data for COLO829         |
+| WGS Tumor-reference  | [COLO829_WGS_TumorReference.pdf](src/main/resources/COLO829_WGS_TumorReference.orange.pdf) |                                         |
+| Targeted Tumor-only  | [COLO829_Targeted_TumorOnly.pdf](src/main/resources/COLO829_Targeted_TumorOnly.orange.pdf) | (Derived from the tumor-reference data) |                  
 
 Note that neither this readme nor the report itself contains any documentation about the Hartwig algorithms and output. For questions in
 this area please refer to the specific algorithm documentation present
@@ -40,61 +46,65 @@ ORANGE requires the output of various Hartwig algorithms, along with some resour
 known fusions and ensembl data cache). The resource files required to run ORANGE can be
 found [here](https://resources.hartwigmedicalfoundation.nl) for either 37 or 38 reference genome version.
 
-### Base (tumor-only) mode
+### Base (targeted/panel) tumor-only DNA mode
 
 ```
 java -jar orange.jar \
-   -tumor_sample_id tumor_sample
-   -primary_tumor_doids doid1;doid2 \
-   -ref_genome_version 37 \
-   -output_dir /path/to/where/to/write/output \
-   -doid_json /path/to/input_doid_tree.json \
-   -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
-   -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
-   -driver_gene_panel_tsv /path/to/driver_gene_panel.tsv \
-   -known_fusion_file /path/to/known_fusion_file.tsv \
-   -ensembl_data_directory /path/to/ensembl_data_directory \
-   -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
-   -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
-   -sage_somatic_tumor_sample_bqr_plot /path/to/sage_tumor_sample_bqr_plot \
-   -purple_data_directory /path/to/purple_data \
-   -purple_plot_directory /path/to/purple_plots \
-   -linx_somatic_data_directory /path/to/linx_somatic_data \
-   -linx_plot_directory /path/to/linx_plots \
-   -lilac_result_csv /path/to/lilac_results.csv \
-   -lilac_qc_csv /path/to/lilac_qc.csv \
-   -annotated_virus_tsv /path/to/annotated_virus.tsv \
-   -chord_prediction_txt /path/to/chord_prediction.txt \
-   -cuppa_result_csv /path/to/cuppa_results.tsv \
-   -cuppa_summary_plot /path/to/cuppa_summary_plot \
-   -sigs_allocation_tsv /path/to/sigs.allocation.tsv 
+    -experiment_type "PANEL"
+    -tumor_sample_id tumor_sample \
+    -primary_tumor_doids "doid1;doid2" \
+    -ref_genome_version "37" \
+    -output_dir /path/to/where/to/write/output \
+    -doid_json /path/to/input_doid_tree.json \
+    -cohort_mapping_tsv /path/to/input_cohort_mapping.tsv \
+    -cohort_percentiles_tsv /path/to/input_cohort_percentiles.tsv \
+    -driver_gene_panel /path/to/driver_gene_panel.tsv \
+    -known_fusion_file /path/to/known_fusion_file.tsv \
+    -ensembl_data_dir /path/to/ensembl_data_directory \
+    -tumor_sample_wgs_metrics_file /path/to/tumor_sample_wgs_metrics \
+    -tumor_sample_flagstat_file /path/to/tumor_sample_flagstats \
+    -sage_dir /path/to/sage_somatic_output \
+    -purple_dir /path/to/purple_output \
+    -purple_plot_dir /path/to/purple_plots \
+    -linx_dir /path/to/linx_somatic_output \
+    -linx_plot_dir /path/to/optional_linx_somatic_output_plots \
+    -lilac_dir /path/to/lilac_output 
 ```
+
+Note that `linx_plot_dir` is an optional parameter and can be left out completely in case linx has not generated any plots.
 
 Note that `primary_tumor_doids` can be left blank (""). This parameter is used to look up cancer-type-specific percentiles for various
 tumor characteristics. If primary tumor doids are not provided, percentiles are calculated against the full HMF database only.
 
-### Additional parameters when running tumor-reference mode
+### Additional parameters when whole genome tumor DNA data is available
+
+```
+   -virus_dir /path/to/virus_interpreter_output \
+   -chord_dir /path/to/chord_output \
+   -cuppa_dir /path/to/cuppa_output \
+   -sigs_dir /path/to/sigs_output 
+```
+
+Also, the value of the `-experiment_type` parameter should be set to `WGS` for all whole genome configurations.
+
+### Additional parameters when whole genome germline DNA data is available
 
 ```
     -reference_sample_id reference_sample \
     -ref_sample_wgs_metrics_file /path/to/reference_sample_wgs_metrics \
     -ref_sample_flagstat_file /path/to/reference_sample_flagstats \
-    -safe_germline_gene_coverage_tsv /path/to/sage_germline_gene_coverage.tsv \
-    -sage_somatic_ref_sample_bqr_plot /path/to/sage_ref_sample_bqr_plot \
-    -linx_germline_data_directory /path/to/linx_germline_data \
-    -peach_genotype_tsv /path/to/peach_genotypes.tsv 
+    -sage_germline_dir /path/to/sage_germline_output \
+    -linx_germline_dir /path/to/linx_germline_output \
+    -peach_dir /path/to/peach_output.tsv 
 ```
 
-### Additional parameters when RNA data is available
+### Additional parameters when whole genome RNA data is available
 
 ```
     -rna_sample_id rna_sample \
-    -isofox_gene_distribution_csv /path/to/isofox_gene_distribution.csv \
-    -isofox_alt_sj_cohort_csv /path/to/isofox_alt_sj_cohort.csv \
-    -isofox_summary_csv /path/to/isofox_summary.csv \
-    -isofox_gene_data_csv /path/to/isofox_gene_data.csv \
-    -isofox_fusion_csv /path/to/isofox_fusion.csv \
-    -isofox_alt_splice_junction_csv /path/to/isofox_alt_splice_junctions.csv
+    -isofox_gene_distribution /path/to/isofox_gene_distribution.csv \
+    -isofox_alt_sj_cohort /path/to/isofox_alt_sj_cohort.csv \
+    -isofox_dir /path/to/isofox_output 
 ```
 
 ### Additional optional parameters across all modes
@@ -102,13 +112,23 @@ tumor characteristics. If primary tumor doids are not provided, percentiles are 
 | Argument                    | Description                                                                                                                                                                                                                                                                           |
 |-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | pipeline_version_file       | Path to the file containing the (platinum) pipeline version used.                                                                                                                                                                                                                     |
-| cuppa_feature_plot          | In case the cuppa summary does not fit onto one page, an additional cuppa feature plot is generated that has to be passed separately                                                                                                                                                  |
+| sampling_date               | Sets the sampling date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as sampling date.                                                                                                                                                    |
 | convert_germline_to_somatic | If set, converts all germline driver variants to somatic driver variants, thereby obfuscating the germline driver part of the analysis without actually loosing this data. Note that the data in other germline tables, except the pharmacogenetics table, is removed from this page. |
-| experiment_date             | Sets the experiment date to the specified date if set. Expected format is YYMMDD. If omitted, current date is used as experiment date.                                                                                                                                                |
+| add_disclaimer              | If set, adds a "research use only" disclaimer to the footer of every page.                                                                                                                                                                                                            |  
 | limit_json_output           | If set, limits all lists in the JSON output to a single entry to facilitate manual inspection of the JSON output.                                                                                                                                                                     |
 | log_debug                   | If set, additional DEBUG logging is generated.                                                                                                                                                                                                                                        |
+| log_level                   | If set, overrides the default log level (INFO). Values can be `ERROR`, `WARN`, `INFO`, `DEBUG` and `TRACE`                                                                                                                                                                            |
 
-### Somatic Findings
+### Additional run modes
+
+Instead of individual algo directories, it is possible to configure a single directory in the following modes:
+
+| Parameter                | Description                                                                                                                      | 
+|--------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| pipeline_sample_root_dir | If this path is set, all individual algo paths are derived from this path, assuming the pipeline has been run using HMF pipeline |
+| sample_data_dir          | If this path is set, all data is expected to exist in the root of this path                                                      | 
+
+## Somatic Findings
 
 In addition to all somatic drivers (SNVs/Indels, copy numbers, structural variants and fusions) the following is considered potentially
 interesting and added to the report:
@@ -148,7 +168,7 @@ In case ORANGE was run in DNA+RNA mode, DNA findings will be annotated with RNA:
     3. Other fusions are annotated with RNA fusion details (detected fusions in RNA, and corresponding fragment support and depth of 5' and
        3' junction)
 
-### Germline Findings
+## Germline Findings
 
 In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../purple), the following is added to the report:
 
@@ -156,14 +176,15 @@ In addition to all germline SNV/Indel tumor drivers determined by [PURPLE](../pu
     1. Any hotspots that are not configured to be reported.
     2. Any hotspots that are filtered based on quality.
 - Potentially pathogenic germline deletions
-- Potentially pathogenic germline disruptions
+- Potentially pathogenic germline homozygous disruptions
+- Potentially pathogenic germline gene disruptions
 - Missed variant likelihood (MVLH) per gene, presenting the likelihood of missing a pathogenic variant in case there would have been one
   present.
 - (Large-scale) germline CN aberrations.
     - Germline CN aberrations are determined by [PURPLE](../purple) and include aberrations such as klinefelter or trisomy X.
-- Pharmacogenetics (DPYD status)
+- Pharmacogenetics (DPYD & UGT1A1 status)
 
-### Immunology
+## Immunology
 
 The immunology chapter is work-in-progress and will report on various immunology properties of the tumor sample.
 
@@ -175,18 +196,18 @@ The chapter currently presents the following:
 
 In case ORANGE was run in DNA+RNA mode, the alleles will be annotated by RNA fragment support.
 
-### RNA Findings
+## RNA Findings
 
 If run with RNA, this chapter displays potentially interesting RNA details:
 
 - QC Details
-- Drive gene panel genes with high TPM (>90th percentile database & tumor type) or low TPM (<5th percentile database or tumor type)
+- Drive gene panel genes with high TPM (>90th percentile database & tumor type) or low TPM (<5th percentile database & tumor type)
 - Potentially interesting support for known or promiscuous fusions not detected in our DNA analysis pipeline
 - Potentially interesting novel splice junctions
     1. Exon-skipping events in `EXON_DEL_DUP` fusion genes
     2. Novel exon/intron events in driver gene panel genes
 
-### Cohort Comparison
+## Cohort Comparison
 
 The cohort comparison reports all the properties of a tumor sample that [Cuppa](../cuppa) considers for determining tumor type. The cohort
 comparison displays the prevalence of the tumor's properties with respect to the cohorts that Cuppa could potentially assign the sample to:
@@ -197,7 +218,7 @@ comparison displays the prevalence of the tumor's properties with respect to the
 
 Do note that RNA features and cohort comparison thereof are only included if ORANGE was run in combined DNA/RNA mode.
 
-### Quality Control
+## Quality Control
 
 The quality control chapter provides extensive details that can help with interpreting the overall [PURPLE](../purple) QC status or
 investigate potential causes for QC failure.
@@ -207,10 +228,62 @@ investigate potential causes for QC failure.
 - Various plots from [PURPLE](../purple)
 - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
-### Version History and Download Links
+## Version History and Download Links
 
-- Upcoming
-    - Remove warning in case a variant potentially falls in the splice region of 2 neighbouring exons
+- [3.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.1)
+    - Fixed bug (potential NPE) when resolving optional paths 
+- [3.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.0)
+    - Disclaimer (if enabled) has bigger font size in footer, and a disclaimer is now also present in header.
+        - New ORANGE-datamodel (v2.0.0) with lots of datamodel renames and clean-ups.
+            - Parameter `experimentDate` has been renamed to `samplingDate`
+            - Kataegis plots are now mandatory and expected to be produced in every situation by PURPLE.
+        - Data is displayed in the report as "NA" in case of purple QC failure, in case the data by itself is not interpretable (e.g. TML).
+        - The TMB status (high vs low) is displayed on the front page along with the actual TMB.
+        - The status of UGT1A1 is displayed on the front page.
+        - The undisrupted CN of a DUP, in case of a HOM_DUP_DISRUPTION, is displayed as undisrupted CN minus junction CN
+        - Lilac RNA and ref counts are displayed as NONE in case they are not available (rather than 0)
+        - The parameter `experiment_type` is now required, with valid values being PANEL or WGS.
+        - Report all non-canonical variants in case of multiple variants in same gene
+- [2.7.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.7.0)
+    - Supports targeted tumor-only mode:
+        - Omits Cuppa, Chord, Sigs and VirusBreakends
+        - Omits Germline annotations
+    - DOID cohort mapper throws exception instead of warn in case of invalid DOID combinations
+    - Various DOID combinations are added to resolve to Esophagus or Stomach cohorts when combined with Gastroesophageal cancer DOIDs
+    - A bug has been fixed with respect to using transcripts from the ensembl data cache that are not ensembl transcripts.
+    - Test data and test report have been bumped to v5.33 pipeline
+- [2.6.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.6.0)
+    - Various updates to configuration:
+        - All inputs are now configured via one directory per tool rather than individual files
+        - `ensembl_data_directory` parameter has been renamed to `ensembl_data_dir`
+        - `driver_gene_panel_tsv` parameter has been renamed to `driver_gene_panel`
+        - `isofox_gene_distribution_csv` parameter has been renamed to `isofox_gene_distribution`
+        - `isofox_alt_sj_cohort_csv` parameter has been renamed to `isofox_alt_sj_cohort`
+        - `log_level` parameter has been added to allow manual override of the default log level
+- [2.5.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.5.0)
+    - Bugfix: Maintain linx clusters after ORANGE germline conversion
+    - Include breakdown by classifier in CUPPA predictions
+    - Fixed bug that used invalid RNA gene expression cohort percentiles for CUP tumors and prevented high-expression findings
+    - Added new PURPLE variant effects: `PHASED_MISSENSE` and `PHASED_SYNONYMOUS`
+- [2.4.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.1)
+    - Fixes java.lang.IllegalStateException occurring when sample has virus integration.
+- [2.4.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.4.0)
+    - The ORANGE datamodel used in the json output has been separated from the ORANGE logic and available as an artifact for
+      other projects to depend on (see also [ORANGE-datamodel](../orange-datamodel))
+    - All copy numbers are rounded to single digit instead of no digits
+    - Combination of urethra cancer and renal cell cancer is mapped to OTHER by ORANGE cohort mapper
+    - The ORANGE cohort mapping application queries clinical view rather than datarequest
+    - Added `-add_disclaimer` parameter that will print a "research use only" disclaimer in the footer when set
+    - PDF documents now share a single instance of each font to reduce file size
+    - Formatting for undetermined HRD type is improved
+- [2.3](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.3)
+    - Full support for reporting germline structural variants
+        - This includes extended linx & purple datamodels with various germline findings
+        - All somatic fields now have explicit "somatic" in their property name.
+    - Added `-cuppa_chart_plot` parameter to hold the output of cuppa-chart
+    - Cuppa, VirusInterpreter, Sigs and Chord are made optional to support pipeline running in targeted-mode
+    - Add `experimentType` to ORANGE output which is either `TARGETED` or `FULL_GENOME` based on purple's targeted property.
+    - Removed warning in case a variant potentially falls in the splice region of 2 neighbouring exons
 - [2.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v2.2)
     - (COSMIC) signatures are added to the somatic findings (new parameter: `-sigs_allocation_tsv`)
     - Unreported germline variants are no longer converted to somatic variants in case "germline to somatic conversion" is enabled.

@@ -12,20 +12,20 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class JsonFunctions {
-
+public final class JsonFunctions
+{
     private static final Logger LOGGER = LogManager.getLogger(JsonFunctions.class);
 
-    private JsonFunctions() {
-    }
-
     @Nullable
-    public static JsonObject optionalJsonObject(@NotNull JsonObject object, @NotNull String field) {
-        if (!object.has(field)) {
+    public static JsonObject optionalJsonObject(@NotNull JsonObject object, @NotNull String field)
+    {
+        if(!object.has(field))
+        {
             return null;
         }
 
-        if (object.get(field).isJsonNull()) {
+        if(object.get(field).isJsonNull())
+        {
             return null;
         }
 
@@ -34,12 +34,15 @@ public final class JsonFunctions {
     }
 
     @Nullable
-    public static JsonArray optionalJsonArray(@NotNull JsonObject object, @NotNull String field) {
-        if (!object.has(field)) {
+    public static JsonArray optionalJsonArray(@NotNull JsonObject object, @NotNull String field)
+    {
+        if(!object.has(field))
+        {
             return null;
         }
 
-        if (object.get(field).isJsonNull()) {
+        if(object.get(field).isJsonNull())
+        {
             return null;
         }
 
@@ -48,20 +51,27 @@ public final class JsonFunctions {
     }
 
     @NotNull
-    public static List<String> stringList(@NotNull JsonObject object, @NotNull String field) {
+    public static List<String> stringList(@NotNull JsonObject object, @NotNull String field)
+    {
         assert object.has(field);
 
-        if (object.get(field).isJsonNull()) {
+        if(object.get(field).isJsonNull())
+        {
             return Lists.newArrayList();
         }
 
         List<String> values = Lists.newArrayList();
-        if (object.get(field).isJsonPrimitive()) {
+        if(object.get(field).isJsonPrimitive())
+        {
             values.add(string(object, field));
-        } else {
+        }
+        else
+        {
             assert object.get(field).isJsonArray();
-            for (JsonElement element : object.getAsJsonArray(field)) {
-                if (!element.isJsonPrimitive()) {
+            for(JsonElement element : object.getAsJsonArray(field))
+            {
+                if(!element.isJsonPrimitive())
+                {
                     LOGGER.warn("Converting array value for {} into string for element {}", field, element);
                 }
                 values.add(element.getAsJsonPrimitive().getAsString());
@@ -71,8 +81,10 @@ public final class JsonFunctions {
     }
 
     @NotNull
-    public static List<String> optionalStringList(@NotNull JsonObject object, @NotNull String field) {
-        if (!object.has(field)) {
+    public static List<String> optionalStringList(@NotNull JsonObject object, @NotNull String field)
+    {
+        if(!object.has(field))
+        {
             return Lists.newArrayList();
         }
 
@@ -80,40 +92,48 @@ public final class JsonFunctions {
     }
 
     @NotNull
-    public static String string(@NotNull JsonObject object, @NotNull String field) {
+    public static String string(@NotNull JsonObject object, @NotNull String field)
+    {
         assert object.has(field);
 
         JsonElement element = object.get(field);
-        if (!element.isJsonPrimitive()) {
+        if(!element.isJsonPrimitive())
+        {
             LOGGER.warn("Converting {} to String for element {}.", field, element);
         }
         return element.getAsJsonPrimitive().getAsString();
     }
 
     @Nullable
-    public static String optionalString(@NotNull JsonObject object, @NotNull String field) {
-        if (!object.has(field)) {
+    public static String optionalString(@NotNull JsonObject object, @NotNull String field)
+    {
+        if(!object.has(field))
+        {
             return null;
         }
 
         return string(object, field);
     }
 
-    public static int integer(@NotNull JsonObject object, @NotNull String field) {
+    public static int integer(@NotNull JsonObject object, @NotNull String field)
+    {
         assert object.has(field);
 
         JsonElement element = object.get(field);
-        if (!element.isJsonPrimitive()) {
+        if(!element.isJsonPrimitive())
+        {
             LOGGER.warn("Converting {} to Integer for element {}.", field, element);
         }
         return element.getAsJsonPrimitive().getAsInt();
     }
 
     @Nullable
-    public static String nullableString(@NotNull JsonObject object, @NotNull String field) {
+    public static String nullableString(@NotNull JsonObject object, @NotNull String field)
+    {
         assert object.has(field);
 
-        if (object.get(field).isJsonNull()) {
+        if(object.get(field).isJsonNull())
+        {
             return null;
         }
 
@@ -121,11 +141,35 @@ public final class JsonFunctions {
     }
 
     @Nullable
-    public static String optionalNullableString(@NotNull JsonObject object, @NotNull String field) {
-        if (!object.has(field)) {
+    public static String optionalNullableString(@NotNull JsonObject object, @NotNull String field)
+    {
+        if(!object.has(field))
+        {
             return null;
         }
 
         return nullableString(object, field);
+    }
+
+    @Nullable
+    public static Boolean optionalBool(@NotNull JsonObject object, @NotNull String field)
+    {
+        return object.has(field) ? nullableBool(object, field) : null;
+    }
+
+    @Nullable
+    public static Boolean nullableBool(@NotNull JsonObject object, @NotNull String field)
+    {
+        return !isNull(object, field) ? bool(object, field) : null;
+    }
+
+    public static boolean bool(@NotNull JsonObject object, @NotNull String field)
+    {
+        return object.get(field).getAsJsonPrimitive().getAsBoolean();
+    }
+
+    private static boolean isNull(@NotNull JsonObject object, @NotNull String field)
+    {
+        return object.get(field).isJsonNull();
     }
 }

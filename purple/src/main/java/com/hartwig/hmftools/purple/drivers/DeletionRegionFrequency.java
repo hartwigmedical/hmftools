@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.purple.drivers;
 
-import com.hartwig.hmftools.common.utils.sv.BaseRegion;
+import com.hartwig.hmftools.common.region.BaseRegion;
 
 public class DeletionRegionFrequency
 {

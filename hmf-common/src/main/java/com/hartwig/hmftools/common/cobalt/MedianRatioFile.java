@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.cobalt;
 
-import static com.hartwig.hmftools.common.cobalt.CobaltCommon.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,17 +39,17 @@ public final class MedianRatioFile
         List<String> lines = Files.readAllLines(new File(filename).toPath());
 
         String header = lines.get(0);
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         lines.remove(0);
 
         for(String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
-            ratios.add(ImmutableMedianRatio.builder()
-                    .chromosome(values[fieldsIndexMap.get(CHROMOSOME)])
-                    .medianRatio(Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_RATIO)]))
-                    .count(Integer.parseInt(values[fieldsIndexMap.get(COUNT)])).build());
+            ratios.add(new MedianRatio(
+                    values[fieldsIndexMap.get(CHROMOSOME)],
+                    Double.parseDouble(values[fieldsIndexMap.get(MEDIAN_RATIO)]),
+                    Integer.parseInt(values[fieldsIndexMap.get(COUNT)])));
         }
 
         return ratios;
@@ -70,7 +70,7 @@ public final class MedianRatioFile
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add(CHROMOSOME)
                 .add(MEDIAN_RATIO)
                 .add(COUNT).toString();
@@ -78,9 +78,9 @@ public final class MedianRatioFile
 
     private static String toString(final MedianRatio position)
     {
-        return new StringJoiner(DELIMITER).add(position.chromosome())
-                .add(FORMAT.format(position.medianRatio()))
-                .add(String.valueOf(position.count()))
+        return new StringJoiner(TSV_DELIM).add(position.Chromosome)
+                .add(FORMAT.format(position.MedianRatio))
+                .add(String.valueOf(position.Count))
                 .toString();
     }
 }

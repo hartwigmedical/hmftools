@@ -4,12 +4,13 @@ import static java.util.stream.Collectors.toList;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
-import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.DELIMITER;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_ID;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_INFO;
 import static com.hartwig.hmftools.common.neo.NeoEpitopeFile.FLD_NE_VAR_TYPE;
 import static com.hartwig.hmftools.common.rna.RnaCommon.ISF_FILE_ID;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,27 +45,24 @@ public class RnaNeoEpitope
         BaseDepth = new int[] { baseDepthUp, baseDepthDown };
     }
 
-    private static final String FILE_EXTENSION = ISF_FILE_ID + "neoepitope.csv";
+    private static final String FILE_EXTENSION = ISF_FILE_ID + "neoepitope.tsv";
 
-    @NotNull
-    public static String generateFilename(@NotNull final String basePath, @NotNull final String sample)
+    public static String generateFilename(final String basePath, final String sample)
     {
-        return basePath + File.separator + sample + FILE_EXTENSION;
+        return checkAddDirSeparator(basePath) + sample + FILE_EXTENSION;
     }
 
-    @NotNull
     public static List<RnaNeoEpitope> read(final String filePath) throws IOException
     {
         return fromLines(Files.readAllLines(new File(filePath).toPath()));
     }
 
-    public static void write(@NotNull final String filename, @NotNull List<RnaNeoEpitope> neos) throws IOException
+    public static void write(final String filename, List<RnaNeoEpitope> neos) throws IOException
     {
         Files.write(new File(filename).toPath(), toLines(neos));
     }
 
-    @NotNull
-    private static List<String> toLines(@NotNull final List<RnaNeoEpitope> neos)
+    private static List<String> toLines(final List<RnaNeoEpitope> neos)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
@@ -73,7 +71,7 @@ public class RnaNeoEpitope
     }
 
     @NotNull
-    private static List<RnaNeoEpitope> fromLines(@NotNull List<String> lines)
+    private static List<RnaNeoEpitope> fromLines(List<String> lines)
     {
         if(lines.isEmpty())
             return Lists.newArrayList();
@@ -81,7 +79,7 @@ public class RnaNeoEpitope
         final String header = lines.get(0);
         lines.remove(0);
 
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, DELIMITER);
+        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
         int neIdIndex = fieldsIndexMap.get(FLD_NE_ID);
         int varTypeIndex = fieldsIndexMap.get(FLD_NE_VAR_TYPE);
         int varInfoIndex = fieldsIndexMap.get(FLD_NE_VAR_INFO);
@@ -96,7 +94,7 @@ public class RnaNeoEpitope
 
     public static String header()
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(FLD_NE_ID)
                 .add(FLD_NE_VAR_TYPE)
                 .add(FLD_NE_VAR_INFO)
@@ -107,9 +105,9 @@ public class RnaNeoEpitope
     }
 
     @NotNull
-    public static String toString(@NotNull final RnaNeoEpitope neo)
+    public static String toString(final RnaNeoEpitope neo)
     {
-        StringJoiner sj = new StringJoiner(DELIMITER);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(String.valueOf(neo.Id));
         sj.add(neo.VariantType.toString());
@@ -122,10 +120,10 @@ public class RnaNeoEpitope
 
     @NotNull
     public static RnaNeoEpitope fromString(
-            @NotNull final String data, int neIdIndex, int varTypeIndex, int varInfoIndex,
+            final String data, int neIdIndex, int varTypeIndex, int varInfoIndex,
             int fragIndex, int baseDepthUpIndex, int baseDepthDownIndex)
     {
-        final String[] values = data.split(DELIMITER, -1);
+        final String[] values = data.split(TSV_DELIM, -1);
 
         return new RnaNeoEpitope(
                 Integer.parseInt(values[neIdIndex]), NeoEpitopeType.valueOf(values[varTypeIndex]), values[varInfoIndex],
@@ -133,9 +131,9 @@ public class RnaNeoEpitope
     }
 
     @NotNull
-    public static RnaNeoEpitope fromString(@NotNull final String data)
+    public static RnaNeoEpitope fromString(final String data)
     {
-        final String[] values = data.split(DELIMITER, -1);
+        final String[] values = data.split(TSV_DELIM, -1);
 
         int index = 0;
 

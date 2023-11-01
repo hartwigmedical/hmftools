@@ -18,12 +18,14 @@ import com.hartwig.hmftools.patientdb.clinical.ecrf.datamodel.EcrfPatient;
 
 import org.junit.Test;
 
-public class DrupPatientReaderTest {
+public class DrupPatientReaderTest
+{
 
     private static final String INFORMED_CONSENTS_TSV = Resources.getResource("consents/informed_consents.tsv").getPath();
 
     @Test
-    public void canReadEmptyPatient() throws IOException {
+    public void canReadEmptyPatient() throws IOException
+    {
         DrupPatientReader patientReader = new DrupPatientReader(
                 CuratorTestFactory.primaryTumorCurator(),
                 CuratorTestFactory.biopsySiteCurator());
@@ -31,7 +33,8 @@ public class DrupPatientReaderTest {
         EcrfPatient ecrfPatient = new EcrfPatient("empty", Maps.newHashMap(), Lists.newArrayList());
         SampleData sample = sampleBuilder(LocalDate.parse("2017-01-01")).build();
 
-        Patient patient = patientReader.read(ecrfPatient, Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "DRUP");
+        Patient patient =
+                patientReader.read(ecrfPatient, Lists.newArrayList(sample), ConsentConfigFactory.read(INFORMED_CONSENTS_TSV), "DRUP");
 
         assertNotNull(patient);
     }

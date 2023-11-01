@@ -1,22 +1,27 @@
 package com.hartwig.hmftools.sage.vcf;
 
+import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_COUNT;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
+import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNTS;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_JITTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.STRAND_BIAS;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -30,7 +35,7 @@ import htsjdk.variant.vcf.VCFConstants;
 
 public final class VariantContextFactory
 {
-    private static final List<Allele> NO_CALL = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
+    public static final List<Allele> NO_CALL = Lists.newArrayList(Allele.NO_CALL, Allele.NO_CALL);
 
     public static VariantContext create(final SageVariant variant, final List<String> referenceIds, final List<String> tumorIds)
     {
@@ -86,12 +91,23 @@ public final class VariantContextFactory
     {
         GenotypeBuilder builder = new GenotypeBuilder(sampleId);
 
-        builder.DP(counter.depth())
-                .AD(new int[] { counter.refSupport(), counter.altSupport() })
+        int depth = counter.depth();
+        int altSupport = counter.altSupport();
+
+        int avgMapQuality = depth > 0 ? (int)Math.round(counter.totalMapQuality() / (double)depth) : 0;
+        int avgAltMapQuality = altSupport > 0 ? (int)Math.round(counter.altMapQuality() / (double)altSupport) : 0;
+
+        double avgNmCount = depth > 0 ? round(counter.totalNmCount() / (double)depth, 1) : 0;
+        double avgAltNmCount = altSupport > 0 ? round(counter.altNmCount() / (double)altSupport, 1) : 0;
+
+        builder.DP(depth)
+                .AD(new int[] { counter.refSupport(), altSupport })
                 .attribute(READ_CONTEXT_QUALITY, counter.quality())
                 .attribute(READ_CONTEXT_COUNT, counter.counts())
-                .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPair())
+                .attribute(READ_CONTEXT_IMPROPER_PAIR, counter.improperPairCount())
                 .attribute(READ_CONTEXT_JITTER, counter.jitter())
+                .attribute(AVG_MAP_QUALITY, new int[] { avgMapQuality, avgAltMapQuality })
+                .attribute(AVG_NM_COUNT, new double[] { avgNmCount, avgAltNmCount })
                 .attribute(RAW_ALLELIC_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
                 .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQuality(), counter.rawAltBaseQuality() })
                 .attribute(RAW_DEPTH, counter.rawDepth())
@@ -99,6 +115,11 @@ public final class VariantContextFactory
                 .attribute(AVG_BASE_QUAL, (int)counter.averageAltBaseQuality())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .alleles(NO_CALL);
+
+        if(counter.umiTypeCounts() != null)
+        {
+            builder.attribute(UMI_TYPE_COUNTS, counter.umiTypeCounts());
+        }
 
         return builder.make();
     }

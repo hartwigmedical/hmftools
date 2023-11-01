@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.gripss;
 
-import static com.hartwig.hmftools.common.sv.ExcludedRegions.POLY_G_REGIONS_V37;
+import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_REGIONS_V37;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -60,7 +60,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantFactory;
-import com.hartwig.hmftools.gripss.common.GenotypeIds;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 
@@ -70,15 +70,19 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.GenotypesContext;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.filter.CompoundFilter;
 
 public class GripssTestUtils
 {
-    public static final String CHR_1 = "1";
-    public static final String CHR_2 = "2";
     public static final String LINE_INSERT_SEQ_A = "AAAAAAAAAAAAAAAAAAAA";
     public static final String LINE_INSERT_SEQ_T = "TTTTTTTTTTTTTTTTTTTT";
 
     public static final double DEFAULT_QUAL = 1000;
+
+    public static StructuralVariantFactory defaultSvFactory()
+    {
+        return new StructuralVariantFactory(new CompoundFilter(false));
+    }
 
     public static SvData createSv(
             final String eventId, final String chrStart, final String chrEnd, int posStart, int posEnd, byte orientStart, byte orientEnd,
@@ -98,7 +102,7 @@ public class GripssTestUtils
         VariantContext[] contexts = createSvBreakends(
                 eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, ref, insSeq, commonOverrides, refOverrides, tumorOverrides);
 
-        StructuralVariant sv = StructuralVariantFactory.create(contexts[SE_START], contexts[SE_END]);
+        StructuralVariant sv = defaultSvFactory().createSV(contexts[SE_START], contexts[SE_END]);
         return new SvData(sv, genotypeIds);
     }
 
@@ -111,7 +115,7 @@ public class GripssTestUtils
         VariantContext[] contexts = createSvBreakends(
                 eventId, chrStart, chrEnd, posStart, posEnd, orientStart, orientEnd, ref, insSeq, attributesStart, attributesEnd);
 
-        StructuralVariant sv = StructuralVariantFactory.create(contexts[SE_START], contexts[SE_END]);
+        StructuralVariant sv = defaultSvFactory().createSV(contexts[SE_START], contexts[SE_END]);
         return new SvData(sv, genotypeIds);
     }
 
@@ -131,7 +135,7 @@ public class GripssTestUtils
         VariantContext context = createSglBreakend(
                 eventId, chromosome, position, orientation, ref, insSeq, commonOverrides, refOverrides, tumorOverrides);
 
-        StructuralVariant sv = StructuralVariantFactory.createSingleBreakend(context);
+        StructuralVariant sv = defaultSvFactory().createSingleBreakend(context);
         return new SvData(sv, genotypeIds);
     }
 
@@ -254,10 +258,8 @@ public class GripssTestUtils
 
         GenotypesContext genotypesContext = GenotypesContext.create(gtNormal, gtTumor);
 
-        String filters = "";
+        double logError = -(qual / 10.0);
 
-        double logError = -(qual / 10.0)
-;
         return builder
                 .source("SOURCE")
                 .id(vcfId)

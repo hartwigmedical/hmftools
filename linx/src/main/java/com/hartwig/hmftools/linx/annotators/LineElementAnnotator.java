@@ -3,7 +3,7 @@ package com.hartwig.hmftools.linx.annotators;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.isStart;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.linx.types.DbPair;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
@@ -162,13 +162,13 @@ public class LineElementAnnotator {
 
         boolean hasSuspected = false;
 
-        for (Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
+        for(Map.Entry<String, List<SvBreakend>> entry : cluster.getChrBreakendMap().entrySet())
         {
             final List<SvBreakend> breakendList = entry.getValue();
 
             lineState.clear();
 
-            for (int i = 0; i < breakendList.size(); ++i)
+            for(int i = 0; i < breakendList.size(); ++i)
             {
                 final SvBreakend breakend = breakendList.get(i);
 
@@ -183,22 +183,22 @@ public class LineElementAnnotator {
                 // gather up all breakends within 5K of this suspect line element
                 List<SvBreakend> proximateBreakends = Lists.newArrayList(breakend);
 
-                for (int j = i + 1; j < breakendList.size(); ++j)
+                for(int j = i + 1; j < breakendList.size(); ++j)
                 {
                     final SvBreakend nextBreakend = breakendList.get(j);
 
-                    if (abs(nextBreakend.position() - breakend.position()) > mProximityDistance)
+                    if(abs(nextBreakend.position() - breakend.position()) > mProximityDistance)
                         break;
 
                     proximateBreakends.add(nextBreakend);
                 }
 
                 // and in the reverse direction
-                for (int j = i - 1; j >= 0; --j)
+                for(int j = i - 1; j >= 0; --j)
                 {
                     final SvBreakend prevBreakend = breakendList.get(j);
 
-                    if (abs(breakend.position() - prevBreakend.position()) > mProximityDistance)
+                    if(abs(breakend.position() - prevBreakend.position()) > mProximityDistance)
                         break;
 
                     proximateBreakends.add(prevBreakend);

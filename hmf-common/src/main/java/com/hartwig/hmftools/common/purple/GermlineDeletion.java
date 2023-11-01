@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.common.purple;
 
-import static com.hartwig.hmftools.common.purple.PurpleCommon.DELIMITER;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,7 +86,7 @@ public final class GermlineDeletion
 
     private static String header()
     {
-        return new StringJoiner(DELIMITER, "", "")
+        return new StringJoiner(TSV_DELIM, "", "")
                 .add("gene")
                 .add("chromosome")
                 .add("chromosomeBand")
@@ -108,7 +108,7 @@ public final class GermlineDeletion
 
     private static String toString(final GermlineDeletion deletion)
     {
-        return new StringJoiner(DELIMITER)
+        return new StringJoiner(TSV_DELIM)
                 .add(deletion.GeneName)
                 .add(deletion.Chromosome)
                 .add(deletion.ChromosomeBand)
@@ -130,14 +130,14 @@ public final class GermlineDeletion
 
     static List<GermlineDeletion> fromLines(final List<String> lines)
     {
-        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), DELIMITER);
+        final Map<String, Integer> fieldsIndexMap = createFieldsIndexMap(lines.get(0), TSV_DELIM);
         lines.remove(0);
 
         List<GermlineDeletion> deletions = Lists.newArrayList();
 
         for(final String line : lines)
         {
-            String[] values = line.split(DELIMITER, -1);
+            String[] values = line.split(TSV_DELIM, -1);
 
             deletions.add(new GermlineDeletion(
                     values[fieldsIndexMap.get("gene")],

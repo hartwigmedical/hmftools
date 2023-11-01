@@ -15,12 +15,33 @@ class VdjBuilderUtilsTest
         //org.apache.logging.log4j.core.config.Configurator.setRootLevel(org.apache.logging.log4j.Level.TRACE)
     }
 
+    // test calculation of word hashes
+    @Test
+    fun testCalcSequenceHashes()
+    {
+        val hashes = VdjBuilderUtils.calcSequenceWordHashes("AAAAATAGAAAAAA", 6)
+
+        // for (h in hashes)
+        // println(h)
+
+        assertEquals(9, hashes.size)
+        assertEquals(1, hashes[0])
+        assertEquals(4, hashes[1])
+        assertEquals(19, hashes[2])
+        assertEquals(76, hashes[3])
+        assertEquals(304, hashes[4])
+        assertEquals(1216, hashes[5])
+        assertEquals(768, hashes[6])
+        assertEquals(3072, hashes[7])
+        assertEquals(0, hashes[8])
+    }
+
     // test the function that identifies overlaps
     @Test
     fun testFindVjOverlap1()
     {
-        val seq1 = "GACTCAGTCCAGGAAAGTATT"
-        val seq2 =       "GTCCAGGAAAGTATTATACTCA"
+        val seq1 = "GACTCAGTCCAGGAAAGTATT".toByteArray()
+        val seq2 =       "GTCCAGGAAAGTATTATACTCA".toByteArray()
 
         var overlap = VdjBuilderUtils.findSequenceOverlap(seq1, seq2, 10)
         assertNotNull(overlap)
@@ -49,8 +70,8 @@ class VdjBuilderUtilsTest
     @Test
     fun testFindVjOverlapLongShort()
     {
-        val seq1 = "GACTCAGTCCAGGAAAGTATTATACTCA"
-        val seq2 =       "GTCCAGGAAAGTATT"
+        val seq1 = "GACTCAGTCCAGGAAAGTATTATACTCA".toByteArray()
+        val seq2 =       "GTCCAGGAAAGTATT".toByteArray()
 
         var overlap = VdjBuilderUtils.findSequenceOverlap(seq1, seq2, 10)
         assertNotNull(overlap)
@@ -162,12 +183,12 @@ class VdjBuilderUtilsTest
 
         // we are aligned at the T
         val baseQual1 = SAMUtils.fastqToPhred("FF:FFFF:FF") // F is 37, : is 25
-        val read1 = TestLayoutRead("read1", ReadKey("read1", true), seq, baseQual1, 4)
+        val read1 = TestLayoutRead("read1", ReadKey("read1", true), seq.toByteArray(), baseQual1, 4)
         layout1.addRead(read1, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
 
         val layout2 = ReadLayout()
         val baseQual2 = SAMUtils.fastqToPhred("FFFF::FFFF") // F is 37, : is 25
-        val read2 = TestLayoutRead("read2", ReadKey("read2", true), seq, baseQual2, 4)
+        val read2 = TestLayoutRead("read2", ReadKey("read2", true), seq.toByteArray(), baseQual2, 4)
         layout2.addRead(read2, ReadLayoutBuilderTest.MIN_BASE_QUALITY)
 
         val vdj1 = TestUtils.createVDJ(layout1, 3, 7, 0, 10)
@@ -201,7 +222,7 @@ class VdjBuilderUtilsTest
 
         assertNotNull(vdjCombine.vAnchor)
         assertNotNull(vdjCombine.jAnchor)
-        assertEquals("CCTCA-GGTG-ATAA".replace("-", ""), vdjCombine.layout.consensusSequence())
+        assertEquals("CCTCA-GGTG-ATAA".replace("-", ""), vdjCombine.layout.consensusSequenceString())
         assertEquals("TCA-GGTG-ATA", vdjCombine.sequenceFormatted)
         assertEquals(3, vdjCombine.vAnchor!!.anchorBoundary)
         assertEquals(7, vdjCombine.jAnchor!!.anchorBoundary)
@@ -211,7 +232,7 @@ class VdjBuilderUtilsTest
 
         assertNotNull(vdjCombine.vAnchor)
         assertNotNull(vdjCombine.jAnchor)
-        assertEquals("CCTCA-GGTG-ATAA".replace("-", ""), vdjCombine.layout.consensusSequence())
+        assertEquals("CCTCA-GGTG-ATAA".replace("-", ""), vdjCombine.layout.consensusSequenceString())
         assertEquals("TCA-GGTG-ATA", vdjCombine.sequenceFormatted)
         assertEquals(3, vdjCombine.vAnchor!!.anchorBoundary)
         assertEquals(7, vdjCombine.jAnchor!!.anchorBoundary)
@@ -240,7 +261,7 @@ class VdjBuilderUtilsTest
 
         assertNotNull(vdjCombine.vAnchor)
         assertNull(vdjCombine.jAnchor)
-        assertEquals("CCTCA-GGTGATAA".replace("-", ""), vdjCombine.layout.consensusSequence())
+        assertEquals("CCTCA-GGTGATAA".replace("-", ""), vdjCombine.layout.consensusSequenceString())
         assertEquals("TCA-GGTGAT", vdjCombine.sequenceFormatted)
         assertEquals(3, vdjCombine.vAnchor!!.anchorBoundary)
 
@@ -249,7 +270,7 @@ class VdjBuilderUtilsTest
 
         assertNotNull(vdjCombine.vAnchor)
         assertNull(vdjCombine.jAnchor)
-        assertEquals("CCTCA-GGTGATAA".replace("-", ""), vdjCombine.layout.consensusSequence())
+        assertEquals("CCTCA-GGTGATAA".replace("-", ""), vdjCombine.layout.consensusSequenceString())
         assertEquals("TCA-GGTGAT", vdjCombine.sequenceFormatted)
         assertEquals(3, vdjCombine.vAnchor!!.anchorBoundary)
     }
@@ -276,7 +297,7 @@ class VdjBuilderUtilsTest
 
         assertNull(vdjCombine.vAnchor)
         assertNotNull(vdjCombine.jAnchor)
-        assertEquals("CCTCAGGTG-ATAA".replace("-", ""), vdjCombine.layout.consensusSequence())
+        assertEquals("CCTCAGGTG-ATAA".replace("-", ""), vdjCombine.layout.consensusSequenceString())
         assertEquals("TCAGGTG-ATA", vdjCombine.sequenceFormatted)
         assertEquals(7, vdjCombine.jAnchor!!.anchorBoundary)
 
@@ -285,7 +306,7 @@ class VdjBuilderUtilsTest
 
         assertNull(vdjCombine.vAnchor)
         assertNotNull(vdjCombine.jAnchor)
-        assertEquals("CCTCAGGTG-ATAA".replace("-", ""), vdjCombine.layout.consensusSequence())
+        assertEquals("CCTCAGGTG-ATAA".replace("-", ""), vdjCombine.layout.consensusSequenceString())
         assertEquals("TCAGGTG-ATA", vdjCombine.sequenceFormatted)
         assertEquals(7, vdjCombine.jAnchor!!.anchorBoundary)
     }

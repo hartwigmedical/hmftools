@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.cup.common;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.cup.CuppaConfig.CANCER_SUBTYPE_OTHER;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
@@ -127,35 +127,43 @@ public class SampleDataCache
             return null;
         }
 
-        if(RefSampleCancerTypeMap.containsKey(sample.Id))
+        SampleData testSample = sample;
+        String refCancerType = RefSampleCancerTypeMap.get(sample.Id);
+
+        if(refCancerType != null)
         {
             // override if known
-            sample.setRefSample();
-            sample.setCancerType(RefSampleCancerTypeMap.get(sample.Id));
+            testSample = findRefSampleData(sample.Id);
+
+            if(testSample == null)
+            {
+                CUP_LOGGER.error("sample({} ct={}) marked as ref but not found", sample.Id, sample.cancerType());
+                return null;
+            }
+            else
+            {
+                testSample.setRefSample();
+                testSample.setCancerType(refCancerType);
+            }
         }
 
-        SampleDataList.add(sample);
-        SampleIds.add(sample.Id);
-        return sample;
+        SampleDataList.add(testSample);
+        SampleIds.add(testSample.Id);
+        return testSample;
     }
 
-    public void loadSampleData(final String specificSampleData, final String sampleDataFile)
+    public void loadSampleData(final String specificSampleId, final int sampleRnaReadLength, final String sampleDataFile)
     {
-        if(specificSampleData != null)
+        if(specificSampleId != null)
         {
-            final String[] sampleItems = specificSampleData.split(SUBSET_DELIM, -1);
-            String sampleId = sampleItems[0];
-            String cancerType = CANCER_TYPE_UNKNOWN;
-            String cancerSubtype = CANCER_SUBTYPE_OTHER;
-
-            if(sampleItems.length >= 2)
-                cancerType = sampleItems[1];
-
-            if(sampleItems.length == 3)
-                cancerSubtype = sampleItems[2];
-
-            SampleData sample = new SampleData(sampleId, cancerType, cancerSubtype);
+            SampleData sample = new SampleData(specificSampleId, "", "");
+            sample.setRnaReadLength(sampleRnaReadLength);
             SpecificSample = addTestSample(sample);
+
+            if(SpecificSample.isRefSample())
+            {
+                CUP_LOGGER.info("sample({}) cancerType({}) is a ref sample", SpecificSample.Id, SpecificSample.cancerType());
+            }
         }
         else if(sampleDataFile != null)
         {

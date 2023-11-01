@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.neo.NeoCommon.NE_LOGGER;
 import static com.hartwig.hmftools.common.codon.AminoAcidRna.STOP_SYMBOL;
+import static com.hartwig.hmftools.neo.NeoCommon.transcriptsToStr;
 
 import java.util.Set;
 import java.util.StringJoiner;
@@ -107,7 +108,9 @@ public abstract class NeoEpitope
     public abstract void extractCodingBases(final RefGenomeInterface refGenome, int requiredAminoAcids);
     public abstract NeoEpitopeType variantType();
     public abstract String variantInfo();
+    public abstract double variantCopyNumber();
     public abstract double copyNumber();
+    public abstract double subclonalLikelihood();
     public abstract boolean phaseMatched();
     public abstract int unsplicedDistance();
     public abstract int skippedAcceptors();
@@ -242,45 +245,17 @@ public abstract class NeoEpitope
 
     public String aminoAcidString() { return UpstreamAcids + NovelAcid + DownstreamAcids; }
 
-    public boolean hasWildtypeAminoAcidMatch()
+    public NeoEpitopeFile toFile(final int neId, final Set<String> upTransNames, final Set<String> downTransNames)
     {
-        int upstreamAALength = UpstreamAcids.length();
-        if(UpstreamWildTypeAcids.length() < upstreamAALength + 1)
-            return false;
-
-        // check if the first novel or downstream AA matches the first wildtype upstream AA
-        String upWildtypeAA = UpstreamWildTypeAcids.substring(upstreamAALength, upstreamAALength + 1);
-        String downAA;
-
-        if(!NovelAcid.isEmpty())
-            downAA = NovelAcid.substring(0, 1);
-        else if(!DownstreamAcids.isEmpty())
-            downAA = DownstreamAcids.substring(0, 1);
-        else
-            return true;
-
-        return upWildtypeAA.equals(downAA);
-    }
-
-    public NeoEpitopeFile toFile(
-            final int neId, final Set<String> upTransNames, final Set<String> downTransNames,
-            final double[] tpmCancer, final double[] tpmCohort)
-    {
-        final StringJoiner upTransStr = new StringJoiner(";");
-        final StringJoiner downTransStr = new StringJoiner(";");
-        upTransNames.forEach(x -> upTransStr.add(x));
-        downTransNames.forEach(x -> downTransStr.add(x));
-
         return new NeoEpitopeFile(
-                neId, variantType(), variantInfo(), copyNumber(),
+                neId, variantType(), variantInfo(), variantCopyNumber(), copyNumber(), subclonalLikelihood(),
                 TransData[FS_UP].GeneId, TransData[FS_DOWN].GeneId, geneName(FS_UP), geneName(FS_DOWN),
                 chromosome(FS_UP), chromosome(FS_DOWN), orientation(FS_UP), orientation(FS_DOWN),
                 UpstreamAcids, DownstreamAcids, NovelAcid, NmdBasesMin, NmdBasesMax, CodingBasesLengthMin, CodingBasesLengthMax,
                 unsplicedDistance(), skippedDonors(), skippedAcceptors(),
-                upTransStr.toString(), downTransStr.toString(), wildtypeAcids(),
+                transcriptsToStr(upTransNames), transcriptsToStr(downTransNames), wildtypeAcids(),
                 ExtPositions[FS_UP][SE_START], ExtPositions[FS_UP][SE_END], ExtCodingBases[FS_UP], ExtCigars[FS_UP].toString(),
                 ExtPositions[FS_DOWN][SE_START], ExtPositions[FS_DOWN][SE_END], ExtCodingBases[FS_DOWN],
-                ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "",
-                tpmCancer[FS_UP], tpmCohort[FS_UP], tpmCancer[FS_DOWN], tpmCohort[FS_DOWN]);
+                ExtCigars[FS_DOWN] != null ? ExtCigars[FS_DOWN].toString() : "");
     }
 }

@@ -18,6 +18,7 @@ public class SageVariant
     private final List<ReadContextCounter> mTumorReadCounters;
 
     private int mMixedImpact;
+    private boolean mDedupIndelDiff; // temp during switch to new method
 
     public SageVariant(
             final Candidate candidate,  final List<ReadContextCounter> normalCounters, final List<ReadContextCounter> tumorReadCounters)
@@ -26,6 +27,7 @@ public class SageVariant
         mNormalReadCounters = normalCounters;
         mTumorReadCounters = tumorReadCounters;
         mFilters = Sets.newHashSet();
+        mDedupIndelDiff = false;
     }
 
     public Candidate candidate()
@@ -147,6 +149,9 @@ public class SageVariant
 
     public boolean isPassing() { return mFilters.isEmpty(); }
 
+    public boolean dedupIndelDiff() { return mDedupIndelDiff; }
+    public void markDedupIndelDiff() { mDedupIndelDiff = true; }
+
     public boolean isTumorEmpty() { return mTumorReadCounters.isEmpty(); }
     public boolean isNormalEmpty() { return mNormalReadCounters.isEmpty(); }
 
@@ -167,17 +172,14 @@ public class SageVariant
     }
 
     public boolean isIndel() { return variant().ref().length() != variant().alt().length(); }
-
     public boolean isMnv()
     {
         return variant().ref().length() > 1 && variant().ref().length() == variant().alt().length();
     }
-
     public boolean isSnv()
     {
         return variant().ref().length() == 1 && variant().alt().length() == 1;
     }
-
     public boolean isDelete() { return variant().ref().length() > variant().alt().length(); }
     public boolean isInsert() { return variant().ref().length() < variant().alt().length(); }
 

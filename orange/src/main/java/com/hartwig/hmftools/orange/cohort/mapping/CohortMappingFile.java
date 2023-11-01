@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.cohort.mapping;
 
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,27 +15,26 @@ import com.google.common.collect.Sets;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class CohortMappingFile {
-
-    private static final String LINE_DELIMITER = "\t";
+public final class CohortMappingFile
+{
     private static final String DOID_DELIMITER = ";";
 
-    private CohortMappingFile() {
-    }
-
     @NotNull
-    public static List<CohortMapping> read(@NotNull String tsv) throws IOException {
+    public static List<CohortMapping> read(@NotNull String tsv) throws IOException
+    {
         return fromLines(Files.readAllLines(new File(tsv).toPath()));
     }
 
     @NotNull
-    private static List<CohortMapping> fromLines(@NotNull List<String> lines) {
+    private static List<CohortMapping> fromLines(@NotNull List<String> lines)
+    {
         List<CohortMapping> configRules = Lists.newArrayList();
 
-        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), LINE_DELIMITER);
+        Map<String, Integer> fields = createFieldsIndexMap(lines.get(0), TSV_DELIM);
 
-        for (String line : lines.subList(1, lines.size())) {
-            String[] values = line.split(LINE_DELIMITER, -1);
+        for(String line : lines.subList(1, lines.size()))
+        {
+            String[] values = line.split(TSV_DELIM, -1);
 
             configRules.add(ImmutableCohortMapping.builder()
                     .cancerType(values[fields.get("cancerType")])
@@ -49,10 +49,13 @@ public final class CohortMappingFile {
     }
 
     @NotNull
-    private static Set<String> toDOIDs(@NotNull String doidString) {
+    private static Set<String> toDOIDs(@NotNull String doidString)
+    {
         Set<String> doids = Sets.newHashSet();
-        if (!doidString.trim().isEmpty()) {
-            for (String doid : doidString.split(DOID_DELIMITER)) {
+        if(!doidString.trim().isEmpty())
+        {
+            for(String doid : doidString.split(DOID_DELIMITER))
+            {
                 doids.add(doid.trim());
             }
         }

@@ -6,20 +6,20 @@ import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERPA
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.AMBERSAMPLE;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
-import com.hartwig.hmftools.common.amber.AmberMapping;
-import com.hartwig.hmftools.common.amber.AmberPatient;
-import com.hartwig.hmftools.common.amber.AmberSample;
+import com.hartwig.hmftools.patientdb.amber.AmberMapping;
+import com.hartwig.hmftools.patientdb.amber.AmberPatient;
+import com.hartwig.hmftools.patientdb.amber.AmberSample;
 import com.hartwig.hmftools.common.amber.ImmutableAmberAnonymous;
-import com.hartwig.hmftools.common.amber.ImmutableAmberPatient;
-import com.hartwig.hmftools.common.amber.ImmutableAmberSample;
+import com.hartwig.hmftools.patientdb.amber.ImmutableAmberPatient;
+import com.hartwig.hmftools.patientdb.amber.ImmutableAmberSample;
 
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep3;
@@ -48,7 +48,7 @@ class AmberDAO {
 
     @NotNull
     List<AmberPatient> readPatients() {
-        final List<AmberPatient> result = Lists.newArrayList();
+        final List<AmberPatient> result = new ArrayList<>();
         final Result<Record> queryResult = context.select().from(AMBERPATIENT).fetch();
         for (Record record : queryResult) {
             result.add(ImmutableAmberPatient.builder()
@@ -62,7 +62,7 @@ class AmberDAO {
 
     @NotNull
     List<AmberSample> readSamples() {
-        final List<AmberSample> result = Lists.newArrayList();
+        final List<AmberSample> result = new ArrayList<>();
         final Result<Record> queryResult = context.select().from(AMBERSAMPLE).fetch();
 
         for (Record record : queryResult) {
@@ -117,7 +117,7 @@ class AmberDAO {
 
     @NotNull
     List<AmberAnonymous> readAnonymous() {
-        final List<AmberAnonymous> result = Lists.newArrayList();
+        final List<AmberAnonymous> result = new ArrayList<>();
         final Result<Record> queryResult = context.select().from(AMBERANONYMOUS).fetch();
 
         for (Record record : queryResult) {
@@ -270,7 +270,7 @@ class AmberDAO {
                 AMBERSAMPLE.SITE99,
                 AMBERSAMPLE.SITE100);
 
-        List<Object> collection = Lists.newArrayList();
+        List<Object> collection = new ArrayList<>();
         collection.add(new Timestamp(new Date().getTime()));
         collection.add(identity.sampleId());
         for (final byte entry : entries) {

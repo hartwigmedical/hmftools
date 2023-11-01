@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.pave;
 
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.effectsToString;
-import static com.hartwig.hmftools.pave.PaveConstants.DELIM;
-import static com.hartwig.hmftools.pave.PaveConstants.ITEM_DELIM;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -102,14 +102,14 @@ public class VariantTransImpact
     }
     public String effectsToCsv() { return effectsToString(mEffects, ITEM_DELIM); }
 
-    public static String csvHeader()
+    public static String tsvHeader()
     {
-        return "TransId,Canonical,IsCoding,Strand,SpliceRegion,SpliceImpact,PhasedInframe,Realigned,Effects";
+        return "TransId\tCanonical\tIsCoding\tStrand\tSpliceRegion\tSpliceImpact\tPhasedInframe\tRealigned\tEffects";
     }
 
-    public String toCsv()
+    public String toTsv()
     {
-        StringJoiner sj = new StringJoiner(DELIM);
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
 
         sj.add(TransData.TransName);
         sj.add(String.valueOf(TransData.IsCanonical));

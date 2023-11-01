@@ -11,6 +11,8 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.config.ConfigItemType;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -24,6 +26,27 @@ public class TaskExecutor
     public static final String THREADS = "threads";
     private static final int DEFAULT_THREAD_COUNT = 1;
 
+    private static String threadDescription(int defaultCount)
+    {
+        if(defaultCount <= 0)
+            return format("Number of threads, default %d = not multi-threaded", defaultCount);
+        else
+            return format("Number of threads, default %d", defaultCount);
+    }
+
+    public static void addThreadOptions(final ConfigBuilder configBuilder)
+    {
+        addThreadOptions(configBuilder, DEFAULT_THREAD_COUNT);
+    }
+
+    public static void addThreadOptions(final ConfigBuilder configBuilder, final int defaultCount)
+    {
+        configBuilder.addConfigItem(
+                ConfigItemType.INTEGER, THREADS, false, threadDescription(defaultCount), String.valueOf(defaultCount));
+    }
+
+    public static int parseThreads(final ConfigBuilder configBuilder) { return configBuilder.getInteger(THREADS); }
+
     public static void addThreadOptions(final Options options)
     {
         addThreadOptions(options, DEFAULT_THREAD_COUNT);
@@ -31,10 +54,7 @@ public class TaskExecutor
 
     public static void addThreadOptions(final Options options, final int defaultCount)
     {
-        if(defaultCount <= 0)
-            options.addOption(THREADS, true, format("Number of threads, default %d = not multi-threaded", defaultCount));
-        else
-            options.addOption(THREADS, true, format("Number of threads, default %d", defaultCount));
+        options.addOption(THREADS, true, threadDescription(defaultCount));
     }
 
     public static int parseThreads(final CommandLine cmd)
@@ -59,8 +79,9 @@ public class TaskExecutor
                 }
                 catch(Exception e)
                 {
-                    LOGGER.error("task execution error: {} stack: {}", e.toString());
+                    LOGGER.error("task execution error: {}", e.toString());
                     e.printStackTrace();
+                    return false;
                 }
             }
 
@@ -96,7 +117,7 @@ public class TaskExecutor
     {
         try
         {
-            for (FutureTask futureTask : taskList)
+            for(FutureTask futureTask : taskList)
             {
                 futureTask.get();
             }

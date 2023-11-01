@@ -1,23 +1,22 @@
 package com.hartwig.hmftools.purple.somatic;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.pow;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
+import static com.hartwig.hmftools.common.variant.SomaticLikelihood.HIGH;
+import static com.hartwig.hmftools.common.variant.SomaticLikelihood.LOW;
+import static com.hartwig.hmftools.common.variant.SomaticLikelihood.MEDIUM;
 import static com.hartwig.hmftools.common.variant.PaveVcfTags.GNOMAD_FREQ;
+import static com.hartwig.hmftools.common.variant.PurpleVcfTags.PANEL_SOMATIC_LIKELIHOOD;
 import static com.hartwig.hmftools.common.variant.VariantType.SNP;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsDouble;
-import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.CODING_BASES_PER_GENOME;
 import static com.hartwig.hmftools.purple.config.TargetRegionsData.TMB_GENE_EXCLUSIONS;
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
+import com.hartwig.hmftools.common.variant.SomaticLikelihood;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.purple.config.TargetRegionsData;
-
-import htsjdk.variant.vcf.VCFConstants;
 
 public class TumorMutationalLoad
 {
@@ -55,68 +54,55 @@ public class TumorMutationalLoad
         return calcTml;
     }
 
-    public void processVariant(final SomaticVariant variant, double purity)
+    public void processVariant(final SomaticVariant variant)
     {
-        final VariantImpact variantImpact = variant.variantImpact();
-
-        boolean isUnclearGermline = false;
-
         if(mTargetRegions.hasTargetRegions())
         {
-            if(!mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
-                return;
-
-            if(variant.isHotspot())
-                return;
-
-            if(variant.type() != SNP)
-                return;
-
-            if(variantImpact.WorstCodingEffect == NONE || variantImpact.WorstCodingEffect == UNDEFINED)
-                return;
-
-            if(TMB_GENE_EXCLUSIONS.contains(variantImpact.CanonicalGeneName))
-                return;
-
-            double gnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, 0);
-            if(gnomadFreq > 0)
-                return;
-
-            double rawAf = getGenotypeAttributeAsDouble(variant.context().getGenotype(0), VCFConstants.ALLELE_FREQUENCY_KEY, 0);
-
-            if(rawAf > mTargetRegions.maxAF())
-                return;
-
-            // - VCN <= Major Allele CN + min(20%,0.5)
-            double variantCn = variant.copyNumber(); // of the segment it's on
-            double segmentCn = variant.decorator().adjustedCopyNumber(); // of the segment it's on
-            double minorAlleleCn = variant.decorator().minorAlleleCopyNumber();
-            double majorAlleleCn = segmentCn - minorAlleleCn;
-
-            /*
-            double diffThreshold = min(TARGET_REGIONS_CN_DIFF, majorAlleleCn * TARGET_REGIONS_CN_PERC_DIFF);
-
-            if(variantCn > majorAlleleCn + diffThreshold)
-               return;
-            */
-
-            double refPurity = 1 - purity;
-
-            double denom = 2 * refPurity + segmentCn * purity;
-            double minorVAF = (refPurity + minorAlleleCn * purity) / denom;
-            double majorVAF = (refPurity + majorAlleleCn * purity) / denom;
-
-            isUnclearGermline = abs(majorVAF - rawAf) < mTargetRegions.maxAFDiff() || abs(minorVAF - rawAf) < mTargetRegions.maxAFDiff();
-
-            PPL_LOGGER.trace(format("var(%s) af(%.2f) copyNumber(vcn=%.2f segCn=%.2f majorCn=%.2f minorVaf=%.2f majorVaf=%.2f) status(%s) for target-regions TMB",
-                    variant.toString(), rawAf, variantCn, segmentCn, majorAlleleCn, minorVAF, majorVAF,
-                    isUnclearGermline ? "unclear" : "somatic"));
+            processTargetedRegionVariant(variant);
+            return;
         }
 
-        if(isUnclearGermline)
-            ++mUnclearVariants;
-        else
+        ++mBurden;
+
+        if(variant.variantImpact().WorstCodingEffect.equals(CodingEffect.MISSENSE))
+            mLoad++;
+    }
+
+    private void processTargetedRegionVariant(final SomaticVariant variant)
+    {
+        // test criteria to count a variant towards TMB
+        final VariantImpact variantImpact = variant.variantImpact();
+
+        if(!mTargetRegions.inTargetRegions(variant.chromosome(), variant.position()))
+            return;
+
+        if(variant.isHotspot())
+            return;
+
+        if(variant.type() != SNP)
+            return;
+
+        if(variantImpact.WorstCodingEffect == NONE || variantImpact.WorstCodingEffect == UNDEFINED)
+            return;
+
+        if(TMB_GENE_EXCLUSIONS.contains(variantImpact.CanonicalGeneName))
+            return;
+
+        double gnomadFreq = variant.context().getAttributeAsDouble(GNOMAD_FREQ, 0);
+        if(gnomadFreq > 0)
+            return;
+
+        SomaticLikelihood somaticLikelihood = variant.context().hasAttribute(PANEL_SOMATIC_LIKELIHOOD) ?
+                SomaticLikelihood.valueOf(variant.context().getAttributeAsString(PANEL_SOMATIC_LIKELIHOOD, "")) : LOW;
+
+        if(somaticLikelihood == HIGH)
+        {
             ++mBurden;
+        }
+        else if(somaticLikelihood == MEDIUM)
+        {
+            ++mUnclearVariants;
+        }
 
         if(variantImpact.WorstCodingEffect.equals(CodingEffect.MISSENSE))
             mLoad++;

@@ -20,7 +20,7 @@ public class GermlinePathogenicEnrichment
     public static void processVariant(final VariantContext context)
     {
         final PathogenicSummary summary = PathogenicSummaryFactory.fromContext(context);
-        context.getCommonInfo().putAttribute(PATHOGENICITY, summary.pathogenicity().toString());
+        context.getCommonInfo().putAttribute(PATHOGENICITY, summary.Status.toString());
     }
 
     public static VCFHeader enrichHeader(final VCFHeader template)

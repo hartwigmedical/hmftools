@@ -1,11 +1,10 @@
 package com.hartwig.hmftools.id;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.id.HmfIdConfig.DATA_DELIM;
 import static com.hartwig.hmftools.id.HmfIdConfig.ID_LOGGER;
-import static com.hartwig.hmftools.id.HmfIdConfig.addCmdLineArgs;
+import static com.hartwig.hmftools.id.HmfIdConfig.addConfig;
 import static com.hartwig.hmftools.id.SampleData.DELETED;
 import static com.hartwig.hmftools.id.SampleData.PATIENT_ID;
 import static com.hartwig.hmftools.id.SampleData.SAMPLE_HASH;
@@ -24,13 +23,9 @@ import java.util.stream.Collectors;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
-import com.hartwig.hmftools.common.amber.AmberPatient;
+import com.hartwig.hmftools.patientdb.amber.AmberPatient;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 public class HmfIdGenerator
 {
@@ -38,11 +33,10 @@ public class HmfIdGenerator
 
     private final DatabaseAccess mDbAccess;
 
-
-    public HmfIdGenerator(final CommandLine cmd)
+    public HmfIdGenerator(final ConfigBuilder configBuilder)
     {
-        mConfig = new HmfIdConfig(cmd);
-        mDbAccess = DatabaseAccess.createDatabaseAccess(cmd);
+        mConfig = new HmfIdConfig(configBuilder);
+        mDbAccess = DatabaseAccess.createDatabaseAccess(configBuilder);
     }
 
     public void run() throws IOException
@@ -308,16 +302,14 @@ public class HmfIdGenerator
         }
     }
 
-    public static void main(String[] args) throws IOException, ParseException
+    public static void main(String[] args) throws IOException
     {
-        Options options = new Options();
-        addCmdLineArgs(options);
+        ConfigBuilder configBuilder = new ConfigBuilder("HmfIdGenerator");
+        addConfig(configBuilder);
 
-        CommandLine cmd = new DefaultParser().parse(options, args);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
-
-        HmfIdGenerator generator = new HmfIdGenerator(cmd);
+        HmfIdGenerator generator = new HmfIdGenerator(configBuilder);
         generator.run();
     }
 }

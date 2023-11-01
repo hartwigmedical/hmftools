@@ -30,6 +30,21 @@ public final class SageVcfTags
     public static final String REPEAT_SEQUENCE_FLAG = "REP_S";
     private static final String REPEAT_FLAG_DESCRIPTION = "Repeat sequence";
 
+    public static final String READ_CONTEXT_COUNT = "RC_CNT";
+    public static final String READ_CONTEXT_COUNT_DESCRIPTION =
+            "Read context counts [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+
+    public static final String READ_CONTEXT_QUALITY = "RC_QUAL";
+    public static final String READ_CONTEXT_QUALITY_DESCRIPTION =
+            "Read context quality [Full, Partial, Core, Realigned, Alt, Reference, Total]";
+
+    public static final String UMI_TYPE_COUNTS = "UMI_CNT";
+    public static final String UMI_TYPE_COUNTS_DESCRIPTION =
+            "UMI type counts [RefNone,RefSingle,RefDualStrand,AltNone,AltSingle,AltDualStrand,Other]";
+    public static final int UMI_TYPE_COUNT = 6;
+
+    public static final String LIST_SEPARATOR = ",";
+
     public static VCFHeader addMetaData(@NotNull final VCFHeader header)
     {
         header.addMetaDataLine(new VCFInfoHeaderLine(TIER, 1, VCFHeaderLineType.String, TIER_DESCRIPTION));
@@ -52,5 +67,4 @@ public final class SageVcfTags
 
         return template;
     }
-
 }

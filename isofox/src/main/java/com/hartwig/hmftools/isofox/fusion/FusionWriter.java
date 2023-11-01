@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.isofox.fusion;
 
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.rna.GeneFusionFile.PASS_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.rna.GeneFusionFile.UNFILTERED_FUSION_FILE_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
@@ -25,9 +27,6 @@ public class FusionWriter
     private final boolean mWriteFragments;
 
     private int mNextFusionId;
-
-    public static final String RAW_FUSION_FILE_ID = "fusions.csv";
-    public static final String PASS_FUSION_FILE_ID = "pass_fusions.csv";
 
     public FusionWriter(final IsofoxConfig config)
     {
@@ -61,7 +60,7 @@ public class FusionWriter
 
         try
         {
-            mFusionWriter = createBufferedWriter(mConfig.formOutputFile(RAW_FUSION_FILE_ID), false);
+            mFusionWriter = createBufferedWriter(mConfig.formOutputFile(UNFILTERED_FUSION_FILE_ID), false);
             mFusionWriter.write(FusionData.csvHeader(false));
             mFusionWriter.newLine();
 

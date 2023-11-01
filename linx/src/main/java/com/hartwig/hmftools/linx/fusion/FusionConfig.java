@@ -1,13 +1,11 @@
 package com.hartwig.hmftools.linx.fusion;
 
-import static com.hartwig.hmftools.common.fusion.KnownFusionCache.KNOWN_FUSIONS_FILE;
-import static com.hartwig.hmftools.linx.LinxConfig.configPathValid;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.DEFAULT_PRE_GENE_PROMOTOR_DISTANCE;
+import static com.hartwig.hmftools.common.fusion.KnownFusionCache.addKnownFusionFileOption;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.PRE_GENE_PROMOTOR_DISTANCE;
-import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FILE_SOURCE;
 import static com.hartwig.hmftools.linx.fusion.rna.RnaFusionMapper.RNA_FUSIONS_FILE;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
 public class FusionConfig
 {
@@ -17,7 +15,7 @@ public class FusionConfig
 
     public static boolean LOG_INVALID_REASON = false;
 
-    // dynmamic parameters
+    // dynamic parameters
     public boolean AllowExonSkipping;
     public boolean RequirePhaseMatch;
     public boolean RequireUpstreamBiotypes;
@@ -30,24 +28,16 @@ public class FusionConfig
     public static final String WRITE_NEO_EPITOPES = "write_neo_epitopes";
     private static final String WRITE_ALL_VIS_FUSIONS = "write_all_vis_fusions";
 
-    public static boolean validConfig(final CommandLine cmd)
+    public FusionConfig(final ConfigBuilder configBuilder)
     {
-        return configPathValid(cmd, RNA_FUSIONS_FILE) && configPathValid(cmd, KNOWN_FUSIONS_FILE);
-    }
+        PRE_GENE_PROMOTOR_DISTANCE = configBuilder.getInteger(PRE_GENE_BREAKEND_DISTANCE);
+        LOG_INVALID_REASON = configBuilder.hasFlag(LOG_INVALID_REASONS);
 
-    public FusionConfig(final CommandLine cmd)
-    {
-        if(cmd.hasOption(PRE_GENE_BREAKEND_DISTANCE))
-        {
-            PRE_GENE_PROMOTOR_DISTANCE = Integer.parseInt(cmd.getOptionValue(PRE_GENE_BREAKEND_DISTANCE));
-        }
-
-        LogReportableOnly = cmd.hasOption(LOG_REPORTABLE_ONLY);
-        RequirePhaseMatch = cmd.hasOption(SKIP_UNPHASED_FUSIONS);
-        LogAllPotentials = cmd.hasOption(LOG_ALL_POTENTIALS);
-        WriteAllVisFusions = cmd.hasOption(WRITE_ALL_VIS_FUSIONS);
+        LogReportableOnly = configBuilder.hasFlag(LOG_REPORTABLE_ONLY);
+        RequirePhaseMatch = configBuilder.hasFlag(SKIP_UNPHASED_FUSIONS);
+        LogAllPotentials = configBuilder.hasFlag(LOG_ALL_POTENTIALS);
+        WriteAllVisFusions = configBuilder.hasFlag(WRITE_ALL_VIS_FUSIONS);
         RequireUpstreamBiotypes = true;
-        LOG_INVALID_REASON = cmd.hasOption(LOG_INVALID_REASONS);
         AllowExonSkipping = true;
     }
 
@@ -61,18 +51,21 @@ public class FusionConfig
         RequireUpstreamBiotypes = true;
     }
 
-    public static void addCmdLineArgs(Options options)
+    public static void addConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(PRE_GENE_BREAKEND_DISTANCE, true, "Distance after to a breakend to consider in a gene");
-        options.addOption(SKIP_UNPHASED_FUSIONS, false, "Skip unphased fusions");
-        options.addOption(WRITE_NEO_EPITOPES, false, "Search for neo-epitopes from fusions");
+        addKnownFusionFileOption(configBuilder);
 
-        options.addOption(RNA_FUSIONS_FILE, true, "Sample RNA fusion data to match vs Linx fusions");
-        options.addOption(RNA_FILE_SOURCE, true, "RNA fusion source: ISOFOX, ARRIBA or STARFUSION");
+        configBuilder.addInteger(
+                PRE_GENE_BREAKEND_DISTANCE, "Distance after to a breakend to consider in a gene", DEFAULT_PRE_GENE_PROMOTOR_DISTANCE);
 
-        options.addOption(LOG_REPORTABLE_ONLY, false, "Only write out reportable fusions");
-        options.addOption(LOG_ALL_POTENTIALS, false, "Log all potential fusions");
-        options.addOption(LOG_INVALID_REASONS, false, "Log reasons for not making a fusion between transcripts");
-        options.addOption(WRITE_ALL_VIS_FUSIONS, false, "Write all fusions including non-reportable for visualiser");
+        configBuilder.addFlag(SKIP_UNPHASED_FUSIONS, "Skip unphased fusions");
+        configBuilder.addFlag(WRITE_NEO_EPITOPES, "Search for neo-epitopes from fusions");
+
+        configBuilder.addConfigItem(RNA_FUSIONS_FILE, "Sample RNA fusion data to match vs Linx fusions");
+
+        configBuilder.addFlag(LOG_REPORTABLE_ONLY, "Only write out reportable fusions");
+        configBuilder.addFlag(LOG_ALL_POTENTIALS, "Log all potential fusions");
+        configBuilder.addFlag(LOG_INVALID_REASONS, "Log reasons for not making a fusion between transcripts");
+        configBuilder.addFlag(WRITE_ALL_VIS_FUSIONS, "Write all fusions including non-reportable for visualiser");
     }
 }

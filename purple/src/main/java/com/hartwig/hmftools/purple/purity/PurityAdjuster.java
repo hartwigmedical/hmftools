@@ -1,25 +1,20 @@
 package com.hartwig.hmftools.purple.purity;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosome;
 import com.hartwig.hmftools.common.genome.chromosome.CobaltChromosomes;
-import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.purple.Gender;
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.jetbrains.annotations.NotNull;
 
 public class PurityAdjuster
 {
-    private final double mPurity;
-    private final double mNormFactor;
+    private double mPurity;
+    private double mNormFactor;
 
-    private final Map<String, Double> mObservedRatioMap;
-    private final Gender mGender;
+    private final Map<String,Double> mObservedRatioMap;
 
     public PurityAdjuster(final double purity, final double normFactor, final CobaltChromosomes cobaltChromosomes)
     {
@@ -28,23 +23,27 @@ public class PurityAdjuster
 
         mObservedRatioMap = cobaltChromosomes.chromosomes().stream()
                 .collect(Collectors.toMap(CobaltChromosome::contig, CobaltChromosome::actualRatio));
-
-        mGender = cobaltChromosomes.gender();
     }
 
-    public PurityAdjuster(final Gender gender, final double purity, final double normFactor)
+    public PurityAdjuster(final Map<String,Double> observedRatioMap, final double purity, final double normFactor)
     {
         mPurity = purity;
         mNormFactor = normFactor;
-        mObservedRatioMap = null;
-        mGender = gender;
+        mObservedRatioMap = observedRatioMap;
     }
 
+    public PurityAdjuster(final Map<String,Double> observedRatioMap)
+    {
+        this(observedRatioMap, 0, 0);
+    }
+
+    public void setPurity(double purity) { mPurity = purity; }
     public double purity()
     {
         return mPurity;
     }
 
+    public void setNormFactor(double normFactor) { mNormFactor = normFactor; }
     public double normFactor()
     {
         return mNormFactor;
@@ -90,11 +89,7 @@ public class PurityAdjuster
 
     private double germlineRatio(final String chromosome)
     {
-        if(mObservedRatioMap != null)
-            return mObservedRatioMap.getOrDefault(chromosome, 0d);
-
-        // for testing only
-        return HumanChromosome.fromString(chromosome).isDiploid(mGender) ? 1 : 0.5;
+        return mObservedRatioMap.getOrDefault(chromosome, 0d);
     }
 
     double purityAdjustedFrequency(final double normalCopyNumber, final double normalPloidy, final double tumorCopyNumber,

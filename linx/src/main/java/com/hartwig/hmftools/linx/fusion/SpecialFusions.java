@@ -2,6 +2,7 @@ package com.hartwig.hmftools.linx.fusion;
 
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_DOWN;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.FS_UP;
+import static com.hartwig.hmftools.common.fusion.FusionCommon.NEG_STRAND;
 import static com.hartwig.hmftools.common.fusion.FusionCommon.POS_STRAND;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.IG_KNOWN_PAIR;
 import static com.hartwig.hmftools.common.fusion.KnownFusionType.PROMISCUOUS_ENHANCER_TARGET;
@@ -14,8 +15,7 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.switchIndex;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.ENHANCER_PROMISCUOUS_MIN_DISTANCE;
 import static com.hartwig.hmftools.linx.fusion.FusionConstants.MAX_UPSTREAM_DISTANCE_IG_KNOWN;
-import static com.hartwig.hmftools.linx.fusion.FusionReportability.determineReportability;
-import static com.hartwig.hmftools.linx.fusion.ReportableReason.OK;
+import static com.hartwig.hmftools.linx.fusion.FusionReportability.isReportable;
 
 import java.util.List;
 import java.util.Map;
@@ -29,10 +29,9 @@ import com.hartwig.hmftools.common.fusion.KnownFusionData;
 import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
-import com.hartwig.hmftools.common.utils.sv.ChrBaseRegion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.linx.gene.BreakendGeneData;
 import com.hartwig.hmftools.linx.gene.BreakendTransData;
-import com.hartwig.hmftools.linx.types.SglMapping;
 import com.hartwig.hmftools.linx.types.SvBreakend;
 import com.hartwig.hmftools.linx.types.SvCluster;
 import com.hartwig.hmftools.linx.types.SvVarData;
@@ -107,9 +106,6 @@ public class SpecialFusions
     {
         List<GeneFusion> fusions = Lists.newArrayList();
 
-        // always report SVs by themselves
-        final List<SvVarData> knownPairSglCandidates = Lists.newArrayList();
-
         List<KnownFusionData> enhancerTargets = mKnownFusionCache.getDataByType(PROMISCUOUS_ENHANCER_TARGET);
 
         if(enhancerTargets.isEmpty())
@@ -117,9 +113,6 @@ public class SpecialFusions
 
         for(final SvVarData var : svList)
         {
-            // if(var.isSglBreakend() && !var.getGenesList(true).isEmpty())
-            //    knownPairSglCandidates.add(var);
-
             if(var.isSglBreakend())
                 continue;
 
@@ -136,18 +129,18 @@ public class SpecialFusions
 
         }
 
-        /*
-        if(!knownPairSglCandidates.isEmpty())
-            fusions.addAll(findKnownPairSglFusions(knownPairSglCandidates));
-        */
-
         return fusions;
     }
 
     private GeneFusion formEnhancerTargetFusion(
             final KnownFusionData knownFusionData, final SvVarData var, final SvBreakend breakend, int seIndex)
     {
-        if(!knownFusionData.matchesGeneRegion(breakend.chromosome(), breakend.position(), breakend.orientation()))
+        // note that these are configured to have the 'gene strand' being the required orientation of the 3' breakend
+        // whereas the gene strand is actually the opposite
+        byte requiredOrientation = knownFusionData.geneStrand();
+        byte geneStrand = knownFusionData.geneStrand() == POS_STRAND ? NEG_STRAND : POS_STRAND;
+
+        if(breakend.orientation() != requiredOrientation || !knownFusionData.withinGeneRegion(breakend.chromosome(), breakend.position()))
             return null;
 
         if(var.type() != BND && var.length() < ENHANCER_PROMISCUOUS_MIN_DISTANCE)
@@ -160,12 +153,9 @@ public class SpecialFusions
         boolean otherIsStart = seIndex == SE_END;
         List<BreakendGeneData> upstreamGenes = var.getGenesList(otherIsStart);
 
-        if(!upstreamGenes.isEmpty())
-        {
-            BreakendGeneData gene = upstreamGenes.get(0);
-            upTrans = gene.canonical();
-        }
-        else
+        upTrans = upstreamGenes.stream().map(x -> x.canonical()).filter(x -> x != null).findFirst().orElse(null);
+
+        if(upTrans == null)
         {
             GeneData geneData = new GeneData(
                     "", "", otherBreakend.chromosome(), POS_STRAND,
@@ -200,14 +190,14 @@ public class SpecialFusions
         {
             ChrBaseRegion geneRegion = knownFusionData.geneRegion();
             GeneData geneData = new GeneData(
-                    "", knownFusionData.ThreeGene, geneRegion.chromosome(), knownFusionData.geneStrand(),
+                    "", knownFusionData.ThreeGene, geneRegion.chromosome(), geneStrand,
                     geneRegion.start(), geneRegion.end(), "");
 
             BreakendGeneData gene = new BreakendGeneData(var.id(), seIndex == SE_START, geneData);
             gene.setSvData(var.getSvData(), var.jcn());
 
             TranscriptData transData = new TranscriptData(
-                    0, "", knownFusionData.ThreeGene, false, knownFusionData.geneStrand(),
+                    0, "", knownFusionData.ThreeGene, false, geneStrand,
                     geneRegion.start(), geneRegion.end(), null, null, "");
 
             BreakendTransData transcript = new BreakendTransData(
@@ -319,7 +309,7 @@ public class SpecialFusions
 
                 if(mFusionConfig.LogReportableOnly)
                 {
-                    fusions = fusions.stream().filter(x -> determineReportability(x) == OK).collect(Collectors.toList());
+                    fusions = fusions.stream().filter(x -> isReportable(x)).collect(Collectors.toList());
                 }
 
                 final SvCluster cluster = sgl1.getCluster();

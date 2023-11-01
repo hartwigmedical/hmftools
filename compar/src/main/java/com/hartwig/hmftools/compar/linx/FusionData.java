@@ -1,19 +1,19 @@
 package com.hartwig.hmftools.compar.linx;
 
-import static com.hartwig.hmftools.compar.Category.FUSION;
-import static com.hartwig.hmftools.compar.CommonUtils.FLD_REPORTED;
-import static com.hartwig.hmftools.compar.DiffFunctions.checkDiff;
-import static com.hartwig.hmftools.compar.MismatchType.VALUE;
+import static com.hartwig.hmftools.compar.common.Category.FUSION;
+import static com.hartwig.hmftools.compar.common.CommonUtils.FLD_REPORTED;
+import static com.hartwig.hmftools.compar.common.DiffFunctions.checkDiff;
+import static com.hartwig.hmftools.compar.common.MismatchType.VALUE;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.linx.LinxFusion;
-import com.hartwig.hmftools.compar.Category;
+import com.hartwig.hmftools.compar.common.Category;
 import com.hartwig.hmftools.compar.ComparableItem;
-import com.hartwig.hmftools.compar.DiffThresholds;
-import com.hartwig.hmftools.compar.MatchLevel;
-import com.hartwig.hmftools.compar.Mismatch;
+import com.hartwig.hmftools.compar.common.DiffThresholds;
+import com.hartwig.hmftools.compar.common.MatchLevel;
+import com.hartwig.hmftools.compar.common.Mismatch;
 
 public class FusionData implements ComparableItem
 {
@@ -82,7 +82,7 @@ public class FusionData implements ComparableItem
 
         checkDiff(diffs, FLD_REPORTED, Fusion.reported(), otherFusion.Fusion.reported());
         checkDiff(diffs, FLD_REPORTED_TYPE, Fusion.reportedType(), otherFusion.Fusion.reportedType());
-            checkDiff(diffs, FLD_PHASED, Fusion.phased().toString(), otherFusion.Fusion.phased().toString());
+        checkDiff(diffs, FLD_PHASED, Fusion.phased().toString(), otherFusion.Fusion.phased().toString());
         checkDiff(diffs, FLD_LIKELIHOOD, Fusion.likelihood().toString(), otherFusion.Fusion.likelihood().toString());
         checkDiff(diffs, FLD_EXON_UP, Fusion.fusedExonUp(), otherFusion.Fusion.fusedExonUp());
         checkDiff(diffs, FLD_EXON_DOWN, Fusion.fusedExonDown(), otherFusion.Fusion.fusedExonDown());

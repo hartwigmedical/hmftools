@@ -7,15 +7,15 @@ import static com.hartwig.hmftools.common.purple.GermlineStatus.HET_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.HOM_DELETION;
 import static com.hartwig.hmftools.common.purple.GermlineStatus.UNKNOWN;
 import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.ALLELE_FRACTION;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READPAIR_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REFERENCE_BREAKEND_READ_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKEND_COVERAGE;
-import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.VARIANT_FRAGMENT_BREAKPOINT_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READPAIR_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.REF_READ_COVERAGE;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SGL_FRAGMENT_COUNT;
+import static com.hartwig.hmftools.common.sv.StructuralVariantFactory.SV_FRAGMENT_COUNT;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DEL;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.DUP;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INS;
 import static com.hartwig.hmftools.common.sv.StructuralVariantType.INV;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -34,20 +34,17 @@ import java.util.Optional;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
-import com.hartwig.hmftools.common.sv.EnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariant;
 import com.hartwig.hmftools.common.sv.ImmutableEnrichedStructuralVariantLeg;
 import com.hartwig.hmftools.common.sv.StructuralVariant;
 import com.hartwig.hmftools.common.sv.StructuralVariantHeader;
 import com.hartwig.hmftools.common.sv.StructuralVariantLeg;
-import com.hartwig.hmftools.common.sv.StructuralVariantType;
+import com.hartwig.hmftools.common.variant.GenotypeIds;
+import com.hartwig.hmftools.purple.config.PurpleConfig;
 import com.hartwig.hmftools.purple.config.ReferenceData;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.purple.sv.StructuralRefContextEnrichment;
 import com.hartwig.hmftools.purple.sv.VariantContextCollection;
-
-import org.apache.logging.log4j.util.Strings;
-import org.jetbrains.annotations.Nullable;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.tribble.index.tabix.TabixFormat;
@@ -62,10 +59,10 @@ import htsjdk.variant.vcf.VCFHeader;
 
 public class GermlineSvCache
 {
-    private final String mOutputVcfFilename;
     private final Optional<VCFHeader> mVcfHeader;
     private final VariantContextCollection mVariantCollection;
     private final IndexedFastaSequenceFile mRefGenomeFile;
+    private final GenotypeIds mGenotypeIds;
 
     private final PurityContext mPurityContext;
     private final List<ObservedRegion> mFittedRegions;
@@ -74,16 +71,16 @@ public class GermlineSvCache
     public GermlineSvCache()
     {
         mVcfHeader = Optional.empty();
-        mOutputVcfFilename = Strings.EMPTY;
         mVariantCollection = new VariantContextCollection(null);
         mRefGenomeFile = null;
         mPurityContext = null;
         mFittedRegions = null;
         mCopyNumbers = null;
+        mGenotypeIds = null;
     }
 
     public GermlineSvCache(
-            final String version, final String inputVcf, final String outputVcf, final ReferenceData referenceData,
+            final String version, final String inputVcf, final ReferenceData referenceData, final PurpleConfig config,
             final List<ObservedRegion> fittedRegions, final List<PurpleCopyNumber> copyNumbers, final PurityContext purityContext)
     {
         mPurityContext = purityContext;
@@ -91,8 +88,10 @@ public class GermlineSvCache
         mCopyNumbers = copyNumbers;
 
         final VCFFileReader vcfReader = new VCFFileReader(new File(inputVcf), false);
-        mOutputVcfFilename = outputVcf;
         mVcfHeader = Optional.of(generateOutputHeader(version, vcfReader.getFileHeader()));
+
+        mGenotypeIds = mVcfHeader.isPresent() ? GenotypeIds.fromVcfHeader(mVcfHeader.get(), config.ReferenceId, config.TumorId) : null;
+
         mVariantCollection = new VariantContextCollection(mVcfHeader.get());
         mRefGenomeFile = referenceData.RefGenome;
 
@@ -108,15 +107,15 @@ public class GermlineSvCache
 
     public List<StructuralVariant> variants() { return mVariantCollection.variants(); }
 
-    public void write()
+    public void write(final String outputVcf)
     {
-        if(!mVcfHeader.isPresent() || mOutputVcfFilename.isEmpty())
+        if(!mVcfHeader.isPresent() || outputVcf.isEmpty())
             return;
 
         try
         {
             final VariantContextWriter writer = new VariantContextWriterBuilder()
-                    .setOutputFile(mOutputVcfFilename)
+                    .setOutputFile(outputVcf)
                     .setReferenceDictionary(mVcfHeader.get().getSequenceDictionary())
                     .setIndexCreator(new TabixIndexCreator(mVcfHeader.get().getSequenceDictionary(), new TabixFormat()))
                     .setOutputFileType(VariantContextWriterBuilder.OutputType.BLOCK_COMPRESSED_VCF)
@@ -152,7 +151,7 @@ public class GermlineSvCache
         }
         catch(Exception e)
         {
-            PPL_LOGGER.error("failed to write germline SV VCF({}): {}", mOutputVcfFilename, e.toString());
+            PPL_LOGGER.error("failed to write germline SV VCF({}): {}", outputVcf, e.toString());
             e.printStackTrace();
             System.exit(1);
         }
@@ -213,12 +212,14 @@ public class GermlineSvCache
 
                 double purity = mPurityContext.bestFit().purity();
 
-                if(context.getGenotypes().size() > 1 && purity > 0)
+                if(mGenotypeIds.hasReference() && mGenotypeIds.hasTumor() && purity > 0)
                 {
                     // [tumorAF*[2*(1-purity)+adjCNStart*purity] -refAF*2*(1-purity)]/adjCNStart/purity = adjAFStart
                     // rearranged from tumorAF = [refAF*2*(1-purity) + adjAFStart*purity*adjCNStart] / [2*(1-purity) + purity*adjCNStart]
-                    Genotype refGenotype = context.getGenotype(0);
-                    Genotype tumorGenotype = context.getGenotype(1);
+
+                    // a check has already been made that the germline VCF has the tumor ID in genotype 0 and the ref in genotype 1
+                    Genotype refGenotype = context.getGenotype(mGenotypeIds.ReferenceOrdinal);
+                    Genotype tumorGenotype = context.getGenotype(mGenotypeIds.TumorOrdinal);
 
                     double refAF = getOrCalculateAlleleFrequency(refGenotype);
                     double tumorAF = getOrCalculateAlleleFrequency(tumorGenotype);
@@ -250,11 +251,11 @@ public class GermlineSvCache
         if(genotype.hasExtendedAttribute(ALLELE_FRACTION))
             return getGenotypeAttributeAsDouble(genotype, ALLELE_FRACTION, 0);
 
-        int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READ_COVERAGE, 0)
-                + getGenotypeAttributeAsInt(genotype, REFERENCE_BREAKEND_READPAIR_COVERAGE, 0);
+        int totalReadCoverage = getGenotypeAttributeAsInt(genotype, REF_READ_COVERAGE, 0)
+                + getGenotypeAttributeAsInt(genotype, REF_READPAIR_COVERAGE, 0);
 
-        int variantFrags = getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKPOINT_COVERAGE, 0) +
-                getGenotypeAttributeAsInt(genotype, VARIANT_FRAGMENT_BREAKEND_COVERAGE, 0);
+        int variantFrags = getGenotypeAttributeAsInt(genotype, SV_FRAGMENT_COUNT, 0) +
+                getGenotypeAttributeAsInt(genotype, SGL_FRAGMENT_COUNT, 0);
 
         double total = variantFrags + totalReadCoverage;
         return variantFrags / total;

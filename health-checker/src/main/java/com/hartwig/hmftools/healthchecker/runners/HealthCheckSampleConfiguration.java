@@ -1,33 +1,15 @@
 package com.hartwig.hmftools.healthchecker.runners;
 
-import java.util.Optional;
+public class HealthCheckSampleConfiguration
+{
+    public final String SampleName;
+    public final String WgsMetricsFile;
+    public final String FlagstatFile;
 
-import org.immutables.value.Value;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-@Value.Immutable
-public interface HealthCheckSampleConfiguration {
-
-    String sampleName();
-
-    String wgsMetricsFile();
-
-    String flagstatFile();
-
-    static HealthCheckSampleConfiguration of(@Nullable String sampleName, @Nullable String wgsMetricsFile, @Nullable String flagstatFile) {
-        if (sampleName != null) {
-            return ImmutableHealthCheckSampleConfiguration.builder()
-                    .sampleName(sampleName)
-                    .wgsMetricsFile(notnullOrThrow(wgsMetricsFile))
-                    .flagstatFile(notnullOrThrow(flagstatFile))
-                    .build();
-        }
-        return null;
-    }
-
-    @NotNull
-    static String notnullOrThrow(@Nullable final String wgsMetricsFile) {
-        return Optional.ofNullable(wgsMetricsFile).orElseThrow();
+    public HealthCheckSampleConfiguration(final String sampleName, final String wgsMetricsFile, final String flagstatFile)
+    {
+        SampleName = sampleName;
+        WgsMetricsFile = wgsMetricsFile;
+        FlagstatFile = flagstatFile;
     }
 }

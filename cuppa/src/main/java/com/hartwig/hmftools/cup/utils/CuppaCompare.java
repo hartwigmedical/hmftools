@@ -2,20 +2,21 @@ package com.hartwig.hmftools.cup.utils;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_ID;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.cup.CuppaConfig.CUP_LOGGER;
 import static com.hartwig.hmftools.cup.CuppaConfig.DATA_DELIM;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_CANCER_TYPE;
 import static com.hartwig.hmftools.cup.CuppaConfig.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.cup.CuppaConfig.REF_SAMPLE_DATA_FILE;
 import static com.hartwig.hmftools.cup.CuppaConfig.SUBSET_DELIM;
+import static com.hartwig.hmftools.cup.common.CupConstants.APP_NAME;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_BREAST_TRIPLE_NEGATIVE;
 import static com.hartwig.hmftools.cup.common.CupConstants.CANCER_TYPE_OTHER;
@@ -35,15 +36,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.cup.common.SampleResult;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.NotNull;
 
 public class CuppaCompare
@@ -66,37 +63,37 @@ public class CuppaCompare
     private static final String CLASSIFERS = "classifiers";
     private static final String ALLOW_CANCER_TYPE_REMAP = "allow_cancer_type_remap";
 
-    public CuppaCompare(final CommandLine cmd)
+    public CuppaCompare(final ConfigBuilder configBuilder)
     {
         mClassifiers = Lists.newArrayList();
 
-        if(cmd.hasOption(CLASSIFERS))
+        if(configBuilder.hasValue(CLASSIFERS))
         {
-            String[] classifers = cmd.getOptionValue(CLASSIFERS).split(SUBSET_DELIM);
+            String[] classifers = configBuilder.getValue(CLASSIFERS).split(SUBSET_DELIM);
             Arrays.stream(classifers).forEach(x -> mClassifiers.add(x));
         }
 
-        mFileOrig = cmd.getOptionValue(FILE_ORIG);
-        mFileNew = cmd.getOptionValue(FILE_NEW);
+        mFileOrig = configBuilder.getValue(FILE_ORIG);
+        mFileNew = configBuilder.getValue(FILE_NEW);
 
-        String outputDir = parseOutputDir(cmd);
+        String outputDir = parseOutputDir(configBuilder);
 
-        if(cmd.hasOption(REF_SAMPLE_DATA_FILE))
+        if(configBuilder.hasValue(REF_SAMPLE_DATA_FILE))
         {
-            mOrigSampleCancerTypes = loadSampleData(cmd.getOptionValue(REF_SAMPLE_DATA_FILE));
+            mOrigSampleCancerTypes = loadSampleData(configBuilder.getValue(REF_SAMPLE_DATA_FILE));
             mNewSampleCancerTypes = mOrigSampleCancerTypes;
             mAllowCancerTypeRemap = false;
         }
         else
         {
-            mOrigSampleCancerTypes = loadSampleData(cmd.getOptionValue(ORIG_SAMPLE_DATA));
-            mNewSampleCancerTypes = loadSampleData(cmd.getOptionValue(NEW_SAMPLE_DATA));
-            mAllowCancerTypeRemap = cmd.hasOption(ALLOW_CANCER_TYPE_REMAP);
+            mOrigSampleCancerTypes = loadSampleData(configBuilder.getValue(ORIG_SAMPLE_DATA));
+            mNewSampleCancerTypes = loadSampleData(configBuilder.getValue(NEW_SAMPLE_DATA));
+            mAllowCancerTypeRemap = configBuilder.hasFlag(ALLOW_CANCER_TYPE_REMAP);
         }
 
         mDataTypeResults = Maps.newHashMap();
 
-        mWriter = initialiseWriter(outputDir, cmd.getOptionValue(OUTPUT_ID), mAllowCancerTypeRemap);
+        mWriter = initialiseWriter(outputDir, configBuilder.getValue(OUTPUT_ID), mAllowCancerTypeRemap);
     }
 
     public void run()
@@ -428,25 +425,23 @@ public class CuppaCompare
         public double origRate() { return (BothCorrect + OrigCorrect) / (double)total(); }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        options.addOption(CLASSIFERS, true, "Classifiers to compare");
-        options.addOption(FILE_ORIG, true, "Original Cuppa results file");
-        options.addOption(FILE_NEW, true, "New Cuppa results file");
-        options.addOption(REF_SAMPLE_DATA_FILE, true, "Sample ref data file, if using the same for original and new results");
-        options.addOption(ORIG_SAMPLE_DATA, true, "Original sample ref data file");
-        options.addOption(NEW_SAMPLE_DATA, true, "New sample ref data file - optional if the same a original");
-        options.addOption(ALLOW_CANCER_TYPE_REMAP, false, "Allow cancer types to change for separate sample ref data files");
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
 
-        final CommandLineParser parser = new DefaultParser();
-        final CommandLine cmd = parser.parse(options, args);
+        configBuilder.addConfigItem(CLASSIFERS, "Classifiers to compare");
+        configBuilder.addPath(FILE_ORIG, true, "Original Cuppa results file");
+        configBuilder.addPath(FILE_NEW, true, "New Cuppa results file");
+        configBuilder.addPath(REF_SAMPLE_DATA_FILE, true, "Sample ref data file, if using the same for original and new results");
+        configBuilder.addPath(ORIG_SAMPLE_DATA, false, "Original sample ref data file");
+        configBuilder.addPath(NEW_SAMPLE_DATA, false, "New sample ref data file - optional if the same a original");
+        configBuilder.addFlag(ALLOW_CANCER_TYPE_REMAP, "Allow cancer types to change for separate sample ref data files");
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
 
-        setLogLevel(cmd);
+        configBuilder.checkAndParseCommandLine(args);
 
-        CuppaCompare cuppaCompare = new CuppaCompare(cmd);
+        CuppaCompare cuppaCompare = new CuppaCompare(configBuilder);
         cuppaCompare.run();
     }
 

@@ -1,13 +1,12 @@
 package com.hartwig.hmftools.isofox.expression.cohort;
 
-import static com.hartwig.hmftools.common.rna.RnaCommon.FLD_GENE_ID;
+import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_GENE_ID;
 import static com.hartwig.hmftools.common.stats.Percentiles.PERCENTILE_COUNT;
 import static com.hartwig.hmftools.common.stats.Percentiles.getPercentile;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.isofox.IsofoxConfig.ISF_LOGGER;
 import static com.hartwig.hmftools.isofox.results.ResultsWriter.DELIMITER;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -23,6 +22,7 @@ public class CohortGenePercentiles
 
     public static final String PAN_CANCER = "ALL";
     public static final String CANCER_TYPE_OTHER = "Other";
+    public static final double INVALID_VALUE = -1;
 
     public CohortGenePercentiles(final String cohortFile)
     {
@@ -99,7 +99,7 @@ public class CohortGenePercentiles
         final Map<String,Double> medianMap = mGeneMedians.get(geneId);
 
         if(medianMap == null || !medianMap.containsKey(cancerType))
-            return -1;
+            return INVALID_VALUE;
 
         return medianMap.get(cancerType);
     }
@@ -109,7 +109,7 @@ public class CohortGenePercentiles
         final Map<String,double[]> percentileMap = mGenePercentiles.get(geneId);
 
         if(percentileMap == null || !percentileMap.containsKey(cancerType))
-            return -1;
+            return INVALID_VALUE;
 
         return getPercentile(percentileMap.get(cancerType), sampleTpm);
     }

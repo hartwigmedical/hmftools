@@ -3,19 +3,19 @@ package com.hartwig.hmftools.purple.tools;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.ensemblcache.EnsemblDataCache.addEnsemblDir;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.REF_GENOME_VERSION_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addLoggingOptions;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.addSampleIdFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.loadSampleIdsFile;
-import static com.hartwig.hmftools.common.utils.ConfigUtils.setLogLevel;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.OUTPUT_DIR;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.addOutputOptions;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.closeBufferedWriter;
-import static com.hartwig.hmftools.common.utils.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeVersion;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.PURPLE_DIR_CFG;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.loadSampleIdsFile;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.setLogLevel;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.BufferedWriter;
@@ -31,14 +31,10 @@ import com.hartwig.hmftools.common.gene.GeneData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.purple.PurpleCopyNumber;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.purple.region.ObservedRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 
 public class GermlineGeneAnalyser
@@ -51,23 +47,22 @@ public class GermlineGeneAnalyser
     private final BufferedWriter mWriter;
     private final boolean mWriteVerbose;
 
-    private static final String PURPLE_DATA_DIR = "purple_data_dir";
     private static final String WRITE_VERBOSE = "write_verbose";
 
-    public GermlineGeneAnalyser(final CommandLine cmd)
+    public GermlineGeneAnalyser(final ConfigBuilder configBuilder)
     {
-        RefGenomeVersion refGenVersion = RefGenomeVersion.from(cmd.getOptionValue(REF_GENOME_VERSION, V37.toString()));
-        mGeneDataCache = new EnsemblDataCache(cmd, refGenVersion);
+        RefGenomeVersion refGenVersion = RefGenomeVersion.from(configBuilder);
+        mGeneDataCache = new EnsemblDataCache(configBuilder);
 
         mGeneDataCache.setRequiredData(true, false, false, true);
         mGeneDataCache.load(false);
 
-        mSampleIds = loadSampleIdsFile(cmd);
-        mPurpleDataDir = cmd.getOptionValue(PURPLE_DATA_DIR);
-        mThreads = parseThreads(cmd);
+        mSampleIds = loadSampleIdsFile(configBuilder);
+        mPurpleDataDir = configBuilder.getValue(PURPLE_DIR_CFG);
+        mThreads = parseThreads(configBuilder);
 
-        mWriteVerbose = cmd.hasOption(WRITE_VERBOSE);
-        mWriter = initialiseWriter(cmd.getOptionValue(OUTPUT_DIR));
+        mWriteVerbose = configBuilder.hasFlag(WRITE_VERBOSE);
+        mWriter = initialiseWriter(parseOutputDir(configBuilder));
     }
 
     public void run()
@@ -116,7 +111,7 @@ public class GermlineGeneAnalyser
 
         closeBufferedWriter(mWriter);
 
-        PPL_LOGGER.info("Purple germline gene analysis cnmplete");
+        PPL_LOGGER.info("Purple germline gene analysis complete");
     }
 
     private BufferedWriter initialiseWriter(final String outputDir)
@@ -201,32 +196,25 @@ public class GermlineGeneAnalyser
         }
     }
 
-    public static void main(@NotNull final String[] args) throws ParseException
+    public static void main(@NotNull final String[] args)
     {
-        final Options options = new Options();
-        addSampleIdFile(options);
-        addThreadOptions(options);
+        ConfigBuilder configBuilder = new ConfigBuilder();
+        addSampleIdFile(configBuilder, true);
 
-        options.addOption(PURPLE_DATA_DIR, true, "Directory pattern for sample purple directory");
-        options.addOption(WRITE_VERBOSE, false, "Write transcript and exon details for each deleted gene segment");
-        options.addOption(REF_GENOME_VERSION, true, REF_GENOME_VERSION_CFG_DESC);
+        configBuilder.addPath(PURPLE_DIR_CFG, true, "Directory pattern for sample purple directory");
+        configBuilder.addFlag(WRITE_VERBOSE, "Write transcript and exon details for each deleted gene segment");
+        addRefGenomeVersion(configBuilder);
 
-        addEnsemblDir(options);
-        addLoggingOptions(options);
-        addOutputOptions(options);
+        addEnsemblDir(configBuilder);
+        addLoggingOptions(configBuilder);
+        addOutputOptions(configBuilder);
+        addThreadOptions(configBuilder);
 
-        final CommandLine cmd = createCommandLine(args, options);
+        configBuilder.checkAndParseCommandLine(args);
 
-        setLogLevel(cmd);
+        setLogLevel(configBuilder);
 
-        GermlineGeneAnalyser germlineGeneAnalyser = new GermlineGeneAnalyser(cmd);
+        GermlineGeneAnalyser germlineGeneAnalyser = new GermlineGeneAnalyser(configBuilder);
         germlineGeneAnalyser.run();
-    }
-
-    @NotNull
-    private static CommandLine createCommandLine(@NotNull final String[] args, @NotNull final Options options) throws ParseException
-    {
-        final CommandLineParser parser = new DefaultParser();
-        return parser.parse(options, args);
     }
 }

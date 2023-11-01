@@ -14,11 +14,11 @@ A demo of the targeted pipeline is available [here](https://github.com/hartwigme
 
 The following files are all required in targeted mode and are panel specific:
 
-File Name | Tool | Purpose
--- | -- | --
-targetRegionsNormalisation.tsv | Cobalt | Normalise copy number regions and mask off target regions.
-CodingRegions.bed | Purple | Coding regions to consider for TMB/TML model.
-MSI.Bed | Purple | List of MSI locii to consider in MSI model
+| File Name                      | Tool   | Purpose                                                    |
+|--------------------------------|--------|------------------------------------------------------------|
+| targetRegionsNormalisation.tsv | Cobalt | Normalise copy number regions and mask off target regions. |
+| CodingRegions.bed              | Purple | Coding regions to consider for TMB/TML model.              |
+| MSI.Bed                        | Purple | List of MSI locii to consider in MSI model.                |
 
 The driverGenePanel.tsv, ActionableCodingPanel.bed and CoverageCodingPanel.bed should also all be adapted to match the specific panel
 
@@ -26,27 +26,29 @@ The driverGenePanel.tsv, ActionableCodingPanel.bed and CoverageCodingPanel.bed s
 
 AMBER
 ```
--minTumorDepth 80
+-tumor_only_min_depth 80
 ```
 COBALT
 ```
--target_region ${target_region_normalisation}
+-target_region {targetRegionsNormalisation}
 -pcf_gamma 15
 ```
 SAGE
 ```
--hotspot_min_tumor_vaf 0.01
--hotspot_min_tumor_qual 150
+-hotspot_min_tumor_vaf 0.005
+-hotspot_min_tumor_qual 100
 -panel_min_tumor_qual 250
 -high_confidence_min_tumor_qual 350
 -low_confidence_min_tumor_qual 500
+-max_read_depth 100000
+-sync_fragments=True
 ```
 GRIPSS
 ```
 -hard_min_tumor_qual 200 
 -min_qual_break_point 1000
 -min_qual_break_end 1000
--filter_sgls
+-target_regions_bed= Target Regions BED file
 ```
 PURPLE
 ```
@@ -55,39 +57,60 @@ PURPLE
 -target_regions_bed ${target_regions_definition}
 -target_regions_ratios ${target_regions_ratios}
 -target_regions_msi_indels ${target_regions_msi_indels}
+-ploidy_penalty_standard_derviation = 0.15
+-ploid_penalty_factor = 0.6
 ```
 
 ## Targeted specific methods
-### Cobalt depth coverage normalisation
-#### Generation of targetRegions CN normalisation file
-A tsv file used for COBALT targeted CN normalisation can be prepared from a set of matching tumor targeted BAMs, + optionally a WGS BAM (if available) and a target regions bed file. The process for generating the tsv file is as follows:
+### Cobalt target regions normalisation file creation
 
-1. Set targetRegions = cobalt 1kb depth windows that meet normal GC and mappability criteria and overlap or partially overlap at least 1 region specified in the primary targets bed file
+A cobalt normalisation file for an arbitary panel can becreated using a set of training samples (recommended at least 20 samples) to learn the copy number biases in on-target regions.  The procedrue for doing this is as follows:
 
-2. Run cobalt on bams from targeted and matching WGS samples. For the targeted samples, calculate the targeted regions enrichment rate as median(tumorGCRatio) of the targetRegions.
+1. Run Cobalt on the training samples without in tumor-only mode WITHOUT a '-target_region' file specified
 
-For each depth window in targetRegions, calculate relativeEnrichment across the n samples as:
+2a. Run Amber on applicable samples in tumor-only mode
+- set '-tumor_only_min_depth 2' to ensure sufficient read coverage over heterozygous points
+OR
+2b. Set Amber gender in for each applicable sample in sample ID file in step 3
+
+3. Run the Cobalt normalisation file builder command described below.  This performs the following steps
+- for each 1K region covering any target region, extract each sample's tumor read count and the GC profile mappability and GC ratio bucket
+- calculate median and median read counts for each sample, and overall sample mean and median counts
+- normalise each sample's tumor read counts per region
+- calculate a median read count from all samples per GC ratio bucket  
+- write a relative enrichment for each region to the output file, with a min enrichment of 0.1
+- if no WGS is available for normalisation, the tumorGCRatio is assumed to be 1 for autosomes. The gender of each sample must be provided. Female samples are excluded from Y chromosome normalisation and males use a tumorGCRatio of 0.5 for the sex chromosomes
+
+The output of this process is a targetRegionsNormalisation file with the expected relative enrichment for each on target region.
+
+#### Arguments
+
+Field | Description
+---|---
+sample_id_file | CSV with SampleId column header and list of sample IDs, optionally Gender column if Amber directory is not specified & available
+amber_dir | Pipeline Amber output directory
+cobalt_dir | Pipeline Cobalt output directory from non-normalised run on panel BAMs
+ref_genome_version | V37 or V38
+gc_profile | As used in Cobalt and Purple
+target_regions_bed | Definition of target regions
+output_file | Output normalisation TSV file
+
+#### Command
+
 ```
-relativeEnrichment = median[tumorGCRatio(Targeted(i))/tumorGCRatio(WGS(i)) / targetEnrichmentRate(i)] 
-
-If relativeEnrichment < 0.1 then the region is masked.
+java -cp cobalt.jar com.hartwig.hmftools.cobalt.norm.NormalisationFileBuilder 
+  -sample_id_file sample_ids.csv
+  -cobalt_dir /path_to_pipeline_cobalt_data/
+  -amber_dir /path_to_pipeline_amber_data/ 
+  -ref_genome_version V37 
+  -gc_profile /ref_data/GC_profile.1000bp.37.cnp 
+  -target_regions_bed /ref_data/target_regions_definition.37.bed 
+  -output_file /data/output/target_regions.cobalt_normalisation.37.tsv 
+  -log_debug
 ```
-If no WGS is available for normalisation, the tumorGCRatio is assumed to be 1 for autosomes. The gender of each sample must be provided. Female samples are excluded from Y chromosome normalisation and males use a tumorGCRatio of 0.5 for the sex chromosomes
 
-3. Write targetRegions normalisation file:
-- chromosome
-- positonStart
-- relativeEnrichment
-
-#### Calculation of target enrichment rate when targetRegions tsv specified
-If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions
-Masking and normalisation of GC ratio when targetRegions tsv specified
-If a targetRegions tsv file is provided then any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the tsv file are normalised first by the overall target enrichment rate for the sample and then by the relativeEnrichment for that depth window.
-
-#### Off target normalisation
-For each 100kb bucket that does not overlap an on-target region and has at least half of the depth windows that meet the COBALT GC and mappability criteria, calculate the median tumor ratios. Normalise such that the median of all 100kb buckets for the bam is 1. Note we don’t use the mean since some regions still contain dna that has been highly enriched by the targeted panel which could skew the average.
-
-Note, the off target normalisation is not currently used in the targeted output.
+### COBALT behaviour in targeted mode
+If a targetRegions file is provided, then a target enrichment rate is calculated simply as the median tumorGCRatio for the specified regions.   Any depth windows outside of the targetRegions file are masked so that they are ignored downstream by PURPLE. Depth windows found in the TSV file are normalised first by the overall target enrichment rate for the sample, then by the relativeEnrichment for that depth window and finally by the normal GC bias adjustment.   The GC bias is calculated using on target regions only.
 
 ### PURPLE MSI 
 
@@ -97,10 +120,9 @@ We estimate MSI rate as:
 ```
 MSIndelsPerMb = 220 * # of MSI variants / # of MSI sites in panel
 ```
-
 ### PURPLE TML & TMB estimate
 
-A custom model is used for TMB estimated in targeted mode. The main challenges of the model is to Variants are included in the TMB estimate that meet the following criteria:
+A custom model is used for TMB estimated in targeted mode. The main challenges of the model is to determine variants are included in the TMB estimate. PURPLE selects variants that meet the following criteria:
 - Coding effect <> NONE
 - GNDFreq <0.00005
 - GENE in PANEL and not in {HLA-A,HLA-B,HLA-C,PIM1,BCL2} 
@@ -108,7 +130,7 @@ A custom model is used for TMB estimated in targeted mode. The main challenges o
 - !HOTSPOT
 - AF < 0.9
 
-Each variant included is classified as ‘somatic’ if AF is more than 0.08 away from the expected germline allele frequencies based on the minor and major allele copy numbers at that loci and the purity of the sample. Other variants are classified as ‘unclear’
+Each variant included is classified as ‘somatic’ if somatic likelihood = HIGH.    If somatic likelihood = MEDIUM, then the variant is marked as 'unclear'.
 
 The final somatic count estimate is set to = somatic + unclear^2 / ( CodingBases/170,000 + unclear).
 
@@ -116,15 +138,17 @@ This function is intended to reflect that when the number of unclear variants is
 
 Using this number we then estimate the mutational burden as follows
 ```
-TML = 0.74 * somatic Variant Estimate / CodingBases * RefGenomeCodingBases 
+TML = somatic Variant Estimate / CodingBases * RefGenomeCodingBases 
 TMB = 0.05 * TML + MSIIndelPerMb
 ```
-The constant 0.74 is the approximate proportion of coding variants expected to be missense, since TML is defined as count of missense variants in Hartwig’s platform. The 0.05 conversion from TML to TMB is the empirically observed relationship in the Hartwig database.
+The 0.05 conversion from TML to TMB is the empirically observed relationship in the Hartwig database.
+
+For driver likelihood calculations, we assume 20% of variants are biallelic for targeted sequencing samples.
 
 ### Other PURPLE differences in targeted mode
 
 The following special rules apply to the consrtuction of the driver catalog
-- **DELS**: Don’t report DELS >10Mb or if the copy number segment has less than 2 depth windows (unless supported by SV on both sides)
+- **DELS**: Don’t report DELS >10Mb or if the copy number segment has less than 3 depth windows (unless supported by SV on both sides)
 - **PARTIAL_AMP**: only in genes with known pathogenic exon deletions {BRAF, EGFR, CTNNB1, CBL,MET, ALK, PDGFRA}
 
 There is also no somatic fit mode or somatic penalty and no SV recovery in PURPLE in targeted mode.

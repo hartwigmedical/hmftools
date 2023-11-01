@@ -3,9 +3,9 @@ package com.hartwig.hmftools.lilac.qc;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.lilac.LilacConfig.LL_LOGGER;
-import static com.hartwig.hmftools.lilac.LilacConstants.DELIM;
 import static com.hartwig.hmftools.lilac.LilacUtils.listMax;
 import static com.hartwig.hmftools.lilac.LilacUtils.listMin;
 
@@ -38,7 +38,7 @@ public class Haplotype
 
     public static Haplotype fromString(final String line)
     {
-        String[] items = line.split(DELIM, -1);
+        String[] items = line.split(CSV_DELIM, -1);
         int startLocus = Integer.parseInt(items[0]);
         String haplotype = items[1];
         int endLocus = startLocus + haplotype.length() - 1;

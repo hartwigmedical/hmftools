@@ -7,7 +7,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.FRAMESHIFT;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.MISSENSE;
-import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isInframe;
@@ -16,7 +15,6 @@ import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DEL;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DUP;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_INS;
 import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_UNKNOWN;
-import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
 
 import java.util.List;
 import java.util.Map;
@@ -85,6 +83,10 @@ public final class HgvsProtein
             {
                 hgvs += HGVS_STOP_GAINED;
             }
+            else if(hgvs.endsWith(HGVS_FRAMESHIFT))
+            {
+                hgvs = hgvs.substring(0, hgvs.length() - HGVS_FRAMESHIFT.length()) + HGVS_STOP_GAINED;
+            }
         }
 
         return hgvs;
@@ -104,10 +106,12 @@ public final class HgvsProtein
         switch(effect)
         {
             case SYNONYMOUS:
+            case PHASED_SYNONYMOUS:
                 formSynonymous(proteinContext, sb);
                 break;
 
             case MISSENSE:
+            case PHASED_MISSENSE:
                 formMissense(proteinContext, sb);
                 break;
 
@@ -144,15 +148,16 @@ public final class HgvsProtein
     private static void formSynonymous(final ProteinContext proteinContext, final StringBuilder sb)
     {
         // ref and alt codons will match
-        // SnpEff uses index only, but instead use form:  p.Leu54= for 1 codon or p.Leu54_Arg55= for MNV
+        // SnpEff uses index only, but instead use form:  p.Leu54= for 1 codon or p.Leu54_Arg55= for MNV or phased synonymous
         sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(0)));
         sb.append(proteinContext.CodonIndex);
 
         if(proteinContext.RefAminoAcids.length() > 1)
         {
             sb.append('_');
-            sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(1)));
-            sb.append(proteinContext.CodonIndex + 1);
+            int lastIndex = proteinContext.RefAminoAcids.length() - 1;
+            sb.append(convertToTriLetters(proteinContext.RefAminoAcids.charAt(lastIndex)));
+            sb.append(proteinContext.CodonIndex + lastIndex);
         }
 
         sb.append(HGVS_SYNONYMOUS);
@@ -161,7 +166,7 @@ public final class HgvsProtein
     private static void formMissense(final ProteinContext proteinContext, final StringBuilder sb)
     {
         // from SNV or MNV, 1 codon p.Arg64Lys or 2 p.Ala100_Val101delinsArgTrp
-        // expect to have to matching number of ref and alt codons, typically 1 or 2, possible 3 for a longer MNV (none in prod)
+        // expect to have to matching number of ref and alt codons, typically 1 or 2, or 3 for phased missense
         // current codon index will be the most upstream position since based on most upstream codon (open or already complete)
         int aaIndexStart = proteinContext.NetCodonIndexRange[SE_START];
         int aaIndexEnd = proteinContext.NetCodonIndexRange[SE_END];
@@ -179,13 +184,18 @@ public final class HgvsProtein
             sb.append(convertToTriLetters(refAminoAcids.charAt(0)));
             sb.append(aaIndexStart);
 
+            int lastIndex = refAminoAcids.length() - 1;
             sb.append('_');
-            sb.append(convertToTriLetters(refAminoAcids.charAt(1)));
+            sb.append(convertToTriLetters(refAminoAcids.charAt(lastIndex)));
             sb.append(aaIndexEnd);
+
             sb.append(HGVS_TYPE_DEL);
             sb.append(HGVS_TYPE_INS);
-            sb.append(convertToTriLetters(altAminoAcids.charAt(0)));
-            sb.append(convertToTriLetters(altAminoAcids.charAt(1)));
+
+            for(int i = 0; i <= lastIndex; ++i)
+            {
+                sb.append(convertToTriLetters(altAminoAcids.charAt(i)));
+            }
         }
     }
 

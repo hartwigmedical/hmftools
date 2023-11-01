@@ -1,8 +1,9 @@
 package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.common.genome.bed.NamedBedFile.readBedFile;
-import static com.hartwig.hmftools.common.utils.FileReaderUtils.createFieldsIndexMap;
-import static com.hartwig.hmftools.common.utils.sv.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.purple.PurpleUtils.PPL_LOGGER;
 
 import java.io.IOException;
@@ -26,8 +27,6 @@ public class TargetRegionsData
     private double mTmlRatio;
     private double mTmbRatio;
     private double mMsiIndelRatio;
-    private double mMaxAF;
-    private double mMaxAFDiff;
     private double mMsi23BaseAF;
     private double mMsi4BaseAF;
     private int mCodingBaseFactor;
@@ -35,18 +34,15 @@ public class TargetRegionsData
     private boolean mIsValid;
 
     private static final String CODING_REGION_ID = "CODING";
-    private static final String FILE_DELIM = "\t";
 
     public static final List<String> TMB_GENE_EXCLUSIONS = Lists.newArrayList("HLA-A","HLA-B","HLA-C","PIM1","BCL2");
 
     // target-region TML, TMB and MSI-Indels
-    // public static final double TARGET_REGIONS_CN_DIFF = 0.5;
-    // public static final double TARGET_REGIONS_CN_PERC_DIFF = 0.2;
-    public static final double DEFAULT_MAX_AF = 0.9;
-    public static final double DEFAULT_MAX_AF_DIFF = 0.08;
     public static final double DEFAULT_MSI_2_3_BASE_AF = 0.15;
     public static final double DEFAULT_MSI_4_BASE_AF = 0.08;
     public static final int DEFAULT_CODING_BASE_FACTOR = 150000;
+    public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_LOW = 0.08;
+    public static final double PANEL_SOMATIC_LIKELIHOOD_DIFF_HIGH = -0.05;
 
     public TargetRegionsData(final String bedFile, final String ratiosFile, final String msiIndelsFile)
     {
@@ -55,8 +51,6 @@ public class TargetRegionsData
         mTmlRatio = 1;
         mTmbRatio = 1;
         mMsiIndelRatio = 1;
-        mMaxAF = DEFAULT_MAX_AF;
-        mMaxAFDiff = DEFAULT_MAX_AF_DIFF;
         mMsi23BaseAF = DEFAULT_MSI_2_3_BASE_AF;
         mMsi4BaseAF = DEFAULT_MSI_4_BASE_AF;
         mCodingBaseFactor = DEFAULT_CODING_BASE_FACTOR;
@@ -98,8 +92,6 @@ public class TargetRegionsData
     public double tmlRatio() { return mTmlRatio; }
     public double tmbRatio() { return mTmbRatio; }
     public double msiIndelRatio() { return mMsiIndelRatio; }
-    public double maxAF() { return mMaxAF; }
-    public double maxAFDiff() { return mMaxAFDiff; }
     public double msi23BaseAF() { return mMsi23BaseAF; }
     public double msi4BaseAF() { return mMsi4BaseAF; }
     public int codingBaseFactor() { return mCodingBaseFactor; }
@@ -150,13 +142,13 @@ public class TargetRegionsData
 
                 String header = lines.get(0);
                 lines.remove(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, FILE_DELIM);
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
                 int chrIndex = fieldsIndexMap.get("Chromosome");
                 int posIndex = fieldsIndexMap.get("Position");
 
                 for(String line : lines)
                 {
-                    String[] values = line.split(FILE_DELIM, -1);
+                    String[] values = line.split(TSV_DELIM, -1);
 
                     String chromosome = values[chrIndex];
                     int position = Integer.parseInt(values[posIndex]);
@@ -192,18 +184,12 @@ public class TargetRegionsData
                 List<String> lines = Files.readAllLines(Paths.get(filename));
 
                 String header = lines.get(0);
-                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, FILE_DELIM);
-                String[] values = lines.get(1).split(FILE_DELIM, -1);
+                Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+                String[] values = lines.get(1).split(TSV_DELIM, -1);
 
                 mTmbRatio = Double.parseDouble(values[fieldsIndexMap.get("TmbRatio")]);
                 mTmlRatio = Double.parseDouble(values[fieldsIndexMap.get("TmlRatio")]);
                 mMsiIndelRatio = Double.parseDouble(values[fieldsIndexMap.get("MsiIndelRatio")]);
-
-                if(fieldsIndexMap.containsKey("MaxAF"))
-                    mMaxAF = Double.parseDouble(values[fieldsIndexMap.get("MaxAF")]);
-
-                if(fieldsIndexMap.containsKey("MaxAFDiff"))
-                    mMaxAFDiff = Double.parseDouble(values[fieldsIndexMap.get("MaxAFDiff")]);
 
                 if(fieldsIndexMap.containsKey("Msi23BaseAF"))
                     mMsi23BaseAF = Double.parseDouble(values[fieldsIndexMap.get("Msi23BaseAF")]);
@@ -214,8 +200,8 @@ public class TargetRegionsData
                 if(fieldsIndexMap.containsKey("CodingBaseFactor"))
                     mCodingBaseFactor = Integer.parseInt(values[fieldsIndexMap.get("CodingBaseFactor")]);
 
-                PPL_LOGGER.info("target regions: tml({}) tmb({}) msiIndels({}) afMax({} diff={}), msiAF(2-3 base={} 4 base={}) codingBaseFactor({})",
-                        mTmlRatio, mTmbRatio, mMsiIndelRatio, mMaxAF, mMaxAFDiff, mMsi23BaseAF, mMsi4BaseAF, mCodingBaseFactor);
+                PPL_LOGGER.info("target regions: tml({}) tmb({}) msiIndels({}) msiAF(2-3 base={} 4 base={}) codingBaseFactor({})",
+                        mTmlRatio, mTmbRatio, mMsiIndelRatio, mMsi23BaseAF, mMsi4BaseAF, mCodingBaseFactor);
             }
             catch(IOException e)
             {

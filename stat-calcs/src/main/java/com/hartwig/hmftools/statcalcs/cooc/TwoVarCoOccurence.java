@@ -8,10 +8,9 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.stats.FisherExactTest;
-import com.hartwig.hmftools.common.utils.FileWriterUtils;
+import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.common.utils.file.FileWriterUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,7 +37,7 @@ public class TwoVarCoOccurence
 
     private static final Logger LOGGER = LogManager.getLogger(TwoVarCoOccurence.class);
 
-    public TwoVarCoOccurence(final CommandLine cmd, final String outputDir)
+    public TwoVarCoOccurence(final ConfigBuilder configBuilder, final String outputDir)
     {
         mCategory1 = "";
         mCategory2 = "";
@@ -47,7 +46,7 @@ public class TwoVarCoOccurence
         mCat1Values = Lists.newArrayList();
         mCat2Values = Lists.newArrayList();
 
-        final String inputFile = cmd.getOptionValue(TWO_VAR_INPUT_FILE);
+        final String inputFile = configBuilder.getValue(TWO_VAR_INPUT_FILE);
         loadSampleGenericData(inputFile);
 
         mFisherET = new FisherExactTest();
@@ -56,14 +55,14 @@ public class TwoVarCoOccurence
         initialiseOutput(outputFile);
     }
 
-    public static void addCmdLineOptions(Options options)
+    public static void registerConfig(final ConfigBuilder configBuilder)
     {
-        options.addOption(TWO_VAR_INPUT_FILE, true, "Sample data with 2 variables");
+        configBuilder.addPath(TWO_VAR_INPUT_FILE, false, "Sample data with 2 variables");
     }
 
-    public static boolean hasConfig(final CommandLine cmd)
+    public static boolean hasConfig(final ConfigBuilder configBuilder)
     {
-        return cmd.hasOption(TWO_VAR_INPUT_FILE);
+        return configBuilder.hasValue(TWO_VAR_INPUT_FILE);
     }
 
     public void run()
