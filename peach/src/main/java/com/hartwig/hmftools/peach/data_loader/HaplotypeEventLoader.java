@@ -10,6 +10,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -30,33 +31,44 @@ public class HaplotypeEventLoader
             Map<String, Integer> eventIdToCount = new HashMap<>();
             for(VariantContext variantContext : reader.iterator())
             {
-                if(variantContext.isFiltered())
-                    continue;
-                Chromosome chromosome = HumanChromosome.fromString(variantContext.getContig());
-                if(!relevantVariantPositions.containsKey(chromosome))
-                    continue;
-                VariantHaplotypeEvent event = VariantHaplotypeEvent.fromVariantContext(variantContext);
-                Set<Integer> relevantPositionsInChromosome = relevantVariantPositions.get(chromosome);
-                if(event.getCoveredPositions().stream().noneMatch(relevantPositionsInChromosome::contains))
-                    continue;
-                Integer count = getEventCount(variantContext.getGenotype(sampleName).getType(), event.id());
-                if(count == 0)
-                    continue;
-
-                if(eventIdToCount.containsKey(event.id()))
-                {
-                    throw new IllegalStateException(
-                            String.format("encountered event with ID '%s' more than once in VCF '%s'", event.id(), vcf)
-                    );
-                }
-
-                eventIdToCount.put(event.id(), count);
+                handleVariantContext(variantContext, sampleName, relevantVariantPositions, eventIdToCount);
             }
             return eventIdToCount;
         }
         catch(IOException e)
         {
             throw new RuntimeException(String.format("failed to read VCF file: %s", vcf), e);
+        }
+    }
+
+    private static void handleVariantContext(
+            VariantContext variantContext,
+            String sampleName,
+            Map<Chromosome, Set<Integer>> relevantVariantPositions,
+            Map<String, Integer> eventIdToCount
+    )
+    {
+        Set<Integer> relevantPositionsInChromosome = relevantVariantPositions.getOrDefault(
+                HumanChromosome.fromString(variantContext.getContig()),
+                Collections.emptySet()
+        );
+        VariantHaplotypeEvent event = VariantHaplotypeEvent.fromVariantContext(variantContext);
+        Integer count = getEventCount(variantContext.getGenotype(sampleName).getType(), event.id());
+
+        boolean isRelevantEvent =
+                !variantContext.isFiltered()
+                        && count != 0
+                        && event.getCoveredPositions().stream().anyMatch(relevantPositionsInChromosome::contains);
+
+        if(isRelevantEvent)
+        {
+            if (eventIdToCount.containsKey(event.id()))
+            {
+                throw new IllegalStateException(
+                        String.format("encountered event with ID '%s' more than once in input VCF", event.id())
+                );
+            }
+            eventIdToCount.put(event.id(), count);
         }
     }
 
