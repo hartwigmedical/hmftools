@@ -222,6 +222,11 @@ public class HighDepthCombiner
                 prev_region = region;
                 ++i;
             }
+
+            if(!validateRegions(regions))
+            {
+                System.exit(1);
+            }
         }
     }
 
@@ -492,12 +497,12 @@ public class HighDepthCombiner
         }
     }
 
-    private boolean validateRegions(final List<SampleHighDepthRegion> regions)
+    private <E extends ChrBaseRegion> boolean validateRegions(final List<E> regions)
     {
         for(int i = 0; i < regions.size() - 1; ++i)
         {
-            SampleHighDepthRegion region = regions.get(i);
-            SampleHighDepthRegion nextRegion = regions.get(i + 1);
+            E region = regions.get(i);
+            E nextRegion = regions.get(i + 1);
 
             if(region.end() >= nextRegion.start())
             {
