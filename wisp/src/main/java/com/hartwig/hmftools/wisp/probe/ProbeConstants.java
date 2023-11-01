@@ -12,8 +12,8 @@ public final class ProbeConstants
 
     public static final double DEFAULT_GC_THRESHOLD_MIN = 0.4;
     public static final double DEFAULT_GC_THRESHOLD_MAX = 0.6;
-    public static final double DEFAULT_GC_THRESHOLD_MIN_LOWER = 0.35;
-    public static final double DEFAULT_GC_THRESHOLD_MAX_LOWER = 0.65;
+    public static final double DEFAULT_GC_THRESHOLD_MIN_LOWER = 0.3;
+    public static final double DEFAULT_GC_THRESHOLD_MAX_LOWER = 0.7;
 
     public static final double DEFAULT_MAPPABILITY_MIN = 0.5;
 
