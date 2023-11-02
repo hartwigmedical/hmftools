@@ -20,6 +20,8 @@ import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.utils.TaskExecutor;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.APP_NAME;
+
 public class RepeatFinder
 {
     private static final String OUTPUT_TSV_HEADER = "Chromosome\tPosStart\tPosEnd\tRepeatBases";
@@ -34,7 +36,7 @@ public class RepeatFinder
 
     public static void main(final String[] args)
     {
-        ConfigBuilder configBuilder = new ConfigBuilder();
+        ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         RepeatFinderConfig.addConfig(configBuilder);
 
         addLoggingOptions(configBuilder);
@@ -101,7 +103,7 @@ public class RepeatFinder
         BufferedWriter writer = initialiseWriter();
 
         List<RepeatFinderTask> finderTasks = Lists.newArrayList();
-        for(final HumanChromosome chromosome : HumanChromosome.values())
+        for(HumanChromosome chromosome : HumanChromosome.values())
         {
             String chrStr = mConfig.RefGenVersion.versionedChromosome(chromosome.toString());
             RepeatFinderTask finderTask;

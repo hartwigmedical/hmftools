@@ -230,7 +230,7 @@ investigate potential causes for QC failure.
 
 ## Version History and Download Links
 
-- Upcoming
+- [3.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.1)
     - Fixed bug (potential NPE) when resolving optional paths 
 - [3.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.0)
     - Disclaimer (if enabled) has bigger font size in footer, and a disclaimer is now also present in header.

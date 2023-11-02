@@ -40,7 +40,6 @@ public class RepeatFinderConfig
         RefGenome = configBuilder.getValue(REF_GENOME);
         RefGenVersion = RefGenomeVersion.from(configBuilder);
         Threads = parseThreads(configBuilder);
-
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
