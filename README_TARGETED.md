@@ -165,8 +165,6 @@ Variants that were already in our normal PON were excluded.
 
 ## Future improvements
 
-- **Overlapping reads** - Overlapping reads in the same fragment are common in FFPE Panel libraries. We should ideally only use the highest qual at each base in case of overlap.
-- **UMI** - We should switch to using UMI to better filter duplicates
 - **Off Target normalisation and integration** - This is implemented, but not used as currently does not yield a benefit over on target alone.
 MSI thresholds - We could better estimate if we had a more diverse range of samples for testing with known MSIndelsPerMb rates around and above the MSI cutoff.
 - **HRD prediction** - We can likely train a custom model, but we don’t have enough known HRD+ samples with panel data at the moment to evaluate.
