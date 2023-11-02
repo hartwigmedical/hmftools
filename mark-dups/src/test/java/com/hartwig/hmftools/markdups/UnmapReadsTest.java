@@ -330,4 +330,27 @@ public class UnmapReadsTest
         assertFalse(read.getMateUnmappedFlag());
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
     }
+
+    @Test
+    public void testUnmapSupplementaryWhenUnmappingAssociatedSupplementary()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_1, 100, READ_BASES, READ_CIGAR, CHR_3, 300, false,
+                true, null, true, READ_CIGAR);
+
+        SupplementaryReadData suppDataPrimary = new SupplementaryReadData(CHR_3, 100, SUPP_POS_STRAND, READ_CIGAR, 60);
+        SupplementaryReadData suppDataOther = new SupplementaryReadData(CHR_3, 500, SUPP_POS_STRAND, READ_CIGAR, 60);
+
+        StringJoiner saJoiner = new StringJoiner(ALIGNMENTS_DELIM);
+        saJoiner.add(suppDataPrimary.asSamTag());
+        saJoiner.add(suppDataOther.asSamTag());
+
+        read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saJoiner.toString());
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+
+        // Note that when we are unmapping a supplementary we do not bother unsetting all of its properties, because we will drop an
+        // unmapped supplementary read immediately.
+        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_3)));
+        assertTrue(read.getReadUnmappedFlag());
+    }
 }

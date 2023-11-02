@@ -84,7 +84,7 @@ public class ReadUnmapper
            Scenarios & logic:
            - both read and mate are already unmapped, then nothing to do
            - check the read's coords, its mate's coords and any supplementary alignment coords vs the loaded unmapping regions
-           - for any overlap with a non-high-depth region, additionally check discordant and soft-lip bases as above
+           - for any overlap with a non-high-depth region, additionally check discordant and soft-clip bases as above
            -
            - supplementaries - unmap if their primary will be or if they need to be
          */
@@ -128,7 +128,7 @@ public class ReadUnmapper
             }
             else if(isSupplementary)
             {
-                // supplementaries are unmapped if their primary will be unmapped
+                // supplementaries are unmapped if their primary, or an associated supplementary, will be unmapped
                 unmapRead = isSupplementary && checkUnmapSupplementaryRead(read);
             }
         }
@@ -239,12 +239,7 @@ public class ReadUnmapper
 
     private boolean checkUnmapSupplementaryRead(final SAMRecord read)
     {
-        final SupplementaryReadData suppData = SupplementaryReadData.extractAlignment(read);
-
-        if(suppData == null)
-            return false;
-
-        if(checkUnmapSupplementaryAlignment(suppData, read.getReadBases().length))
+        if(checkUnmapSupplementaryAlignments(read))
             return true;
 
         // We don't want to drop supplementaries based on chimeric read criteria, since this is a criteria for a primary read and its
@@ -663,7 +658,6 @@ public class ReadUnmapper
             int depthIndex = fieldIndexMap.get("MaxDepth");
 
             Map<String, List<HighDepthRegion>> chrLocationsMap = Maps.newHashMap();
-            HighDepthRegion lastRegion = null;
 
             for(String line : lines)
             {
@@ -676,8 +670,9 @@ public class ReadUnmapper
                 {
                     regions = Lists.newArrayList();
                     chrLocationsMap.put(chromosome, regions);
-                    lastRegion = null;
                 }
+
+                HighDepthRegion lastRegion = (regions.isEmpty()) ? null : regions.get(regions.size() - 1);
 
                 int posStart = Integer.parseInt(values[posStartIndex]);
                 int posEnd = Integer.parseInt(values[posEndIndex]);
@@ -687,19 +682,18 @@ public class ReadUnmapper
 
                 if(lastRegion != null)
                 {
+                    // to difficult to merge
                     if(lastRegion.overlaps(region))
                     {
-                        MD_LOGGER.warn("unmap regions overlap: current({}) next({})", lastRegion, region);
+                        MD_LOGGER.error("unmap regions overlap: current({}) next({})", lastRegion, region);
+                        System.exit(1);
                     }
                     else if(region.end() < lastRegion.start())
                     {
-                        MD_LOGGER.warn("unmap regions not sorted: current({}) next({})", lastRegion, region);
+                        MD_LOGGER.error("unmap regions not sorted: current({}) next({})", lastRegion, region);
+                        System.exit(1);
                     }
-
-                    // to difficult to merge
                 }
-
-                lastRegion = region;
 
                 regions.add(region);
             }
