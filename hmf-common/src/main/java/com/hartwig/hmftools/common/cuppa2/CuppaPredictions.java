@@ -26,15 +26,17 @@ public class CuppaPredictions
     {
         if(string.length() == 0)
         {
-            string = "NaN";
+            return Double.NaN;
         }
-        else if(string.equals("inf"))
+
+        if(string.equals("inf"))
         {
-            string = "Infinity";
+            return Double.POSITIVE_INFINITY;
         }
-        else if(string.equals("-inf"))
+
+        if(string.equals("-inf"))
         {
-            string = "-Infinity";
+            return Double.NEGATIVE_INFINITY;
         }
 
         return Double.parseDouble(string);
