@@ -10,6 +10,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.cider.Cdr3LocusSummary;
 import com.hartwig.hmftools.common.cider.Cdr3Sequence;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.patientdb.amber.AmberMapping;
 import com.hartwig.hmftools.patientdb.amber.AmberPatient;
@@ -560,11 +561,8 @@ public class DatabaseAccess implements AutoCloseable
         peachDAO.writePeach(sample, peachGenotypes, peachCalls);
     }
 
-    public void writeCuppa(
-            @NotNull String sample, @NotNull String dataType, @NotNull String clfName,
-            @NotNull String cancerType, Double dataValue, int rank, int rankGroup
-    ){
-        cuppaDAO.writeCuppa(sample, dataType, clfName, cancerType, dataValue, rank, rankGroup);
+    public void writeCuppa(@NotNull String sample, @NotNull CuppaPredictions cuppaPredictions){
+        cuppaDAO.writeCuppa(sample, cuppaPredictions);
     }
 
     public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends)
