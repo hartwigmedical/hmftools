@@ -117,15 +117,16 @@ public class IndelDeduper
     {
         List<Variant> dedupGroup = Lists.newArrayList();
 
+        // look for phased variants within the INDELs flanks or with a low maxEdgeDistance
         for(Variant variant : candidates)
         {
             if(variant == indel)
                 continue;
 
-            if(variant.FlankPosEnd < indel.FlankPosStart - INDEL_DEDUP_PHASED_DIST_THRESHOLD)
+            if(variant.positionEnd() < indel.FlankPosStart - INDEL_DEDUP_PHASED_DIST_THRESHOLD)
                 continue;
 
-            if(variant.FlankPosStart > indel.FlankPosEnd + INDEL_DEDUP_PHASED_DIST_THRESHOLD)
+            if(variant.position() > indel.FlankPosEnd + INDEL_DEDUP_PHASED_DIST_THRESHOLD)
                 break;
 
             if(!indel.Variant.hasMatchingLps(variant.Variant.localPhaseSets()))
@@ -222,11 +223,15 @@ public class IndelDeduper
             variant.markDedupIndelDiff();
             variant.filters().add(DEDUP_INDEL_FILTER);
         }
+        else if(variant.filters().contains(DEDUP_INDEL_FILTER_OLD))
+        {
+            variant.filters().add(DEDUP_INDEL_FILTER);
+        }
     }
 
     private static boolean isDedupCandidate(final Variant indel, final Variant variant)
     {
-        return positionsOverlap(indel.FlankPosStart, indel.FlankPosEnd, variant.FlankPosStart, variant.FlankPosEnd)
+        return positionsOverlap(indel.FlankPosStart, indel.FlankPosEnd, variant.position(), variant.positionEnd())
                 || variant.ReadCounter.maxDistanceFromEdge() < INDEL_DEDUP_MAX_DIST_THRESHOLD;
     }
 
