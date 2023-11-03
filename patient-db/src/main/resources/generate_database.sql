@@ -1367,7 +1367,7 @@ CREATE TABLE `cdr3LocusSummary`
      PRIMARY KEY (`id`)
 );
 
-CREATE INDEX `cdr3LocusSummary_sampleId_locus` ON `cdr3LocusSummary` (`sampleId`, `locus`);
+CREATE UNIQUE INDEX `cdr3LocusSummary_sampleId_locus` ON `cdr3LocusSummary` (`sampleId`, `locus`);
 
 DROP TABLE IF EXISTS `telomereLength`;
 CREATE TABLE `telomereLength`
@@ -1386,4 +1386,4 @@ CREATE TABLE `telomereLength`
      PRIMARY KEY (`id`)
 );
 
-CREATE INDEX `telomereLength_sampleId` ON `telomereLength` (`sampleId`);
+CREATE UNIQUE INDEX `telomereLength_sampleId` ON `telomereLength` (`sampleId`);
