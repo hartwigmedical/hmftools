@@ -25,15 +25,27 @@ public class LoadCuppa
 {
     private static final String CUPPA_VIS_DATA_TSV = "cuppa_vis_data_tsv";
 
+    @NotNull
+    private static Options createOptions()
+    {
+        Options options = new Options();
+
+        options.addOption(SAMPLE, true, "Sample name");
+        options.addOption(CUPPA_VIS_DATA_TSV, true, "Path to the CUPPA vis data file");
+
+        addDatabaseCmdLineArgs(options);
+
+        return options;
+    }
+
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
     {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         String sample = cmd.getOptionValue(SAMPLE);
+        String cuppaVisDataTsv = cmd.getOptionValue(CUPPA_VIS_DATA_TSV);
 
         logVersion();
-
-        String cuppaVisDataTsv = cmd.getOptionValue(CUPPA_VIS_DATA_TSV);
 
         if(CommonUtils.anyNull(sample, cuppaVisDataTsv))
         {
@@ -46,39 +58,10 @@ public class LoadCuppa
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
         LOGGER.info(" Loaded {} entries from {}", cuppaPredictions.size(), cuppaVisDataTsv);
 
-//        List<CuppaPrediction> predictions = CuppaPredictionFactory.create(cuppaEntries);
-//        CuppaPrediction best = predictions.get(0);
-//        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
-
         LOGGER.info("Writing CUPPA into database for {}", sample);
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
-        for(CuppaPredictionEntry cuppaPredictionEntry: cuppaPredictions.PredictionEntries)
-        {
-            dbWriter.writeCuppa(
-                    cuppaPredictionEntry.SampleId,
-                    cuppaPredictionEntry.DataType.toString(),
-                    cuppaPredictionEntry.ClfName.toString(),
-                    cuppaPredictionEntry.CancerType,
-                    cuppaPredictionEntry.DataValue,
-                    cuppaPredictionEntry.Rank,
-                    cuppaPredictionEntry.RankGroup
-            );
-        }
-
+        dbWriter.writeCuppa(sample, cuppaPredictions);
         LOGGER.info("Complete");
-    }
-
-    @NotNull
-    private static Options createOptions()
-    {
-        Options options = new Options();
-
-        options.addOption(SAMPLE, true, "Sample name");
-        options.addOption(CUPPA_VIS_DATA_TSV, true, "Path to the CUPPA vis data file");
-
-        addDatabaseCmdLineArgs(options);
-
-        return options;
     }
 }
