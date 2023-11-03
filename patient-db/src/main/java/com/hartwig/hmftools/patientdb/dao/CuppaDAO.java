@@ -29,27 +29,25 @@ public class CuppaDAO {
         deleteCuppaForSample(sample);
         LocalDateTime timestamp = LocalDateTime.now();
 
-        context
-                .insertInto(
-                        CUPPA,
-                        CUPPA.MODIFIED,
-                        CUPPA.SAMPLEID,
-                        CUPPA.DATATYPE,
-                        CUPPA.CLFNAME,
-                        CUPPA.CANCERTYPE,
-                        CUPPA.DATAVALUE,
-                        CUPPA.RANK,
-                        CUPPA.RANKGROUP
-                )
+        context.insertInto(
+                    CUPPA,
+                    CUPPA.MODIFIED,
+                    CUPPA.SAMPLEID,
+                    CUPPA.DATATYPE,
+                    CUPPA.CLFNAME,
+                    CUPPA.CANCERTYPE,
+                    CUPPA.DATAVALUE,
+                    CUPPA.RANK,
+                    CUPPA.RANKGROUP)
                 .values(
-                        timestamp,
-                        sample,
-                        dataType,
-                        clfName,
-                        cancerType,
-                        dataValue,
-                        rank,
-                        rankGroup
+                    timestamp,
+                    sample,
+                    dataType,
+                    clfName,
+                    cancerType,
+                    dataValue,
+                    rank,
+                    rankGroup
                 )
                 .execute();
     }
