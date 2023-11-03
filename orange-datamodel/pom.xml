@@ -56,7 +56,9 @@
                                     <shadedPattern>com.hartwig.hmftools.datamodel.v2</shadedPattern>
                                 </relocation>
                             </relocations>
-                            <shadedArtifactId>orange-datamodel-v2</shadedArtifactId>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
                         </configuration>
                         <executions>
                             <execution>
