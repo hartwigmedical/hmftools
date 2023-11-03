@@ -67,7 +67,6 @@
                                 <configuration>
                                     <shadedArtifactAttached>true</shadedArtifactAttached>
                                     <shadedClassifierName>shaded</shadedClassifierName>
-                                    <shadedArtifactId>orange-datamodel-v2</shadedArtifactId>
                                 </configuration>
                             </execution>
                         </executions>
