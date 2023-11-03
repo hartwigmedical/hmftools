@@ -27,14 +27,12 @@ import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_SOFT_CLIP
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
@@ -197,9 +195,9 @@ public class ReadUnmapper
         NONE;
     }
 
-    private static UnmapReason checkUnmapRead(final SAMRecord read, final List<HighDepthRegion> readRegions)
+    private UnmapReason checkUnmapRead(final SAMRecord read, final List<HighDepthRegion> readRegions)
     {
-        RegionMatchType matchType = readMaxDepthRegionOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), readRegions);
+        RegionMatchType matchType = findMaxDepthRegionOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), readRegions);
 
         if(matchType == RegionMatchType.NONE)
             return UnmapReason.NONE;
@@ -278,7 +276,7 @@ public class ReadUnmapper
         if(suppData == null)
             return false;
 
-        RegionMatchType matchType = supplementaryMaxDepthRegionOverlap(suppData, readBaseLength);
+        RegionMatchType matchType = supplementaryMaxDepthRegionOverlap(suppData);
 
         if(matchType == RegionMatchType.NONE)
             return false;
@@ -299,7 +297,7 @@ public class ReadUnmapper
         OTHER;
     }
 
-    private final static int READ_END_POS_BUFFER = 40; // to account for long deletes in a read that push back the alignment end
+    private static final int READ_END_APPROX_BUFFER = 100;
 
     @VisibleForTesting
     public RegionMatchType mateMaxDepthRegionOverlap(final SAMRecord read)
@@ -310,23 +308,24 @@ public class ReadUnmapper
         if(mateRegions == null)
             return RegionMatchType.NONE;
 
+        if(!isWithinRegionRange(read.getMateAlignmentStart(), mateRegions))
+            return RegionMatchType.NONE;
+
         // coordinate check must be identical to how the mate checks itself, which requires knowledge of aligned bases
         if(read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
-            int approxMateEnd = read.getMateAlignmentStart() + read.getReadBases().length + READ_END_POS_BUFFER;
-            return readMaxDepthRegionOverlap(
-                    read.getMateAlignmentStart(), approxMateEnd, read.getStringAttribute(MATE_CIGAR_ATTRIBUTE), mateRegions);
+            int mateEnd = getReadEndFromCigarStr(read.getMateAlignmentStart(), read.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
+            return findMaxDepthRegionOverlap(read.getMateAlignmentStart(), mateEnd, mateRegions);
         }
         else
         {
             // TODO: this won't work for split reads
-            int readBaseLength = read.getReadBases().length;
-            return readMaxDepthRegionOverlap(
-                    read.getMateAlignmentStart(), read.getMateAlignmentStart() + readBaseLength - 1, mateRegions);
+            int approxReadEnd = read.getMateAlignmentStart() + read.getReadBases().length + READ_END_APPROX_BUFFER;
+            return findMaxDepthRegionOverlap(read.getMateAlignmentStart(), approxReadEnd, mateRegions);
         }
     }
 
-    private RegionMatchType supplementaryMaxDepthRegionOverlap(final SupplementaryReadData suppReadData, final int readLength)
+    private RegionMatchType supplementaryMaxDepthRegionOverlap(final SupplementaryReadData suppReadData)
     {
         // Returns -1 if there is no overlap.
         final List<HighDepthRegion> suppRegions = mChrLocationsMap.get(suppReadData.Chromosome);
@@ -334,16 +333,38 @@ public class ReadUnmapper
         if(suppRegions == null)
             return RegionMatchType.NONE;
 
-        int approxSuppEnd = suppReadData.Position + readLength + READ_END_POS_BUFFER;
-        return readMaxDepthRegionOverlap(suppReadData.Position, approxSuppEnd, suppReadData.Cigar, suppRegions);
+        if(!isWithinRegionRange(suppReadData.Position, suppRegions))
+            return RegionMatchType.NONE;
+
+        int readEnd = getReadEndFromCigarStr(suppReadData.Position, suppReadData.Cigar);
+        return findMaxDepthRegionOverlap(suppReadData.Position, readEnd, suppRegions);
     }
 
-    private static RegionMatchType readMaxDepthRegionOverlap(final int readStart, final int readEnd, final List<HighDepthRegion> regions)
+    private static boolean isWithinRegionRange(final int readStart, final List<HighDepthRegion> regions)
+    {
+        int startIndex = binarySearch(readStart, regions);
+        for(int i = startIndex; i < regions.size(); ++i)
+        {
+            HighDepthRegion region = regions.get(i);
+
+            if(positionsOverlap(readStart, readStart + READ_END_APPROX_BUFFER, region.start(), region.end()))
+                return true;
+
+            if(region.start() > readStart + READ_END_APPROX_BUFFER)
+                break;
+        }
+
+        return false;
+    }
+
+    private RegionMatchType findMaxDepthRegionOverlap(final int readStart, final int readEnd, final List<HighDepthRegion> regions)
     {
         RegionMatchType matchType = RegionMatchType.NONE;
 
-        int startIdx = binarySearch(readStart, regions);
-        for (int i = startIdx; i < regions.size(); ++i)
+        int startIndex = binarySearch(readStart, regions);
+
+        // in effect the binary search finds a current overlap or the previous region, so at most 2 regions will be tested
+        for(int i = startIndex; i < regions.size(); ++i)
         {
             HighDepthRegion region = regions.get(i);
             if(region.start() > readEnd)
@@ -366,45 +387,7 @@ public class ReadUnmapper
                 if(region.maxDepth() >= UNMAP_MIN_HIGH_DEPTH)
                     return RegionMatchType.HIGH_DEPTH;
                 else
-                    matchType = RegionMatchType.OTHER;
-            }
-        }
-
-        return matchType;
-    }
-
-    private static RegionMatchType readMaxDepthRegionOverlap(
-            final int readStart, int approxReadEnd, final String cigar, final List<HighDepthRegion> regions)
-    {
-        RegionMatchType matchType = RegionMatchType.NONE;
-
-        int readEnd = -1;
-        int startIdx = binarySearch(readStart, regions);
-        for(int i = startIdx; i < regions.size(); ++i)
-        {
-            HighDepthRegion region = regions.get(i);
-            if(region.start() > approxReadEnd)
-                break;
-
-            if(!positionsOverlap(readStart, approxReadEnd, region.start(), region.end()))
-                continue;
-
-            // now test with precise read end alignment from the Cigar
-            if(readEnd < 0)
-            {
-                readEnd = getReadEndFromCigarStr(readStart, cigar);
-            }
-
-            int overlapBases = min(region.end(), readEnd) - max(region.start(), readStart) + 1;
-            int readLength = readEnd - readStart + 1;
-            int nonOverlappingBases = readLength - overlapBases;
-
-            if(nonOverlappingBases < UNMAP_MAX_NON_OVERLAPPING_BASES)
-            {
-                if(region.maxDepth() >= UNMAP_MIN_HIGH_DEPTH)
-                    return RegionMatchType.HIGH_DEPTH;
-                else
-                    matchType = RegionMatchType.OTHER;
+                    matchType = RegionMatchType.OTHER; // and continue searching for a better match
             }
         }
 
