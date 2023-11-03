@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class LoadCuppa
 {
-    private static final String CUPPA_RESULTS_TSV = "cuppa_results_csv";
+    private static final String CUPPA_VIS_DATA_TSV = "cuppa_vis_data_tsv";
 
     public static void main(@NotNull String[] args) throws ParseException, SQLException, IOException
     {
@@ -33,7 +33,7 @@ public class LoadCuppa
 
         logVersion();
 
-        String cuppaVisDataTsv = cmd.getOptionValue(CUPPA_RESULTS_TSV);
+        String cuppaVisDataTsv = cmd.getOptionValue(CUPPA_VIS_DATA_TSV);
 
         if(CommonUtils.anyNull(sample, cuppaVisDataTsv))
         {
@@ -74,8 +74,8 @@ public class LoadCuppa
     {
         Options options = new Options();
 
-        options.addOption(SAMPLE, true, "Sample for which we are going to load the CUPPA results");
-        options.addOption(CUPPA_RESULTS_TSV, true, "Path towards the CUPPA conclusion txt file");
+        options.addOption(SAMPLE, true, "Sample name");
+        options.addOption(CUPPA_VIS_DATA_TSV, true, "Path to the CUPPA vis data file");
 
         addDatabaseCmdLineArgs(options);
 
