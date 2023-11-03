@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.binarySearch;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.common.region.ChrBaseRegion.getChromosomeFieldIndex;
@@ -26,12 +27,14 @@ import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_SOFT_CLIP
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
@@ -339,8 +342,10 @@ public class ReadUnmapper
     {
         RegionMatchType matchType = RegionMatchType.NONE;
 
-        for(HighDepthRegion region : regions)
+        int startIdx = binarySearch(readStart, regions);
+        for (int i = startIdx; i < regions.size(); ++i)
         {
+            HighDepthRegion region = regions.get(i);
             if(region.start() > readEnd)
                 break;
 
@@ -374,8 +379,10 @@ public class ReadUnmapper
         RegionMatchType matchType = RegionMatchType.NONE;
 
         int readEnd = -1;
-        for(HighDepthRegion region : regions)
+        int startIdx = binarySearch(readStart, regions);
+        for(int i = startIdx; i < regions.size(); ++i)
         {
+            HighDepthRegion region = regions.get(i);
             if(region.start() > approxReadEnd)
                 break;
 
