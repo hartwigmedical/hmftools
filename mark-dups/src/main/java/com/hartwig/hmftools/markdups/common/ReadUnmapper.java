@@ -30,6 +30,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -72,9 +74,9 @@ public class ReadUnmapper
 
     public UnmapStats stats() { return mStats; }
 
-    public boolean checkTransformRead(final SAMRecord read, final List<HighDepthRegion> readRegions)
+    public boolean checkTransformRead(final SAMRecord read, final UnmapRegionState regionState)
     {
-        if(!mEnabled || readRegions == null)
+        if(!mEnabled || regionState == null)
             return false;
 
         /* Criteria for unmapping a read:
@@ -103,7 +105,7 @@ public class ReadUnmapper
 
         if(!readUnmapped)
         {
-            UnmapReason unmapReason = checkUnmapRead(read, readRegions);
+            UnmapReason unmapReason = checkUnmapRead(read, regionState);
 
             if(unmapReason != UnmapReason.NONE)
             {
@@ -142,7 +144,7 @@ public class ReadUnmapper
             return true;
         }
 
-        boolean unmapMate = !mateUnmapped && checkUnmapMate(read);
+        boolean unmapMate = !mateUnmapped && checkUnmapMate(read, regionState);
 
         if(unmapRead)
         {
@@ -195,9 +197,10 @@ public class ReadUnmapper
         NONE;
     }
 
-    private UnmapReason checkUnmapRead(final SAMRecord read, final List<HighDepthRegion> readRegions)
+    private UnmapReason checkUnmapRead(final SAMRecord read, final UnmapRegionState regionState)
     {
-        RegionMatchType matchType = findMaxDepthRegionOverlap(read.getAlignmentStart(), read.getAlignmentEnd(), readRegions);
+        RegionMatchType matchType = findMaxDepthRegionOverlap(
+                read.getAlignmentStart(), read.getAlignmentEnd(), regionState.PartitionRegions, regionState, true);
 
         if(matchType == RegionMatchType.NONE)
             return UnmapReason.NONE;
@@ -214,9 +217,9 @@ public class ReadUnmapper
         return UnmapReason.NONE;
     }
 
-    private boolean checkUnmapMate(final SAMRecord read)
+    private boolean checkUnmapMate(final SAMRecord read, final UnmapRegionState regionState)
     {
-        RegionMatchType matchType = mateMaxDepthRegionOverlap(read);
+        RegionMatchType matchType = mateMaxDepthRegionOverlap(read, regionState);
 
         if(matchType == RegionMatchType.NONE)
             return false;
@@ -300,29 +303,47 @@ public class ReadUnmapper
     private static final int READ_END_APPROX_BUFFER = 100;
 
     @VisibleForTesting
-    public RegionMatchType mateMaxDepthRegionOverlap(final SAMRecord read)
+    public RegionMatchType mateMaxDepthRegionOverlap(final SAMRecord read, final UnmapRegionState regionState)
     {
-        // Returns -1 if there is no overlap.
-        final List<HighDepthRegion> mateRegions = mChrLocationsMap.get(read.getMateReferenceName());
+        // first check for a local mate vs the partition's unmapped regions
+        boolean checkLocalRegions = false;
 
-        if(mateRegions == null)
-            return RegionMatchType.NONE;
+        List<HighDepthRegion> mateRegions;
 
-        if(!isWithinRegionRange(read.getMateAlignmentStart(), mateRegions))
-            return RegionMatchType.NONE;
+        if(read.getMateReferenceName().equals(regionState.Partition.chromosome())
+        && regionState.Partition.containsPosition(read.getMateAlignmentStart()))
+        {
+            mateRegions = regionState.PartitionRegions;
+            checkLocalRegions = true;
+        }
+        else
+        {
+            mateRegions = mChrLocationsMap.get(read.getMateReferenceName());
+
+            if(mateRegions == null)
+                return RegionMatchType.NONE;
+
+            if(!isWithinRegionRange(read.getMateAlignmentStart(), mateRegions))
+                return RegionMatchType.NONE;
+        }
 
         // coordinate check must be identical to how the mate checks itself, which requires knowledge of aligned bases
+        int mateEnd;
+
         if(read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
-            int mateEnd = getReadEndFromCigarStr(read.getMateAlignmentStart(), read.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
-            return findMaxDepthRegionOverlap(read.getMateAlignmentStart(), mateEnd, mateRegions);
+            mateEnd = getReadEndFromCigarStr(read.getMateAlignmentStart(), read.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
         }
         else
         {
             // TODO: this won't work for split reads
             int approxReadEnd = read.getMateAlignmentStart() + read.getReadBases().length + READ_END_APPROX_BUFFER;
-            return findMaxDepthRegionOverlap(read.getMateAlignmentStart(), approxReadEnd, mateRegions);
+            mateEnd = approxReadEnd;
         }
+
+        return findMaxDepthRegionOverlap(
+                read.getMateAlignmentStart(), mateEnd, mateRegions,
+                checkLocalRegions ? regionState : null, false);
     }
 
     private RegionMatchType supplementaryMaxDepthRegionOverlap(final SupplementaryReadData suppReadData)
@@ -337,7 +358,7 @@ public class ReadUnmapper
             return RegionMatchType.NONE;
 
         int readEnd = getReadEndFromCigarStr(suppReadData.Position, suppReadData.Cigar);
-        return findMaxDepthRegionOverlap(suppReadData.Position, readEnd, suppRegions);
+        return findMaxDepthRegionOverlap(suppReadData.Position, readEnd, suppRegions, null, false);
     }
 
     private static boolean isWithinRegionRange(final int readStart, final List<HighDepthRegion> regions)
@@ -357,11 +378,54 @@ public class ReadUnmapper
         return false;
     }
 
-    private RegionMatchType findMaxDepthRegionOverlap(final int readStart, final int readEnd, final List<HighDepthRegion> regions)
+    private static final int NO_INDEX_MATCH = -1;
+
+    private int checkRegionStateMatch(final int readStart, final int readEnd, final UnmapRegionState regionState)
+    {
+        if(regionState == null || regionState.LastMatchedRegionIndex == null)
+            return NO_INDEX_MATCH;
+
+        if(!positionsWithin(readStart, readEnd, regionState.Partition.start(), regionState.Partition.end()))
+            return NO_INDEX_MATCH;
+
+        HighDepthRegion region = regionState.PartitionRegions.get(regionState.LastMatchedRegionIndex);
+
+        if(readStart < region.start())
+        {
+            if(regionState.LastMatchedRegionIndex == 0)
+                return regionState.LastMatchedRegionIndex; // returning the first region is still valid since the read is within the partition
+
+            HighDepthRegion prevRegion = regionState.PartitionRegions.get(regionState.LastMatchedRegionIndex - 1);
+
+            return readStart >= prevRegion.start() ? regionState.LastMatchedRegionIndex - 1 : NO_INDEX_MATCH;
+        }
+
+        if(region.containsPosition(readStart))
+            return regionState.LastMatchedRegionIndex;
+
+        if(regionState.LastMatchedRegionIndex >= regionState.PartitionRegions.size() - 1)
+            return NO_INDEX_MATCH;
+
+        HighDepthRegion nextRegion = regionState.PartitionRegions.get(regionState.LastMatchedRegionIndex + 1);
+
+        return readStart < nextRegion.start() ? regionState.LastMatchedRegionIndex : NO_INDEX_MATCH;
+    }
+
+    private RegionMatchType findMaxDepthRegionOverlap(
+            final int readStart, final int readEnd, final List<HighDepthRegion> regions,
+            @Nullable final UnmapRegionState regionState, boolean updateRegionState)
     {
         RegionMatchType matchType = RegionMatchType.NONE;
 
-        int startIndex = binarySearch(readStart, regions);
+        int startIndex = checkRegionStateMatch(readStart, readEnd, regionState);
+
+        if(startIndex == NO_INDEX_MATCH)
+        {
+            startIndex = binarySearch(readStart, regions);
+
+            if(updateRegionState)
+                regionState.LastMatchedRegionIndex = startIndex;
+        }
 
         // in effect the binary search finds a current overlap or the previous region, so at most 2 regions will be tested
         for(int i = startIndex; i < regions.size(); ++i)

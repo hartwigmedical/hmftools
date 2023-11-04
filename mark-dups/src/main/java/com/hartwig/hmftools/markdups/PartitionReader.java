@@ -32,6 +32,7 @@ import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
+import com.hartwig.hmftools.markdups.common.UnmapRegionState;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 import com.hartwig.hmftools.markdups.write.BamWriter;
 
@@ -54,7 +55,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
-    private final List<HighDepthRegion> mUnmapRegions;
+    private UnmapRegionState mUnmapRegionState;
 
     private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
 
@@ -84,7 +85,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         mConsensusReads = new ConsensusReads(config.RefGenome);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
-        mUnmapRegions = Lists.newArrayList();
+        mUnmapRegionState = null;
 
         mPendingIncompleteReads = Maps.newHashMap();
 
@@ -179,7 +180,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         if(mConfig.UnmapRegions.enabled())
         {
-            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegions);
+            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
             if(read.getSupplementaryAlignmentFlag() && read.getReadUnmappedFlag())
                 return; // drop unmapped supplementaries
@@ -379,14 +380,19 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     private void setUnmappedRegions()
     {
-        mUnmapRegions.clear();
-
         List<HighDepthRegion> chrUnmapRegions = mConfig.UnmapRegions.getRegions(mCurrentRegion.Chromosome);
 
+        List<HighDepthRegion> partitionRegions;
         if(chrUnmapRegions != null)
         {
-            chrUnmapRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).forEach(x -> mUnmapRegions.add(x));
+            partitionRegions = chrUnmapRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).collect(Collectors.toList());
         }
+        else
+        {
+            partitionRegions = Collections.emptyList();
+        }
+
+        mUnmapRegionState = new UnmapRegionState(mCurrentRegion, partitionRegions);
     }
 
     private void perfCountersStart()

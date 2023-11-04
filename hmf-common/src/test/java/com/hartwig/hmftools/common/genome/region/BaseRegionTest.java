@@ -29,6 +29,7 @@ public class BaseRegionTest
             regions.add(new BaseRegion(regionStart, regionEnd));
         }
 
+        // before the first region still returns 1
         assertEquals(0, BaseRegion.binarySearch(1, regions));
 
         // exact start region start match
@@ -49,7 +50,7 @@ public class BaseRegionTest
         // last region
         assertEquals(19, BaseRegion.binarySearch(20050, regions));
 
-        // beyond the regions
+        // beyond the last region
         assertEquals(19, BaseRegion.binarySearch(100000, regions));
     }
 }
