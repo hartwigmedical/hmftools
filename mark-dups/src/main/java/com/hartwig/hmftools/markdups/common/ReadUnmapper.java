@@ -382,7 +382,7 @@ public class ReadUnmapper
 
     private int checkRegionStateMatch(final int readStart, final int readEnd, final UnmapRegionState regionState)
     {
-        if(regionState == null || regionState.LastMatchedRegionIndex == null)
+        if(regionState == null || regionState.LastMatchedRegionIndex == null || regionState.PartitionRegions.isEmpty())
             return NO_INDEX_MATCH;
 
         if(!positionsWithin(readStart, readEnd, regionState.Partition.start(), regionState.Partition.end()))
@@ -415,6 +415,9 @@ public class ReadUnmapper
             final int readStart, final int readEnd, final List<HighDepthRegion> regions,
             @Nullable final UnmapRegionState regionState, boolean updateRegionState)
     {
+        if(regions.isEmpty())
+            return RegionMatchType.NONE;
+        
         RegionMatchType matchType = RegionMatchType.NONE;
 
         int startIndex = checkRegionStateMatch(readStart, readEnd, regionState);
