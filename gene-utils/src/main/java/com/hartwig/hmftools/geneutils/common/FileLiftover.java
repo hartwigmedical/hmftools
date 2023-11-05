@@ -5,6 +5,11 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.UNMAPPED_POSITION;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.INVALID_FIELD;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getChromosomeFieldIndex;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionEndFieldIndex;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionFieldIndex;
+import static com.hartwig.hmftools.common.region.ChrBaseRegion.getPositionStartFieldIndex;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_CHROMOSOME;
 import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_POSITION;
@@ -24,6 +29,7 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;
@@ -58,24 +64,27 @@ public class FileLiftover
             lines.remove(0);
             Map<String,Integer> fieldIndexMap = FileReaderUtils.createFieldsIndexMap(header, delim);
 
-            if(!fieldIndexMap.containsKey(FLD_CHROMOSOME)
-            || (!(fieldIndexMap.containsKey(FLD_POSITION_START) && fieldIndexMap.containsKey(FLD_POSITION_END))
-                    && !fieldIndexMap.containsKey(FLD_POSITION)))
+            int chrIndex = getChromosomeFieldIndex(fieldIndexMap);
+            int posIndex = getPositionFieldIndex(fieldIndexMap);
+            Integer posStartIndex = getPositionStartFieldIndex(fieldIndexMap);
+            Integer posEndIndex = getPositionEndFieldIndex(fieldIndexMap);
+
+            boolean fieldsPresent = chrIndex != INVALID_FIELD
+                    && (posIndex != INVALID_FIELD || (posStartIndex != INVALID_FIELD && posEndIndex != INVALID_FIELD));
+
+            if(!fieldsPresent)
             {
                 GU_LOGGER.error("input file missing required fields: {},{} & {} or {}",
                         FLD_CHROMOSOME, FLD_POSITION_START, FLD_POSITION_END, FLD_POSITION);
                 System.exit(1);
             }
 
-            int chrIndex = fieldIndexMap.get(FLD_CHROMOSOME);
-            Integer posStartIndex = fieldIndexMap.get(FLD_POSITION_START);
-            Integer posEndIndex = fieldIndexMap.get(FLD_POSITION_END);
-            Integer posIndex = fieldIndexMap.get(FLD_POSITION);
-
             BufferedWriter writer = createBufferedWriter(outputFile);
 
             writer.write(header);
             writer.newLine();
+
+            int failedLiftoverCount = 0;
 
             for(String line : lines)
             {
@@ -83,6 +92,8 @@ public class FileLiftover
                 String chromosome = values[chrIndex];
 
                 StringJoiner sj = new StringJoiner(delim);
+
+                boolean liftoverOk = true;
 
                 for(int i = 0; i < values.length; ++i)
                 {
@@ -96,6 +107,7 @@ public class FileLiftover
                         if(newPosition == UNMAPPED_POSITION)
                         {
                             GU_LOGGER.debug("skipped writing unmapped location({}:{})", chromosome, origPosition);
+                            liftoverOk = false;
                             continue;
                         }
 
@@ -111,11 +123,23 @@ public class FileLiftover
                     }
                 }
 
-                writer.write(sj.toString());
-                writer.newLine();
+                if(liftoverOk)
+                {
+                    writer.write(sj.toString());
+                    writer.newLine();
+                }
+                else
+                {
+                    ++failedLiftoverCount;
+                }
             }
 
             writer.close();
+
+            if(failedLiftoverCount > 0)
+            {
+                GU_LOGGER.info("skipped lifting over {} entries", failedLiftoverCount);
+            }
         }
         catch(IOException e)
         {
