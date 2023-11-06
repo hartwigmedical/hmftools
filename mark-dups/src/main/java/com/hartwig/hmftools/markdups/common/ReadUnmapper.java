@@ -417,7 +417,7 @@ public class ReadUnmapper
     {
         if(regions.isEmpty())
             return RegionMatchType.NONE;
-        
+
         RegionMatchType matchType = RegionMatchType.NONE;
 
         int startIndex = checkRegionStateMatch(readStart, readEnd, regionState);
