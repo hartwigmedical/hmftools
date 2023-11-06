@@ -229,7 +229,7 @@ investigate potential causes for QC failure.
 - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ## Version History and Download Links
-- Upcoming
+- [3.0.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.2)
     - Fixed bug with selecting high/low expressed genes for samples without a specific cancer-type (e.g. CUPs)    
 - [3.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.1)
     - Fixed bug (potential NPE) when resolving optional paths 
