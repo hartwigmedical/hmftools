@@ -563,6 +563,12 @@ public class ReadUnmapper
         // check whether the primary read (detailed in the supp attribute) is chimeric with the mate - note the primary is always mapped
         SupplementaryReadData suppReadData = SupplementaryReadData.extractAlignment(record);
 
+        // rarely supplementary read data is missing
+        if(suppReadData == null)
+        {
+            return false;
+        }
+
         // insert size is not populated for supplementaries
 
         if(mateUnmapped(record))

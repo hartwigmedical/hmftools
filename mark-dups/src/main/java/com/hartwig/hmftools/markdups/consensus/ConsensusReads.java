@@ -148,6 +148,11 @@ public class ConsensusReads
         return read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == operator).mapToInt(x -> x.getLength()).sum();
     }
 
+    public void setChromosomeLength(int chromosomeLength)
+    {
+        mBaseBuilder.setChromosomLength(chromosomeLength);
+    }
+
     private enum ValidationReason
     {
         OK,

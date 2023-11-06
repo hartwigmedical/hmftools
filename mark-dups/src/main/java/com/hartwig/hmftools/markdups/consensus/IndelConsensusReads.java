@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
@@ -96,6 +94,12 @@ public class IndelConsensusReads
     private void addElementBases(
             final ConsensusState consensusState, final List<ReadParseState> readStates, final CigarElement selectedElement, int baseIndex)
     {
+        int chromosomeLength = mBaseBuilder.chromosomeLength();
+        if(chromosomeLength == 0)
+        {
+            chromosomeLength = mBaseBuilder.refGenome().getChromosomeLength(readStates.get(0).Read.getReferenceName());
+        }
+
         int readCount = readStates.size();
 
         consensusState.addCigarElement(selectedElement.getLength(), selectedElement.getOperator());
@@ -214,6 +218,10 @@ public class IndelConsensusReads
             else
             {
                 int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
+                if(basePosition >= chromosomeLength)
+                {
+                    basePosition = -1;
+                }
 
                 byte[] consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
                         locationBases, locationQuals, consensusState.Chromosome, basePosition);
@@ -271,5 +279,4 @@ public class IndelConsensusReads
 
         return maxRead;
     }
-
 }
