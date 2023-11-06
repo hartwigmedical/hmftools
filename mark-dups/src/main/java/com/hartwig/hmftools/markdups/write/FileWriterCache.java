@@ -71,9 +71,9 @@ public class FileWriterCache
         return createBamWriter(fileId, false, mConfig.UseSortCache);
     }
 
-    public int totalWrittenReads()
+    public long totalWrittenReads()
     {
-        return mBamWriters.stream().mapToInt(x -> x.nonConsensusWriteCount()).sum();
+        return mBamWriters.stream().mapToLong(x -> x.nonConsensusWriteCount()).sum();
     }
 
     public void close()

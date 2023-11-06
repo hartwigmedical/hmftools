@@ -144,8 +144,8 @@ public class MarkDuplicates
 
         combinedStats.logStats();
 
-        int totalWrittenReads = fileWriterCache.totalWrittenReads();
-        int unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
+        long totalWrittenReads = fileWriterCache.totalWrittenReads();
+        long unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
 
         if(mConfig.UnmapRegions.enabled())
         {
