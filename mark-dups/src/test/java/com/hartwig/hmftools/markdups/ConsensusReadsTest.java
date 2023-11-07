@@ -38,6 +38,7 @@ import htsjdk.samtools.SAMRecord;
 public class ConsensusReadsTest
 {
     private final MockRefGenome mRefGenome;
+    private final MockRefGenome mRefGenomeOneBased;
     private final ConsensusReads mConsensusReads;
     private final ReadIdGenerator mReadIdGen;
 
@@ -49,6 +50,11 @@ public class ConsensusReadsTest
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
         mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES.length());
         mConsensusReads = new ConsensusReads(mRefGenome);
+
+        mRefGenomeOneBased = new MockRefGenome(true);
+        mRefGenomeOneBased.RefGenomeMap.put(CHR_1, REF_BASES);
+        mRefGenomeOneBased.ChromosomeLengths.put(CHR_1, REF_BASES.length());
+
         mReadIdGen = new ReadIdGenerator();
     }
 
@@ -327,11 +333,12 @@ public class ConsensusReadsTest
         String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
         reads.add(createSamRecord(nextReadId(), posStart, readBases2, "5M5S", false));
 
-        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReadInfo readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenome);
-        consensusReads.setChromosomeLength(mRefGenome.getChromosomeLength(CHR_1));
+        consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        consensusReads.setChromosomeLength(mRefGenomeOneBased.getChromosomeLength(CHR_1));
         readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
     }
@@ -348,12 +355,45 @@ public class ConsensusReadsTest
         String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
         reads.add(createSamRecord(nextReadId(), posStart, readBases2, "1M1D3M5S", false));
 
-        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReadInfo readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
 
-        ConsensusReads consensusReads = new ConsensusReads(mRefGenome);
-        consensusReads.setChromosomeLength(mRefGenome.getChromosomeLength(CHR_1));
+        consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        consensusReads.setChromosomeLength(mRefGenomeOneBased.getChromosomeLength(CHR_1));
         readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+    }
+
+    @Test
+    public void testSoftClippedOverChromosomeStart()
+    {
+        final List<SAMRecord> reads = Lists.newArrayList();
+
+        String readBases1 = "T".repeat(5) + REF_BASES.substring(0, 5);
+        reads.add(createSamRecord(nextReadId(), 1, readBases1, "5S5M", false));
+
+        String readBases2 = "A".repeat(5) + REF_BASES.substring(0, 5);
+        reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S5M", false));
+
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReadInfo readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+    }
+
+    @Test
+    public void testSoftClippedOverChromosomeStartWithDel()
+    {
+        final List<SAMRecord> reads = Lists.newArrayList();
+
+        String readBases1 = "T".repeat(5) + REF_BASES.substring(0, 5);
+        reads.add(createSamRecord(nextReadId(), 1, readBases1, "5S2M1D2M", false));
+
+        String readBases2 = "A".repeat(5) + REF_BASES.substring(0, 5);
+        reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S1M1D3M", false));
+
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReadInfo readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
     }
 

@@ -24,14 +24,13 @@ public class BaseBuilder
     }
 
     public static final byte NO_BASE = 0;
+    public static final int INVALID_POSITION = -1;
 
     public void buildReadBases(final List<SAMRecord> reads, final ConsensusState consensusState)
     {
         int chromosomeLength = mChromosomeLength;
         if(chromosomeLength == 0)
-        {
             chromosomeLength = mRefGenome.getChromosomeLength(reads.get(0).getReferenceName());
-        }
 
         int baseLength = consensusState.Bases.length;
 
@@ -106,8 +105,8 @@ public class BaseBuilder
             {
                 int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
 
-                if(basePosition >= chromosomeLength)
-                    basePosition = -1; // protect against over-runs from soft-clips - rare but possible
+                if(basePosition < 1 || basePosition > chromosomeLength)
+                    basePosition = INVALID_POSITION; // protect against over-runs from soft-clips - rare but possible
 
                 byte[] consensusBaseAndQual = determineBaseAndQual(locationBases, locationQuals, reads.get(0).getContig(), basePosition);
 
@@ -164,7 +163,7 @@ public class BaseBuilder
                 maxQual = maxQuals.get(i);
                 maxBase = distinctBases.get(i);
             }
-            else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef && position > 0)
+            else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef && position != INVALID_POSITION)
             {
                 // chromosome will be null for unmapped reads
                 String refBase = mRefGenome.getBaseString(chromosome, position, position);
