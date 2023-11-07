@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_C;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
+import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,6 +47,7 @@ public class ConsensusReadsTest
     {
         mRefGenome = new MockRefGenome();
         mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES);
+        mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES.length());
         mConsensusReads = new ConsensusReads(mRefGenome);
         mReadIdGen = new ReadIdGenerator();
     }
@@ -311,6 +313,48 @@ public class ConsensusReadsTest
 
         readState.moveNext();
         assertTrue(readState.exhausted());
+    }
+
+    @Test
+    public void testSoftClippedOverChromosomeEnd()
+    {
+        final List<SAMRecord> reads = Lists.newArrayList();
+
+        int posStart = REF_BASES.length() - 5;
+        String readBases1 = REF_BASES.substring(posStart, REF_BASES.length()) + "T".repeat(5);
+        reads.add(createSamRecord(nextReadId(), posStart, readBases1, "5M5S", false));
+
+        String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
+        reads.add(createSamRecord(nextReadId(), posStart, readBases2, "5M5S", false));
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenome);
+        consensusReads.setChromosomeLength(mRefGenome.getChromosomeLength(CHR_1));
+        readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+    }
+
+    @Test
+    public void testSoftClippedOverChromosomeEndWithDel()
+    {
+        final List<SAMRecord> reads = Lists.newArrayList();
+
+        int posStart = REF_BASES.length() - 5;
+        String readBases1 = REF_BASES.substring(posStart, REF_BASES.length()) + "T".repeat(5);
+        reads.add(createSamRecord(nextReadId(), posStart, readBases1, "2M1D2M5S", false));
+
+        String readBases2 = REF_BASES.substring(posStart, REF_BASES.length()) + "A".repeat(5);
+        reads.add(createSamRecord(nextReadId(), posStart, readBases2, "1M1D3M5S", false));
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenome);
+        consensusReads.setChromosomeLength(mRefGenome.getChromosomeLength(CHR_1));
+        readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
     }
 
     private static SAMRecord createSamRecord(

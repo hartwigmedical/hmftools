@@ -14,15 +14,24 @@ public class BaseBuilder
 {
     private final RefGenomeInterface mRefGenome;
 
+    private int mChromosomeLength;
+
     public BaseBuilder(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
+        mChromosomeLength = 0;
     }
 
     public static final byte NO_BASE = 0;
 
     public void buildReadBases(final List<SAMRecord> reads, final ConsensusState consensusState)
     {
+        int chromosomeLength = mChromosomeLength;
+        if(chromosomeLength == 0)
+        {
+            chromosomeLength = mRefGenome.getChromosomeLength(reads.get(0).getReferenceName());
+        }
+
         int baseLength = consensusState.Bases.length;
 
         int readCount = reads.size();
@@ -95,6 +104,10 @@ public class BaseBuilder
             else
             {
                 int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
+                if(basePosition >= chromosomeLength)
+                {
+                    basePosition = -1;
+                }
 
                 byte[] consensusBaseAndQual = determineBaseAndQual(
                         locationBases, locationQuals, reads.get(0).getContig(), basePosition);
@@ -152,7 +165,8 @@ public class BaseBuilder
                 maxQual = maxQuals.get(i);
                 maxBase = distinctBases.get(i);
             }
-            else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef) // chromosome will be null for unmapped reads
+            else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef
+                    && position != -1) // chromosome will be null for unmapped reads
             {
                 String refBase = mRefGenome.getBaseString(chromosome, position, position);
 
@@ -183,4 +197,18 @@ public class BaseBuilder
         return new byte[] { maxBase, (byte)round(calcQual) };
     }
 
+    public void setChromosomLength(int chromosomeLength)
+    {
+        mChromosomeLength = chromosomeLength;
+    }
+
+    public int chromosomeLength()
+    {
+        return mChromosomeLength;
+    }
+
+    public RefGenomeInterface refGenome()
+    {
+        return mRefGenome;
+    }
 }

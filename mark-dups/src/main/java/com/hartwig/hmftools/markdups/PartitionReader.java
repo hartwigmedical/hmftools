@@ -109,6 +109,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
     public void setupRegion(final ChrBaseRegion region)
     {
         mCurrentRegion = region;
+        mConsensusReads.setChromosomeLength(mConfig.RefGenome.getChromosomeLength(region.Chromosome));
 
         perfCountersStart();
 
