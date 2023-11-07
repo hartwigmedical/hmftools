@@ -35,14 +35,27 @@ public class BaseBuilder
             chromosomeLength = mRefGenome.getChromosomeLength(reads.get(0).getReferenceName());
 
         int baseLength = consensusState.Bases.length;
-
         int readCount = reads.size();
+        String chromosome = reads.get(0).getContig();
 
         int[] readOffsets = new int[readCount];
 
         for(int i = 0; i < readCount; ++i)
         {
             readOffsets[i] = reads.get(i).getReadBases().length - baseLength;
+        }
+
+        boolean[] isFirstInPair = null;
+        int firstInPairCount = (int) reads.stream().filter(q -> q.getFirstOfPairFlag()).count();
+        int secondInPairCount = readCount - firstInPairCount;
+        boolean isDual = firstInPairCount > 0 && secondInPairCount > 0;
+        if(isDual)
+        {
+            isFirstInPair = new boolean[readCount];
+            for(int i = 0; i < readCount; ++i)
+            {
+                isFirstInPair[i] = reads.get(i).getFirstOfPairFlag();
+            }
         }
 
         byte[] locationBases = new byte[readCount];
@@ -114,9 +127,6 @@ public class BaseBuilder
 
                 if (!dualMismatchedLogged)
                 {
-                    boolean hasFirstInPairReads = reads.stream().anyMatch(q -> q.getFirstOfPairFlag());
-                    boolean hasSecondInPairReads = reads.stream().anyMatch(q -> q.getSecondOfPairFlag());
-                    boolean isDual = hasFirstInPairReads && hasSecondInPairReads;
                     if(isDual)
                     {
                         MD_LOGGER.trace("Mismatched basis found in dual stranded read group readCount({})", reads.size());
@@ -127,13 +137,91 @@ public class BaseBuilder
                     }
                 }
 
-                byte[] consensusBaseAndQual = determineBaseAndQual(
-                        locationBases, locationQuals, reads.get(0).getContig(), basePosition);
+                byte[] consensusBaseAndQual;
+                if(isDual)
+                {
+                    consensusBaseAndQual =
+                            determineBaseAndQualDual(locationBases, locationQuals, chromosome, firstInPairCount, isFirstInPair, basePosition);
+                }
+                else
+                {
+                    consensusBaseAndQual = determineBaseAndQual(locationBases, locationQuals, chromosome, basePosition);
+                }
 
                 consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
                 consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
             }
         }
+    }
+
+    public byte[] determineBaseAndQualDual(
+            final byte[] locationBases, final byte[] locationQuals, final String chromosome, int firstInPairCount,
+            final boolean[] isFirstInPair, int position)
+    {
+        if(position == -1)
+        {
+            return determineBaseAndQual(locationBases, locationQuals, chromosome, position); // ref base is not available.
+        }
+
+        int readCount = locationBases.length;
+        int secondInPairCount = readCount - firstInPairCount;
+
+        byte[][] locationBasesPair = { new byte[firstInPairCount], new byte[secondInPairCount] };
+        byte[][] locationQualsPair = { new byte[firstInPairCount], new byte[secondInPairCount] };
+        int[] indexPair = { 0, 0 };
+        for(int i = 0; i < readCount; i++)
+        {
+            int pairIdx = isFirstInPair[i] ? 0 : 1;
+            locationBasesPair[pairIdx][indexPair[pairIdx]] = locationBases[i];
+            locationQualsPair[pairIdx][indexPair[pairIdx]] = locationQuals[i];
+            ++indexPair[pairIdx];
+        }
+
+        byte[][] consensusBaseAndQualPair = new byte[][] { null, null };
+        consensusBaseAndQualPair[0] = determineBaseAndQual(locationBasesPair[0], locationQualsPair[0], chromosome, position);
+        consensusBaseAndQualPair[1] = determineBaseAndQual(locationBasesPair[1], locationQualsPair[1], chromosome, position);
+
+        if(consensusBaseAndQualPair[0][0] == NO_BASE)
+        {
+            return consensusBaseAndQualPair[1];
+        }
+
+        if(consensusBaseAndQualPair[1][0] == NO_BASE)
+        {
+            return consensusBaseAndQualPair[0];
+        }
+
+        if(consensusBaseAndQualPair[0][0] == consensusBaseAndQualPair[1][0])
+        {
+            byte qual = (byte) max(consensusBaseAndQualPair[0][1], consensusBaseAndQualPair[1][1]);
+            return new byte[] { consensusBaseAndQualPair[0][0], qual };
+        }
+
+        byte refBase = mRefGenome.getBaseString(chromosome, position, position).getBytes()[0];
+        boolean firstIsRef = consensusBaseAndQualPair[0][0] == refBase;
+        boolean secondIsRef = consensusBaseAndQualPair[1][0] == refBase;
+        if(!firstIsRef && !secondIsRef)
+        {
+            byte[] locationBasePair = new byte[] { consensusBaseAndQualPair[0][0], consensusBaseAndQualPair[1][0] };
+            byte[] locationQualPair = new byte[] { consensusBaseAndQualPair[0][1], consensusBaseAndQualPair[1][1] };
+            return determineBaseAndQual(locationBasePair, locationQualPair, chromosome, position);
+        }
+
+        int refQual;
+        int differingQual;
+        if(firstIsRef)
+        {
+            refQual = consensusBaseAndQualPair[0][1];
+            differingQual = consensusBaseAndQualPair[1][1];
+        }
+        else
+        {
+            refQual = consensusBaseAndQualPair[1][1];
+            differingQual = consensusBaseAndQualPair[0][1];
+        }
+
+        byte qual = (byte) max(0.0, refQual - differingQual);
+        return new byte[] { refBase, qual };
     }
 
     public byte[] determineBaseAndQual(
@@ -168,6 +256,11 @@ public class BaseBuilder
                 qualTotals.add((int)locationQuals[i]);
                 maxQuals.add((int)locationQuals[i]);
             }
+        }
+
+        if(distinctBases.isEmpty())
+        {
+            return new byte[] { NO_BASE, 0 };
         }
 
         byte maxBase = distinctBases.get(0);

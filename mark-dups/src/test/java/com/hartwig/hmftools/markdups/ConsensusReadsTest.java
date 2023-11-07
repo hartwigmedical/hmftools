@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_C;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
+import static com.hartwig.hmftools.markdups.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
@@ -22,8 +23,10 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
@@ -41,6 +44,7 @@ public class ConsensusReadsTest
     private final MockRefGenome mRefGenomeOneBased;
     private final ConsensusReads mConsensusReads;
     private final ReadIdGenerator mReadIdGen;
+    private final Map<Character, Character> mNextBaseMap;
 
     public static final String UMI_ID_1 = "TAGTAG";
 
@@ -56,6 +60,12 @@ public class ConsensusReadsTest
         mRefGenomeOneBased.ChromosomeLengths.put(CHR_1, REF_BASES.length());
 
         mReadIdGen = new ReadIdGenerator();
+
+        mNextBaseMap = Maps.newHashMap();
+        mNextBaseMap.put('G', 'C');
+        mNextBaseMap.put('C', 'A');
+        mNextBaseMap.put('A', 'T');
+        mNextBaseMap.put('T', 'G');
     }
 
     @Test
@@ -395,6 +405,35 @@ public class ConsensusReadsTest
         ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
         ConsensusReadInfo readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+    }
+
+    @Test
+    public void testDualStrandPrefersRefBase()
+    {
+        int posStart = 11;
+        int readLength = 10;
+        String cigar = "10M";
+        String consensusBases = REF_BASES.substring(posStart, posStart + readLength);
+        SAMRecord read1 = createSamRecord(nextReadId(), posStart, consensusBases, cigar, false);
+
+        int mutatedBaseIndex = 5;
+        char mutatedBase = mNextBaseMap.get(consensusBases.charAt(mutatedBaseIndex));
+        StringBuilder mutatedBasesBuilder = new StringBuilder(consensusBases);
+        mutatedBasesBuilder.setCharAt(mutatedBaseIndex, mutatedBase);
+        String mutatedBases = mutatedBasesBuilder.toString();
+        SAMRecord read2 = createSamRecord(nextReadId(), posStart, mutatedBases, cigar, false);
+        setSecondInPair(read2);
+
+        SAMRecord read3 = createSamRecord(nextReadId(), posStart, mutatedBases, cigar, false);
+        setSecondInPair(read3);
+
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
+        assertEquals("10M", readInfo.ConsensusRead.getCigarString());
+        assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
     }
 
     private static SAMRecord createSamRecord(
