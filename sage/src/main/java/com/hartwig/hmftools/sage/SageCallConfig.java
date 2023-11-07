@@ -41,7 +41,7 @@ public class SageCallConfig
     private static final String PANEL_BED = "panel_bed";
     private static final String HOTSPOTS = "hotspots";
     private static final String PANEL_ONLY = "panel_only";
-    private static final String RUN_NEW_DEDUP = "new_dedup";
+    private static final String RUN_NEW_DEDUP = "new_indel_dedup";
 
     public SageCallConfig(final String version, final ConfigBuilder configBuilder)
     {

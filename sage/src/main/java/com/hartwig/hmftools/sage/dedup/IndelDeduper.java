@@ -284,6 +284,13 @@ public class IndelDeduper
             }
         }
 
+        if(dedupGroup.size() > LARGE_DEDUP_GROUP_SIZE)
+        {
+            // add them all, so only the INDEL will be kept plus any outside the flanks with high enough max edge distance
+            dedupedVariants.addAll(dedupGroup);
+            return true;
+        }
+
         /*
         // otherwise try combinations by recursively building all possible combinations
         for(int i = 0; i < dedupGroup.size(); ++i)
