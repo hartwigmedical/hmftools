@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.LOCAL_PHASE_SET_READ_COUNT;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.MIXED_SOMATIC_GERMLINE;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.OLD_INDEL_DEDUP_FLAG;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_BASE_QUALITY;
@@ -83,6 +84,8 @@ public final class VariantContextFactory
         {
             builder.attribute(OLD_INDEL_DEDUP_FLAG, true);
         }
+
+        builder.attribute(MAX_READ_EDGE_DISTANCE, variant.tumorReadCounters().get(0).maxDistanceFromEdge());
 
         final VariantContext context = builder.make();
         if(context.isNotFiltered())

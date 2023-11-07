@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
@@ -48,6 +49,7 @@ public class SageAppendApplication
 {
     private final SageAppendConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenome;
+    private final FragmentLengths mFragmentLengths;
 
     private static final double MIN_PRIOR_VERSION = 2.8;
 
@@ -55,6 +57,7 @@ public class SageAppendApplication
     {
         final VersionInfo version = new VersionInfo("sage.version");
         mConfig = new SageAppendConfig(version.version(), configBuilder);
+        mFragmentLengths = new FragmentLengths(mConfig.Common);
 
         if(!mConfig.Common.isValid())
         {
@@ -187,7 +190,7 @@ public class SageAppendApplication
                 if(regionVariants.isEmpty())
                     continue;
 
-                regionTasks.add(new RegionAppendTask(i, region, regionVariants, mConfig, mRefGenome, recalibrationMap));
+                regionTasks.add(new RegionAppendTask(i, region, regionVariants, mConfig, mRefGenome, recalibrationMap, mFragmentLengths));
             }
 
             final List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
@@ -201,6 +204,7 @@ public class SageAppendApplication
         }
 
         outputVCF.close();
+        mFragmentLengths.close();
 
         mRefGenome.close();
 

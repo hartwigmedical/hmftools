@@ -18,6 +18,7 @@ import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.PARTIAL;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REALIGNED;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.OTHER_ALT;
+import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
@@ -111,6 +112,7 @@ public class ReadContextCounter implements VariantHotspot
     private List<Integer> mLocalPhaseSets;
     private List<int[]> mLpsCounts;
     private int[] mUmiTypeCounts;
+    private FragmentLengthData mFragmentLengthData;
 
     public ReadContextCounter(
             final int id, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
@@ -165,6 +167,7 @@ public class ReadContextCounter implements VariantHotspot
         mLocalPhaseSets = null;
         mLpsCounts = null;
         mUmiTypeCounts = null;
+        mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthData() : null;
     }
 
     public int id() { return mId; }
@@ -247,6 +250,7 @@ public class ReadContextCounter implements VariantHotspot
     public List<int[]> lpsCounts() { return mLpsCounts; }
 
     public int[] umiTypeCounts() { return mUmiTypeCounts; }
+    public FragmentLengthData fragmentLengths() { return mFragmentLengthData; }
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
 
@@ -440,7 +444,7 @@ public class ReadContextCounter implements VariantHotspot
 
         if(rawContext.RefSupport)
         {
-            readSupport = VariantReadSupport.REF;
+            readSupport = REF;
             readMatchType = NO_SUPPORT;
         }
         else if(rawContext.AltSupport)
@@ -497,12 +501,17 @@ public class ReadContextCounter implements VariantHotspot
         mCounts.addSupport(support, 1);
         mQualities.addSupport(support, (int)quality);
 
+        boolean supportsVariant = support != null
+                && (support == FULL || support == PARTIAL || support == CORE || support == REALIGNED);
+
         if(mConfig.TrackUMIs)
         {
-            boolean supportsVariant = support != null
-                    && (support == FULL || support == PARTIAL || support == CORE || support == REALIGNED);
-
             countUmiType(record, supportsVariant);
+        }
+
+        if(mFragmentLengthData != null && (support == REF || supportsVariant))
+        {
+            mFragmentLengthData.addLength(abs(record.getInferredInsertSize()), supportsVariant);
         }
     }
 

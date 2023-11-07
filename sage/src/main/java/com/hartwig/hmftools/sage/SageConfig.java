@@ -69,6 +69,7 @@ public class SageConfig
     public final int Threads;
 
     public final boolean TrackUMIs;
+    public final boolean WriteFragmentLengths;
 
     // debug
     public final SpecificRegions SpecificChrRegions;
@@ -84,7 +85,7 @@ public class SageConfig
 
     private static final String REFERENCE = "reference";
     private static final String REFERENCE_BAM = "reference_bam";
-    private static final String OUTPUT_VCF = "out";
+    private static final String OUTPUT_VCF = "output_vcf";
     private static final String MIN_MAP_QUALITY = "min_map_quality";
     private static final String MAX_READ_DEPTH = "max_read_depth";
     private static final String MAX_READ_DEPTH_PANEL = "max_read_depth_panel";
@@ -94,6 +95,7 @@ public class SageConfig
     private static final String READ_LENGTH = "read_length";
     private static final String NO_FRAGMENT_SYNC = "no_fragment_sync";
     private static final String TRACK_UMIS = "track_umis";
+    private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
@@ -153,6 +155,7 @@ public class SageConfig
         QualityRecalibration = new QualityRecalibrationConfig(configBuilder);
 
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
+        WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
 
         SpecificPositions = Sets.newHashSet();
         if(configBuilder.hasValue(SPECIFIC_POSITIONS))
@@ -189,9 +192,10 @@ public class SageConfig
         mReadLength = readLength;
     }
 
-    public String formOutputDir()
+    public String outputDir()
     {
-        return OutputFile != null ? new File(OutputFile).getParent() + File.separator : "";
+        return OutputFile.contains(File.separator) ?
+                new File(OutputFile).getParent() + File.separator : "./";
     }
 
     public boolean isValid()
@@ -258,7 +262,7 @@ public class SageConfig
         configBuilder.addConfigItem(REFERENCE_BAM, false, "Reference bam file");
 
         configBuilder.addPath(SAMPLE_DATA_DIR_CFG, false, "Path to sample data files");
-        configBuilder.addConfigItem(OUTPUT_VCF, true, "Output vcf");
+        configBuilder.addConfigItem(OUTPUT_VCF, true, "Output VCF filename");
 
         addRefGenomeConfig(configBuilder, true);
 
@@ -276,6 +280,7 @@ public class SageConfig
         configBuilder.addInteger(MAX_READ_DEPTH_PANEL, "Max depth to look for evidence in panel", DEFAULT_MAX_READ_DEPTH_PANEL);
         configBuilder.addFlag(NO_FRAGMENT_SYNC, "Disable fragment reads sync in evidence phase");
         configBuilder.addFlag(TRACK_UMIS, "Record counts of UMI types");
+        configBuilder.addFlag(WRITE_FRAG_LENGTHS, "Write fragment lengths to file");
         addValidationStringencyOption(configBuilder);
 
         FilterConfig.registerConfig(configBuilder);
@@ -321,6 +326,7 @@ public class SageConfig
         RefGenVersion = V37;
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
         TrackUMIs = false;
+        WriteFragmentLengths = false;
         SyncFragments = true;
         SpecificPositions = Sets.newHashSet();
         LogEvidenceReads = false;

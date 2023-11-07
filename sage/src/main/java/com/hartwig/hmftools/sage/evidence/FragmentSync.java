@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -416,7 +417,9 @@ public class FragmentSync
         combinedRecord.setFlags(first.getFlags());
 
         combinedRecord.setMappingQuality(first.getMappingQuality());
-        combinedRecord.setInferredInsertSize(combinedPosEnd - combinedPosStart + 1);
+
+        // no need to compute since both records have the same value and it remains unchanged
+        combinedRecord.setInferredInsertSize(abs(first.getInferredInsertSize()));
 
         for(SAMRecord.SAMTagAndValue tagAndValue : first.getAttributes())
         {

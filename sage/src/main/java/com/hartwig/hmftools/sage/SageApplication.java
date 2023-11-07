@@ -17,6 +17,7 @@ import com.hartwig.hmftools.common.samtools.BamSampler;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePipeline;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
@@ -36,6 +37,7 @@ public class SageApplication implements AutoCloseable
 
     private final PhaseSetCounter mPhaseSetCounter;
     private final VcfWriter mVcfWriter;
+    private final FragmentLengths mFragmentLengths;
 
     private SageApplication(final ConfigBuilder configBuilder)
     {
@@ -60,6 +62,8 @@ public class SageApplication implements AutoCloseable
 
         mVcfWriter = new VcfWriter(
                 mConfig.Common.Version, mConfig.Common.OutputFile, mConfig.TumorIds, mConfig.Common.ReferenceIds, mRefData.RefGenome);
+
+        mFragmentLengths = new FragmentLengths(mConfig.Common);
 
         SG_LOGGER.info("writing to file: {}", mConfig.Common.OutputFile);
     }
@@ -89,12 +93,13 @@ public class SageApplication implements AutoCloseable
                 continue;
 
             final ChromosomePipeline pipeline = new ChromosomePipeline(
-                    chromosome, mConfig, mRefData, recalibrationMap, coverage, mPhaseSetCounter, mVcfWriter);
+                    chromosome, mConfig, mRefData, recalibrationMap, coverage, mPhaseSetCounter, mVcfWriter, mFragmentLengths);
 
             pipeline.process();
         }
 
         coverage.writeFiles(mConfig.Common.OutputFile);
+        mFragmentLengths.close();
 
         SG_LOGGER.info("Sage complete, mins({})", runTimeMinsStr(startTimeMs));
     }

@@ -80,7 +80,13 @@ public class VariantVCF implements AutoCloseable
     public static final String RAW_ALLELIC_BASE_QUALITY = "RABQ";
 
     public static final String AVG_MAP_QUALITY = "AMQ";
+    public static final String AVG_MAP_QUALITY_DESC = "Average map quality count (all,alt)";
+
     public static final String AVG_NM_COUNT = "ANM";
+    public static final String AVG_NM_COUNT_DESC = "Average NM count (all,alt)";
+
+    public static final String MAX_READ_EDGE_DISTANCE = "MED";
+    public static final String MAX_READ_EDGE_DISTANCE_DESC = "Max read edge distance";
 
     public static final String STRAND_BIAS = "SB";
     public static final String STRAND_BIAS_DESC = "Strand bias - percentage of forward-orientation fragments";
@@ -171,8 +177,8 @@ public class VariantVCF implements AutoCloseable
                 VCFConstants.ALLELE_FREQUENCY_KEY, 1, VCFHeaderLineType.Float, READ_CONTEXT_AF_DESCRIPTION));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_CONTEXT_JITTER, 3, VCFHeaderLineType.Integer, READ_CONTEXT_JITTER_DESCRIPTION));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, "Average map quality count (all,alt)"));
-        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, "Average NM count (all,alt)"));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, AVG_NM_COUNT_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_DEPTH, 2, VCFHeaderLineType.Integer, "Raw allelic depth"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_ALLELIC_BASE_QUALITY, 2, VCFHeaderLineType.Integer, "Raw allelic base quality"));
         header.addMetaDataLine(new VCFFormatHeaderLine(RAW_DEPTH, 1, VCFHeaderLineType.Integer, "Raw read depth"));
@@ -225,6 +231,8 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFInfoHeaderLine(
                 OLD_INDEL_DEDUP_FLAG, 0, VCFHeaderLineType.Flag, "Temp marking of old-routine INDEL deduping"));
 
+        header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
+
         return header;
     }
 
@@ -237,18 +245,24 @@ public class VariantVCF implements AutoCloseable
 
         if(!header.hasFormatLine(AVG_MAP_QUALITY))
         {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, "Average map quality count (all,alt)"));
+            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_MAP_QUALITY, 2, VCFHeaderLineType.Integer, AVG_MAP_QUALITY_DESC));
         }
 
         if(!header.hasFormatLine(AVG_NM_COUNT))
         {
-            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, "Average NM count (all,alt)"));
+            header.addMetaDataLine(new VCFFormatHeaderLine(AVG_NM_COUNT, 2, VCFHeaderLineType.Float, AVG_NM_COUNT_DESC));
         }
 
         if(!header.hasFormatLine(UMI_TYPE_COUNTS))
         {
             header.addMetaDataLine(new VCFFormatHeaderLine(
                     UMI_TYPE_COUNTS, UMI_TYPE_COUNT, VCFHeaderLineType.Integer, UMI_TYPE_COUNTS_DESCRIPTION));
+        }
+
+        if(!header.hasInfoLine(MAX_READ_EDGE_DISTANCE))
+        {
+            header.addMetaDataLine(new VCFInfoHeaderLine(MAX_READ_EDGE_DISTANCE, 1, VCFHeaderLineType.Integer, MAX_READ_EDGE_DISTANCE_DESC));
+
         }
     }
 
