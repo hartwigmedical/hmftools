@@ -96,9 +96,7 @@ public class IndelConsensusReads
     {
         int chromosomeLength = mBaseBuilder.chromosomeLength();
         if(chromosomeLength == 0)
-        {
             chromosomeLength = mBaseBuilder.refGenome().getChromosomeLength(readStates.get(0).Read.getReferenceName());
-        }
 
         int readCount = readStates.size();
 
@@ -218,10 +216,8 @@ public class IndelConsensusReads
             else
             {
                 int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
-                if(basePosition >= chromosomeLength)
-                {
+                if(basePosition > chromosomeLength)
                     basePosition = -1;
-                }
 
                 byte[] consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
                         locationBases, locationQuals, consensusState.Chromosome, basePosition);

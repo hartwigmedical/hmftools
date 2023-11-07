@@ -28,9 +28,7 @@ public class BaseBuilder
     {
         int chromosomeLength = mChromosomeLength;
         if(chromosomeLength == 0)
-        {
             chromosomeLength = mRefGenome.getChromosomeLength(reads.get(0).getReferenceName());
-        }
 
         int baseLength = consensusState.Bases.length;
 
@@ -104,10 +102,8 @@ public class BaseBuilder
             else
             {
                 int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
-                if(basePosition >= chromosomeLength)
-                {
+                if(basePosition > chromosomeLength)
                     basePosition = -1;
-                }
 
                 byte[] consensusBaseAndQual = determineBaseAndQual(
                         locationBases, locationQuals, reads.get(0).getContig(), basePosition);
