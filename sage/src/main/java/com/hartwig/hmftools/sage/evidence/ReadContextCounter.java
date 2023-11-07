@@ -21,7 +21,7 @@ import static com.hartwig.hmftools.common.variant.VariantReadSupport.OTHER_ALT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_EVIDENCE_MAP_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.EVIDENCE_MIN_MAP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH;
@@ -281,8 +281,11 @@ public class ReadContextCounter implements VariantHotspot
         if(exceedsMaxCoverage())
             return UNRELATED;
 
-        if(!mTier.equals(VariantTier.HOTSPOT) && record.getMappingQuality() < DEFAULT_EVIDENCE_MAP_QUAL)
-            return UNRELATED;
+        if(!mTier.equals(VariantTier.HOTSPOT))
+        {
+            if(mConfig.Quality.MapQualityRatioFactor == 0 && record.getMappingQuality() < EVIDENCE_MIN_MAP_QUAL)
+                return UNRELATED;
+        }
 
         RawContext rawContext = RawContext.create(mVariant, record);
 

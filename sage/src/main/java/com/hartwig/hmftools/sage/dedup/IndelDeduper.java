@@ -465,7 +465,7 @@ public class IndelDeduper
 
             int rightFlankFromIndex = indexedBases.RightFlankIndex - indexedBases.Index;
 
-            int insertedBaseCount = variant.isInsert() ? variant.alt().length() - 1 : 0;
+            int insertedBaseCount = variant.isInsert() ? variant.alt().length() : 0;
             FlankPosEnd = positionEnd() + rightFlankFromIndex - insertedBaseCount;
 
             int leftCoreFromIndex = indexedBases.Index - indexedBases.LeftCoreIndex;

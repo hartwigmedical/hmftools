@@ -141,7 +141,7 @@ public class SageConfig
         BamStringency = BamUtils.validationStringency(configBuilder);
         RegionSliceSize = configBuilder.getInteger(SLICE_SIZE);
         ReadContextFlankSize = configBuilder.getInteger(READ_CONTEXT_FLANK_SIZE);
-        MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
+
         MaxReadDepth = configBuilder.getInteger(MAX_READ_DEPTH);
         MaxReadDepthPanel = configBuilder.getInteger(MAX_READ_DEPTH_PANEL);
 
@@ -153,6 +153,11 @@ public class SageConfig
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
         QualityRecalibration = new QualityRecalibrationConfig(configBuilder);
+
+        if(Quality.MapQualityRatioFactor > 0)
+            MinMapQuality = 0; // force to zero so all reads are considered
+        else
+            MinMapQuality = configBuilder.getInteger(MIN_MAP_QUALITY);
 
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
