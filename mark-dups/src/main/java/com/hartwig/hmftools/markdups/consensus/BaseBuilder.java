@@ -3,6 +3,8 @@ package com.hartwig.hmftools.markdups.consensus;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -45,6 +47,8 @@ public class BaseBuilder
 
         byte[] locationBases = new byte[readCount];
         byte[] locationQuals = new byte[readCount];
+
+        boolean dualMismatchedLogged = false;
 
         for(int baseIndex = 0; baseIndex < baseLength; ++baseIndex)
         {
@@ -108,7 +112,23 @@ public class BaseBuilder
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = INVALID_POSITION; // protect against over-runs from soft-clips - rare but possible
 
-                byte[] consensusBaseAndQual = determineBaseAndQual(locationBases, locationQuals, reads.get(0).getContig(), basePosition);
+                if (!dualMismatchedLogged)
+                {
+                    boolean hasFirstInPairReads = reads.stream().anyMatch(q -> q.getFirstOfPairFlag());
+                    boolean hasSecondInPairReads = reads.stream().anyMatch(q -> q.getSecondOfPairFlag());
+                    boolean isDual = hasFirstInPairReads && hasSecondInPairReads;
+                    if(isDual)
+                    {
+                        MD_LOGGER.trace("Mismatched basis found in dual stranded read group readCount({})", reads.size());
+                        for (SAMRecord read : reads)
+                            MD_LOGGER.trace("Read in dual stranded read group: {}", read);
+
+                        dualMismatchedLogged = true;
+                    }
+                }
+
+                byte[] consensusBaseAndQual = determineBaseAndQual(
+                        locationBases, locationQuals, reads.get(0).getContig(), basePosition);
 
                 consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
                 consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
