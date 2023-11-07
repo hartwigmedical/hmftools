@@ -365,6 +365,38 @@ public class ConsensusReadsTest
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
     }
 
+    @Test
+    public void testSoftClippedOverChromosomeStart()
+    {
+        final List<SAMRecord> reads = Lists.newArrayList();
+
+        String readBases1 = "T".repeat(5) + REF_BASES.substring(0, 5);
+        reads.add(createSamRecord(nextReadId(), 1, readBases1, "5S5M", false));
+
+        String readBases2 = "A".repeat(5) + REF_BASES.substring(0, 5);
+        reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S5M", false));
+
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReadInfo readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+    }
+
+    @Test
+    public void testSoftClippedOverChromosomeStartWithDel()
+    {
+        final List<SAMRecord> reads = Lists.newArrayList();
+
+        String readBases1 = "T".repeat(5) + REF_BASES.substring(0, 5);
+        reads.add(createSamRecord(nextReadId(), 1, readBases1, "5S2M1D2M", false));
+
+        String readBases2 = "A".repeat(5) + REF_BASES.substring(0, 5);
+        reads.add(createSamRecord(nextReadId(), 1, readBases2, "5S1M1D3M", false));
+
+        ConsensusReads consensusReads = new ConsensusReads(mRefGenomeOneBased);
+        ConsensusReadInfo readInfo = consensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+    }
+
     private static SAMRecord createSamRecord(
             final String readId, int readStart, final String readBases, final String cigar, boolean isReversed)
     {
