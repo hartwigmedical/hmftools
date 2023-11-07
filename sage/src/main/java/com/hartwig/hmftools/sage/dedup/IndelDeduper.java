@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MAX_DIST_THRESHOLD;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_AVG_BASE_QUALITY;
@@ -11,6 +12,7 @@ import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.STRAND_BIAS;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_SNV_MNV_FILTER;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -62,9 +64,6 @@ public class IndelDeduper
         if(indels.isEmpty())
             return;
 
-        // if(indels.size() + candidates.size() < 2)
-        //    return;
-
         if(indels.size() > 1)
             Collections.sort(indels, new IndelScoreSorter());
 
@@ -99,6 +98,7 @@ public class IndelDeduper
             MIN_TUMOR_QUAL.filterName(),
             MIN_AVG_BASE_QUALITY.filterName(),
             STRAND_BIAS.filterName(),
+            DEDUP_SNV_MNV_FILTER,
             DEDUP_INDEL_FILTER_OLD); // temporary
 
     private static boolean hasValidFilters(final SageVariant variant)
@@ -110,7 +110,8 @@ public class IndelDeduper
     }
 
     private static final int INDEL_DEDUP_PHASED_DIST_THRESHOLD = 60;
-    private static final int INDEL_DEDUP_MAX_COMBO_GROUP = 7;
+    private static final int LARGE_DEDUP_GROUP_SIZE = 6;
+    private static final int LARGE_DEDUP_SELECT_MAX = 3;
     private static final int INDEL_DEDUP_LOG_ITERATIONS = 25;
 
     private List<Variant> findDedupGroup(final Variant indel, final List<Variant> candidates)
@@ -231,8 +232,13 @@ public class IndelDeduper
 
     private static boolean isDedupCandidate(final Variant indel, final Variant variant)
     {
-        return positionsOverlap(indel.FlankPosStart, indel.FlankPosEnd, variant.position(), variant.positionEnd())
-                || variant.ReadCounter.maxDistanceFromEdge() < INDEL_DEDUP_MAX_DIST_THRESHOLD;
+        if(positionsWithin(variant.position(), variant.CorePosEnd, indel.FlankPosStart, indel.FlankPosEnd))
+            return true;
+
+        if(variant.ReadCounter.maxDistanceFromEdge() < INDEL_DEDUP_MAX_DIST_THRESHOLD)
+            return true;
+
+        return false;
     }
 
     private boolean checkDedupCombinations(
@@ -250,6 +256,7 @@ public class IndelDeduper
         }
 
         // then check all variants
+        /*
         if(checkDedupCombination(indel, dedupGroup, dedupGroup, dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
         {
             return true;
@@ -257,14 +264,27 @@ public class IndelDeduper
 
         if(dedupGroup.size() == 1)
             return false;
+        */
 
-        if(dedupGroup.size() > INDEL_DEDUP_MAX_COMBO_GROUP)
+        Set<Variant> variantSet = Sets.newHashSet(dedupGroup);
+
+        int maxSelectionCount = dedupGroup.size() <= LARGE_DEDUP_GROUP_SIZE ? dedupGroup.size() : LARGE_DEDUP_SELECT_MAX;
+
+        for(int i = 1; i <= maxSelectionCount; ++i)
         {
-            SG_LOGGER.debug("indel({}) skipped deduping {} variants", indel, dedupGroup.size());
-            dedupedVariants.addAll(dedupGroup);
-            return false;
+            Set<Set<Variant>> subsets = Sets.combinations(variantSet, i);
+
+            for(Set<Variant> subset : subsets)
+            {
+                if(checkDedupCombination(
+                        indel, dedupGroup, Lists.newArrayList(subset), dedupedVariants, indelCoreFlankBases, refBases, refPosStart, refPosEnd))
+                {
+                    return true;
+                }
+            }
         }
 
+        /*
         // otherwise try combinations by recursively building all possible combinations
         for(int i = 0; i < dedupGroup.size(); ++i)
         {
@@ -276,6 +296,7 @@ public class IndelDeduper
                 return true;
             }
         }
+        */
 
         return false;
     }
@@ -407,6 +428,8 @@ public class IndelDeduper
         public final SageVariant Variant;
         public final ReadContextCounter ReadCounter;
         public final int IndelScore;
+        public final int CorePosStart;
+        public final int CorePosEnd;
         public final int FlankPosStart;
         public final int FlankPosEnd;
 
@@ -430,12 +453,19 @@ public class IndelDeduper
             final IndexedBases indexedBases = ReadCounter.readContext().indexedBases();
 
             // note that flank positions are estimates of position since they aren't aware of other INDELs in their context
-            int leftFlankFromCore = indexedBases.Index - indexedBases.LeftFlankIndex;
-            FlankPosStart = variant.position() - leftFlankFromCore;
+            int leftFlankFromIndex = indexedBases.Index - indexedBases.LeftFlankIndex;
+            FlankPosStart = variant.position() - leftFlankFromIndex;
 
-            int rightFlankFromCore = indexedBases.RightFlankIndex - indexedBases.Index;
-            int indelGap = variant.isDelete() ? variant.ref().length() - 1 : (variant.isInsert() ? -(variant.alt().length() - 1) : 0);
-            FlankPosEnd = positionEnd() + rightFlankFromCore + indelGap;
+            int rightFlankFromIndex = indexedBases.RightFlankIndex - indexedBases.Index;
+
+            int insertedBaseCount = variant.isInsert() ? variant.alt().length() - 1 : 0;
+            FlankPosEnd = positionEnd() + rightFlankFromIndex - insertedBaseCount;
+
+            int leftCoreFromIndex = indexedBases.Index - indexedBases.LeftCoreIndex;
+            CorePosStart = variant.position() - leftCoreFromIndex;
+
+            int rightCoreFromIndex = indexedBases.RightCoreIndex - indexedBases.Index;
+            CorePosEnd = positionEnd() + rightCoreFromIndex - insertedBaseCount;
         }
 
         public String ref()
@@ -459,8 +489,11 @@ public class IndelDeduper
                 return position() + Variant.ref().length() - 1;
         }
 
-        public String toString() { return format("var(%s:%d %s>%s) filters(%s) flankPos(%d - %d) distFromEdge(%d) score(%d)",
-                Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), Variant.filters().toString(),
-                FlankPosStart, FlankPosEnd, ReadCounter.maxDistanceFromEdge(), IndelScore); }
+        public String toString()
+        {
+            return format("var(%s:%d %s>%s) corePos(%d - %d) flankPos(%d - %d) distFromEdge(%d) score(%d) filters(%s)",
+                Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(),
+                CorePosStart, CorePosEnd, FlankPosStart, FlankPosEnd, ReadCounter.maxDistanceFromEdge(), IndelScore, Variant.filtersStr());
+        }
     }
 }

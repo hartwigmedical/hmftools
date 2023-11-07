@@ -371,7 +371,9 @@ public class ReadContextCounter implements VariantHotspot
                 mSupportAltBaseQualityTotal += rawBaseQuality;
 
                 registerRawSupport(rawContext);
-                updateDistanceFromReadEdge(record);
+
+                if(rawContext.AltSupport)
+                    updateDistanceFromReadEdge(record);
 
                 logReadEvidence(record, matchType, readIndex, quality);
 

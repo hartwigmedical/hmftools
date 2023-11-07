@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.common;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
@@ -160,6 +161,7 @@ public class SageVariant
     public VariantTier tier() { return mCandidate.tier(); }
 
     public Set<String> filters() { return mFilters; }
+    public String filtersStr() { return mFilters.stream().collect(Collectors.joining(",")); }
 
     public ReadContext readContext() { return mTumorReadCounters.get(0).readContext(); }
 

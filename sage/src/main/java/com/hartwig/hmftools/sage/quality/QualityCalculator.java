@@ -41,14 +41,9 @@ public class QualityCalculator
         int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
         int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadEventsPenalty);
 
-        if(config.MapQualityRatioFactor > 0)
-        {
-            return min(MAX_MAP_QUALITY, (mapQuality - config.FixedPenalty) - improperPairPenalty - eventPenalty);
-        }
-        else
-        {
-            return mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
-        }
+        int modifiedMapQuality = mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
+
+        return config.MapQualityRatioFactor > 0 ? min(MAX_MAP_QUALITY, modifiedMapQuality) : modifiedMapQuality;
     }
 
     public double calculateQualityScore(
