@@ -218,10 +218,9 @@ public class IndelConsensusReads
             else
             {
                 int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
+
                 if(basePosition >= chromosomeLength)
-                {
                     basePosition = -1;
-                }
 
                 byte[] consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
                         locationBases, locationQuals, consensusState.Chromosome, basePosition);

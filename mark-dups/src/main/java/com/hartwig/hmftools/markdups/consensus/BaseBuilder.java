@@ -14,6 +14,7 @@ public class BaseBuilder
 {
     private final RefGenomeInterface mRefGenome;
 
+    // cached for the majority of successive reads being on the same chromosome, to protect against ref genome base requests beyond limits
     private int mChromosomeLength;
 
     public BaseBuilder(final RefGenomeInterface refGenome)
@@ -104,13 +105,11 @@ public class BaseBuilder
             else
             {
                 int basePosition = consensusState.MinUnclippedPosStart + baseIndex;
-                if(basePosition >= chromosomeLength)
-                {
-                    basePosition = -1;
-                }
 
-                byte[] consensusBaseAndQual = determineBaseAndQual(
-                        locationBases, locationQuals, reads.get(0).getContig(), basePosition);
+                if(basePosition >= chromosomeLength)
+                    basePosition = -1; // protect against over-runs from soft-clips - rare but possible
+
+                byte[] consensusBaseAndQual = determineBaseAndQual(locationBases, locationQuals, reads.get(0).getContig(), basePosition);
 
                 consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
                 consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
@@ -165,9 +164,9 @@ public class BaseBuilder
                 maxQual = maxQuals.get(i);
                 maxBase = distinctBases.get(i);
             }
-            else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef
-                    && position != -1) // chromosome will be null for unmapped reads
+            else if(chromosome != null && qualTotals.get(i) >= maxQualTotal && !maxIsRef && position > 0)
             {
+                // chromosome will be null for unmapped reads
                 String refBase = mRefGenome.getBaseString(chromosome, position, position);
 
                 if(maxBase == refBase.getBytes()[0])
@@ -197,18 +196,8 @@ public class BaseBuilder
         return new byte[] { maxBase, (byte)round(calcQual) };
     }
 
-    public void setChromosomLength(int chromosomeLength)
-    {
-        mChromosomeLength = chromosomeLength;
-    }
+    public void setChromosomLength(int chromosomeLength) { mChromosomeLength = chromosomeLength; }
+    public int chromosomeLength() { return mChromosomeLength; }
 
-    public int chromosomeLength()
-    {
-        return mChromosomeLength;
-    }
-
-    public RefGenomeInterface refGenome()
-    {
-        return mRefGenome;
-    }
+    public RefGenomeInterface refGenome() { return mRefGenome; }
 }
