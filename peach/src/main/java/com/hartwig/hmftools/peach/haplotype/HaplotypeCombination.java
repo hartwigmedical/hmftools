@@ -42,10 +42,15 @@ public class HaplotypeCombination
         return new HashMap<>(haplotypeNameToCount);
     }
 
-    public int getNonWildTypeCount(String wildTypeHaplotypeName)
+    public int getHaplotypeCount()
+    {
+        return haplotypeNameToCount.values().stream().mapToInt(c -> c).sum();
+    }
+
+    public int getHaplotypeCountWithout(String ignoredHaplotypeName)
     {
         return haplotypeNameToCount.entrySet().stream()
-                .filter(e -> !e.getKey().equals(wildTypeHaplotypeName))
+                .filter(e -> !e.getKey().equals(ignoredHaplotypeName))
                 .mapToInt(Map.Entry::getValue)
                 .sum();
     }

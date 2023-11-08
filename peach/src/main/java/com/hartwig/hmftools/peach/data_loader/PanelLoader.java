@@ -8,8 +8,8 @@ import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 import com.hartwig.hmftools.peach.PeachUtils;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
-import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
-import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
+import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
+import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
@@ -46,13 +46,14 @@ public class PanelLoader
     @NotNull
     private static HaplotypePanel loadHaplotypePanel(List<String> lines)
     {
-        Map<String, List<WildTypeHaplotype>> geneToWildTypeHaplotypes = new HashMap<>();
-        Map<String, List<NonWildTypeHaplotype>> geneToNonWildTypeHaplotypes = new HashMap<>();
+        Map<String, List<DefaultHaplotype>> geneToDefaultHaplotypes = new HashMap<>();
+        Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes = new HashMap<>();
 
         String header = lines.get(0);
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, PeachUtils.TSV_DELIMITER);
         int geneIndex = fieldsIndexMap.get("Gene");
         int haplotypeIndex = fieldsIndexMap.get("Haplotype");
+        int defaultIndex = fieldsIndexMap.get("Default");
         int wildTypeIndex = fieldsIndexMap.get("WildType");
         int eventsIndex = fieldsIndexMap.get("Events");
 
@@ -62,58 +63,97 @@ public class PanelLoader
 
             String haplotypeEventsString = values[eventsIndex];
             String gene = values[geneIndex];
+            boolean isDefault = Boolean.parseBoolean(values[defaultIndex]);
             boolean isWildType = Boolean.parseBoolean(values[wildTypeIndex]);
 
             ImmutableList<HaplotypeEvent> haplotypeEvents = getHaplotypeEvents(haplotypeEventsString);
-            if (isWildType)
+            if (isDefault)
             {
-                WildTypeHaplotype haplotype = new WildTypeHaplotype(values[haplotypeIndex], haplotypeEvents);
-                if (!geneToWildTypeHaplotypes.containsKey(gene))
-                    geneToWildTypeHaplotypes.put(gene, Lists.newArrayList());
-                geneToWildTypeHaplotypes.get(gene).add(haplotype);
+                DefaultHaplotype haplotype = new DefaultHaplotype(values[haplotypeIndex], haplotypeEvents, isWildType);
+                if (!geneToDefaultHaplotypes.containsKey(gene))
+                    geneToDefaultHaplotypes.put(gene, Lists.newArrayList());
+                geneToDefaultHaplotypes.get(gene).add(haplotype);
             }
             else
             {
-                NonWildTypeHaplotype haplotype = new NonWildTypeHaplotype(values[haplotypeIndex], haplotypeEvents);
-                if (!geneToNonWildTypeHaplotypes.containsKey(gene))
-                    geneToNonWildTypeHaplotypes.put(gene, Lists.newArrayList());
-                geneToNonWildTypeHaplotypes.get(gene).add(haplotype);
+                NonDefaultHaplotype haplotype = new NonDefaultHaplotype(values[haplotypeIndex], haplotypeEvents, isWildType);
+                if (!geneToNonDefaultHaplotypes.containsKey(gene))
+                    geneToNonDefaultHaplotypes.put(gene, Lists.newArrayList());
+                geneToNonDefaultHaplotypes.get(gene).add(haplotype);
             }
         }
 
         Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel = createGeneToGeneHaplotypePanel(
-                geneToWildTypeHaplotypes, geneToNonWildTypeHaplotypes
+                geneToDefaultHaplotypes, geneToNonDefaultHaplotypes
         );
         return new HaplotypePanel(geneToGeneHaplotypePanel);
     }
 
     private static Map<String, GeneHaplotypePanel> createGeneToGeneHaplotypePanel(
-            Map<String, List<WildTypeHaplotype>> geneToWildTypeHaplotypes,
-            Map<String, List<NonWildTypeHaplotype>> geneToNonWildTypeHaplotypes
+            Map<String, List<DefaultHaplotype>> geneToDefaultHaplotypes,
+            Map<String, List<NonDefaultHaplotype>> geneToNonDefaultHaplotypes
     )
     {
         Map<String, GeneHaplotypePanel> geneToGeneHaplotypePanel = new HashMap<>();
         Set<String> genes = Streams.concat(
-                geneToWildTypeHaplotypes.keySet().stream(),
-                geneToNonWildTypeHaplotypes.keySet().stream()
+                geneToDefaultHaplotypes.keySet().stream(),
+                geneToNonDefaultHaplotypes.keySet().stream()
         ).collect(Collectors.toSet());
         for (String gene : genes)
         {
-            List<WildTypeHaplotype> wildTypeHaplotypes = geneToWildTypeHaplotypes.getOrDefault(gene, new ArrayList<>());
-            if (wildTypeHaplotypes.size() != 1)
+            List<DefaultHaplotype> defaultHaplotypes = geneToDefaultHaplotypes.getOrDefault(gene, new ArrayList<>());
+            if (defaultHaplotypes.size() != 1)
             {
-                throw new RuntimeException(String.format("Cannot have more than 1 wild type haplotype for gene: %s", gene));
+                throw new RuntimeException(String.format("Need to have exactly 1 default haplotype for gene: %s", gene));
             }
-            WildTypeHaplotype wildTypeHaplotype = wildTypeHaplotypes.get(0);
+            DefaultHaplotype defaultHaplotype = defaultHaplotypes.get(0);
+            List<NonDefaultHaplotype> nonDefaultHaplotypes = geneToNonDefaultHaplotypes.getOrDefault(
+                    gene, new ArrayList<>()
+            );
+            if (nonDefaultHaplotypes.stream().anyMatch(h -> h.name.equals(defaultHaplotype.name)))
+            {
+                throw new RuntimeException(String.format("Cannot have non-default haplotype with same name as default haplotype for gene: %s", gene));
+            }
+
+            String wildTypeHaplotypeName = getWildTypeHaplotypeName(defaultHaplotype, nonDefaultHaplotypes, gene);
 
             GeneHaplotypePanel geneHaplotypePanel = new GeneHaplotypePanel(
-                    wildTypeHaplotype,
-                    ImmutableList.copyOf(geneToNonWildTypeHaplotypes.getOrDefault(gene, new ArrayList<>()))
+                    defaultHaplotype, ImmutableList.copyOf(nonDefaultHaplotypes), wildTypeHaplotypeName
             );
             geneToGeneHaplotypePanel.put(gene, geneHaplotypePanel);
         }
 
         return geneToGeneHaplotypePanel;
+    }
+
+    private static String getWildTypeHaplotypeName(
+            DefaultHaplotype defaultHaplotype, List<NonDefaultHaplotype> nonDefaultHaplotypes, String gene
+    )
+    {
+        List<String> wildTypeHaplotypeNames = nonDefaultHaplotypes.stream()
+                .filter(h -> h.isWildType)
+                .map(h -> h.name)
+                .collect(Collectors.toList());
+        if (defaultHaplotype.isWildType)
+        {
+            wildTypeHaplotypeNames.add(defaultHaplotype.name);
+        }
+
+        if (wildTypeHaplotypeNames.size() != 1)
+        {
+            throw new RuntimeException(String.format("Need to have exactly 1 wild type haplotype for gene: %s", gene));
+        }
+
+        String wildTypeHaplotypeName = wildTypeHaplotypeNames.get(0);
+
+        boolean haplotypeStatusesClash = !defaultHaplotype.isWildType
+                && nonDefaultHaplotypes.stream().anyMatch(h -> h.name.equals(wildTypeHaplotypeName) && !h.isWildType);
+        if (haplotypeStatusesClash)
+        {
+            throw new RuntimeException(String.format("Wild type status inconsistent for haplotype %s for gene %s", wildTypeHaplotypeName, gene));
+        }
+
+        return wildTypeHaplotypeName;
     }
 
     private static ImmutableList<HaplotypeEvent> getHaplotypeEvents(String haplotypeEventsString)

@@ -49,15 +49,15 @@ public class AllHaplotypeCombinationsFile
 
     private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
     {
-        String wildTypeName = analysis.getWildTypeHaplotypeName();
+        String wildTypeName = analysis.getDefaultHaplotypeName();
         Comparator<HaplotypeCombination> combinationComparator = Comparator.comparingInt(
-                (HaplotypeCombination c) -> c.getNonWildTypeCount(wildTypeName)
+                (HaplotypeCombination c) -> c.getHaplotypeCountWithout(wildTypeName)
         ).thenComparing(
                 AllHaplotypeCombinationsFile::getHaplotypeCombinationString
         );
         return analysis.getHaplotypeCombinations().stream()
                 .sorted(combinationComparator)
-                .map(c -> toLine(gene, c, analysis.getWildTypeHaplotypeName()))
+                .map(c -> toLine(gene, c, analysis.getDefaultHaplotypeName()))
                 .collect(Collectors.toList());
     }
 
@@ -66,7 +66,7 @@ public class AllHaplotypeCombinationsFile
         return new StringJoiner(TSV_DELIMITER)
                 .add(gene)
                 .add(getHaplotypeCombinationString(combination))
-                .add(Integer.toString(combination.getNonWildTypeCount(wildTypeHaplotypeName)))
+                .add(Integer.toString(combination.getHaplotypeCountWithout(wildTypeHaplotypeName)))
                 .toString();
     }
 

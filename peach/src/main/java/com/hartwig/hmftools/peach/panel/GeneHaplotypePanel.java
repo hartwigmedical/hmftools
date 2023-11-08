@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.VariantHaplotypeEvent;
-import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
-import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
+import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
+import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -17,22 +17,26 @@ import java.util.stream.Stream;
 public class GeneHaplotypePanel
 {
     @NotNull
-    public final WildTypeHaplotype wildTypeHaplotype;
+    public final DefaultHaplotype defaultHaplotype;
     @NotNull
-    public final ImmutableList<NonWildTypeHaplotype> nonWildTypeHaplotypes;
+    public final ImmutableList<NonDefaultHaplotype> nonDefaultHaplotypes;
+    @NotNull
+    public final String wildTypeHaplotypeName;
 
     public GeneHaplotypePanel(
-            @NotNull WildTypeHaplotype wildTypeHaplotype,
-            @NotNull ImmutableList<NonWildTypeHaplotype> nonWildTypeHaplotypes
+            @NotNull DefaultHaplotype defaultHaplotype,
+            @NotNull ImmutableList<NonDefaultHaplotype> nonDefaultHaplotypes,
+            @NotNull String wildTypeHaplotypeName
     )
     {
-        this.wildTypeHaplotype = wildTypeHaplotype;
-        this.nonWildTypeHaplotypes = nonWildTypeHaplotypes;
+        this.defaultHaplotype = defaultHaplotype;
+        this.nonDefaultHaplotypes = nonDefaultHaplotypes;
+        this.wildTypeHaplotypeName = wildTypeHaplotypeName;
     }
 
     public Map<Chromosome, Set<Integer>> getRelevantVariantPositions()
     {
-        Stream<VariantHaplotypeEvent> variantHaplotypeEvents = nonWildTypeHaplotypes.stream()
+        Stream<VariantHaplotypeEvent> variantHaplotypeEvents = nonDefaultHaplotypes.stream()
                 .map(h -> h.events)
                 .flatMap(Collection::stream)
                 .filter(e -> e instanceof VariantHaplotypeEvent)
@@ -47,14 +51,14 @@ public class GeneHaplotypePanel
 
     public boolean isRelevantFor(HaplotypeEvent event)
     {
-        boolean isEventToIgnore = wildTypeHaplotype.eventsToIgnore.stream()
+        boolean isEventToIgnore = defaultHaplotype.eventsToIgnore.stream()
                 .map(HaplotypeEvent::id)
                 .anyMatch(e -> e.equals(event.id()));
-        return !isEventToIgnore && nonWildTypeHaplotypes.stream().anyMatch(h -> h.isRelevantFor(event));
+        return !isEventToIgnore && nonDefaultHaplotypes.stream().anyMatch(h -> h.isRelevantFor(event));
     }
 
     public int getHaplotypeCount()
     {
-        return nonWildTypeHaplotypes.size() + 1;
+        return nonDefaultHaplotypes.size() + 1;
     }
 }

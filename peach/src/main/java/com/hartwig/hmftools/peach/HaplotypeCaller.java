@@ -3,8 +3,8 @@ package com.hartwig.hmftools.peach;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
-import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
-import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
+import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
+import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,19 +55,24 @@ public class HaplotypeCaller
                 .filter(e -> haplotypePanel.isRelevantFor(e.getKey(), gene))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-        List<List<NonWildTypeHaplotype>> nonWildHaplotypeCombinations = getPossibleNonWildTypeHaplotypes(
+        List<List<NonDefaultHaplotype>> nonDefaultCombinations = getPossibleNonDefaultHaplotypes(
                 relevantEventIdToCount,
-                List.copyOf(haplotypePanel.getNonWildTypeHaplotypes(gene))
+                List.copyOf(haplotypePanel.getNonDefaultHaplotypes(gene))
         );
-        List<HaplotypeCombination> possibleHaplotypeCombinations = nonWildHaplotypeCombinations.stream()
-                .map(l -> getCombination(l, haplotypePanel.getWildTypeHaplotype(gene)))
+        List<HaplotypeCombination> possibleHaplotypeCombinations = nonDefaultCombinations.stream()
+                .map(l -> getCombination(l, haplotypePanel.getDefaultHaplotype(gene)))
                 .collect(Collectors.toList());
-        return new HaplotypeAnalysis(relevantEventIdToCount, possibleHaplotypeCombinations, haplotypePanel.getWildTypeHaplotype(gene).name);
+        return new HaplotypeAnalysis(
+                relevantEventIdToCount,
+                possibleHaplotypeCombinations,
+                haplotypePanel.getDefaultHaplotype(gene).name,
+                haplotypePanel.getWildTypeHaplotypeName(gene)
+        );
     }
 
-    private List<List<NonWildTypeHaplotype>> getPossibleNonWildTypeHaplotypes(
+    private List<List<NonDefaultHaplotype>> getPossibleNonDefaultHaplotypes(
             Map<String, Integer> eventIdToUnexplainedCount,
-            List<NonWildTypeHaplotype> candidateHaplotypes)
+            List<NonDefaultHaplotype> candidateHaplotypes)
     {
         // Use recursive descent to efficiently go through all possibilities
         if (eventIdToUnexplainedCount.values().stream().anyMatch(c -> c < 0))
@@ -80,20 +85,20 @@ public class HaplotypeCaller
             return new ArrayList<>(List.of(new ArrayList<>()));
         }
 
-        List<List<NonWildTypeHaplotype>> results = new ArrayList<>();
+        List<List<NonDefaultHaplotype>> results = new ArrayList<>();
         for (int i = 0; i < candidateHaplotypes.size(); i++)
         {
-            NonWildTypeHaplotype haplotypeToTry = candidateHaplotypes.get(i);
+            NonDefaultHaplotype haplotypeToTry = candidateHaplotypes.get(i);
             Map<String, Integer> eventIdToUnexplainedCountAfterTry = getEventIdToUnexplainedCountAfterTry(
                     eventIdToUnexplainedCount, haplotypeToTry
             );
             // To avoid encountering the exact same combination many times, limit the possible candidates for the recursive calls
-            List<NonWildTypeHaplotype> candidateHaplotypesAfterTry = candidateHaplotypes.subList(i, candidateHaplotypes.size());
-            List<List<NonWildTypeHaplotype>> subCombinations = getPossibleNonWildTypeHaplotypes(
+            List<NonDefaultHaplotype> candidateHaplotypesAfterTry = candidateHaplotypes.subList(i, candidateHaplotypes.size());
+            List<List<NonDefaultHaplotype>> subCombinations = getPossibleNonDefaultHaplotypes(
                     eventIdToUnexplainedCountAfterTry,
                     candidateHaplotypesAfterTry
             );
-            List<List<NonWildTypeHaplotype>> fullCombinations = subCombinations.stream()
+            List<List<NonDefaultHaplotype>> fullCombinations = subCombinations.stream()
                     .peek(l -> l.add(haplotypeToTry))
                     .collect(Collectors.toList());
             results.addAll(fullCombinations);
@@ -102,7 +107,7 @@ public class HaplotypeCaller
     }
 
     private Map<String, Integer> getEventIdToUnexplainedCountAfterTry(
-            Map<String, Integer> eventIdToUnexplainedCount, NonWildTypeHaplotype haplotypeToTry
+            Map<String, Integer> eventIdToUnexplainedCount, NonDefaultHaplotype haplotypeToTry
     )
     {
         HashMap<String, Integer> newEventIdToCount = Maps.newHashMap(eventIdToUnexplainedCount);
@@ -115,14 +120,14 @@ public class HaplotypeCaller
     }
 
     private HaplotypeCombination getCombination(
-            List<NonWildTypeHaplotype> nonWildTypeHaplotypes, WildTypeHaplotype wildTypeHaplotype
+            List<NonDefaultHaplotype> nonDefaultHaplotypes, DefaultHaplotype defaultHaplotype
     )
     {
-        Map<String, Integer> haplotypeNameToCount = nonWildTypeHaplotypes.stream()
+        Map<String, Integer> haplotypeNameToCount = nonDefaultHaplotypes.stream()
                 .map(h -> h.name)
                 .collect(Collectors.groupingBy(h -> h, Collectors.summingInt(h -> 1)));
-        if (nonWildTypeHaplotypes.size() < GERMLINE_TOTAL_COPY_NUMBER)
-            haplotypeNameToCount.put(wildTypeHaplotype.name, GERMLINE_TOTAL_COPY_NUMBER - nonWildTypeHaplotypes.size());
+        if (nonDefaultHaplotypes.size() < GERMLINE_TOTAL_COPY_NUMBER)
+            haplotypeNameToCount.put(defaultHaplotype.name, GERMLINE_TOTAL_COPY_NUMBER - nonDefaultHaplotypes.size());
         return new HaplotypeCombination(haplotypeNameToCount);
     }
 }

@@ -4,8 +4,8 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
 import com.hartwig.hmftools.peach.event.HaplotypeEvent;
 import com.hartwig.hmftools.peach.event.HaplotypeEventFactory;
-import com.hartwig.hmftools.peach.haplotype.NonWildTypeHaplotype;
-import com.hartwig.hmftools.peach.haplotype.WildTypeHaplotype;
+import com.hartwig.hmftools.peach.haplotype.NonDefaultHaplotype;
+import com.hartwig.hmftools.peach.haplotype.DefaultHaplotype;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -47,13 +47,18 @@ public class HaplotypePanel
         return geneToGeneHaplotypePanel.get(gene).isRelevantFor(event);
     }
 
-    public List<NonWildTypeHaplotype> getNonWildTypeHaplotypes(String gene)
+    public List<NonDefaultHaplotype> getNonDefaultHaplotypes(String gene)
     {
-        return geneToGeneHaplotypePanel.get(gene).nonWildTypeHaplotypes;
+        return geneToGeneHaplotypePanel.get(gene).nonDefaultHaplotypes;
     }
-    public WildTypeHaplotype getWildTypeHaplotype(String gene)
+    public DefaultHaplotype getDefaultHaplotype(String gene)
     {
-        return geneToGeneHaplotypePanel.get(gene).wildTypeHaplotype;
+        return geneToGeneHaplotypePanel.get(gene).defaultHaplotype;
+    }
+
+    public String getWildTypeHaplotypeName(String gene)
+    {
+        return geneToGeneHaplotypePanel.get(gene).wildTypeHaplotypeName;
     }
 
     public Set<String> getGenes()

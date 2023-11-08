@@ -17,16 +17,20 @@ public class HaplotypeAnalysis
     @NotNull
     private final List<HaplotypeCombination> haplotypeCombinations;
     @NotNull
+    private final String defaultHaplotypeName;
+    @NotNull
     private final String wildTypeHaplotypeName;
 
     public HaplotypeAnalysis(
             @NotNull Map<String, Integer> eventIdToCount,
             @NotNull List<HaplotypeCombination> haplotypeCombinations,
+            @NotNull String defaultHaplotypeName,
             @NotNull String wildTypeHaplotypeName
     )
     {
         this.eventIdToCount = new HashMap<>(eventIdToCount);
         this.haplotypeCombinations = new ArrayList<>(haplotypeCombinations);
+        this.defaultHaplotypeName = defaultHaplotypeName;
         this.wildTypeHaplotypeName = wildTypeHaplotypeName;
     }
 
@@ -36,7 +40,7 @@ public class HaplotypeAnalysis
         return "HaplotypeAnalysis(" +
                 "eventIdToCount=" + eventIdToCount +
                 ", haplotypeCombinations=" + haplotypeCombinations +
-                ", wildTypeHaplotypeName=" + wildTypeHaplotypeName +
+                ", defaultHaplotypeName=" + defaultHaplotypeName +
                 ')';
     }
 
@@ -51,9 +55,9 @@ public class HaplotypeAnalysis
     }
 
     @NotNull
-    public String getWildTypeHaplotypeName()
+    public String getDefaultHaplotypeName()
     {
-        return wildTypeHaplotypeName;
+        return defaultHaplotypeName;
     }
 
     public PeachQCStatus getAnalysisStatus()
@@ -64,7 +68,7 @@ public class HaplotypeAnalysis
         List<HaplotypeCombination> minimumCombinations = getMinimumCombinations();
         if (minimumCombinations.size() != 1)
             return PeachQCStatus.FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND;
-        else if (minimumCombinations.get(0).getNonWildTypeCount(wildTypeHaplotypeName) > 2)
+        else if (minimumCombinations.get(0).getHaplotypeCount() > 2)
             return PeachQCStatus.WARN_TOO_MANY_ALLELES_FOUND;
         else
             return PeachQCStatus.PASS;
@@ -101,10 +105,10 @@ public class HaplotypeAnalysis
             return Collections.emptyList();
 
         int minimumNonWildTypeCount = haplotypeCombinations.stream()
-                .mapToInt(c -> c.getNonWildTypeCount(wildTypeHaplotypeName))
+                .mapToInt(c -> c.getHaplotypeCountWithout(wildTypeHaplotypeName))
                 .min().getAsInt();
         return haplotypeCombinations.stream()
-                .filter(c -> c.getNonWildTypeCount(wildTypeHaplotypeName) == minimumNonWildTypeCount)
+                .filter(c -> c.getHaplotypeCountWithout(wildTypeHaplotypeName) == minimumNonWildTypeCount)
                 .collect(Collectors.toList());
     }
 
