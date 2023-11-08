@@ -57,7 +57,6 @@ Require inputs shown as :white_check_mark: for available modes
 ### Targeted sequencing workflow overview
 
 ![HMF_Pipeline](hmf_tools_panel_pipeline.png)
-
 #### Available modes
 
 Require inputs shown as :white_check_mark: for available modes
