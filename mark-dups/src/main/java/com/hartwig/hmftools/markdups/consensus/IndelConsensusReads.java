@@ -3,7 +3,10 @@ package com.hartwig.hmftools.markdups.consensus;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
+import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
+import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.isDualStrandAndIsFirstInPair;
+import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.logDualStrandWithMismatch;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
@@ -26,10 +29,12 @@ import htsjdk.samtools.SAMRecord;
 public class IndelConsensusReads
 {
     private final BaseBuilder mBaseBuilder;
+    private boolean mCurrentIsDualStrandWithMismatch;
 
     public IndelConsensusReads(final BaseBuilder baseBuilder)
     {
         mBaseBuilder = baseBuilder;
+        mCurrentIsDualStrandWithMismatch = false;
     }
 
     public void buildIndelComponents(final List<SAMRecord> reads, final ConsensusState consensusState)
@@ -48,6 +53,12 @@ public class IndelConsensusReads
             consensusState.CigarElements.addAll(selectedConsensusRead.getCigar().getCigarElements());
             return;
         }
+
+        mCurrentIsDualStrandWithMismatch = false;
+
+        int readCount = reads.size();
+        boolean[] isFirstInPair = new boolean[readCount];
+        boolean isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
 
         // find the most common read by CIGAR, and where there are equal counts choose the one with the least soft-clips
         SAMRecord selectedConsensusRead = selectConsensusRead(cigarFrequencies);
@@ -69,10 +80,10 @@ public class IndelConsensusReads
             CigarElement element = selectElements.get(cigarIndex);
 
             // simplest scenario is where all reads agree about this next element
-            addElementBases(consensusState, readStates, element, baseIndex);
+            addElementBases(consensusState, readStates, element, baseIndex, isDualStrand, isFirstInPair);
 
             if(consensusState.outcome() == INDEL_FAIL)
-                return;
+                break;
 
             if(!deleteOrSplit(element.getOperator()))
             {
@@ -88,11 +99,20 @@ public class IndelConsensusReads
                 --cigarIndex;
         }
 
-        consensusState.setOutcome(INDEL_MISMATCH);
+        if(consensusState.outcome() != INDEL_FAIL)
+            consensusState.setOutcome(INDEL_MISMATCH);
+
+        ConsensusStatistics consensusStats = mBaseBuilder.stats();
+        if(mCurrentIsDualStrandWithMismatch && consensusStats != null)
+        {
+            logDualStrandWithMismatch(reads);
+            consensusStats.registerDualStrandMismatchReadGroup(readCount);
+        }
     }
 
     private void addElementBases(
-            final ConsensusState consensusState, final List<ReadParseState> readStates, final CigarElement selectedElement, int baseIndex)
+            final ConsensusState consensusState, final List<ReadParseState> readStates, final CigarElement selectedElement, int baseIndex,
+            boolean isDualStrand, final boolean[] isFirstInPair)
     {
         int chromosomeLength = mBaseBuilder.chromosomeLength();
         if(chromosomeLength == 0)
@@ -130,6 +150,15 @@ public class IndelConsensusReads
         byte[] locationBases = new byte[readCount];
         byte[] locationQuals = new byte[readCount];
 
+        // in case of dual strand, we also track bases and quals by first/second in pair status
+        byte[][] locationBasesPair = null;
+        byte[][] locationQualsPair = null;
+        if (isDualStrand)
+        {
+            locationBasesPair = new byte[][] { new byte[readCount], new byte[readCount] };
+            locationQualsPair = new byte[][] { new byte[readCount], new byte[readCount] };
+        }
+
         for(int i = 0; i < selectedElement.getLength(); ++i)
         {
             boolean hasMismatch = false;
@@ -139,6 +168,11 @@ public class IndelConsensusReads
             for(int r = 0; r < readCount; ++r)
             {
                 locationBases[r] = NO_BASE;
+                if (isDualStrand)
+                {
+                    locationBasesPair[0][r] = NO_BASE;
+                    locationBasesPair[1][r] = NO_BASE;
+                }
             }
 
             for(int r = 0; r < readCount; ++r)
@@ -196,6 +230,13 @@ public class IndelConsensusReads
                     locationBases[r] = read.currentBase();
                     locationQuals[r] = read.currentBaseQual();
 
+                    if (isDualStrand)
+                    {
+                        int pairIdx = isFirstInPair[r] ? 0 : 1;
+                        locationBasesPair[pairIdx][r] = locationBases[r];
+                        locationQualsPair[pairIdx][r] = locationQuals[r];
+                    }
+
                     if(firstBase == NO_BASE)
                         firstBase = locationBases[r];
                     else
@@ -220,8 +261,21 @@ public class IndelConsensusReads
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = BaseBuilder.INVALID_POSITION;
 
-                byte[] consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
-                        locationBases, locationQuals, consensusState.Chromosome, basePosition);
+                if(isDualStrand)
+                    mCurrentIsDualStrandWithMismatch = true;
+
+                byte[] consensusBaseAndQual;
+                if(isDualStrand && basePosition != INVALID_POSITION)
+                {
+                    consensusBaseAndQual =
+                            mBaseBuilder.determineBaseAndQualDualStrand(locationBasesPair, locationQualsPair, consensusState.Chromosome, basePosition);
+                }
+                else
+                {
+                    consensusBaseAndQual =
+                            mBaseBuilder.determineBaseAndQual(locationBases, locationQuals, consensusState.Chromosome, basePosition);
+                }
+
 
                 consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
                 consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];

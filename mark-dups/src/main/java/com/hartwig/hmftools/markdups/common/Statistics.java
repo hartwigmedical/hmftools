@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
+import com.hartwig.hmftools.markdups.consensus.ConsensusStatistics;
 import com.hartwig.hmftools.markdups.umi.UmiStatistics;
 
 public class Statistics
@@ -35,6 +36,8 @@ public class Statistics
 
     public final UmiStatistics UmiStats;
 
+    public final ConsensusStatistics ConsensusStats;
+
     public Statistics()
     {
         TotalReads = 0;
@@ -48,6 +51,7 @@ public class Statistics
         PairedAltChromosome = 0;
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
+        ConsensusStats = new ConsensusStatistics();
     }
 
     public void merge(final Statistics other)
@@ -68,6 +72,7 @@ public class Statistics
         }
 
         UmiStats.merge(other.UmiStats);
+        ConsensusStats.merge(other.ConsensusStats);
     }
 
     public void addFrequency(int frequency)

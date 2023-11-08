@@ -20,15 +20,16 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSampler;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.markdups.write.BamWriter;
-import com.hartwig.hmftools.markdups.write.FileWriterCache;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.Statistics;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
+import com.hartwig.hmftools.markdups.consensus.ConsensusStatistics;
+import com.hartwig.hmftools.markdups.write.BamWriter;
+import com.hartwig.hmftools.markdups.write.FileWriterCache;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -105,7 +106,8 @@ public class MarkDuplicates
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
         int totalUnwrittenFragments = 0;
-        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
+        ConsensusStatistics consensusStats = new ConsensusStatistics();
+        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome, consensusStats);
         consensusReads.setDebugOptions(mConfig.RunChecks);
 
         // write any orphaned or remaining fragments (can be supplementaries)
@@ -128,6 +130,7 @@ public class MarkDuplicates
         Statistics combinedStats = new Statistics();
         partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
         partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
+        combinedStats.ConsensusStats.merge(consensusStats);
 
         // free up any processing state
         partitionReaders.clear();
@@ -172,6 +175,8 @@ public class MarkDuplicates
                     combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
                 }
             }
+
+            MD_LOGGER.info("consensus stats: {}", combinedStats.ConsensusStats.toString());
         }
 
         logPerformanceStats(combinedPerfCounters, partitionDataStore);
@@ -265,7 +270,7 @@ public class MarkDuplicates
 
     }
 
-    public static void main(@NotNull final String[] args)
+    public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addConfig(configBuilder);

@@ -83,7 +83,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         mReadPositions = new ReadPositionsCache(config.BufferSize, !config.NoMateCigar, this);
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
-        mConsensusReads = new ConsensusReads(config.RefGenome);
+        mStats = mDuplicateGroupBuilder.statistics();
+        mConsensusReads = new ConsensusReads(config.RefGenome, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
         mUnmapRegionState = null;
@@ -91,8 +92,6 @@ public class PartitionReader implements Consumer<List<Fragment>>
         mPendingIncompleteReads = Maps.newHashMap();
 
         mPartitionRecordCount = 0;
-
-        mStats = mDuplicateGroupBuilder.statistics();
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mPcTotal = new PerformanceCounter("Total");
