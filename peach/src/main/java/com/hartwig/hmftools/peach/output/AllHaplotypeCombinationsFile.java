@@ -49,7 +49,7 @@ public class AllHaplotypeCombinationsFile
 
     private static List<String> toLines(String gene, HaplotypeAnalysis analysis)
     {
-        String wildTypeName = analysis.getDefaultHaplotypeName();
+        String wildTypeName = analysis.getWildTypeHaplotypeName();
         Comparator<HaplotypeCombination> combinationComparator = Comparator.comparingInt(
                 (HaplotypeCombination c) -> c.getHaplotypeCountWithout(wildTypeName)
         ).thenComparing(
@@ -57,7 +57,7 @@ public class AllHaplotypeCombinationsFile
         );
         return analysis.getHaplotypeCombinations().stream()
                 .sorted(combinationComparator)
-                .map(c -> toLine(gene, c, analysis.getDefaultHaplotypeName()))
+                .map(c -> toLine(gene, c, analysis.getWildTypeHaplotypeName()))
                 .collect(Collectors.toList());
     }
 

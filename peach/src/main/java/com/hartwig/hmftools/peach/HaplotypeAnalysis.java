@@ -55,9 +55,9 @@ public class HaplotypeAnalysis
     }
 
     @NotNull
-    public String getDefaultHaplotypeName()
+    public String getWildTypeHaplotypeName()
     {
-        return defaultHaplotypeName;
+        return wildTypeHaplotypeName;
     }
 
     public PeachQCStatus getAnalysisStatus()
