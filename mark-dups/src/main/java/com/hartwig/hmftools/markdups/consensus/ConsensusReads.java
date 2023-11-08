@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.Cigar;
@@ -49,6 +50,7 @@ public class ConsensusReads
         mValidateConsensusReads = false;
     }
 
+    @VisibleForTesting
     public ConsensusReads(final RefGenomeInterface refGenome)
     {
         this(refGenome, null);

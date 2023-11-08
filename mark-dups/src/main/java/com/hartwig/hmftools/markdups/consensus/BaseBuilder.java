@@ -3,6 +3,8 @@ package com.hartwig.hmftools.markdups.consensus;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -117,9 +119,7 @@ public class BaseBuilder
                     basePosition = INVALID_POSITION; // protect against over-runs from soft-clips - rare but possible
 
                 if(isDualStrand)
-                {
                     isDualStrandWithMismatch = true;
-                }
 
                 byte[] consensusBaseAndQual;
                 if(isDualStrand && basePosition != -1)
@@ -138,7 +138,10 @@ public class BaseBuilder
         }
 
         if(isDualStrandWithMismatch && mConsensusStats != null)
-            mConsensusStats.registerDualStrandMismatchReadGroup(reads);
+        {
+            logDualStrandWithMismatch(reads);
+            mConsensusStats.registerDualStrandMismatchReadGroup(readCount);
+        }
     }
 
     public static boolean isDualStrandAndIsFirstInPair(final List<SAMRecord> reads, final boolean[] isFirstInPairOut)
@@ -295,6 +298,15 @@ public class BaseBuilder
         double calcQual = (double)maxQual * max(0.0, maxQualTotal - differingQual) / maxQualTotal;
 
         return new byte[] { maxBase, (byte)round(calcQual) };
+    }
+
+    public static void logDualStrandWithMismatch(List<SAMRecord> reads)
+    {
+        MD_LOGGER.trace("Mismatched basis found in dual stranded read group readCount({})", reads.size());
+        for(SAMRecord read : reads)
+        {
+            MD_LOGGER.trace("Read in dual stranded read group: {}", read);
+        }
     }
 
     public void setChromosomLength(int chromosomeLength) { mChromosomeLength = chromosomeLength; }

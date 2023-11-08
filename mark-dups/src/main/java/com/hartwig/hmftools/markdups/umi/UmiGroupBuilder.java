@@ -19,8 +19,6 @@ import com.hartwig.hmftools.markdups.common.DuplicateGroup;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
 
-import org.apache.commons.lang3.NotImplementedException;
-
 public class UmiGroupBuilder
 {
     private final UmiConfig mUmiConfig;
@@ -203,14 +201,7 @@ public class UmiGroupBuilder
 
         public boolean hasOpposites()
         {
-            boolean output = ForwardGroups != null && ReverseGroups != null;
-
-//            if (output)
-//            {
-//                throw new NotImplementedException("TODO");
-//            }
-
-            return output;
+            return ForwardGroups != null && ReverseGroups != null;
         }
 
         private void addFragmentGroup(final Object object, boolean isForward)

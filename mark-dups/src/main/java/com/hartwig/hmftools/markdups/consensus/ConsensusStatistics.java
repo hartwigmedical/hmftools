@@ -2,12 +2,6 @@ package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-
-import java.util.List;
-
-import htsjdk.samtools.SAMRecord;
-
 public class ConsensusStatistics
 {
     private int mDualStrandMismatchReadGroupCount;
@@ -19,16 +13,10 @@ public class ConsensusStatistics
         mDualStrandMismatchReadCount = 0;
     }
 
-    public void registerDualStrandMismatchReadGroup(final List<SAMRecord> reads)
+    public void registerDualStrandMismatchReadGroup(int readCount)
     {
-        MD_LOGGER.trace("Mismatched basis found in dual stranded read group readCount({})", reads.size());
-        for(SAMRecord read : reads)
-        {
-            MD_LOGGER.trace("Read in dual stranded read group: {}", read);
-        }
-
         ++mDualStrandMismatchReadGroupCount;
-        mDualStrandMismatchReadCount += reads.size();
+        mDualStrandMismatchReadCount += readCount;
     }
 
     public void merge(final ConsensusStatistics other)

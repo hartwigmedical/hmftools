@@ -5,6 +5,7 @@ import static java.lang.Math.max;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.isDualStrandAndIsFirstInPair;
+import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.logDualStrandWithMismatch;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAIL;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
@@ -54,7 +55,8 @@ public class IndelConsensusReads
 
         mCurrentIsDualStrandWithMismatch = false;
 
-        boolean[] isFirstInPair = new boolean[reads.size()];
+        int readCount = reads.size();
+        boolean[] isFirstInPair = new boolean[readCount];
         boolean isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
 
         // find the most common read by CIGAR, and where there are equal counts choose the one with the least soft-clips
@@ -80,9 +82,7 @@ public class IndelConsensusReads
             addElementBases(consensusState, readStates, element, baseIndex, isDualStrand, isFirstInPair);
 
             if(consensusState.outcome() == INDEL_FAIL)
-            {
                 break;
-            }
 
             if(!deleteOrSplit(element.getOperator()))
             {
@@ -103,7 +103,10 @@ public class IndelConsensusReads
 
         ConsensusStatistics consensusStats = mBaseBuilder.stats();
         if(mCurrentIsDualStrandWithMismatch && consensusStats != null)
-            consensusStats.registerDualStrandMismatchReadGroup(reads);
+        {
+            logDualStrandWithMismatch(reads);
+            consensusStats.registerDualStrandMismatchReadGroup(readCount);
+        }
     }
 
     private void addElementBases(
@@ -246,9 +249,7 @@ public class IndelConsensusReads
                     basePosition = BaseBuilder.INVALID_POSITION;
 
                 if(isDualStrand)
-                {
                     mCurrentIsDualStrandWithMismatch = true;
-                }
 
                 byte[] consensusBaseAndQual;
                 if(isDualStrand && basePosition != -1)
