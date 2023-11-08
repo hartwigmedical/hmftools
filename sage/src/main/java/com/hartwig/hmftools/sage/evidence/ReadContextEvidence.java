@@ -169,9 +169,11 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         int nthGap = gapDistances.get(nth - 1);
         int medianGap = gapDistances.get(gapCount / 2);
 
+        /*
         SG_LOGGER.debug("region({}:{}-{} len={}) candidates({}) gap(n={} nth={}, max={} avg={} median={})",
                 firstCandidate.chromosome(), firstCandidate.position(), lastCandidate.position(), sliceLength,
                 candidates.size(), nth, nthGap, gapDistances.get(0), averageGap, medianGap);
+        */
 
         ChrBaseRegion currentRegion = new ChrBaseRegion(firstCandidate.chromosome(), firstCandidate.position(), firstCandidate.position());
 
