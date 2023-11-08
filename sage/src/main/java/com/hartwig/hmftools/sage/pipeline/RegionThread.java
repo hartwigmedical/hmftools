@@ -20,6 +20,7 @@ import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 
@@ -46,13 +47,14 @@ public class RegionThread extends Thread
     private final List<BaseRegion> mHighConfidenceRegions;
 
     private final SamSlicerFactory mSamSlicerFactory;
+    private final FragmentLengths mFragmentLengths;
 
     public RegionThread(
             final String chromosome, final SageCallConfig config,
             final Map<String,QualityRecalibrationMap> qualityRecalibrationMap, final Coverage coverage,
             final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<VariantHotspot> hotspots,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
-            final Queue<PartitionTask> partitions, final RegionResults regionResults)
+            final Queue<PartitionTask> partitions, final RegionResults regionResults, final FragmentLengths fragmentLengths)
     {
         mChromosome = chromosome;
         mConfig = config;
@@ -62,6 +64,7 @@ public class RegionThread extends Thread
         mQualityRecalibrationMap = qualityRecalibrationMap;
         mCoverage = coverage;
         mPhaseSetCounter = phaseSetCounter;
+        mFragmentLengths = fragmentLengths;
 
         mPanelRegions = panelRegions;
         mHighConfidenceRegions = highConfidenceRegions;
@@ -131,6 +134,6 @@ public class RegionThread extends Thread
 
         return new RegionTask(
                 partitionTask.TaskId, region, mRegionResults, mConfig, mRefGenome, regionHotspots, regionPanel, regionsTranscripts,
-                regionHighConfidence, mQualityRecalibrationMap, mPhaseSetCounter, mCoverage, mSamSlicerFactory);
+                regionHighConfidence, mQualityRecalibrationMap, mPhaseSetCounter, mCoverage, mSamSlicerFactory, mFragmentLengths);
     }
 }

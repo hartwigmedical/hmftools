@@ -20,15 +20,16 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSampler;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.markdups.write.BamWriter;
-import com.hartwig.hmftools.markdups.write.FileWriterCache;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.Statistics;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
+import com.hartwig.hmftools.markdups.consensus.ConsensusStatistics;
+import com.hartwig.hmftools.markdups.write.BamWriter;
+import com.hartwig.hmftools.markdups.write.FileWriterCache;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -105,9 +106,11 @@ public class MarkDuplicates
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
         int totalUnwrittenFragments = 0;
-        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
+        ConsensusStatistics consensusStats = new ConsensusStatistics();
+        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome, consensusStats);
         consensusReads.setDebugOptions(mConfig.RunChecks);
 
+        // write any orphaned or remaining fragments (can be supplementaries)
         BamWriter recordWriter = partitionTasks.get(0).bamWriter();
 
         for(PartitionData partitionData : partitionDataStore.partitions())
@@ -119,8 +122,18 @@ public class MarkDuplicates
 
         if(totalUnwrittenFragments > 0)
         {
-            MD_LOGGER.info("wrote {} cached fragments", totalUnwrittenFragments);
+            MD_LOGGER.info("wrote {} remaining cached fragments", totalUnwrittenFragments);
         }
+
+        List<PerformanceCounter> combinedPerfCounters = mergePerfCounters(partitionReaders);
+
+        Statistics combinedStats = new Statistics();
+        partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
+        partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
+        combinedStats.ConsensusStats.merge(consensusStats);
+
+        // free up any processing state
+        partitionReaders.clear();
 
         fileWriterCache.close();
 
@@ -132,14 +145,10 @@ public class MarkDuplicates
             fileWriterCache.sortAndIndexBams();
         }
 
-        Statistics combinedStats = new Statistics();
-        partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
-        partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
-
         combinedStats.logStats();
 
-        int totalWrittenReads = fileWriterCache.totalWrittenReads();
-        int unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
+        long totalWrittenReads = fileWriterCache.totalWrittenReads();
+        long unmappedDroppedReads = mConfig.UnmapRegions.stats().SupplementaryCount.get();
 
         if(mConfig.UnmapRegions.enabled())
         {
@@ -166,8 +175,43 @@ public class MarkDuplicates
                     combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
                 }
             }
+
+            MD_LOGGER.info("consensus stats: {}", combinedStats.ConsensusStats.toString());
         }
 
+        logPerformanceStats(combinedPerfCounters, partitionDataStore);
+
+        MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private void setReadLength()
+    {
+        if(mConfig.readLength() > 0) // skip if set in config
+            return;
+
+        // sample the BAM to determine read length
+        BamSampler bamSampler = new BamSampler(mConfig.RefGenomeFile);
+
+        ChrBaseRegion sampleRegion = !mConfig.SpecificChrRegions.Regions.isEmpty() ?
+                mConfig.SpecificChrRegions.Regions.get(0) : bamSampler.defaultRegion();
+
+        int readLength = DEFAULT_READ_LENGTH;
+
+        if(bamSampler.calcBamCharacteristics(mConfig.BamFile, sampleRegion) && bamSampler.maxReadLength() > 0)
+        {
+            readLength = bamSampler.maxReadLength();
+            MD_LOGGER.info("BAM sampled max read-length({})", readLength);
+        }
+        else
+        {
+            MD_LOGGER.warn("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
+        }
+
+        mConfig.setReadLength(readLength);
+    }
+
+    private List<PerformanceCounter> mergePerfCounters(final List<PartitionReader> partitionReaders)
+    {
         List<PerformanceCounter> combinedPerfCounters = partitionReaders.get(0).perfCounters();
 
         for(int i = 1; i < partitionReaders.size(); ++i)
@@ -180,6 +224,11 @@ public class MarkDuplicates
             }
         }
 
+        return combinedPerfCounters;
+    }
+
+    private void logPerformanceStats(final List<PerformanceCounter> combinedPerfCounters, final PartitionDataStore partitionDataStore)
+    {
         if(mConfig.PerfDebug)
         {
             for(int j = 0; j < combinedPerfCounters.size(); ++j)
@@ -219,36 +268,9 @@ public class MarkDuplicates
             combinedPerfCounters.forEach(x -> x.logStats());
         }
 
-        MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private void setReadLength()
-    {
-        if(mConfig.readLength() > 0) // skip if set in config
-            return;
-
-        // sample the BAM to determine read length
-        BamSampler bamSampler = new BamSampler(mConfig.RefGenomeFile);
-
-        ChrBaseRegion sampleRegion = !mConfig.SpecificChrRegions.Regions.isEmpty() ?
-                mConfig.SpecificChrRegions.Regions.get(0) : bamSampler.defaultRegion();
-
-        int readLength = DEFAULT_READ_LENGTH;
-
-        if(bamSampler.calcBamCharacteristics(mConfig.BamFile, sampleRegion) && bamSampler.maxReadLength() > 0)
-        {
-            readLength = bamSampler.maxReadLength();
-            MD_LOGGER.info("BAM sampled max read-length({})", readLength);
-        }
-        else
-        {
-            MD_LOGGER.warn("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
-        }
-
-        mConfig.setReadLength(readLength);
-    }
-
-    public static void main(@NotNull final String[] args)
+    public static void main(final String[] args)
     {
         ConfigBuilder configBuilder = new ConfigBuilder(APP_NAME);
         addConfig(configBuilder);

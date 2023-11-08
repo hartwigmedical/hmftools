@@ -72,7 +72,7 @@ public class BaseQualityRecalibration
         if(mConfig.QualityRecalibration.LoadBqrFiles)
         {
             Map<String,String> sampleFileNames = Maps.newHashMap();
-            String outputDir = mConfig.formOutputDir();
+            String outputDir = mConfig.outputDir();
             mConfig.ReferenceIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(outputDir, x)));
             mTumorIds.forEach(x -> sampleFileNames.put(x, generateBqrFilename(outputDir, x)));
 
@@ -261,7 +261,7 @@ public class BaseQualityRecalibration
     {
         try
         {
-            final String tsvFile = generateBqrFilename(mConfig.formOutputDir(), sampleId);
+            final String tsvFile = generateBqrFilename(mConfig.outputDir(), sampleId);
             SG_LOGGER.debug("writing base quality recalibration file: {}", tsvFile);
 
             QualityRecalibrationFile.write(tsvFile, records.stream().collect(Collectors.toList()));

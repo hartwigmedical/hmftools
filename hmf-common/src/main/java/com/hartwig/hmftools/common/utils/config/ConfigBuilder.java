@@ -262,7 +262,7 @@ public class ConfigBuilder
 
             if(matchedItem != null)
             {
-                if(argument.startsWith(mConfigPrefix) && matchedItem.Type != DECIMAL) // account for negative decimal values
+                if(argument.startsWith(mConfigPrefix) && matchedItem.Type != DECIMAL && matchedItem.Type != INTEGER) // account for negative values
                 {
                     LOGGER.error("config item({}) has invalid argument: {}", matchedItem.Name, argument);
                     mErrors.add(ErrorType.INCORRECT_ARGUMENT);

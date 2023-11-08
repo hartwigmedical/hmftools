@@ -6,6 +6,7 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.sage.common.IndexedBases;
@@ -39,7 +40,10 @@ public class QualityCalculator
 
         int improperPairPenalty = isImproperPair ? config.ImproperPairPenalty : 0;
         int eventPenalty = (int)round(max(0, readEvents - 1) * config.ReadEventsPenalty);
-        return mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
+
+        int modifiedMapQuality = mapQuality - config.FixedPenalty - improperPairPenalty - eventPenalty;
+
+        return config.MapQualityRatioFactor > 0 ? min(MAX_MAP_QUALITY, modifiedMapQuality) : modifiedMapQuality;
     }
 
     public double calculateQualityScore(
@@ -62,6 +66,7 @@ public class QualityCalculator
         }
 
         double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
+
 
         /*
         if(readContextCounter.logEvidence() && !SG_LOGGER.isTraceEnabled())

@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.pipeline;
 
-import static java.lang.Math.max;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -13,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.evidence.EvidenceStats;
+import com.hartwig.hmftools.sage.evidence.FragmentLengthData;
 import com.hartwig.hmftools.sage.evidence.FragmentSyncType;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
@@ -21,7 +21,6 @@ public class RegionResults
     private final VcfWriter mVcfWriter;
     private int mTotalReads;
     private int mTotaVariants;
-    private int mMaxMemoryUsage;
     private final List<PerformanceCounter> mPerfCounters;
     private final int[] mSyncCounts;
     private final EvidenceStats mEvidenceStats;
@@ -31,7 +30,6 @@ public class RegionResults
         mVcfWriter = vcfWriter;
         mTotalReads = 0;
         mTotaVariants = 0;
-        mMaxMemoryUsage = 0;
         mPerfCounters = Lists.newArrayList();
         mSyncCounts = new int[FragmentSyncType.values().length];
         mEvidenceStats = new EvidenceStats();
@@ -48,11 +46,6 @@ public class RegionResults
     public synchronized void addTotalReads(int totalReads)
     {
         mTotalReads += totalReads;
-    }
-
-    public synchronized void addMaxMemory(int maxMemory)
-    {
-        mMaxMemoryUsage = max(mMaxMemoryUsage, maxMemory);
     }
 
     public synchronized void addPerfCounters(final List<PerformanceCounter> perfCounters)
@@ -82,7 +75,6 @@ public class RegionResults
 
     public int totalReads() { return mTotalReads; }
     public int totalVariants() { return mTotaVariants; }
-    public int maxMemoryUsage() { return mMaxMemoryUsage; }
 
     public void logPerfCounters()
     {

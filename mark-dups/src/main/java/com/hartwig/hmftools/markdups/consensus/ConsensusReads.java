@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 
 import htsjdk.samtools.Cigar;
@@ -41,12 +42,18 @@ public class ConsensusReads
 
     private static final String CONSENSUS_PREFIX = "CNS_";
 
-    public ConsensusReads(final RefGenomeInterface refGenome)
+    public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
     {
-        mBaseBuilder = new BaseBuilder(refGenome);
+        mBaseBuilder = new BaseBuilder(refGenome, consensusStats);
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         mOutcomeCounts = new int[ConsensusOutcome.values().length];
         mValidateConsensusReads = false;
+    }
+
+    @VisibleForTesting
+    public ConsensusReads(final RefGenomeInterface refGenome)
+    {
+        this(refGenome, null);
     }
 
     public void setDebugOptions(boolean validateConsensusReads)
@@ -146,6 +153,11 @@ public class ConsensusReads
     private static int cigarElementLength(final SAMRecord read, final CigarOperator operator)
     {
         return read.getCigar().getCigarElements().stream().filter(x -> x.getOperator() == operator).mapToInt(x -> x.getLength()).sum();
+    }
+
+    public void setChromosomeLength(int chromosomeLength)
+    {
+        mBaseBuilder.setChromosomLength(chromosomeLength);
     }
 
     private enum ValidationReason

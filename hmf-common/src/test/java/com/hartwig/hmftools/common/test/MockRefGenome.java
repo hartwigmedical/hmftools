@@ -15,13 +15,20 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 // test implementation of the ref genome
 public class MockRefGenome implements RefGenomeInterface
 {
+    private final boolean mOneBasedIndexing;
     public final Map<String,String> RefGenomeMap;
     public final Map<String,Integer> ChromosomeLengths;
 
-    public MockRefGenome()
+    public MockRefGenome(boolean oneBasedIndexing)
     {
+        mOneBasedIndexing = oneBasedIndexing;
         RefGenomeMap = Maps.newHashMap();
         ChromosomeLengths = Maps.newHashMap();
+    }
+
+    public MockRefGenome()
+    {
+        this(false);
     }
 
     public void populateChromosomeLengths(final RefGenomeVersion version)
@@ -49,6 +56,12 @@ public class MockRefGenome implements RefGenomeInterface
     public String getBaseString(final String chromosome, int posStart, int posEnd)
     {
         String chrBases = RefGenomeMap.get(chromosome);
+
+        if(mOneBasedIndexing)
+        {
+            --posStart;
+            --posEnd;
+        }
 
         if(chrBases != null && posStart >= 0 && chrBases.length() > posEnd)
             return chrBases.substring(posStart, posEnd + 1);

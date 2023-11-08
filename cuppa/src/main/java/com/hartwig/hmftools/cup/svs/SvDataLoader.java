@@ -170,9 +170,9 @@ public class SvDataLoader
         svCounts[LINE.ordinal()] = lineCount;
         svCounts[SIMPLE_DEL_20KB_1MB.ordinal()] = shortDels;
         svCounts[SIMPLE_DUP_32B_200B.ordinal()] = shortDups;
-        svCounts[SIMPLE_DUP_100KB_5MB.ordinal()] = maxEventSize;
-        svCounts[MAX_COMPLEX_SIZE.ordinal()] = telomericSgls;
-        svCounts[MAX_COMPLEX_SIZE.ordinal()] = lineCount;
+        svCounts[SIMPLE_DUP_100KB_5MB.ordinal()] = longDups;
+        svCounts[MAX_COMPLEX_SIZE.ordinal()] = maxEventSize;
+        svCounts[TELOMERIC_SGL.ordinal()] = telomericSgls;
 
         return svCounts;
     }

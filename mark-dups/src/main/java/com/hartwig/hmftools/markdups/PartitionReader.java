@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
@@ -32,6 +33,7 @@ import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.PartitionResults;
 import com.hartwig.hmftools.markdups.common.Statistics;
+import com.hartwig.hmftools.markdups.common.UnmapRegionState;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 import com.hartwig.hmftools.markdups.write.BamWriter;
 
@@ -54,7 +56,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     private String mCurrentStrPartition;
     private PartitionData mCurrentPartitionData;
-    private final List<HighDepthRegion> mUnmapRegions;
+    private UnmapRegionState mUnmapRegionState;
 
     private final Map<String,List<SAMRecord>> mPendingIncompleteReads;
 
@@ -81,16 +83,15 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         mReadPositions = new ReadPositionsCache(config.BufferSize, !config.NoMateCigar, this);
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
-        mConsensusReads = new ConsensusReads(config.RefGenome);
+        mStats = mDuplicateGroupBuilder.statistics();
+        mConsensusReads = new ConsensusReads(config.RefGenome, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
-        mUnmapRegions = Lists.newArrayList();
+        mUnmapRegionState = null;
 
         mPendingIncompleteReads = Maps.newHashMap();
 
         mPartitionRecordCount = 0;
-
-        mStats = mDuplicateGroupBuilder.statistics();
 
         mLogReadIds = !mConfig.LogReadIds.isEmpty();
         mPcTotal = new PerformanceCounter("Total");
@@ -108,6 +109,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
     public void setupRegion(final ChrBaseRegion region)
     {
         mCurrentRegion = region;
+        mConsensusReads.setChromosomeLength(mConfig.RefGenome.getChromosomeLength(region.Chromosome));
 
         perfCountersStart();
 
@@ -163,6 +165,9 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
             return;
 
+        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+            return;
+
         if(mConfig.SpecificRegionsFilterType != NONE && readOutsideSpecifiedRegions(
                 read, mConfig.SpecificChrRegions.Regions, mConfig.SpecificChrRegions.Chromosomes, mConfig.SpecificRegionsFilterType))
         {
@@ -179,7 +184,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         if(mConfig.UnmapRegions.enabled())
         {
-            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegions);
+            mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
 
             if(read.getSupplementaryAlignmentFlag() && read.getReadUnmappedFlag())
                 return; // drop unmapped supplementaries
@@ -379,14 +384,19 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     private void setUnmappedRegions()
     {
-        mUnmapRegions.clear();
-
         List<HighDepthRegion> chrUnmapRegions = mConfig.UnmapRegions.getRegions(mCurrentRegion.Chromosome);
 
+        List<HighDepthRegion> partitionRegions;
         if(chrUnmapRegions != null)
         {
-            chrUnmapRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).forEach(x -> mUnmapRegions.add(x));
+            partitionRegions = chrUnmapRegions.stream().filter(x -> x.overlaps(mCurrentRegion)).collect(Collectors.toList());
         }
+        else
+        {
+            partitionRegions = Collections.emptyList();
+        }
+
+        mUnmapRegionState = new UnmapRegionState(mCurrentRegion, partitionRegions);
     }
 
     private void perfCountersStart()

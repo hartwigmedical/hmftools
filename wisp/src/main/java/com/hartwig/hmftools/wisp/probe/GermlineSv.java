@@ -106,6 +106,9 @@ public class GermlineSv extends Variant
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
         String linxDir = ProbeConfig.getSampleFilePath(sampleId, config.LinxGermlineDir);
 
+        if(linxDir == null)
+            return variants;
+
         String germlineSvFile = LinxGermlineSv.generateFilename(linxDir, sampleId);
         String germlineBreakendsFile = LinxBreakend.generateFilename(linxDir, sampleId, true);
 

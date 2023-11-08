@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.evidence;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -128,7 +127,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
             SG_LOGGER.debug("region({}) evidence stats: {}", regionBounds, mStats);
         }
 
-        // SG_LOGGER.debug("variant-reads({}) phasing checks({})", mVariantReadChecks, mPhasingChecks);
+        if(mConfig.Quality.MapQualityRatioFactor > 0)
+        {
+            mReadCounters.forEach(x -> x.applyMapQualityRatio());
+        }
 
         return mReadCounters;
     }

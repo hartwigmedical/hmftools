@@ -179,5 +179,23 @@ public class BaseRegion implements Cloneable, Comparable<BaseRegion>
             }
         }
     }
+
+    public static <E extends BaseRegion> int binarySearch(int readStart, final List<E> regions)
+    {
+        // Returns index of the last region in regions with start pos less than or equal to readStart
+        // If all regions have start pos larger than readStart then return zero. It is assumed that regions are sorted
+        int binarySearchIndex = Collections.binarySearch(regions, new BaseRegion(readStart, readStart));
+
+        if(binarySearchIndex >= 0)
+            return binarySearchIndex; // found with exact match for start pos
+
+        // get insertion point
+        int insertionIndex = -(binarySearchIndex + 1);
+
+        if(insertionIndex == 0)
+            return 0;
+
+        return insertionIndex - 1;
+    }
 }
 

@@ -137,6 +137,9 @@ public class ConfigUtils
 
     public static String convertWildcardSamplePath(final String samplePath, final String sampleId)
     {
+        if(samplePath == null)
+            return samplePath;
+
         return samplePath.replaceAll("\\*", sampleId);
     }
 

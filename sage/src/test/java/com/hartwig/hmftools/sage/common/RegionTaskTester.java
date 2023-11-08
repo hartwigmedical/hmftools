@@ -13,6 +13,7 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageCallConfig;
 import com.hartwig.hmftools.sage.coverage.Coverage;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.RegionResults;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
@@ -64,6 +65,6 @@ public class RegionTaskTester
     {
         return new RegionTask(
                 0, region, Results, Config, RefGenome, Hotspots, PanelRegions, Transcripts, HighConfidenceRegions,
-                QualityRecalibrationMap, PhaseSetCounter, Coverage, SamSlicerFactory);
+                QualityRecalibrationMap, PhaseSetCounter, Coverage, SamSlicerFactory, new FragmentLengths(Config.Common));
     }
 }

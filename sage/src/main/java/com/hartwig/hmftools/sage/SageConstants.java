@@ -42,7 +42,7 @@ public class SageConstants
     public static final int NORMAL_RAW_ALT_BQ_MAX = 25;
     public static final int LONG_GERMLINE_INSERT_LENGTH = 10;
 
-    public static final int DEFAULT_EVIDENCE_MAP_QUAL = 1;
+    public static final int EVIDENCE_MIN_MAP_QUAL = 1;
     
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
@@ -58,6 +58,10 @@ public class SageConstants
 
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
+
+    public static final int MAX_MAP_QUALITY = 60;
+    public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
+    public static final double MQ_RATIO_SMOOTHING = 3;
 
     public static final int INDEL_DEDUP_MAX_DIST_THRESHOLD = 40;
 

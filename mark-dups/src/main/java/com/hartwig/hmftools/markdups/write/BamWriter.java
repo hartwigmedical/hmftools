@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.markdups.common.FragmentStatus.PRIMARY;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.hartwig.hmftools.markdups.MarkDupsConfig;
 import com.hartwig.hmftools.markdups.common.Fragment;
@@ -26,8 +27,8 @@ public abstract class BamWriter
     protected final SAMFileWriter mSamFileWriter;
     protected final ReadDataWriter mReadDataWriter;
 
-    protected final AtomicInteger mNonConsensusReadCount;
-    protected final AtomicInteger mConsensusReadCount;
+    protected final AtomicLong mNonConsensusReadCount;
+    protected final AtomicLong mConsensusReadCount;
 
     public BamWriter(
             final String filename, final MarkDupsConfig config, final ReadDataWriter readDataWriter, final SAMFileWriter samFileWriter)
@@ -37,16 +38,16 @@ public abstract class BamWriter
         mSamFileWriter = samFileWriter;
         mReadDataWriter = readDataWriter;
 
-        mNonConsensusReadCount = new AtomicInteger(0);
-        mConsensusReadCount = new AtomicInteger(0);
+        mNonConsensusReadCount = new AtomicLong(0);
+        mConsensusReadCount = new AtomicLong(0);
     }
 
     public String filename() { return mFilename; }
 
-    public int nonConsensusWriteCount() { return mNonConsensusReadCount.get(); }
-    public int consensusWriteCount() { return mConsensusReadCount.get(); }
+    public long nonConsensusWriteCount() { return mNonConsensusReadCount.get(); }
+    public long consensusWriteCount() { return mConsensusReadCount.get(); }
 
-    public int totalWriteCount() { return nonConsensusWriteCount() + consensusWriteCount(); }
+    public long totalWriteCount() { return nonConsensusWriteCount() + consensusWriteCount(); }
 
     public abstract boolean isSorted();
 

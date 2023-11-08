@@ -92,7 +92,7 @@ public class IndexedBases
     }
 
     public int corePositionStart() { return Position - (Index - LeftCoreIndex); }
-    public int corePositionEnd() { return Position + RightCoreIndex - Index; }
+    public int corePositionEnd() { return Position + RightCoreIndex - Index; } // doesn't take into account INDEL bases
 
     public byte base(int position)
     {

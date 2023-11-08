@@ -71,9 +71,9 @@ public class FileWriterCache
         return createBamWriter(fileId, false, mConfig.UseSortCache);
     }
 
-    public int totalWrittenReads()
+    public long totalWrittenReads()
     {
-        return mBamWriters.stream().mapToInt(x -> x.nonConsensusWriteCount()).sum();
+        return mBamWriters.stream().mapToLong(x -> x.nonConsensusWriteCount()).sum();
     }
 
     public void close()
@@ -343,15 +343,18 @@ public class FileWriterCache
 
             // String sortArgs = format("sort -@ %s -m %dG -T tmp -O bam %s -o %s", Bash.allCpus(), SORT_MEMORY_PER_CORE, inputBam, outputBam);
 
-            final String[] command = new String[13];
+            final String[] command = new String[11];
 
             int index = 0;
             command[index++] = mConfig.SamToolsPath;
             command[index++] = "sort";
             command[index++] = "-@";
             command[index++] = String.valueOf(mThreadCount);
-            command[index++] = "-m";
-            command[index++] = "1G"; // could configure as a function of max heap used by MarkDups
+
+            // default memory per thread according to samtools doco is 768MB
+            // command[index++] = "-m";
+            // command[index++] = "1G"; // could configure as a function of max heap used by MarkDups
+
             command[index++] = "-T";
             command[index++] = "tmp";
             command[index++] = "-O";

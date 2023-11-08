@@ -20,11 +20,9 @@ import static com.hartwig.hmftools.wisp.probe.CategoryType.AMP;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.DISRUPTION;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.FUSION;
 import static com.hartwig.hmftools.wisp.probe.CategoryType.OTHER_SV;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.DEFAULT_GC_THRESHOLD_MAX;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.DEFAULT_GC_THRESHOLD_MIN;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.DEFAULT_SV_BREAKENDS_PER_GENE;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.MAX_INSERT_BASES;
-import static com.hartwig.hmftools.wisp.probe.ProbeConfig.MAX_POLY_A_T_BASES;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.DEFAULT_SV_BREAKENDS_PER_GENE;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_INSERT_BASES;
+import static com.hartwig.hmftools.wisp.probe.ProbeConstants.MAX_POLY_A_T_BASES;
 
 import java.util.List;
 import java.util.Map;
@@ -321,19 +319,19 @@ public class StructuralVariant extends Variant
     boolean checkFilters() { return mCategoryType != FUSION && mCategoryType != AMP && mCategoryType != CategoryType.DEL; }
 
     @Override
-    public boolean passNonReportableFilters(final ProbeConfig config)
+    public boolean passNonReportableFilters(final ProbeConfig config, boolean useLowerLimits)
     {
         if(reported() && mCategoryType != DISRUPTION)
             return true;
 
-        if(gc() < DEFAULT_GC_THRESHOLD_MIN || gc() > DEFAULT_GC_THRESHOLD_MAX)
+        if(!passesGcRatioLimit(gc(), config, useLowerLimits))
             return false;
 
         for(String refSequence : mRefSequences)
         {
             double gcRatio = calcGcPercent(refSequence);
 
-            if(gcRatio < DEFAULT_GC_THRESHOLD_MIN || gcRatio > DEFAULT_GC_THRESHOLD_MAX)
+            if(!passesGcRatioLimit(gcRatio, config, useLowerLimits))
                 return false;
 
             if(exceedsPolyAtThreshold(refSequence))
@@ -343,7 +341,7 @@ public class StructuralVariant extends Variant
         if(vaf() < config.VafMin)
             return false;
 
-        if(tumorFragments() < config.FragmentCountMin)
+        if(!passesFragmentCountLimit(tumorFragments(), config, useLowerLimits))
             return false;
 
         return true;
@@ -419,14 +417,18 @@ public class StructuralVariant extends Variant
     {
         List<Variant> variants = Lists.newArrayList();
 
+        if(config.LinxDir == null)
+            return variants;
+
         // load each structural variant (ignoring INFs and SGLs), and link to any disruption/breakend and fusion, and cluster info
         String purpleDir = ProbeConfig.getSampleFilePath(sampleId, config.PurpleDir);
-        String linxDir = ProbeConfig.getSampleFilePath(sampleId, config.LinxDir);
 
         String vcfFile = PurpleCommon.purpleSomaticSvFile(purpleDir, sampleId);
 
         List<EnrichedStructuralVariant> enrichedVariants = new EnrichedStructuralVariantFactory().enrich(
                 StructuralVariantFileLoader.fromFile(vcfFile, new AlwaysPassFilter()));
+
+        String linxDir = ProbeConfig.getSampleFilePath(sampleId, config.LinxDir);
 
         List<LinxBreakend> breakends = LinxBreakend.read(LinxBreakend.generateFilename(linxDir, sampleId));
         List<LinxSvAnnotation> annotations = LinxSvAnnotation.read(LinxSvAnnotation.generateFilename(linxDir, sampleId));

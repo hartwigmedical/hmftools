@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.pipeline;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import java.util.List;
@@ -21,6 +23,8 @@ import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
+import com.hartwig.hmftools.sage.evidence.FragmentLengthData;
+import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -35,6 +39,7 @@ public class RegionTask
     private final ChrBaseRegion mRegion; // region to slice and analyse for this task
     private final int mTaskId;
     private final RegionResults mResults;
+    private final FragmentLengths mFragmentLengths;
 
     private final SageCallConfig mConfig;
     private final RefGenomeInterface mRefGenome;
@@ -53,21 +58,23 @@ public class RegionTask
     public static final int PC_VARIANTS = 2;
 
     public RegionTask(
-            final int taskId, final ChrBaseRegion region, final RegionResults results, final SageCallConfig config, final RefGenomeInterface refGenome,
-            final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions, final List<TranscriptData> transcripts,
-            final List<BaseRegion> highConfidenceRegions, final Map<String, QualityRecalibrationMap> qualityRecalibrationMap,
-            final PhaseSetCounter phaseSetCounter, final Coverage coverage, final SamSlicerFactory samSlicerFactory)
+            final int taskId, final ChrBaseRegion region, final RegionResults results, final SageCallConfig config,
+            final RefGenomeInterface refGenome, final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
+            final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
+            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter,
+            final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengths fragmentLengths)
     {
         mTaskId = taskId;
         mRegion = region;
         mResults = results;
         mConfig = config;
         mRefGenome = refGenome;
+        mFragmentLengths = fragmentLengths;
 
         mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
         mEvidenceStage = new EvidenceStage(config.Common, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
 
-        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome);
+        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.NewIndelDedup);
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();
@@ -195,8 +202,24 @@ public class RegionTask
         if(mConfig.Common.logPerfStats())
             mResults.addPerfCounters(mPerfCounters);
 
-        mResults.addMaxMemory(MemoryCalcs.calcMemoryUsage());
         mResults.addSynCounts(mEvidenceStage.getSyncCounts());
         mResults.addEvidenceStats(mEvidenceStage.getEvidenceStats());
+
+        if(mConfig.Common.WriteFragmentLengths)
+        {
+            for(SageVariant variant : mSageVariants)
+            {
+                String variantInfo = format("%s:%d %s>%s", variant.chromosome(), variant.position(), variant.ref(), variant.alt());
+
+                FragmentLengthData fragmentLengthData = variant.tumorReadCounters().get(0).fragmentLengths();
+
+                for(int i = 1; i < variant.tumorReadCounters().size(); ++i)
+                {
+                    fragmentLengthData.merge(variant.tumorReadCounters().get(i).fragmentLengths());
+                }
+
+                mFragmentLengths.writeVariantFragmentLength(variantInfo, fragmentLengthData);
+            }
+        }
     }
 }

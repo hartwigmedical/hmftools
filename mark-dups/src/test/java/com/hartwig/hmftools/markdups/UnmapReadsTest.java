@@ -21,10 +21,12 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.SupplementaryReadData;
 import com.hartwig.hmftools.common.test.SamRecordTestUtils;
 import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.ReadUnmapper;
+import com.hartwig.hmftools.markdups.common.UnmapRegionState;
 
 import org.junit.Test;
 
@@ -34,6 +36,8 @@ public class UnmapReadsTest
 {
     private static final String READ_BASES = "A".repeat(100);
     private static final String READ_CIGAR = "100M";
+    private static final String CHR_4 = "4";
+    private static final String CHR_5 = "5";
     private static final String SOFT_CLIPPED_READ_CIGAR = "21S79M";
     private static final String READ_ID = "READ_001";
     private static final Map<String, List<HighDepthRegion>> CHR_LOCATION_MAP;
@@ -44,6 +48,12 @@ public class UnmapReadsTest
         CHR_LOCATION_MAP = Maps.newHashMap();
         CHR_LOCATION_MAP.put(CHR_1, Lists.newArrayList(new HighDepthRegion(500, 700, 0)));
         CHR_LOCATION_MAP.put(CHR_3, Lists.newArrayList(new HighDepthRegion(500, 700, UNMAP_MIN_HIGH_DEPTH)));
+
+        CHR_LOCATION_MAP.put(CHR_4, Lists.newArrayList(
+                new HighDepthRegion(1000, 2000, UNMAP_MIN_HIGH_DEPTH),
+                new HighDepthRegion(3000, 4000, UNMAP_MIN_HIGH_DEPTH),
+                new HighDepthRegion(5000, 6000, UNMAP_MIN_HIGH_DEPTH),
+                new HighDepthRegion(7000, 8000, UNMAP_MIN_HIGH_DEPTH)));
         READ_UNMAPPER = new ReadUnmapper(CHR_LOCATION_MAP);
     }
 
@@ -65,7 +75,7 @@ public class UnmapReadsTest
                 false, null, true, READ_CIGAR);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertFalse(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertFalse(checkTransformRead(read, CHR_1));
         assertFalse(read.getReadUnmappedFlag());
         assertFalse(read.getMateUnmappedFlag());
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
@@ -80,7 +90,7 @@ public class UnmapReadsTest
                 false, null, true, SOFT_CLIPPED_READ_CIGAR);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertFalse(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertFalse(checkTransformRead(read, CHR_1));
         assertFalse(read.getReadUnmappedFlag());
         assertFalse(read.getMateUnmappedFlag());
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
@@ -95,7 +105,7 @@ public class UnmapReadsTest
                 false, null, true, READ_CIGAR);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertTrue(read.getReadUnmappedFlag());
         assertFalse(read.getMateUnmappedFlag());
         assertEquals(600, read.getAlignmentStart());
@@ -111,7 +121,7 @@ public class UnmapReadsTest
                 false, null, true, SOFT_CLIPPED_READ_CIGAR);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertFalse(read.getReadUnmappedFlag());
         assertTrue(read.getMateUnmappedFlag());
         assertEquals(100, read.getMateAlignmentStart());
@@ -130,7 +140,7 @@ public class UnmapReadsTest
                 true, SOFT_CLIPPED_READ_CIGAR);
 
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertFalse(read.getReadUnmappedFlag());
         assertTrue(read.getMateUnmappedFlag());
         assertEquals(100, read.getMateAlignmentStart());
@@ -147,7 +157,7 @@ public class UnmapReadsTest
         read.setMateUnmappedFlag(true);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertTrue(read.getReadUnmappedFlag());
         assertTrue(read.getMateUnmappedFlag());
         assertEquals(NO_POSITION, read.getAlignmentStart());
@@ -166,7 +176,7 @@ public class UnmapReadsTest
         read.setReadUnmappedFlag(true);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertTrue(read.getReadUnmappedFlag());
         assertTrue(read.getMateUnmappedFlag());
         assertEquals(NO_POSITION, read.getAlignmentStart());
@@ -189,7 +199,7 @@ public class UnmapReadsTest
 
         // when supplementaries are unmapped not all properties are unset since it will be dropped immediately
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertTrue(read.getReadUnmappedFlag());
     }
 
@@ -201,7 +211,7 @@ public class UnmapReadsTest
                 false, null, true, READ_CIGAR);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertTrue(read.getReadUnmappedFlag());
         assertFalse(read.getMateUnmappedFlag());
         assertEquals(600, read.getAlignmentStart());
@@ -216,7 +226,7 @@ public class UnmapReadsTest
                 false, null, true, READ_BASES);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertFalse(read.getReadUnmappedFlag());
         assertTrue(read.getMateUnmappedFlag());
         assertEquals(100, read.getMateAlignmentStart());
@@ -234,7 +244,7 @@ public class UnmapReadsTest
                 suppReadData, true, READ_BASES);
 
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertFalse(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertFalse(checkTransformRead(read, CHR_1));
         assertFalse(read.getReadUnmappedFlag());
         assertFalse(read.getMateUnmappedFlag());
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
@@ -253,7 +263,7 @@ public class UnmapReadsTest
         // Note that when we are unmapping a supplementary we do not bother unsetting all of its properties, because we will drop an unmapped
         // supplementary read immediately.
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertTrue(read.getReadUnmappedFlag());
     }
 
@@ -265,7 +275,7 @@ public class UnmapReadsTest
                 false, null, true, READ_CIGAR);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_3)));
+        assertTrue(checkTransformRead(read, CHR_3));
         assertTrue(read.getReadUnmappedFlag());
         assertFalse(read.getMateUnmappedFlag());
         assertEquals(701, read.getAlignmentStart());
@@ -280,7 +290,7 @@ public class UnmapReadsTest
                 false, null, true, READ_CIGAR);
 
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_3)));
+        assertTrue(checkTransformRead(read, CHR_3));
         assertFalse(read.getReadUnmappedFlag());
         assertTrue(read.getMateUnmappedFlag());
         assertEquals(400, read.getMateAlignmentStart());
@@ -297,7 +307,7 @@ public class UnmapReadsTest
                 true, READ_CIGAR);
 
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_3)));
+        assertTrue(checkTransformRead(read, CHR_3));
         assertFalse(read.getReadUnmappedFlag());
         assertTrue(read.getMateUnmappedFlag());
         assertEquals(400, read.getMateAlignmentStart());
@@ -325,9 +335,77 @@ public class UnmapReadsTest
         read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saJoiner.toString());
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
 
-        assertTrue(READ_UNMAPPER.checkTransformRead(read, CHR_LOCATION_MAP.get(CHR_1)));
+        assertTrue(checkTransformRead(read, CHR_1));
         assertFalse(read.getReadUnmappedFlag());
         assertFalse(read.getMateUnmappedFlag());
         assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    @Test
+    public void testUnmapSupplementaryWhenUnmappingAssociatedSupplementary()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_1, 100, READ_BASES, READ_CIGAR, CHR_3, 300, false,
+                true, null, true, READ_CIGAR);
+
+        SupplementaryReadData suppDataPrimary = new SupplementaryReadData(CHR_3, 100, SUPP_POS_STRAND, READ_CIGAR, 60);
+        SupplementaryReadData suppDataOther = new SupplementaryReadData(CHR_3, 500, SUPP_POS_STRAND, READ_CIGAR, 60);
+
+        StringJoiner saJoiner = new StringJoiner(ALIGNMENTS_DELIM);
+        saJoiner.add(suppDataPrimary.asSamTag());
+        saJoiner.add(suppDataOther.asSamTag());
+
+        read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saJoiner.toString());
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+
+        // Note that when we are unmapping a supplementary we do not bother unsetting all of its properties, because we will drop an
+        // unmapped supplementary read immediately.
+        assertTrue(checkTransformRead(read, CHR_3));
+        assertTrue(read.getReadUnmappedFlag());
+    }
+
+    @Test
+    public void testUnmapRegionState()
+    {
+        UnmapRegionState regionState = new UnmapRegionState(new ChrBaseRegion(
+                CHR_4, 1, 1000000), CHR_LOCATION_MAP.get(CHR_4));
+
+        // primary read
+        SAMRecord read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_4, 1000, READ_BASES, READ_CIGAR, CHR_5, 100, false,
+                false, null, true, READ_CIGAR);
+
+        assertTrue(READ_UNMAPPER.checkTransformRead(read, regionState));
+        assertTrue(regionState.LastMatchedRegionIndex != null);
+        assertEquals(0, regionState.LastMatchedRegionIndex.intValue());
+
+        read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_4, 2100, READ_BASES, READ_CIGAR, CHR_5, 100, false,
+                false, null, true, READ_CIGAR);
+
+        assertFalse(READ_UNMAPPER.checkTransformRead(read, regionState));
+        assertEquals(0, regionState.LastMatchedRegionIndex.intValue());
+
+        read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_4, 5100, READ_BASES, READ_CIGAR, CHR_5, 100, false,
+                false, null, true, READ_CIGAR);
+
+        assertTrue(READ_UNMAPPER.checkTransformRead(read, regionState));
+        assertEquals(2, regionState.LastMatchedRegionIndex.intValue());
+
+        read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_4, 10000, READ_BASES, READ_CIGAR, CHR_5, 100, false,
+                false, null, true, READ_CIGAR);
+
+        assertFalse(READ_UNMAPPER.checkTransformRead(read, regionState));
+        assertEquals(3, regionState.LastMatchedRegionIndex.intValue());
+    }
+
+    private boolean checkTransformRead(final SAMRecord read, final String chromosome)
+    {
+        UnmapRegionState regionState = new UnmapRegionState(new ChrBaseRegion(
+                chromosome, 1, 1000000), CHR_LOCATION_MAP.get(chromosome));
+
+        return READ_UNMAPPER.checkTransformRead(read, regionState);
     }
 }
