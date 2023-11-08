@@ -100,11 +100,11 @@ public class HaplotypeAnalysis
         if (haplotypeCombinations.isEmpty())
             return Collections.emptyList();
 
-        int minimumNowWildTypeCount = haplotypeCombinations.stream()
+        int minimumNonWildTypeCount = haplotypeCombinations.stream()
                 .mapToInt(c -> c.getNonWildTypeCount(wildTypeHaplotypeName))
                 .min().getAsInt();
         return haplotypeCombinations.stream()
-                .filter(c -> c.getNonWildTypeCount(wildTypeHaplotypeName) == minimumNowWildTypeCount)
+                .filter(c -> c.getNonWildTypeCount(wildTypeHaplotypeName) == minimumNonWildTypeCount)
                 .collect(Collectors.toList());
     }
 
