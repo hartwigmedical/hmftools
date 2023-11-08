@@ -1,5 +1,14 @@
 # Running the HMF pipeline with oncoanalyser
 
+## Table of contents
+
+* [Overview](#overview)
+* [Supported workflows](#supported-workflows)
+* [Usage](#usage)
+* [Outputs](#outputs)
+* [Future improvements](#future-improvements)
+* [Acknowledgements](#acknowledgements)
+
 ## Overview
 
 The recommended way to run **hartwigmedical/hmftools** workflows or components is with
