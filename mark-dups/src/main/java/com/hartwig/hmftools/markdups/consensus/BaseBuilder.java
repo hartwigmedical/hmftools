@@ -3,8 +3,6 @@ package com.hartwig.hmftools.markdups.consensus;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -15,13 +13,15 @@ import htsjdk.samtools.SAMRecord;
 public class BaseBuilder
 {
     private final RefGenomeInterface mRefGenome;
+    private final ConsensusStatistics mConsensusStats;
 
     // cached for the majority of successive reads being on the same chromosome, to protect against ref genome base requests beyond limits
     private int mChromosomeLength;
 
-    public BaseBuilder(final RefGenomeInterface refGenome)
+    public BaseBuilder(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
     {
         mRefGenome = refGenome;
+        mConsensusStats = consensusStats;
         mChromosomeLength = 0;
     }
 
@@ -54,7 +54,7 @@ public class BaseBuilder
         byte[][] locationBasesPair = new byte[][] { new byte[readCount], new byte[readCount] };
         byte[][] locationQualsPair = new byte[][] { new byte[readCount], new byte[readCount] };
 
-        boolean dualMismatchedLogged = false;
+        boolean isDualStrandWithMismatch = false;
 
         for(int baseIndex = 0; baseIndex < baseLength; ++baseIndex)
         {
@@ -116,13 +116,9 @@ public class BaseBuilder
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = INVALID_POSITION; // protect against over-runs from soft-clips - rare but possible
 
-                if(!dualMismatchedLogged && isDualStrand)
+                if(isDualStrand)
                 {
-                    MD_LOGGER.trace("Mismatched basis found in dual stranded read group readCount({})", reads.size());
-                    for (SAMRecord read : reads)
-                        MD_LOGGER.trace("Read in dual stranded read group: {}", read);
-
-                    dualMismatchedLogged = true;
+                    isDualStrandWithMismatch = true;
                 }
 
                 byte[] consensusBaseAndQual;
@@ -140,6 +136,9 @@ public class BaseBuilder
                 consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
             }
         }
+
+        if(isDualStrandWithMismatch && mConsensusStats != null)
+            mConsensusStats.registerDualStrandMismatchReadGroup(reads);
     }
 
     public static boolean isDualStrandAndIsFirstInPair(final List<SAMRecord> reads, final boolean[] isFirstInPairOut)
@@ -299,7 +298,10 @@ public class BaseBuilder
     }
 
     public void setChromosomLength(int chromosomeLength) { mChromosomeLength = chromosomeLength; }
+
     public int chromosomeLength() { return mChromosomeLength; }
 
     public RefGenomeInterface refGenome() { return mRefGenome; }
+
+    public ConsensusStatistics stats() { return mConsensusStats; }
 }

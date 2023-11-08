@@ -2,7 +2,6 @@ package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.Math.max;
 
-import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.isDualStrandAndIsFirstInPair;
@@ -28,13 +27,12 @@ import htsjdk.samtools.SAMRecord;
 public class IndelConsensusReads
 {
     private final BaseBuilder mBaseBuilder;
-    private boolean mDualMismatchedLogged;
+    private boolean mCurrentIsDualStrandWithMismatch;
 
     public IndelConsensusReads(final BaseBuilder baseBuilder)
     {
-
         mBaseBuilder = baseBuilder;
-        mDualMismatchedLogged = false;
+        mCurrentIsDualStrandWithMismatch = false;
     }
 
     public void buildIndelComponents(final List<SAMRecord> reads, final ConsensusState consensusState)
@@ -54,7 +52,7 @@ public class IndelConsensusReads
             return;
         }
 
-        mDualMismatchedLogged = false;
+        mCurrentIsDualStrandWithMismatch = false;
 
         boolean[] isFirstInPair = new boolean[reads.size()];
         boolean isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
@@ -82,7 +80,9 @@ public class IndelConsensusReads
             addElementBases(consensusState, readStates, element, baseIndex, isDualStrand, isFirstInPair);
 
             if(consensusState.outcome() == INDEL_FAIL)
-                return;
+            {
+                break;
+            }
 
             if(!deleteOrSplit(element.getOperator()))
             {
@@ -98,7 +98,12 @@ public class IndelConsensusReads
                 --cigarIndex;
         }
 
-        consensusState.setOutcome(INDEL_MISMATCH);
+        if(consensusState.outcome() != INDEL_FAIL)
+            consensusState.setOutcome(INDEL_MISMATCH);
+
+        ConsensusStatistics consensusStats = mBaseBuilder.stats();
+        if(mCurrentIsDualStrandWithMismatch && consensusStats != null)
+            consensusStats.registerDualStrandMismatchReadGroup(reads);
     }
 
     private void addElementBases(
@@ -240,16 +245,9 @@ public class IndelConsensusReads
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = BaseBuilder.INVALID_POSITION;
 
-                if(!mDualMismatchedLogged && isDualStrand)
+                if(isDualStrand)
                 {
-                    // TODO: Stats
-                    MD_LOGGER.trace("Mismatched basis found in dual stranded read group readCount({})", readStates.size());
-                    for(ReadParseState readState : readStates)
-                    {
-                        MD_LOGGER.trace("Read in dual stranded read group: {}", readState.Read);
-                    }
-
-                    mDualMismatchedLogged = true;
+                    mCurrentIsDualStrandWithMismatch = true;
                 }
 
                 byte[] consensusBaseAndQual;

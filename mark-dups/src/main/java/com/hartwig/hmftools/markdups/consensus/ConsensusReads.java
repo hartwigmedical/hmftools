@@ -41,12 +41,17 @@ public class ConsensusReads
 
     private static final String CONSENSUS_PREFIX = "CNS_";
 
-    public ConsensusReads(final RefGenomeInterface refGenome)
+    public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
     {
-        mBaseBuilder = new BaseBuilder(refGenome);
+        mBaseBuilder = new BaseBuilder(refGenome, consensusStats);
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
         mOutcomeCounts = new int[ConsensusOutcome.values().length];
         mValidateConsensusReads = false;
+    }
+
+    public ConsensusReads(final RefGenomeInterface refGenome)
+    {
+        this(refGenome, null);
     }
 
     public void setDebugOptions(boolean validateConsensusReads)
