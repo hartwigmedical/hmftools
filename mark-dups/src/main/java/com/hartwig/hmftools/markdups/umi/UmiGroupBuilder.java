@@ -395,6 +395,8 @@ public class UmiGroupBuilder
 
     private void collapseCoordinateGroup(final List<DuplicateGroup> allUmiGroups, final CoordinateGroup coordGroup)
     {
+        // up until now fragments with the same coordinates but different ordering (ie F1R2 vs F2R1) have been kept separate.
+        // but now merge these if they either don't use UMIs or have complementary duplex UMIs
         if(!coordGroup.hasOpposites())
         {
             addUmiGroup(allUmiGroups, coordGroup.ForwardGroups);
@@ -463,8 +465,9 @@ public class UmiGroupBuilder
                         firstGroup.addFragment(secondFragment);
                     }
 
-                    // collapsing only occurs between a pair, not 1:M
                     firstGroup.registerDualStrand();
+
+                    // collapsing only occurs between a pair, not 1:M
                     break;
                 }
                 else

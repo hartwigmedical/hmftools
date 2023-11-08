@@ -277,7 +277,6 @@ public class ConsensusReads
         return record;
     }
 
-
     public SAMRecord copyPrimaryRead(final SAMRecord read, final String groupIdentifier)
     {
         SAMRecord record = new SAMRecord(read.getHeader());
