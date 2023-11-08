@@ -3,6 +3,7 @@ package com.hartwig.hmftools.markdups.consensus;
 import static java.lang.Math.max;
 
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
+import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.INVALID_POSITION;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.isDualStrandAndIsFirstInPair;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.logDualStrandWithMismatch;
@@ -148,9 +149,15 @@ public class IndelConsensusReads
 
         byte[] locationBases = new byte[readCount];
         byte[] locationQuals = new byte[readCount];
-        // we also track bases and quals by first/second in pair status
-        byte[][] locationBasesPair = new byte[][] { new byte[readCount], new byte[readCount] };
-        byte[][] locationQualsPair = new byte[][] { new byte[readCount], new byte[readCount] };
+
+        // in case of dual strand, we also track bases and quals by first/second in pair status
+        byte[][] locationBasesPair = null;
+        byte[][] locationQualsPair = null;
+        if (isDualStrand)
+        {
+            locationBasesPair = new byte[][] { new byte[readCount], new byte[readCount] };
+            locationQualsPair = new byte[][] { new byte[readCount], new byte[readCount] };
+        }
 
         for(int i = 0; i < selectedElement.getLength(); ++i)
         {
@@ -161,8 +168,11 @@ public class IndelConsensusReads
             for(int r = 0; r < readCount; ++r)
             {
                 locationBases[r] = NO_BASE;
-                locationBasesPair[0][r] = NO_BASE;
-                locationBasesPair[1][r] = NO_BASE;
+                if (isDualStrand)
+                {
+                    locationBasesPair[0][r] = NO_BASE;
+                    locationBasesPair[1][r] = NO_BASE;
+                }
             }
 
             for(int r = 0; r < readCount; ++r)
@@ -220,9 +230,12 @@ public class IndelConsensusReads
                     locationBases[r] = read.currentBase();
                     locationQuals[r] = read.currentBaseQual();
 
-                    int pairIdx = isFirstInPair[r] ? 0 : 1;
-                    locationBasesPair[pairIdx][r] = locationBases[r];
-                    locationQualsPair[pairIdx][r] = locationQuals[r];
+                    if (isDualStrand)
+                    {
+                        int pairIdx = isFirstInPair[r] ? 0 : 1;
+                        locationBasesPair[pairIdx][r] = locationBases[r];
+                        locationQualsPair[pairIdx][r] = locationQuals[r];
+                    }
 
                     if(firstBase == NO_BASE)
                         firstBase = locationBases[r];
@@ -252,7 +265,7 @@ public class IndelConsensusReads
                     mCurrentIsDualStrandWithMismatch = true;
 
                 byte[] consensusBaseAndQual;
-                if(isDualStrand && basePosition != -1)
+                if(isDualStrand && basePosition != INVALID_POSITION)
                 {
                     consensusBaseAndQual =
                             mBaseBuilder.determineBaseAndQualDualStrand(locationBasesPair, locationQualsPair, consensusState.Chromosome, basePosition);

@@ -52,9 +52,15 @@ public class BaseBuilder
 
         byte[] locationBases = new byte[readCount];
         byte[] locationQuals = new byte[readCount];
-        // we also track bases and quals by first/second in pair status
-        byte[][] locationBasesPair = new byte[][] { new byte[readCount], new byte[readCount] };
-        byte[][] locationQualsPair = new byte[][] { new byte[readCount], new byte[readCount] };
+
+        // in case of dual strand, we also track bases and quals by first/second in pair status
+        byte[][] locationBasesPair = null;
+        byte[][] locationQualsPair = null;
+        if (isDualStrand)
+        {
+            locationBasesPair = new byte[][] { new byte[readCount], new byte[readCount] };
+            locationQualsPair = new byte[][] { new byte[readCount], new byte[readCount] };
+        }
 
         boolean isDualStrandWithMismatch = false;
 
@@ -72,8 +78,11 @@ public class BaseBuilder
                 SAMRecord read = reads.get(r);
 
                 locationBases[r] = NO_BASE;
-                locationBasesPair[0][r] = NO_BASE;
-                locationBasesPair[1][r] = NO_BASE;
+                if (isDualStrand)
+                {
+                    locationBasesPair[0][r] = NO_BASE;
+                    locationBasesPair[1][r] = NO_BASE;
+                }
 
                 int readIndex;
                 if(consensusState.IsForward)
@@ -94,9 +103,12 @@ public class BaseBuilder
                 locationBases[r] = reads.get(r).getReadBases()[readIndex];
                 locationQuals[r] = reads.get(r).getBaseQualities()[readIndex];
 
-                int pairIdx = isFirstInPair[r] ? 0 : 1;
-                locationBasesPair[pairIdx][r] = locationBases[r];
-                locationQualsPair[pairIdx][r] = locationQuals[r];
+                if (isDualStrand)
+                {
+                    int pairIdx = isFirstInPair[r] ? 0 : 1;
+                    locationBasesPair[pairIdx][r] = locationBases[r];
+                    locationQualsPair[pairIdx][r] = locationQuals[r];
+                }
 
                 if(firstBase == NO_BASE)
                     firstBase = locationBases[r];
@@ -122,7 +134,7 @@ public class BaseBuilder
                     isDualStrandWithMismatch = true;
 
                 byte[] consensusBaseAndQual;
-                if(isDualStrand && basePosition != -1)
+                if(isDualStrand && basePosition != INVALID_POSITION)
                 {
                     consensusBaseAndQual =
                             determineBaseAndQualDualStrand(locationBasesPair, locationQualsPair, chromosome, basePosition);
@@ -153,13 +165,9 @@ public class BaseBuilder
         {
             boolean firstInPair = reads.get(i).getFirstOfPairFlag();
             if(firstInPair)
-            {
                 hasFirstInPair = true;
-            }
             else
-            {
                 hasSecondInPair = true;
-            }
 
             isFirstInPairOut[i] = firstInPair;
         }
@@ -174,14 +182,10 @@ public class BaseBuilder
         byte[] secondConsensusBaseAndQual = determineBaseAndQual(locationBasesPair[1], locationQualsPair[1], chromosome, position);
 
         if(firstConsensusBaseAndQual[0] == NO_BASE)
-        {
             return secondConsensusBaseAndQual;
-        }
 
         if(secondConsensusBaseAndQual[0] == NO_BASE)
-        {
             return firstConsensusBaseAndQual;
-        }
 
         if(firstConsensusBaseAndQual[0] == secondConsensusBaseAndQual[0])
         {
@@ -194,9 +198,24 @@ public class BaseBuilder
         boolean secondIsRef = secondConsensusBaseAndQual[0] == refBase;
         if(!firstIsRef && !secondIsRef)
         {
-            byte[] locationBasePair = new byte[] { firstConsensusBaseAndQual[0], secondConsensusBaseAndQual[0] };
-            byte[] locationQualPair = new byte[] { firstConsensusBaseAndQual[1], secondConsensusBaseAndQual[1] };
-            return determineBaseAndQual(locationBasePair, locationQualPair, chromosome, position);
+            byte maxBase;
+            int maxQual;
+            int differingQual;
+            if (firstConsensusBaseAndQual[1] >= secondConsensusBaseAndQual[1])
+            {
+                maxBase = firstConsensusBaseAndQual[0];
+                maxQual = firstConsensusBaseAndQual[1];
+                differingQual = secondConsensusBaseAndQual[1];
+            }
+            else
+            {
+                maxBase = secondConsensusBaseAndQual[0];
+                maxQual = secondConsensusBaseAndQual[1];
+                differingQual = firstConsensusBaseAndQual[1];
+            }
+
+            byte qual = (byte) max(0, maxQual - differingQual);
+            return new byte[] { maxBase, qual };
         }
 
         int refQual;
@@ -212,7 +231,7 @@ public class BaseBuilder
             differingQual = firstConsensusBaseAndQual[1];
         }
 
-        byte qual = (byte) max(0.0, refQual - differingQual);
+        byte qual = (byte) max(0, refQual - differingQual);
         return new byte[] { refBase, qual };
     }
 

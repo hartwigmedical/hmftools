@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.secondsSinceNow;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
@@ -162,6 +163,9 @@ public class PartitionReader implements Consumer<List<Fragment>>
     private void processSamRecord(final SAMRecord read)
     {
         if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
+            return;
+
+        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
             return;
 
         if(mConfig.SpecificRegionsFilterType != NONE && readOutsideSpecifiedRegions(
