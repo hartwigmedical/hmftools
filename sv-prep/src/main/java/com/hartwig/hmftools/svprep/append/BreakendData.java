@@ -79,10 +79,12 @@ public class BreakendData
 
                     ++mReadTypeSupport[readType.ordinal()];
 
+                    /* rework or move into Esvee
                     String umiType = read.record().getStringAttribute(UMI_TYPE_ATTRIBUTE);
 
                     UmiReadType umiReadType = umiType != null ? UmiReadType.valueOf(umiType) : UmiReadType.NONE;
                     ++mUmiTypeCounts[umiReadType.ordinal()];
+                    */
                 }
             }
 
