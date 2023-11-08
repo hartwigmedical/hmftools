@@ -36,8 +36,7 @@ public class ConsensusReads
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
 
-    private final int[] mOutcomeCounts;
-
+    private final ConsensusStatistics mConsensusStats;
     private boolean mValidateConsensusReads;
 
     private static final String CONSENSUS_PREFIX = "CNS_";
@@ -45,8 +44,8 @@ public class ConsensusReads
     public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
     {
         mBaseBuilder = new BaseBuilder(refGenome, consensusStats);
+        mConsensusStats = consensusStats;
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
-        mOutcomeCounts = new int[ConsensusOutcome.values().length];
         mValidateConsensusReads = false;
     }
 
@@ -87,7 +86,7 @@ public class ConsensusReads
 
             if(consensusState.outcome() == INDEL_FAIL)
             {
-                ++mOutcomeCounts[INDEL_FAIL.ordinal()];
+                mConsensusStats.registerOutcome(INDEL_FAIL);
 
                 logInvalidConsensusRead(reads, null, groupIdentifier, consensusState, INDEL_FAIL.toString());
 
@@ -111,7 +110,7 @@ public class ConsensusReads
             consensusState.CigarElements.addAll(selectedConsensusRead.getCigar().getCigarElements());
         }
 
-        ++mOutcomeCounts[consensusState.outcome().ordinal()];
+        mConsensusStats.registerOutcome(consensusState.outcome());
 
         SAMRecord consensusRead = createConsensusRead(consensusState, reads, groupIdentifier);
 
@@ -220,21 +219,6 @@ public class ConsensusReads
         }
 
         return ValidationReason.OK;
-    }
-
-    public void logStats(final String chromosome)
-    {
-        if(!mValidateConsensusReads || !MD_LOGGER.isDebugEnabled())
-            return;
-
-        StringJoiner sj = new StringJoiner(", ");
-        for(ConsensusOutcome outcome : ConsensusOutcome.values())
-        {
-            if(mOutcomeCounts[outcome.ordinal()] > 0)
-                sj.add(format("%s=%d", outcome, mOutcomeCounts[outcome.ordinal()]));
-        }
-
-        MD_LOGGER.debug("chromosome({}) consensus read outcomes: {}", chromosome, sj.toString());
     }
 
     protected static String formReadId(final String templateReadId, final String groupIdentifier)

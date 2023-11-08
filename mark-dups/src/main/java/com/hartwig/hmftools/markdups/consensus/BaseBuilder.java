@@ -56,7 +56,7 @@ public class BaseBuilder
         // in case of dual strand, we also track bases and quals by first/second in pair status
         byte[][] locationBasesPair = null;
         byte[][] locationQualsPair = null;
-        if (isDualStrand)
+        if(isDualStrand)
         {
             locationBasesPair = new byte[][] { new byte[readCount], new byte[readCount] };
             locationQualsPair = new byte[][] { new byte[readCount], new byte[readCount] };
@@ -78,7 +78,7 @@ public class BaseBuilder
                 SAMRecord read = reads.get(r);
 
                 locationBases[r] = NO_BASE;
-                if (isDualStrand)
+                if(isDualStrand)
                 {
                     locationBasesPair[0][r] = NO_BASE;
                     locationBasesPair[1][r] = NO_BASE;
@@ -103,7 +103,7 @@ public class BaseBuilder
                 locationBases[r] = reads.get(r).getReadBases()[readIndex];
                 locationQuals[r] = reads.get(r).getBaseQualities()[readIndex];
 
-                if (isDualStrand)
+                if(isDualStrand)
                 {
                     int pairIdx = isFirstInPair[r] ? 0 : 1;
                     locationBasesPair[pairIdx][r] = locationBases[r];
@@ -201,7 +201,7 @@ public class BaseBuilder
             byte maxBase;
             int maxQual;
             int differingQual;
-            if (firstConsensusBaseAndQual[1] >= secondConsensusBaseAndQual[1])
+            if(firstConsensusBaseAndQual[1] >= secondConsensusBaseAndQual[1])
             {
                 maxBase = firstConsensusBaseAndQual[0];
                 maxQual = firstConsensusBaseAndQual[1];
@@ -235,8 +235,7 @@ public class BaseBuilder
         return new byte[] { refBase, qual };
     }
 
-    public byte[] determineBaseAndQual(
-            final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
+    public byte[] determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
     {
         List<Byte> distinctBases = Lists.newArrayListWithCapacity(4);
         List<Integer> qualTotals = Lists.newArrayListWithCapacity(4);

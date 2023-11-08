@@ -267,13 +267,13 @@ public class IndelConsensusReads
                 byte[] consensusBaseAndQual;
                 if(isDualStrand && basePosition != INVALID_POSITION)
                 {
-                    consensusBaseAndQual =
-                            mBaseBuilder.determineBaseAndQualDualStrand(locationBasesPair, locationQualsPair, consensusState.Chromosome, basePosition);
+                    consensusBaseAndQual = mBaseBuilder.determineBaseAndQualDualStrand(
+                            locationBasesPair, locationQualsPair, consensusState.Chromosome, basePosition);
                 }
                 else
                 {
-                    consensusBaseAndQual =
-                            mBaseBuilder.determineBaseAndQual(locationBases, locationQuals, consensusState.Chromosome, basePosition);
+                    consensusBaseAndQual = mBaseBuilder.determineBaseAndQual(
+                            locationBases, locationQuals, consensusState.Chromosome, basePosition);
                 }
 
 

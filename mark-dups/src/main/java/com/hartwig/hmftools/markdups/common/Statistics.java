@@ -111,8 +111,8 @@ public class Statistics
 
     public void logStats()
     {
-        MD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({})",
-                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups);
+        MD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({}) consensus({})",
+                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, ConsensusStats);
 
         if(MD_LOGGER.isDebugEnabled())
         {
