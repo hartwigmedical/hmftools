@@ -15,6 +15,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.gripss.common.SvData;
+import com.hartwig.hmftools.gripss.pon.PonCache;
 
 import org.junit.Test;
 

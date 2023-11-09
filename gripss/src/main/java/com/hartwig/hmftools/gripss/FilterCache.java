@@ -18,6 +18,7 @@ import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
+import com.hartwig.hmftools.gripss.pon.PonCache;
 
 public class FilterCache
 {

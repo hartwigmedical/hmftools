@@ -1,15 +1,17 @@
-package com.hartwig.hmftools.gripss;
+package com.hartwig.hmftools.gripss.pon;
 
 import static java.lang.Integer.max;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedReader;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_PAIR;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT_ID;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 import static com.hartwig.hmftools.gripss.filters.FilterConstants.DEFAULT_PON_DISTANCE;
 
@@ -70,6 +72,9 @@ public class PonCache
     }
 
     public boolean hasValidData() { return mHasValidData; }
+
+    public Map<String,List<PonSvRegion>> svRegions() { return mSvRegions; }
+    public Map<String,List<PonSglRegion>> sglRegions() { return mSglRegions; }
 
     public int getPonCount(final SvData var)
     {
@@ -268,7 +273,7 @@ public class PonCache
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] items = line.split("\t", -1);
+                final String[] items = line.split(TSV_DELIM, -1);
 
                 String chrStart = items[0];
                 String chrEnd = items[3];
@@ -285,8 +290,8 @@ public class PonCache
                 BaseRegion regionStart = new BaseRegion(Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
                 ChrBaseRegion regionEnd = new ChrBaseRegion(chrEnd, Integer.parseInt(items[4]) + 1, Integer.parseInt(items[5]));
 
-                Byte orientStart = items[8].equals("+") ? POS_ORIENT : NEG_ORIENT;
-                Byte orientEnd = items[9].equals("+") ? POS_ORIENT : NEG_ORIENT;
+                Byte orientStart = items[8].equals(POS_ORIENT_ID) ? POS_ORIENT : NEG_ORIENT;
+                Byte orientEnd = items[9].equals(POS_ORIENT_ID) ? POS_ORIENT : NEG_ORIENT;
                 int ponCount = Integer.parseInt(items[7]);
 
                 svRegions.add(new PonSvRegion(regionStart, orientStart, regionEnd, orientEnd, ponCount));
@@ -329,7 +334,7 @@ public class PonCache
 
             while((line = fileReader.readLine()) != null)
             {
-                final String[] items = line.split("\t", -1);
+                final String[] items = line.split(TSV_DELIM, -1);
 
                 String chr = items[0];
 
@@ -343,7 +348,7 @@ public class PonCache
 
                 BaseRegion region = new BaseRegion(Integer.parseInt(items[1]) + 1, Integer.parseInt(items[2]));
 
-                Byte orient = items[5].equals("+") ? POS_ORIENT : NEG_ORIENT;
+                Byte orient = items[5].equals(POS_ORIENT_ID) ? POS_ORIENT : NEG_ORIENT;
                 int ponCount = Integer.parseInt(items[4]);
 
                 sglRegions.add(new PonSglRegion(region, orient, ponCount));
@@ -410,57 +415,4 @@ public class PonCache
                 GERMLINE_PON_MARGIN, "PON permitted matching position margin", DEFAULT_PON_DISTANCE);
     }
 
-    private class PonSvRegion
-    {
-        public final BaseRegion RegionStart;
-        public final Byte OrientStart;
-        public final ChrBaseRegion RegionEnd;
-        public final Byte OrientEnd;
-        public final int PonCount;
-
-        public PonSvRegion(
-                final BaseRegion regionStart, final Byte orientStart, final ChrBaseRegion regionEnd, final Byte orientEnd, final int ponCount)
-        {
-            RegionStart = regionStart;
-            OrientStart = orientStart;
-            RegionEnd = regionEnd;
-            OrientEnd = orientEnd;
-            PonCount = ponCount;
-        }
-
-        public boolean matches(final BaseRegion svStart, final ChrBaseRegion svEnd, byte orientStart, byte orientEnd)
-        {
-            return RegionStart.overlaps(svStart) && RegionEnd.overlaps(svEnd) && OrientStart == orientStart && OrientEnd == orientEnd;
-        }
-
-        public String toString()
-        {
-            return String.format("region(%s - %s) orients(%d - %d) pon(%d)", RegionStart, RegionEnd, OrientStart, OrientEnd, PonCount);
-        }
-    }
-
-    private class PonSglRegion
-    {
-        public final BaseRegion Region;
-        public final Byte Orient;
-        public final int PonCount;
-
-        public PonSglRegion(final BaseRegion region, final Byte orient, final int ponCount)
-        {
-            Region = region;
-            Orient = orient;
-            PonCount = ponCount;
-        }
-
-        public boolean matches(final BaseRegion svRegion, byte orientation)
-        {
-            return Region.overlaps(svRegion) && Orient == orientation;
-        }
-
-        public String toString()
-        {
-            return String.format("region(%s) orient(%d) pon(%d)", Region, Orient, PonCount);
-        }
-
-    }
 }
