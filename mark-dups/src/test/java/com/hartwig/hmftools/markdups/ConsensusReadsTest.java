@@ -434,6 +434,8 @@ public class ConsensusReadsTest
         assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals("10M", readInfo.ConsensusRead.getCigarString());
+        assertEquals(37, (int) readInfo.ConsensusRead.getBaseQualities()[0]); // non mutated base
+        assertEquals(0, (int) readInfo.ConsensusRead.getBaseQualities()[mutatedBaseIndex]); // mutated base
         assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
     }
 
