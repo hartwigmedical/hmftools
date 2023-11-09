@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
@@ -137,7 +138,8 @@ public class PonCombiner
         }
     }
 
-    private void mergeSvRegions(final String chromosomeStart, final List<PonSvRegion> combinedRegions)
+    @VisibleForTesting
+    public static void mergeSvRegions(final String chromosomeStart, final List<PonSvRegion> combinedRegions)
     {
         if(combinedRegions.size() < 2)
             return;
@@ -152,18 +154,19 @@ public class PonCombiner
         {
             PonSvRegion currentRegion = combinedRegions.get(index);
 
-            // search all regions starting with this base and merge if both ends overlap
-            int nextIndex = index + 1;
-
             while(true)
             {
                 boolean foundMerge = false;
+
+                // search all regions starting with this base and merge if both ends overlap
+                int nextIndex = index + 1;
 
                 while(nextIndex < combinedRegions.size())
                 {
                     PonSvRegion nextRegion = combinedRegions.get(nextIndex);
 
-                    if(nextRegion.RegionStart.start() > currentRegion.RegionStart.start())
+                    // must overlap at the start
+                    if(nextRegion.RegionStart.start() > currentRegion.RegionStart.end())
                         break;
 
                     if(nextRegion.OrientStart != currentRegion.OrientStart || nextRegion.OrientEnd != currentRegion.OrientEnd)
@@ -179,15 +182,16 @@ public class PonCombiner
                     }
 
                     // doesn't matter where the end is - but expand to the longer of the two if any end regions overlap
-                    GR_LOGGER.debug("merging region({}:{} -> {}) with next({}:{} -> {})",
+                    GR_LOGGER.trace("merging region({}:{} -> {}) with next({}:{} -> {})",
                             chromosomeStart, currentRegion.RegionStart, currentRegion.RegionEnd,
                             chromosomeStart, nextRegion.RegionStart, nextRegion.RegionEnd);
 
-                    combinedRegions.remove(nextIndex);
-
+                    currentRegion.RegionStart.setStart(min(currentRegion.RegionStart.start(), nextRegion.RegionStart.start()));
                     currentRegion.RegionStart.setEnd(max(currentRegion.RegionStart.end(), nextRegion.RegionStart.end()));
                     currentRegion.RegionEnd.setStart(min(currentRegion.RegionEnd.start(), nextRegion.RegionEnd.start()));
                     currentRegion.RegionEnd.setEnd(max(currentRegion.RegionEnd.end(), nextRegion.RegionEnd.end()));
+
+                    combinedRegions.remove(nextIndex);
                     foundMerge = true;
                     ++mergeCount;
                 }
@@ -252,7 +256,8 @@ public class PonCombiner
         }
     }
 
-    private void mergeSglRegions(final String chromosomeStart, final List<PonSglRegion> combinedRegions)
+    @VisibleForTesting
+    public static void mergeSglRegions(final String chromosomeStart, final List<PonSglRegion> combinedRegions)
     {
         if(combinedRegions.size() < 2)
             return;
@@ -274,7 +279,7 @@ public class PonCombiner
             {
                 PonSglRegion nextRegion = combinedRegions.get(nextIndex);
 
-                if(nextRegion.Region.start() > currentRegion.Region.start())
+                if(nextRegion.Region.start() > currentRegion.Region.end())
                     break;
 
                 if(nextRegion.Orient != currentRegion.Orient)
@@ -284,12 +289,11 @@ public class PonCombiner
                 }
 
                 // doesn't matter where the end is - but expand to the longer of the two if any end regions overlap
-                GR_LOGGER.debug("merging region({}:{}) with next({}:{})",
+                GR_LOGGER.trace("merging region({}:{}) with next({}:{})",
                         chromosomeStart, currentRegion.Region, chromosomeStart, nextRegion.Region);
 
-                combinedRegions.remove(nextIndex);
-
                 currentRegion.Region.setEnd(max(currentRegion.Region.end(), nextRegion.Region.end()));
+                combinedRegions.remove(nextIndex);
                 ++mergeCount;
             }
 
