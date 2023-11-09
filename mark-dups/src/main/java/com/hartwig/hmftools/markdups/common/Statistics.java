@@ -80,7 +80,13 @@ public class Statistics
         addFrequency(frequency, 1, 0);
     }
 
-    private void addFrequency(int duplicateCount, int count, int dualStrandCount)
+    public void addNonDuplicateCounts(int fragmentCount)
+    {
+        if(fragmentCount > 0)
+            addFrequency(1, fragmentCount, 0);
+    }
+
+    private void addFrequency(int duplicateCount, long count, int dualStrandCount)
     {
         int rounded = roundFrequency(duplicateCount);
         DuplicateFrequency dupFreq = DuplicateFrequencies.get(rounded);

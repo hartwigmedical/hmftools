@@ -375,6 +375,9 @@ public class PartitionReader implements Consumer<List<Fragment>>
             mBamWriter.writeFragments(resolvedFragments, true);
 
             mStats.LocalComplete += resolvedFragments.stream().mapToInt(x -> x.readCount()).sum();
+
+            int nonDuplicateFragments = (int)resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
+            mStats.addNonDuplicateCounts(nonDuplicateFragments);
         }
 
         mBamWriter.setBoundaryPosition(position, true);
