@@ -10,6 +10,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO_DELIM;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
@@ -526,8 +528,25 @@ public class ReadContextCounter implements VariantHotspot
             mUmiTypeCounts = new int[UMI_TYPE_COUNT];
         }
 
-        String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-        UmiReadType umiReadType = umiType != null ? UmiReadType.valueOf(umiType) : UmiReadType.NONE;
+        UmiReadType umiReadType = UmiReadType.NONE;
+
+        if(record.hasAttribute(UMI_TYPE_ATTRIBUTE))
+        {
+            String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+
+            if(umiType != null)
+                umiReadType = UmiReadType.valueOf(umiType);
+        }
+        else
+        {
+            String consensusInfo = record.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+            if(consensusInfo != null && consensusInfo.contains(CONSENSUS_INFO_DELIM))
+            {
+                String[] values = consensusInfo.split(CONSENSUS_INFO_DELIM, 3);
+                umiReadType = UmiReadType.valueOf(values[2]);
+            }
+        }
 
         // add to total and variant support if applicable
         ++mUmiTypeCounts[umiReadType.ordinal()];
