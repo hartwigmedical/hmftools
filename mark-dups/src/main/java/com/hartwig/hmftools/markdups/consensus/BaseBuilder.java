@@ -41,33 +41,20 @@ public class BaseBuilder
         String chromosome = reads.get(0).getContig();
 
         int[] readOffsets = new int[readCount];
+        boolean[] isFirstInPair = new boolean[readCount];
+        boolean isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
 
         for(int i = 0; i < readCount; ++i)
         {
             readOffsets[i] = reads.get(i).getReadBases().length - baseLength;
         }
 
-        boolean[] isFirstInPair = new boolean[readCount];
-        boolean isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
-
         byte[] locationBases = new byte[readCount];
         byte[] locationQuals = new byte[readCount];
 
-        // in case of dual strand, we also track bases and quals by first/second in pair status
-        byte[][] locationBasesPair = null;
-        byte[][] locationQualsPair = null;
-        if(isDualStrand)
-        {
-            locationBasesPair = new byte[][] { new byte[readCount], new byte[readCount] };
-            locationQualsPair = new byte[][] { new byte[readCount], new byte[readCount] };
-        }
-
-        boolean isDualStrandWithMismatch = false;
-
         for(int baseIndex = 0; baseIndex < baseLength; ++baseIndex)
         {
-            // check bases at this index
-            // work on the premise that most bases will agree
+            // check bases at this index - work on the premise that most bases will agree
             boolean hasMismatch = false;
             int maxQual = 0;
             byte firstBase = NO_BASE;
@@ -78,11 +65,6 @@ public class BaseBuilder
                 SAMRecord read = reads.get(r);
 
                 locationBases[r] = NO_BASE;
-                if(isDualStrand)
-                {
-                    locationBasesPair[0][r] = NO_BASE;
-                    locationBasesPair[1][r] = NO_BASE;
-                }
 
                 int readIndex;
                 if(consensusState.IsForward)
@@ -102,13 +84,6 @@ public class BaseBuilder
 
                 locationBases[r] = reads.get(r).getReadBases()[readIndex];
                 locationQuals[r] = reads.get(r).getBaseQualities()[readIndex];
-
-                if(isDualStrand)
-                {
-                    int pairIdx = isFirstInPair[r] ? 0 : 1;
-                    locationBasesPair[pairIdx][r] = locationBases[r];
-                    locationQualsPair[pairIdx][r] = locationQuals[r];
-                }
 
                 if(firstBase == NO_BASE)
                     firstBase = locationBases[r];
@@ -130,14 +105,12 @@ public class BaseBuilder
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = INVALID_POSITION; // protect against over-runs from soft-clips - rare but possible
 
-                if(isDualStrand)
-                    isDualStrandWithMismatch = true;
-
                 byte[] consensusBaseAndQual;
+
                 if(isDualStrand && basePosition != INVALID_POSITION)
                 {
-                    consensusBaseAndQual =
-                            determineBaseAndQualDualStrand(locationBasesPair, locationQualsPair, chromosome, basePosition);
+                    // split the reads into 2 consensus reads and then compare
+                    consensusBaseAndQual = determineDualStrandBaseAndQual(isFirstInPair, locationBases, locationQuals, chromosome, basePosition);
                 }
                 else
                 {
@@ -148,70 +121,87 @@ public class BaseBuilder
                 consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
             }
         }
-
-        if(isDualStrandWithMismatch && mConsensusStats != null)
-        {
-            logDualStrandWithMismatch(reads);
-            mConsensusStats.registerDualStrandMismatchReadGroup(readCount);
-        }
     }
 
-    public static boolean isDualStrandAndIsFirstInPair(final List<SAMRecord> reads, final boolean[] isFirstInPairOut)
+    public byte[] determineDualStrandBaseAndQual(
+            final boolean[] isFirstInPair, final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
     {
-        int readCount = reads.size();
-        boolean hasFirstInPair = false;
-        boolean hasSecondInPair = false;
-        for(int i = 0; i < readCount; ++i)
+        int readCount = isFirstInPair.length;
+
+        int firstInPairCount = 0;
+        int secondInPairCount = 0;
+
+        for(int i = 0; i < isFirstInPair.length; ++i)
         {
-            boolean firstInPair = reads.get(i).getFirstOfPairFlag();
-            if(firstInPair)
-                hasFirstInPair = true;
+            if(isFirstInPair[i])
+                ++firstInPairCount;
             else
-                hasSecondInPair = true;
-
-            isFirstInPairOut[i] = firstInPair;
+                ++secondInPairCount;
         }
 
-        return hasFirstInPair && hasSecondInPair;
-    }
+        byte[] locationBasesFirst = new byte[firstInPairCount];
+        byte[] locationQualsFirst = new byte[firstInPairCount];
 
-    public byte[] determineBaseAndQualDualStrand(
-            final byte[][] locationBasesPair, final byte[][] locationQualsPair, final String chromosome, int position)
-    {
-        byte[] firstConsensusBaseAndQual = determineBaseAndQual(locationBasesPair[0], locationQualsPair[0], chromosome, position);
-        byte[] secondConsensusBaseAndQual = determineBaseAndQual(locationBasesPair[1], locationQualsPair[1], chromosome, position);
+        byte[] locationBasesSecond = new byte[secondInPairCount];
+        byte[] locationQualsSecond = new byte[secondInPairCount];
 
-        if(firstConsensusBaseAndQual[0] == NO_BASE)
-            return secondConsensusBaseAndQual;
+        int firstIndex = 0;
+        int secondIndex = 0;
 
-        if(secondConsensusBaseAndQual[0] == NO_BASE)
-            return firstConsensusBaseAndQual;
-
-        if(firstConsensusBaseAndQual[0] == secondConsensusBaseAndQual[0])
+        for(int i = 0; i < locationBases.length; ++i)
         {
-            byte qual = (byte) max(firstConsensusBaseAndQual[1], secondConsensusBaseAndQual[1]);
-            return new byte[] { firstConsensusBaseAndQual[0], qual };
+            if(isFirstInPair[i])
+            {
+                locationBasesFirst[firstIndex] = locationBases[i];
+                locationQualsFirst[firstIndex] = locationQuals[i];
+                ++firstIndex;
+            }
+            else
+            {
+                locationBasesSecond[secondIndex] = locationBases[i];
+                locationQualsSecond[secondIndex] = locationQuals[i];
+                ++secondIndex;
+            }
         }
+
+        byte[] firstBaseAndQual = determineBaseAndQual(locationBasesFirst, locationQualsFirst, chromosome, position);
+        byte[] secondBaseAndQual = determineBaseAndQual(locationBasesSecond, locationQualsSecond, chromosome, position);
+
+        if(firstBaseAndQual[0] == NO_BASE)
+            return secondBaseAndQual;
+
+        if(secondBaseAndQual[0] == NO_BASE)
+            return firstBaseAndQual;
+
+        if(firstBaseAndQual[0] == secondBaseAndQual[0])
+        {
+            byte qual = (byte)max(firstBaseAndQual[1], secondBaseAndQual[1]);
+            return new byte[] { firstBaseAndQual[0], qual };
+        }
+
+        // logDualStrandWithMismatch(reads);
+        mConsensusStats.registerDualStrandMismatchReadGroup(readCount);
 
         byte refBase = mRefGenome.getBaseString(chromosome, position, position).getBytes()[0];
-        boolean firstIsRef = firstConsensusBaseAndQual[0] == refBase;
-        boolean secondIsRef = secondConsensusBaseAndQual[0] == refBase;
+        boolean firstIsRef = firstBaseAndQual[0] == refBase;
+        boolean secondIsRef = secondBaseAndQual[0] == refBase;
+
         if(!firstIsRef && !secondIsRef)
         {
             byte maxBase;
             int maxQual;
             int differingQual;
-            if(firstConsensusBaseAndQual[1] >= secondConsensusBaseAndQual[1])
+            if(firstBaseAndQual[1] >= secondBaseAndQual[1])
             {
-                maxBase = firstConsensusBaseAndQual[0];
-                maxQual = firstConsensusBaseAndQual[1];
-                differingQual = secondConsensusBaseAndQual[1];
+                maxBase = firstBaseAndQual[0];
+                maxQual = firstBaseAndQual[1];
+                differingQual = secondBaseAndQual[1];
             }
             else
             {
-                maxBase = secondConsensusBaseAndQual[0];
-                maxQual = secondConsensusBaseAndQual[1];
-                differingQual = firstConsensusBaseAndQual[1];
+                maxBase = secondBaseAndQual[0];
+                maxQual = secondBaseAndQual[1];
+                differingQual = firstBaseAndQual[1];
             }
 
             byte qual = (byte) max(0, maxQual - differingQual);
@@ -222,13 +212,13 @@ public class BaseBuilder
         int differingQual;
         if(firstIsRef)
         {
-            refQual = firstConsensusBaseAndQual[1];
-            differingQual = secondConsensusBaseAndQual[1];
+            refQual = firstBaseAndQual[1];
+            differingQual = secondBaseAndQual[1];
         }
         else
         {
-            refQual = secondConsensusBaseAndQual[1];
-            differingQual = firstConsensusBaseAndQual[1];
+            refQual = secondBaseAndQual[1];
+            differingQual = firstBaseAndQual[1];
         }
 
         byte qual = (byte) max(0, refQual - differingQual);
@@ -237,6 +227,12 @@ public class BaseBuilder
 
     public byte[] determineBaseAndQual(final byte[] locationBases, final byte[] locationQuals, final String chromosome, int position)
     {
+        if(locationBases.length == 1)
+        {
+            // early exit for dual strand with a single read on one side - a very common scenario
+            return new byte[] { locationBases[0], locationQuals[0] };
+        }
+
         List<Byte> distinctBases = Lists.newArrayListWithCapacity(4);
         List<Integer> qualTotals = Lists.newArrayListWithCapacity(4);
         List<Integer> maxQuals = Lists.newArrayListWithCapacity(4);
@@ -318,6 +314,22 @@ public class BaseBuilder
         return new byte[] { maxBase, (byte)round(calcQual) };
     }
 
+    public static boolean isDualStrandAndIsFirstInPair(final List<SAMRecord> reads, final boolean[] isFirstInPairOut)
+    {
+        boolean isDualStrand = false;
+
+        for(int i = 0; i < reads.size(); ++i)
+        {
+            isFirstInPairOut[i] = reads.get(i).getFirstOfPairFlag();
+
+            if(i > 0)
+                isDualStrand |= isFirstInPairOut[0] != isFirstInPairOut[i];
+        }
+
+        return isDualStrand;
+    }
+
+    /*
     public static void logDualStrandWithMismatch(List<SAMRecord> reads)
     {
         MD_LOGGER.trace("Mismatched basis found in dual stranded read group readCount({})", reads.size());
@@ -326,6 +338,7 @@ public class BaseBuilder
             MD_LOGGER.trace("Read in dual stranded read group: {}", read);
         }
     }
+    */
 
     public void setChromosomLength(int chromosomeLength) { mChromosomeLength = chromosomeLength; }
 

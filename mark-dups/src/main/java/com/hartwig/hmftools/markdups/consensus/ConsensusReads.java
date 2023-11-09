@@ -52,13 +52,14 @@ public class ConsensusReads
     @VisibleForTesting
     public ConsensusReads(final RefGenomeInterface refGenome)
     {
-        this(refGenome, null);
+        this(refGenome, new ConsensusStatistics());
     }
 
     public void setDebugOptions(boolean validateConsensusReads)
     {
         mValidateConsensusReads = validateConsensusReads;
     }
+    public ConsensusStatistics consensusStats() { return mConsensusStats; }
 
     public ConsensusReadInfo createConsensusRead(final List<SAMRecord> reads, final String groupIdentifier)
     {

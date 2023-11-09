@@ -122,10 +122,11 @@ public class Statistics
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);
 
-            for(Integer frequency : frequencies)
-            {
-                MD_LOGGER.debug("duplicate frequency({}={})", frequency, DuplicateFrequencies.get(frequency).Frequency);
-            }
+            String dupFreqStr = frequencies.stream()
+                    .map(x -> format("%d=%d", x, DuplicateFrequencies.get(x).Frequency))
+                    .collect(Collectors.joining(", "));
+
+            MD_LOGGER.debug("duplicate frequency: {}", dupFreqStr);
         }
 
         if(MissingMateCigar > 0)
