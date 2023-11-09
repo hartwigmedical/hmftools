@@ -27,7 +27,7 @@ public class PonTest
     public PonTest()
     {
         mGripss = new GripssTestApp();
-        mPonCache = new PonCache(2, null, null);
+        mPonCache = new PonCache(2, null, null, false);
     }
 
     @Test

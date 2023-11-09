@@ -33,6 +33,7 @@ public class PonCache
     private final Map<String,List<PonSvRegion>> mSvRegions;
     private final Map<String,List<PonSglRegion>> mSglRegions;
     private final int mPositionMargin;
+    private final boolean mAllowUnordered;
 
     // keep indices into the 2 collections assuming that requests to match on the PON will be made sequentially through the genome
     private String mCurrentSvChromosome;
@@ -48,13 +49,14 @@ public class PonCache
     public PonCache(final ConfigBuilder configBuilder)
     {
         this(configBuilder.getInteger(GERMLINE_PON_MARGIN), configBuilder.getValue(GERMLINE_PON_BED_SV_FILE),
-                configBuilder.getValue(GERMLINE_PON_BED_SGL_FILE));
+                configBuilder.getValue(GERMLINE_PON_BED_SGL_FILE), false);
     }
 
-    public PonCache(final int margin, final String ponSvFile, final String ponSglFile)
+    public PonCache(final int margin, final String ponSvFile, final String ponSglFile, boolean allowUnordered)
     {
         mSvRegions = Maps.newHashMap();
         mSglRegions = Maps.newHashMap();
+        mAllowUnordered = allowUnordered;
         mHasValidData = true;
 
         mPositionMargin = margin;
@@ -297,7 +299,7 @@ public class PonCache
                 svRegions.add(new PonSvRegion(regionStart, orientStart, regionEnd, orientEnd, ponCount));
                 ++itemCount;
 
-                if(lastRegion != null && lastRegion.start() > regionStart.start())
+                if(!mAllowUnordered && lastRegion != null && lastRegion.start() > regionStart.start())
                 {
                     GR_LOGGER.warn("SV PON not ordered: last({}) vs this({})", lastRegion, regionStart);
                 }
@@ -354,7 +356,7 @@ public class PonCache
                 sglRegions.add(new PonSglRegion(region, orient, ponCount));
                 ++itemCount;
                 
-                if(lastRegion != null && lastRegion.start() > region.start())
+                if(!mAllowUnordered && lastRegion != null && lastRegion.start() > region.start())
                 {
                     GR_LOGGER.warn("SGL PON not ordered: last({}) vs this({})", lastRegion, region);
                 }

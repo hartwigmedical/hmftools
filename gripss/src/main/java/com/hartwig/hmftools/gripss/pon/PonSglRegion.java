@@ -2,7 +2,7 @@ package com.hartwig.hmftools.gripss.pon;
 
 import com.hartwig.hmftools.common.region.BaseRegion;
 
-public class PonSglRegion
+public class PonSglRegion implements Comparable<PonSglRegion>
 {
     public final BaseRegion Region;
     public final Byte Orient;
@@ -23,6 +23,20 @@ public class PonSglRegion
     public String toString()
     {
         return String.format("region(%s) orient(%d) pon(%d)", Region, Orient, PonCount);
+    }
+
+    @Override
+    public int compareTo(final PonSglRegion other)
+    {
+        if(Region.start() == other.Region.start())
+        {
+            if(Region.end() == other.Region.end())
+                return 0;
+
+            return Region.end() < other.Region.end() ? -1 : 1;
+        }
+
+        return Region.start() < other.Region.start() ? -1 : 1;
     }
 
 }

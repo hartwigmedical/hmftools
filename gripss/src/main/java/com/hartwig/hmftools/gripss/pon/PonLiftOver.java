@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.gripss.utils;
+package com.hartwig.hmftools.gripss.pon;
 
 import static java.lang.String.format;
 
@@ -21,9 +21,6 @@ import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
-import com.hartwig.hmftools.gripss.pon.PonCache;
-import com.hartwig.hmftools.gripss.pon.PonSglRegion;
-import com.hartwig.hmftools.gripss.pon.PonSvRegion;
 
 import org.jetbrains.annotations.NotNull;
 
