@@ -28,12 +28,10 @@ import htsjdk.samtools.SAMRecord;
 public class IndelConsensusReads
 {
     private final BaseBuilder mBaseBuilder;
-    private boolean mCurrentIsDualStrandWithMismatch;
 
     public IndelConsensusReads(final BaseBuilder baseBuilder)
     {
         mBaseBuilder = baseBuilder;
-        mCurrentIsDualStrandWithMismatch = false;
     }
 
     public void buildIndelComponents(final List<SAMRecord> reads, final ConsensusState consensusState)
@@ -53,21 +51,10 @@ public class IndelConsensusReads
             return;
         }
 
-        mCurrentIsDualStrandWithMismatch = false;
-
         int readCount = reads.size();
 
         boolean[] isFirstInPair = new boolean[readCount];
         boolean isDualStrand = isDualStrandAndIsFirstInPair(reads, isFirstInPair);
-
-        for(int i = 1; i < readCount; ++i)
-        {
-            if(reads.get(0).getFirstOfPairFlag() != reads.get(i).getFirstOfPairFlag())
-            {
-                isDualStrand = true;
-                break;
-            }
-        }
 
         // find the most common read by CIGAR, and where there are equal counts choose the one with the least soft-clips
         SAMRecord selectedConsensusRead = selectConsensusRead(cigarFrequencies);
@@ -110,9 +97,6 @@ public class IndelConsensusReads
 
         if(consensusState.outcome() != INDEL_FAIL)
             consensusState.setOutcome(INDEL_MISMATCH);
-
-        if(mCurrentIsDualStrandWithMismatch)
-            mBaseBuilder.stats().registerDualStrandMismatchReadGroup(readCount);
     }
 
     private void addElementBases(
@@ -244,9 +228,6 @@ public class IndelConsensusReads
 
                 if(basePosition < 1 || basePosition > chromosomeLength)
                     basePosition = BaseBuilder.INVALID_POSITION;
-
-                if(isDualStrand)
-                    mCurrentIsDualStrandWithMismatch = true;
 
                 byte[] consensusBaseAndQual;
 

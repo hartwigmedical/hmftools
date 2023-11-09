@@ -441,7 +441,7 @@ public class UmiGroupBuilder
                 }
 
                 boolean canCollapse = mUmiConfig.Duplex ?
-                        hasDuplexUmiMatch(firstUmi, secondUmi, mUmiConfig.DuplexDelim, mUmiConfig.PermittedBaseDiff) : true;
+                        hasDuplexUmiMatch(firstUmi, secondUmi, mUmiConfig.DuplexDelim, mUmiConfig.PermittedBaseDiff) : false;
 
                 if(canCollapse)
                 {
