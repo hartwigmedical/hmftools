@@ -20,14 +20,6 @@ public class SageAppendConfig
         FilterToGenes = configBuilder.hasFlag(FILTER_TO_GENES);
     }
 
-    public boolean isValid()
-    {
-        if(!Common.isValid())
-            return false;
-
-        return true;
-    }
-
     public static void registerConfig(final ConfigBuilder configBuilder)
     {
         SageConfig.registerCommonConfig(configBuilder);

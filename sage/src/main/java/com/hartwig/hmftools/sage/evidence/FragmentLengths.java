@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.hartwig.hmftools.sage.SageConfig;
-import com.hartwig.hmftools.sage.common.SageVariant;
 
 public class FragmentLengths
 {
@@ -34,7 +33,7 @@ public class FragmentLengths
             return null;
 
         String outputVcf = mConfig.OutputFile;
-        String fileName = outputVcf.replace(".vcf.gz", ".fragment_lengths.tsv.gz");
+        String fileName = outputVcf.replace(".vcf.gz", ".frag_lengths.tsv.gz");
 
         try
         {

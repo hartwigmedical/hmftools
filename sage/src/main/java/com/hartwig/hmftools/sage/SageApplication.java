@@ -3,17 +3,11 @@ package com.hartwig.hmftools.sage;
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 import static com.hartwig.hmftools.sage.SageCommon.APP_NAME;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_LENGTH;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.common.genome.chromosome.Chromosome;
-import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSampler;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.sage.coverage.Coverage;
@@ -73,7 +67,7 @@ public class SageApplication implements AutoCloseable
         long startTimeMs = System.currentTimeMillis();
         final Coverage coverage = new Coverage(mConfig.TumorIds, mRefData.CoveragePanel.values(), mConfig.Common);
 
-        setReadLength();
+        SageCommon.setReadLength(mConfig.Common, mRefData.PanelWithHotspots, mConfig.TumorBams.get(0));
 
         BaseQualityRecalibration baseQualityRecalibration = new BaseQualityRecalibration(
                 mConfig.Common, mRefData.RefGenome, mConfig.PanelBed, mConfig.TumorIds, mConfig.TumorBams);
@@ -102,47 +96,6 @@ public class SageApplication implements AutoCloseable
         mFragmentLengths.close();
 
         SG_LOGGER.info("Sage complete, mins({})", runTimeMinsStr(startTimeMs));
-    }
-
-    private void setReadLength()
-    {
-        if(mConfig.Common.getReadLength() > 0) // skip if set in config
-            return;
-
-        BamSampler bamSampler = new BamSampler(mConfig.Common.RefGenomeFile);
-
-        ChrBaseRegion sampleRegion = null;
-
-        if(!mConfig.Common.SpecificChrRegions.Regions.isEmpty())
-        {
-            sampleRegion = mConfig.Common.SpecificChrRegions.Regions.get(0);
-        }
-        else if(!mRefData.PanelWithHotspots.isEmpty())
-        {
-            for(Map.Entry<Chromosome, List<BaseRegion>> entry : mRefData.PanelWithHotspots.entrySet())
-            {
-                BaseRegion region = entry.getValue().get(0);
-
-                sampleRegion = new ChrBaseRegion(
-                        mConfig.Common.RefGenVersion.versionedChromosome(entry.getKey().toString()), region.start(), region.end());
-
-                break;
-            }
-        }
-        else
-        {
-            sampleRegion = bamSampler.defaultRegion();
-        }
-
-        if(bamSampler.calcBamCharacteristics(mConfig.TumorBams.get(0), sampleRegion) && bamSampler.maxReadLength() > 0)
-        {
-            mConfig.Common.setReadLength(bamSampler.maxReadLength());
-        }
-        else
-        {
-            SG_LOGGER.warn("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
-            mConfig.Common.setReadLength(DEFAULT_READ_LENGTH);
-        }
     }
 
     private SAMSequenceDictionary dictionary() throws IOException

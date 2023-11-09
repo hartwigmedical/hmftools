@@ -27,6 +27,7 @@ import com.hartwig.hmftools.common.utils.version.VersionInfo;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.common.variant.impact.VariantImpactSerialiser;
+import com.hartwig.hmftools.sage.SageCommon;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.pipeline.ChromosomePartition;
 import com.hartwig.hmftools.sage.quality.BaseQualityRecalibration;
@@ -159,6 +160,8 @@ public class SageAppendApplication
         if(!baseQualityRecalibration.isValid())
             System.exit(1);
 
+        SageCommon.setReadLength(mConfig.Common, Collections.emptyMap(), mConfig.Common.ReferenceBams.get(0));
+
         final Map<String,QualityRecalibrationMap> recalibrationMap = baseQualityRecalibration.getSampleRecalibrationMap();
 
         final ChromosomePartition chromosomePartition = new ChromosomePartition(mConfig.Common, mRefGenome);
@@ -194,7 +197,10 @@ public class SageAppendApplication
             }
 
             final List<Callable> callableList = regionTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Common.Threads);
+            if(!TaskExecutor.executeTasks(callableList, mConfig.Common.Threads))
+            {
+                System.exit(1);
+            }
 
             for(RegionAppendTask regionTask : regionTasks)
             {
@@ -278,6 +284,7 @@ public class SageAppendApplication
         tumorReader.close();
         return dictionary;
     }
+
 
     public static void main(String[] args)
     {
