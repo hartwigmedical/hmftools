@@ -16,6 +16,11 @@ import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.COMBINED;
 import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.EXCEPTION;
 import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.NO_OVERLAP;
 import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.NO_OVERLAP_CIGAR_DIFF;
+import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.buildSyncedRead;
+import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.getCombinedBaseAndQual;
+import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.ignoreCigarOperatorMismatch;
+import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.isDeleteOrSplit;
+import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.overlappingCigarDiffs;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -160,44 +165,46 @@ public class FragmentSync
         final byte[] firstBaseQualities = first.getBaseQualities();
         final byte[] firstBases = first.getReadBases();
 
-        int[] firstScLengths = new int[] {
-                firstCigar.getFirstCigarElement().getOperator() == S ? firstCigar.getFirstCigarElement().getLength() : 0,
-                firstCigar.getLastCigarElement().getOperator() == S ? firstCigar.getLastCigarElement().getLength() : 0
-        };
+        final CigarBaseCounts firstBaseCounts = new CigarBaseCounts(firstCigar);
+        final CigarBaseCounts secondBaseCounts = new CigarBaseCounts(secondCigar);
 
         final byte[] secondBaseQualities = second.getBaseQualities();
         final byte[] secondBases = second.getReadBases();
 
-        int[] secondScLengths = new int[] {
-                secondCigar.getFirstCigarElement().getOperator() == S ? secondCigar.getFirstCigarElement().getLength() : 0,
-                secondCigar.getLastCigarElement().getOperator() == S ? secondCigar.getLastCigarElement().getLength() : 0
-        };
-
         // work out boundaries and lengths
-        int firstEffectivePosStart = firstPosStart - firstScLengths[SE_START];
-        int secondEffectivePosStart = secondPosStart - secondScLengths[SE_START];
-        int firstEffectivePosEnd = firstPosEnd + firstScLengths[SE_END];
-        int secondEffectivePosEnd = secondPosEnd + secondScLengths[SE_END];
+        int firstEffectivePosStart = firstPosStart - firstBaseCounts.SoftClipStart;
+        int secondEffectivePosStart = secondPosStart - secondBaseCounts.SoftClipStart;
+        int firstEffectivePosEnd = firstPosEnd + firstBaseCounts.SoftClipEnd;
+        int secondEffectivePosEnd = secondPosEnd + secondBaseCounts.SoftClipEnd;
 
-        int combinedEffectiveStart = min(firstEffectivePosStart, secondEffectivePosStart);
-        int combinedEffectiveEnd = max(firstEffectivePosEnd, secondEffectivePosEnd);
-
-        int firstAdjustedBases = firstCigar.getCigarElements().stream()
-                .filter(x -> x.getOperator().isIndel() || x.getOperator() == N)
-                .mapToInt(x -> isDeleteOrSplit(x.getOperator()) ? -x.getLength() : x.getLength())
-                .sum();
-
-        int secondAdjustedBases = secondCigar.getCigarElements().stream()
-                .filter(x -> x.getOperator().isIndel() || x.getOperator() == N)
-                .mapToInt(x -> isDeleteOrSplit(x.getOperator()) ? -x.getLength() : x.getLength())
-                .sum();
-
-        if(firstAdjustedBases != secondAdjustedBases && overlappingCigarDiffs(firstCigar, firstPosStart, secondCigar, secondPosStart))
+        if(firstBaseCounts.AdjustedBases != secondBaseCounts.AdjustedBases
+        && overlappingCigarDiffs(firstCigar, firstPosStart, secondCigar, secondPosStart))
         {
             return new FragmentSyncOutcome(CIGAR_MISMATCH);
         }
 
-        int combinedLength = combinedEffectiveEnd - combinedEffectiveStart + 1 + firstAdjustedBases;
+        int combinedEffectiveStart = min(firstEffectivePosStart, secondEffectivePosStart);
+        int combinedEffectiveEnd = max(firstEffectivePosEnd, secondEffectivePosEnd);
+
+        // truncate any fragment with an insert size less than the expected read length
+        int fragmentLength = abs(first.getInferredInsertSize());
+
+        int truncatedFragmentStart = 0;
+        int truncatedFragmentEnd = combinedEffectiveEnd;
+
+        if(firstBaseCounts.AlignedBases > fragmentLength || secondBaseCounts.AdjustedBases > fragmentLength)
+        {
+            int excessBases = max(firstBaseCounts.AlignedBases, secondBaseCounts.AdjustedBases) - fragmentLength;
+            truncatedFragmentStart = max(firstEffectivePosStart, secondEffectivePosStart);
+
+            if(truncatedFragmentStart - combinedEffectiveStart < excessBases)
+            {
+                int endBaseTrim = excessBases - (truncatedFragmentStart - combinedEffectiveStart);
+                truncatedFragmentEnd -= endBaseTrim;
+            }
+        }
+
+        int combinedLength = combinedEffectiveEnd - combinedEffectiveStart + 1 + firstBaseCounts.AdjustedBases;
 
         final byte[] combinedBaseQualities = new byte[combinedLength];
         final byte[] combinedBases = new byte[combinedLength];
@@ -392,152 +399,10 @@ public class FragmentSync
         // add the last cigar element
         combinedCigar.add(new CigarElement(combinedCigarElementLength, combinedCigarOperator));
 
-        SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
-        recordBuilder.setUnmappedHasBasesAndQualities(false);
-
-        SAMRecord combinedRecord = recordBuilder.addFrag(
-                first.getReadName(),
-                first.getReferenceIndex(),
-                combinedPosStart,
-                first.getReadNegativeStrandFlag(),
-                false,
-                combinedCigar.toString(), "", 1, false);
-
-        combinedRecord.setReadBases(combinedBases);
-        combinedRecord.setAlignmentStart(combinedPosStart);
-        combinedRecord.setReferenceIndex(first.getReferenceIndex());
-
-        combinedRecord.setBaseQualities(combinedBaseQualities);
-        combinedRecord.setReferenceName(first.getReferenceName());
-        combinedRecord.setMateAlignmentStart(secondPosStart);
-        combinedRecord.setMateReferenceName(second.getReferenceName());
-        combinedRecord.setMateReferenceIndex(second.getReferenceIndex());
-
-        // to be correct this should match the cigar element count
-        combinedRecord.setFlags(first.getFlags());
-
-        combinedRecord.setMappingQuality(first.getMappingQuality());
-
-        // no need to compute since both records have the same value and it remains unchanged
-        combinedRecord.setInferredInsertSize(abs(first.getInferredInsertSize()));
-
-        for(SAMRecord.SAMTagAndValue tagAndValue : first.getAttributes())
-        {
-            combinedRecord.setAttribute(tagAndValue.tag, tagAndValue.value);
-        }
-
-        // provide original coords since these are used in the evidence phase
-        combinedRecord.setAttribute(ORIG_READ_COORDS, format("%d;%d;%d;%d", firstPosStart, firstPosEnd, secondPosStart, secondPosEnd));
+        SAMRecord combinedRecord = buildSyncedRead(
+                first, combinedPosStart, combinedBases, combinedBaseQualities, combinedCigar,
+                format("%d;%d;%d;%d", firstPosStart, firstPosEnd, secondPosStart, secondPosEnd));
 
         return new FragmentSyncOutcome(combinedRecord, COMBINED);
     }
-
-    private static boolean isDeleteOrSplit(final CigarOperator element)
-    {
-        return element == D || element == N;
-    }
-
-    private static boolean ignoreCigarOperatorMismatch(final CigarOperator first, final CigarOperator second)
-    {
-        return (first == M || first == S) && (second == M || second == S);
-    }
-
-    public static boolean overlappingCigarDiffs(final Cigar firstCigar, int firstPosStart, final Cigar secondCigar, int secondPosStart)
-    {
-        int firstAdjustedElementPosEnd = 0;
-        int readPos = firstPosStart;
-        for(CigarElement element : firstCigar.getCigarElements())
-        {
-            switch(element.getOperator())
-            {
-                case M:
-                    readPos += element.getLength();
-                    break;
-                case D:
-                case N:
-                    readPos += element.getLength();
-                    firstAdjustedElementPosEnd = readPos + element.getLength();
-                    break;
-                case I:
-                    firstAdjustedElementPosEnd = readPos + 1;
-                default:
-                    break;
-            }
-        }
-
-        int secondAdjustedElementPosStart = secondPosStart;
-        for(CigarElement element : secondCigar.getCigarElements())
-        {
-            if(element.getOperator() == M)
-                secondAdjustedElementPosStart += element.getLength();
-            else if(element.getOperator().isIndel())
-                break;
-        }
-
-        return firstAdjustedElementPosEnd >= secondAdjustedElementPosStart;
-    }
-
-    public static boolean compatibleCigars(final Cigar firstCigar, final Cigar secondCigar)
-    {
-        // SC at the start and end are optional, but otherwise all elements must match length and type
-        int j = 0;
-        int i = 0;
-
-        CigarElement firstElement = firstCigar.getCigarElements().get(i);
-        CigarElement secondElement = secondCigar.getCigarElements().get(j);
-
-        if(firstElement.getOperator() == S)
-            ++i;
-
-        if(secondElement.getOperator() == S)
-            ++j;
-
-        while(true)
-        {
-            firstElement = i < firstCigar.getCigarElements().size() ? firstCigar.getCigarElements().get(i) : null;
-            secondElement = j < secondCigar.getCigarElements().size() ? secondCigar.getCigarElements().get(j) : null;
-
-            if(firstElement == null && secondElement == null)
-                break;
-
-            if(firstElement == null)
-                return secondElement.getOperator() == S;
-            else if(secondElement == null)
-                return firstElement.getOperator() == S;
-
-            // must match types and lengths if not an alignment
-            if(firstElement.getOperator() != secondElement.getOperator())
-                return false;
-
-            if(firstElement.getOperator() == S)
-                return true;
-
-            if(firstElement.getOperator() != M && firstElement.getLength() != secondElement.getLength())
-                return false;
-
-            ++i;
-            ++j;
-        }
-
-        return true;
-    }
-
-    public static byte[] getCombinedBaseAndQual(byte firstBase, byte firstQual, byte secondBase, byte secondQual)
-    {
-        if(firstBase == secondBase)
-        {
-            byte qual = (byte)max(firstQual, secondQual);
-            return new byte[] { firstBase, qual };
-        }
-        else if(firstQual > secondQual)
-        {
-            // use the difference in quals
-            return new byte[] { firstBase, (byte)((int)firstQual - (int)secondQual) };
-        }
-        else
-        {
-            return new byte[] { secondBase, (byte)((int)secondQual - (int)firstQual) };
-        }
-    }
-
 }

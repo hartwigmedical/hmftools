@@ -1,7 +1,9 @@
 package com.hartwig.hmftools.sage.evidence;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.compatibleCigars;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -232,7 +234,7 @@ public class FragmentSyncTest
         first.add(new CigarElement(40, M));
         first.add(new CigarElement(8, S));
 
-        assertTrue(FragmentSync.compatibleCigars(first, first));
+        assertTrue(compatibleCigars(first, first));
 
         // other diffs are not permitted
         Cigar second = new Cigar();
@@ -242,13 +244,13 @@ public class FragmentSyncTest
         second.add(new CigarElement(5, D));
         second.add(new CigarElement(40, M));
 
-        assertFalse(FragmentSync.compatibleCigars(first, second));
+        assertFalse(compatibleCigars(first, second));
 
         second.add(new CigarElement(30, M));
         second.add(new CigarElement(13, D));
         second.add(new CigarElement(40, M));
 
-        assertFalse(FragmentSync.compatibleCigars(first, second));
+        assertFalse(compatibleCigars(first, second));
 
         // can differ in soft-clips and aligned lengths
         first = new Cigar();
@@ -261,12 +263,12 @@ public class FragmentSyncTest
         second.add(new CigarElement(40, M));
         second.add(new CigarElement(2, S));
 
-        assertTrue(FragmentSync.compatibleCigars(first, first));
+        assertTrue(compatibleCigars(first, first));
 
         second = new Cigar();
         second.add(new CigarElement(40, M));
 
-        assertTrue(FragmentSync.compatibleCigars(first, first));
+        assertTrue(compatibleCigars(first, first));
 
         // can differ in soft-clips and aligned lengths
         first = new Cigar();
@@ -279,8 +281,20 @@ public class FragmentSyncTest
         second.add(new CigarElement(120, N));
         second.add(new CigarElement(40, M));
 
-        assertTrue(FragmentSync.compatibleCigars(first, first));
+        assertTrue(compatibleCigars(first, first));
+    }
 
+    @Test
+    public void testUtils()
+    {
+        CigarBaseCounts baseCounts = new CigarBaseCounts(cigarFromStr("100M"));
+        assertEquals(100, baseCounts.AlignedBases);
+
+        baseCounts = new CigarBaseCounts(cigarFromStr("4S50M5D50M12I30M10S"));
+        assertEquals(135, baseCounts.AlignedBases);
+        assertEquals(7, baseCounts.AdjustedBases);
+        assertEquals(4, baseCounts.SoftClipStart);
+        assertEquals(10, baseCounts.SoftClipEnd);
     }
 
     private static SAMRecord formFragmentRead(final SAMRecord first, final SAMRecord second)
