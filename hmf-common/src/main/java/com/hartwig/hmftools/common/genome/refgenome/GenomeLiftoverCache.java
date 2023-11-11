@@ -135,6 +135,13 @@ public class GenomeLiftoverCache
 
         Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
 
+        int chr37Index = fieldsIndexMap.get("Chr37");
+        int start37Index = fieldsIndexMap.get("Start37");
+        int end37Index = fieldsIndexMap.get("End37");
+        int start38Index = fieldsIndexMap.get("Start38");
+        int end38Index = fieldsIndexMap.get("End38");
+        int orient38Index = fieldsIndexMap.get("Orient38");
+
         List<CoordMapping> chrMappings = null;
         String currentChromosome = "";
 
@@ -159,14 +166,14 @@ public class GenomeLiftoverCache
 
             // note +1 for start positions since source file is in BED style
             // Chr37	Start37	End37	Orient37	Chr38 	Start38	End38	Orient38
-            boolean isReverse = values[fieldsIndexMap.get("Orient38")].equals(NEG_ORIENT);
+            boolean isReverse = values[orient38Index].equals(NEG_ORIENT);
 
             chrMappings.add(new CoordMapping(
-                    values[fieldsIndexMap.get("Chr37")],
-                    Integer.parseInt(values[fieldsIndexMap.get("Start37")]) + 1,
-                    Integer.parseInt(values[fieldsIndexMap.get("End37")]),
-                    Integer.parseInt(values[fieldsIndexMap.get("Start38")]) + 1,
-                    Integer.parseInt(values[fieldsIndexMap.get("End38")]),
+                    values[chr37Index],
+                    Integer.parseInt(values[start37Index]) + 1,
+                    Integer.parseInt(values[end37Index]),
+                    Integer.parseInt(values[start38Index]) + 1,
+                    Integer.parseInt(values[end38Index]),
                     isReverse));
         }
 
