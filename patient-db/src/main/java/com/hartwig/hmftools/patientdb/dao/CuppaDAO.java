@@ -54,7 +54,7 @@ public class CuppaDAO {
         context.delete(CUPPA).where(CUPPA.SAMPLEID.eq(sample)).execute();
     }
 
-    void writeCuppa(
+    void writeCuppa2(
             @NotNull final String sample,
             @NotNull final CuppaPredictions cuppaPredictions
     ){
@@ -89,5 +89,24 @@ public class CuppaDAO {
         }
 
         inserter.execute();
+    }
+
+    void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood) {
+        deleteCuppaForSample(sample);
+        LocalDateTime timestamp = LocalDateTime.now();
+
+        context.insertInto(CUPPA,
+                        CUPPA.MODIFIED,
+                        CUPPA.SAMPLEID,
+                        CUPPA.CANCERTYPE,
+                        CUPPA.DATAVALUE,
+                        CUPPA.DATATYPE
+                ).values(
+                        timestamp,
+                        sample,
+                        cancerType,
+                        likelihood,
+                        Categories.DataType.PROB.toString()
+                ).execute();
     }
 }
