@@ -60,7 +60,7 @@ public class LoadCuppa2
         LOGGER.info("Writing CUPPA into database for {}", sample);
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
-        dbWriter.writeCuppa(sample, cuppaPredictions);
+        dbWriter.writeCuppa2(sample, cuppaPredictions);
         LOGGER.info("Complete");
     }
 }
