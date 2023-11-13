@@ -13,7 +13,7 @@ Windows with a GC content less than 0.2 or greater than 0.6 or with an average m
 Next we apply a GC normalization to calculate the read ratios. To do this we divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the ratio of the median to mean read count of all windows.    For some targeted region analyses the median read count may be very low due to low numbers of off target reads, and the use of discrete integers may restrict resolution.  We therefore modify the median with the following formula to improve the estimate:
 
 ```
-modifiedMedian = median - 0.5 + (0.5 - proportion of depth windows with read count < median) / (proportion of depth windows  with read count = median)
+modifiedMedian = median - 0.5 + (0.5 - proportion of depth windows with read depth < median) / (proportion of depth windows  with read depth = median)
 ```
 ### Diploid normalisation
 
@@ -141,13 +141,13 @@ The following tab delimited files are written:
 
 TUMOR.cobalt.ratio.tsv.gz contains the counts and ratios of the reference and tumor:
 
-| Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio |
+| Chromosome | Position | ReferenceReadDepth | TumorReadDepth | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio |
 |------------|----------|--------------------|----------------|------------------|--------------|-------------------------|
-| 1          | 4000001  | 204                | 504            | 0.8803           | 0.855        | 0.8982                  |
-| 1          | 4001001  | 203                | 570            | 0.8429           | 0.9149       | 0.86                    |
-| 1          | 4002001  | 155                | 473            | 0.6463           | 0.7654       | 0.6594                  |
-| 1          | 4003001  | 260                | 566            | 1.098            | 0.9328       | 1.1203                  |
-| 1          | 4004001  | 256                | 550            | 1.1144           | 0.9428       | 1.1371                  |
+| 1          | 4000001  | 20.4               | 50.4           | 0.8803           | 0.855        | 0.8982                  |
+| 1          | 4001001  | 20.3               | 57.0           | 0.8429           | 0.9149       | 0.86                    |
+| 1          | 4002001  | 15.5               | 47.3           | 0.6463           | 0.7654       | 0.6594                  |
+| 1          | 4003001  | 26.0               | 56.6           | 1.098            | 0.9328       | 1.1203                  |
+| 1          | 4004001  | 25.6               | 55.0           | 1.1144           | 0.9428       | 1.1371                  |
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 

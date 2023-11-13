@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Comparators;
@@ -57,6 +58,7 @@ public class LowCoverageRatioMapper implements RatioMapper
             mConsolidateBoundaries = consolidateIntoBuckets(inputRatios, mConsolidationCount);
         }
 
+        Objects.requireNonNull(mConsolidateBoundaries);
         CB_LOGGER.info("using {} sparse consolidated buckets, from {} input ratios",
                 mConsolidateBoundaries.size(), inputRatios.rowCount());
 
@@ -64,6 +66,7 @@ public class LowCoverageRatioMapper implements RatioMapper
     }
 
     // we create a pan window ratio by taking the mean count of super windows that combine multiple windows
+    @SuppressWarnings("UnstableApiUsage")
     private Table populateLowCoverageRatio(final Table rawRatios, Multimap<String, LowCovBucket> consolidateBoundaries)
     {
         // make sure the ratios chromosome code are sorted
@@ -228,10 +231,10 @@ public class LowCoverageRatioMapper implements RatioMapper
         return boundaries;
     }
 
-    static int calcConsolidationCount(final double medianReadCount)
+    static int calcConsolidationCount(final double medianReadDepth)
     {
-        // consolidation starts when mean read count <= 50 reads
-        double c = 500.0 / medianReadCount;
+        // consolidation starts when mean read depth <= 8
+        double c = 80.0 / medianReadDepth;
 
         if (c < 10.0)
         {
@@ -255,6 +258,7 @@ public class LowCoverageRatioMapper implements RatioMapper
     }
 
     // given the list of non masked windows, get the list of consolidated buckets
+    @SuppressWarnings("UnstableApiUsage")
     static List<LowCovBucket> consolidateIntoBuckets(List<Integer> windowPositions, int consolidationCount)
     {
         // make sure position is sorted

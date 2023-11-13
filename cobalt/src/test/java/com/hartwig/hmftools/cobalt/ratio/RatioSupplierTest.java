@@ -27,16 +27,16 @@ public class RatioSupplierTest
         var chromosomePosCodec = new ChromosomePositionCodec();
 
         // add some counts
-        final Table readCounts = Table.create("readCounts",
+        final Table readDepths = Table.create("readDepths",
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
-                IntColumn.create(CobaltColumns.READ_COUNT));
+                DoubleColumn.create(CobaltColumns.READ_DEPTH));
 
-        addReadCount(readCounts, "chr1", 2001, 100);
-        addReadCount(readCounts, "chr2", 3001, 50);
-        addReadCount(readCounts, "chr2", 4001, 70);
+        addReadCount(readDepths, "chr1", 2001, 100);
+        addReadCount(readDepths, "chr2", 3001, 50);
+        addReadCount(readDepths, "chr2", 4001, 70);
 
-        chromosomePosCodec.addEncodedChrPosColumn(readCounts, false);
+        chromosomePosCodec.addEncodedChrPosColumn(readDepths, false);
 
         // gc profiles
         Table gcProfiles = Table.create("gcProfiles",
@@ -67,7 +67,7 @@ public class RatioSupplierTest
         chromosomePosCodec.addEncodedChrPosColumn(diploidRegions, true);
 
         final RatioSupplier ratioSupplier = new RatioSupplier("TEST", "TEST", null,
-                gcProfiles, null, readCounts,
+                gcProfiles, null, readDepths,
                 chromosomePosCodec);
 
         Table ratios = ratioSupplier.tumorOnly(diploidRegions);
@@ -92,9 +92,10 @@ public class RatioSupplierTest
         Row row = readCountTable.appendRow();
         row.setString(CobaltColumns.CHROMOSOME, chromosome);
         row.setInt(CobaltColumns.POSITION, position);
-        row.setInt(CobaltColumns.READ_COUNT, readCount);
+        row.setDouble(CobaltColumns.READ_DEPTH, readCount);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void addGcProfile(Table table, String chromosome, int position, double gcContent, boolean isMappable)
     {
         Row row = table.appendRow();
