@@ -186,43 +186,6 @@ public class FragmentSyncUtils
             }
         }
 
-        /*
-        while(startOffset > 0)
-        {
-            CigarElement currentElement = combinedCigar.get(0);
-
-            if(startOffset < currentElement.getLength())
-            {
-                combinedCigar.set(0, new CigarElement(
-                        currentElement.getLength() - startOffset, currentElement.getOperator()));
-                startOffset = 0;
-            }
-            else
-            {
-                startOffset -= currentElement.getLength();
-                combinedCigar.remove(0);
-            }
-        }
-
-        while(endOffset > 0)
-        {
-            int lastIndex = combinedCigar.size() - 1;
-            CigarElement currentElement = combinedCigar.get(lastIndex);
-
-            if(endOffset < currentElement.getLength())
-            {
-                combinedCigar.set(lastIndex, new CigarElement(
-                        currentElement.getLength() - endOffset, currentElement.getOperator()));
-                endOffset = 0;
-            }
-            else
-            {
-                endOffset -= currentElement.getLength();
-                combinedCigar.remove(lastIndex);
-            }
-        }
-        */
-
         return buildSyncedRead(referenceRead, truncatedFragmentStart, truncBases, truncBaseQuals, combinedCigar, origCoords);
     }
 

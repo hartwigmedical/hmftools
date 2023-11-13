@@ -344,10 +344,6 @@ public class DuplicateGroup
 
                 addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount, firstInPairCount,  umiReadType);
 
-                // now included in the consensus read info
-                // String umiReadType = mDualStrand ? UmiReadType.DUAL_STRAND.toString() : UmiReadType.SINGLE.toString();
-                // consensusReadInfo.ConsensusRead.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType);
-
                 reads.add(consensusReadInfo.ConsensusRead);
             }
             catch(Exception e)

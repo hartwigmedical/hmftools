@@ -20,6 +20,8 @@ public class QualityCalculator
     private final QualityRecalibrationMap mQualityRecalibrationMap;
     private final IndexedBases mRefBases;
 
+    public static final int QUAL_INVALID = -1;
+
     private static final int MAX_HIGHLY_POLYMORPHIC_GENES_QUALITY = 10;
 
     public QualityCalculator(
@@ -51,6 +53,9 @@ public class QualityCalculator
     {
         double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
 
+        if(baseQuality < mConfig.HighBaseQualLimit)
+            return QUAL_INVALID;
+
         int mapQuality = record.getMappingQuality();
         boolean isImproperPair = isImproperPair(record);
 
@@ -66,7 +71,6 @@ public class QualityCalculator
         }
 
         double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
-
 
         /*
         if(readContextCounter.logEvidence() && !SG_LOGGER.isTraceEnabled())

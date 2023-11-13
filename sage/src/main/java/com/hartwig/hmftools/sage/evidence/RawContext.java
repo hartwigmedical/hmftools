@@ -54,7 +54,7 @@ public class RawContext
     public String toString()
     {
         return format("index(%d) sc(%s) del(%s) skip(%s) alt(%s) ref(%s) depth(%s) bq(%d)",
-                ReadIndex, ReadIndexInSkipped, ReadIndexInDelete, ReadIndexInSkipped, AltSupport, RefSupport, DepthSupport, BaseQuality);
+                ReadIndex, ReadIndexInSoftClip, ReadIndexInDelete, ReadIndexInSkipped, AltSupport, RefSupport, DepthSupport, BaseQuality);
     }
 
     static RawContext inSoftClip(final int readIndex, final boolean altSupport, final int quality)

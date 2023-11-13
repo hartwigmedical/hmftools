@@ -14,6 +14,7 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL_STRAND_OLD;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
@@ -39,6 +40,8 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.CORE_PARTIAL;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
+import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
+import static com.hartwig.hmftools.sage.quality.QualityCalculator.QUAL_INVALID;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -291,6 +294,15 @@ public class ReadContextCounter implements VariantHotspot
 
         RawContext rawContext = RawContext.create(mVariant, record);
 
+        if(mConfig.Quality.HighBaseQualLimit > 0)
+        {
+            if(isChimericRead(record))
+                return UNRELATED;
+
+            if(rawContext.ReadIndexInSoftClip)
+                return UNRELATED;
+        }
+
         if(rawContext.ReadIndex < 0 && !ignoreSoftClipAdapter(record))
         {
             if(rawContext.DepthSupport || rawContext.AltSupport || rawContext.RefSupport)
@@ -339,6 +351,9 @@ public class ReadContextCounter implements VariantHotspot
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
         double quality = mQualityCalculator.calculateQualityScore(this, readIndex, record, adjustedNumOfEvents);
+
+        if(quality == QUAL_INVALID)
+            return UNRELATED;
 
         MatchType matchType = MatchType.NONE;
 
@@ -547,7 +562,7 @@ public class ReadContextCounter implements VariantHotspot
                 String[] values = consensusInfo.split(CONSENSUS_INFO_DELIM, 3);
 
                 if(values.length == 3)
-                    umiReadType = UmiReadType.valueOf(values[2]);
+                    umiReadType = values[2].equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(values[2]);
             }
         }
 

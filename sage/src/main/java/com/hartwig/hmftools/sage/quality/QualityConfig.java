@@ -17,6 +17,7 @@ public class QualityConfig
     public final double ReadEventsPenalty;
     public final int ImproperPairPenalty;
     public final double MapQualityRatioFactor;
+    public final int HighBaseQualLimit;
 
     private static final String JITTER_PENALTY = "jitter_penalty";
     private static final String JITTER_MIN_REPEAT_COUNT = "jitter_min_repeat_count";
@@ -27,6 +28,7 @@ public class QualityConfig
     private static final String MAP_QUAL_IMPROPER_PAIR_PENALTY = "improper_pair_qual_penalty";
     private static final String MAP_QUAL_READ_EVENTS_PENALTY = "read_events_qual_penalty";
     private static final String MAP_QUAL_RATIO_FACTOR = "map_qual_ratio_factor";
+    private static final String HIGH_BASE_QUAL_LIMIT = "high_base_qual_limit";
 
     private static final double DEFAULT_JITTER_PENALTY = 0.25;
     private static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
@@ -47,6 +49,7 @@ public class QualityConfig
         ReadEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
         MapQualityRatioFactor = configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
+        HighBaseQualLimit = configBuilder.getInteger(HIGH_BASE_QUAL_LIMIT);
     }
 
     public QualityConfig()
@@ -60,6 +63,7 @@ public class QualityConfig
         ReadEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
         ImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
         MapQualityRatioFactor = DEFAULT_MQ_RATIO_FACTOR;
+        HighBaseQualLimit = 0;
     }
 
     public boolean isHighlyPolymorphic(final GenomePosition position)
@@ -96,5 +100,7 @@ public class QualityConfig
                 "Penalty to apply to map qual for additional distance from ref", DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY);
 
         configBuilder.addDecimal(MAP_QUAL_RATIO_FACTOR, "Map quality ratio factor (0 = disabled)", DEFAULT_MQ_RATIO_FACTOR);
+
+        configBuilder.addInteger(HIGH_BASE_QUAL_LIMIT, "Enable high-qual checks including min base qual", 0);
     }
 }

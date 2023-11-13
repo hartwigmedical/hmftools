@@ -43,6 +43,8 @@ public class SageConstants
     public static final int LONG_GERMLINE_INSERT_LENGTH = 10;
 
     public static final int EVIDENCE_MIN_MAP_QUAL = 1;
+
+    public static final int CHIMERIC_FRAGMENT_LENGTH_MAX = 1000;
     
     // filtering defaults and constants
     public static final int DEFAULT_HARD_MIN_TUMOR_BASE_QUALITY = 0;
