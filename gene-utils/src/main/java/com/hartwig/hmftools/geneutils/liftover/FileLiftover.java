@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.geneutils.common;
+package com.hartwig.hmftools.geneutils.liftover;
 
 import static java.lang.String.format;
 
@@ -33,7 +33,6 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.BaseRegion;
-import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.file.FileDelimiters;
 import com.hartwig.hmftools.common.utils.file.FileReaderUtils;

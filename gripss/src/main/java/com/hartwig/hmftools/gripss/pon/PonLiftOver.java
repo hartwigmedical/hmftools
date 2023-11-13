@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT_ID;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT_ID;
+import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.flipOrientation;
 import static com.hartwig.hmftools.gripss.GripssConfig.GR_LOGGER;
 
 import java.io.BufferedWriter;
@@ -65,6 +66,7 @@ public class PonLiftOver
     }
 
     private static final int LOG_COUNT = 1000000;
+    private static final int REGION_LENGTH_DIFF = 10;
 
     private void writeSvPonFile()
     {
@@ -105,10 +107,58 @@ public class PonLiftOver
                         continue;
                     }
 
-                    // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
-                    writer.write(format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
-                            chrDestStart, posStartStart, posStartEnd, chrDestEnd, posEndStart, posEndEnd, ".",
-                            region.PonCount, orientToId(region.OrientStart), orientToId(region.OrientEnd)));
+                    byte orientStart = region.OrientStart;
+                    byte orientEnd = region.OrientEnd;
+
+                    // check for changes to direction for SVs
+                    if(posStartStart > posStartEnd)
+                    {
+                        int tmp = posStartEnd;
+                        posStartEnd = posStartStart;
+                        posStartStart = tmp;
+                        orientStart = flipOrientation(orientStart);
+                    }
+
+                    if(posEndStart > posEndEnd)
+                    {
+                        int tmp = posEndEnd;
+                        posEndEnd = posEndStart;
+                        posEndStart = tmp;
+                        orientEnd = flipOrientation(orientEnd);
+                    }
+
+                    // check for substantial changes in region length, indicating a possible error in lift-over
+                    if(posStartEnd - posStartStart > region.RegionStart.length() + REGION_LENGTH_DIFF)
+                    {
+                        GR_LOGGER.debug("lifted start region({}:{}-{} len={}) longer than original({} len={})",
+                                chrDestStart, posStartStart, posStartEnd, posStartEnd - posStartStart,
+                                region.RegionStart, region.RegionStart.length());
+                    }
+
+                    if(posEndEnd - posEndStart > region.RegionEnd.length() + REGION_LENGTH_DIFF)
+                    {
+                        GR_LOGGER.debug("lifted end region({}:{}-{} len={}) longer than original({} len={})",
+                                chrDestEnd, posEndStart, posEndEnd, posEndEnd - posEndStart,
+                                region.RegionEnd, region.RegionEnd.length());
+                    }
+
+                    if(chrDestStart.equals(chrDestEnd) && posStartStart > posEndStart)
+                    {
+                        GR_LOGGER.debug("swapping start region({}:{}-{}) with end region({}:{}-{})",
+                                chrDestStart, posStartStart, posStartEnd, chrDestEnd, posEndStart, posEndEnd);
+
+                        // swap coords if the start region is now after the end region
+                        writer.write(format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
+                                chrDestStart, posEndStart, posEndEnd, chrDestEnd, posStartStart, posStartEnd, ".",
+                                region.PonCount, orientToId(orientEnd), orientToId(orientStart)));
+                    }
+                    else
+                    {
+                        // fields: ChrStart,PosStartBegin,PosStartEnd,ChrEnd,PosEndBegin,PosEndEnd,Unknown,PonCount,OrientStart,OrientEnd
+                        writer.write(format("%s\t%d\t%d\t%s\t%d\t%d\t%s\t%d\t%s\t%s",
+                                chrDestStart, posStartStart, posStartEnd, chrDestEnd, posEndStart, posEndEnd, ".",
+                                region.PonCount, orientToId(orientStart), orientToId(orientEnd)));
+                    }
 
                     writer.newLine();
 
@@ -159,6 +209,7 @@ public class PonLiftOver
                 {
                     int posStartStart = mLiftoverCache.convertPosition(chrSourceStart, region.Region.start());
                     int posStartEnd = mLiftoverCache.convertPosition(chrSourceStart, region.Region.end());
+                    byte orientStart = region.Orient;
 
                     if(posStartStart == UNMAPPED_POSITION || posStartEnd == UNMAPPED_POSITION)
                     {
@@ -166,9 +217,17 @@ public class PonLiftOver
                         continue;
                     }
 
+                    if(posStartStart > posStartEnd)
+                    {
+                        int tmp = posStartEnd;
+                        posStartEnd = posStartStart;
+                        posStartStart = tmp;
+                        orientStart = flipOrientation(orientStart);
+                    }
+
                     // fields: Chr,PosBegin,PosEnd,Unknown,PonCount,Orientation
                     writer.write(format("%s\t%d\t%d\t%s\t%d\t%s",
-                            chrDestStart, posStartStart, posStartEnd, ".", region.PonCount, orientToId(region.Orient)));
+                            chrDestStart, posStartStart, posStartEnd, ".", region.PonCount, orientToId(orientStart)));
 
                     writer.newLine();
 
