@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.patientdb;
 
-import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.patientdb.CommonUtils.LOGGER;
 import static com.hartwig.hmftools.patientdb.CommonUtils.logVersion;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -10,15 +9,10 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.common.cuppa2.Categories;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 import org.jetbrains.annotations.NotNull;
 
 public class LoadCuppa2
@@ -42,6 +36,13 @@ public class LoadCuppa2
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
         String cuppaVisDataTsv = cmd.getOptionValue(CUPPA_VIS_DATA_TSV);
+
+        if(CommonUtils.anyNull(cuppaVisDataTsv))
+        {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("Patient-DB - Load CUPPA Data", options);
+            System.exit(1);
+        }
 
         logVersion();
 
