@@ -52,7 +52,7 @@ public class LoadCuppa2
         LOGGER.info("Loaded {} entries from {} for sample {}", cuppaPredictions.size(), cuppaVisDataTsv, sample);
 
         int TOP_N_PROBS = 3;
-        LOGGER.info("Writing top {} to database", TOP_N_PROBS);
+        LOGGER.info("Writing top {} probabilities from all classifiers to database", TOP_N_PROBS);
         DatabaseAccess dbWriter = databaseAccess(cmd);
         dbWriter.writeCuppa2(sample, cuppaPredictions, TOP_N_PROBS);
         LOGGER.info("Complete");
