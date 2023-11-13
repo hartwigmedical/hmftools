@@ -155,11 +155,11 @@ We must first estimate the total amount of telomeric content (in bases) in the B
 
 Where only 1 read is telomeric the orientation of the telomeric read is important as only C-rich fragments are candidate telomeres, whereas the G-rich) likely represent one end of an interstitial telomeric repeat. As described in TelomereCat (https://www.nature.com/articles/s41598-017-14403-y), we expect interstitial telomeric repeats to be symmetric and have equal numbers of G and C rich reads. Hence we can use the G-rich count to estimate the proportion of the c-rich single read telomeric 
 
-$$ Total Telomeric Reads = 2 \times Both Telomeric Fragment Count + Single Read Telomeric Fragment C-rich count - Single Read Telomeric Fragment G-rich count
+$$ Total Telomeric Reads = 2 \times Both Telomeric Fragment Count + Single Read Telomeric Fragment C-rich count - Single Read Telomeric Fragment G-rich count $$
 
 To calculate the average telomere length we need to normalise this to the coverage of the genome as a whole. The formula used to normalise is:
 
-$$ Mean Telomere Length = \frac{Total Telomeric Reads \times (1-duplicatePercent) \times MeanReadLength }{ MeanReadDepth \times GCBiasAdj \times 46 } 
+$$ Mean Telomere Length = \frac{Total Telomeric Reads \times (1-duplicatePercent) \times MeanReadLength }{ MeanReadDepth \times GCBiasAdj \times 46 } $$
 
 The 1000 constant is the COBALT read count window size in bases  and 46 is the number of telomeres in 1 copy of the genome (2 per chromosome).
 
@@ -183,11 +183,11 @@ to fit to longer telomere lengths. We apply the following adjustment separately 
 
 For tumor samples, we need to recognise that we are observing a mix of reference and tumor. We use the purity and ploidy obtained from PURPLE, we can solve the following equation for the tumor reference mix. 
 
-$$ TumorMixLength = \frac{[TumorLength \times Purity \times Ploidy + RefLength \times (1-purity) \times 2]}{[Purity \times Ploidy + 2 \times (1-purity)]}
+$$ TumorMixLength = \frac{ TumorLength \times Purity \times Ploidy + RefLength \times (1-purity) \times 2 }{ [Purity \times Ploidy + 2 \times (1-purity)] } $$
 
 Rearrangement of this formula gives the following expression for tumor length:
 
-$$ TumorLength = \frac{[TumorMixLength \times [Purity \times Ploidy +2 \times (1-purity)] - RefLength \times (1-purity) \times 2]}{purity \times ploidy}
+$$ TumorLength = \frac{ TumorMixLength \times [Purity \times Ploidy +2 \times (1-purity)] - RefLength \times (1-purity) \times 2 }{ purity \times ploidy } $$
 
 Note this assumes that the stromal component of the tumor has the same telomeric length as the reference sample, but these measurements may differ for different cell types
 
