@@ -18,11 +18,15 @@ class TelomereLengthCalc(
     val purity: Double,
     val ploidy: Double,
     val duplicateProportion: Double,
-    val meanReadsPerKb: Double,
-    val gc50ReadsPerKb: Double,
+    val meanReadDepth: Double,
+    val gc50ReadDepth: Double,
     val germlineTelomereLength: Double?)
 {
     private val logger = LogManager.getLogger(javaClass)
+
+    // following fields used to calculate mean read length
+    private var readLengthSum: Long = 0
+    private var numReads: Long = 0
 
     enum class FragmentType
     {
@@ -62,6 +66,9 @@ class TelomereLengthCalc(
         // we want to classify this read group
         val fragType = classifyFragment(readGroup)
         mFragmentTypeCount[fragType] = mFragmentTypeCount.getOrDefault(fragType, 0) + 1
+
+        readGroup.allReads.forEach { r -> readLengthSum += r.readLength }
+        numReads += readGroup.allReads.size
     }
 
     fun classifyFragment(readGroup: ReadGroup): FragmentType
@@ -132,7 +139,7 @@ class TelomereLengthCalc(
 
     fun calcGcBiasAdj(): Double
     {
-        val gc50bias = gc50ReadsPerKb / meanReadsPerKb
+        val gc50bias = gc50ReadDepth / meanReadDepth
 
         if (gc50bias < 0.625) return 1.2427
         if (gc50bias < 0.675) return 1.0595
@@ -156,8 +163,9 @@ class TelomereLengthCalc(
 
     fun calcTelomereLength() : Double
     {
+        val meanReadLength = readLengthSum / numReads.toDouble()
         val totalTelomericReads = calcTotalTelomericReads()
-        val meanTelomereLength = totalTelomericReads * (1 - duplicateProportion) * 1000 / meanReadsPerKb / calcGcBiasAdj() / 46
+        val meanTelomereLength = totalTelomericReads * (1 - duplicateProportion) * meanReadLength / meanReadDepth / calcGcBiasAdj() / 46
         return meanTelomereLength
     }
 
@@ -190,8 +198,8 @@ class TelomereLengthCalc(
             DoubleColumn.create("purity"),
             DoubleColumn.create("ploidy"),
             DoubleColumn.create("duplicateProportion"),
-            DoubleColumn.create("meanReadsPerKb"),
-            DoubleColumn.create("gc50ReadsPerKb"))
+            DoubleColumn.create("meanReadDepth"),
+            DoubleColumn.create("gc50ReadDepth"))
 
         val row = teloLengthTable.appendRow()
         row.setString("sampleId", sampleId)
@@ -205,8 +213,8 @@ class TelomereLengthCalc(
         row.setDouble("purity", purity)
         row.setDouble("ploidy", ploidy)
         row.setDouble("duplicateProportion", duplicateProportion)
-        row.setDouble("meanReadsPerKb", meanReadsPerKb)
-        row.setDouble("gc50ReadsPerKb", gc50ReadsPerKb)
+        row.setDouble("meanReadDepth", meanReadDepth)
+        row.setDouble("gc50ReadDepth", gc50ReadDepth)
 
         try
         {

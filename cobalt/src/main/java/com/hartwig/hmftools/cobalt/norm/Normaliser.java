@@ -6,11 +6,11 @@ import static com.hartwig.hmftools.cobalt.norm.NormConstants.MAPPABILITY_THRESHO
 import static com.hartwig.hmftools.common.utils.Doubles.interpolatedMedian;
 import static com.hartwig.hmftools.common.utils.Doubles.median;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 
 public class Normaliser
@@ -37,10 +37,10 @@ public class Normaliser
     {
         // calculate interpolated median read count per GC bucket across filtered regions
 
-        List<Double> sampleReadCounts = Lists.newArrayList();
+        List<Double> sampleReadDepths = new ArrayList<>();
         double sampleReadCountTotal = 0;
 
-        Map<Integer, List<Double>> gcBucketReadCounts = Maps.newHashMap();
+        Map<Integer, List<Double>> gcBucketReadDepths = new HashMap<>();
 
         for(Map.Entry<String, List<RegionData>> entry : chrRegionData.entrySet())
         {
@@ -58,38 +58,32 @@ public class Normaliser
                 if(!useRegion(regionData, sampleRegionData))
                     continue;
 
-                double readCount = sampleRegionData.ReadCount;
-                sampleReadCounts.add(readCount);
+                double readCount = sampleRegionData.ReadDepth;
+                sampleReadDepths.add(readCount);
                 sampleReadCountTotal += readCount;
 
-                List<Double> bucketCounts = gcBucketReadCounts.get(regionData.gcBucket());
+                List<Double> bucketDepths = gcBucketReadDepths.computeIfAbsent(regionData.gcBucket(), k -> new ArrayList<>());
 
-                if(bucketCounts == null)
-                {
-                    bucketCounts = Lists.newArrayList();
-                    gcBucketReadCounts.put(regionData.gcBucket(), bucketCounts);
-                }
-
-                bucketCounts.add(readCount);
+                bucketDepths.add(readCount);
             }
         }
 
-        if(sampleReadCounts.isEmpty())
+        if(sampleReadDepths.isEmpty())
             return NormCalcData.INVALID;
 
-        double sampleMeanReadCount = sampleReadCountTotal / sampleReadCounts.size();
-        double sampleMedianReadCount = interpolatedMedian(sampleReadCounts);
+        double sampleMeanReadCount = sampleReadCountTotal / sampleReadDepths.size();
+        double sampleMedianReadCount = interpolatedMedian(sampleReadDepths);
 
-        Map<Integer,Double> gcBucketMedians = Maps.newHashMap();
+        Map<Integer,Double> gcBucketMedians = new HashMap<>();
 
-        for(Map.Entry<Integer, List<Double>> entry : gcBucketReadCounts.entrySet())
+        for(Map.Entry<Integer, List<Double>> entry : gcBucketReadDepths.entrySet())
         {
             int gcBucket = entry.getKey();
-            double medianReadCount = interpolatedMedian(entry.getValue());
-            gcBucketMedians.put(gcBucket, medianReadCount);
+            double medianReadDepth = interpolatedMedian(entry.getValue());
+            gcBucketMedians.put(gcBucket, medianReadDepth);
         }
 
-        return new NormCalcData(sampleMeanReadCount, sampleMedianReadCount, sampleReadCounts.size(), gcBucketMedians);
+        return new NormCalcData(sampleMeanReadCount, sampleMedianReadCount, sampleReadDepths.size(), gcBucketMedians);
     }
 
     public static void applySampleNormalisation(
@@ -109,7 +103,7 @@ public class Normaliser
                 if(gcBucketMedian == null || gcBucketMedian == 0)
                     continue;
 
-                double adjustedRatio = sampleMedianNormalisation * sampleRegionData.ReadCount / gcBucketMedian;
+                double adjustedRatio = sampleMedianNormalisation * sampleRegionData.ReadDepth / gcBucketMedian;
 
                 sampleRegionData.setAdjustedGcRatio(adjustedRatio);
             }
@@ -126,7 +120,7 @@ public class Normaliser
         if(regionData.mappability() < MAPPABILITY_THRESHOLD)
             return false;
 
-        if(sampleRegionData.ReadCount < 0)
+        if(sampleRegionData.ReadDepth < 0)
             return false;
 
         if(regionData.gcBucket() < GC_BUCKET_MIN || regionData.gcBucket() > GC_BUCKET_MAX)
@@ -141,7 +135,7 @@ public class Normaliser
         {
             for(RegionData regionData : regions)
             {
-                List<Double> sampleRelativeEnrichment = Lists.newArrayListWithCapacity(regionData.sampleCount());
+                List<Double> sampleRelativeEnrichment = new ArrayList<>(regionData.sampleCount());
 
                 for(SampleRegionData sampleRegionData : regionData.getSamples())
                 {

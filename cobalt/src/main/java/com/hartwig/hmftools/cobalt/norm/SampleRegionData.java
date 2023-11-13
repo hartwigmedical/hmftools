@@ -4,16 +4,16 @@ import static java.lang.String.format;
 
 public class SampleRegionData
 {
-    public final int ReadCount;
+    public final double ReadDepth;
     public final double GcRatioPanel;
     public final double GcRatioWgs;
 
     // calculated values
     private double mAdjustedGcRatio;
 
-    public SampleRegionData(final int readCount, final double gcRatioPanel, final double gcRatioWgs)
+    public SampleRegionData(final double readDepth, final double gcRatioPanel, final double gcRatioWgs)
     {
-        ReadCount = readCount;
+        ReadDepth = readDepth;
         GcRatioPanel = gcRatioPanel;
         GcRatioWgs = gcRatioWgs;
         mAdjustedGcRatio = 0;
@@ -24,6 +24,6 @@ public class SampleRegionData
 
     public String toString()
     {
-        return format("reads(%d) ratio(panel=%.3f wgs=%f) adjRatio(%.4f)", ReadCount, GcRatioPanel, GcRatioWgs, mAdjustedGcRatio);
+        return format("reads(%.3f) ratio(panel=%.3f wgs=%f) adjRatio(%.4f)", ReadDepth, GcRatioPanel, GcRatioWgs, mAdjustedGcRatio);
     }
 }

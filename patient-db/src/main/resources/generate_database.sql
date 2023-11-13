@@ -1234,8 +1234,11 @@ CREATE TABLE `cuppa`
 (   `id` INT NOT NULL AUTO_INCREMENT,
     `modified` DATETIME NOT NULL,
     `sampleId` VARCHAR(255) NOT NULL,
-    `cuppaTumorLocation` VARCHAR(255) NOT NULL,
-    `cuppaPrediction` VARCHAR(255),
+    `clfName` VARCHAR(255) DEFAULT NULL,
+    `cancerType` VARCHAR(255),
+    `prob` DOUBLE PRECISION,
+    `rank` INT NOT NULL,
+    `isOldCuppaOutput` TINYINT NOT NULL,
     PRIMARY KEY (`id`)
 );
 

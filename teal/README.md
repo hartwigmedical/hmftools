@@ -75,23 +75,23 @@ other pipeline tools will need to be explicited provided.
 
 ### Paired germline/tumor mode standalone
 
-| Argument                       | Default                     | Description                                                                                |
-|--------------------------------|-----------------------------|--------------------------------------------------------------------------------------------|
-| reference                      |                             | Name of the reference sample                                                               |
-| reference_bam                  |                             | Path to indexed reference BAM or CRAM file                                                 |
-| tumor                          |                             | Name of the tumor sample                                                                   |
-| tumor_bam                      |                             | Path to indexed tumor BAM or CRAM file                                                     |
-| output_dir                     |                             | Path to the output directory. This directory will be created if it does not already exist. |
-| reference_duplicate_proportion | 0                           | Proportion of reads that are marked duplicates in the reference sample BAM                 |
-| reference_mean_reads_per_kb    |                             | Mean reads per KB of the reference sample                                                  |
-| reference_gc50_reads_per_kb    | reference_mean_reads_per_kb | GC 50 reads per KB of the reference sample. Defaults to mean reads per KB if not provided  |
-| tumor_purity                   | 1                           | Purity of the tumor sample                                                                 |
-| tumor_ploidy                   | 2                           | Ploidy of the tumor                                                                        |
-| tumor_duplicate_proportion     | 0                           | Proportion of reads that are marked duplicates in the tumor sample BAM                     |
-| tumor_mean_reads_per_kb        |                             | Mean reads per KB of the tumor sample                                                      |
-| tumor_gc50_reads_per_kb        | tumor_mean_reads_per_kb     | GC 50 reads per KB. Defaults to mean reads per KB if not provided                          |
-| threads                        | 1                           | Number of threads to use                                                                   |
-| ref_genome                     |                             | Path to the reference genome fasta file. Required only when using CRAM files.              |
+| Argument                       | Default                   | Description                                                                                |
+|--------------------------------|---------------------------|--------------------------------------------------------------------------------------------|
+| reference                      |                           | Name of the reference sample                                                               |
+| reference_bam                  |                           | Path to indexed reference BAM or CRAM file                                                 |
+| tumor                          |                           | Name of the tumor sample                                                                   |
+| tumor_bam                      |                           | Path to indexed tumor BAM or CRAM file                                                     |
+| output_dir                     |                           | Path to the output directory. This directory will be created if it does not already exist. |
+| reference_duplicate_proportion | 0                         | Proportion of reads that are marked duplicates in the reference sample BAM                 |
+| reference_mean_read_depth      |                           | Mean read depth of the reference sample                                                    |
+| reference_gc50_read_depth      | reference_mean_read_depth | GC 50 read depth of the reference sample. Defaults to mean read depth if not provided      |
+| tumor_purity                   | 1                         | Purity of the tumor sample                                                                 |
+| tumor_ploidy                   | 2                         | Ploidy of the tumor                                                                        |
+| tumor_duplicate_proportion     | 0                         | Proportion of reads that are marked duplicates in the tumor sample BAM                     |
+| tumor_mean_read_depth          |                           | Mean read depth of the tumor sample                                                        |
+| tumor_gc50_read_depth          | tumor_mean_read_depth     | GC 50 read depth. Defaults to mean read depth if not provided                              |
+| threads                        | 1                         | Number of threads to use                                                                   |
+| ref_genome                     |                           | Path to the reference genome fasta file. Required only when using CRAM files.              |
 
 Example Usage:
 ```
@@ -99,13 +99,13 @@ java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
    -reference COLO829R -reference_bam COLO829R.bam \
    -tumor COLO829T -tumor_bam COLO829T.bam \
    -reference_duplicate_proportion 0.2284 \
-   -reference_gc50_reads_per_kb 214 \
-   -reference_mean_reads_per_kb 271 \
+   -reference_gc50_read_depth 21.4 \
+   -reference_mean_read_depth 27.1 \
    -tumor_purity 0.6 \
    -tumor_ploidy 1.98 \
    -tumor_duplicate_proportion 0.2766 \
-   -tumor_gc50_reads_per_kb 555 \
-   -tumor_mean_reads_per_kb 575 \
+   -tumor_gc50_read_depth 55.5 \
+   -tumor_mean_read_depth 57.5 \
    -output_dir /path/to/COLO829/teal \
    -threads 28
 ```
@@ -118,8 +118,8 @@ java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
 | reference_bam                  |                             | Path to indexed reference BAM or CRAM file                                                 |
 | output_dir                     |                             | Path to the output directory. This directory will be created if it does not already exist. |
 | reference_duplicate_proportion | 0                           | Proportion of reads that are marked duplicates in the reference sample BAM                 |
-| reference_mean_reads_per_kb    |                             | Mean reads per KB of the reference sample                                                  |
-| reference_gc50_reads_per_kb    | reference_mean_reads_per_kb | GC 50 reads per KB of the reference sample. Defaults to mean reads per KB if not provided  |
+| reference_mean_read_depth      |                             | Mean read depth of the reference sample                                                    |
+| reference_gc50_read_depth      | reference_mean_read_depth   | GC 50 read depth of the reference sample. Defaults to mean read depth if not provided    |
 | threads                        | 1                           | Number of threads to use                                                                   |
 | ref_genome                     |                             | Path to the reference genome fasta file. Required only when using CRAM files.              |
 
@@ -129,8 +129,8 @@ Example Usage:
 java -Xmx16G -cp teal.jar com.hartwig.hmftools.teal.TealApplication \
    -reference COLO829R -reference_bam COLO829R.bam \
    -reference_duplicate_proportion 0.2284 \
-   -reference_gc50_reads_per_kb 214 \
-   -reference_mean_reads_per_kb 271 \
+   -reference_gc50_read_depth 21.4 \
+   -reference_mean_read_depth 27.1 \
    -output_dir /path/to/COLO829/teal \
    -threads 28
 ```
@@ -154,16 +154,18 @@ In this step, each read is annotated according to it’s telomeric and other cha
 We must first estimate the total amount of telomeric content (in bases) in the BAM. To do this we count the number of fragments with both reads telomeric and with only one read telomeric. A read is classified as telomeric if it has at least 4 canonical T-type repeats and 5 consecutive telomeric repeats overall. 
 
 Where only 1 read is telomeric the orientation of the telomeric read is important as only C-rich fragments are candidate telomeres, whereas the G-rich) likely represent one end of an interstitial telomeric repeat. As described in TelomereCat (https://www.nature.com/articles/s41598-017-14403-y), we expect interstitial telomeric repeats to be symmetric and have equal numbers of G and C rich reads. Hence we can use the G-rich count to estimate the proportion of the c-rich single read telomeric 
-```
-Total Telomeric Reads = 2 * Both Telomeric Fragment Count + Single Read Telomeric Fragment C-rich count - Single Read Telomeric Fragment G-rich count
-```
+
+$$ Total Telomeric Reads = 2 \times Both Telomeric Fragment Count + Single Read Telomeric Fragment C-rich count - Single Read Telomeric Fragment G-rich count $$
+
 To calculate the average telomere length we need to normalise this to the coverage of the genome as a whole. The formula used to normalise is:
-```
-Mean Telomere Length = Total Telomeric Reads * (1-duplicatePercent) * 1000 / MeanReadsPerKb / GCBiasAdj / 46 
-```
+
+$$ Mean Telomere Length = \frac{Total Telomeric Reads \times (1-duplicatePercent) \times MeanReadLength }{ MeanReadDepth \times GCBiasAdj \times 46 } $$
+
 The 1000 constant is the COBALT read count window size in bases  and 46 is the number of telomeres in 1 copy of the genome (2 per chromosome).
 
-The GC bias adjustment is set based on the empirical observation of germline telomere content for samples with very high positive or negative GC bias. In practice we calculate GCBias as GC50ReadsPerKb / MeanReadsPerKb and observe that very low values (ie. negative bias) and high values both tend to fit to longer telomere lengths. We apply the following adjustment separately to both tumor and germline samples:
+The GC bias adjustment is set based on the empirical observation of germline telomere content for samples with very high positive or negative GC bias.
+In practice we calculate GCBias as GC50ReadDepth / MeanReadDepth and observe that very low values (ie. negative bias) and high values both tend
+to fit to longer telomere lengths. We apply the following adjustment separately to both tumor and germline samples:
 
 | GC50Bias | GCBiasAdj |
 |----------|-----------|
@@ -180,13 +182,13 @@ The GC bias adjustment is set based on the empirical observation of germline tel
 | 1.1      | 1.05      |
 
 For tumor samples, we need to recognise that we are observing a mix of reference and tumor. We use the purity and ploidy obtained from PURPLE, we can solve the following equation for the tumor reference mix. 
-```
-TumorMixLength = [TumorLength*Purity*Ploidy + RefLength*(1-purity)*2] / [Purity*Ploidy +2*(1-purity)]
-```
+
+$$ TumorMixLength = \frac{ TumorLength \times Purity \times Ploidy + RefLength \times (1-purity) \times 2 }{ [Purity \times Ploidy + 2 \times (1-purity)] } $$
+
 Rearrangement of this formula gives the following expression for tumor length:
-```
-TumorLength = [TumorMixLength*[Purity*Ploidy +2*(1-purity)] - RefLength*(1-purity)*2] / purity / ploidy
-```
+
+$$ TumorLength = \frac{ TumorMixLength \times [Purity \times Ploidy +2 \times (1-purity)] - RefLength \times (1-purity) \times 2 }{ purity \times ploidy } $$
+
 Note this assumes that the stromal component of the tumor has the same telomeric length as the reference sample, but these measurements may differ for different cell types
 
 ### 4. Identification of telomeric rearrangements
@@ -254,8 +256,8 @@ The outputs of TEAL is a 'telbam' file (ie a bam restricted to fragments where a
 |-----------------------|-------------------------------------------------------------------------------------------------------|
 | purity                | From PURPLE (=1 for ref)                                                                              |
 | ploidy                | From PURPLE (=2 for ref)                                                                              |
-| gc50ReadsPerKb        | From COBALT                                                                                           |
-| meanReadsPerKb        | From COBALT                                                                                           |
+| gc50ReadDepth         | From COBALT                                                                                           |
+| meanReadDepth         | From COBALT                                                                                           |
 | duplicateProportion   | Estimated proportion of duplicates in file (from WGS metrics)                                         |
 | fullFragments         | Count of fragments with both reads classified as telomeric                                            |
 | cRichPartialFragments | Count of fragments with 1 read non telomeric and the other telomeric oriented in a C-rich orientation |

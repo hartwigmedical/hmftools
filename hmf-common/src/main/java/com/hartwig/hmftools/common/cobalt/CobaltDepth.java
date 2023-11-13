@@ -2,9 +2,9 @@ package com.hartwig.hmftools.common.cobalt;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 
-public interface CobaltCount extends GenomePosition
+public interface CobaltDepth extends GenomePosition
 {
-    int referenceReadCount();
+    double referenceReadDepth();
 
-    int tumorReadCount();
+    double tumorReadDepth();
 }

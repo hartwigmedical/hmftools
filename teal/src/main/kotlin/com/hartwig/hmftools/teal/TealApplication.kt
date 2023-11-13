@@ -1,7 +1,7 @@
 package com.hartwig.hmftools.teal
 
 import com.beust.jcommander.*
-import com.hartwig.hmftools.common.genome.gc.GCMedianReadCountFile
+import com.hartwig.hmftools.common.genome.gc.GCMedianReadDepthFile
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket
 import com.hartwig.hmftools.common.metrics.WGSMetricsFile
 import com.hartwig.hmftools.common.purple.PurityContextFile
@@ -88,8 +88,8 @@ class TealApplication
                     germlineTelLengthApp.params.outputFile = germlineTelLegnthTsvPath()
                     germlineTelLengthApp.params.telbamFile = germlineTelbamPath()
                     germlineTelLengthApp.params.duplicatePercent = params.germlineDuplicateProportion
-                    germlineTelLengthApp.params.meanReadsPerKb = params.germlineMeanReadsPerKb!!
-                    germlineTelLengthApp.params.gc50ReadsPerKb = params.germlineGc50ReadsPerKb
+                    germlineTelLengthApp.params.meanReadDepth = params.germlineMeanReadDepth!!
+                    germlineTelLengthApp.params.gc50ReadDepth = params.germlineGc50ReadDepth
                     germlineTelomereLength = germlineTelLengthApp.calcTelomereLength()
                 }
 
@@ -104,8 +104,8 @@ class TealApplication
                     tumorTelLengthApp.params.purity = params.tumorPurity
                     tumorTelLengthApp.params.ploidy = params.tumorPloidy
                     tumorTelLengthApp.params.duplicatePercent = params.tumorDuplicateProportion
-                    tumorTelLengthApp.params.meanReadsPerKb = params.tumorMeanReadsPerKb!!
-                    tumorTelLengthApp.params.gc50ReadsPerKb = params.tumorGc50ReadsPerKb
+                    tumorTelLengthApp.params.meanReadDepth = params.tumorMeanReadDepth!!
+                    tumorTelLengthApp.params.gc50ReadDepth = params.tumorGc50ReadDepth
                     tumorTelLengthApp.calcTelomereLength()
                 }
 
@@ -208,20 +208,20 @@ class TealApplication
                 if (pipelineParams.commonParams.tumorSampleId != null)
                 {
                     val tumorGCMedianFilename =
-                        GCMedianReadCountFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.tumorSampleId!!)
-                    val tumorGCMedianReadCount = GCMedianReadCountFile.read(true, tumorGCMedianFilename)
-                    tealParams.tumorMeanReadsPerKb = tumorGCMedianReadCount.meanReadCount()
-                    tealParams.tumorGc50ReadsPerKb = tumorGCMedianReadCount.medianReadCount(ImmutableGCBucket(50))
+                        GCMedianReadDepthFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.tumorSampleId!!)
+                    val tumorGCMedianReadDepth = GCMedianReadDepthFile.read(true, tumorGCMedianFilename)
+                    tealParams.tumorMeanReadDepth = tumorGCMedianReadDepth.meanReadDepth()
+                    tealParams.tumorGc50ReadDepth = tumorGCMedianReadDepth.medianReadDepth(ImmutableGCBucket(50))
                 }
 
                 if (pipelineParams.commonParams.referenceSampleId != null)
                 {
                     val referenceGCMedianFilename =
-                        GCMedianReadCountFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.referenceSampleId!!)
-                    val referenceGCMedianReadCount = GCMedianReadCountFile.read(true, referenceGCMedianFilename)
+                        GCMedianReadDepthFile.generateFilename(pipelineParams.cobalt!!, pipelineParams.commonParams.referenceSampleId!!)
+                    val referenceGCMedianReadDepth = GCMedianReadDepthFile.read(true, referenceGCMedianFilename)
 
-                    tealParams.germlineMeanReadsPerKb = referenceGCMedianReadCount.meanReadCount()
-                    tealParams.germlineGc50ReadsPerKb = referenceGCMedianReadCount.medianReadCount(ImmutableGCBucket(50))
+                    tealParams.germlineMeanReadDepth = referenceGCMedianReadDepth.meanReadDepth()
+                    tealParams.germlineGc50ReadDepth = referenceGCMedianReadDepth.medianReadDepth(ImmutableGCBucket(50))
                 }
             }
 

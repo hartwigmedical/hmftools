@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
 
 import org.jetbrains.annotations.NotNull;
 
-public final class GCMedianReadCountFile
+public final class GCMedianReadDepthFile
 {
     private static final String EXTENSION = ".cobalt.gc.median.tsv";
 
@@ -24,18 +24,18 @@ public final class GCMedianReadCountFile
     }
 
     @NotNull
-    public static GCMedianReadCount read(boolean extendRange, @NotNull final String filename) throws IOException
+    public static GCMedianReadDepth read(boolean extendRange, @NotNull final String filename) throws IOException
     {
         return fromLines(extendRange, Files.readAllLines(new File(filename).toPath()));
     }
 
-    public static void write(@NotNull final String fileName, @NotNull final GCMedianReadCount gcMedianReadCount) throws IOException
+    public static void write(@NotNull final String fileName, @NotNull final GCMedianReadDepth gcMedianReadDepth) throws IOException
     {
-        Files.write(new File(fileName).toPath(), toLines(gcMedianReadCount));
+        Files.write(new File(fileName).toPath(), toLines(gcMedianReadDepth));
     }
 
     @NotNull
-    private static GCMedianReadCount fromLines(boolean extendRange, @NotNull final List<String> lines)
+    private static GCMedianReadDepth fromLines(boolean extendRange, @NotNull final List<String> lines)
     {
         double mean = 0;
         double median = 0;
@@ -76,23 +76,23 @@ public final class GCMedianReadCountFile
             }
         }
 
-        return new GCMedianReadCount(mean, median, medianPerBucket);
+        return new GCMedianReadDepth(mean, median, medianPerBucket);
     }
 
     @NotNull
-    private static List<String> toLines(@NotNull final GCMedianReadCount gcMedianReadCount)
+    private static List<String> toLines(@NotNull final GCMedianReadDepth gcMedianReadDepth)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add("#SampleMean" + TSV_DELIM + "SampleMedian");
-        lines.add(String.format("%.2f" + TSV_DELIM + "%.2f", gcMedianReadCount.meanReadCount(), gcMedianReadCount.medianReadCount()));
+        lines.add(String.format("%.2f" + TSV_DELIM + "%.2f", gcMedianReadDepth.meanReadDepth(), gcMedianReadDepth.medianReadDepth()));
         lines.add("#GCBucket" + TSV_DELIM + "Median");
         for(int i = 0; i <= 100; i++)
         {
             final GCBucket bucket = new ImmutableGCBucket(i);
-            double readCount = gcMedianReadCount.medianReadCount(bucket);
-            if(readCount > 0)
+            double readDepth = gcMedianReadDepth.medianReadDepth(bucket);
+            if(readDepth > 0)
             {
-                lines.add(String.format("%d" + TSV_DELIM + "%.2f", i, readCount));
+                lines.add(String.format("%d" + TSV_DELIM + "%.2f", i, readDepth));
             }
         }
         return lines;

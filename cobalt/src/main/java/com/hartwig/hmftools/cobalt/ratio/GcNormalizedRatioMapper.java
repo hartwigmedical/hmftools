@@ -7,11 +7,9 @@ import java.util.Map;
 
 import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
-import com.hartwig.hmftools.common.genome.gc.GCMedianReadCount;
+import com.hartwig.hmftools.common.genome.gc.GCMedianReadDepth;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
 import com.hartwig.hmftools.common.utils.Doubles;
-
-import org.apache.commons.lang3.Validate;
 
 import tech.tablesaw.aggregate.AggregateFunctions;
 import tech.tablesaw.aggregate.NumericAggregateFunction;
@@ -24,9 +22,9 @@ public class GcNormalizedRatioMapper implements RatioMapper
 
     private final boolean mUseInterpolatedMedian;
 
-    private Table mGCMedianReadCount;
-    private double mSampleMedianReadCount;
-    private double mSampleMeanReadCount;
+    private Table mGCMedianReadDepth;
+    private double mSampleMedianReadDepth;
+    private double mSampleMeanReadDepth;
 
     // apply gc normalisation, the input ratios must have chromosome, position, ratio, gcBucket, isMappable
     public GcNormalizedRatioMapper(boolean useInterpolatedMedian)
@@ -75,8 +73,8 @@ public class GcNormalizedRatioMapper implements RatioMapper
         }
 
         // get the sample median and mean
-        mSampleMedianReadCount = aggFunc.summarize(gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO));
-        mSampleMeanReadCount = gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO).mean();
+        mSampleMedianReadDepth = aggFunc.summarize(gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO));
+        mSampleMeanReadDepth = gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO).mean();
 
         // groupby gcBucket and apply median, to create a table with columns
         // gcBucket, gcMedianCount, windowCount
@@ -84,8 +82,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
                 .summarize(CobaltColumns.RATIO, aggFunc, AggregateFunctions.count)
                 .by(CobaltColumns.GC_BUCKET);
 
-        CB_LOGGER.trace("sample median: {}, mean: {}, gc median calc: {}",
-                mSampleMedianReadCount, mSampleMeanReadCount, gcMedianCalcDf);
+        CB_LOGGER.trace("sample median: {}, mean: {}, gc median calc: {}", mSampleMedianReadDepth, mSampleMeanReadDepth, gcMedianCalcDf);
 
         gcMedianCalcDf.column(String.format("%s [%s]", aggFunc.functionName(), CobaltColumns.RATIO)).setName("gcMedianCount");
         gcMedianCalcDf.column(String.format("Count [%s]", CobaltColumns.RATIO)).setName("windowCount");
@@ -95,7 +92,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
                 .where(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                 .joinOn(CobaltColumns.GC_BUCKET).inner(gcMedianCalcDf);
 
-        double medianNormalisation = mSampleMedianReadCount / mSampleMeanReadCount;
+        double medianNormalisation = mSampleMedianReadDepth / mSampleMeanReadDepth;
 
         DoubleColumn gcNormalisedRatio = ratiosWithMedianCount.doubleColumn(CobaltColumns.RATIO)
                 .multiply(medianNormalisation)
@@ -107,33 +104,33 @@ public class GcNormalizedRatioMapper implements RatioMapper
         // resort it, the join messes up with the ordering
         ratiosWithMedianCount = ratiosWithMedianCount.sortAscendingOn(CobaltColumns.ENCODED_CHROMOSOME_POS);
 
-        mGCMedianReadCount = gcMedianCalcDf;
+        mGCMedianReadDepth = gcMedianCalcDf;
         return ratiosWithMedianCount;
     }
 
-    public Table gcMedianReadCountTable()
+    public Table gcMedianReadDepthTable()
     {
-        return mGCMedianReadCount;
+        return mGCMedianReadDepth;
     }
 
-    public double getSampleMedianReadCount()
+    public double getSampleMedianReadDepth()
     {
-        return mSampleMedianReadCount;
+        return mSampleMedianReadDepth;
     }
 
-    public double getSampleMeanReadCount()
+    public double getSampleMeanReadDepth()
     {
-        return mSampleMeanReadCount;
+        return mSampleMeanReadDepth;
     }
 
     // convert the gc median read count table to the object representation
-    public GCMedianReadCount gcMedianReadCount()
+    public GCMedianReadDepth gcMedianReadDepth()
     {
         final Map<GCBucket, Double> medianPerBucket = new HashMap<>();
-        for (Row row : mGCMedianReadCount)
+        for (Row row : mGCMedianReadDepth)
         {
             medianPerBucket.put(new ImmutableGCBucket(row.getInt(CobaltColumns.GC_BUCKET)), row.getDouble("gcMedianCount"));
         }
-        return new GCMedianReadCount(mSampleMeanReadCount, mSampleMedianReadCount, medianPerBucket);
+        return new GCMedianReadDepth(mSampleMeanReadDepth, mSampleMedianReadDepth, medianPerBucket);
     }
 }

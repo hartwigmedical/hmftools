@@ -50,8 +50,8 @@ public class CobaltUtils
         return ImmutableCobaltRatio.builder()
                 .chromosome(chromosomePosCodec.decodeChromosome(row.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS)))
                 .position(chromosomePosCodec.decodePosition(row.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS)))
-                .referenceReadCount(row.getInt("referenceReadCount"))
-                .tumorReadCount(row.getInt("tumorReadCount"))
+                .referenceReadDepth(row.getDouble(CobaltColumns.REFERENCE_READ_DEPTH))
+                .tumorReadDepth(row.getDouble(CobaltColumns.TUMOR_READ_DEPTH))
                 .referenceGCRatio(row.getDouble("referenceGCRatio"))
                 .tumorGCRatio(row.getDouble("tumorGCRatio"))
                 .referenceGCDiploidRatio(row.getDouble("referenceGCDiploidRatio")).build();
@@ -62,7 +62,7 @@ public class CobaltUtils
         return Table.create(
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
-                IntColumn.create(CobaltColumns.READ_COUNT));
+                DoubleColumn.create(CobaltColumns.READ_DEPTH));
     }
 
     public static Table createRatioTable()
