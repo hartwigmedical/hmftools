@@ -222,7 +222,77 @@ public class FragmentSyncTest
         assertEquals(FragmentSyncType.NO_OVERLAP_CIGAR_DIFF, syncOutcome.SyncType);
     }
 
-        @Test
+    @Test
+    public void testTruncatedFragments()
+    {
+        String readId = "READ_01";
+        String chromosome = "1";
+
+        SAMRecord first = createSamRecord(
+                readId, chromosome, 5, REF_BASES.substring(5, 35), "30M");
+        first.setInferredInsertSize(25);
+        first.setReadNegativeStrandFlag(true);
+
+        SAMRecord second = createSamRecord(readId, chromosome, 10, REF_BASES.substring(10, 40), "30M");
+        second.setInferredInsertSize(-25);
+
+        FragmentSyncOutcome syncOutcome = FragmentSync.formFragmentRead(first, second);
+        assertEquals(25, syncOutcome.CombinedRecord.getInferredInsertSize());
+        assertEquals(10, syncOutcome.CombinedRecord.getAlignmentStart());
+        assertEquals(34, syncOutcome.CombinedRecord.getAlignmentEnd());
+        assertEquals("25M", syncOutcome.CombinedRecord.getCigarString());
+        assertEquals(25, syncOutcome.CombinedRecord.getBaseQualities().length);
+
+        String readBases = syncOutcome.CombinedRecord.getReadString();
+        assertEquals(REF_BASES.substring(10, 35), readBases);
+        assertEquals(FragmentSyncType.COMBINED, syncOutcome.SyncType);
+
+        // test again with soft-clips
+        // actual alignment is 11 -> 42 = 22 bases
+        int fragLength = 22;
+        first = createSamRecord(readId, chromosome, 11, REF_BASES.substring(9, 50), "2S35M4S");
+        first.setInferredInsertSize(fragLength);
+
+        second = createSamRecord(
+                readId, chromosome, 11, REF_BASES.substring(5, 45), "6S32M2S");
+        second.setInferredInsertSize(-fragLength);
+        second.setReadNegativeStrandFlag(true);
+
+        syncOutcome = FragmentSync.formFragmentRead(first, second);
+        assertEquals(fragLength, syncOutcome.CombinedRecord.getInferredInsertSize());
+        assertEquals(11, syncOutcome.CombinedRecord.getAlignmentStart());
+        assertEquals(44, syncOutcome.CombinedRecord.getAlignmentEnd());
+        assertEquals("2S34M", syncOutcome.CombinedRecord.getCigarString());
+        assertEquals(36, syncOutcome.CombinedRecord.getBaseQualities().length);
+
+        readBases = syncOutcome.CombinedRecord.getReadString();
+        assertEquals(REF_BASES.substring(9, 45), readBases);
+        assertEquals(FragmentSyncType.COMBINED, syncOutcome.SyncType);
+
+        // test again with soft-clips on the 3' ends and a DEL
+
+        fragLength = 43 - 8 + 1;
+        first = createSamRecord(
+                readId, chromosome, 8, REF_BASES.substring(8, 23) + REF_BASES.substring(28, 45), "15M5D15M2S");
+        first.setInferredInsertSize(fragLength);
+
+        second = createSamRecord(readId, chromosome, 11, REF_BASES.substring(5, 23) + REF_BASES.substring(28, 43), "6S12M5D15M");
+        second.setInferredInsertSize(-fragLength);
+        second.setReadNegativeStrandFlag(true);
+
+        syncOutcome = FragmentSync.formFragmentRead(first, second);
+        assertEquals(fragLength, syncOutcome.CombinedRecord.getInferredInsertSize());
+        assertEquals(8, syncOutcome.CombinedRecord.getAlignmentStart());
+        assertEquals(42, syncOutcome.CombinedRecord.getAlignmentEnd());
+        assertEquals("15M5D15M", syncOutcome.CombinedRecord.getCigarString());
+        assertEquals(30, syncOutcome.CombinedRecord.getBaseQualities().length);
+
+        readBases = syncOutcome.CombinedRecord.getReadString();
+        assertEquals(REF_BASES.substring(8, 23) + REF_BASES.substring(28, 43), readBases);
+        assertEquals(FragmentSyncType.COMBINED, syncOutcome.SyncType);
+    }
+
+    @Test
     public void testCompatibleCigars()
     {
         Cigar first = new Cigar();

@@ -21,6 +21,7 @@ import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.getCombinedBa
 import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.ignoreCigarOperatorMismatch;
 import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.isDeleteOrSplit;
 import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.overlappingCigarDiffs;
+import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.switchSoftClipToAligned;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
@@ -28,8 +29,10 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import htsjdk.samtools.Cigar;
@@ -186,21 +189,34 @@ public class FragmentSync
         int combinedEffectiveStart = min(firstEffectivePosStart, secondEffectivePosStart);
         int combinedEffectiveEnd = max(firstEffectivePosEnd, secondEffectivePosEnd);
 
+        int combinedPosStart = min(firstPosStart, secondPosStart);
+        int combinedPosEnd = max(firstPosEnd, secondPosEnd);
+
         // truncate any fragment with an insert size less than the expected read length
-        int fragmentLength = abs(first.getInferredInsertSize());
+        int[] trucatedBases = {0, 0, 0};
 
-        int truncatedFragmentStart = 0;
-        int truncatedFragmentEnd = combinedEffectiveEnd;
-
-        if(firstBaseCounts.AlignedBases > fragmentLength || secondBaseCounts.AdjustedBases > fragmentLength)
+        if(first.getReadNegativeStrandFlag() != second.getReadNegativeStrandFlag())
         {
-            int excessBases = max(firstBaseCounts.AlignedBases, secondBaseCounts.AdjustedBases) - fragmentLength;
-            truncatedFragmentStart = max(firstEffectivePosStart, secondEffectivePosStart);
-
-            if(truncatedFragmentStart - combinedEffectiveStart < excessBases)
+            // truncate any bases extending past the 5' read end on the 3' read end
+            if(!first.getReadNegativeStrandFlag())
             {
-                int endBaseTrim = excessBases - (truncatedFragmentStart - combinedEffectiveStart);
-                truncatedFragmentEnd -= endBaseTrim;
+                if(secondEffectivePosStart < firstEffectivePosStart)
+                    trucatedBases[0] = firstEffectivePosStart - secondEffectivePosStart;
+
+                if(firstEffectivePosEnd > secondEffectivePosEnd)
+                    trucatedBases[1] = firstEffectivePosEnd - secondEffectivePosEnd;
+
+                trucatedBases[2] = firstPosStart;
+            }
+            else
+            {
+                if(firstEffectivePosStart < secondEffectivePosStart)
+                    trucatedBases[0] = secondEffectivePosStart - firstEffectivePosStart;
+
+                if(secondEffectivePosEnd > firstEffectivePosEnd)
+                    trucatedBases[1] = secondEffectivePosEnd - firstEffectivePosEnd;
+
+                trucatedBases[2] = secondPosStart;
             }
         }
 
@@ -208,8 +224,6 @@ public class FragmentSync
 
         final byte[] combinedBaseQualities = new byte[combinedLength];
         final byte[] combinedBases = new byte[combinedLength];
-        int combinedPosStart = min(firstPosStart, secondPosStart);
-        int combinedPosEnd = max(firstPosEnd, secondPosEnd);
 
         int combinedReadIndex = 0;
         int firstReadIndex = -1;
@@ -225,7 +239,7 @@ public class FragmentSync
 
         int combinedCigarElementLength = 0;
         CigarOperator combinedCigarOperator = M;
-        Cigar combinedCigar = new Cigar();
+        List<CigarElement> combinedCigar = Lists.newArrayList();
 
         int baseMismatches = 0;
 
@@ -313,8 +327,16 @@ public class FragmentSync
                 }
             }
 
-            // handle cigar elements
-            if((firstCigarChange || firstElement == null) && (secondCigarChange || secondElement == null))
+            // handle cigar element changes
+            if(((firstCigarChange && firstCigarIndex == 0) || (secondCigarChange && secondCigarIndex == 0))
+            && combinedCigarOperator == S && switchSoftClipToAligned(firstElement, secondElement))
+            {
+                combinedCigar.add(new CigarElement(combinedCigarElementLength, combinedCigarOperator));
+                combinedCigarElementLength = 0;
+
+                combinedCigarOperator = M;
+            }
+            else if((firstCigarChange || firstElement == null) && (secondCigarChange || secondElement == null))
             {
                 if(combinedCigarElementLength > 0)
                 {
@@ -400,8 +422,8 @@ public class FragmentSync
         combinedCigar.add(new CigarElement(combinedCigarElementLength, combinedCigarOperator));
 
         SAMRecord combinedRecord = buildSyncedRead(
-                first, combinedPosStart, combinedBases, combinedBaseQualities, combinedCigar,
-                format("%d;%d;%d;%d", firstPosStart, firstPosEnd, secondPosStart, secondPosEnd));
+                first, combinedPosStart, combinedPosEnd, combinedBases, combinedBaseQualities, combinedCigar,
+                format("%d;%d;%d;%d", firstPosStart, firstPosEnd, secondPosStart, secondPosEnd), trucatedBases);
 
         return new FragmentSyncOutcome(combinedRecord, COMBINED);
     }

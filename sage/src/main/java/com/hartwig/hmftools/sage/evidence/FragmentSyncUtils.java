@@ -11,6 +11,10 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
+import java.util.List;
+
+import org.checkerframework.checker.units.qual.C;
+
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -27,6 +31,14 @@ public class FragmentSyncUtils
     protected static boolean ignoreCigarOperatorMismatch(final CigarOperator first, final CigarOperator second)
     {
         return (first == M || first == S) && (second == M || second == S);
+    }
+
+    protected static boolean switchSoftClipToAligned(final CigarElement first, final CigarElement second)
+    {
+        if(first == null || second == null)
+            return false;
+
+        return (first.getOperator() == M && second.getOperator() == S) || (first.getOperator() == S && second.getOperator() == M);
     }
 
     protected static boolean overlappingCigarDiffs(final Cigar firstCigar, int firstPosStart, final Cigar secondCigar, int secondPosStart)
@@ -128,8 +140,95 @@ public class FragmentSyncUtils
     }
 
     protected static SAMRecord buildSyncedRead(
+            final SAMRecord referenceRead, final int combinedPosStart, final int combinedPosEnd,
+            final byte[] combinedBases, final byte[] combinedBaseQualities,
+            final List<CigarElement> combinedCigar, final String origCoords, final int[] trucatedBases)
+    {
+        if(trucatedBases == null || (trucatedBases[0] == 0 && trucatedBases[0] == 0))
+        {
+            return buildSyncedRead(referenceRead, combinedPosStart, combinedBases, combinedBaseQualities, combinedCigar, origCoords);
+        }
+
+        // bring in the read bases, quals, coords and cigar to the truncated positions
+        int totalOffset = trucatedBases[0] + trucatedBases[1];
+        int truncLength = combinedBases.length - totalOffset;
+        byte[] truncBases = new byte[truncLength];
+        byte[] truncBaseQuals = new byte[truncLength];
+
+        for(int i = 0; i < truncLength; ++i)
+        {
+            truncBases[i] = combinedBases[i + trucatedBases[0]];
+            truncBaseQuals[i] = combinedBaseQualities[i + trucatedBases[0]];
+        }
+
+        int truncatedFragmentStart = trucatedBases[2];
+
+        for(int i = 0; i <= 1; ++i)
+        {
+            int offset = trucatedBases[i];
+
+            while(offset > 0)
+            {
+                int cigarIndex = (i == 0) ? 0 : combinedCigar.size() - 1;
+                CigarElement currentElement = combinedCigar.get(cigarIndex);
+
+                if(offset < currentElement.getLength())
+                {
+                    combinedCigar.set(cigarIndex, new CigarElement(
+                            currentElement.getLength() - offset, currentElement.getOperator()));
+                    offset = 0;
+                }
+                else
+                {
+                    offset -= currentElement.getLength();
+                    combinedCigar.remove(cigarIndex);
+                }
+            }
+        }
+
+        /*
+        while(startOffset > 0)
+        {
+            CigarElement currentElement = combinedCigar.get(0);
+
+            if(startOffset < currentElement.getLength())
+            {
+                combinedCigar.set(0, new CigarElement(
+                        currentElement.getLength() - startOffset, currentElement.getOperator()));
+                startOffset = 0;
+            }
+            else
+            {
+                startOffset -= currentElement.getLength();
+                combinedCigar.remove(0);
+            }
+        }
+
+        while(endOffset > 0)
+        {
+            int lastIndex = combinedCigar.size() - 1;
+            CigarElement currentElement = combinedCigar.get(lastIndex);
+
+            if(endOffset < currentElement.getLength())
+            {
+                combinedCigar.set(lastIndex, new CigarElement(
+                        currentElement.getLength() - endOffset, currentElement.getOperator()));
+                endOffset = 0;
+            }
+            else
+            {
+                endOffset -= currentElement.getLength();
+                combinedCigar.remove(lastIndex);
+            }
+        }
+        */
+
+        return buildSyncedRead(referenceRead, truncatedFragmentStart, truncBases, truncBaseQuals, combinedCigar, origCoords);
+    }
+
+    protected static SAMRecord buildSyncedRead(
             final SAMRecord referenceRead, final int combinedPosStart, final byte[] combinedBases, final byte[] combinedBaseQualities,
-            final Cigar combinedCigar, final String origCoords)
+            final List<CigarElement> combinedCigar, final String origCoords)
     {
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
         recordBuilder.setUnmappedHasBasesAndQualities(false);
@@ -140,7 +239,7 @@ public class FragmentSyncUtils
                 combinedPosStart,
                 referenceRead.getReadNegativeStrandFlag(),
                 false,
-                combinedCigar.toString(), "", 1, false);
+                new Cigar(combinedCigar).toString(), "", 1, false);
 
         combinedRecord.setReadBases(combinedBases);
         combinedRecord.setAlignmentStart(combinedPosStart);
