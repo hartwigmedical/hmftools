@@ -29,7 +29,6 @@ public class LoadCuppa2
     {
         Options options = new Options();
 
-        options.addOption(SAMPLE, true, "Sample name");
         options.addOption(CUPPA_VIS_DATA_TSV, true, "Path to the CUPPA vis data file");
 
         addDatabaseCmdLineArgs(options);
@@ -41,22 +40,15 @@ public class LoadCuppa2
     {
         Options options = createOptions();
         CommandLine cmd = new DefaultParser().parse(options, args);
-        String sample = cmd.getOptionValue(SAMPLE);
         String cuppaVisDataTsv = cmd.getOptionValue(CUPPA_VIS_DATA_TSV);
 
         logVersion();
 
-        if(CommonUtils.anyNull(sample, cuppaVisDataTsv))
-        {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("Patient-DB - Load CUPPA Data", options);
-            System.exit(1);
-        }
-
         LOGGER.info("Loading CUPPA from {}", new File(cuppaVisDataTsv).getParent());
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
-        LOGGER.info(" Loaded {} entries from {}", cuppaPredictions.size(), cuppaVisDataTsv);
+        LOGGER.info("Loaded {} entries from {}", cuppaPredictions.size(), cuppaVisDataTsv);
 
+        String sample = cuppaPredictions.get(0).SampleId;
         LOGGER.info("Writing CUPPA into database for {}", sample);
         DatabaseAccess dbWriter = databaseAccess(cmd);
 
