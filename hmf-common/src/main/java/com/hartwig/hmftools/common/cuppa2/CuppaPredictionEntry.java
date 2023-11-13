@@ -75,7 +75,6 @@ public class CuppaPredictionEntry
 
     public List<Object> getValues()
     {
-
         List<Object> values = new ArrayList<>();
 
         values.add(SampleId);

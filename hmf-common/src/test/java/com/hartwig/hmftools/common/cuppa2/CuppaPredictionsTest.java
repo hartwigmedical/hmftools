@@ -3,10 +3,9 @@ import com.google.common.io.Resources;
 import org.junit.Test;
 import java.io.IOException;
 
-public class CuppaPredictionsTest {
-
-    public CuppaPredictionsTest() throws IOException {
-    }
+public class CuppaPredictionsTest
+{
+    public CuppaPredictionsTest() throws IOException {}
 
     private static final String CUPPA_VIS_DATA_TSV = Resources.getResource("cuppa/cuppa_vis_data.tsv").getPath();
     CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
@@ -17,8 +16,9 @@ public class CuppaPredictionsTest {
         cuppaPredictions
             .subsetByDataType(Categories.DataType.PROB)
             .getTopPredictions(3)
-            .sortByRank()
-            .printPredictions(20);
+            .sortByRank();
+
+        // cuppaPredictions.printPredictions(20);
     }
 
     @Test
