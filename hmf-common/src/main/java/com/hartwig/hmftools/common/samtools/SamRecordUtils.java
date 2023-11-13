@@ -97,7 +97,8 @@ public final class SamRecordUtils
 
     public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType)
     {
-        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, format("%d;%d;%s", readCount, firstInPairCount, umiReadType));
+        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, format("%d;%d", readCount, firstInPairCount));
+        record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
     }
 
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)

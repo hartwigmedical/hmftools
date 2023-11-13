@@ -5,11 +5,9 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.addConsensusReadAttribute;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
-import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL_STRAND;
+import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL;
 import static com.hartwig.hmftools.common.samtools.UmiReadType.SINGLE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
@@ -337,18 +335,12 @@ public class DuplicateGroup
                 int firstInPairCount = (int)readGroup.stream().filter(x -> x.getFirstOfPairFlag()).count();
                 int readCount = readGroup.size();
                 boolean isDualStrand = mDualStrand || (firstInPairCount > 0 && firstInPairCount < readCount);
+                boolean isPrimaryGroup = (i == ReadType.PRIMARY.ordinal() || i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal());
 
-                /* check for unmarked groups, not seeing this ever trigger which means the collapsing is working
-                boolean isPrimary = (i == ReadType.PRIMARY.ordinal() || i == ReadType.MATE.ordinal());
+                if(!isPrimaryGroup)
+                    firstInPairCount = readCount - firstInPairCount; // adjusted so both reads report the same ratio
 
-                if(mDualStrand != isDualStrand && isPrimary)
-                {
-                    MD_LOGGER.debug("read(%s) dual-strand mismatch: dual(%s) reads(fwd=%d vs total=%d)",
-                            id(), mDualStrand, firstInPairCount, readCount);
-                }
-                */
-
-                UmiReadType umiReadType = isDualStrand ? DUAL_STRAND : SINGLE;
+                UmiReadType umiReadType = isDualStrand ? DUAL : SINGLE;
 
                 addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount, firstInPairCount,  umiReadType);
 

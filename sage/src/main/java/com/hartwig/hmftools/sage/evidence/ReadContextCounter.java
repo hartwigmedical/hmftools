@@ -539,12 +539,15 @@ public class ReadContextCounter implements VariantHotspot
         }
         else
         {
+            // to be deprecated since have return to using UMI type attribute above
             String consensusInfo = record.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
 
             if(consensusInfo != null && consensusInfo.contains(CONSENSUS_INFO_DELIM))
             {
                 String[] values = consensusInfo.split(CONSENSUS_INFO_DELIM, 3);
-                umiReadType = UmiReadType.valueOf(values[2]);
+
+                if(values.length == 3)
+                    umiReadType = UmiReadType.valueOf(values[2]);
             }
         }
 
