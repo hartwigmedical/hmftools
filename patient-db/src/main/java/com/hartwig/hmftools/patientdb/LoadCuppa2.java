@@ -47,21 +47,13 @@ public class LoadCuppa2
 
         LOGGER.info("Loading CUPPA from {}", new File(cuppaVisDataTsv).getParent());
         CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
-        LOGGER.info("Loaded {} entries from {}", cuppaPredictions.size(), cuppaVisDataTsv);
-
-        int TOP_N_PREDICTIONS = 3;
-        cuppaPredictions = cuppaPredictions
-                .subsetByDataType(Categories.DataType.PROB)
-                .getTopPredictions(TOP_N_PREDICTIONS)
-                .sortByRank();
-
-        LOGGER.info("Getting top {} probabilities from all classifiers ({} entries)", TOP_N_PREDICTIONS, cuppaPredictions.size());
-
         String sample = cuppaPredictions.get(0).SampleId;
-        LOGGER.info("Writing CUPPA into database for {}", sample);
-        DatabaseAccess dbWriter = databaseAccess(cmd);
+        LOGGER.info("Loaded {} entries from {} for sample {}", cuppaPredictions.size(), cuppaVisDataTsv, sample);
 
-        dbWriter.writeCuppa2(sample, cuppaPredictions);
+        int TOP_N_PROBS = 3;
+        LOGGER.info("Writing top {} to database", TOP_N_PROBS);
+        DatabaseAccess dbWriter = databaseAccess(cmd);
+        dbWriter.writeCuppa2(sample, cuppaPredictions, TOP_N_PROBS);
         LOGGER.info("Complete");
     }
 }
