@@ -41,10 +41,19 @@ public class Categories
     public enum DataType
     {
         PROB,
-        SIG_QUANTILE,
         FEAT_CONTRIB,
-        CV_PERFORMANCE,
+        SIG_QUANTILE,
+        CV_PERFORMANCE, // This data type is only use for plotting
 
         NONE;
+
+        public static boolean isSampleLevelDataType(DataType dataType)
+        {
+            if(dataType.equals(PROB) | dataType.equals(FEAT_CONTRIB) | dataType.equals(SIG_QUANTILE))
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }
