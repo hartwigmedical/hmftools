@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -566,8 +567,8 @@ public class DatabaseAccess implements AutoCloseable
         cuppaDAO.writeCuppa(sample, cancerType, likelihood);
     }
 
-    public void writeCuppa2(@NotNull String sample, @NotNull CuppaPredictions cuppaPredictions){
-        cuppaDAO.writeCuppa2(sample, cuppaPredictions);
+    public void writeCuppa2(@NotNull String sample, @NotNull CuppaPredictions cuppaPredictions, int topNProbs) throws IOException {
+        cuppaDAO.writeCuppa2(sample, cuppaPredictions, topNProbs);
     }
 
     public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends)
