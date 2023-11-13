@@ -1238,7 +1238,6 @@ CREATE TABLE `cuppa`
     `cancerType` VARCHAR(255),
     `prob` DOUBLE PRECISION,
     `rank` INT NOT NULL,
-    `rankGroup` INT NOT NULL,
     `isOldCuppaOutput` TINYINT NOT NULL,
     PRIMARY KEY (`id`)
 );
