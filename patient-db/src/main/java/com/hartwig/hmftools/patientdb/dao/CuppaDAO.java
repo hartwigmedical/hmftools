@@ -12,8 +12,6 @@ import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.CuppaR
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep7;
-import org.jooq.InsertValuesStep8;
-import org.jooq.InsertValuesStep9;
 
 public class CuppaDAO {
 
@@ -61,7 +59,8 @@ public class CuppaDAO {
             @NotNull final String sample,
             @NotNull CuppaPredictions cuppaPredictions,
             @NotNull final int topNProbs
-    ) throws IOException {
+    ) throws IOException
+    {
         deleteCuppaForSample(sample);
 
         @NotNull InsertValuesStep7<CuppaRecord, LocalDateTime, String, String, String, Double, Integer, Integer> inserter = context.insertInto(CUPPA,
@@ -97,7 +96,8 @@ public class CuppaDAO {
         inserter.execute();
     }
 
-    void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood) {
+    void writeCuppa(@NotNull String sample, @NotNull String cancerType, double likelihood)
+    {
         deleteCuppaForSample(sample);
         LocalDateTime timestamp = LocalDateTime.now();
 

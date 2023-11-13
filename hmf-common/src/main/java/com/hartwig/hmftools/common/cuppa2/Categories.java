@@ -17,7 +17,8 @@ public class Categories
 
         NONE;
 
-        public static String convertAliasToName(String string){
+        public static String convertAliasToName(String string)
+        {
             string = string.toUpperCase();
 
             if(string.equals("RMD")){
