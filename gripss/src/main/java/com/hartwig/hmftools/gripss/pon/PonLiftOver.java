@@ -33,10 +33,16 @@ public class PonLiftOver
     private final RefGenomeVersion mDestinationVersion;
     private final RefGenomeVersion mSourceVersion;
     private final GenomeLiftoverCache mLiftoverCache;
+    private final int mMaxLengthDiff;
+
+    private int mConverted;
+    private int mFailedLiftover;
+    private int mFailedMaxLengthDiff;
 
     private static final String OUTPUT_SV_PON_FILE = "output_pon_sv_file";
     private static final String OUTPUT_SGL_PON_FILE = "output_pon_sgl_file";
     private static final String DEST_REF_GENOME_VERSION = "dest_ref_genome_version";
+    private static final String MAX_LENGTH_DIFF = "max_length_diff";
 
     public PonLiftOver(final ConfigBuilder configBuilder)
     {
@@ -45,8 +51,13 @@ public class PonLiftOver
         mOutputSglFile = configBuilder.getValue(OUTPUT_SGL_PON_FILE);
         mDestinationVersion = RefGenomeVersion.from(configBuilder.getValue(DEST_REF_GENOME_VERSION));
         mSourceVersion = mDestinationVersion.is37() ? V38 : V37;
+        mMaxLengthDiff = configBuilder.getInteger(MAX_LENGTH_DIFF);
 
         mLiftoverCache = new GenomeLiftoverCache(true, mDestinationVersion == V38);
+
+        mConverted = 0;
+        mFailedLiftover = 0;
+        mFailedMaxLengthDiff = 0;
     }
 
     public void run()
@@ -62,18 +73,17 @@ public class PonLiftOver
         writeSvPonFile();
         writeSglPonFile();
 
+        GR_LOGGER.info("converted {} entries, failed liftover({}) maxLengthDiff({})",
+                mConverted, mFailedLiftover, mFailedMaxLengthDiff);
+
         GR_LOGGER.info("Gripss PON lift-over complete");
     }
 
     private static final int LOG_COUNT = 1000000;
-    private static final int REGION_LENGTH_DIFF = 10;
 
     private void writeSvPonFile()
     {
         GR_LOGGER.info("lifting over SV PON file to: {}", mOutputSvFile);
-
-        int convertedRegions = 0;
-        int droppedRegions = 0;
 
         try
         {
@@ -103,7 +113,7 @@ public class PonLiftOver
                     if(posStartStart == UNMAPPED_POSITION || posStartEnd == UNMAPPED_POSITION
                     || posEndStart == UNMAPPED_POSITION || posEndEnd == UNMAPPED_POSITION)
                     {
-                        ++droppedRegions;
+                        ++mFailedLiftover;
                         continue;
                     }
 
@@ -128,23 +138,25 @@ public class PonLiftOver
                     }
 
                     // check for substantial changes in region length, indicating a possible error in lift-over
-                    if(posStartEnd - posStartStart > region.RegionStart.length() + REGION_LENGTH_DIFF)
-                    {
-                        GR_LOGGER.debug("lifted start region({}:{}-{} len={}) longer than original({} len={})",
-                                chrDestStart, posStartStart, posStartEnd, posStartEnd - posStartStart,
-                                region.RegionStart, region.RegionStart.length());
-                    }
+                    int lengthStartNew = posStartEnd - posStartStart;
+                    int lengthEndNew = posEndEnd - posEndStart;
 
-                    if(posEndEnd - posEndStart > region.RegionEnd.length() + REGION_LENGTH_DIFF)
+                    if(lengthStartNew - region.RegionStart.length() > mMaxLengthDiff
+                    || lengthEndNew - region.RegionEnd.length() > mMaxLengthDiff)
                     {
-                        GR_LOGGER.debug("lifted end region({}:{}-{} len={}) longer than original({} len={})",
-                                chrDestEnd, posEndStart, posEndEnd, posEndEnd - posEndStart,
-                                region.RegionEnd, region.RegionEnd.length());
+                        /*
+                        GR_LOGGER.debug("LENGTH: SV_START,{},{},{},{},{},{},{}",
+                                chrDestStart, region.RegionStart.start(), region.RegionStart.end(), region.RegionStart.length(),
+                                posStartStart, posStartEnd, posStartEnd - posStartStart);
+                        */
+                        ++mFailedMaxLengthDiff;
+                        continue;
+
                     }
 
                     if(chrDestStart.equals(chrDestEnd) && posStartStart > posEndStart)
                     {
-                        GR_LOGGER.debug("swapping start region({}:{}-{}) with end region({}:{}-{})",
+                        GR_LOGGER.trace("swapping start region({}:{}-{}) with end region({}:{}-{})",
                                 chrDestStart, posStartStart, posStartEnd, chrDestEnd, posEndStart, posEndEnd);
 
                         // swap coords if the start region is now after the end region
@@ -162,11 +174,11 @@ public class PonLiftOver
 
                     writer.newLine();
 
-                    ++convertedRegions;
+                    ++mConverted;
 
-                    if((convertedRegions % LOG_COUNT) == 0)
+                    if((mConverted % LOG_COUNT) == 0)
                     {
-                        GR_LOGGER.debug("converted {} positions", convertedRegions);
+                        GR_LOGGER.debug("converted {} entries", mConverted);
                     }
                 }
             }
@@ -178,16 +190,11 @@ public class PonLiftOver
             GR_LOGGER.error("failed to write SV PON output file: {}", e.toString());
             System.exit(1);
         }
-
-        GR_LOGGER.info("coverted SV {} entries, dropped {}", convertedRegions, droppedRegions);
     }
 
     private void writeSglPonFile()
     {
         GR_LOGGER.info("lifting over SGL PON file to: {}", mOutputSvFile);
-
-        int convertedRegions = 0;
-        int droppedRegions = 0;
 
         try
         {
@@ -213,7 +220,7 @@ public class PonLiftOver
 
                     if(posStartStart == UNMAPPED_POSITION || posStartEnd == UNMAPPED_POSITION)
                     {
-                        ++droppedRegions;
+                        ++mFailedLiftover;
                         continue;
                     }
 
@@ -225,17 +232,31 @@ public class PonLiftOver
                         orientStart = flipOrientation(orientStart);
                     }
 
+                    int lengthNew = posStartEnd - posStartStart;
+
+                    if(lengthNew - region.Region.length() > mMaxLengthDiff)
+                    {
+                        /*
+                        GR_LOGGER.debug("LENGTH: SGL,{},{},{},{},{},{},{}",
+                                chrDestStart, region.Region.start(), region.Region.end(), region.Region.length(),
+                                posStartStart, posStartEnd, posStartEnd - posStartStart);
+                        */
+
+                        ++mFailedMaxLengthDiff;
+                        continue;
+                    }
+
                     // fields: Chr,PosBegin,PosEnd,Unknown,PonCount,Orientation
                     writer.write(format("%s\t%d\t%d\t%s\t%d\t%s",
                             chrDestStart, posStartStart, posStartEnd, ".", region.PonCount, orientToId(orientStart)));
 
                     writer.newLine();
 
-                    ++convertedRegions;
+                    ++mConverted;
 
-                    if((convertedRegions % LOG_COUNT) == 0)
+                    if((mConverted % LOG_COUNT) == 0)
                     {
-                        GR_LOGGER.debug("converted {} positions", convertedRegions);
+                        GR_LOGGER.debug("converted {} entries", mConverted);
                     }
                 }
             }
@@ -247,8 +268,6 @@ public class PonLiftOver
             GR_LOGGER.error("failed to write SGL PON output file: {}", e.toString());
             System.exit(1);
         }
-
-        GR_LOGGER.info("coverted SGL {} entries, dropped {}", convertedRegions, droppedRegions);
     }
 
     private static String orientToId(final byte orientation)
@@ -262,6 +281,7 @@ public class PonLiftOver
         configBuilder.addConfigItem(OUTPUT_SGL_PON_FILE, true, "Output SGL PON file");
         configBuilder.addConfigItem(OUTPUT_SV_PON_FILE, true, "Output SV PON file");
         configBuilder.addConfigItem(DEST_REF_GENOME_VERSION, true, "Destination ref genome version");
+        configBuilder.addInteger(MAX_LENGTH_DIFF, "Permitted lifted region difference in length vs original", 5);
         PonCache.addConfig(configBuilder);
 
         ConfigUtils.addLoggingOptions(configBuilder);
