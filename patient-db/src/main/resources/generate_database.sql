@@ -1235,11 +1235,12 @@ CREATE TABLE `cuppa`
     `modified` DATETIME NOT NULL,
     `sampleId` VARCHAR(255) NOT NULL,
     `dataType` VARCHAR(255) NOT NULL,
-    `clfName` VARCHAR(255) NOT NULL,
-    `cancerType` VARCHAR(255) NOT NULL,
+    `clfName` VARCHAR(255) DEFAULT NULL,
+    `cancerType` VARCHAR(255),
     `dataValue` DOUBLE PRECISION,
     `rank` INT NOT NULL,
     `rankGroup` INT NOT NULL,
+    `isOldCuppaOutput` TINYINT NOT NULL,
     PRIMARY KEY (`id`)
 );
 
