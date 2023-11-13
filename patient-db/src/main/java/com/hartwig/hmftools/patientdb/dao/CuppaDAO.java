@@ -11,6 +11,7 @@ import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.CuppaR
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep8;
+import org.jooq.InsertValuesStep9;
 
 public class CuppaDAO {
 
@@ -61,7 +62,7 @@ public class CuppaDAO {
         deleteCuppaForSample(sample);
 
         @NotNull
-        InsertValuesStep8<CuppaRecord, LocalDateTime, String, String, String, String, Double, Integer, Integer> inserter = context.insertInto(CUPPA,
+        InsertValuesStep9<CuppaRecord, LocalDateTime, String, String, String, String, Double, Integer, Integer, Integer> inserter = context.insertInto(CUPPA,
                 CUPPA.MODIFIED,
                 CUPPA.SAMPLEID,
                 CUPPA.DATATYPE,
@@ -69,7 +70,8 @@ public class CuppaDAO {
                 CUPPA.CANCERTYPE,
                 CUPPA.DATAVALUE,
                 CUPPA.RANK,
-                CUPPA.RANKGROUP
+                CUPPA.RANKGROUP,
+                CUPPA.ISOLDCUPPAOUTPUT
         );
 
         LocalDateTime timestamp = LocalDateTime.now();
@@ -84,7 +86,8 @@ public class CuppaDAO {
                     cuppaPredictionEntry.CancerType,
                     parseDouble(cuppaPredictionEntry.DataValue),
                     cuppaPredictionEntry.Rank,
-                    cuppaPredictionEntry.RankGroup
+                    cuppaPredictionEntry.RankGroup,
+                    0
             );
         }
 
@@ -98,15 +101,23 @@ public class CuppaDAO {
         context.insertInto(CUPPA,
                         CUPPA.MODIFIED,
                         CUPPA.SAMPLEID,
+                        CUPPA.DATATYPE,
+                        CUPPA.CLFNAME,
                         CUPPA.CANCERTYPE,
                         CUPPA.DATAVALUE,
-                        CUPPA.DATATYPE
+                        CUPPA.RANK,
+                        CUPPA.RANKGROUP,
+                        CUPPA.ISOLDCUPPAOUTPUT
                 ).values(
                         timestamp,
                         sample,
+                        Categories.DataType.PROB.toString(),
+                        null,
                         cancerType,
                         likelihood,
-                        Categories.DataType.PROB.toString()
+                        1,
+                        -1,
+                        1
                 ).execute();
     }
 }
