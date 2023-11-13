@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPA;
@@ -57,18 +58,18 @@ public class CuppaDAO {
 
     void writeCuppa2(
             @NotNull final String sample,
-            @NotNull final CuppaPredictions cuppaPredictions
-    ){
+            @NotNull CuppaPredictions cuppaPredictions,
+            @NotNull final int topNProbs
+    ) throws IOException {
         deleteCuppaForSample(sample);
 
         @NotNull
-        InsertValuesStep9<CuppaRecord, LocalDateTime, String, String, String, String, Double, Integer, Integer, Integer> inserter = context.insertInto(CUPPA,
+        InsertValuesStep8<CuppaRecord, LocalDateTime, String, String, String, Double, Integer, Integer, Integer> inserter = context.insertInto(CUPPA,
                 CUPPA.MODIFIED,
                 CUPPA.SAMPLEID,
-                CUPPA.DATATYPE,
                 CUPPA.CLFNAME,
                 CUPPA.CANCERTYPE,
-                CUPPA.DATAVALUE,
+                CUPPA.PROB,
                 CUPPA.RANK,
                 CUPPA.RANKGROUP,
                 CUPPA.ISOLDCUPPAOUTPUT
@@ -76,12 +77,16 @@ public class CuppaDAO {
 
         LocalDateTime timestamp = LocalDateTime.now();
 
+        cuppaPredictions = cuppaPredictions
+                .subsetByDataType(Categories.DataType.PROB)
+                .getTopPredictions(topNProbs)
+                .sortByRank();
+
         for(CuppaPredictionEntry cuppaPredictionEntry : cuppaPredictions.PredictionEntries)
         {
             inserter.values(
                     timestamp,
                     cuppaPredictionEntry.SampleId,
-                    cuppaPredictionEntry.DataType.toString(),
                     parseClfName(cuppaPredictionEntry.ClfName),
                     cuppaPredictionEntry.CancerType,
                     parseDouble(cuppaPredictionEntry.DataValue),
@@ -101,17 +106,15 @@ public class CuppaDAO {
         context.insertInto(CUPPA,
                         CUPPA.MODIFIED,
                         CUPPA.SAMPLEID,
-                        CUPPA.DATATYPE,
                         CUPPA.CLFNAME,
                         CUPPA.CANCERTYPE,
-                        CUPPA.DATAVALUE,
+                        CUPPA.PROB,
                         CUPPA.RANK,
                         CUPPA.RANKGROUP,
                         CUPPA.ISOLDCUPPAOUTPUT
                 ).values(
                         timestamp,
                         sample,
-                        Categories.DataType.PROB.toString(),
                         null,
                         cancerType,
                         likelihood,
