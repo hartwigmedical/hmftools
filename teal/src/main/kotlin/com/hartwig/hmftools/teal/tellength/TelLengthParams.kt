@@ -40,11 +40,11 @@ data class TelLengthParams
         description = "Proportion of reads that are marked duplicates in the sample BAM")
     var duplicatePercent: Double = 0.0,
 
-    @Parameter(names = ["-mean_reads_per_kb"], required = true, description = "Mean reads per KB")
-    var meanReadsPerKb: Double = 0.0,
+    @Parameter(names = ["-mean_read_depth"], required = true, description = "Mean read depth")
+    var meanReadDepth: Double = 0.0,
 
-    @Parameter(names = ["-gc50_reads_per_kb"], description = "GC 50 reads per KB. Defaults to mean reads per KB if not provided")
-    var gc50ReadsPerKb: Double? = null
+    @Parameter(names = ["-gc50_read_depth"], description = "GC 50 read depth. Defaults to mean reads per KB if not provided")
+    var gc50ReadDepth: Double? = null
 )
 {
     fun validate()

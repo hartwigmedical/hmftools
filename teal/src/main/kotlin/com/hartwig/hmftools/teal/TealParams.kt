@@ -15,8 +15,8 @@ private const val REF_BAM = "-reference_bam"
 private const val TUMOR_BAM = "-tumor_bam"
 private const val PURPLE = "-purple"
 private const val COBALT = "-cobalt"
-private const val REF_MEAN_READS_PER_KB = "-reference_mean_reads_per_kb"
-private const val TUMOR_MEAN_READS_PER_KB = "-tumor_mean_reads_per_kb"
+private const val REF_MEAN_READ_DEPTH = "-reference_mean_read_depth"
+private const val TUMOR_MEAN_READ_DEPTH = "-tumor_mean_read_depth"
 
 // NOTE: We use nullable string for required argument types, this is to avoid (default: <empty string>) getting
 // printed in the usage by JCommander
@@ -154,12 +154,12 @@ data class TealParams
         description = "Proportion of reads that are marked duplicates in the reference sample BAM")
     var germlineDuplicateProportion: Double = 0.0,
 
-    @Parameter(names = [REF_MEAN_READS_PER_KB], description = "Mean reads per KB of the reference sample")
-    var germlineMeanReadsPerKb: Double? = null,
+    @Parameter(names = [REF_MEAN_READ_DEPTH], description = "Mean read depth of the reference sample")
+    var germlineMeanReadDepth: Double? = null,
 
-    @Parameter(names = ["-reference_gc50_reads_per_kb"],
-        description = "GC 50 reads per KB of the reference sample. Defaults to mean reads per KB if not provided")
-    var germlineGc50ReadsPerKb: Double? = null,
+    @Parameter(names = ["-reference_gc50_read_depth"],
+        description = "GC 50 read depth of the reference sample. Defaults to mean reads per KB if not provided")
+    var germlineGc50ReadDepth: Double? = null,
 
     @Parameter(names = ["-tumor_purity"],
         description = "Purity of the tumor sample")
@@ -173,11 +173,11 @@ data class TealParams
         description = "Proportion of reads that are marked duplicates in the tumor sample BAM")
     var tumorDuplicateProportion: Double = 0.0,
 
-    @Parameter(names = [TUMOR_MEAN_READS_PER_KB], description = "Mean reads per KB of the tumor sample")
-    var tumorMeanReadsPerKb: Double? = null,
+    @Parameter(names = [TUMOR_MEAN_READ_DEPTH], description = "Mean read depth of the tumor sample")
+    var tumorMeanReadDepth: Double? = null,
 
-    @Parameter(names = ["-tumor_gc50_reads_per_kb"], description = "GC 50 reads per KB. Defaults to mean reads per KB if not provided")
-    var tumorGc50ReadsPerKb: Double? = null
+    @Parameter(names = ["-tumor_gc50_read_depth"], description = "GC 50 read depth. Defaults to mean depth if not provided")
+    var tumorGc50ReadDepth: Double? = null
 )
 {
     // validate the params, throw ParameterException if fails
@@ -188,17 +188,17 @@ data class TealParams
 
         if (commonParams.referenceSampleId != null)
         {
-            if (germlineMeanReadsPerKb == null)
+            if (germlineMeanReadDepth == null)
             {
-                throw ParameterException("$REF_MEAN_READS_PER_KB is required when $REF_SAMPLE(${commonParams.referenceSampleId}) is specified")
+                throw ParameterException("$REF_MEAN_READ_DEPTH is required when $REF_SAMPLE(${commonParams.referenceSampleId}) is specified")
             }
         }
 
         if (commonParams.tumorSampleId != null)
         {
-            if (tumorMeanReadsPerKb == null)
+            if (tumorMeanReadDepth == null)
             {
-                throw ParameterException("$TUMOR_MEAN_READS_PER_KB is required when $TUMOR_SAMPLE(${commonParams.tumorSampleId}) is specified")
+                throw ParameterException("$TUMOR_MEAN_READ_DEPTH is required when $TUMOR_SAMPLE(${commonParams.tumorSampleId}) is specified")
             }
         }
     }
