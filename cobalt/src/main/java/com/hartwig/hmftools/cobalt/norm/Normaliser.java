@@ -3,7 +3,6 @@ package com.hartwig.hmftools.cobalt.norm;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.GC_BUCKET_MAX;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.GC_BUCKET_MIN;
 import static com.hartwig.hmftools.cobalt.norm.NormConstants.MAPPABILITY_THRESHOLD;
-import static com.hartwig.hmftools.common.utils.Doubles.interpolatedMedian;
 import static com.hartwig.hmftools.common.utils.Doubles.median;
 
 import java.util.ArrayList;
@@ -72,14 +71,14 @@ public class Normaliser
             return NormCalcData.INVALID;
 
         double sampleMeanReadCount = sampleReadCountTotal / sampleReadDepths.size();
-        double sampleMedianReadCount = interpolatedMedian(sampleReadDepths);
+        double sampleMedianReadCount = median(sampleReadDepths);
 
         Map<Integer,Double> gcBucketMedians = new HashMap<>();
 
         for(Map.Entry<Integer, List<Double>> entry : gcBucketReadDepths.entrySet())
         {
             int gcBucket = entry.getKey();
-            double medianReadDepth = interpolatedMedian(entry.getValue());
+            double medianReadDepth = median(entry.getValue());
             gcBucketMedians.put(gcBucket, medianReadDepth);
         }
 
@@ -123,10 +122,7 @@ public class Normaliser
         if(sampleRegionData.ReadDepth < 0)
             return false;
 
-        if(regionData.gcBucket() < GC_BUCKET_MIN || regionData.gcBucket() > GC_BUCKET_MAX)
-            return false;
-
-        return true;
+        return regionData.gcBucket() >= GC_BUCKET_MIN && regionData.gcBucket() <= GC_BUCKET_MAX;
     }
 
     public static void calcRelativeEnrichment(final Map<String,List<RegionData>> chrRegionData, double minEnrichmentRatio)

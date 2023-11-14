@@ -9,7 +9,6 @@ import com.hartwig.hmftools.cobalt.CobaltColumns;
 import com.hartwig.hmftools.common.genome.gc.GCBucket;
 import com.hartwig.hmftools.common.genome.gc.GCMedianReadDepth;
 import com.hartwig.hmftools.common.genome.gc.ImmutableGCBucket;
-import com.hartwig.hmftools.common.utils.Doubles;
 
 import tech.tablesaw.aggregate.AggregateFunctions;
 import tech.tablesaw.aggregate.NumericAggregateFunction;
@@ -20,16 +19,13 @@ public class GcNormalizedRatioMapper implements RatioMapper
     private static final int MIN_BUCKET = 20;
     private static final int MAX_BUCKET = 60;
 
-    private final boolean mUseInterpolatedMedian;
-
     private Table mGCMedianReadDepth;
     private double mSampleMedianReadDepth;
     private double mSampleMeanReadDepth;
 
     // apply gc normalisation, the input ratios must have chromosome, position, ratio, gcBucket, isMappable
-    public GcNormalizedRatioMapper(boolean useInterpolatedMedian)
+    public GcNormalizedRatioMapper()
     {
-        mUseInterpolatedMedian = useInterpolatedMedian;
     }
 
     @Override
@@ -53,24 +49,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_MAPPABLE).asSelection())
                         .and(inputRatios.booleanColumn(CobaltColumns.IS_AUTOSOME).asSelection()));
 
-        NumericAggregateFunction aggFunc;
-
-        if (mUseInterpolatedMedian)
-        {
-            aggFunc = new NumericAggregateFunction("Interpolated Median")
-            {
-                @Override
-                public Double summarize(NumericColumn<?> column)
-                {
-                    return Doubles.interpolatedMedian(column.asDoubleColumn().removeMissing().asList());
-                }
-            };
-        }
-        else
-        {
-            // use normal median
-            aggFunc = AggregateFunctions.median;
-        }
+        NumericAggregateFunction aggFunc = AggregateFunctions.median;
 
         // get the sample median and mean
         mSampleMedianReadDepth = aggFunc.summarize(gcMedianCalcDf.doubleColumn(CobaltColumns.RATIO));
@@ -84,7 +63,7 @@ public class GcNormalizedRatioMapper implements RatioMapper
 
         CB_LOGGER.trace("sample median: {}, mean: {}, gc median calc: {}", mSampleMedianReadDepth, mSampleMeanReadDepth, gcMedianCalcDf);
 
-        gcMedianCalcDf.column(String.format("%s [%s]", aggFunc.functionName(), CobaltColumns.RATIO)).setName("gcMedianCount");
+        gcMedianCalcDf.column(String.format("Median [%s]", CobaltColumns.RATIO)).setName("gcMedianCount");
         gcMedianCalcDf.column(String.format("Count [%s]", CobaltColumns.RATIO)).setName("windowCount");
 
         // merge in the gc median count

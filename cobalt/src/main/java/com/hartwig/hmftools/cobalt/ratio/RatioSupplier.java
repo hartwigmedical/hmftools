@@ -101,7 +101,7 @@ public class RatioSupplier
                 readRatios = new TargetedRatioMapper(targetRegionEnrichment, chromosomePosCodec).mapRatios(readRatios);
             }
 
-            gcNormalizedRatioMapper = new GcNormalizedRatioMapper(true);
+            gcNormalizedRatioMapper = new GcNormalizedRatioMapper();
             readRatios = gcNormalizedRatioMapper.mapRatios(readRatios);
 
             switch (sparseBucketPolicy)
@@ -116,8 +116,8 @@ public class RatioSupplier
                 {
                     // determine consolidated buckets
                     // determine the low cov consolidation window count
-                    double medianReadCount = gcNormalizedRatioMapper.getSampleMedianReadDepth();
-                    this.consolidatedBuckets = LowCoverageRatioMapper.calcConsolidateBuckets(readRatios, medianReadCount);
+                    double medianReadDepth = gcNormalizedRatioMapper.getSampleMedianReadDepth();
+                    this.consolidatedBuckets = LowCoverageRatioMapper.calcConsolidateBuckets(readRatios, medianReadDepth);
                     break;
                 }
             }
