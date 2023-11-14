@@ -10,9 +10,8 @@ set of inputs. This is achieved through flexible prefined configuration for indi
 retrieved at runtime for each process, and automated on-demand staging of reference genomes and resource files. The
 only required input to run an analysis with oncoanalyser is a samplesheet describing sample inputs.
 
-Both the [WGTS](../README.md#dna-pipeline-components) and [targeted
-sequencing](README_PANEL.md) workflows are available in oncoanalyser. The targeted sequencing workflow has built-in
-support for the TSO500 panel and can be configured to work with custom DNA/RNA panels.
+Both the WGS/WTS and targeted sequencing workflows are available in oncoanalyser. The targeted sequencing workflow has built-in
+support for the TSO500 panel and in future releases will be configured to work with custom DNA/RNA panels.
 
 As oncoanalyser is written using Nextflow, it supports a range of compute environments including AWS, Azure, GCP, and
 HPC. Other features include continuous checkpointing with run resuming and the ability to integrate with [Seqera
@@ -205,12 +204,17 @@ analysis has completed this directory can be removed.
 | Execution | `pipeline_info/execution_report_*.html`   | HTML report of execution metrics and details                       |
 | Timeline  | `pipeline_info/execution_timeline_*.html` | Timeline diagram showing process execution (start/duration/finish) |
 
+
+## Future Improvements
+The following improvements are planned for the next few releases:
+* support for custom targeted panels
+* apply HMF's MarkDuplicates & UMI-analysis to BAMs prior to variant calling
+* longitudinal analysis of patient samples including ctDNA samples
+* ancillary analyses for neoantigen burden
+* cloud-specific instructions and optimisations (ie for AWS, Azure and GCP)
+
+
 ## Acknowledgements
 
 The oncoanalyser pipeline was written by Stephen Watts at the [University of Melbourne Centre for Cancer
-Research](https://mdhs.unimelb.edu.au/centre-for-cancer-research) with the support of the following collaborators,
-listed in alphabetical order:
-
-* Charles Shale
-* Oliver Hofmann
-* Peter Priestley
+Research](https://mdhs.unimelb.edu.au/centre-for-cancer-research) with the support of Oliver Hofmann and the Hartwig Medical Foundation Australia.
