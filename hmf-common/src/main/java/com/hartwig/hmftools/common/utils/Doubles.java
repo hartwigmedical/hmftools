@@ -101,6 +101,11 @@ public final class Doubles
 
         for(double val : values)
         {
+            if(val != (int)val)
+            {
+                throw new IllegalArgumentException("inputs to interpolatedMedian must be integer values");
+            }
+
             if(cumulativeCount == count / 2.0 && val != median)
             {
                 // same corner case as median, if it falls between two numbers, say 2 and 3, then

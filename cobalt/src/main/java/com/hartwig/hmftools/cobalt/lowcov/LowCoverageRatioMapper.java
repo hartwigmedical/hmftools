@@ -26,7 +26,7 @@ import tech.tablesaw.api.*;
 
 public class LowCoverageRatioMapper implements RatioMapper
 {
-    private static final String BUCKET_ID_COLUMN = "lovCovBucketId";
+    private static final String BUCKET_ID_COLUMN = "lowCovBucketId";
 
     private int mConsolidationCount = 0;
     private @Nullable Multimap<String, LowCovBucket> mConsolidateBoundaries;
@@ -95,6 +95,12 @@ public class LowCoverageRatioMapper implements RatioMapper
             String rowChr = mChromosomePositionCodec.decodeChromosome(encodedChrPos);
             int pos = mChromosomePositionCodec.decodePosition(encodedChrPos);
 
+            if(rowChr.isEmpty())
+            {
+                CB_LOGGER.error("chr is empty, row: {}", row);
+                throw new RuntimeException();
+            }
+
             if (!chromosome.equals(rowChr))
             {
                 // move to next chromosome
@@ -148,6 +154,8 @@ public class LowCoverageRatioMapper implements RatioMapper
                     }
                 }
 
+                // we do not assign bucket id for rows that have negative ratio, we do not want them
+                // to be in the summarize call
                 bucketIdCol.set(i, bucketId);
             }
         }
@@ -156,49 +164,49 @@ public class LowCoverageRatioMapper implements RatioMapper
         rawRatios.addColumns(bucketIdCol);
 
         //
-        Table lovCovRatio = rawRatios.summarize(
+        Table lowCovRatio = rawRatios.summarize(
                 CobaltColumns.RATIO,
                 CobaltColumns.GC_CONTENT,
                 AggregateFunctions.mean).by(BUCKET_ID_COLUMN);
 
-        CB_LOGGER.debug("low cov table: {}", lovCovRatio);
+        CB_LOGGER.debug("low cov table: {}", lowCovRatio);
 
         //
         // lowCovBucketId  |   Mean [gcContent]    |  Mean [bucketEncodedChrPos]  |      Mean [ratio]
         // fix up the column names
-        lovCovRatio.column("Mean [gcContent]").setName(CobaltColumns.GC_CONTENT);
-        lovCovRatio.column("Mean [ratio]").setName(CobaltColumns.RATIO);
+        lowCovRatio.column("Mean [gcContent]").setName(CobaltColumns.GC_CONTENT);
+        lowCovRatio.column("Mean [ratio]").setName(CobaltColumns.RATIO);
 
         // add is mappable column, we are not sure if this is needed yet. But if we want to pass
         // consolidated ratios to gc normalisation this is needed.
-        lovCovRatio.addColumns(BooleanColumn.create(CobaltColumns.IS_MAPPABLE,
-                Collections.nCopies(lovCovRatio.rowCount(), true)));
+        lowCovRatio.addColumns(BooleanColumn.create(CobaltColumns.IS_MAPPABLE,
+                Collections.nCopies(lowCovRatio.rowCount(), true)));
 
         // merge in the bucket, this is required to get the bucket position
-        lovCovRatio = lovCovRatio.joinOn(BUCKET_ID_COLUMN).leftOuter(bucketTable);
+        lowCovRatio = lowCovRatio.joinOn(BUCKET_ID_COLUMN).inner(bucketTable);
 
         // add the encoded chromosome pos columns
-        mChromosomePositionCodec.addEncodedChrPosColumn(lovCovRatio, false);
+        mChromosomePositionCodec.addEncodedChrPosColumn(lowCovRatio, false);
 
-        CB_LOGGER.debug("low cov table: {}", lovCovRatio);
+        CB_LOGGER.debug("low cov table: {}", lowCovRatio);
 
-        return lovCovRatio;
+        return lowCovRatio;
     }
 
     @Nullable
     public static Multimap<String, LowCovBucket> calcConsolidateBuckets(final Table rawRatios,
-            final double medianReadCount)
+            final double medianReadDepth)
     {
-        int consolidationCount = calcConsolidationCount(medianReadCount);
+        int consolidationCount = calcConsolidationCount(medianReadDepth);
 
         if (consolidationCount == 1)
         {
-            CB_LOGGER.info("median read count: {}, not using sparse consolidation", medianReadCount);
+            CB_LOGGER.info("median read depth: {}, not using sparse consolidation", medianReadDepth);
             return null;
         }
 
-        CB_LOGGER.info("median read count: {}, sparse consolidation count: {}",
-                medianReadCount, consolidationCount);
+        CB_LOGGER.info("median read depth: {}, sparse consolidation count: {}",
+                medianReadDepth, consolidationCount);
 
         return consolidateIntoBuckets(rawRatios, consolidationCount);
     }

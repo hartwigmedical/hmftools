@@ -4,17 +4,15 @@
 
 ## Algorithm
 
-### Read counting and masking
-COBALT starts with the raw read counts per 1,000 base window for both normal and tumor samples by counting the number of alignment starts 
+### Calculating read depths and masking
+COBALT starts with finding the mean read depth per 1,000 base window for both normal and tumor samples by counting the number of alignment starts 
 in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
 Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
 
 ### GC normalisation
-Next we apply a GC normalization to calculate the read ratios. To do this we divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the ratio of the median to mean read count of all windows.    For some targeted region analyses the median read count may be very low due to low numbers of off target reads, and the use of discrete integers may restrict resolution.  We therefore modify the median with the following formula to improve the estimate:
+Next we apply a GC normalization to calculate the read ratios. To do this we divide the read depth of each window by the median read depth of
+all windows sharing the same GC content then normalise further to the ratio of the median to mean read depth of all windows.
 
-```
-modifiedMedian = median - 0.5 + (0.5 - proportion of depth windows with read depth < median) / (proportion of depth windows  with read depth = median)
-```
 ### Diploid normalisation
 
 The reference sample ratios have a further ‘diploid’ normalization applied to them to remove megabase scale GC biases. 
@@ -29,9 +27,13 @@ male sex chromosomes in addition to the following exceptions:
 | `TRISOMY_[X,21,13,18,15]` | X,21,13,18,15 | 1.5                |
 
 ### Depth window consoldiation
-Sparse information in COBALT may cause a noisy fit for lpWGS.  Therefore, we consolidate buckets to try to reach a median read count of at least 50 reads per bucket.  The ConsolidatedBucketSize is set to = clamp(roundToOneSigDigit(500 / medianTumorReadCount, 10, 1000).   This formula allows consolidation into buckets of up to 1000 depth windows.  For standard WGS this should have no effect as medianTumorReadCount >> 50. We should never consolidate across regions of more than 3Mb (so never across centromere).   Consolidation is not used in targeted sequencing mode. 
+Sparse information in COBALT may cause a noisy fit for lpWGS.  Therefore, we consolidate buckets to try to reach a median read depth of at
+least 8 per bucket. The ConsolidatedBucketSize is set to = clamp(roundToOneSigDigit(80 / medianTumorReadCount, 10, 1000).   This formula allows
+consolidation into buckets of up to 1000 depth windows.  For standard WGS this should have no effect as medianTumorReadDepth >> 8. We should
+never consolidate across regions of more than 3Mb (so never across centromere).   Consolidation is not used in targeted sequencing mode. 
 
-For the consolidated buckets, the mean GC ratio for both tumor and reference is calculated for the consolidated bucket and set to the centre window in the consolidated bucket.  The other buckets are masked.
+For the consolidated buckets, the mean GC ratio for both tumor and reference is calculated for the consolidated bucket and set to the centre
+window in the consolidated bucket.  The other buckets are masked.
 
 ### Germline chromosomal aberrations
 

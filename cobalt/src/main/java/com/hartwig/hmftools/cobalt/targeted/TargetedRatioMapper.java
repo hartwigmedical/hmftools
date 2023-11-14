@@ -112,7 +112,7 @@ public class TargetedRatioMapper implements RatioMapper
         CB_LOGGER.info("off target after consolidation: \n{}", offTargetRatios);
 
         // apply gc normalisation
-        GcNormalizedRatioMapper gcNormalizedRatioMapper = new GcNormalizedRatioMapper(true);
+        GcNormalizedRatioMapper gcNormalizedRatioMapper = new GcNormalizedRatioMapper();
         offTargetRatios = gcNormalizedRatioMapper.mapRatios(offTargetRatios);
 
         CB_LOGGER.info("off target gc normalisation: \n{}", gcNormalizedRatioMapper.gcMedianReadDepthTable());

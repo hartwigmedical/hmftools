@@ -50,7 +50,7 @@ public class GcNormalisationTest
 
         (new ChromosomePositionCodec()).addEncodedChrPosColumn(ratios, false);
 
-        ratios = new GcNormalizedRatioMapper(false).mapRatios(ratios);
+        ratios = new GcNormalizedRatioMapper().mapRatios(ratios);
 
         // System.out.println(ratios);
 
