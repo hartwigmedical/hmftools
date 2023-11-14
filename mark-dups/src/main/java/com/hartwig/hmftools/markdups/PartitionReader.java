@@ -380,7 +380,8 @@ public class PartitionReader implements Consumer<List<Fragment>>
             mStats.addNonDuplicateCounts(nonDuplicateFragments);
         }
 
-        mBamWriter.setBoundaryPosition(position, true);
+        if(position > 0) // note the reversed fragment coordinate positions are skipped for updating sorted BAM writing routines
+            mBamWriter.setBoundaryPosition(position, true);
 
         mPcAcceptPositions.pause();
     }
