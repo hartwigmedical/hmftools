@@ -41,7 +41,6 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
-import static com.hartwig.hmftools.sage.quality.QualityCalculator.QUAL_INVALID;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
 import static htsjdk.samtools.CigarOperator.D;
@@ -84,6 +83,8 @@ public class ReadContextCounter implements VariantHotspot
     // local variant-related state
     private final int mMinNumberOfEvents;
     private final boolean mIsMnv;
+    private final boolean mIsSnv;
+    private final boolean mIsIndel;
     private final boolean mAllowWildcardMatchInCore;
     private final int mMaxCoreMismatches;
     private final int mAdjustedVariantPosition;
@@ -138,6 +139,8 @@ public class ReadContextCounter implements VariantHotspot
 
         // set local state to avoid testing on each read
         mIsMnv = variant.isMNV();
+        mIsSnv = variant.isSNV();
+        mIsIndel = variant.isIndel();
 
         mAllowWildcardMatchInCore = mVariant.isSNV() && mReadContext.microhomology().isEmpty();
 
@@ -180,6 +183,9 @@ public class ReadContextCounter implements VariantHotspot
     public ReadContext readContext() { return mReadContext; }
     public VariantTier tier() { return mTier; }
     public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
+    public boolean isSnv() { return mIsSnv; }
+    public boolean isMnv() { return mIsMnv; }
+    public boolean isIndel() { return mIsIndel; }
 
     @Override
     public String chromosome() { return mVariant.chromosome(); }
@@ -350,10 +356,13 @@ public class ReadContextCounter implements VariantHotspot
 
         adjustedNumOfEvents = max(mMinNumberOfEvents, adjustedNumOfEvents);
 
-        double quality = mQualityCalculator.calculateQualityScore(this, readIndex, record, adjustedNumOfEvents);
+        double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readIndex, record);
 
-        if(quality == QUAL_INVALID)
+        if(mConfig.Quality.HighBaseQualLimit > 0 && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
             return UNRELATED;
+
+        double quality = mQualityCalculator.calculateQualityScore(
+                this, readIndex, record, adjustedNumOfEvents, rawBaseQuality);
 
         MatchType matchType = MatchType.NONE;
 
@@ -391,7 +400,6 @@ public class ReadContextCounter implements VariantHotspot
                 mTotalNmCount += numberOfEvents;
                 mTotalAltNmCount += numberOfEvents;
 
-                double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readIndex, record);
                 mSupportAltBaseQualityTotal += rawBaseQuality;
 
                 registerRawSupport(rawContext);
