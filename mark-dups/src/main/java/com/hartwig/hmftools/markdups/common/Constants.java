@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.markdups.common;
 
-import com.google.common.annotations.VisibleForTesting;
-
 public class Constants
 {
     // BAM processing
@@ -25,4 +23,7 @@ public class Constants
 
     // performance
     public static final double LOCK_ACQUIRE_LONG_TIME_MS = 100;
+
+    // consensus building
+    public static int CONSENSUS_MAX_DEPTH = 100;
 }

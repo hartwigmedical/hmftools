@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.samtools.SupplementaryReadData.SUPP_PO
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_3;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
+import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_REPEAT_40;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_CIGAR;
 import static com.hartwig.hmftools.markdups.TestUtils.setSecondInPair;
@@ -23,7 +24,6 @@ import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.test.ReadIdGenerator;
 import com.hartwig.hmftools.markdups.common.HighDepthRegion;
 import com.hartwig.hmftools.markdups.common.PartitionData;
-import com.hartwig.hmftools.markdups.common.ReadUnmapper;
 
 import org.junit.Test;
 
@@ -42,6 +42,8 @@ public class MarkDuplicatesTest
     {
         mReadIdGen = new ReadIdGenerator();
         mRefGenome = new MockRefGenome();
+        mRefGenome.RefGenomeMap.put(CHR_1, REF_BASES_REPEAT_40);
+        mRefGenome.ChromosomeLengths.put(CHR_1, REF_BASES_REPEAT_40.length());
 
         MarkDupsConfig config = new MarkDupsConfig(1000, 1000, mRefGenome, false, false, false);
 

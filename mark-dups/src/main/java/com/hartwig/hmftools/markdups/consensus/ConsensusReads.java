@@ -1,10 +1,12 @@
 package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.Math.max;
-import static java.lang.String.format;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarBaseLength;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
+import static com.hartwig.hmftools.markdups.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_FAIL;
@@ -20,7 +22,6 @@ import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -33,6 +34,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ConsensusReads
 {
+    private final RefGenomeInterface mRefGenome;
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
 
@@ -43,6 +45,7 @@ public class ConsensusReads
 
     public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
     {
+        mRefGenome = refGenome;
         mBaseBuilder = new BaseBuilder(refGenome, consensusStats);
         mConsensusStats = consensusStats;
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
@@ -69,13 +72,15 @@ public class ConsensusReads
             return new ConsensusReadInfo(consensusRead, SUPPLEMENTARY);
         }
 
-        boolean isForward = !reads.get(0).getReadNegativeStrandFlag();
+        List<SAMRecord> readsView = reads.subList(0, min(CONSENSUS_MAX_DEPTH, reads.size()));
+
+        boolean isForward = !readsView.get(0).getReadNegativeStrandFlag();
         boolean hasIndels = false;
 
         // work out the outermost boundaries - soft-clipped and aligned - from amongst all reads
-        ConsensusState consensusState = new ConsensusState(isForward, reads.get(0).getContig());
+        ConsensusState consensusState = new ConsensusState(isForward, readsView.get(0).getContig(), mRefGenome);
 
-        for(SAMRecord read : reads)
+        for(SAMRecord read : readsView)
         {
             hasIndels |= read.getCigar().getCigarElements().stream().anyMatch(x -> x.getOperator() == I || x.getOperator() == D);
             consensusState.MapQuality = max(consensusState.MapQuality, read.getMappingQuality());
@@ -83,16 +88,16 @@ public class ConsensusReads
 
         if(hasIndels)
         {
-            mIndelConsensusReads.buildIndelComponents(reads,  consensusState);
+            mIndelConsensusReads.buildIndelComponents(readsView, consensusState);
 
             if(consensusState.outcome() == INDEL_FAIL)
             {
                 mConsensusStats.registerOutcome(INDEL_FAIL);
 
-                logInvalidConsensusRead(reads, null, groupIdentifier, consensusState, INDEL_FAIL.toString());
+                logInvalidConsensusRead(readsView, null, groupIdentifier, consensusState, INDEL_FAIL.toString());
 
                 // fall-back to selecting the read with the longest aligned bases, highest average qual
-                SAMRecord primaryRead = selectPrimaryRead(reads);
+                SAMRecord primaryRead = selectPrimaryRead(readsView);
                 SAMRecord consensusRead = copyPrimaryRead(primaryRead, groupIdentifier);
 
                 return new ConsensusReadInfo(consensusRead, consensusState.outcome());
@@ -100,12 +105,12 @@ public class ConsensusReads
         }
         else
         {
-            Map<String,CigarFrequency> cigarFrequencies = CigarFrequency.buildFrequencies(reads);
+            Map<String, CigarFrequency> cigarFrequencies = CigarFrequency.buildFrequencies(readsView);
 
-            SAMRecord selectedConsensusRead = cigarFrequencies.size() > 1 ? selectConsensusRead(cigarFrequencies) : reads.get(0);
+            SAMRecord selectedConsensusRead = cigarFrequencies.size() > 1 ? selectConsensusRead(cigarFrequencies) : readsView.get(0);
             consensusState.setBaseLength(selectedConsensusRead.getBaseQualities().length);
             consensusState.setBoundaries(selectedConsensusRead);
-            mBaseBuilder.buildReadBases(reads, consensusState);
+            mBaseBuilder.buildReadBases(readsView, consensusState);
             consensusState.setOutcome(ALIGNMENT_ONLY);
 
             consensusState.CigarElements.addAll(selectedConsensusRead.getCigar().getCigarElements());
@@ -113,14 +118,15 @@ public class ConsensusReads
 
         mConsensusStats.registerOutcome(consensusState.outcome());
 
-        SAMRecord consensusRead = createConsensusRead(consensusState, reads, groupIdentifier);
+        consensusState.setNumMutations();
+        SAMRecord consensusRead = createConsensusRead(consensusState, readsView, groupIdentifier);
 
         if(mValidateConsensusReads)
         {
             ValidationReason validReason = isValidConsensusRead(consensusRead);
             if(validReason != ValidationReason.OK)
             {
-                logInvalidConsensusRead(reads, consensusRead, groupIdentifier, consensusState, validReason.toString());
+                logInvalidConsensusRead(readsView, consensusRead, groupIdentifier, consensusState, validReason.toString());
             }
         }
 
@@ -266,6 +272,7 @@ public class ConsensusReads
         initialRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
 
         record.setInferredInsertSize(initialRead.getInferredInsertSize());
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, state.NumMutations);
         return record;
     }
 

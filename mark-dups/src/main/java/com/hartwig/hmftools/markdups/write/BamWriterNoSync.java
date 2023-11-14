@@ -51,7 +51,7 @@ public class BamWriterNoSync extends BamWriter
         if(mSortedBamWriter != null)
         {
             if(isLower)
-                mSortedBamWriter.setUpperSortablePosition(position);
+                mSortedBamWriter.setUpperWritablePosition(position);
             else
                 mSortedBamWriter.setUpperBoundPosition(position);
         }
@@ -93,9 +93,9 @@ public class BamWriterNoSync extends BamWriter
         {
             mSortedBamWriter.flush();
 
-            MD_LOGGER.debug("sorted-writer records written({} writes={} avg={} max={}) maxCache({} avgCheck={}) to BAM({})",
+            MD_LOGGER.debug("sorted-writer records written({} writes={} avg={} max={}) maxCache({}) to BAM({})",
                     mSortedBamWriter.written(), mSortedBamWriter.writeCount(), mSortedBamWriter.avgWriteCount(),
-                    mSortedBamWriter.maxWrite(), mSortedBamWriter.maxCache(), mSortedBamWriter.avgAssessSize(), filenamePart(mFilename));
+                    mSortedBamWriter.maxWrite(), mSortedBamWriter.maxCache(), filenamePart(mFilename));
         }
 
         if(mSamFileWriter != null)

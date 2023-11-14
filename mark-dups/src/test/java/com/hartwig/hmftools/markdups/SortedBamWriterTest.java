@@ -22,14 +22,12 @@ public class SortedBamWriterTest
     @Test
     public void testSortedReadCache()
     {
-        SortedBamConfig config = new SortedBamConfig(
-                10, 20, 5, 1,
-                0, 0.9, 0.5);
+        SortedBamConfig config = new SortedBamConfig(20, 5, 1);
 
         SortedBamWriter readCache = new SortedBamWriter(config, null);
 
         readCache.initialiseStartPosition(CHR_1, 50);
-        readCache.setUpperSortablePosition(100);
+        readCache.setUpperWritablePosition(100);
         readCache.setUpperBoundPosition(110);
 
         // first test boundaries
@@ -45,7 +43,7 @@ public class SortedBamWriterTest
 
         // add a record past the buffer position
         readCache.setUpperBoundPosition(170);
-        readCache.setUpperSortablePosition(120);
+        readCache.setUpperWritablePosition(120);
         readCache.addRecord(createRead(CHR_1, 170));
 
         assertEquals(2, readCache.written());
@@ -68,9 +66,8 @@ public class SortedBamWriterTest
 
         assertEquals(2, readCache.written());
         assertEquals(12, readCache.cached());
-        // assertEquals(20, readCache.capacity());
 
-        readCache.setUpperSortablePosition(190);
+        readCache.setUpperWritablePosition(190);
 
         readCache.addRecord(createRead(CHR_1, 200));
 
@@ -90,7 +87,6 @@ public class SortedBamWriterTest
 
         assertEquals(15, readCache.written());
         assertEquals(1, readCache.cached());
-        assertEquals(10, readCache.capacity());
         assertEquals(3, readCache.writeCount());
     }
 
