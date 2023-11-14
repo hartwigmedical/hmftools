@@ -355,7 +355,12 @@ public class ReadContextCounter implements VariantHotspot
         double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readIndex, record);
 
         if(mConfig.Quality.HighBaseQualLimit > 0 && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
+        {
+            if(rawContext.AltSupport)
+                countStrandedness(record);
+
             return UNRELATED;
+        }
 
         double quality = mQualityCalculator.calculateQualityScore(
                 this, readIndex, record, adjustedNumOfEvents, rawBaseQuality);
