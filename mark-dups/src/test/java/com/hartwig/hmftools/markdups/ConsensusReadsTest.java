@@ -9,6 +9,7 @@ import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_A;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_C;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.markdups.TestUtils.setSecondInPair;
+import static com.hartwig.hmftools.markdups.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
@@ -470,6 +471,36 @@ public class ConsensusReadsTest
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals("2M1D7M", readInfo.ConsensusRead.getCigarString());
+        assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
+    }
+
+    @Test
+    public void testMaxDepthFiltering()
+    {
+        List<SAMRecord> reads = Lists.newArrayList();
+
+        int posStart = 11;
+        int readLength = 10;
+        String consensusCigar = "10M";
+        String consensusBases = REF_BASES.substring(posStart, posStart + readLength);
+        for(int i = 0; i < CONSENSUS_MAX_DEPTH; ++i)
+        {
+            reads.add(createSamRecord(nextReadId(), posStart, consensusBases, consensusCigar, false));
+        }
+
+        int mutatedBaseIndex = 5;
+        StringBuilder mutatedBasesBuilder = new StringBuilder(consensusBases);
+        mutatedBasesBuilder.setCharAt(mutatedBaseIndex, mNextBaseMap.get(consensusBases.charAt(mutatedBaseIndex)));
+        String mutatedBases = mutatedBasesBuilder.toString();
+        for(int i = 0; i < CONSENSUS_MAX_DEPTH + 1; ++i)
+        {
+            reads.add(createSamRecord(nextReadId(), posStart, mutatedBases, consensusCigar, false));
+        }
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
+        assertEquals(consensusCigar, readInfo.ConsensusRead.getCigarString());
         assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
     }
 
