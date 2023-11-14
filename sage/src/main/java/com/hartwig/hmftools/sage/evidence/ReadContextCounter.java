@@ -93,8 +93,8 @@ public class ReadContextCounter implements VariantHotspot
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
 
-    private int mForwardStrand;
-    private int mReverseStrand;
+    private final StrandBiasData mFragmentStrandBias;
+    private final StrandBiasData mReadStrandBias;
 
     private final JitterData mJitterData;
     private int mImproperPairCount;
@@ -154,8 +154,9 @@ public class ReadContextCounter implements VariantHotspot
 
         mJitterData = new JitterData();
 
-        mForwardStrand = 0;
-        mReverseStrand = 0;
+        mFragmentStrandBias = new StrandBiasData();
+        mReadStrandBias = new StrandBiasData();
+
         mImproperPairCount = 0;
 
         mRawDepth = 0;
@@ -222,13 +223,8 @@ public class ReadContextCounter implements VariantHotspot
         return mJitterData.summary();
     }
 
-    public double strandBias()
-    {
-        double total = mForwardStrand + mReverseStrand;
-        return total > 0 ? mForwardStrand / total : 0.5;
-    }
-
-    public int strandDepth() { return mForwardStrand + mReverseStrand; }
+    public StrandBiasData fragmentStrandBias() { return mFragmentStrandBias; }
+    public StrandBiasData readStrandBias() { return mReadStrandBias; }
     public int improperPairCount() { return mImproperPairCount; }
 
     public int rawDepth() { return mRawDepth; }
@@ -833,26 +829,23 @@ public class ReadContextCounter implements VariantHotspot
 
     private void countStrandedness(final SAMRecord record)
     {
+        boolean readIsForward = !record.getReadNegativeStrandFlag();
+
+        mReadStrandBias.add(readIsForward);
+
         if(!record.getReadPairedFlag())
         {
-            if(record.getReadNegativeStrandFlag())
-                mReverseStrand++;
-            else
-                mForwardStrand++;
-
+            mFragmentStrandBias.add(readIsForward);
             return;
         }
 
         // make the distinction between F1R2 and F2R1
-        boolean firstIsForward = record.getFirstOfPairFlag() ? !record.getReadNegativeStrandFlag() : !record.getMateNegativeStrandFlag();
-        boolean secondIsForward = !record.getFirstOfPairFlag() ? !record.getReadNegativeStrandFlag() : !record.getMateNegativeStrandFlag();
+        boolean firstIsForward = record.getFirstOfPairFlag() ? readIsForward : !record.getMateNegativeStrandFlag();
+        boolean secondIsForward = !record.getFirstOfPairFlag() ? readIsForward : !record.getMateNegativeStrandFlag();
 
         if(firstIsForward != secondIsForward)
         {
-            if(firstIsForward)
-                mForwardStrand++;
-            else
-                mReverseStrand++;
+            mFragmentStrandBias.add(firstIsForward);
         }
     }
 
