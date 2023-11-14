@@ -16,7 +16,8 @@ public class CuppaPredictions
     public final boolean HasRnaPredictions;
     public final Categories.ClfName MainCombinedClfName;
 
-    public CuppaPredictions(final List<CuppaPredictionEntry> predictionEntries) throws IOException {
+    public CuppaPredictions(final List<CuppaPredictionEntry> predictionEntries) throws IOException
+    {
         PredictionEntries = predictionEntries;
         HasRnaPredictions = checkHasRnaPredictions();
         MainCombinedClfName = getMainCombinedClfName();
