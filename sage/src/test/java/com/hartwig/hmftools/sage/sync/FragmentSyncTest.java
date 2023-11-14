@@ -1,9 +1,9 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.sage.sync;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.compatibleCigars;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.compatibleCigars;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

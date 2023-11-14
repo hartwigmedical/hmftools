@@ -28,6 +28,8 @@ import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.sync.FragmentSync;
+import com.hartwig.hmftools.sage.sync.FragmentSyncReadHandler;
 
 import htsjdk.samtools.SAMRecord;
 

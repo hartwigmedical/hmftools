@@ -1,32 +1,26 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.sage.sync;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
-import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncOutcome.ORIG_READ_COORDS;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.BASE_MISMATCH;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.CIGAR_MISMATCH;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.COMBINED;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.EXCEPTION;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.NO_OVERLAP;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncType.NO_OVERLAP_CIGAR_DIFF;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.buildSyncedRead;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.getCombinedBaseAndQual;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.ignoreCigarOperatorMismatch;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.isDeleteOrSplit;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.overlappingCigarDiffs;
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncUtils.switchSoftClipToAligned;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncType.BASE_MISMATCH;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncType.CIGAR_MISMATCH;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncType.COMBINED;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncType.EXCEPTION;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncType.NO_OVERLAP;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncType.NO_OVERLAP_CIGAR_DIFF;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.buildSyncedRead;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.getCombinedBaseAndQual;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.ignoreCigarOperatorMismatch;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.isDeleteOrSplit;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.overlappingCigarDiffs;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.switchSoftClipToAligned;
 
-import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
-import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
@@ -39,7 +33,6 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordSetBuilder;
 
 public class FragmentSync
 {
@@ -92,13 +85,14 @@ public class FragmentSync
                 }
                 else if(syncOutcome.SyncType == CIGAR_MISMATCH)
                 {
+                    // favour the read with the longest INDEL where they disagree
                     int firstIndelLen = otherRecord.getCigar().getCigarElements().stream()
                             .filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
 
                     int secondIndelLen = record.getCigar().getCigarElements().stream()
                             .filter(x -> x.getOperator().isIndel()).mapToInt(x -> x.getLength()).sum();
 
-                    if(secondIndelLen < firstIndelLen)
+                    if(secondIndelLen > firstIndelLen)
                         mReadHandler.processReadRecord(record, false);
                     else
                         mReadHandler.processReadRecord(otherRecord, false);

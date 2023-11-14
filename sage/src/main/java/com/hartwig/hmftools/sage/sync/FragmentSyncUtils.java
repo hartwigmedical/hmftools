@@ -1,10 +1,10 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.sage.sync;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.sage.evidence.FragmentSyncOutcome.ORIG_READ_COORDS;
+import static com.hartwig.hmftools.sage.sync.FragmentSyncOutcome.ORIG_READ_COORDS;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
@@ -12,8 +12,6 @@ import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
 import java.util.List;
-
-import org.checkerframework.checker.units.qual.C;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
