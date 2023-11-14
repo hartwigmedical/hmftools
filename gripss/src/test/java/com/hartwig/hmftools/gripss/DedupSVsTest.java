@@ -3,6 +3,7 @@ package com.hartwig.hmftools.gripss;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.gripss.GripssTestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.loadSvDataCache;
 import static com.hartwig.hmftools.gripss.common.VcfUtils.VT_IMPRECISE;
@@ -68,7 +69,7 @@ public class DedupSVsTest
 
         // passing vs not
         Map<String, Object> tumorAttributes = Maps.newHashMap();
-        tumorAttributes.put(VT_QUAL, 2000);
+        tumorAttributes.put(VT_QUAL, DEFAULT_QUAL + 10); // higher than the other
 
         var1 = createSv(
                 mGripss.IdGen.nextEventId(), CHR_1, CHR_1, 100, 1000, POS_ORIENT, NEG_ORIENT, "",

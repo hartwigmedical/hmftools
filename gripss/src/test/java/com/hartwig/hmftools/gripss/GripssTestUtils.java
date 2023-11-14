@@ -77,7 +77,7 @@ public class GripssTestUtils
     public static final String LINE_INSERT_SEQ_A = "AAAAAAAAAAAAAAAAAAAA";
     public static final String LINE_INSERT_SEQ_T = "TTTTTTTTTTTTTTTTTTTT";
 
-    public static final double DEFAULT_QUAL = 1000;
+    public static final double DEFAULT_QUAL = 5000;
 
     public static StructuralVariantFactory defaultSvFactory()
     {
@@ -227,8 +227,8 @@ public class GripssTestUtils
         Map<String,Object> tumorAttributes = makeGenotypeAttributes(qual);
 
         // defaults to indicate a somatic variant
-        tumorAttributes.put(VT_VF, 100);
-        tumorAttributes.put(VT_BVF, 100);
+        tumorAttributes.put(VT_VF, 50);
+        tumorAttributes.put(VT_BVF, 50);
         tumorAttributes.put(VT_BSC, 100);
         tumorAttributes.put(VT_SR, 1);
 
@@ -373,7 +373,10 @@ public class GripssTestUtils
                 DEFAULT_PON_DISTANCE,
                 POLY_G_REGIONS_V37,
                 PMS2_V37,
-                false);
+                false,
+                30,
+                0.03,
+                0.005);
     }
 
     public static Map<String,Object> buildLinkAttributes(final String beid, final String beidl)

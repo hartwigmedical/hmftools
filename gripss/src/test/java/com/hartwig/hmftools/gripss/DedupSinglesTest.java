@@ -3,6 +3,7 @@ package com.hartwig.hmftools.gripss;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
+import static com.hartwig.hmftools.gripss.GripssTestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSgl;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.createSv;
 import static com.hartwig.hmftools.gripss.GripssTestUtils.loadSvDataCache;
@@ -66,7 +67,7 @@ public class DedupSinglesTest
         SvData var1 = mGripss.createDel(CHR_1, 101, 1000, DEFAULT_ATTRIBUTES,  DEFAULT_ATTRIBUTES);
 
         Map<String, Object> tumorAttributes = Maps.newHashMap();
-        tumorAttributes.put(VT_BAQ, 2000);
+        tumorAttributes.put(VT_BAQ, DEFAULT_QUAL + 10);
 
         SvData var2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
@@ -85,7 +86,7 @@ public class DedupSinglesTest
         SvData var1 = mGripss.createDel(CHR_1, 101, 1000, DEFAULT_ATTRIBUTES,  DEFAULT_ATTRIBUTES);
 
         Map<String, Object> tumorAttributes = Maps.newHashMap();
-        tumorAttributes.put(VT_BAQ, 2000);
+        tumorAttributes.put(VT_BAQ, DEFAULT_QUAL + 10);
 
         SvData var2 = createSgl(
                 mGripss.IdGen.nextEventId(), CHR_1, 100, POS_ORIENT, "",
@@ -239,7 +240,7 @@ public class DedupSinglesTest
     public void testCanStillMatchAgainstImprecise()
     {
         Map<String, Object> tumorAttributes = Maps.newHashMap();
-        tumorAttributes.put(VT_QUAL, 2000);
+        tumorAttributes.put(VT_QUAL, 6000);
 
         Map<String, Object> commonAttributes = Maps.newHashMap();
         commonAttributes.put(VT_CIPOS, new int[] {-10, 10});

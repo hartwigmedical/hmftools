@@ -105,7 +105,7 @@ public class VcfWriter
             if(filter == HARD_FILTERED)
                 continue;
 
-            newHeader.addMetaDataLine(new VCFFilterHeaderLine(FilterType.vcfName(filter), FilterType.vcfInfoString(filter)));
+            newHeader.addMetaDataLine(new VCFFilterHeaderLine(filter.vcfTag(), filter.vcfDesc()));
         }
 
         newHeader.addMetaDataLine(new VCFInfoHeaderLine(VT_REALIGN, 1, VCFHeaderLineType.Flag, "Variant was realigned"));
@@ -250,7 +250,7 @@ public class VcfWriter
         }
         else
         {
-            svFilters.forEach(x -> builder.filter(FilterType.vcfName(x)));
+            svFilters.forEach(x -> builder.filter(x.vcfTag()));
         }
 
         VariantContext variantContext = builder.make(true);
