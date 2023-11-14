@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarBaseLength;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.Constants.CONSENSUS_MAX_DEPTH;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
@@ -33,6 +34,7 @@ import htsjdk.samtools.SAMRecord;
 
 public class ConsensusReads
 {
+    private final RefGenomeInterface mRefGenome;
     private final BaseBuilder mBaseBuilder;
     private final IndelConsensusReads mIndelConsensusReads;
 
@@ -43,6 +45,7 @@ public class ConsensusReads
 
     public ConsensusReads(final RefGenomeInterface refGenome, final ConsensusStatistics consensusStats)
     {
+        mRefGenome = refGenome;
         mBaseBuilder = new BaseBuilder(refGenome, consensusStats);
         mConsensusStats = consensusStats;
         mIndelConsensusReads = new IndelConsensusReads(mBaseBuilder);
@@ -75,7 +78,7 @@ public class ConsensusReads
         boolean hasIndels = false;
 
         // work out the outermost boundaries - soft-clipped and aligned - from amongst all reads
-        ConsensusState consensusState = new ConsensusState(isForward, readsView.get(0).getContig());
+        ConsensusState consensusState = new ConsensusState(isForward, readsView.get(0).getContig(), mRefGenome);
 
         for(SAMRecord read : readsView)
         {
@@ -115,6 +118,7 @@ public class ConsensusReads
 
         mConsensusStats.registerOutcome(consensusState.outcome());
 
+        consensusState.setNumMutations();
         SAMRecord consensusRead = createConsensusRead(consensusState, readsView, groupIdentifier);
 
         if(mValidateConsensusReads)
@@ -268,6 +272,7 @@ public class ConsensusReads
         initialRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
 
         record.setInferredInsertSize(initialRead.getInferredInsertSize());
+        record.setAttribute(NUM_MUTATONS_ATTRIBUTE, state.NumMutations);
         return record;
     }
 

@@ -8,6 +8,8 @@ import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.UNSET;
 import java.util.Arrays;
 import java.util.List;
 
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+
 import org.apache.commons.compress.utils.Lists;
 
 import htsjdk.samtools.CigarElement;
@@ -18,6 +20,7 @@ public class ConsensusState
 {
     public final boolean IsForward;
     public final String Chromosome;
+    private final RefGenomeInterface mRefGenome;
     public byte[] Bases;
     public byte[] BaseQualities;
     public List<CigarElement> CigarElements;
@@ -27,13 +30,15 @@ public class ConsensusState
     public int MinAlignedPosStart;
     public int MaxAlignedPosEnd;
     public int MapQuality;
+    public int NumMutations;
 
     private ConsensusOutcome mOutcome;
 
-    public ConsensusState(final boolean isForward, final String chromosome)
+    public ConsensusState(final boolean isForward, final String chromosome, final RefGenomeInterface refGenome)
     {
         IsForward = isForward;
         Chromosome = chromosome;
+        mRefGenome = refGenome;
         Bases = null;
         BaseQualities = null;
         CigarElements = Lists.newArrayList();
@@ -43,6 +48,7 @@ public class ConsensusState
         MinAlignedPosStart = 0;
         MaxAlignedPosEnd = 0;
         MapQuality = 0;
+        NumMutations = 0;
 
         mOutcome = UNSET;
     }
@@ -127,5 +133,49 @@ public class ConsensusState
             else
                 CigarElements.add(0, new CigarElement(length, operator));
         }
+    }
+
+    public void setNumMutations()
+    {
+        NumMutations = 0;
+        String refBases = mRefGenome.getBaseString(Chromosome, MinAlignedPosStart, MaxAlignedPosEnd);
+        int baseIndex = 0;
+        int refBaseIndex = 0;
+        for(CigarElement cigarElement : CigarElements)
+        {
+            CigarOperator cigarOp = cigarElement.getOperator();
+            int elemLength = cigarElement.getLength();
+
+            if(isIndelOrMismatch(cigarOp))
+                NumMutations += elemLength;
+            else if(cigarOp == CigarOperator.M)
+            {
+                for(int i = 0; i < elemLength; i++)
+                {
+                    if(refBases.charAt(refBaseIndex + i) != (char) Bases[baseIndex + i])
+                        ++NumMutations;
+                }
+            }
+
+            if(cigarOp.consumesReadBases())
+                baseIndex += elemLength;
+
+            if(cigarOp.consumesReferenceBases())
+                refBaseIndex += elemLength;
+        }
+    }
+
+    private static boolean isIndelOrMismatch(CigarOperator cigarOp)
+    {
+        if(cigarOp == CigarOperator.I)
+            return true;
+
+        if(cigarOp == CigarOperator.D)
+            return true;
+
+        if(cigarOp == CigarOperator.X)
+            return true;
+
+        return false;
     }
 }

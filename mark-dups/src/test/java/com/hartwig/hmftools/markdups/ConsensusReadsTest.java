@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES;
@@ -10,7 +11,6 @@ import static com.hartwig.hmftools.markdups.TestUtils.REF_BASES_C;
 import static com.hartwig.hmftools.markdups.TestUtils.setBaseQualities;
 import static com.hartwig.hmftools.markdups.TestUtils.setSecondInPair;
 import static com.hartwig.hmftools.markdups.common.Constants.CONSENSUS_MAX_DEPTH;
-import static com.hartwig.hmftools.markdups.consensus.BaseBuilder.NO_BASE;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.ALIGNMENT_ONLY;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MATCH;
 import static com.hartwig.hmftools.markdups.consensus.ConsensusOutcome.INDEL_MISMATCH;
@@ -445,32 +445,30 @@ public class ConsensusReadsTest
     {
         int posStart = 11;
         int readLength = 10;
-        String readBasesWithRef = REF_BASES.substring(posStart, posStart + readLength);
-        SAMRecord read1 = createSamRecord(nextReadId(), posStart, readBasesWithRef, "1M1D8M", false);
+        int consensusDelIndex = 2;
+        StringBuilder consensusBasesBuilder = new StringBuilder(REF_BASES.substring(posStart, posStart + readLength + 1));
+        consensusBasesBuilder.deleteCharAt(consensusDelIndex);
+        String consensusBases = consensusBasesBuilder.toString();
+
+        SAMRecord read1 = createSamRecord(nextReadId(), posStart, consensusBases, "1M1D9M", false);
 
         int mutatedBaseIndex = 5;
-        char mutatedBase = mNextBaseMap.get(readBasesWithRef.charAt(mutatedBaseIndex));
-        StringBuilder mutatedBasesBuilder = new StringBuilder(readBasesWithRef);
+        char mutatedBase = mNextBaseMap.get(consensusBases.charAt(mutatedBaseIndex));
+        StringBuilder mutatedBasesBuilder = new StringBuilder(consensusBases);
         mutatedBasesBuilder.setCharAt(mutatedBaseIndex, mutatedBase);
         String mutatedBases = mutatedBasesBuilder.toString();
-        SAMRecord read2 = createSamRecord(nextReadId(), posStart, mutatedBases, "2M1D7M", false);
+        SAMRecord read2 = createSamRecord(nextReadId(), posStart, mutatedBases, "2M1D8M", false);
         setSecondInPair(read2);
 
-        SAMRecord read3 = createSamRecord(nextReadId(), posStart, mutatedBases, "2M1D7M", false);
+        SAMRecord read3 = createSamRecord(nextReadId(), posStart, mutatedBases, "2M1D8M", false);
         setSecondInPair(read3);
 
         List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
         ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
 
-        int delIdx = 2;
-        StringBuilder consensusBasesBuilder = new StringBuilder(readBasesWithRef);
-        consensusBasesBuilder.deleteCharAt(delIdx);
-        consensusBasesBuilder.append((char) NO_BASE);
-        String consensusBases = consensusBasesBuilder.toString();
-
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
-        assertEquals("2M1D7M", readInfo.ConsensusRead.getCigarString());
+        assertEquals("2M1D8M", readInfo.ConsensusRead.getCigarString());
         assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
     }
 
@@ -502,6 +500,129 @@ public class ConsensusReadsTest
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals(consensusCigar, readInfo.ConsensusRead.getCigarString());
         assertEquals(posStart, readInfo.ConsensusRead.getAlignmentStart());
+    }
+
+    @Test
+    public void testNumMutationsAttribute()
+    {
+        final List<SAMRecord> reads = Lists.newArrayList();
+
+        // no mutations
+        int posStart = 11;
+        String readBases = REF_BASES.substring(posStart, 21);
+        reads.add(createSamRecord(nextReadId(), posStart, readBases, "10M", false));
+        reads.add(createSamRecord(nextReadId(), posStart, readBases, "10M", false));
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(0, (int) readInfo.ConsensusRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+
+        // indels only
+        reads.clear();
+
+        reads.add(createSamRecord(nextReadId(), posStart, readBases, "1M2I1M3D3M", false));
+        reads.add(createSamRecord(nextReadId(), posStart, readBases, "1M2I1M3D3M", false));
+
+        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(INDEL_MATCH, readInfo.Outcome);
+        assertEquals(5, (int) readInfo.ConsensusRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+
+        // mismatches only
+        reads.clear();
+
+        StringBuilder mutatedBasesBuilder = new StringBuilder(readBases);
+        mutatedBasesBuilder.setCharAt(0, mNextBaseMap.get(readBases.charAt(0)));
+        mutatedBasesBuilder.setCharAt(1, mNextBaseMap.get(readBases.charAt(2)));
+        mutatedBasesBuilder.setCharAt(4, mNextBaseMap.get(readBases.charAt(4)));
+        String mutatedBases = mutatedBasesBuilder.toString();
+        reads.add(createSamRecord(nextReadId(), posStart, mutatedBases, "10M", false));
+        reads.add(createSamRecord(nextReadId(), posStart, mutatedBases, "10M", false));
+
+        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(3, (int) readInfo.ConsensusRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+
+        // indels and mismatches
+        reads.clear();
+
+        reads.add(createSamRecord(nextReadId(), posStart, mutatedBases, "2M1I1M3D3M", false));
+        reads.add(createSamRecord(nextReadId(), posStart, mutatedBases, "2M1I1M3D3M", false));
+
+        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(INDEL_MATCH, readInfo.Outcome);
+        assertEquals(7, (int) readInfo.ConsensusRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+
+        // left soft clip
+        reads.clear();
+
+        StringBuilder softClipBaseBuilder = new StringBuilder(readBases);
+        softClipBaseBuilder.setCharAt(0, mNextBaseMap.get(readBases.charAt(0)));
+        String softClipBases = softClipBaseBuilder.toString();
+        reads.add(createSamRecord(nextReadId(), posStart + 1, softClipBases, "1S9M", false));
+        reads.add(createSamRecord(nextReadId(), posStart + 1, softClipBases, "1S9M", false));
+
+        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(0, (int) readInfo.ConsensusRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+
+        // left hard clip
+        reads.clear();
+
+        StringBuilder hardClipBaseBuilder = new StringBuilder(readBases);
+        hardClipBaseBuilder.deleteCharAt(0);
+        String hardClipBases = hardClipBaseBuilder.toString();
+        reads.add(createSamRecord(nextReadId(), posStart + 1, hardClipBases, "1H9M", false));
+        reads.add(createSamRecord(nextReadId(), posStart + 1, hardClipBases, "1H9M", false));
+
+        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(0, (int) readInfo.ConsensusRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+    }
+
+    @Test
+    public void testNumMutationsAttributeIndelMismatch()
+    {
+        // no mutations
+        int posStart = 11;
+        int readLength = 10;
+        int consensusDelIndex = 2;
+        StringBuilder consensusBasesBuilder = new StringBuilder(REF_BASES.substring(posStart, posStart + readLength + 1));
+        consensusBasesBuilder.deleteCharAt(consensusDelIndex);
+        String consensusBases = consensusBasesBuilder.toString();
+
+        SAMRecord read1 = createSamRecord(nextReadId(), posStart, consensusBases, "1M1D9M", false);
+
+        SAMRecord read2 = createSamRecord(nextReadId(), posStart, consensusBases, "2M1D8M", false);
+        setSecondInPair(read2);
+
+        SAMRecord read3 = createSamRecord(nextReadId(), posStart, consensusBases, "2M1D8M", false);
+        setSecondInPair(read3);
+
+        List<SAMRecord> reads = Lists.newArrayList(read1, read2, read3);
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(1, (int) readInfo.ConsensusRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
+
+        // mismatch
+        int mutatedBaseIndex = 8;
+        StringBuilder mutatedBasesBuilder = new StringBuilder(consensusBases);
+        mutatedBasesBuilder.setCharAt(mutatedBaseIndex, mNextBaseMap.get(consensusBases.charAt(mutatedBaseIndex)));
+        String mutatedBases = mutatedBasesBuilder.toString();
+
+        read1 = createSamRecord(nextReadId(), posStart, mutatedBases, "1M1D9M", false);
+
+        read2 = createSamRecord(nextReadId(), posStart, mutatedBases, "2M1D8M", false);
+        setSecondInPair(read2);
+
+        read3 = createSamRecord(nextReadId(), posStart, mutatedBases, "2M1D8M", false);
+        setSecondInPair(read3);
+
+        reads = Lists.newArrayList(read1, read2, read3);
+        readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+
+        assertEquals(INDEL_MISMATCH, readInfo.Outcome);
+        assertEquals(2, (int) readInfo.ConsensusRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE));
     }
 
     private static SAMRecord createSamRecord(
