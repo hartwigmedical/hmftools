@@ -6,13 +6,16 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBuffe
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.util.BiConsumer;
 
@@ -74,7 +77,7 @@ public class DelimFileWriter
      * @param objects    iterable of objects to serialised.
      * @param mapper     function to populate a Row given an object of type T.
      */
-    public <T> void write(BufferedWriter writer, Iterable<String> columns, Iterable<T> objects, BiConsumer<T, Row> mapper)
+    public <T> void write(Writer writer, Iterable<String> columns, Iterable<T> objects, BiConsumer<T, Row> mapper)
     {
         try
         {
@@ -111,6 +114,17 @@ public class DelimFileWriter
         }
     }
 
+    // overload that allows using enum as columns
+    public <T> void write(String filename, Enum<?>[] columns, Iterable<T> objects, BiConsumer<T, Row> mapper)
+    {
+        write(filename, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), objects, mapper);
+    }
+
+    public <T> void write(Writer writer, Enum<?>[] columns, Iterable<T> objects, BiConsumer<T, Row> mapper)
+    {
+        write(writer, Arrays.stream(columns).map(Enum::name).collect(Collectors.toList()), objects, mapper);
+    }
+
     public static class Row
     {
         private final Map<String, Integer> mColumnIndexMap;
@@ -121,87 +135,91 @@ public class DelimFileWriter
             mColumnIndexMap = columnIndexMap;
             mValues = new String[numColumns];
         }
-        public void set(String key, String value)
+        public void set(String column, String value)
         {
-            Integer columnIndex = mColumnIndexMap.get(key);
+            Integer columnIndex = mColumnIndexMap.get(column);
             if (columnIndex == null)
             {
-                throw new IllegalArgumentException("invalid column: " + key);
+                throw new IllegalArgumentException("invalid column: " + column);
             }
             mValues[columnIndex] = value;
         }
-        public void set(String key, int value)
+        public void set(String column, int value)
         {
-            set(key, Integer.toString(value));
+            set(column, Integer.toString(value));
+        }
+
+        // we store null as empty string
+        public void setNull(String column)
+        {
+            set(column, sNullIndicator);
         }
 
         // store bool as 1 and 0
-        public void set(String key, boolean value)
+        public void set(String column, boolean value)
         {
-            set(key, value ? 1 : 0);
+            set(column, value ? 1 : 0);
         }
 
-        public void set(String key, char value)
+        public void set(String column, char value)
         {
-            set(key, String.valueOf(value));
+            set(column, String.valueOf(value));
         }
 
-        public void set(String key, byte value)
+        public void set(String column, byte value)
         {
-            set(key, Byte.toString(value));
+            set(column, Byte.toString(value));
         }
 
-        public void set(String key, double value)
+        public void set(String column, double value)
         {
-            set(key, value, sDefaultNumberFormat);
+            set(column, value, sDefaultNumberFormat);
         }
 
-        //
-        //  record.set("rate", 0.27562, "%.3f");
-        //
-        public void set(String key, double value, String format)
+        // row.set("rate", 0.27562, "%.3f");
+        public void set(String column, double value, String format)
         {
-            set(key, String.format(format, value));
+            set(column, String.format(format, value));
         }
 
-        // record.set("rate", 0.27572, new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH)));
-        public void set(String key, double value, NumberFormat format)
+        // row.set("rate", 0.27572, new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH)));
+        public void set(String column, double value, NumberFormat format)
         {
-            set(key, format.format(value));
+            set(column, format.format(value));
         }
 
-        // overloads to allow using enum as key
-        public void set(Enum<?> key, String value)
+        // overloads to allow using enum as column
+        public void set(Enum<?> column, String value)
         {
-            set(key.name(), value);
+            set(column.name(), value);
         }
-        public void set(Enum<?> key, int value)
+        public void set(Enum<?> column, int value)
         {
-            set(key.name(), value);
+            set(column.name(), value);
         }
-        public void set(Enum<?> key, boolean value)
+        public void set(Enum<?> column, boolean value)
         {
-            set(key.name(), value);
+            set(column.name(), value);
         }
-        public void set(Enum<?> key, char value)
+        public void set(Enum<?> column, char value)
         {
-            set(key.name(), value);
+            set(column.name(), value);
         }
-        public void set(Enum<?> key, byte value)
+        public void set(Enum<?> column, byte value)
         {
-            set(key.name(), value);
+            set(column.name(), value);
         }
-        public void set(Enum<?> key, double value)
+        public void set(Enum<?> column, double value)
         {
-            set(key.name(), value);
+            set(column.name(), value);
         }
-        public void set(Enum<?> key, double value, String format)
+        public void set(Enum<?> column, double value, String format)
         {
-            set(key.name(), value, format);
+            set(column.name(), value, format);
         }
-        public void set(Enum<?> key, double value, NumberFormat format)
+        public void set(Enum<?> column, double value, NumberFormat format)
         {
-            set(key.name(), value, format);
+            set(column.name(), value, format);
         }
     }
 }
