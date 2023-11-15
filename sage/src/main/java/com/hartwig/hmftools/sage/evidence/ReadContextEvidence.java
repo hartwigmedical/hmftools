@@ -28,6 +28,8 @@ import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.sync.FragmentSync;
+import com.hartwig.hmftools.sage.sync.FragmentSyncReadHandler;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -143,7 +145,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         List<ChrBaseRegion> sliceRegions = Lists.newArrayList();
 
-        int minGap = mConfig.getReadLength() * 2;
+        int minGap = max(mConfig.getReadLength() * 2, 100);
 
         int sliceLength = lastCandidate.position() - firstCandidate.position();
         int averageGap = sliceLength / candidates.size();
@@ -169,9 +171,11 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         int nthGap = gapDistances.get(nth - 1);
         int medianGap = gapDistances.get(gapCount / 2);
 
+        /*
         SG_LOGGER.debug("region({}:{}-{} len={}) candidates({}) gap(n={} nth={}, max={} avg={} median={})",
                 firstCandidate.chromosome(), firstCandidate.position(), lastCandidate.position(), sliceLength,
                 candidates.size(), nth, nthGap, gapDistances.get(0), averageGap, medianGap);
+        */
 
         ChrBaseRegion currentRegion = new ChrBaseRegion(firstCandidate.chromosome(), firstCandidate.position(), firstCandidate.position());
 

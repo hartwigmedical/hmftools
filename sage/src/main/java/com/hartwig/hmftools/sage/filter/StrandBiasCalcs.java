@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import com.hartwig.hmftools.common.utils.Doubles;
+import com.hartwig.hmftools.sage.evidence.StrandBiasData;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 
@@ -22,7 +23,6 @@ public class StrandBiasCalcs
     private static final double INVALID_STRAND_BIAS = -1;
     private static final double STRAND_BIAS_CHECK_THRESHOLD = 0.1;
 
-
     public StrandBiasCalcs()
     {
         mStrandBiasValues = new double[MAX_AD_VS_PROB + 1];
@@ -30,8 +30,11 @@ public class StrandBiasCalcs
         mMaxStrandBiasValue = mStrandBiasValues[mStrandBiasValues.length - 1];
     }
 
-    public boolean isDepthBelowProbability(double strandBias, int depth)
+    public boolean isDepthBelowProbability(final StrandBiasData strandBiasData)
     {
+        double strandBias = strandBiasData.bias();
+        int depth = strandBiasData.depth();
+
         double minStrandBias = min(strandBias, 1 - strandBias);
         if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)
             return false;

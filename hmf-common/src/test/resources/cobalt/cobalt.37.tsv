@@ -1,5 +1,5 @@
-chromosome	position	referenceReadCount	tumorReadCount	referenceGCRatio	tumorGCRatio	referenceGCDiploidRatio
-1	755001	274	714	1.1473	1.165	1.185
-1	756001	256	644	1.0951	1.0832	1.1311
-1	757001	300	596	1.2834	1.0025	1.3255
-1	758001	237	626	1.0227	1.062	1.0563
+chromosome	position	referenceReadDepth	tumorReadDepth	referenceGCRatio	tumorGCRatio	referenceGCDiploidRatio	referenceGCContent	tumorGCContent
+1	755001	2.74	7.14	1.1473	1.165	1.185	0.6	0.6
+1	756001	2.56	6.44	1.0951	1.0832	1.1311	0.6	0.6
+1	757001	3.00	5.96	1.2834	1.0025	1.3255	0.6	0.6
+1	758001	2.37	6.26	1.0227	1.062	1.0563	0.6	0.6

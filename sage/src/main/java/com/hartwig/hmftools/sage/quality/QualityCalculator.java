@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
@@ -47,9 +46,10 @@ public class QualityCalculator
     }
 
     public double calculateQualityScore(
-            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents)
+            final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents, double rawBaseQuality)
     {
-        double baseQuality = baseQuality(readContextCounter, readBaseIndex, record);
+        double baseQuality = readContextCounter.isIndel() ?
+                rawBaseQuality : baseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length());
 
         int mapQuality = record.getMappingQuality();
         boolean isImproperPair = isImproperPair(record);
@@ -67,7 +67,6 @@ public class QualityCalculator
 
         double modifiedQuality = max(0, min(modifiedMapQuality, modifiedBaseQuality));
 
-
         /*
         if(readContextCounter.logEvidence() && !SG_LOGGER.isTraceEnabled())
         {
@@ -82,17 +81,14 @@ public class QualityCalculator
 
     public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
 
-    public double baseQuality(final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record)
-    {
-        return !readContextCounter.variant().isIndel()
-                ? baseQuality(readContextCounter, readBaseIndex, record, readContextCounter.variant().ref().length())
-                : readContextCounter.readContext().avgCentreQuality(readBaseIndex, record);
-    }
 
     public static double rawBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
-        if(readContextCounter.variant().isIndel())
+        if(readContextCounter.isIndel())
             return readContextCounter.readContext().avgCentreQuality(readIndex, record);
+
+        if(readContextCounter.isSnv())
+            return record.getBaseQualities()[readIndex];
 
         int varLength = readContextCounter.variant().ref().length();
 
@@ -108,6 +104,14 @@ public class QualityCalculator
 
     private double baseQuality(final ReadContextCounter readContextCounter, int startReadIndex, final SAMRecord record, int length)
     {
+        if(readContextCounter.isSnv())
+        {
+            // simplified version of the MNV case below
+            byte rawQuality = record.getBaseQualities()[startReadIndex];
+            return recalibrateQuality(readContextCounter, readContextCounter.position(), 0, rawQuality);
+        }
+
+        // MNV case
         int maxIndex = min(startReadIndex + length, record.getBaseQualities().length) - 1;
         int maxLength = maxIndex - startReadIndex + 1;
 

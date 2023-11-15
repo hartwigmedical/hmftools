@@ -165,7 +165,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(!mCurrentRegion.containsPosition(read.getAlignmentStart())) // to avoid processing reads from the prior region again
             return;
 
-        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+        if(read.hasAttribute(CONSENSUS_READ_ATTRIBUTE)) // drop any consensus reads from previous MarkDup-generated BAMs runs
             return;
 
         if(mConfig.SpecificRegionsFilterType != NONE && readOutsideSpecifiedRegions(
@@ -375,9 +375,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
             mBamWriter.writeFragments(resolvedFragments, true);
 
             mStats.LocalComplete += resolvedFragments.stream().mapToInt(x -> x.readCount()).sum();
+
+            int nonDuplicateFragments = (int)resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).count();
+            mStats.addNonDuplicateCounts(nonDuplicateFragments);
         }
 
-        mBamWriter.setBoundaryPosition(position, true);
+        if(position > 0) // note the reversed fragment coordinate positions are skipped for updating sorted BAM writing routines
+            mBamWriter.setBoundaryPosition(position, true);
 
         mPcAcceptPositions.pause();
     }

@@ -150,7 +150,9 @@ public class VariantFilters
                 filters.add(SoftFilter.MIN_TUMOR_VAF.filterName());
         }
 
-        if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.strandBias(), primaryTumor.strandDepth()))
+
+        if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBias())
+        || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBias()))
         {
             filters.add(SoftFilter.STRAND_BIAS.filterName());
         }

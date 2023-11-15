@@ -35,6 +35,7 @@ import com.hartwig.hmftools.gripss.links.AssemblyLinks;
 import com.hartwig.hmftools.gripss.links.DsbLinkFinder;
 import com.hartwig.hmftools.gripss.links.LinkRescue;
 import com.hartwig.hmftools.gripss.links.LinkStore;
+import com.hartwig.hmftools.gripss.pon.PonCache;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotation;
 import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotator;
 

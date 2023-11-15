@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Comparators;
@@ -25,7 +26,7 @@ import tech.tablesaw.api.*;
 
 public class LowCoverageRatioMapper implements RatioMapper
 {
-    private static final String BUCKET_ID_COLUMN = "lovCovBucketId";
+    private static final String BUCKET_ID_COLUMN = "lowCovBucketId";
 
     private int mConsolidationCount = 0;
     private @Nullable Multimap<String, LowCovBucket> mConsolidateBoundaries;
@@ -57,6 +58,7 @@ public class LowCoverageRatioMapper implements RatioMapper
             mConsolidateBoundaries = consolidateIntoBuckets(inputRatios, mConsolidationCount);
         }
 
+        Objects.requireNonNull(mConsolidateBoundaries);
         CB_LOGGER.info("using {} sparse consolidated buckets, from {} input ratios",
                 mConsolidateBoundaries.size(), inputRatios.rowCount());
 
@@ -64,6 +66,7 @@ public class LowCoverageRatioMapper implements RatioMapper
     }
 
     // we create a pan window ratio by taking the mean count of super windows that combine multiple windows
+    @SuppressWarnings("UnstableApiUsage")
     private Table populateLowCoverageRatio(final Table rawRatios, Multimap<String, LowCovBucket> consolidateBoundaries)
     {
         // make sure the ratios chromosome code are sorted
@@ -91,6 +94,12 @@ public class LowCoverageRatioMapper implements RatioMapper
             long encodedChrPos = row.getLong(CobaltColumns.ENCODED_CHROMOSOME_POS);
             String rowChr = mChromosomePositionCodec.decodeChromosome(encodedChrPos);
             int pos = mChromosomePositionCodec.decodePosition(encodedChrPos);
+
+            if(rowChr.isEmpty())
+            {
+                CB_LOGGER.error("chr is empty, row: {}", row);
+                throw new RuntimeException();
+            }
 
             if (!chromosome.equals(rowChr))
             {
@@ -145,6 +154,8 @@ public class LowCoverageRatioMapper implements RatioMapper
                     }
                 }
 
+                // we do not assign bucket id for rows that have negative ratio, we do not want them
+                // to be in the summarize call
                 bucketIdCol.set(i, bucketId);
             }
         }
@@ -153,49 +164,49 @@ public class LowCoverageRatioMapper implements RatioMapper
         rawRatios.addColumns(bucketIdCol);
 
         //
-        Table lovCovRatio = rawRatios.summarize(
+        Table lowCovRatio = rawRatios.summarize(
                 CobaltColumns.RATIO,
                 CobaltColumns.GC_CONTENT,
                 AggregateFunctions.mean).by(BUCKET_ID_COLUMN);
 
-        CB_LOGGER.debug("low cov table: {}", lovCovRatio);
+        CB_LOGGER.debug("low cov table: {}", lowCovRatio);
 
         //
         // lowCovBucketId  |   Mean [gcContent]    |  Mean [bucketEncodedChrPos]  |      Mean [ratio]
         // fix up the column names
-        lovCovRatio.column("Mean [gcContent]").setName(CobaltColumns.GC_CONTENT);
-        lovCovRatio.column("Mean [ratio]").setName(CobaltColumns.RATIO);
+        lowCovRatio.column("Mean [gcContent]").setName(CobaltColumns.GC_CONTENT);
+        lowCovRatio.column("Mean [ratio]").setName(CobaltColumns.RATIO);
 
         // add is mappable column, we are not sure if this is needed yet. But if we want to pass
         // consolidated ratios to gc normalisation this is needed.
-        lovCovRatio.addColumns(BooleanColumn.create(CobaltColumns.IS_MAPPABLE,
-                Collections.nCopies(lovCovRatio.rowCount(), true)));
+        lowCovRatio.addColumns(BooleanColumn.create(CobaltColumns.IS_MAPPABLE,
+                Collections.nCopies(lowCovRatio.rowCount(), true)));
 
         // merge in the bucket, this is required to get the bucket position
-        lovCovRatio = lovCovRatio.joinOn(BUCKET_ID_COLUMN).leftOuter(bucketTable);
+        lowCovRatio = lowCovRatio.joinOn(BUCKET_ID_COLUMN).inner(bucketTable);
 
         // add the encoded chromosome pos columns
-        mChromosomePositionCodec.addEncodedChrPosColumn(lovCovRatio, false);
+        mChromosomePositionCodec.addEncodedChrPosColumn(lowCovRatio, false);
 
-        CB_LOGGER.debug("low cov table: {}", lovCovRatio);
+        CB_LOGGER.debug("low cov table: {}", lowCovRatio);
 
-        return lovCovRatio;
+        return lowCovRatio;
     }
 
     @Nullable
     public static Multimap<String, LowCovBucket> calcConsolidateBuckets(final Table rawRatios,
-            final double medianReadCount)
+            final double medianReadDepth)
     {
-        int consolidationCount = calcConsolidationCount(medianReadCount);
+        int consolidationCount = calcConsolidationCount(medianReadDepth);
 
         if (consolidationCount == 1)
         {
-            CB_LOGGER.info("median read count: {}, not using sparse consolidation", medianReadCount);
+            CB_LOGGER.info("median read depth: {}, not using sparse consolidation", medianReadDepth);
             return null;
         }
 
-        CB_LOGGER.info("median read count: {}, sparse consolidation count: {}",
-                medianReadCount, consolidationCount);
+        CB_LOGGER.info("median read depth: {}, sparse consolidation count: {}",
+                medianReadDepth, consolidationCount);
 
         return consolidateIntoBuckets(rawRatios, consolidationCount);
     }
@@ -222,16 +233,16 @@ public class LowCoverageRatioMapper implements RatioMapper
 
             boundaries.putAll(chromosome, consolidatedBuckets);
 
-            CB_LOGGER.info("chromosome: {}, lov buckets count: {}", chromosome, consolidatedBuckets.size());
+            CB_LOGGER.info("chromosome: {}, low cov buckets count: {}", chromosome, consolidatedBuckets.size());
         }
 
         return boundaries;
     }
 
-    static int calcConsolidationCount(final double medianReadCount)
+    static int calcConsolidationCount(final double medianReadDepth)
     {
-        // consolidation starts when mean read count <= 50 reads
-        double c = 500.0 / medianReadCount;
+        // consolidation starts when mean read depth <= 8
+        double c = 80.0 / medianReadDepth;
 
         if (c < 10.0)
         {
@@ -255,6 +266,7 @@ public class LowCoverageRatioMapper implements RatioMapper
     }
 
     // given the list of non masked windows, get the list of consolidated buckets
+    @SuppressWarnings("UnstableApiUsage")
     static List<LowCovBucket> consolidateIntoBuckets(List<Integer> windowPositions, int consolidationCount)
     {
         // make sure position is sorted

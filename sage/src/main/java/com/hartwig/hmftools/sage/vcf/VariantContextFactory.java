@@ -18,12 +18,12 @@ import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_ALLELIC_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_IMPROPER_PAIR;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_CONTEXT_JITTER;
-import static com.hartwig.hmftools.sage.vcf.VariantVCF.STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_STRAND_BIAS;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
@@ -120,7 +120,8 @@ public final class VariantContextFactory
                 .attribute(RAW_ALLELIC_DEPTH, new int[] { counter.rawRefSupport(), counter.rawAltSupport() })
                 .attribute(RAW_ALLELIC_BASE_QUALITY, new int[] { counter.rawRefBaseQuality(), counter.rawAltBaseQuality() })
                 .attribute(RAW_DEPTH, counter.rawDepth())
-                .attribute(STRAND_BIAS, counter.strandBias())
+                .attribute(FRAG_STRAND_BIAS, counter.fragmentStrandBias().bias())
+                .attribute(READ_STRAND_BIAS, counter.readStrandBias().bias())
                 .attribute(AVG_BASE_QUAL, (int)counter.averageAltBaseQuality())
                 .attribute(VCFConstants.ALLELE_FREQUENCY_KEY, counter.vaf())
                 .alleles(NO_CALL);

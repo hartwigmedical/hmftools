@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -128,12 +129,21 @@ public class GenomeLiftoverCache
         loadFile(lines);
     }
 
+    public static final int COL_CHR_37 = 0;
+    public static final int COL_START_37 = 1;
+    public static final int COL_END_37 = 2;
+    public static final int COL_ORIENT_37 = 3;
+
+    public static final int COL_CHR_38 = 4;
+    public static final int COL_START_38 = 5;
+    public static final int COL_END_38 = 6;
+    public static final int COL_ORIENT_38 = 7;
+
     public boolean loadFile(final List<String> lines)
     {
-        String header = lines.get(0);
-        lines.remove(0);
-
-        Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, TSV_DELIM);
+        // no header, expect exact columns as defined above
+        if(lines.get(0).startsWith("Chr37"))
+            lines.remove(0);
 
         List<CoordMapping> chrMappings = null;
         String currentChromosome = "";
@@ -159,14 +169,14 @@ public class GenomeLiftoverCache
 
             // note +1 for start positions since source file is in BED style
             // Chr37	Start37	End37	Orient37	Chr38 	Start38	End38	Orient38
-            boolean isReverse = values[fieldsIndexMap.get("Orient38")].equals(NEG_ORIENT);
+            boolean isReverse = values[COL_ORIENT_38].equals(NEG_ORIENT);
 
             chrMappings.add(new CoordMapping(
-                    values[fieldsIndexMap.get("Chr37")],
-                    Integer.parseInt(values[fieldsIndexMap.get("Start37")]) + 1,
-                    Integer.parseInt(values[fieldsIndexMap.get("End37")]),
-                    Integer.parseInt(values[fieldsIndexMap.get("Start38")]) + 1,
-                    Integer.parseInt(values[fieldsIndexMap.get("End38")]),
+                    values[COL_CHR_37],
+                    Integer.parseInt(values[COL_START_37]) + 1,
+                    Integer.parseInt(values[COL_END_37]),
+                    Integer.parseInt(values[COL_START_38]) + 1,
+                    Integer.parseInt(values[COL_END_38]),
                     isReverse));
         }
 

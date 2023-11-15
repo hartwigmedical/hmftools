@@ -5,7 +5,7 @@ import static java.lang.Math.round;
 public class DuplicateFrequency
 {
     public final int DuplicateCount;
-    public int Frequency;
+    public long Frequency;
     public int DualStrandFrequency;
 
     public DuplicateFrequency(final int duplicateCount)

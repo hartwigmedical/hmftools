@@ -80,7 +80,13 @@ public class Statistics
         addFrequency(frequency, 1, 0);
     }
 
-    private void addFrequency(int duplicateCount, int count, int dualStrandCount)
+    public void addNonDuplicateCounts(int fragmentCount)
+    {
+        if(fragmentCount > 0)
+            addFrequency(1, fragmentCount, 0);
+    }
+
+    private void addFrequency(int duplicateCount, long count, int dualStrandCount)
     {
         int rounded = roundFrequency(duplicateCount);
         DuplicateFrequency dupFreq = DuplicateFrequencies.get(rounded);
@@ -111,8 +117,8 @@ public class Statistics
 
     public void logStats()
     {
-        MD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({})",
-                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups);
+        MD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({}) consensus({})",
+                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, ConsensusStats);
 
         if(MD_LOGGER.isDebugEnabled())
         {
@@ -122,10 +128,11 @@ public class Statistics
             List<Integer> frequencies = DuplicateFrequencies.keySet().stream().collect(Collectors.toList());
             Collections.sort(frequencies);
 
-            for(Integer frequency : frequencies)
-            {
-                MD_LOGGER.debug("duplicate frequency({}={})", frequency, DuplicateFrequencies.get(frequency).Frequency);
-            }
+            String dupFreqStr = frequencies.stream()
+                    .map(x -> format("%d=%d", x, DuplicateFrequencies.get(x).Frequency))
+                    .collect(Collectors.joining(", "));
+
+            MD_LOGGER.debug("duplicate frequency: {}", dupFreqStr);
         }
 
         if(MissingMateCigar > 0)

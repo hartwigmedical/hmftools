@@ -47,6 +47,7 @@ public class UnmapReadsTest
     {
         CHR_LOCATION_MAP = Maps.newHashMap();
         CHR_LOCATION_MAP.put(CHR_1, Lists.newArrayList(new HighDepthRegion(500, 700, 0)));
+        CHR_LOCATION_MAP.put(CHR_2, Lists.newArrayList());
         CHR_LOCATION_MAP.put(CHR_3, Lists.newArrayList(new HighDepthRegion(500, 700, UNMAP_MIN_HIGH_DEPTH)));
 
         CHR_LOCATION_MAP.put(CHR_4, Lists.newArrayList(
@@ -199,7 +200,7 @@ public class UnmapReadsTest
 
         // when supplementaries are unmapped not all properties are unset since it will be dropped immediately
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(checkTransformRead(read, CHR_1));
+        assertTrue(checkTransformRead(read, CHR_2));
         assertTrue(read.getReadUnmappedFlag());
     }
 
@@ -263,7 +264,7 @@ public class UnmapReadsTest
         // Note that when we are unmapping a supplementary we do not bother unsetting all of its properties, because we will drop an unmapped
         // supplementary read immediately.
         assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
-        assertTrue(checkTransformRead(read, CHR_1));
+        assertTrue(checkTransformRead(read, CHR_2));
         assertTrue(read.getReadUnmappedFlag());
     }
 
@@ -399,6 +400,171 @@ public class UnmapReadsTest
 
         assertFalse(READ_UNMAPPER.checkTransformRead(read, regionState));
         assertEquals(3, regionState.LastMatchedRegionIndex.intValue());
+    }
+
+    @Test
+    public void testNoUnmapUnpaired()
+    {
+        // read not in unmap regions
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(READ_ID, CHR_1, 100, READ_BASES, READ_CIGAR, false, false, null);
+
+        assertFalse(checkTransformRead(read, CHR_1));
+        assertFalse(read.getReadUnmappedFlag());
+
+    }
+
+    @Test
+    public void testNoUnmapSoftClippedUnpaired()
+    {
+        // soft-clipped but not in an unmap region
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(
+                READ_ID, CHR_1, 100, READ_BASES, SOFT_CLIPPED_READ_CIGAR, false, false, null);
+
+        assertFalse(checkTransformRead(read, CHR_1));
+        assertFalse(read.getReadUnmappedFlag());
+    }
+
+    @Test
+    public void testUnmapReadSoftClippedUnpaired()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(
+                READ_ID, CHR_1, 550, READ_BASES, SOFT_CLIPPED_READ_CIGAR, false, false, null);
+
+        assertTrue(checkTransformRead(read, CHR_1));
+        assertTrue(read.getReadUnmappedFlag());
+        assertEquals(NO_POSITION, read.getAlignmentStart());
+        assertEquals(NO_CHROMOSOME_NAME, read.getReferenceName());
+    }
+
+    @Test
+    public void testSupplementarySoftClippedUnpaired()
+    {
+        // supp removed since it is in an unmap region and has a long SC
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(
+                READ_ID, CHR_1, 100, READ_BASES, READ_CIGAR, false,
+                false,
+                new SupplementaryReadData(CHR_1, 550, SUPP_POS_STRAND, SOFT_CLIPPED_READ_CIGAR, 60));
+
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        assertTrue(checkTransformRead(read, CHR_1));
+        assertFalse(read.getReadUnmappedFlag());
+        assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    @Test
+    public void testUnmapSupplementaryWhenPrimaryIsUnmappedSoftClippedUnpaired()
+    {
+        // Note that the suppReadData for a supplementary read refers to the associated primary read
+        SupplementaryReadData suppReadData = new SupplementaryReadData(
+                CHR_1, 550, SUPP_POS_STRAND, SOFT_CLIPPED_READ_CIGAR, 60);
+
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(
+                READ_ID, CHR_2, 100, READ_BASES, READ_CIGAR, false,
+                true, suppReadData);
+
+        // when supplementaries are unmapped not all properties are unset since it will be dropped immediately
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        assertTrue(checkTransformRead(read, CHR_2));
+        assertTrue(read.getReadUnmappedFlag());
+    }
+
+    @Test
+    public void testUnpairedChimericNotUnmapped()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecord(
+                READ_ID, CHR_1, 550, READ_BASES, READ_CIGAR, CHR_2, 600, false,
+                false, null, true, READ_CIGAR);
+        read.setReadPairedFlag(false);
+
+        assertFalse(checkTransformRead(read, CHR_1));
+        assertFalse(read.getReadUnmappedFlag());
+    }
+
+    @Test
+    public void testUnmapReadHighDepthUnpaired()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(READ_ID, CHR_3, 600, READ_BASES, READ_CIGAR, false, false, null);
+
+        assertTrue(checkTransformRead(read, CHR_3));
+        assertTrue(read.getReadUnmappedFlag());
+        assertEquals(NO_POSITION, read.getAlignmentStart());
+        assertEquals(NO_CHROMOSOME_NAME, read.getReferenceName());
+    }
+
+    @Test
+    public void testUnmapSupplementaryHighDepthUnpaired()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(
+                READ_ID, CHR_3, 400, READ_BASES, READ_CIGAR, false,
+                false,
+                new SupplementaryReadData(CHR_3, 600, SUPP_POS_STRAND, READ_CIGAR, 60));
+
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        assertTrue(checkTransformRead(read, CHR_3));
+        assertFalse(read.getReadUnmappedFlag());
+        assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    @Test
+    public void testUnmapMultipleSupplementaryAlignmentsUnpaired()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(
+                READ_ID, CHR_1, 100, READ_BASES, READ_CIGAR, false,
+                false, null);
+
+        SupplementaryReadData suppData1 = new SupplementaryReadData(CHR_1, 1000, SUPP_POS_STRAND, READ_CIGAR, 60);
+        SupplementaryReadData suppData2 = new SupplementaryReadData(CHR_2, 6000, SUPP_POS_STRAND, READ_CIGAR, 60);
+        SupplementaryReadData suppData3 = new SupplementaryReadData(CHR_3, 600, SUPP_POS_STRAND, READ_CIGAR, 60);
+
+        StringJoiner saJoiner = new StringJoiner(ALIGNMENTS_DELIM);
+        saJoiner.add(suppData1.asSamTag());
+        saJoiner.add(suppData2.asSamTag());
+        saJoiner.add(suppData3.asSamTag());
+
+        read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saJoiner.toString());
+
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        assertTrue(checkTransformRead(read, CHR_1));
+        assertFalse(read.getReadUnmappedFlag());
+        assertFalse(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+    }
+
+    @Test
+    public void testUnmapSupplementaryWhenUnmappingAssociatedSupplementaryUnpaired()
+    {
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(
+                READ_ID, CHR_1, 100, READ_BASES, READ_CIGAR, false,
+                true, null);
+
+        SupplementaryReadData suppDataPrimary = new SupplementaryReadData(CHR_3, 100, SUPP_POS_STRAND, READ_CIGAR, 60);
+        SupplementaryReadData suppDataOther = new SupplementaryReadData(CHR_3, 500, SUPP_POS_STRAND, READ_CIGAR, 60);
+
+        StringJoiner saJoiner = new StringJoiner(ALIGNMENTS_DELIM);
+        saJoiner.add(suppDataPrimary.asSamTag());
+        saJoiner.add(suppDataOther.asSamTag());
+
+        read.setAttribute(SUPPLEMENTARY_ATTRIBUTE, saJoiner.toString());
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+
+        // Note that when we are unmapping a supplementary we do not bother unsetting all of its properties, because we will drop an
+        // unmapped supplementary read immediately.
+        assertTrue(checkTransformRead(read, CHR_3));
+        assertTrue(read.getReadUnmappedFlag());
+    }
+
+    @Test
+    public void testUnmapSupplementaryWhenPrimaryIsUnmappedUnpaired()
+    {
+        // Note that the suppReadData for a supplementary read refers to the associated primary read.
+        SupplementaryReadData suppReadData = new SupplementaryReadData(CHR_3, 550, SUPP_POS_STRAND, READ_CIGAR, 60);
+
+        SAMRecord read = SamRecordTestUtils.createSamRecordUnpaired(READ_ID, CHR_2, 100, READ_BASES, READ_CIGAR, false, true, suppReadData);
+
+        // Note that when we are unmapping a supplementary we do not bother unsetting all of its properties, because we will drop an unmapped
+        // supplementary read immediately.
+        assertTrue(read.hasAttribute(SUPPLEMENTARY_ATTRIBUTE));
+        assertTrue(checkTransformRead(read, CHR_2));
+        assertTrue(read.getReadUnmappedFlag());
     }
 
     private boolean checkTransformRead(final SAMRecord read, final String chromosome)

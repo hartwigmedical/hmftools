@@ -17,18 +17,18 @@ public class LowCoverageRatioMapperTest
     @Test
     public void testCalcConsoliationCount()
     {
-        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(100.0));
-        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(51.0));
+        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(16.0));
+        assertEquals(1, LowCoverageRatioMapper.calcConsolidationCount(8.1));
 
-        // starting from 50 reads we consolidate
-        assertEquals(10, LowCoverageRatioMapper.calcConsolidationCount(50.0));
-        assertEquals(30, LowCoverageRatioMapper.calcConsolidationCount(20.0));
-        assertEquals(100, LowCoverageRatioMapper.calcConsolidationCount(5.0));
-        assertEquals(300, LowCoverageRatioMapper.calcConsolidationCount(2.0));
-        assertEquals(500, LowCoverageRatioMapper.calcConsolidationCount(1.0));
-        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.5));
-        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.05));
-        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.001));
+        // starting from 8.0 reads depth we consolidate
+        assertEquals(10, LowCoverageRatioMapper.calcConsolidationCount(8.0));
+        assertEquals(30, LowCoverageRatioMapper.calcConsolidationCount(3.0));
+        assertEquals(100, LowCoverageRatioMapper.calcConsolidationCount(0.8));
+        assertEquals(300, LowCoverageRatioMapper.calcConsolidationCount(0.3));
+        assertEquals(500, LowCoverageRatioMapper.calcConsolidationCount(0.15));
+        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.08));
+        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.008));
+        assertEquals(1000, LowCoverageRatioMapper.calcConsolidationCount(0.00015));
     }
 
     @Test
@@ -132,6 +132,7 @@ public class LowCoverageRatioMapperTest
         assertEquals(20001, buckets.get(2).endPosition);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void appendReadRatio(Table table, String chromosome, int position, double ratio)
     {
         Row row = table.appendRow();

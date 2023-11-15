@@ -220,8 +220,7 @@ public class PonAnnotation extends AnnotationData implements Callable
                 {
                     if(currentCache != null && !currentCache.isComplete())
                     {
-                        PV_LOGGER.debug("chr({}) loaded {} PON entries, strCache({})",
-                                currentCache.Chromosome, currentCache.entryCount(), mStringCache.size());
+                        PV_LOGGER.debug("chr({}) loaded {} PON entries", currentCache.Chromosome, currentCache.entryCount());
 
                         currentCache.setComplete();
                     }

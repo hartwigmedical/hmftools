@@ -66,7 +66,7 @@ public class LoadCuppa
         Options options = new Options();
 
         options.addOption(SAMPLE, true, "Sample for which we are going to load the CUPPA results");
-        options.addOption(CUPPA_RESULTS_CSV, true, "Path towards the CUPPA conclusion txt file");
+        options.addOption(CUPPA_RESULTS_CSV, true, "Path to the *.cup.data.csv file");
 
         addDatabaseCmdLineArgs(options);
 

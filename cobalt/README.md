@@ -4,17 +4,15 @@
 
 ## Algorithm
 
-### Read counting and masking
-COBALT starts with the raw read counts per 1,000 base window for both normal and tumor samples by counting the number of alignment starts 
+### Calculating read depths and masking
+COBALT starts with finding the mean read depth per 1,000 base window for both normal and tumor samples by counting the number of alignment starts 
 in the respective bam files with a mapping quality score of at least 10 that is neither unmapped, duplicated, secondary, nor supplementary. 
 Windows with a GC content less than 0.2 or greater than 0.6 or with an average mappability below 0.85 are excluded from further analysis.
 
 ### GC normalisation
-Next we apply a GC normalization to calculate the read ratios. To do this we divide the read count of each window by the median read count of all windows sharing the same GC content then normalise further to the ratio of the median to mean read count of all windows.    For some targeted region analyses the median read count may be very low due to low numbers of off target reads, and the use of discrete integers may restrict resolution.  We therefore modify the median with the following formula to improve the estimate:
+Next we apply a GC normalization to calculate the read ratios. To do this we divide the read depth of each window by the median read depth of
+all windows sharing the same GC content then normalise further to the ratio of the median to mean read depth of all windows.
 
-```
-modifiedMedian = median - 0.5 + (0.5 - proportion of depth windows with read count < median) / (proportion of depth windows  with read count = median)
-```
 ### Diploid normalisation
 
 The reference sample ratios have a further ‘diploid’ normalization applied to them to remove megabase scale GC biases. 
@@ -29,9 +27,13 @@ male sex chromosomes in addition to the following exceptions:
 | `TRISOMY_[X,21,13,18,15]` | X,21,13,18,15 | 1.5                |
 
 ### Depth window consoldiation
-Sparse information in COBALT may cause a noisy fit for lpWGS.  Therefore, we consolidate buckets to try to reach a median read count of at least 50 reads per bucket.  The ConsolidatedBucketSize is set to = clamp(roundToOneSigDigit(500 / medianTumorReadCount, 10, 1000).   This formula allows consolidation into buckets of up to 1000 depth windows.  For standard WGS this should have no effect as medianTumorReadCount >> 50. We should never consolidate across regions of more than 3Mb (so never across centromere).   Consolidation is not used in targeted sequencing mode. 
+Sparse information in COBALT may cause a noisy fit for lpWGS.  Therefore, we consolidate buckets to try to reach a median read depth of at
+least 8 per bucket. The ConsolidatedBucketSize is set to = clamp(roundToOneSigDigit(80 / medianTumorReadCount, 10, 1000).   This formula allows
+consolidation into buckets of up to 1000 depth windows.  For standard WGS this should have no effect as medianTumorReadDepth >> 8. We should
+never consolidate across regions of more than 3Mb (so never across centromere).   Consolidation is not used in targeted sequencing mode. 
 
-For the consolidated buckets, the mean GC ratio for both tumor and reference is calculated for the consolidated bucket and set to the centre window in the consolidated bucket.  The other buckets are masked.
+For the consolidated buckets, the mean GC ratio for both tumor and reference is calculated for the consolidated bucket and set to the centre
+window in the consolidated bucket.  The other buckets are masked.
 
 ### Germline chromosomal aberrations
 
@@ -141,13 +143,13 @@ The following tab delimited files are written:
 
 TUMOR.cobalt.ratio.tsv.gz contains the counts and ratios of the reference and tumor:
 
-| Chromosome | Position | ReferenceReadCount | TumorReadCount | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio |
+| Chromosome | Position | ReferenceReadDepth | TumorReadDepth | ReferenceGCRatio | TumorGCRatio | ReferenceGCDiploidRatio |
 |------------|----------|--------------------|----------------|------------------|--------------|-------------------------|
-| 1          | 4000001  | 204                | 504            | 0.8803           | 0.855        | 0.8982                  |
-| 1          | 4001001  | 203                | 570            | 0.8429           | 0.9149       | 0.86                    |
-| 1          | 4002001  | 155                | 473            | 0.6463           | 0.7654       | 0.6594                  |
-| 1          | 4003001  | 260                | 566            | 1.098            | 0.9328       | 1.1203                  |
-| 1          | 4004001  | 256                | 550            | 1.1144           | 0.9428       | 1.1371                  |
+| 1          | 4000001  | 20.4               | 50.4           | 0.8803           | 0.855        | 0.8982                  |
+| 1          | 4001001  | 20.3               | 57.0           | 0.8429           | 0.9149       | 0.86                    |
+| 1          | 4002001  | 15.5               | 47.3           | 0.6463           | 0.7654       | 0.6594                  |
+| 1          | 4003001  | 26.0               | 56.6           | 1.098            | 0.9328       | 1.1203                  |
+| 1          | 4004001  | 25.6               | 55.0           | 1.1144           | 0.9428       | 1.1371                  |
 
 TUMOR.cobalt.ratio.pcf and REFERENCE.cobalt.ratio.pcf contain the segmented regions determined from the ratios.
 

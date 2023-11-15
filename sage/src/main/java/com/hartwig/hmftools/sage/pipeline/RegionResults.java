@@ -12,8 +12,7 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.evidence.EvidenceStats;
-import com.hartwig.hmftools.sage.evidence.FragmentLengthData;
-import com.hartwig.hmftools.sage.evidence.FragmentSyncType;
+import com.hartwig.hmftools.sage.sync.FragmentSyncType;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 public class RegionResults

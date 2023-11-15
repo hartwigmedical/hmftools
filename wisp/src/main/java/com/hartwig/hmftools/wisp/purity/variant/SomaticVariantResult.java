@@ -19,9 +19,9 @@ public class SomaticVariantResult
     public final double ClonalDropoutRate;
     public final double WeightedAvgDepth;
     public final int TotalFragments;
-    public final int UmiRefDual;
+    public final int TotalDualFragments;
     public final int AlleleFragments;
-    public final int UmiAlleleDual;
+    public final int AlleleDualFragments;
 
     public final double TumorVaf;
     public final double AdjustedTumorVaf;
@@ -50,9 +50,9 @@ public class SomaticVariantResult
         Method = method;
         WeightedAvgDepth = weightedAvgDepth;
         TotalFragments = sampleCounts.totalFragments();
-        UmiRefDual = umiTypeCounts.TotalDual;
+        TotalDualFragments = umiTypeCounts.TotalDual;
         AlleleFragments = sampleCounts.alleleFragments();
-        UmiAlleleDual = umiTypeCounts.AlleleDual;
+        AlleleDualFragments = umiTypeCounts.AlleleDual;
         TumorVaf = tumorVaf;
         AdjustedTumorVaf = adjustedTumorVaf;
         RawSomaticPurity = rawSomaticPurity;
@@ -74,8 +74,8 @@ public class SomaticVariantResult
         ClonalDropoutRate = 0;
         WeightedAvgDepth = 0;
         TotalFragments = 0;
-        UmiRefDual = 0;
-        UmiAlleleDual = 0;
+        TotalDualFragments = 0;
+        AlleleDualFragments = 0;
         AlleleFragments = 0;
         TumorVaf = 0;
         AdjustedTumorVaf = 0;
@@ -102,9 +102,9 @@ public class SomaticVariantResult
         sj.add("DualSNVProbability");
         sj.add("LodPurity");
         sj.add("TotalFragments");
-        sj.add("UmiRefDual");
+        sj.add("TotalDual");
         sj.add("AlleleFragments");
-        sj.add("UmiAlleleDual");
+        sj.add("AlleleDual");
         sj.add("TumorVaf");
         sj.add("AdjustedTumorVaf");
         sj.add("WeightedAvgDepth");
@@ -129,9 +129,9 @@ public class SomaticVariantResult
 
         // inputs
         sj.add(format("%d", TotalFragments));
-        sj.add(format("%d", UmiRefDual));
+        sj.add(format("%d", TotalDualFragments));
         sj.add(format("%d", AlleleFragments));
-        sj.add(format("%d", UmiAlleleDual));
+        sj.add(format("%d", AlleleDualFragments));
         sj.add(formatPurityValue(TumorVaf));
         sj.add(formatPurityValue(AdjustedTumorVaf));
         sj.add(format("%.0f", WeightedAvgDepth));

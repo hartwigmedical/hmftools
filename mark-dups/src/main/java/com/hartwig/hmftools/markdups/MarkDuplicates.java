@@ -106,8 +106,7 @@ public class MarkDuplicates
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
         int totalUnwrittenFragments = 0;
-        ConsensusStatistics consensusStats = new ConsensusStatistics();
-        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome, consensusStats);
+        ConsensusReads consensusReads = new ConsensusReads(mConfig.RefGenome);
         consensusReads.setDebugOptions(mConfig.RunChecks);
 
         // write any orphaned or remaining fragments (can be supplementaries)
@@ -130,7 +129,7 @@ public class MarkDuplicates
         Statistics combinedStats = new Statistics();
         partitionReaders.forEach(x -> combinedStats.merge(x.statistics()));
         partitionDataStore.partitions().forEach(x -> combinedStats.merge(x.statistics()));
-        combinedStats.ConsensusStats.merge(consensusStats);
+        combinedStats.ConsensusStats.merge(consensusReads.consensusStats());
 
         // free up any processing state
         partitionReaders.clear();
@@ -175,8 +174,6 @@ public class MarkDuplicates
                     combinedStats.UmiStats.writeUmiBaseFrequencyStats(mConfig);
                 }
             }
-
-            MD_LOGGER.info("consensus stats: {}", combinedStats.ConsensusStats.toString());
         }
 
         logPerformanceStats(combinedPerfCounters, partitionDataStore);

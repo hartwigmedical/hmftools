@@ -10,16 +10,6 @@ public final class Strings
         return dest.isEmpty() ? source : dest + delim + source;
     }
 
-    public static String appendStrList(final List<String> sourceList, char delim)
-    {
-        if(sourceList.isEmpty())
-            return "";
-
-        final StringJoiner combinedStr = new StringJoiner(String.valueOf(delim));
-        sourceList.forEach(x -> combinedStr.add(x));
-        return sourceList.toString();
-    }
-
     public static String reverseString(final String str)
     {
         String reverse = "";

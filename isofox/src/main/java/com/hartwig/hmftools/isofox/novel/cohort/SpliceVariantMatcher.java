@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.NOVEL_EXON;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.SKIPPED_EXONS;
 import static com.hartwig.hmftools.common.rna.AltSpliceJunctionType.UNKNOWN;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
-import static com.hartwig.hmftools.common.utils.Strings.appendStrList;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
@@ -42,6 +41,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -530,9 +530,10 @@ public class SpliceVariantMatcher
             // acceptor donor based on gene strand and which end of the splice junction is matched
             AcceptorDonorType acceptorDonorType = ((closeIndex == SE_START) == (geneData.Strand == POS_STRAND)) ? DONOR : ACCEPTOR;
 
+            String transListStr = allTransNames.stream().collect(Collectors.joining(ITEM_DELIM));
+
             writeMatchData(
-                    sampleId, variant, geneData, altSJ, NOVEL, acceptorDonorType, -1, null,
-                    appendStrList(allTransNames, ITEM_DELIM.charAt(0)));
+                    sampleId, variant, geneData, altSJ, NOVEL, acceptorDonorType, -1, null, transListStr);
 
             closeAltSJs.add(altSJ);
         }

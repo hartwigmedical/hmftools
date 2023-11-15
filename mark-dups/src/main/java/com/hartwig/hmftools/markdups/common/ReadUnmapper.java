@@ -16,8 +16,6 @@ import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CHROMOSOME_
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UNMAP_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateNegativeStrand;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.mateUnmapped;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_CHIMERIC_FRAGMENT_LENGTH_MAX;
 import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MAX_NON_OVERLAPPING_BASES;
@@ -81,7 +79,7 @@ public class ReadUnmapper
 
         /* Criteria for unmapping a read:
             - falls within a region of high depth
-            - discordant - INV, BND, one read unmapped or fragment length > 1000
+            - discordant - INV, BND, one read unmapped or fragment length > 1000 (only for paired reads)
             - soft-clip bases > 20
 
            Scenarios & logic:
@@ -89,12 +87,20 @@ public class ReadUnmapper
            - check the read's coords, its mate's coords and any supplementary alignment coords vs the loaded unmapping regions
            - for any overlap with a non-high-depth region, additionally check discordant and soft-clip bases as above
            -
-           - supplementaries - unmap if their primary will be or if they need to be
+           - supplementaries - unmap if their primary or another associated supplementary will be, or if they need to be
          */
 
+        if(read.getReadPairedFlag())
+            return checkTransformPairedRead(read, regionState);
+        else
+            return checkTransformUnpairedRead(read, regionState);
+    }
+
+    private boolean checkTransformPairedRead(final SAMRecord read, final UnmapRegionState regionState)
+    {
         // first check the read's alignment itself
         boolean readUnmapped = read.getReadUnmappedFlag();
-        boolean mateUnmapped = mateUnmapped(read);
+        boolean mateUnmapped = read.getMateUnmappedFlag();
 
         if(readUnmapped && mateUnmapped)
             return false; // nothing to do and there won't be a supplementary
@@ -132,7 +138,7 @@ public class ReadUnmapper
             else if(isSupplementary)
             {
                 // supplementaries are unmapped if their primary, or an associated supplementary, will be unmapped
-                unmapRead = isSupplementary && checkUnmapSupplementaryRead(read);
+                unmapRead = checkUnmapSupplementaryRead(read);
             }
         }
 
@@ -147,9 +153,7 @@ public class ReadUnmapper
         boolean unmapMate = !mateUnmapped && checkUnmapMate(read, regionState);
 
         if(unmapRead)
-        {
             unmapReadAlignment(read, mateUnmapped, unmapMate);
-        }
 
         if(unmapMate)
         {
@@ -159,23 +163,15 @@ public class ReadUnmapper
         }
 
         if((readUnmapped || unmapRead) && (mateUnmapped || unmapMate))
-        {
             mStats.UnmappedCount.incrementAndGet();
-        }
         else if(unmapRead)
-        {
             mStats.ReadCount.incrementAndGet();
-        }
         else if(unmapMate)
-        {
             mStats.MateCount.incrementAndGet();
-        }
 
         // nothing more to do for a supplementary whose primary or mate has been unmapped, or if it was unmapped
         if(isSupplementary)
-        {
             return unmapMate;
-        }
 
         boolean unmapSuppAlignment = false;
 
@@ -187,6 +183,72 @@ public class ReadUnmapper
         }
 
         return unmapRead || unmapMate || unmapSuppAlignment;
+    }
+
+    private boolean checkTransformUnpairedRead(final SAMRecord read, final UnmapRegionState regionState)
+    {
+        // first check the read's alignment itself
+        if(read.getReadUnmappedFlag())
+            return false; // nothing to do and there won't be a supplementary
+
+        boolean isSupplementary = read.getSupplementaryAlignmentFlag();
+
+        boolean unmapRead = false;
+
+        UnmapReason unmapReason = checkUnmapRead(read, regionState);
+
+        if(unmapReason != UnmapReason.NONE)
+        {
+            unmapRead = true;
+
+            switch(unmapReason)
+            {
+                case HIGH_DEPTH:
+                    mStats.HighDepthCount.incrementAndGet();
+                    break;
+
+                case SOFT_CLIP:
+                    mStats.LongSoftClipCount.incrementAndGet();
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        else if(isSupplementary)
+        {
+            // supplementaries are unmapped if their primary, or an associated supplementary, will be unmapped
+            unmapRead = checkUnmapSupplementaryRead(read);
+        }
+
+        if(unmapRead && isSupplementary)
+        {
+            // these will be dropped from the BAM
+            setUnmappedAttributes(read);
+            mStats.SupplementaryCount.incrementAndGet();
+            return true;
+        }
+
+        if(unmapRead)
+        {
+            unmapReadAlignment(read, false, true);
+            mStats.UnmappedCount.incrementAndGet();
+        }
+
+        // nothing more to do for a supplementary whose primary has been unmapped, or if it was unmapped
+        if(isSupplementary)
+            return false;
+
+        boolean unmapSuppAlignment = false;
+
+        if(!unmapRead && checkUnmapSupplementaryAlignments(read))
+        {
+            clearSupplementaryAlignment(read);
+            mStats.SuppAlignmentCount.incrementAndGet();
+            unmapSuppAlignment = true;
+        }
+
+        return unmapRead || unmapSuppAlignment;
     }
 
     private enum UnmapReason
@@ -211,7 +273,7 @@ public class ReadUnmapper
         if(getSoftClipCountFromCigarStr(read.getCigarString()) > UNMAP_MIN_SOFT_CLIP)
             return UnmapReason.SOFT_CLIP;
 
-        if(isChimericRead(read, false))
+        if(read.getReadPairedFlag() && isChimericRead(read, false))
             return UnmapReason.CHIMERIC;
 
         return UnmapReason.NONE;
@@ -249,7 +311,7 @@ public class ReadUnmapper
         // We don't want to drop supplementaries based on chimeric read criteria, since this is a criteria for a primary read and its
         // primary mate. However, when checking if we are unmapping a supplementary based on whether its primary is unmapped, we do check
         // the chimeric read criteria.
-        if(isSupplementaryChimericRead(read))
+        if(read.getReadPairedFlag() && isSupplementaryChimericRead(read))
             return true;
 
         return false;
@@ -525,7 +587,7 @@ public class ReadUnmapper
     private static boolean isChimericRead(final SAMRecord record, boolean checkForMate)
     {
         boolean readUnmapped = record.getReadUnmappedFlag();
-        boolean mateUnmapped = mateUnmapped(record);
+        boolean mateUnmapped = record.getMateUnmappedFlag();
 
         if(!checkForMate && readUnmapped)
             return false;
@@ -551,7 +613,7 @@ public class ReadUnmapper
                 return true;
 
             // inversion
-            if(record.getReadNegativeStrandFlag() == mateNegativeStrand(record))
+            if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
                 return true;
         }
 
@@ -571,7 +633,7 @@ public class ReadUnmapper
 
         // insert size is not populated for supplementaries
 
-        if(mateUnmapped(record))
+        if(record.getMateUnmappedFlag())
             return true;
 
         if(record.getReadPairedFlag())
@@ -583,7 +645,7 @@ public class ReadUnmapper
             // inversion
             boolean primaryReadOnNegativeStrand = suppReadData.Strand == SupplementaryReadData.SUPP_NEG_STRAND;
 
-            if(primaryReadOnNegativeStrand == mateNegativeStrand(record))
+            if(primaryReadOnNegativeStrand == record.getMateNegativeStrandFlag())
                 return true;
         }
 

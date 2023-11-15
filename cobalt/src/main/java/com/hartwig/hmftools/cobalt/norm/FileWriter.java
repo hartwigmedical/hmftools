@@ -60,7 +60,7 @@ public class FileWriter
         {
             BufferedWriter writer = createBufferedWriter(outputFile, false);
 
-            writer.write("SampleId\tChromosome\tPosition\tGcBucket\tMappability\tGcRatioPanel\tReadCount\tAdjGcRatio");
+            writer.write("SampleId\tChromosome\tPosition\tGcBucket\tMappability\tGcRatioPanel\tReadDepth\tAdjGcRatio");
             writer.newLine();
 
             for(Map.Entry<String, List<RegionData>> entry : chrRegionData.entrySet())
@@ -76,9 +76,9 @@ public class FileWriter
                         String sampleId = sampleIds.get(i);
                         SampleRegionData sampleRegionData = regionData.getSampleData(i);
 
-                        writer.write(format("%s\t%s\t%d\t%d\t%.3f\t%.3f\t%d\t%.3f",
+                        writer.write(format("%s\t%s\t%d\t%d\t%.3f\t%.3f\t%.3f\t%.3f",
                                 sampleId, chromosome, regionData.Position, regionData.gcBucket(), regionData.mappability(),
-                                sampleRegionData.GcRatioPanel, sampleRegionData.ReadCount, sampleRegionData.adjustedGcRatio()));
+                                sampleRegionData.GcRatioPanel, sampleRegionData.ReadDepth, sampleRegionData.adjustedGcRatio()));
                         writer.newLine();
                     }
                 }

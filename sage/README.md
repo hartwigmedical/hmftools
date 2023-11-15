@@ -187,9 +187,9 @@ Optional NM tag (edit distance to the reference) is used in the quality calculat
 SAGE is designed to jointly call any number of samples.  1 or more 'tumor' samples must be defined and 1 or more 
 
 - A 'tumor' sample in SAGE is defined as a sample in which SAGE will BOTH search for candidates AND collect evidence
-- A 'reference' sample is one in which SAGE will collect evidence only (for candidates identified in the tumor sampless)
+- A 'reference' sample is one in which SAGE will collect evidence only (for candidates identified in the tumor samples)
 
-SAGE requires at least one tumor sample to be set (unless running in append mode - see below).    By default the first reference sample is also treated as a 'germline' sample, which is used for calculation of the germline filters.  The number of reference samples to be used for germline filtering can be configured by setting the ref_sample_count.  2 common alternatives are:
+SAGE requires at least one tumor sample to be set (unless running in append mode - see below).    By default the first reference sample is also treated as a 'germline' sample, which is used for calculation of the germline filters.  The number of reference samples to be used for germline filtering can be configured by setting the ref_sample_count.  Two common alternatives are:
 
 - If no germline filtering is desired set ref_sample_count = 0.
 - If the patient has a bone marrow donor and reference samples for both patient and donor are avaialable, then SAGE can subtract germline calls from both by setting ref_sample_count = 2. 
@@ -496,7 +496,7 @@ Patients who have previously undergone bone marrow transplantation may have a si
 
 SAGE tries to phase variants which have overlapping read evidence.   Phasing is considered for any  variants not filtered by the ‘hard_min_tumor_qual’, ’hard_min_tumor_raw_alt_support’ or ‘hard_min_tumor_raw_base_quality’ hard filters or by the ‘min_tumor_vaf’ soft filter.  
 
-The variants are into ‘phase regions’ (ie regions without any read overlap and can hence which can be phased independently).   If a phase region has no PASS variants, then skip phasing.  For each phase region the following operations are performed:     
+The variants are into ‘phase regions’ (ie regions without any read overlap, and hence can be phased independently).   If a phase region has no PASS variants, then skip phasing.  For each phase region the following operations are performed:     
 - **Create ‘sets’** - Sets are groups of reads that overlap identical candidate variants with the same phase support (either + for alt support or - for reference support). For example, one set would be all the reads that support +A+B where A and B are 2 candidate variants)
 - **Collapse sets** - Collapse sets which are proper subsets of other sets into their supersets, eg. ‘+A+B’ but do NOT also cover variant C may be collapsed into the superset ‘+A+B+C’.   1 set may be collapsible into multiple supersets (eg. +A+B may be collapsable into +A+B+C and +A+B-C if both have independent support.  In this case the read counts are pro-rata added to the supersets
 - **Iteratively merge overlapping sets** - merge any pairs of overlapping sets, if at least in one direction there exists only 1 option with consistent overlap.   .Repeat until no further sets can be merged

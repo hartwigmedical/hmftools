@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -114,15 +113,15 @@ public class CobaltApplication
                     WINDOW_SIZE, mConfig.MinMappingQuality,
                     executorService, readerFactory, chromosomePosCodec);
 
-            bamReadCounter.generateCounts(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
+            bamReadCounter.generateDepths(mConfig.ReferenceBamPath, mConfig.TumorBamPath);
 
-            Table referenceReadCounts = bamReadCounter.getReferenceCounts();
-            Table tumorReadCounts = bamReadCounter.getTumorCounts();
+            Table referenceReadDepths = bamReadCounter.getReferenceDepths();
+            Table tumorReadDepths = bamReadCounter.getTumorDepths();
 
             final Table gcProfiles = loadGCContent(chromosomePosCodec);
 
             final RatioSupplier ratioSupplier = new RatioSupplier(mConfig.ReferenceId, mConfig.TumorId, mConfig.OutputDir,
-                    gcProfiles, referenceReadCounts, tumorReadCounts,
+                    gcProfiles, referenceReadDepths, tumorReadDepths,
                     chromosomePosCodec);
 
             if (mConfig.TargetRegionPath != null)
@@ -148,7 +147,7 @@ public class CobaltApplication
                     ratios = ratioSupplier.tumorNormalPair();
             }
 
-            final String outputFilename = CobaltRatioFile.generateFilenameForWriting(
+            final String outputFilename = CobaltRatioFile.generateFilename(
                     mConfig.OutputDir, mConfig.TumorId != null ? mConfig.TumorId : mConfig.ReferenceId);
             CB_LOGGER.info("Persisting cobalt ratios to {}", outputFilename);
             mVersionInfo.write(mConfig.OutputDir);

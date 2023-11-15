@@ -206,13 +206,12 @@ public class GnomadAnnotation extends AnnotationData implements Callable
 
             if(mChromosomeFiles.isEmpty())
             {
-                PV_LOGGER.info("loaded {} Gnomad frequency records from file({}), strCache({})",
-                        itemCount, filename, mStringCache.size());
+                PV_LOGGER.info("loaded {} Gnomad frequency records from file({})", itemCount, filename);
             }
             else if(currentChrCache != null)
             {
-                PV_LOGGER.debug("chr({}) loaded {} Gnomad frequency records, strCache({})",
-                        currentChrCache.Chromosome, currentChrCache.entryCount(), mStringCache.size());
+                PV_LOGGER.debug("chr({}) loaded {} Gnomad frequency records",
+                        currentChrCache.Chromosome, currentChrCache.entryCount());
             }
         }
         catch(IOException e)

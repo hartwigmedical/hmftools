@@ -18,6 +18,7 @@ import com.hartwig.hmftools.gripss.common.Breakend;
 import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterType;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
+import com.hartwig.hmftools.gripss.pon.PonCache;
 
 public class FilterCache
 {
@@ -41,7 +42,6 @@ public class FilterCache
     public boolean isHotspot(final SvData sv) { return mHotspots.contains(sv); }
 
     public Map<Breakend,List<FilterType>> getBreakendFilters() { return mBreakendFilters; }
-    public Map<Breakend,List<FilterType>> getRescuedBreakendFilters() { return mRescuedBreakendFilters; }
 
     public List<FilterType> getBreakendFilters(final Breakend breakend) { return mBreakendFilters.get(breakend); }
     public boolean hasFilters(final Breakend breakend) { return mBreakendFilters.containsKey(breakend); }
@@ -162,7 +162,7 @@ public class FilterCache
             Breakend breakend = entry.getKey();
             List<FilterType> filters = entry.getValue();
             StringJoiner sj = new StringJoiner(";");
-            filters.forEach(x -> sj.add(FilterType.vcfName(x)));
+            filters.forEach(x -> sj.add(x.vcfTag()));
 
             GR_LOGGER.trace("breakend({}) rescued from filters({})", breakend, sj.toString());
         }

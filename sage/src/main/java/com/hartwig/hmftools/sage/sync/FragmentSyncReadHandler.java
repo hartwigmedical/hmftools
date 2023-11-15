@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.sage.sync;
 
 import htsjdk.samtools.SAMRecord;
 

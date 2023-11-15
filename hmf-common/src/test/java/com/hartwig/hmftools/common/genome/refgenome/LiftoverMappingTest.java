@@ -38,7 +38,5 @@ public class LiftoverMappingTest
         assertEquals(317720, genomeLiftoverCache.convertPositionTo37(CHR_1, 501617));
         assertEquals(471368, genomeLiftoverCache.convertPositionTo37(CHR_1, 347969));
         assertEquals(10001, genomeLiftoverCache.convertPositionTo37(CHR_1, 10001));
-
-
     }
 }

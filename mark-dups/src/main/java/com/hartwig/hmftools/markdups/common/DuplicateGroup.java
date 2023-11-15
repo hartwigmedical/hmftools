@@ -5,9 +5,10 @@ import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.addConsensusReadAttribute;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
+import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL;
+import static com.hartwig.hmftools.common.samtools.UmiReadType.SINGLE;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -331,10 +332,17 @@ public class DuplicateGroup
                 }
 
                 // set consensus read attributes
-                consensusReadInfo.ConsensusRead.setAttribute(CONSENSUS_READ_ATTRIBUTE, readGroup.size());
+                int firstInPairCount = (int)readGroup.stream().filter(x -> x.getFirstOfPairFlag()).count();
+                int readCount = readGroup.size();
+                boolean isDualStrand = mDualStrand || (firstInPairCount > 0 && firstInPairCount < readCount);
+                boolean isPrimaryGroup = (i == ReadType.PRIMARY.ordinal() || i == ReadType.PRIMARY_SUPPLEMENTARY.ordinal());
 
-                String umiReadType = mDualStrand ? UmiReadType.DUAL_STRAND.toString() : UmiReadType.SINGLE.toString();
-                consensusReadInfo.ConsensusRead.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType);
+                if(!isPrimaryGroup)
+                    firstInPairCount = readCount - firstInPairCount; // adjusted so both reads report the same ratio
+
+                UmiReadType umiReadType = isDualStrand ? DUAL : SINGLE;
+
+                addConsensusReadAttribute(consensusReadInfo.ConsensusRead, readCount, firstInPairCount,  umiReadType);
 
                 reads.add(consensusReadInfo.ConsensusRead);
             }

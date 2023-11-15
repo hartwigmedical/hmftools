@@ -79,11 +79,12 @@ public class NormalisationFileTest
 
         NormCalcData normCalcData = calcSampleAdjustedRatios(0, chrRegionData);
         assertEquals(4, normCalcData.SampleFilteredRegionCount);
-        assertEquals(37.5, normCalcData.SampleMeanReadCount, 0.1);
-        assertEquals(35, normCalcData.SampleMedianReadCount, 0.1);
+        assertEquals(37.5, normCalcData.SampleMeanReadDepth, 0.1);
+        assertEquals(35, normCalcData.SampleMedianReadDepth, 0.1);
         assertEquals(4, normCalcData.GcBucketMedians.size());
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static RegionData createRegion(int position, int gcBucket, double mappability, int readCount, double gcRatioPanel)
     {
         RegionData regionData = new RegionData(position);

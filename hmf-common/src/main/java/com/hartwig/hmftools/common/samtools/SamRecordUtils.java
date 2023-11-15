@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static java.lang.String.format;
+
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.NEG_ORIENT;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
@@ -7,6 +9,7 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static htsjdk.samtools.CigarOperator.D;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
@@ -29,6 +32,7 @@ public final class SamRecordUtils
     public static final String UMI_TYPE_ATTRIBUTE = "UT";
     public static final String UMI_ATTRIBUTE = "UI";
     public static final String SECONDARY_ATTRIBUTE = "HI";
+    public static final String CONSENSUS_INFO_DELIM = ";";
 
     public static final String UNMAP_ATTRIBUTE = "UM"; // a read has been unmapped (ie by MarkDups)
 
@@ -89,6 +93,12 @@ public final class SamRecordUtils
             score += baseScore;
         }
         return score / length;
+    }
+
+    public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType)
+    {
+        record.setAttribute(CONSENSUS_READ_ATTRIBUTE, format("%d;%d", readCount, firstInPairCount));
+        record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
     }
 
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)

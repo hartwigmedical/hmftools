@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.gripss.filters;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_C_INSERT;
 import static com.hartwig.hmftools.common.region.ExcludedRegions.POLY_G_INSERT;
@@ -31,6 +32,8 @@ import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_NORMAL_COVERAGE;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_QUAL;
 import static com.hartwig.hmftools.gripss.filters.FilterType.MIN_TUMOR_AF;
+import static com.hartwig.hmftools.gripss.filters.FilterType.MODIFIED_AF;
+import static com.hartwig.hmftools.gripss.filters.FilterType.QUAL_PER_AD;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SGL_INSERT_SEQ_MIN_LENGTH;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SGL_STRAND_BIAS;
 import static com.hartwig.hmftools.gripss.filters.FilterType.SHORT_DEL_INS_ARTIFACT;
@@ -68,7 +71,18 @@ public class SoftFilters
     public void applyFilters(final SvData sv, final FilterCache filterCache)
     {
         if(filterCache.isHotspot(sv))
-            return;
+        {
+            // only limited filters are checked for hotspots
+            if(modifiedAF(sv, true))
+            {
+                filterCache.addBreakendFilters(sv.breakendStart(), Lists.newArrayList(MODIFIED_AF));
+
+                if(!sv.isSgl())
+                    filterCache.addBreakendFilters(sv.breakendEnd(), Lists.newArrayList(MODIFIED_AF));
+
+                return;
+            }
+        }
 
         List<FilterType> beStartFilters = null;
 
@@ -117,6 +131,7 @@ public class SoftFilters
             if(strandBias(sv, breakend))
                 filters.add(SHORT_STRAND_BIAS);
 
+            // the following filters are replicated in the end breakend if met in the start
             if((se == SE_END && beStartFilters.contains(IMPRECISE)) || imprecise(sv))
                 filters.add(IMPRECISE);
 
@@ -131,6 +146,12 @@ public class SoftFilters
 
             if((se == SE_END && beStartFilters.contains(MIN_LENGTH)) || minLength(sv))
                 filters.add(MIN_LENGTH);
+
+            if((se == SE_END && beStartFilters.contains(MODIFIED_AF)) || modifiedAF(sv, false))
+                filters.add(MODIFIED_AF);
+
+            if(qualPerAD(breakend))
+                filters.add(QUAL_PER_AD);
 
             if(!filters.isEmpty())
                 filterCache.addBreakendFilters(breakend, filters);
@@ -160,6 +181,44 @@ public class SoftFilters
     {
         double afThreshold = sv.isSgl() ? mFilterConstants.MinTumorAfBreakend : mFilterConstants.MinTumorAfBreakpoint;
         return breakend.allelicFrequency() < afThreshold;
+    }
+
+    private boolean qualPerAD(final Breakend breakend)
+    {
+        int indelCount = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_IC, 0);
+        int ad = indelCount + breakend.TumorFragments;
+
+        if(ad == 0)
+            return false;
+
+        double qualPerAD = breakend.Qual / ad;
+        return qualPerAD < mFilterConstants.QualPerAD;
+    }
+
+    private boolean modifiedAF(final SvData sv, boolean isHotspot)
+    {
+        double modifiedAf = calcModifiedAf(sv.breakendStart());
+
+        if(!sv.isSgl())
+        {
+            modifiedAf = min(modifiedAf, calcModifiedAf(sv.breakendEnd()));
+        }
+
+        double afLimit = isHotspot ? mFilterConstants.ModifiedAfHotspot : mFilterConstants.ModifiedAf;
+        return modifiedAf < afLimit;
+    }
+
+    private static double calcModifiedAf(final Breakend breakend)
+    {
+        int readPairSupport = (breakend.isSgl() || !breakend.sv().isShortLocal()) ?
+                getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_REFPAIR, 0) : 0;
+
+        int refSupport = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_REF, 0);
+        int indelCount = getGenotypeAttributeAsInt(breakend.TumorGenotype, VT_IC, 0);
+        int ad = indelCount + breakend.TumorFragments;
+        double totalSupport = ad + refSupport + readPairSupport;
+
+        return totalSupport > 0 ? ad / totalSupport : 0;
     }
 
     private boolean shortDelInsertArtifact(final SvData sv, final Breakend breakend)

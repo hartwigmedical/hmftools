@@ -2,7 +2,6 @@ package com.hartwig.hmftools.common.cider;
 
 import java.io.File;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.hartwig.hmftools.common.utils.file.DelimFileReader;
@@ -28,15 +27,15 @@ public class Cdr3LocusSummaryFile
 
     public static List<Cdr3LocusSummary> read(final String filename)
     {
-        try (var reader = new DelimFileReader(filename))
+        try (DelimFileReader reader = new DelimFileReader(filename))
         {
             return reader.stream().map(row -> ImmutableCdr3LocusSummary.builder()
-                    .locus(Objects.requireNonNull(row.get(Column.locus)))
-                    .readsUsed(Objects.requireNonNull(row.getInt(Column.readsUsed)))
-                    .readsTotal(Objects.requireNonNull(row.getInt(Column.readsTotal)))
+                    .locus(row.get(Column.locus))
+                    .readsUsed(row.getInt(Column.readsUsed))
+                    .readsTotal(row.getInt(Column.readsTotal))
                     .downSampled(Boolean.parseBoolean(row.get(Column.downSampled)))
-                    .sequences(Objects.requireNonNull(row.getInt(Column.sequences)))
-                    .passSequences(Objects.requireNonNull(row.getInt(Column.passSequences)))
+                    .sequences(row.getInt(Column.sequences))
+                    .passSequences(row.getInt(Column.passSequences))
                 .build()).collect(Collectors.toList());
         }
     }

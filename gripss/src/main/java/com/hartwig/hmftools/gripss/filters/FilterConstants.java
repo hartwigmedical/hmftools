@@ -28,6 +28,9 @@ public class FilterConstants
     public final List<ChrBaseRegion> PolyGcRegions;
     public final ChrBaseRegion LowQualRegion;
     public final boolean FilterSGLs;
+    public final int QualPerAD;
+    public final double ModifiedAf;
+    public final double ModifiedAfHotspot;
 
     // filters which only apply when reference is present:
     // minNormalCoverage, minRelativeCoverage, maxNormalSupport, shortSRNormalSupport, discordantPairSupport
@@ -59,20 +62,23 @@ public class FilterConstants
     public static final ChrBaseRegion PMS2_V38 = new ChrBaseRegion("chr7", 5960925, 6019106);
 
     // config overrides
-    public static final String HARD_MIN_TUMOR_QUAL_CFG = "hard_min_tumor_qual";
-    public static final String HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_CFG = "hard_max_normal_absolute_support";
-    public static final String HARD_MAX_NORMAL_RELATIVE_SUPPORT_CFG = "hard_max_normal_relative_support";
-    public static final String SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG = "soft_max_normal_relative_support";
-    public static final String MIN_NORMAL_COVERAGE_CFG = "min_normal_coverage";
-    public static final String MIN_TUMOR_AF_CFG = "min_tumor_af";
-    public static final String MAX_SHORT_STRAND_BIAS_CFG = "max_short_strand_bias";
-    public static final String MIN_QUAL_BREAK_END_CFG = "min_qual_break_end";
-    public static final String MIN_QUAL_BREAK_POINT_CFG = "min_qual_break_point";
-    public static final String MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION = "min_qual_rescue_mobile_element_insertion";
-    public static final String MAX_HOM_LENGTH_SHORT_INV_CFG = "max_hom_length_short_inv";
-    public static final String MIN_LENGTH_CFG = "min_length";
+    private static final String HARD_MIN_TUMOR_QUAL_CFG = "hard_min_tumor_qual";
+    private static final String HARD_MAX_NORMAL_ABSOLUTE_SUPPORT_CFG = "hard_max_normal_absolute_support";
+    private static final String HARD_MAX_NORMAL_RELATIVE_SUPPORT_CFG = "hard_max_normal_relative_support";
+    private static final String SOFT_MAX_NORMAL_RELATIVE_SUPPORT_CFG = "soft_max_normal_relative_support";
+    private static final String MIN_NORMAL_COVERAGE_CFG = "min_normal_coverage";
+    private static final String MIN_TUMOR_AF_CFG = "min_tumor_af";
+    private static final String MAX_SHORT_STRAND_BIAS_CFG = "max_short_strand_bias";
+    private static final String MIN_QUAL_BREAK_END_CFG = "min_qual_break_end";
+    private static final String MIN_QUAL_BREAK_POINT_CFG = "min_qual_break_point";
+    private static final String MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION = "min_qual_rescue_mobile_element_insertion";
+    private static final String MAX_HOM_LENGTH_SHORT_INV_CFG = "max_hom_length_short_inv";
+    private static final String MIN_LENGTH_CFG = "min_length";
     public static final String PON_DISTANCE = "pon_distance";
     private static final String FILTER_SGLS = "filter_sgls";
+    private static final String QUAL_PER_AD = "qual_per_ad";
+    private static final String MODIFIED_AF = "modified_af";
+    private static final String MODIFIED_AF_HOTSPOT = "modified_af_hotspot";
 
     public static FilterConstants from(final ConfigBuilder configBuilder)
     {
@@ -94,14 +100,18 @@ public class FilterConstants
                 configBuilder.getInteger(MIN_LENGTH_CFG),
                 configBuilder.getInteger(PON_DISTANCE),
                 getPolyGRegions(refGenVersion), refGenVersion == V37 ? PMS2_V37 : PMS2_V38,
-                configBuilder.hasFlag(FILTER_SGLS));
+                configBuilder.hasFlag(FILTER_SGLS),
+                configBuilder.getInteger(QUAL_PER_AD),
+                configBuilder.getDecimal(MODIFIED_AF),
+                configBuilder.getDecimal(MODIFIED_AF_HOTSPOT));
     }
 
     public FilterConstants(
             int minTumorQual, int hardMaxNormalAbsoluteSupport, double hardMaxNormalRelativeSupport, double softMaxNormalRelativeSupport,
             double minNormalCoverage, double minTumorAfBreakend, double minTumorAfBreakpoint, double maxShortStrandBias,
             int minQualBreakend, int minQualBreakpoint, int minQualRescueLine, int maxHomLengthShortInv,
-            int minLength, int ponDistance, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion, boolean filterSGLs)
+            int minLength, int ponDistance, final List<ChrBaseRegion> polyGcRegions, final ChrBaseRegion lowQualRegion, boolean filterSGLs,
+            final int qualPerAD, final double modifiedAf, final double modifiedAfHotspot)
     {
         MinTumorQual = minTumorQual;
         HardMaxNormalAbsoluteSupport = hardMaxNormalAbsoluteSupport;
@@ -120,6 +130,9 @@ public class FilterConstants
         PolyGcRegions = polyGcRegions;
         LowQualRegion = lowQualRegion;
         FilterSGLs = filterSGLs;
+        QualPerAD = qualPerAD;
+        ModifiedAf = modifiedAf;
+        ModifiedAfHotspot = modifiedAfHotspot;
     }
 
     public boolean matchesPolyGRegion(final String chromosome, int position)
@@ -145,6 +158,9 @@ public class FilterConstants
         configBuilder.addDecimal(MAX_SHORT_STRAND_BIAS_CFG, "Max short strand bias", DEFAULT_MAX_SHORT_STRAND_BIAS);
         configBuilder.addInteger(MIN_QUAL_BREAK_END_CFG, "Min qual break end", DEFAULT_MIN_QUAL_BREAK_END);
         configBuilder.addInteger(MIN_QUAL_BREAK_POINT_CFG, "Min qual break point", DEFAULT_MIN_QUAL_BREAK_POINT);
+        configBuilder.addInteger(QUAL_PER_AD, "Qual per AD limit", 0);
+        configBuilder.addDecimal(MODIFIED_AF, "Modified AF limit", 0);
+        configBuilder.addDecimal(MODIFIED_AF_HOTSPOT, "Modified AF limit for hotspots", 0);
 
         configBuilder.addInteger(
                 MIN_QUAL_RESCUE_MOBILE_ELEMENT_INSERTION, "Min qual rescue mobile element insertions",

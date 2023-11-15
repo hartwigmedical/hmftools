@@ -25,15 +25,15 @@ import org.jetbrains.annotations.Nullable;
  * Read a CSV / TSV file. If the file name ends with .gz, it will apply gzip reading.
  *
  * Example usage:
- *     try (DelimFileReader reader = new DelimFileReader(filename))
- *     {
- *         reader.setDelimiter(",");
- *         return reader.stream().map(row -> ImmutableMedianRatio.builder()
- *                     .chromosome(row.get(CHROMOSOME))
- *                     .medianRatio(row.getDouble(MEDIAN_RATIO))
- *                     .count(row.getInt(COUNT)).build())
- *                 .collect(Collectors.toList());
- *     }
+ *  try (DelimFileReader reader = new DelimFileReader(filename))
+ *  {
+ *      reader.setDelimiter(",");
+ *      return reader.stream().map(row -> ImmutableMedianRatio.builder()
+ *                  .chromosome(row.get(CHROMOSOME))
+ *                  .medianRatio(row.getDouble(MEDIAN_RATIO))
+ *                  .count(row.getInt(COUNT)).build())
+ *              .collect(Collectors.toList());
+ *  }
  *
  * It is also possible to iterate row by row
  *
@@ -41,7 +41,10 @@ import org.jetbrains.annotations.Nullable;
  *  {
  *      for(DelimFileReader.Row row : reader)
  *      {
- *          int id = row.getInt("id");
+ *          String id = row.get("id");
+ *          int count = row.get("count");
+ *          boolean isValid = row.getBoolean("isValid");
+ *          Double rate = row.getDoubleOrNull("rate");
  *      }
  *  }
  */
@@ -200,103 +203,172 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             mValues = values;
         }
 
-        public boolean isNull(String key)
+        public boolean isNull(String column)
         {
-            return valueIndicatesNull(parseRawValue(key));
+            return valueIndicatesNull(parseRawValue(column));
         }
 
-        public @Nullable String get(String key)
+        public @NotNull String get(String column)
         {
-            String v = parseRawValue(key);
+            String v = parseRawValue(column);
+            if(valueIndicatesNull(v))
+            {
+                throw new NoSuchElementException();
+            }
+            return v;
+        }
+
+        public @Nullable String getOrNull(String column)
+        {
+            String v = parseRawValue(column);
             if(valueIndicatesNull(v))
                 return null;
             return v;
         }
 
-        public @Nullable Integer getInt(String key)
+        public int getInt(String column)
         {
-            String v = get(key);
-            if(v == null)
-                return null;
-            return Integer.parseInt(v);
+            return Integer.parseInt(get(column));
+        }
+
+        public @Nullable Integer getIntOrNull(String column)
+        {
+            String v = getOrNull(column);
+            return v == null ? null : Integer.parseInt(v);
         }
 
         // store boolean as 1 and 0
-        public @Nullable Boolean getBoolean(String key)
+        public boolean getBoolean(String column)
         {
-            Integer v = getInt(key);
-            if(v == null)
-                return null;
-            return v == 1;
+            return getInt(column) != 0;
         }
 
-        public @Nullable Character getChar(String key)
+        public @Nullable Boolean getBooleanOrNull(String column)
         {
-            String v = get(key);
-            if(v == null)
-                return null;
-            return v.charAt(0);
+            Integer v = getIntOrNull(column);
+            return v == null ? null : v != 0;
         }
 
-        public @Nullable Byte getByte(String key)
+        public char getChar(String column)
         {
-            String v = get(key);
-            if(v == null)
-                return null;
-            return Byte.parseByte(v);
+            return get(column).charAt(0);
         }
 
-        public @Nullable Double getDouble(String key)
+        public @Nullable Character getCharOrNull(String column)
         {
-            String v = get(key);
-            if(v == null)
-                return null;
-            return Double.parseDouble(v);
+            String v = getOrNull(column);
+            return v == null ? null : v.charAt(0);
         }
 
-        // overloads that allow using enum as key
-        public boolean isNull(Enum<?> key)
+        public byte getByte(String column)
         {
-            return isNull(key.name());
+            return Byte.parseByte(get(column));
         }
 
-        public @Nullable String get(Enum<?> key)
+        public @Nullable Byte getByteOrNull(String column)
         {
-            return get(key.name());
+            String v = getOrNull(column);
+            return v == null ? null : Byte.parseByte(v);
         }
 
-        public @Nullable Integer getInt(Enum<?> key)
+        public double getDouble(String column)
         {
-            return getInt(key.name());
+            return Double.parseDouble(get(column));
         }
 
-        public @Nullable Boolean getBoolean(Enum<?> key)
+        public @Nullable Double getDoubleOrNull(String column)
         {
-            return getBoolean(key.name());
+            String v = getOrNull(column);
+            return v == null ? null : Double.parseDouble(v);
         }
 
-        public @Nullable Character getChar(Enum<?> key)
+        public long getLong(String column)
         {
-            return getChar(key.name());
+            return Long.parseLong(get(column));
         }
 
-        public @Nullable Byte getByte(Enum<?> key)
+        public @Nullable Long getLongOrNull(String column)
         {
-            return getByte(key.name());
+            String v = getOrNull(column);
+            return v == null ? null : Long.parseLong(v);
         }
 
-        public @Nullable Double getDouble(Enum<?> key)
+        // overloads that allow using enum as column
+        public boolean isNull(Enum<?> column)
         {
-            return getDouble(key.name());
+            return isNull(column.name());
         }
 
-        // get the value that is stored in the file
-        private @NotNull String parseRawValue(String key)
+        public @NotNull String get(Enum<?> column)
         {
-            Integer index = mColumnIndexMap.get(key);
+            return get(column.name());
+        }
+        public @Nullable String getOrNull(Enum<?> column)
+        {
+            return getOrNull(column.name());
+        }
+
+        public int getInt(Enum<?> column)
+        {
+            return getInt(column.name());
+        }
+        public @Nullable Integer getIntOrNull(Enum<?> column)
+        {
+            return getIntOrNull(column.name());
+        }
+
+        public boolean getBoolean(Enum<?> column)
+        {
+            return getBoolean(column.name());
+        }
+        public @Nullable Boolean getBooleanOrNull(Enum<?> column)
+        {
+            return getBooleanOrNull(column.name());
+        }
+
+        public char getChar(Enum<?> column)
+        {
+            return getChar(column.name());
+        }
+        public @Nullable Character getCharOrNull(Enum<?> column)
+        {
+            return getCharOrNull(column.name());
+        }
+
+        public byte getByte(Enum<?> column)
+        {
+            return getByte(column.name());
+        }
+        public @Nullable Byte getByteOrNull(Enum<?> column)
+        {
+            return getByteOrNull(column.name());
+        }
+
+        public double getDouble(Enum<?> column)
+        {
+            return getDouble(column.name());
+        }
+        public @Nullable Double getDoubleOrNull(Enum<?> column)
+        {
+            return getDoubleOrNull(column.name());
+        }
+
+        public long getLong(Enum<?> column)
+        {
+            return getLong(column.name());
+        }
+        public @Nullable Long getLongOrNull(Enum<?> column)
+        {
+            return getLongOrNull(column.name());
+        }
+
+        // get the value that is stored in the row
+        private @NotNull String parseRawValue(String column)
+        {
+            Integer index = mColumnIndexMap.get(column);
             if(index == null)
             {
-                throw new RuntimeException(String.format("column: %s not found", key));
+                throw new NoSuchElementException(String.format("column: %s not found", column));
             }
             return mValues[index];
         }

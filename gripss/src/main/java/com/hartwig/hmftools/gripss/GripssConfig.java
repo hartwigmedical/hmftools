@@ -25,7 +25,7 @@ import com.hartwig.hmftools.gripss.common.SvData;
 import com.hartwig.hmftools.gripss.filters.FilterConstants;
 import com.hartwig.hmftools.gripss.filters.HotspotCache;
 import com.hartwig.hmftools.gripss.filters.TargetRegions;
-import com.hartwig.hmftools.gripss.rm.RepeatMaskAnnotator;
+import com.hartwig.hmftools.gripss.pon.PonCache;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
