@@ -3,6 +3,7 @@ package com.hartwig.hmftools.peach.haplotype;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
@@ -30,6 +31,17 @@ public class HaplotypeCombination
             throw new RuntimeException(error_msg);
         }
         this.haplotypeNameToCount = haplotypeNameToCount;
+    }
+    
+    public boolean equals(final Object other)
+    {
+        if(this == other)
+            return true;
+
+        if(!(other instanceof HaplotypeCombination))
+            return false;
+        
+        return haplotypeNameToCount.equals(((HaplotypeCombination) other).haplotypeNameToCount);
     }
 
     public String toString()

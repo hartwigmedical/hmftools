@@ -60,6 +60,12 @@ public class HaplotypeAnalysis
         return wildTypeHaplotypeName;
     }
 
+    @NotNull
+    public String getDefaultHaplotypeName()
+    {
+        return defaultHaplotypeName;
+    }
+
     public PeachQCStatus getAnalysisStatus()
     {
         if (haplotypeCombinations.isEmpty())
