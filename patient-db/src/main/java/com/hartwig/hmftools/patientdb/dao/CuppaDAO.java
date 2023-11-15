@@ -63,7 +63,7 @@ public class CuppaDAO {
     {
         deleteCuppaForSample(sample);
 
-        @NotNull InsertValuesStep7<CuppaRecord, LocalDateTime, String, String, String, Double, Integer, Integer> inserter = context.insertInto(CUPPA,
+        @NotNull InsertValuesStep7<CuppaRecord, LocalDateTime, String, String, String, Double, Integer, Byte> inserter = context.insertInto(CUPPA,
                 CUPPA.MODIFIED,
                 CUPPA.SAMPLEID,
                 CUPPA.CLFNAME,
@@ -89,7 +89,7 @@ public class CuppaDAO {
                     cuppaPredictionEntry.CancerType,
                     parseDouble(cuppaPredictionEntry.DataValue),
                     cuppaPredictionEntry.Rank,
-                    0
+                    (byte) 0
             );
         }
 
@@ -112,11 +112,11 @@ public class CuppaDAO {
                 ).values(
                         timestamp,
                         sample,
-                        null,
+                        (String) null,
                         cancerType,
                         likelihood,
                         1,
-                        1
-                ).execute();
+                        (byte) 1
+        ).execute();
     }
 }
