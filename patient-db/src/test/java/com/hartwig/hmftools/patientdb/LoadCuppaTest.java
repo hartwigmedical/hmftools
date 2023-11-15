@@ -9,17 +9,17 @@ public class LoadCuppaTest {
 
     // Run this while in the mysql process
     USE patientdb;
-    source hmftools/patient-db/src/main/resources/generate_database.sql; // This initializes/resets the database
+    source /Users/lnguyen/Hartwig/hartwigmedical/hmftools/patient-db/src/main/resources/generate_database.sql; // This initializes/resets the database
 
     // For CUPPA v2, run the LoadCuppa2 class in IntelliJ's run config with the below params:
-    -cuppa_vis_data_tsv hmftools/hmf-common/src/test/resources/cuppa/cuppa_vis_data.tsv
+    -cuppa_vis_data_tsv /Users/lnguyen/Hartwig/hartwigmedical/hmftools/hmf-common/src/test/resources/cuppa/cuppa_vis_data.tsv
     -db_user writer
     -db_pass writer_password
     -db_url "mysql://localhost:3306/patientdb?serverTimezone=UTC"
 
     // For CUPPAv1
     -sample TEST_SAMPLE_CUPPA_V1
-    -cuppa_results_csv hmftools/hmf-common/src/test/resources/cuppa/sample.cup.data.csv
+    -cuppa_results_csv /Users/lnguyen/Hartwig/hartwigmedical/hmftools/hmf-common/src/test/resources/cuppa/sample.cup.data.csv
     -db_user writer
     -db_pass writer_password
     -db_url "mysql://localhost:3306/patientdb?serverTimezone=UTC"
