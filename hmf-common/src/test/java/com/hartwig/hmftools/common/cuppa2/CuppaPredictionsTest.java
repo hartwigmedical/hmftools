@@ -17,7 +17,7 @@ public class CuppaPredictionsTest
     }
 
     @Test
-    public void subsetByDataTypeReturnsCorrectDataType() throws IOException
+    public void subsetByDataTypeReturnsCorrectDataType()
     {
         CuppaPredictionEntry predictionEntry = cuppaPredictions.subsetByDataType(Categories.DataType.FEAT_CONTRIB).get(0);
         assert predictionEntry.DataType.equals(Categories.DataType.FEAT_CONTRIB);
@@ -25,7 +25,7 @@ public class CuppaPredictionsTest
 
 
     @Test
-    public void sortByRankHasCorrectOrder() throws IOException
+    public void sortByRankHasCorrectOrder()
     {
         CuppaPredictions sortedCuppaPredictions = cuppaPredictions.sortByRank();
 
