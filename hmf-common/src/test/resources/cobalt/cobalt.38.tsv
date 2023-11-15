@@ -1,6 +1,6 @@
-chromosome	position	referenceReadDepth	tumorReadDepth	referenceGCRatio	tumorGCRatio	referenceGCDiploidRatio
-chr1	954001	2.03	5.45	0.8865	0.9152	0.9057
-chr1	955001	2.23	5.55	0.9911	0.948	1.0126
-chr1	956001	2.21	5.40	0.9822	0.9224	1.0035
-chr1	957001	2.34	5.08	1.0218	0.8531	1.044
-chr1	958001	2.24	5.68	0.9739	0.949	0.9949
+chromosome	position	referenceReadDepth	tumorReadDepth	referenceGCRatio	tumorGCRatio	referenceGCDiploidRatio	referenceGCContent	tumorGCContent
+chr1	954001	2.03	5.45	0.8865	0.9152	0.9057	0.6	0.6
+chr1	955001	2.23	5.55	0.9911	0.948	1.0126	0.6	0.6
+chr1	956001	2.21	5.40	0.9822	0.9224	1.0035	0.6	0.6
+chr1	957001	2.34	5.08	1.0218	0.8531	1.044	0.6	0.6
+chr1	958001	2.24	5.68	0.9739	0.949	0.9949	0.6	0.6

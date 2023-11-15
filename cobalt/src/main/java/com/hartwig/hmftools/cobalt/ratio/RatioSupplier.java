@@ -274,14 +274,16 @@ public class RatioSupplier
         {
             referenceDepths = Table.create(
                     LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
-                    DoubleColumn.create(CobaltColumns.READ_DEPTH));
+                    DoubleColumn.create(CobaltColumns.READ_DEPTH),
+                    DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
         }
 
         if (tumorDepths == null)
         {
             tumorDepths = Table.create(
                     LongColumn.create(CobaltColumns.ENCODED_CHROMOSOME_POS),
-                    DoubleColumn.create(CobaltColumns.READ_DEPTH));
+                    DoubleColumn.create(CobaltColumns.READ_DEPTH),
+                    DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
         }
 
         if (referenceRatios == null)
@@ -306,16 +308,18 @@ public class RatioSupplier
         }
 
         result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
-                referenceDepths.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_DEPTH));
+                referenceDepths.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_DEPTH, CobaltColumns.READ_GC_CONTENT));
 
-        // rename the readCount column
+        // rename the readDepth column
         result.doubleColumn(CobaltColumns.READ_DEPTH).setName(CobaltColumns.REFERENCE_READ_DEPTH);
+        result.doubleColumn(CobaltColumns.READ_GC_CONTENT).setName(CobaltColumns.REFERENCE_GC_CONTENT);
 
         result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
-                tumorDepths.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_DEPTH));
+                tumorDepths.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.READ_DEPTH, CobaltColumns.READ_GC_CONTENT));
 
-        // rename the readCount column
+        // rename the readDepth column
         result.doubleColumn(CobaltColumns.READ_DEPTH).setName(CobaltColumns.TUMOR_READ_DEPTH);
+        result.doubleColumn(CobaltColumns.READ_GC_CONTENT).setName(CobaltColumns.TUMOR_GC_CONTENT);
 
         result = result.joinOn(CobaltColumns.ENCODED_CHROMOSOME_POS).fullOuter(
                 referenceRatios.retainColumns(CobaltColumns.ENCODED_CHROMOSOME_POS, CobaltColumns.RATIO));

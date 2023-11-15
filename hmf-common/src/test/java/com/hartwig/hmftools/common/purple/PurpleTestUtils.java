@@ -44,7 +44,9 @@ public class PurpleTestUtils
                 .referenceReadDepth(0)
                 .referenceGCRatio(1)
                 .referenceGCDiploidRatio(1)
-                .tumorGCRatio(ratio);
+                .tumorGCRatio(ratio)
+                .referenceGcContent(0.5)
+                .tumorGcContent(0.5);
     }
 
     public static ImmutablePurpleCopyNumber.Builder createCopyNumber(

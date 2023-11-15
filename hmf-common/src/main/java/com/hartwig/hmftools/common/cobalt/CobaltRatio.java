@@ -19,4 +19,8 @@ public interface CobaltRatio extends GenomePosition
     double referenceGCDiploidRatio();
 
     double tumorGCRatio();
+
+    double referenceGcContent();
+
+    double tumorGcContent();
 }

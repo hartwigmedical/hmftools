@@ -161,14 +161,29 @@ public class BamReadCounter
 
         for(AlignmentBlock currentBlock : record.getAlignmentBlocks())
         {
-            int start = Math.max(currentBlock.getReferenceStart(), region.start());
-            int end = Math.min(currentBlock.getReferenceStart() + currentBlock.getLength() - 1, region.end());
-
-            if(start <= end)
-            {
-                readDepthAccumulator.addReadAlignmentToCounts(region.Chromosome, start, end);
-            }
+            accumulateAlignmentBlock(region, readDepthAccumulator, currentBlock.getReadStart(), currentBlock.getReferenceStart(),
+                    currentBlock.getLength(), record.getReadBases());
         }
+    }
+
+    static void accumulateAlignmentBlock(final ChrBaseRegion region, final ReadDepthAccumulator readDepthAccumulator,
+            final int alignmentBlockReadStart, final int alignmentBlockReferenceStart, final int alignmentBlockLength,
+            byte[] readBases)
+    {
+        // NOTE: we need to adjust start and end to avoid adding counts to regions that belongs to another task
+        // as if we do that they will be double counted
+        int genomeStart = Math.max(alignmentBlockReferenceStart, region.start());
+        int length = Math.min(alignmentBlockReferenceStart + alignmentBlockLength, region.end() + 1) - genomeStart;
+
+        if(length <= 0)
+        {
+            return;
+        }
+
+        // use 0 based index here such that we can use it with java string
+        int readStartIndex = alignmentBlockReadStart - 1;
+        readStartIndex += (genomeStart - alignmentBlockReferenceStart);
+        readDepthAccumulator.addReadAlignmentToCounts(region.Chromosome, genomeStart, length, readBases, readStartIndex);
     }
 
     private Table generateDepths(ReadDepthAccumulator readDepthAccumulator)
@@ -176,7 +191,8 @@ public class BamReadCounter
         final Table readDepthTable = Table.create("readDepths",
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
-                DoubleColumn.create(CobaltColumns.READ_DEPTH));
+                DoubleColumn.create(CobaltColumns.READ_DEPTH),
+                DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
 
         for (Chromosome chromosome : mChromosomes)
         {
@@ -188,6 +204,7 @@ public class BamReadCounter
                 row.setString(CobaltColumns.CHROMOSOME, chromosome.contig);
                 row.setInt(CobaltColumns.POSITION, readDepth.startPosition);
                 row.setDouble(CobaltColumns.READ_DEPTH, readDepth.readDepth);
+                row.setDouble(CobaltColumns.READ_GC_CONTENT, readDepth.readGcContent);
             }
         }
 

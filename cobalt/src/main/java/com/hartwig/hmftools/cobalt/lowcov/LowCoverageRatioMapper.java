@@ -233,7 +233,7 @@ public class LowCoverageRatioMapper implements RatioMapper
 
             boundaries.putAll(chromosome, consolidatedBuckets);
 
-            CB_LOGGER.info("chromosome: {}, lov buckets count: {}", chromosome, consolidatedBuckets.size());
+            CB_LOGGER.info("chromosome: {}, low cov buckets count: {}", chromosome, consolidatedBuckets.size());
         }
 
         return boundaries;

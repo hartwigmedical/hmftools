@@ -30,11 +30,12 @@ public class RatioSupplierTest
         final Table readDepths = Table.create("readDepths",
                 StringColumn.create(CobaltColumns.CHROMOSOME),
                 IntColumn.create(CobaltColumns.POSITION),
-                DoubleColumn.create(CobaltColumns.READ_DEPTH));
+                DoubleColumn.create(CobaltColumns.READ_DEPTH),
+                DoubleColumn.create(CobaltColumns.READ_GC_CONTENT));
 
-        addReadCount(readDepths, "chr1", 2001, 100);
-        addReadCount(readDepths, "chr2", 3001, 50);
-        addReadCount(readDepths, "chr2", 4001, 70);
+        addReadDepth(readDepths, "chr1", 2001, 10.0);
+        addReadDepth(readDepths, "chr2", 3001, 5.0);
+        addReadDepth(readDepths, "chr2", 4001, 7.0);
 
         chromosomePosCodec.addEncodedChrPosColumn(readDepths, false);
 
@@ -87,12 +88,13 @@ public class RatioSupplierTest
         assertDoubleEquals(ratio.getDouble("tumorGCRatio"), -1);
     }
 
-    private static void addReadCount(Table readCountTable, String chromosome, int position, int readCount)
+    private static void addReadDepth(Table readCountTable, String chromosome, int position, double readDepth)
     {
         Row row = readCountTable.appendRow();
         row.setString(CobaltColumns.CHROMOSOME, chromosome);
         row.setInt(CobaltColumns.POSITION, position);
-        row.setDouble(CobaltColumns.READ_DEPTH, readCount);
+        row.setDouble(CobaltColumns.READ_DEPTH, readDepth);
+        row.setDouble(CobaltColumns.READ_GC_CONTENT, 0.5);
     }
 
     @SuppressWarnings("SameParameterValue")
