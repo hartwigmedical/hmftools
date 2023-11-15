@@ -3,28 +3,13 @@ package com.hartwig.hmftools.orange.algo.cuppa2;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.common.cuppa.SvDataType;
 import com.hartwig.hmftools.common.cuppa2.Categories;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
-import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppaPredictionData;
-import com.hartwig.hmftools.datamodel.cuppa2.CuppaPredictionData;
 
-import org.jetbrains.annotations.NotNull;
 
 public class CuppaPredictionDataFactory
 {
-    public static CuppaPredictionData create(@NotNull List<CuppaDataFile> entries)
-    {
-        return ImmutableCuppaPredictionData.builder()
-                .predictions(extractPredictions(entries))
-                .simpleDups32To200B(safeInt(entries, SvDataType.SIMPLE_DUP_32B_200B))
-                .maxComplexSize(safeInt(entries, SvDataType.MAX_COMPLEX_SIZE))
-                .lineCount(safeInt(entries, SvDataType.LINE))
-                .telomericSGLs(safeInt(entries, SvDataType.TELOMERIC_SGL))
-                .build();
-    }
 
     public static ProbabilityEntry getTopPrediction(CuppaPredictions cuppaPredictions)
     {
