@@ -170,7 +170,7 @@ public class CuppaPredictions
         return Categories.ClfName.DNA_COMBINED;
     }
 
-    public CuppaPredictions subsetByDataType(Categories.DataType dataType) throws IOException
+    public CuppaPredictions subsetByDataType(Categories.DataType dataType)
     {
         List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
         for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
@@ -184,7 +184,7 @@ public class CuppaPredictions
         return new CuppaPredictions(newPredictionEntries);
     }
 
-    public CuppaPredictions getTopPredictions(int n) throws IOException
+    public CuppaPredictions getTopPredictions(int n)
     {
         List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
         for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
@@ -197,7 +197,7 @@ public class CuppaPredictions
         return new CuppaPredictions(newPredictionEntries);
     }
 
-    public CuppaPredictions sortByRank() throws IOException
+    public CuppaPredictions sortByRank()
     {
         Comparator<CuppaPredictionEntry> comparator = Comparator.comparing(cuppaPrediction -> cuppaPrediction.RankGroup);
         comparator = comparator.thenComparing(cuppaPrediction -> cuppaPrediction.Rank);
