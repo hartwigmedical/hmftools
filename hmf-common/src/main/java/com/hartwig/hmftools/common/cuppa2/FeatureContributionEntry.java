@@ -1,7 +1,4 @@
-package com.hartwig.hmftools.orange.algo.cuppa2;
-import org.jetbrains.annotations.NotNull;
-import com.hartwig.hmftools.common.cuppa2.Categories;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
+package com.hartwig.hmftools.common.cuppa2;
 
 public class FeatureContributionEntry
 {

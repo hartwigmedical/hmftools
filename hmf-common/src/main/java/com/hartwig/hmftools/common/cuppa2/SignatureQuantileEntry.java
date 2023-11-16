@@ -1,7 +1,4 @@
-package com.hartwig.hmftools.orange.algo.cuppa2;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
-
-import org.jetbrains.annotations.NotNull;
+package com.hartwig.hmftools.common.cuppa2;
 
 public class SignatureQuantileEntry
 {
