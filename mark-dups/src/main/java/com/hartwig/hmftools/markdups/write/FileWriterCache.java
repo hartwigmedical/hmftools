@@ -71,6 +71,14 @@ public class FileWriterCache
         return createBamWriter(fileId, false, mConfig.UseSortCache);
     }
 
+    public BamWriter getFullyUnmappedReadsBamWriter()
+    {
+        if(!mConfig.MultiBam || mConfig.UseSortCache)
+            return mSharedUnsortedWriter;
+
+        return mBamWriters.get(0);
+    }
+
     public long totalWrittenReads()
     {
         return mBamWriters.stream().mapToLong(x -> x.nonConsensusWriteCount()).sum();

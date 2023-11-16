@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.markdups.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -22,16 +23,19 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSampler;
+import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.markdups.common.FragmentStatus;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.Statistics;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
-import com.hartwig.hmftools.markdups.consensus.ConsensusStatistics;
 import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.write.FileWriterCache;
 
-import org.jetbrains.annotations.NotNull;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 public class MarkDuplicates
 {
@@ -101,6 +105,8 @@ public class MarkDuplicates
         }
 
         MD_LOGGER.info("all partition tasks complete");
+
+        writeFullyUnmappedReads(fileWriterCache);
 
         List<PartitionReader> partitionReaders = partitionTasks.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
 
@@ -179,6 +185,27 @@ public class MarkDuplicates
         logPerformanceStats(combinedPerfCounters, partitionDataStore);
 
         MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
+    }
+
+    private void writeFullyUnmappedReads(final FileWriterCache fileWriterCache)
+    {
+        MD_LOGGER.info("Writing unmapped reads which are either unpaired or have an unmapped mate.");
+
+        if(mConfig.BamFile == null)
+            return;
+
+        BamWriter bamWriter = fileWriterCache.getFullyUnmappedReadsBamWriter();
+
+        SamReader samReader =
+                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
+        BamSlicer bamSlicer = new BamSlicer(0, true, false, false);
+        bamSlicer.setKeepUnmapped();
+
+        bamSlicer.queryUnmapped(samReader, (final SAMRecord read) ->
+        {
+            if(read.getReadUnmappedFlag() && (!read.getReadPairedFlag() || read.getMateUnmappedFlag()))
+                bamWriter.writeRead(read, FragmentStatus.UNSET);
+        });
     }
 
     private void setReadLength()
