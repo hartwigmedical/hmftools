@@ -75,7 +75,7 @@ public class SomaticVariants
 
         if(mConfig.SomaticVcf.isEmpty())
         {
-            somaticVcf = mConfig.SampleDataDir + mSample.TumorId + PurityConstants.PURPLE_CTDNA_SOMATIC_VCF_ID;
+            somaticVcf = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_CTDNA_SOMATIC_VCF_ID;
 
             if(!mSample.VcfTag.isEmpty())
                 somaticVcf += mSample.VcfTag + ".";
