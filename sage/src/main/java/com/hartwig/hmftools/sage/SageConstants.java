@@ -67,6 +67,8 @@ public class SageConstants
 
     public static final int INDEL_DEDUP_MAX_DIST_THRESHOLD = 40;
 
+    public static final int SYNC_FRAG_MAX_MISMATCHES = 10;
+
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
             "hotspot", 70, 0.005,
             0, 0, 0, 0,

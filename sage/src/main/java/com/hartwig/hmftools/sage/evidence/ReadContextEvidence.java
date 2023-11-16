@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -28,6 +30,7 @@ import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.sync.FragmentData;
 import com.hartwig.hmftools.sage.sync.FragmentSync;
 import com.hartwig.hmftools.sage.sync.FragmentSyncReadHandler;
 
@@ -209,7 +212,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     }
 
     @Override
-    public void processReadRecord(final SAMRecord record, boolean checkSync)
+    public void processReadRecord(final SAMRecord record, boolean checkSync) { processReadRecord(record, checkSync, null); }
+
+    @Override
+    public void processReadRecord(final SAMRecord record, boolean checkSync, @Nullable final FragmentData fragmentData)
     {
         ++mStats.ReadCount;
 
@@ -292,7 +298,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         for(ReadContextCounter readCounter : mSelectedReadCounters)
         {
-            ReadMatchType matchType = readCounter.processRead(record, numberOfEvents);
+            ReadMatchType matchType = readCounter.processRead(record, numberOfEvents, fragmentData);
 
             ++mStats.SupportCounts[matchType.ordinal()];
 

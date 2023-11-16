@@ -2,9 +2,6 @@ package com.hartwig.hmftools.sage.sync;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
-import static java.lang.String.format;
-
-import static com.hartwig.hmftools.sage.sync.FragmentSyncOutcome.ORIG_READ_COORDS;
 
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
@@ -140,11 +137,11 @@ public class FragmentSyncUtils
     protected static SAMRecord buildSyncedRead(
             final SAMRecord referenceRead, final int combinedPosStart, final int combinedPosEnd,
             final byte[] combinedBases, final byte[] combinedBaseQualities,
-            final List<CigarElement> combinedCigar, final String origCoords, final int[] trucatedBases)
+            final List<CigarElement> combinedCigar, final int[] trucatedBases)
     {
         if(trucatedBases == null || (trucatedBases[0] == 0 && trucatedBases[0] == 0))
         {
-            return buildSyncedRead(referenceRead, combinedPosStart, combinedBases, combinedBaseQualities, combinedCigar, origCoords);
+            return buildSyncedRead(referenceRead, combinedPosStart, combinedBases, combinedBaseQualities, combinedCigar);
         }
 
         // bring in the read bases, quals, coords and cigar to the truncated positions
@@ -184,12 +181,12 @@ public class FragmentSyncUtils
             }
         }
 
-        return buildSyncedRead(referenceRead, truncatedFragmentStart, truncBases, truncBaseQuals, combinedCigar, origCoords);
+        return buildSyncedRead(referenceRead, truncatedFragmentStart, truncBases, truncBaseQuals, combinedCigar);
     }
 
     protected static SAMRecord buildSyncedRead(
             final SAMRecord referenceRead, final int combinedPosStart, final byte[] combinedBases, final byte[] combinedBaseQualities,
-            final List<CigarElement> combinedCigar, final String origCoords)
+            final List<CigarElement> combinedCigar)
     {
         SAMRecordSetBuilder recordBuilder = new SAMRecordSetBuilder();
         recordBuilder.setUnmappedHasBasesAndQualities(false);
@@ -223,9 +220,6 @@ public class FragmentSyncUtils
         {
             combinedRecord.setAttribute(tagAndValue.tag, tagAndValue.value);
         }
-
-        // provide original coords since these are used in the evidence phase
-        combinedRecord.setAttribute(ORIG_READ_COORDS, origCoords);
 
         return combinedRecord;
     }

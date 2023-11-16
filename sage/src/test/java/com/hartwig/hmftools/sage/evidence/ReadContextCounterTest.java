@@ -34,7 +34,7 @@ public class ReadContextCounterTest
 
     private static void processRead(final ReadContextCounter rcCounter, final SAMRecord record)
     {
-        rcCounter.processRead(record, 1);
+        rcCounter.processRead(record, 1, null);
     }
 
     @Test

@@ -32,7 +32,6 @@ import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LEN
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
-import static com.hartwig.hmftools.sage.sync.FragmentSyncOutcome.ORIG_READ_COORDS;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
@@ -64,6 +63,7 @@ import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.common.ReadContext;
 import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.sync.FragmentData;
 
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
@@ -283,7 +283,7 @@ public class ReadContextCounter implements VariantHotspot
         ALT;
     }
 
-    public ReadMatchType processRead(final SAMRecord record, int numberOfEvents)
+    public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)
     {
         if(exceedsMaxCoverage())
             return UNRELATED;
@@ -357,7 +357,7 @@ public class ReadContextCounter implements VariantHotspot
         if(mConfig.Quality.HighBaseQualLimit > 0 && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
         {
             if(rawContext.AltSupport)
-                countStrandedness(record);
+                countStrandedness(record, fragmentData);
 
             return UNRELATED;
         }
@@ -406,7 +406,7 @@ public class ReadContextCounter implements VariantHotspot
                 registerRawSupport(rawContext);
 
                 if(rawContext.AltSupport)
-                    updateDistanceFromReadEdge(record);
+                    updateDistanceFromReadEdge(record, fragmentData);
 
                 logReadEvidence(record, matchType, readIndex, quality);
 
@@ -417,7 +417,8 @@ public class ReadContextCounter implements VariantHotspot
                 }
                 */
 
-                countStrandedness(record);
+                if(rawContext.AltSupport || readSupport != null)
+                    countStrandedness(record, fragmentData);
 
                 checkImproperCount(record);
                 return SUPPORT;
@@ -483,7 +484,7 @@ public class ReadContextCounter implements VariantHotspot
             mTotalAltMapQuality += record.getMappingQuality();
             mTotalAltNmCount += numberOfEvents;
 
-            countStrandedness(record);
+            countStrandedness(record, fragmentData);
         }
 
         registerReadSupport(record, readSupport, quality);
@@ -832,9 +833,14 @@ public class ReadContextCounter implements VariantHotspot
         mLpsCounts.add(index, new int[] { readCount, (int)allocCount } );
     }
 
-    private void countStrandedness(final SAMRecord record)
+    private void countStrandedness(final SAMRecord record, final FragmentData fragmentData)
     {
+        if(fragmentData != null)
+            return;
+
         boolean readIsForward = !record.getReadNegativeStrandFlag();
+
+        // SG_LOGGER.debug("read({}) strand({})", record.getReadName(), readIsForward ? "forward" : "reverse");
 
         mReadStrandBias.add(readIsForward);
 
@@ -854,7 +860,7 @@ public class ReadContextCounter implements VariantHotspot
         }
     }
 
-    private void updateDistanceFromReadEdge(final SAMRecord record)
+    private void updateDistanceFromReadEdge(final SAMRecord record, final FragmentData fragmentData)
     {
         if(mMaxDistanceFromEdge >= record.getReadBases().length / 2)
             return;
@@ -868,28 +874,21 @@ public class ReadContextCounter implements VariantHotspot
         int distFromStart = -1;
         int distFromEnd = -1;
 
-        if(record.hasAttribute(ORIG_READ_COORDS))
+        if(fragmentData != null)
         {
-            String[] originalCoords = record.getStringAttribute(ORIG_READ_COORDS).split(";", 4);
-
-            int firstPosStart = Integer.parseInt(originalCoords[0]);
-            int firstPosEnd = Integer.parseInt(originalCoords[1]);
-            int secondPosStart = Integer.parseInt(originalCoords[2]);
-            int secondPosEnd = Integer.parseInt(originalCoords[3]);
-
-            if(positionWithin(mAdjustedVariantPosition, firstPosStart, firstPosEnd))
+            if(positionWithin(mAdjustedVariantPosition, fragmentData.FirstPosStart, fragmentData.FirstPosEnd))
             {
-                distFromStart = mAdjustedVariantPosition - firstPosStart;
-                distFromEnd = firstPosEnd - mAdjustedVariantPosition;
+                distFromStart = mAdjustedVariantPosition - fragmentData.FirstPosStart;
+                distFromEnd = fragmentData.FirstPosEnd - mAdjustedVariantPosition;
             }
 
-            if(positionWithin(mAdjustedVariantPosition, secondPosStart, secondPosEnd))
+            if(positionWithin(mAdjustedVariantPosition, fragmentData.SecondPosStart, fragmentData.SecondPosEnd))
             {
-                if(distFromStart == -1 || mAdjustedVariantPosition - secondPosStart < distFromStart)
-                    distFromStart = mAdjustedVariantPosition - secondPosStart;
+                if(distFromStart == -1 || mAdjustedVariantPosition - fragmentData.SecondPosStart < distFromStart)
+                    distFromStart = mAdjustedVariantPosition - fragmentData.SecondPosStart;
 
-                if(distFromEnd == -1 || secondPosEnd - mAdjustedVariantPosition < distFromEnd)
-                    distFromEnd = secondPosEnd - mAdjustedVariantPosition;
+                if(distFromEnd == -1 || fragmentData.SecondPosEnd - mAdjustedVariantPosition < distFromEnd)
+                    distFromEnd = fragmentData.SecondPosEnd - mAdjustedVariantPosition;
             }
         }
         else
