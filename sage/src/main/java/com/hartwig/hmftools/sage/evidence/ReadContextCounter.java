@@ -10,11 +10,8 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO_DELIM;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
-import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL_STRAND_OLD;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
@@ -553,28 +550,7 @@ public class ReadContextCounter implements VariantHotspot
             mUmiTypeCounts = new int[UMI_TYPE_COUNT];
         }
 
-        UmiReadType umiReadType = UmiReadType.NONE;
-
-        if(record.hasAttribute(UMI_TYPE_ATTRIBUTE))
-        {
-            String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-
-            if(umiType != null)
-                umiReadType = UmiReadType.valueOf(umiType);
-        }
-        else
-        {
-            // to be deprecated since have return to using UMI type attribute above
-            String consensusInfo = record.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
-
-            if(consensusInfo != null && consensusInfo.contains(CONSENSUS_INFO_DELIM))
-            {
-                String[] values = consensusInfo.split(CONSENSUS_INFO_DELIM, 3);
-
-                if(values.length == 3)
-                    umiReadType = values[2].equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(values[2]);
-            }
-        }
+        UmiReadType umiReadType = extractUmiType(record);
 
         // add to total and variant support if applicable
         ++mUmiTypeCounts[umiReadType.ordinal()];

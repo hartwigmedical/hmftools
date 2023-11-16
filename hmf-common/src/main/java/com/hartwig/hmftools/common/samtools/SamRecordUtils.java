@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static htsjdk.samtools.CigarOperator.D;
 
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
@@ -99,6 +98,37 @@ public final class SamRecordUtils
     {
         record.setAttribute(CONSENSUS_READ_ATTRIBUTE, format("%d;%d", readCount, firstInPairCount));
         record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
+    }
+
+    @Deprecated
+    private static final String DUAL_STRAND_OLD = "DUAL_STRAND";
+
+    public static UmiReadType extractUmiType(final SAMRecord record)
+    {
+        UmiReadType umiReadType = UmiReadType.NONE;
+
+        if(record.hasAttribute(UMI_TYPE_ATTRIBUTE))
+        {
+            String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+
+            if(umiType != null)
+                umiReadType = UmiReadType.valueOf(umiType);
+        }
+        else
+        {
+            // to be deprecated since have return to using UMI type attribute above
+            String consensusInfo = record.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+            if(consensusInfo != null && consensusInfo.contains(CONSENSUS_INFO_DELIM))
+            {
+                String[] values = consensusInfo.split(CONSENSUS_INFO_DELIM, 3);
+
+                if(values.length == 3)
+                    umiReadType = values[2].equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(values[2]);
+            }
+        }
+
+        return umiReadType;
     }
 
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)

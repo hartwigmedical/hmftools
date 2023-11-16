@@ -5,6 +5,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.SUPPLEMENTARY_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL;
 
 import java.util.List;
@@ -170,8 +171,7 @@ public class BamReader
         if(read.getDuplicateReadFlag())
             return false;
 
-        String umiType = read.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-        return umiType != null && umiType.equals(DUAL.toString());
+        return extractUmiType(read) == DUAL;
     }
 
     private void checkTargetRegions(final SAMRecord read, boolean isConsensus, boolean isDualStrand)
