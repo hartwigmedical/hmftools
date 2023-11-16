@@ -2,6 +2,10 @@ package com.hartwig.hmftools.orange.algo.cuppa2;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.common.cuppa2.FeatureContributionEntry;
+import com.hartwig.hmftools.common.cuppa2.ProbabilityEntry;
+import com.hartwig.hmftools.common.cuppa2.SignatureQuantileEntry;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppaPredictionData;
 
 import org.junit.Test;
 
@@ -41,5 +45,15 @@ public class CuppaPredictionDataFactoryTest
         SignatureQuantileEntry signatureQuantileEntry = CuppaPredictionDataFactory.getSignatureQuantiles(cuppaPredictions).get(0);
         // System.out.println(signatureQuantileEntry.DataValue);
         assert true;
+    }
+
+    @Test
+    public void createImmutableDataSucceeds()
+    {
+        ImmutableCuppaPredictionData data = CuppaPredictionDataFactory.create(cuppaPredictions);
+        assert data.topPrediction().CancerType.equals("Breast: Triple negative");
+        assert data.probs().size()==320;
+        assert data.featContribs().size()==640;
+        assert data.sigQuantiles().size()==200;
     }
 }
