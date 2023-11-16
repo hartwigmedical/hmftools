@@ -229,10 +229,13 @@ investigate potential causes for QC failure.
 - BQR plots from both reference and tumor sample from [SAGE](../sage)
 
 ## Version History and Download Links
+
+- Upcoming
+    - `::` is used rather than `_` to concatenate the two genes fused in DNA and RNA fusions (impacting orange-datamodel!)
 - [3.0.2](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.2)
-    - Fixed bug with selecting high/low expressed genes for samples without a specific cancer-type (e.g. CUPs)    
+    - Fixed bug with selecting high/low expressed genes for samples without a specific cancer-type (e.g. CUPs)
 - [3.0.1](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.1)
-    - Fixed bug (potential NPE) when resolving optional paths 
+    - Fixed bug (potential NPE) when resolving optional paths
 - [3.0.0](https://github.com/hartwigmedical/hmftools/releases/tag/orange-v3.0.0)
     - Disclaimer (if enabled) has bigger font size in footer, and a disclaimer is now also present in header.
         - New ORANGE-datamodel (v2.0.0) with lots of datamodel renames and clean-ups.
