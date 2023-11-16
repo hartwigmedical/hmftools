@@ -67,8 +67,12 @@ public class CuppaDAO
     {
         deleteCuppaForSample(sample);
 
+<<<<<<< HEAD
         @NotNull
         InsertValuesStep7<CuppaRecord, LocalDateTime, String, String, String, Double, Integer, Byte> inserter = context.insertInto(CUPPA,
+=======
+        @NotNull InsertValuesStep7<CuppaRecord, LocalDateTime, String, String, String, Double, Integer, Byte> inserter = context.insertInto(CUPPA,
+>>>>>>> cuppa_dev
                 CUPPA.MODIFIED,
                 CUPPA.SAMPLEID,
                 CUPPA.CLFNAME,
@@ -107,6 +111,7 @@ public class CuppaDAO
         LocalDateTime timestamp = LocalDateTime.now();
 
         context.insertInto(CUPPA,
+<<<<<<< HEAD
                 CUPPA.MODIFIED,
                 CUPPA.SAMPLEID,
                 CUPPA.CLFNAME,
@@ -122,6 +127,23 @@ public class CuppaDAO
                 likelihood,
                 1,
                 (byte) 1
+=======
+                        CUPPA.MODIFIED,
+                        CUPPA.SAMPLEID,
+                        CUPPA.CLFNAME,
+                        CUPPA.CANCERTYPE,
+                        CUPPA.PROB,
+                        CUPPA.RANK,
+                        CUPPA.ISOLDCUPPAOUTPUT
+                ).values(
+                        timestamp,
+                        sample,
+                        (String) null,
+                        cancerType,
+                        likelihood,
+                        1,
+                        (byte) 1
+>>>>>>> cuppa_dev
         ).execute();
     }
 }
