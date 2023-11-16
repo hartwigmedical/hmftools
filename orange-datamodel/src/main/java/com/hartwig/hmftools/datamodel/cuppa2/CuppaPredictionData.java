@@ -1,9 +1,9 @@
 package com.hartwig.hmftools.datamodel.cuppa2;
-
 import java.util.List;
 
-import com.google.gson.annotations.SerializedName;
-import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
+import com.hartwig.hmftools.common.cuppa2.FeatureContributionEntry;
+import com.hartwig.hmftools.common.cuppa2.ProbabilityEntry;
+import com.hartwig.hmftools.common.cuppa2.SignatureQuantileEntry;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -16,14 +16,14 @@ import org.jetbrains.annotations.Nullable;
 public interface CuppaPredictionData
 {
     @NotNull
-    List<CuppaPrediction> predictions();
+    ProbabilityEntry topPrediction();
 
-    int simpleDups32To200B();
+    @NotNull
+    List<ProbabilityEntry> probs();
 
-    int maxComplexSize();
+    @NotNull
+    List<FeatureContributionEntry> featContribs();
 
-    int telomericSGLs();
-
-    @SerializedName("LINECount")
-    int lineCount();
+    @NotNull
+    List<SignatureQuantileEntry> sigQuantiles();
 }
