@@ -49,4 +49,11 @@ public class EcrfFileReaderTest
         assertEquals(8, result.size());
     }
 
+    @Test
+    public void testTreatChemoAvlDataDoesNotThrow() throws IOException
+    {
+        var result = EcrfFileReader.readTreatChemoAvlData("readers/wide/dummy_treat_chemo_avl_data.csv");
+
+        assertEquals(1, result.size());
+    }
 }
