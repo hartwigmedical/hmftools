@@ -13,7 +13,7 @@ public interface LinxFusion
     @NotNull
     default String display()
     {
-        return String.format("%s_%s", geneStart(), geneEnd());
+        return String.format("%s::%s", geneStart(), geneEnd());
     }
 
     @NotNull

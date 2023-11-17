@@ -37,7 +37,7 @@ public class IsofoxConversionTest
     }
 
     @Test
-    public void ShouldConvertFusionsWithoutGeneNames()
+    public void shouldConvertFusionsWithoutGeneNames()
     {
         ImmutableRnaFusion fusion = IsofoxTestFactory.rnaFusionBuilder()
                 .chromosomeUp("1")
@@ -52,6 +52,6 @@ public class IsofoxConversionTest
         RnaFusion convertedFusion = convert(fusion);
         assertNull(convertedFusion.geneStart());
         assertNull(convertedFusion.geneEnd());
-        assertEquals("_", convertedFusion.display());
+        assertEquals("::", convertedFusion.display());
     }
 }

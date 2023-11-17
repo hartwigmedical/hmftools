@@ -78,7 +78,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
         mSamReader = samReader;
 
-        mBamSlicer = new BamSlicer(0, true, true, false);
+        mBamSlicer = new BamSlicer(0, true, true, true);
         mBamSlicer.setKeepUnmapped();
 
         mReadPositions = new ReadPositionsCache(config.BufferSize, !config.NoMateCigar, this);
@@ -180,6 +180,14 @@ public class PartitionReader implements Consumer<List<Fragment>>
         if(mLogReadIds && mConfig.LogReadIds.contains(read.getReadName())) // debugging only
         {
             MD_LOGGER.debug("specific read: {}", readToString(read));
+        }
+
+        if(read.isSecondaryAlignment())
+        {
+            mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
+            mBamWriter.writeRead(read, FragmentStatus.UNSET);
+            ++mStats.Secondary;
+            return;
         }
 
         if(mConfig.UnmapRegions.enabled())
