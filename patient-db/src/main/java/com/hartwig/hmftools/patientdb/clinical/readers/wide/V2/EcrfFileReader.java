@@ -238,30 +238,31 @@ public final class EcrfFileReader
         return result;
     }
 
-    private interface MappedColumn
+    public static List<TreatChemoAvlData> readTreatChemoAvlData(@NotNull String pathToCsv) throws IOException
     {
-        String getMapping();
-    }
+        List<TreatChemoAvlData> result = new ArrayList<>();
+        List<CsvEntry> entries = HmfCsvReader.read(pathToCsv);
 
-    private enum TreatChemoAvlColumn implements MappedColumn
-    {
-        SUBJECT_KEY("SubjectKey"),
-        CHEMO_CODE("TRAATCC"),
-        TRASDT("TRASDT"),
-        TRAEDT("TRAEDT");
-
-        private final String csvColumnName;
-
-        TreatChemoAvlColumn(String csvColumnName)
+        for(var entry : entries)
         {
-            this.csvColumnName = csvColumnName;
-        }
+            // required fields
+            var subjectKey = entry.get("SubjectKey").orElseThrow();
 
-        @Override
-        public String getMapping()
-        {
-            return csvColumnName;
+            // optional fields
+            var chemoCode = entry.get("TRAATCC");
+            var TRASDT = entry.get("TRASDT").map(LocalDate::parse);
+            var TRAEDT = entry.get("TRAEDT").map(LocalDate::parse);
+
+            var treatChemoAvlDataEntry = TreatChemoAvlData.builder()
+                    .subjectKey("SubjectKey")
+                    .chemoCode(chemoCode)
+                    .TRASDT(TRASDT)
+                    .TRAEDT(TRAEDT)
+                    .build();
+
+            result.add(treatChemoAvlDataEntry);
         }
+        return result;
     }
 
 }
