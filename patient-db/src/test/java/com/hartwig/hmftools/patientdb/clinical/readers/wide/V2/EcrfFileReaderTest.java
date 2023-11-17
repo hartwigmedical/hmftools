@@ -33,4 +33,12 @@ public class EcrfFileReaderTest
         assertEquals(1, result.size());
     }
 
+    @Test
+    public void testReadPrevTreatRadDoesNotThrow() throws IOException
+    {
+        var result = EcrfFileReader.readPrevTreatRadData("readers/wide/dummy_prev_treat_rad_data.csv");
+
+        assertEquals(1, result.size());
+    }
+
 }
