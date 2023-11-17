@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.wide.V2;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -20,6 +21,10 @@ public class CsvEntry
 
     public Optional<String> get(String header)
     {
+        if(!entry.containsKey(header))
+        {
+            throw new NoSuchElementException("Header with name '%s' does not exist.");
+        }
         var result = entry.get(header);
         if(result.equals("NA"))
         {
