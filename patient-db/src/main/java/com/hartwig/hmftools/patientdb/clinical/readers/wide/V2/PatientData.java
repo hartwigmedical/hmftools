@@ -1,48 +1,52 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.wide.V2;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 @Value.Immutable
-@Value.Style(allParameters = true,
-             passAnnotations = { NotNull.class, Nullable.class })
+@Value.Style(passAnnotations = { NotNull.class })
 public abstract class PatientData
 {
     @NotNull
     public abstract String subjectKey();
 
-    public abstract LocalDate informedConsentDate();
+    public abstract Optional<LocalDate> informedConsentDate();
 
-    public abstract LocalDate registrationDate();
+    public abstract Optional<LocalDate> registrationDate();
 
-    public abstract int yearOfBirth();
+    public abstract Optional<Integer> yearOfBirth();
 
-    public abstract Gender gender();
+    public abstract Optional<Gender> gender();
 
-    public abstract boolean specimensCanBeStoredIndefinitelyAndBeUsedForFutureResearch();
+    public abstract Optional<Boolean> specimensCanBeStoredIndefinitelyAndBeUsedForFutureResearch();
 
-    public abstract boolean dataAvailable();
+    public abstract Optional<Boolean> isDataAvailable();
 
-    public abstract boolean otherTrial(); // boolean doesn't really make sense with this naming.
+    public abstract Optional<Boolean> otherTrial(); // boolean doesn't really make sense with this naming.
 
-    public abstract String otherTrialCode();
+    public abstract Optional<String> otherTrialCode();
 
-    public abstract LocalDate otherTrialDate();
+    public abstract Optional<LocalDate> otherTrialDate();
 
-    public abstract boolean hadPreviousChemoTherapy();
+    public abstract Optional<Boolean> hadPreviousChemoTherapy();
 
-    public abstract String chemoEstimatedDate(); //TODO what? Why is this a (boolean) string according to specs
+    public abstract Optional<String> chemoEstimatedDate(); //TODO what? Why is this a (boolean) string according to specs
 
-    public abstract LocalDate chemoDateLastDose();
+    public abstract Optional<LocalDate> chemoLastDoseDate();
 
-    public abstract boolean hadPreviousRadioTherapy();
+    public abstract Optional<Boolean> hadPreviousRadioTherapy();
 
-    public abstract String radioEstimatedDate(); //TODO what? Why is this a (boolean) string according to specs
+    public abstract Optional<String> radioEstimatedDate(); //TODO what? Why is this a (boolean) string according to specs
 
-    public abstract LocalDate radioDateLastDose();
+    public abstract Optional<LocalDate> radioLastDoseDate();
+
+    public static ImmutablePatientData.Builder builder()
+    {
+        return ImmutablePatientData.builder();
+    }
 
     public enum Gender
     {
