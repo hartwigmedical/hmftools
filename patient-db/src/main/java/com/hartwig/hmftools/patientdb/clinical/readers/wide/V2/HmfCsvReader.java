@@ -32,7 +32,7 @@ public final class HmfCsvReader
         {
             return List.of();
         }
-        String[] headers = headerLine.split(",");
+        String[] headers = removeQuoteCharacters(headerLine).split(",");
         return csvReader.lines().filter(line -> !line.isBlank())
                 .map(HmfCsvReader::removeQuoteCharacters)
                 .map(line -> line.split(","))

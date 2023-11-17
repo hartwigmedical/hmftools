@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class HmfCsvReaderTest
 {
-    private static final String DUMMY_CSV_PATH  = "readers/dummy_csv_file.csv";
+    private static final String DUMMY_CSV_PATH = "readers/dummy_csv_file.csv";
 
     @Test
     public void canReadDummyFile() throws IOException
@@ -46,13 +46,24 @@ public class HmfCsvReaderTest
     }
 
     /**
-     *  A bug occurred where an exception would be thrown if a csv file was parsed that had a newline at the end.
-     *  This test should catch that bug.
+     * A bug occurred where an exception would be thrown if a csv file was parsed that had a newline at the end.
+     * This test should catch that bug.
      */
     @Test
     public void testHeaderOnlyWithNewlineDoesNotThrow() throws IOException
     {
-       List<CsvEntry> result = HmfCsvReader.read("readers/file_with_newlines_at_end.csv");
-       assertEquals(1, result.size());
+        List<CsvEntry> result = HmfCsvReader.read("readers/file_with_newlines_at_end.csv");
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    public void testCanReadFileWithQuotedFields() throws IOException
+    {
+        List<CsvEntry> result = HmfCsvReader.read("readers/file_with_quoted_fields.csv");
+        assertEquals(1, result.size());
+
+        var entry = result.get(0);
+        var column = entry.get("header1").orElseThrow();
+        assertEquals("value", column);
     }
 }
