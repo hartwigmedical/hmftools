@@ -30,7 +30,7 @@ public class LowCountModel extends ClonalityModel
     }
 
     @Override
-    public ClonalityResult calculate(final String sampleId, final FragmentCalcResult estimatedResult)
+    public ClonalityResult calculate(final String sampleId, final FragmentCalcResult estimatedResult, final double weightedAvgDepth)
     {
         if(estimatedResult.VAF == 0)
             return INVALID_RESULT;

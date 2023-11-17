@@ -6,6 +6,9 @@ import static com.hartwig.hmftools.wisp.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.WriteType.CN_DATA;
 import static com.hartwig.hmftools.wisp.purity.WriteType.CN_PLOTS;
+import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATIC_PLOTS;
+import static com.hartwig.hmftools.wisp.purity.WriteType.plotCopyNumber;
+import static com.hartwig.hmftools.wisp.purity.WriteType.plotSomatics;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -84,17 +87,29 @@ public class PurityEstimator
 
         mResultsWriter.close();
 
-        if(mConfig.writeType(CN_PLOTS) && mConfig.writeType(CN_DATA))
+        if(plotSomatics(mConfig.WriteTypes) || plotCopyNumber(mConfig.WriteTypes))
         {
             boolean hasError = false;
             for(SampleData sample : mConfig.Samples)
             {
                 for(String sampleId : sample.CtDnaSamples)
                 {
-                    if(!CopyNumberProfile.plotCopyNumberGcRatioFit(sample.PatientId, sampleId, mConfig))
+                    if(plotCopyNumber(mConfig.WriteTypes))
                     {
-                        hasError = true;
-                        break;
+                        if(!CopyNumberProfile.plotCopyNumberGcRatioFit(sample.PatientId, sampleId, mConfig))
+                        {
+                            hasError = true;
+                            break;
+                        }
+                    }
+
+                    if(plotSomatics(mConfig.WriteTypes))
+                    {
+                        if(!SomaticVariants.plotSomaticVafs(sample.PatientId, sampleId, mConfig))
+                        {
+                            hasError = true;
+                            break;
+                        }
                     }
                 }
 
@@ -103,7 +118,7 @@ public class PurityEstimator
             }
         }
 
-        CT_LOGGER.info("CtDNA purity estimator complete");
+        CT_LOGGER.info("Wisp purity estimator complete");
     }
 
     private class PurityTask implements Callable

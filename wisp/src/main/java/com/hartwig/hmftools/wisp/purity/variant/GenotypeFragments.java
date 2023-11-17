@@ -33,6 +33,8 @@ public class GenotypeFragments
 
     public boolean isLowQual() { return UmiCounts.alleleCount() > 0 && qualPerAlleleFragment() <= PurityConstants.MIN_QUAL_PER_AD; }
 
-    public String toString() { return format("%d/%d umi(total=%d allele=%d)",
-            AlleleCount, Depth, UmiCounts.totalCount(), UmiCounts.alleleCount()); }
+    public String toString()
+    {
+        return format("%d/%d umi(total=%d allele=%d)", AlleleCount, Depth, UmiCounts.totalCount(), UmiCounts.alleleCount());
+    }
 }

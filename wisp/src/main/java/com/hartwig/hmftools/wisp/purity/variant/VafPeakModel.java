@@ -6,11 +6,14 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MAX_PROBABILITY;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_DEPTH_PERC;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_VARIANTS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.VAF_PEAK_MODEL_MIN_AVG_DEPTH;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityResult.INVALID_RESULT;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
@@ -24,46 +27,40 @@ import com.hartwig.hmftools.wisp.purity.PurityConstants;
 
 public class VafPeakModel extends ClonalityModel
 {
-    private double mTumorAvgVaf;
-
     public VafPeakModel(
             final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample, final List<SomaticVariant> variants)
     {
         super(config, resultsWriter, sample,  variants);
-
-        mTumorAvgVaf = calcTumorAvgVaf();
     }
 
     @Override
-    public ClonalityResult calculate(final String sampleId, final FragmentCalcResult estimatedResult)
+    public ClonalityResult calculate(final String sampleId, final FragmentCalcResult estimatedResult, final double weightedAvgDepth)
     {
-        if(estimatedResult.PurityProbability > PurityConstants.SOMATIC_PEAK_MAX_PROBABILITY)
+        if(estimatedResult.PurityProbability > SOMATIC_PEAK_MAX_PROBABILITY)
             return INVALID_RESULT;
 
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
-        List<VariantCalcs> variantCalcData = Lists.newArrayList();
+
+        List<Double> variantVafs = Lists.newArrayList();
+
+        int depthThreshold = (int)max(VAF_PEAK_MODEL_MIN_AVG_DEPTH, weightedAvgDepth * SOMATIC_PEAK_MIN_DEPTH_PERC);
 
         for(SomaticVariant variant : mVariants)
         {
             GenotypeFragments sampleFragData = variant.findGenotypeData(sampleId);
-            GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
 
             if(sampleFragData == null)
                 continue;
 
-            if(canUseVariant(variant, sampleFragData))
+            if(canUseVariant(variant, sampleFragData, depthThreshold))
             {
                 filteredVariants.add(variant);
-
-                VariantCalcs varCalcData = calcAdjustedVaf(sampleFragData, tumorFragData);
-                variantCalcData.add(varCalcData);
+                variantVafs.add(sampleFragData.vaf());
             }
         }
 
-        if(filteredVariants.size() < PurityConstants.SOMATIC_PEAK_MIN_VARIANTS)
+        if(filteredVariants.size() < SOMATIC_PEAK_MIN_VARIANTS)
             return INVALID_RESULT;
-
-        List<Double> variantVafs = variantCalcData.stream().map(x -> x.SampleVaf).collect(Collectors.toList());
 
         List<VafPeak> vafPeaks = findVafPeaks(variantVafs, estimatedResult.VAF);
 
@@ -126,11 +123,11 @@ public class VafPeakModel extends ClonalityModel
 
         double avgVaf = vafTotal / sampleVafs.size();
 
-        // double densityBandwidth = min(avgVaf / 2, 0.01);
         double densityBandwidth = max(avgVaf/8, min(avgVaf/2, 0.01));
-        // bandwidth=pmax(mean(filteredVars$SampleVaf)/8,pmin(mean(filteredVars$SampleVaf)/2,0.01))  # mean = 0.076, min(avgVaf / 2, 0.01)
+
         int maxVafLimit = min((int)round(maxVaf * 100), 99);
 
+        // VAFs will be allocated to buckets typically of 0.002 increments, so up to 500 altogether, but capped by the max observed VAF
         int vafFraction = 5;
         double[] vafs = IntStream.rangeClosed(0, maxVafLimit * vafFraction).mapToDouble(x -> x / (100d * vafFraction)).toArray();
 
@@ -147,7 +144,6 @@ public class VafPeakModel extends ClonalityModel
             double density = densities[i];
 
             // peak must be above the estimated VAF
-
             if(!Doubles.greaterThan(density, densities[i - 1]) || !Doubles.greaterThan(density, densities[i + 1]))
                 continue;
 
@@ -177,63 +173,10 @@ public class VafPeakModel extends ClonalityModel
         return peakVafs;
     }
 
-    private boolean canUseVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData)
+    private boolean canUseVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData, int depthThreshold)
     {
         return useVariant(variant, sampleFragData)
-                && sampleFragData.UmiCounts.totalCount() >= PurityConstants.SOMATIC_PEAK_MIN_DEPTH
-                && sampleFragData.UmiCounts.alleleCount() >= PurityConstants.SOMATIC_PEAK_MIN_AD;
-    }
-
-    private class VariantCalcs
-    {
-        public final double TumorVaf;
-        public final double TumorVafAdjust;
-        public final double SampleVaf;
-
-        public VariantCalcs(final double tumorVaf, final double tumorVafAdjust, final double sampleVaf)
-        {
-            TumorVaf = tumorVaf;
-            TumorVafAdjust = tumorVafAdjust;
-            SampleVaf = sampleVaf;
-        }
-
-        public double sampleAdjustedVaf() { return SampleVaf * TumorVafAdjust; }
-    }
-
-    private VariantCalcs calcAdjustedVaf(final GenotypeFragments sampleFragData, final GenotypeFragments tumorFragData)
-    {
-        double variantVaf = sampleFragData.vaf();
-        double tumorVaf = tumorFragData.vaf();
-
-        if(tumorVaf == 0)
-            return new VariantCalcs(0, 0, 0);
-
-        double tumorVafAdjust = mTumorAvgVaf / tumorVaf;
-        return new VariantCalcs(tumorVaf, tumorVafAdjust, variantVaf);
-    }
-
-    private double calcTumorAvgVaf()
-    {
-        double sampleVafTotal = 0;
-        int sampleVafCount = 0;
-
-        for(SomaticVariant variant : mVariants)
-        {
-            GenotypeFragments tumorFragData = variant.findGenotypeData(mSample.TumorId);
-
-            if(tumorFragData == null)
-                continue;
-
-            if(!variant.isFiltered())
-            {
-                if(tumorFragData.Depth > 0)
-                {
-                    sampleVafTotal += tumorFragData.vaf();
-                    ++sampleVafCount;
-                }
-            }
-        }
-
-        return sampleVafCount > 0 ? sampleVafTotal / sampleVafCount : 0;
+            && sampleFragData.UmiCounts.totalCount() >= depthThreshold
+            && sampleFragData.UmiCounts.alleleCount() >= 1;
     }
 }

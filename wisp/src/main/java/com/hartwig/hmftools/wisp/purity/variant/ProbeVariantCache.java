@@ -1,8 +1,6 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static com.hartwig.hmftools.common.utils.file.CommonFields.FLD_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
-import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.FLD_CATEGORY;
@@ -27,17 +25,17 @@ import com.hartwig.hmftools.wisp.probe.CategoryType;
 
 public class ProbeVariantCache
 {
-    private final Map<String, List<ProbeVariant>> mSampleVariants;
+    private final Map<String,List<ProbeVariant>> mTumorVariants; // map of tumor ID to probe variants in the panel
 
     public ProbeVariantCache(final String filename)
     {
-        mSampleVariants = Maps.newHashMap();
+        mTumorVariants = Maps.newHashMap();
 
         if(filename != null)
             loadVariants(filename);
     }
 
-    public List<ProbeVariant> getSampleVariants(final String sampleId) { return mSampleVariants.get(sampleId); }
+    public List<ProbeVariant> getSampleVariants(final String tumorId) { return mTumorVariants.get(tumorId); }
 
     private void loadVariants(final String filename)
     {
@@ -48,26 +46,26 @@ public class ProbeVariantCache
 
             Map<String,Integer> fieldsIndexMap = createFieldsIndexMap(header, CSV_DELIM);
 
-            int sampleIndex = fieldsIndexMap.get(FLD_TUMOR_ID);
+            int tumorIdIndex = fieldsIndexMap.get(FLD_TUMOR_ID);
             int categoryIndex = fieldsIndexMap.get(FLD_CATEGORY);
             int variantIndex = fieldsIndexMap.get(FLD_VARIANT);
 
             lines.remove(0);
 
             List<ProbeVariant> sampleVariants = null;
-            String currentSampleId = "";
+            String currentTumorId = "";
 
             for(String line : lines)
             {
                 String[] values = line.split(CSV_DELIM, -1);
 
-                String sampleId = values[sampleIndex];
+                String tumorId = values[tumorIdIndex];
 
-                if(!sampleId.equals(currentSampleId))
+                if(!tumorId.equals(currentTumorId))
                 {
-                    currentSampleId = sampleId;
+                    currentTumorId = tumorId;
                     sampleVariants = Lists.newArrayList();
-                    mSampleVariants.put(sampleId, sampleVariants);
+                    mTumorVariants.put(tumorId, sampleVariants);
                 }
 
                 CategoryType category = CategoryType.valueOf(values[categoryIndex]);
@@ -89,12 +87,12 @@ public class ProbeVariantCache
                 }
             }
 
-            CT_LOGGER.info("loaded {} sample probe variants from file({})",
-                    mSampleVariants.values().stream().mapToInt(x -> x.size()).sum(), filename);
+            CT_LOGGER.info("loaded {} tumor sample probe variants from file({})",
+                    mTumorVariants.values().stream().mapToInt(x -> x.size()).sum(), filename);
         }
         catch(Exception e)
         {
-            CT_LOGGER.error("failed to load sample probe variants file({}): {}", filename, e.toString());
+            CT_LOGGER.error("failed to load tumor sample probe variants file({}): {}", filename, e.toString());
             e.printStackTrace();
             System.exit(1);
         }
