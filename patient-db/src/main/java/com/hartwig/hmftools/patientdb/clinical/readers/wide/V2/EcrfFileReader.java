@@ -20,7 +20,10 @@ public final class EcrfFileReader
 
         for(CsvEntry entry : entries)
         {
+            // required fields
             var subjectKey = entry.get("SubjectKey").orElseThrow();
+
+            // optional fields
             var informedConsentDate = entry.get("DIC").map(LocalDate::parse);
             var registrationDate = entry.get("registrationDate").map(LocalDate::parse);
             var yearOfBirth = entry.get("YOB").map(Integer::parseInt);
@@ -57,6 +60,71 @@ public final class EcrfFileReader
                     .build();
             result.add(patientDataEntry);
         }
+        return result;
+    }
+
+    public static List<BiopsyData> readBiopsyData(@NotNull String pathToCsv) throws IOException
+    {
+        List<BiopsyData> result = new ArrayList<>();
+
+        List<CsvEntry> entries = HmfCsvReader.read(pathToCsv);
+
+        for(CsvEntry entry : entries)
+        {
+            // required fields
+            var combinedKey = entry.get("Subject_FormRepeat_Keys").orElseThrow();
+            var subjectKey = entry.get("SubjectKey").orElseThrow();
+            var registrationDate = entry.get("FormRepeatKey").map(LocalDate::parse).orElseThrow();
+
+            // optional fields
+            var sampleDate = entry.get("BIOPTDTC").map(LocalDate::parse);
+            var sampleSite = entry.get("BIOPSITC");
+            var sampleSiteDetails = entry.get("BIOPTISC");
+            var sampleCollectionMethod = entry.get("SAMPTYPC");
+            var studyCode = entry.get("STCODEC");
+            var otherTrial = entry.get("OTHTRLC");
+            var otherTrialCode = entry.get("DFHOTCC");
+            var otherTrialDate = entry.get("DFOTSDTC").map(LocalDate::parse);
+            var diagnosis = entry.get("DFHDIAGC");
+            var BDMWDPNR = entry.get("BDMWDPNR");
+            var tNumber = entry.get("BMDTNR");
+            var wasWgsSuccessful = entry.get("BMDBWSYN").map(i -> i.equals("1"));
+            var reasonWgsWasNotSuccessful = entry.get("BMDBWSNR");
+            var sampleType = entry.get("BMDPTM");
+            var wgsReportPipelineVersion = entry.get("BMDWGSV");
+            var hmfReportDate = entry.get("BMDWRPDT").map(LocalDate::parse);
+            var wgsFindingsSummary = entry.get("BMDWGSF");
+            var tumorTypeOncoTree = entry.get("BMDTTOT");
+            var tumorTypeHmf = entry.get("BMDTTHMF");
+
+            var biopsyDataEntry = BiopsyData.builder()
+                    .combinedKey(combinedKey)
+                    .subjectKey(subjectKey)
+                    .registrationDate(registrationDate)
+                    .sampleDate(sampleDate)
+                    .sampleSite(sampleSite)
+                    .sampleSiteDetails(sampleSiteDetails)
+                    .sampleCollectMethod(sampleCollectionMethod)
+                    .studyCode(studyCode)
+                    .otherTrial(otherTrial)
+                    .otherTrialCode(otherTrialCode)
+                    .otherTrialDate(otherTrialDate)
+                    .diagnosis(diagnosis)
+                    .BDMWDPNR(BDMWDPNR)
+                    .tNumber(tNumber)
+                    .wasWgsSuccessful(wasWgsSuccessful)
+                    .reasonWgsWasNotSuccessful(reasonWgsWasNotSuccessful)
+                    .sampleType(sampleType)
+                    .wgsReportPipelineVersion(wgsReportPipelineVersion)
+                    .hmfReportDate(hmfReportDate)
+                    .wgsFindingsSummary(wgsFindingsSummary)
+                    .tumorTypeOncoTree(tumorTypeOncoTree)
+                    .tumorTypeHmf(tumorTypeHmf)
+                    .build();
+
+            result.add(biopsyDataEntry);
+        }
+
         return result;
     }
 
