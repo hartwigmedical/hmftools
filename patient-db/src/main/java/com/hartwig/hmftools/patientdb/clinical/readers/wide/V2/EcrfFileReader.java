@@ -124,81 +124,54 @@ public final class EcrfFileReader
 
             result.add(biopsyDataEntry);
         }
+        return result;
+    }
 
+
+    public static List<PrevTreatChemoData> readPrevTreatChemoData(@NotNull String pathToCsv) throws IOException
+    {
+        List<PrevTreatChemoData> result = new ArrayList<>();
+        List<CsvEntry> entries = HmfCsvReader.read(pathToCsv);
+
+        for (CsvEntry entry : entries) {
+            // required fields
+            var subjectKey = entry.get("SubjectKey").orElseThrow();
+            var itemGroupOid = entry.get("ItemGroupOID").orElseThrow();
+            var itemGroupRepeatKey = entry.get("ItemGroupRepeatKey").map(Integer::parseInt).orElseThrow();
+
+            // optional fields
+            var medicalHistoryCategory = entry.get("CHCT");
+            var chemoDrugOne = entry.get("CHTR").map(Integer::parseInt);
+            var CHTS = entry.get("CHTS").map(Integer::parseInt);
+            var chemoDrugTwo = entry.get("CHTR1").map(Integer::parseInt);
+            var CHTS1 = entry.get("CHTS1").map(Integer::parseInt);
+            var chemoDrugThree = entry.get("CHTR2").map(Integer::parseInt);
+            var CHTS2 = entry.get("CHTS2").map(Integer::parseInt);
+            var chemoDrugFour = entry.get("CHTR3").map(Integer::parseInt);
+            var CHTS3 = entry.get("CHTS3").map(Integer::parseInt);
+
+            var prevTreatChemoDataEntry = PrevTreatChemoData.builder()
+                    .subjectKey(subjectKey)
+                    .itemGroupOid(itemGroupOid)
+                    .itemGroupRepeatedKey(itemGroupRepeatKey)
+                    .medicalHistoryCategory(medicalHistoryCategory)
+                    .chemoDrugOne(chemoDrugOne)
+                    .CHTS(CHTS)
+                    .chemoDrugTwo(chemoDrugTwo)
+                    .CHTS1(CHTS1)
+                    .chemoDrugThree(chemoDrugThree)
+                    .CHTS2(CHTS2)
+                    .chemoDrugFour(chemoDrugFour)
+                    .CHTS3(CHTS3)
+                    .build();
+            result.add(prevTreatChemoDataEntry);
+        }
         return result;
     }
 
     private interface MappedColumn
     {
         String getMapping();
-    }
-
-    private enum BiospyDataColumn implements MappedColumn
-    {
-        COMBINED_KEY("Subject_FormRepeat_Keys"),
-        SUBJECT_KEY("SubjectKey"),
-        REGISTRATION_DATE("FormRepeatKey"),
-        SAMPLE_DATE("BIOPTDTC"),
-        SAMPLE_SITE("BIOPSITC"),
-        SAMPLE_SITE_DETAILS("BIOPTISC"),
-        SAMPLE_COLLECT_METHOD("SAMPTYPC"),
-        STUDY_CODE("STCODEC"),
-        OTHER_TRIAL("OTHTRLC"),
-        OTHER_TRIAL_CODE("DFHOTCC"),
-        OTHER_TRIAL_DATE("DFOTSDTC"),
-        DIAGNOSIS("DFHDIAGC"),
-        BDMWDPNR("BDMWDPNR"),
-        T_NUMBER("BMDTNR"),
-        WAS_WGS_SUCCESFUL("BMDBWSYN"),
-        REASON_WGS_WAS_NOT_SUCCESFUL("BMDBWSNR"),
-        SAMPLE_TYPE("BMDPTM"),
-        WGS_REPORT_PIPELINE_VERSION("BMDWGSV"),
-        HMF_REPORT_DATE("BMDWRPDT"),
-        WGS_FINDINGS_SUMMARY("BMDWGSF"),
-        TUMOR_TYPE_ONCO_TREE("BMDTTOT"),
-        TUMOR_TYPE_HMF("BMDTTHMF");
-
-        private final String csvColumnName;
-
-        BiospyDataColumn(String csvColumnName)
-        {
-            this.csvColumnName = csvColumnName;
-        }
-
-        @Override
-        public String getMapping()
-        {
-            return csvColumnName;
-        }
-    }
-
-    private enum PrevTreatChemoColumn implements MappedColumn
-    {
-        SUBJECT_KEY("SubjectKey"),
-        ITEM_GROUP_OID("ItemGroupOID"),
-        ITEM_GROUP_REPEAT_KEY("ItemGroupRepeatKey"),
-        MEDICAL_HISTORY_CATEGORY("CHCT"),
-        CHEMO_DRUG_ONE("CHTR"),
-        CHTS("CHTS"),
-        CHEMO_DRUG_TWO("CHTR1"),
-        CHTS1("CHTS1"),
-        CHEMO_DRUG_THREE("CHTR2"),
-        CHTS2("CHTS2"),
-        CHEMO_DRUG_FOUR("CHTR3"),
-        CHTS3("CHTS3");
-
-        private final String csvColumnName;
-
-        PrevTreatChemoColumn(String csvColumnName)
-        {
-            this.csvColumnName = csvColumnName;
-        }
-
-        @Override
-        public String getMapping()
-        {
-            return csvColumnName;
-        }
     }
 
     private enum PrevTreatRadColumn implements MappedColumn

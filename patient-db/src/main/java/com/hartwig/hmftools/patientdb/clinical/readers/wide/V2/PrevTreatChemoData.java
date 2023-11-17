@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.patientdb.clinical.readers.wide.V2;
 
+import java.util.Optional;
+
 import org.immutables.value.Value;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,23 +13,33 @@ public abstract class PrevTreatChemoData // TODO CHTS meaning
 {
     @NotNull
     public abstract String subjectKey();
-    public abstract String ItemGroupOid();
-    public abstract int ItemGroupRepeatedKey();
-    public abstract String medicalHistoryCategory();
 
-    public abstract int chemoDrugOne();
+    @NotNull
+    public abstract String itemGroupOid();
 
-    public abstract int CHTS();
+    @NotNull
+    public abstract Integer itemGroupRepeatedKey();
 
-    public abstract int chemoDrugTwo();
+    public abstract Optional<String> medicalHistoryCategory();
 
-    public abstract int CHTS1();
+    public abstract Optional<Integer> chemoDrugOne();
 
-    public abstract int chemoDrugThree();
+    public abstract Optional<Integer> CHTS();
 
-    public abstract int CHTS2();
+    public abstract Optional<Integer> chemoDrugTwo();
 
-    public abstract int chemoDrugFour();
+    public abstract Optional<Integer> CHTS1();
 
-    public abstract int CHTS3();
+    public abstract Optional<Integer> chemoDrugThree();
+
+    public abstract Optional<Integer> CHTS2();
+
+    public abstract Optional<Integer> chemoDrugFour();
+
+    public abstract Optional<Integer> CHTS3();
+
+    public static ImmutablePrevTreatChemoData.Builder builder()
+    {
+        return ImmutablePrevTreatChemoData.builder();
+    }
 }
