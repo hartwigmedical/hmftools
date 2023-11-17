@@ -26,7 +26,7 @@ public abstract class TumorMeasureData
 
     public abstract Optional<Integer> recist(); // TODO what is this, very cryptic
 
-    public abstract Optional<Boolean> continueTreatment();
+    public abstract Optional<ResponseEvaluation> responseEvaluation();
 
     public abstract Optional<EndOfTreatmentReason> reasonEndOfTreatment();
 
@@ -34,6 +34,11 @@ public abstract class TumorMeasureData
 
     public static ImmutableTumorMeasureData.Builder builder() {
         return ImmutableTumorMeasureData.builder();
+    }
+
+    public enum ResponseEvaluation {
+        CLINICAL_BENEFIT,
+        STOP_TREATMENT
     }
 
     public enum EndOfTreatmentReason

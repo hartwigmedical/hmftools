@@ -209,7 +209,7 @@ public final class EcrfFileReader
         for(CsvEntry entry : entries)
         {
             // required fields
-            var combinedKey = entry.get("Subejct_FormRepeat_Keys").orElseThrow();
+            var combinedKey = entry.get("Subject_FormRepeat_Keys").orElseThrow();
             var subjectKey = entry.get("SubjectKey").orElseThrow();
             var formRepeatKey = entry.get("FormRepeatKey").orElseThrow();
 
@@ -217,9 +217,10 @@ public final class EcrfFileReader
             var measureDate = entry.get("TMDTC").map(LocalDate::parse);
             var TMDUMTXT = entry.get("TMDUMTXT");
             var recist = entry.get("RSPOA").map(Integer::parseInt);
-            var continueTreatment = entry.get("TMREOT").map(EcrfFileReader::convertBinaryStringToBoolean);
-            var reasonEndOfTreatment = entry.get("TMREOT").map(TumorMeasureData.EndOfTreatmentReason::valueOf);
+            var reasonEndOfTreatment = entry.get("TMREOT").map(EcrfFileReader::convertToEndOfTreatmentReason);
             var reasonEndOfTreatmentSpecification = entry.get("TMREOTSP");
+
+            var responseEvaluation = entry.get("TMRESNR").map(EcrfFileReader::convertToResponseEvaluation);
 
             var tumorMeasureDataEntry = TumorMeasureData.builder()
                     .combinedKey(combinedKey)
@@ -228,7 +229,7 @@ public final class EcrfFileReader
                     .measureDate(measureDate)
                     .TMDUMTXT(TMDUMTXT)
                     .recist(recist)
-                    .continueTreatment(continueTreatment)
+                    .responseEvaluation(responseEvaluation)
                     .reasonEndOfTreatment(reasonEndOfTreatment)
                     .reasonEndOfTreatmentSpecification(reasonEndOfTreatmentSpecification)
                     .build();
@@ -265,26 +266,67 @@ public final class EcrfFileReader
         return result;
     }
 
-    private static Boolean convertBinaryStringToBoolean(@NotNull String bitString) {
-        if (! bitString.equals("0") && ! bitString.equals("1")) {
+    private static Boolean convertBinaryStringToBoolean(@NotNull String bitString)
+    {
+        if(!bitString.equals("0") && !bitString.equals("1"))
+        {
             throw new IllegalArgumentException(String.format("Cannot convert input '%s' to boolean value. Please provide '0' for false or '1' for true.", bitString));
         }
         return bitString.equals("1");
     }
 
-    private static Boolean convertYNStringToBoolean(@NotNull String YNString) {
-        if (! YNString.equals("Y") && ! YNString.equals("N")) {
+    private static Boolean convertYNStringToBoolean(@NotNull String YNString)
+    {
+        if(!YNString.equals("Y") && !YNString.equals("N"))
+        {
             throw new IllegalArgumentException(String.format("Cannot convert input '%s' to boolean value. Please provide 'N' for false or 'Y' for true.", YNString));
         }
         return YNString.equals("Y");
     }
 
-    private static PatientData.Gender convertBitStringToGender(@NotNull String bitString) {
-        if (! bitString.equals("0") && ! bitString.equals("1")) {
+    private static PatientData.Gender convertBitStringToGender(@NotNull String bitString)
+    {
+        if(!bitString.equals("0") && !bitString.equals("1"))
+        {
             throw new IllegalArgumentException(String.format("Cannot convert input '%s' to Gender value. Please provide '0' for MALE or '1' for FEMALE.", bitString));
         }
         return bitString.equals("0") ? PatientData.Gender.MALE : PatientData.Gender.FEMALE;
     }
 
+    private static TumorMeasureData.EndOfTreatmentReason convertToEndOfTreatmentReason(@NotNull String encoding)
+    {
+        switch(encoding)
+        {
+            case "1":
+                return TumorMeasureData.EndOfTreatmentReason.CLINICAL_DETERIORATION;
+            case "2":
+                return TumorMeasureData.EndOfTreatmentReason.DEATH;
+            case "3":
+                return TumorMeasureData.EndOfTreatmentReason.RADIOLOGIC_PROGRESSION_NON_RECIST_LESIONS;
+            case "4":
+                return TumorMeasureData.EndOfTreatmentReason.VISIBLE_EVIDENT_PROGRESSION;
+            case "5":
+                return TumorMeasureData.EndOfTreatmentReason.TUMOR_MARKERS;
+            case "6":
+                return TumorMeasureData.EndOfTreatmentReason.CHEMO_PAUSE;
+            case "7":
+                return TumorMeasureData.EndOfTreatmentReason.CONFORM_PROTOCOL_CURATIVE_SETTING;
+            case "8":
+                return TumorMeasureData.EndOfTreatmentReason.OTHER;
+            default:
+                throw new IllegalArgumentException(String.format("Unknown encoding: '%s'", encoding));
+        }
+    }
+
+    private static TumorMeasureData.ResponseEvaluation convertToResponseEvaluation(@NotNull String bitString)
+    {
+        if(!bitString.equals("1") && !bitString.equals("2"))
+        {
+            throw new IllegalArgumentException(String.format("Cannot convert input '%s' to ResponseEvaluation value. Please provide '1' for CLINICAL_BENEFIT or '2' for STOP_TREATMENT.", bitString));
+        }
+        return bitString.equals("1")
+                ? TumorMeasureData.ResponseEvaluation.CLINICAL_BENEFIT
+                : TumorMeasureData.ResponseEvaluation.STOP_TREATMENT;
+    }
 
 }

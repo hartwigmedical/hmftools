@@ -41,4 +41,12 @@ public class EcrfFileReaderTest
         assertEquals(1, result.size());
     }
 
+    @Test
+    public void testReadTumorMeasureDoesNotThrow() throws IOException
+    {
+        var result = EcrfFileReader.readTumorMeasureData("readers/wide/dummy_tumor_measure_data.csv");
+
+        assertEquals(8, result.size());
+    }
+
 }
