@@ -62,7 +62,6 @@ public class DuplicateGroupBuilder
         }
 
         int fragmentCount = fragments.size();
-        boolean applyHighDepthLogic = false; // fragmentCount > HIGH_DEPTH_THRESHOLD;
 
         Map<Fragment,List<Fragment>> possibleDuplicates = Maps.newHashMap();
         Map<Fragment,Fragment> linkedDuplicates = Maps.newHashMap();
@@ -97,9 +96,6 @@ public class DuplicateGroupBuilder
                 Fragment fragment2 = fragments.get(j);
 
                 FragmentStatus status = calcFragmentStatus(fragment1, fragment2, requireOrientationMatch);
-
-                if(applyHighDepthLogic && status == CANDIDATE && proximateFragmentSizes(fragment1, fragment2))
-                    status = DUPLICATE;
 
                 if(status == DUPLICATE)
                 {
