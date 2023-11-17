@@ -18,7 +18,7 @@ public abstract class BiopsyData // TODO FormRepeatKey, what is that ?
     public abstract String subjectKey();
 
     @NotNull
-    public abstract LocalDate registrationDate();
+    public abstract String formRepeatKey();
 
     public abstract Optional<LocalDate> sampleDate();
 

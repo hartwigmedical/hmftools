@@ -1,0 +1,3 @@
+"Subject_FormRepeat_Keys","SubjectKey","FormRepeatKey","BIOPTDTC","BIOPSITC","BIOPTISC","SAMPTYPC","STCODEC","OTHTRLC","DFHOTCC","DFOTSDTC","DFHDIAGC","BDMWDPNR","BMDTNR","BMDBWSYN","BMDBWSNR","BMDPTM","BMDWGSV","BMDWRPDT","BMDWGSF","BMDTTOT","BMDTTHMF"
+"0001_1",1,1,"1980-01-01","foo","foo","biopt","N18WGS-3","N","1980-01-05","1980-01-09","carcinoom","WIDE-00-00-0000","T00-12345",0,20,3,5.11,"1980-01-03","WGS failed for unknown reasons",4,5
+"0001_2",2,3,"1980-01-01","foo","foo","biopt","N18WGS-3","Y","1980-01-05","1980-01-09","carcinoom","WIDE-00-00-0000","T00-12345",0,20,3,5.11,"1980-01-03","WGS failed for unknown reasons",4,5

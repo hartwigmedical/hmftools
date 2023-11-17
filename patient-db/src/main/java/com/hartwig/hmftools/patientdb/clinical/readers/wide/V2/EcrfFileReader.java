@@ -25,18 +25,18 @@ public final class EcrfFileReader
 
             // optional fields
             var informedConsentDate = entry.get("DIC").map(LocalDate::parse);
-            var registrationDate = entry.get("registrationDate").map(LocalDate::parse);
+            var registrationDate = entry.get("REGDT").map(LocalDate::parse);
             var yearOfBirth = entry.get("YOB").map(Integer::parseInt);
-            var gender = entry.get("GEN").map(i -> i.equals("0") ? PatientData.Gender.MALE : PatientData.Gender.FEMALE);
-            var specimens = entry.get("CNS01").map(i -> i.equals("1"));
-            var isDataAvailable = entry.get("CNS02").map(i -> i.equals("1"));
-            var otherTrial = entry.get("OTHTRLC").map(i -> i.equals("Y"));
+            var gender = entry.get("GEN").map(EcrfFileReader::convertBitStringToGender);
+            var specimens = entry.get("CNS01").map(EcrfFileReader::convertBinaryStringToBoolean);
+            var isDataAvailable = entry.get("CNS02").map(EcrfFileReader::convertBinaryStringToBoolean);
+            var otherTrial = entry.get("OTHTRLC").map(EcrfFileReader::convertYNStringToBoolean);
             var otherTrialCode = entry.get("DFHOTCC");
             var otherTrialDate = entry.get("DFOTSDTC").map(LocalDate::parse);
-            var hadPreviousChemoTherapy = entry.get("CHYN").map(i -> i.equals("1"));
+            var hadPreviousChemoTherapy = entry.get("CHYN").map(EcrfFileReader::convertBinaryStringToBoolean);
             var chemoEstimatedDate = entry.get("CHEDT");
             var chemoLastDoseDate = entry.get("CHDT").map(LocalDate::parse);
-            var hadPreviousRadioTherapy = entry.get("RDYN").map(i -> i.equals("1"));
+            var hadPreviousRadioTherapy = entry.get("RDYN").map(EcrfFileReader::convertBinaryStringToBoolean);
             var radioEstimatedDate = entry.get("RDEDT");
             var radioLastDoseDate = entry.get("RDDT").map(LocalDate::parse);
 
@@ -74,7 +74,7 @@ public final class EcrfFileReader
             // required fields
             var combinedKey = entry.get("Subject_FormRepeat_Keys").orElseThrow();
             var subjectKey = entry.get("SubjectKey").orElseThrow();
-            var registrationDate = entry.get("FormRepeatKey").map(LocalDate::parse).orElseThrow();
+            var formRepeatKey = entry.get("FormRepeatKey").orElseThrow();
 
             // optional fields
             var sampleDate = entry.get("BIOPTDTC").map(LocalDate::parse);
@@ -88,7 +88,7 @@ public final class EcrfFileReader
             var diagnosis = entry.get("DFHDIAGC");
             var BDMWDPNR = entry.get("BDMWDPNR");
             var tNumber = entry.get("BMDTNR");
-            var wasWgsSuccessful = entry.get("BMDBWSYN").map(i -> i.equals("1"));
+            var wasWgsSuccessful = entry.get("BMDBWSYN").map(EcrfFileReader::convertBinaryStringToBoolean);
             var reasonWgsWasNotSuccessful = entry.get("BMDBWSNR");
             var sampleType = entry.get("BMDPTM");
             var wgsReportPipelineVersion = entry.get("BMDWGSV");
@@ -100,7 +100,7 @@ public final class EcrfFileReader
             var biopsyDataEntry = BiopsyData.builder()
                     .combinedKey(combinedKey)
                     .subjectKey(subjectKey)
-                    .registrationDate(registrationDate)
+                    .formRepeatKey(formRepeatKey)
                     .sampleDate(sampleDate)
                     .sampleSite(sampleSite)
                     .sampleSiteDetails(sampleSiteDetails)
@@ -217,7 +217,7 @@ public final class EcrfFileReader
             var measureDate = entry.get("TMDTC").map(LocalDate::parse);
             var TMDUMTXT = entry.get("TMDUMTXT");
             var recist = entry.get("RSPOA").map(Integer::parseInt);
-            var continueTreatment = entry.get("TMREOT").map(i -> i.equals("1"));
+            var continueTreatment = entry.get("TMREOT").map(EcrfFileReader::convertBinaryStringToBoolean);
             var reasonEndOfTreatment = entry.get("TMREOT").map(TumorMeasureData.EndOfTreatmentReason::valueOf);
             var reasonEndOfTreatmentSpecification = entry.get("TMREOTSP");
 
@@ -264,5 +264,27 @@ public final class EcrfFileReader
         }
         return result;
     }
+
+    private static Boolean convertBinaryStringToBoolean(@NotNull String bitString) {
+        if (! bitString.equals("0") && ! bitString.equals("1")) {
+            throw new IllegalArgumentException(String.format("Cannot convert input '%s' to boolean value. Please provide '0' for false or '1' for true.", bitString));
+        }
+        return bitString.equals("1");
+    }
+
+    private static Boolean convertYNStringToBoolean(@NotNull String YNString) {
+        if (! YNString.equals("Y") && ! YNString.equals("N")) {
+            throw new IllegalArgumentException(String.format("Cannot convert input '%s' to boolean value. Please provide 'N' for false or 'Y' for true.", YNString));
+        }
+        return YNString.equals("Y");
+    }
+
+    private static PatientData.Gender convertBitStringToGender(@NotNull String bitString) {
+        if (! bitString.equals("0") && ! bitString.equals("1")) {
+            throw new IllegalArgumentException(String.format("Cannot convert input '%s' to Gender value. Please provide '0' for MALE or '1' for FEMALE.", bitString));
+        }
+        return bitString.equals("0") ? PatientData.Gender.MALE : PatientData.Gender.FEMALE;
+    }
+
 
 }
