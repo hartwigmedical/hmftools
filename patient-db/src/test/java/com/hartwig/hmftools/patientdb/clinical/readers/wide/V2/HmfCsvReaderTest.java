@@ -44,4 +44,15 @@ public class HmfCsvReaderTest
     {
         assertThrows(FileNotFoundException.class, () -> HmfCsvReader.read("NonExistentCsvPath.csv"));
     }
+
+    /**
+     *  A bug occurred where an exception would be thrown if a csv file was parsed that had a newline at the end.
+     *  This test should catch that bug.
+     */
+    @Test
+    public void testHeaderOnlyWithNewlineDoesNotThrow() throws IOException
+    {
+       List<CsvEntry> result = HmfCsvReader.read("readers/file_with_newlines_at_end.csv");
+       assertEquals(1, result.size());
+    }
 }

@@ -10,20 +10,20 @@ public class CsvEntry
 {
     private final Map<String, String> entry;
 
-    public CsvEntry(String[] headers, String[] values)
+    public CsvEntry(String[] headers, String[] columns)
     {
-        if(headers.length != values.length)
+        if(headers.length != columns.length)
         {
-            throw new IllegalArgumentException(String.format("Amount of headers was '%d' and amount of values was '%d' but they should be equal.", headers.length, values.length));
+            throw new IllegalArgumentException(String.format("Amount of headers was '%d' but amount of columns was '%d'. They should be equal.", headers.length, columns.length));
         }
-        entry = IntStream.range(0, headers.length).boxed().collect(Collectors.toMap(i -> headers[i], i -> values[i]));
+        entry = IntStream.range(0, headers.length).boxed().collect(Collectors.toMap(i -> headers[i], i -> columns[i]));
     }
 
     public Optional<String> get(String header)
     {
         if(!entry.containsKey(header))
         {
-            throw new NoSuchElementException("Header with name '%s' does not exist.");
+            throw new NoSuchElementException(String.format("Header with name '%s' does not exist.", header));
         }
         var result = entry.get(header);
         if(result.equals("NA"))
