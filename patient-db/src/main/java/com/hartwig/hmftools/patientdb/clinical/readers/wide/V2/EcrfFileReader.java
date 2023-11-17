@@ -127,13 +127,13 @@ public final class EcrfFileReader
         return result;
     }
 
-
     public static List<PrevTreatChemoData> readPrevTreatChemoData(@NotNull String pathToCsv) throws IOException
     {
         List<PrevTreatChemoData> result = new ArrayList<>();
         List<CsvEntry> entries = HmfCsvReader.read(pathToCsv);
 
-        for (CsvEntry entry : entries) {
+        for(CsvEntry entry : entries)
+        {
             // required fields
             var subjectKey = entry.get("SubjectKey").orElseThrow();
             var itemGroupOid = entry.get("ItemGroupOID").orElseThrow();
@@ -165,6 +165,38 @@ public final class EcrfFileReader
                     .CHTS3(CHTS3)
                     .build();
             result.add(prevTreatChemoDataEntry);
+        }
+        return result;
+    }
+
+    public static List<PrevTreatRadData> readPrevTreatRadData(@NotNull String pathToCsv) throws IOException
+    {
+        List<PrevTreatRadData> result = new ArrayList<>();
+
+        List<CsvEntry> entries = HmfCsvReader.read(pathToCsv);
+
+        for(CsvEntry entry : entries)
+        {
+            // required fields
+            var subjectKey = entry.get("SubjectKey").orElseThrow();
+            var itemGroupOid = entry.get("ItemGroupOID").orElseThrow();
+            var itemGroupRepeatKey = entry.get("ItemGroupRepeatKey").map(Integer::parseInt).orElseThrow();
+
+            // optional fields
+            var radioSite = entry.get("RDTR");
+            var medicalHistoryCategory = entry.get("RDCT");
+            var cumulativeDose = entry.get("RDCD").map(Integer::parseInt);
+
+            var prevTreatRadDataEntry = PrevTreatRadData.builder()
+                    .subjectKey(subjectKey)
+                    .itemGroupOid(itemGroupOid)
+                    .itemGroupRepeatKey(itemGroupRepeatKey)
+                    .radioSite(radioSite)
+                    .medicalHistoryCategory(medicalHistoryCategory)
+                    .cumulativeDose(cumulativeDose)
+                    .build();
+
+            result.add(prevTreatRadDataEntry);
         }
         return result;
     }
