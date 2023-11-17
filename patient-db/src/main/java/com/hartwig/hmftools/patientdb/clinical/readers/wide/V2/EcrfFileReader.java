@@ -201,58 +201,46 @@ public final class EcrfFileReader
         return result;
     }
 
+    public static List<TumorMeasureData> readTumorMeasureData(@NotNull String pathToCsv) throws IOException
+    {
+        List<TumorMeasureData> result = new ArrayList<>();
+        List<CsvEntry> entries = HmfCsvReader.read(pathToCsv);
+
+        for(CsvEntry entry : entries)
+        {
+            // required fields
+            var combinedKey = entry.get("Subejct_FormRepeat_Keys").orElseThrow();
+            var subjectKey = entry.get("SubjectKey").orElseThrow();
+            var formRepeatKey = entry.get("FormRepeatKey").orElseThrow();
+
+            // optional fields
+            var measureDate = entry.get("TMDTC").map(LocalDate::parse);
+            var TMDUMTXT = entry.get("TMDUMTXT");
+            var recist = entry.get("RSPOA").map(Integer::parseInt);
+            var continueTreatment = entry.get("TMREOT").map(i -> i.equals("1"));
+            var reasonEndOfTreatment = entry.get("TMREOT").map(TumorMeasureData.EndOfTreatmentReason::valueOf);
+            var reasonEndOfTreatmentSpecification = entry.get("TMREOTSP");
+
+            var tumorMeasureDataEntry = TumorMeasureData.builder()
+                    .combinedKey(combinedKey)
+                    .subjectKey(subjectKey)
+                    .formRepeatKey(formRepeatKey)
+                    .measureDate(measureDate)
+                    .TMDUMTXT(TMDUMTXT)
+                    .recist(recist)
+                    .continueTreatment(continueTreatment)
+                    .reasonEndOfTreatment(reasonEndOfTreatment)
+                    .reasonEndOfTreatmentSpecification(reasonEndOfTreatmentSpecification)
+                    .build();
+
+            result.add(tumorMeasureDataEntry);
+        }
+        return result;
+    }
+
     private interface MappedColumn
     {
         String getMapping();
-    }
-
-    private enum PrevTreatRadColumn implements MappedColumn
-    {
-        SUBJECT_KEY("SubjectKey"),
-        ITEM_GROUP_OID("ItemGroupOID"),
-        ITEM_GROUP_REPEAT_KEY("ItemGroupRepeatKey"),
-        RADIO_SITE("RDTR"),
-        MEDICAL_HISTORY_CATEGORY("RDCT"),
-        CUMULATIVE_DOSE("RDCD");
-
-        private final String csvColumnName;
-
-        PrevTreatRadColumn(String csvColumnName)
-        {
-            this.csvColumnName = csvColumnName;
-        }
-
-        @Override
-        public String getMapping()
-        {
-            return csvColumnName;
-        }
-    }
-
-    private enum TumorMeasureColumn implements MappedColumn
-    {
-        COMBINED_KEY("Subject_FormRepeat_Keys"),
-        SUBJECT_KEY("SubjectKey"),
-        FORM_REPEAT_KEY("FormRepeatKey"),
-        MEASSURE_DATE("TMDTC"),
-        TMDUMTXT("TMDUMTXT"),
-        RECIST("RSPOA"),
-        CONTINUE_TREATMENT("TMRESNR"),
-        REASON_END_OF_TREATMENT("TMREOT"),
-        REASON_END_OF_TREATMENT_SPECIFICATION("TMREOTSP");
-
-        private final String csvColumnName;
-
-        TumorMeasureColumn(String csvColumnName)
-        {
-            this.csvColumnName = csvColumnName;
-        }
-
-        @Override
-        public String getMapping()
-        {
-            return csvColumnName;
-        }
     }
 
     private enum TreatChemoAvlColumn implements MappedColumn
