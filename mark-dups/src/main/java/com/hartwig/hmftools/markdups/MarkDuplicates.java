@@ -189,16 +189,17 @@ public class MarkDuplicates
 
     private void writeFullyUnmappedReads(final FileWriterCache fileWriterCache)
     {
-        MD_LOGGER.info("Writing unmapped reads which are either unpaired or have an unmapped mate.");
+        MD_LOGGER.info("writing initial unmapped reads");
 
         if(mConfig.BamFile == null)
             return;
 
         BamWriter bamWriter = fileWriterCache.getFullyUnmappedReadsBamWriter();
 
-        SamReader samReader =
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
-        BamSlicer bamSlicer = new BamSlicer(0, true, false, false);
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
+                .open(new File(mConfig.BamFile));
+
+        BamSlicer bamSlicer = new BamSlicer(0, false, false, false);
         bamSlicer.setKeepUnmapped();
 
         bamSlicer.queryUnmapped(samReader, (final SAMRecord read) ->
