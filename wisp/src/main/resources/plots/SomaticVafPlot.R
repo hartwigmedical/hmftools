@@ -57,6 +57,7 @@ estimatedVaf=sampleSummary$SampleVAF
 rawSomaticPurity=sampleSummary$RawSomaticPurity
 peakPurity=sampleSummary$SNVPurity
 weightedAvgDepth=sampleSummary$WeightedAvgDepth
+clonalMethod=samplePurityData$ClonalMethod
 
 depthThreshold=max(minSampleDepth,minSampleDepthPerc*weightedAvgDepth)
 
@@ -71,9 +72,9 @@ somaticPlot = ggplot() +
   geom_density(data=peakVars,aes(SampleVarVaf)) +
   geom_vline(xintercept=rawSomaticPurity*0.5,color='red') +
   geom_hline(yintercept=minVariantCount,color='blue') +
-  labs(x='Filter Variant VAF',y='# Variants',title=sprintf('%s %s', patientId, sampleId))
+  labs(x='Filter Variant VAF',y='# Variants',title=sprintf('%s %s %s',patientId,sampleId,clonalMethod))
 
-if(peakPurity > rawSomaticPurity)
+if(clonalMethod!='NO_PEAK' & peakPurity > rawSomaticPurity)
 {
     somaticPlot = somaticPlot + geom_vline(xintercept=peakPurity*0.5,color='green')
 }
