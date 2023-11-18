@@ -112,7 +112,7 @@ public final class SamRecordUtils
             String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
 
             if(umiType != null)
-                umiReadType = UmiReadType.valueOf(umiType);
+                umiReadType = umiType.equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(umiType);
         }
         else
         {

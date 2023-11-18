@@ -33,6 +33,7 @@ public class ConfigUtils
     public static final String GENE_ID_FILE_DESC = "Restricted set of Gene IDs in CSV file";
 
     public static final String SAMPLE_ID_COLUMN = "SampleId";
+    public static final String IGNORE_SAMPLE_ID = "#";
 
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);
 
@@ -125,7 +126,7 @@ public class ConfigUtils
 
         for(String line : fileContents)
         {
-            if(line.startsWith("#") || line.isEmpty())
+            if(line.isEmpty() || line.startsWith(IGNORE_SAMPLE_ID))
                 continue;
 
             String[] items = line.split(delim, -1);

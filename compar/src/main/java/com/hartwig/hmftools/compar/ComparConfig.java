@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.L
 import static com.hartwig.hmftools.common.genome.refgenome.GenomeLiftoverCache.LIFTOVER_MAPPING_FILE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
@@ -285,12 +286,12 @@ public class ComparConfig
 
             for(String line : lines)
             {
+                if(line.isEmpty() || line.startsWith(IGNORE_SAMPLE_ID))
+                    continue;
+
                 String[] values = line.split(CSV_DELIM, -1);
 
                 String sampleId = values[sampleIndex];
-
-                if(sampleId.startsWith("#"))
-                    continue;
 
                 SampleIds.add(sampleId);
 
