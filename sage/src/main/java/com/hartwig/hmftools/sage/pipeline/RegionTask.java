@@ -211,14 +211,12 @@ public class RegionTask
             {
                 String variantInfo = format("%s:%d %s>%s", variant.chromosome(), variant.position(), variant.ref(), variant.alt());
 
-                FragmentLengthData fragmentLengthData = variant.tumorReadCounters().get(0).fragmentLengths();
-
-                for(int i = 1; i < variant.tumorReadCounters().size(); ++i)
+                for(int s = 0; s < mConfig.TumorIds.size(); ++s)
                 {
-                    fragmentLengthData.merge(variant.tumorReadCounters().get(i).fragmentLengths());
+                    String sampleId = mConfig.TumorIds.get(s);
+                    FragmentLengthData fragmentLengthData = variant.tumorReadCounters().get(s).fragmentLengths();
+                    mFragmentLengths.writeVariantFragmentLength(variantInfo, sampleId, fragmentLengthData);
                 }
-
-                mFragmentLengths.writeVariantFragmentLength(variantInfo, fragmentLengthData);
             }
         }
     }

@@ -95,14 +95,12 @@ public class RegionAppendTask implements Callable
 
                 List<ReadContextCounter> sampleCounters = readContextCounters.getReadCounters(i);
 
-                FragmentLengthData fragmentLengthData = sampleCounters.get(0).fragmentLengths();
-
-                for(int j = 1; j < sampleCounters.size(); ++j)
+                for(int s = 0; s < mConfig.Common.ReferenceIds.size(); ++s)
                 {
-                    fragmentLengthData.merge(sampleCounters.get(j).fragmentLengths());
+                    String sampleId = mConfig.Common.ReferenceIds.get(s);
+                    FragmentLengthData fragmentLengthData = sampleCounters.get(s).fragmentLengths();
+                    mFragmentLengths.writeVariantFragmentLength(variantInfo, sampleId, fragmentLengthData);
                 }
-
-                mFragmentLengths.writeVariantFragmentLength(variantInfo, fragmentLengthData);
             }
         }
 
