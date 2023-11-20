@@ -120,7 +120,7 @@ public class Statistics
 
     public void logStats()
     {
-        MD_LOGGER.info("stats: totalReads({}) secondaries({}) duplicates({}) duplicationGroups({}) umiGroups({}) consensus({})",
+        MD_LOGGER.info("stats: totalReads({}) secondaries({}) duplicates({}) duplicationGroups({}) umiGroups({}) {}",
                 TotalReads, Secondary, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, ConsensusStats);
 
         if(MD_LOGGER.isDebugEnabled())

@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSampler;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.markdups.common.FragmentStatus;
@@ -34,6 +33,7 @@ import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.write.FileWriterCache;
 
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -106,7 +106,7 @@ public class MarkDuplicates
 
         MD_LOGGER.info("all partition tasks complete");
 
-        writeFullyUnmappedReads(fileWriterCache);
+        long unmappedReads = writeUnmappedReads(fileWriterCache);
 
         List<PartitionReader> partitionReaders = partitionTasks.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
 
@@ -160,10 +160,12 @@ public class MarkDuplicates
             MD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
         }
 
-        if(combinedStats.TotalReads != totalWrittenReads + unmappedDroppedReads)
+        if(combinedStats.TotalReads + unmappedReads != totalWrittenReads + unmappedDroppedReads)
         {
+            long difference = combinedStats.TotalReads + unmappedReads - totalWrittenReads - unmappedDroppedReads;
+
             MD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
-                    combinedStats.TotalReads, totalWrittenReads, combinedStats.TotalReads - totalWrittenReads - unmappedDroppedReads);
+                    combinedStats.TotalReads + unmappedReads, totalWrittenReads, difference);
         }
 
         if(mConfig.WriteStats)
@@ -187,26 +189,35 @@ public class MarkDuplicates
         MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
-    private void writeFullyUnmappedReads(final FileWriterCache fileWriterCache)
+    private long writeUnmappedReads(final FileWriterCache fileWriterCache)
     {
-        MD_LOGGER.info("writing initial unmapped reads");
-
         if(mConfig.BamFile == null)
-            return;
+            return 0;
 
         BamWriter bamWriter = fileWriterCache.getFullyUnmappedReadsBamWriter();
 
         SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
                 .open(new File(mConfig.BamFile));
 
-        BamSlicer bamSlicer = new BamSlicer(0, false, false, false);
-        bamSlicer.setKeepUnmapped();
+        long unmappedCount = 0;
 
-        bamSlicer.queryUnmapped(samReader, (final SAMRecord read) ->
+        try(final SAMRecordIterator iterator = samReader.queryUnmapped())
         {
-            if(read.getReadUnmappedFlag() && (!read.getReadPairedFlag() || read.getMateUnmappedFlag()))
-                bamWriter.writeRead(read, FragmentStatus.UNSET);
-        });
+            while(iterator.hasNext())
+            {
+                final SAMRecord record = iterator.next();
+
+                bamWriter.writeRead(record, FragmentStatus.UNSET);
+                ++unmappedCount;
+            }
+        }
+
+        if(unmappedCount > 0)
+        {
+            MD_LOGGER.debug("wrote {} unmapped reads", unmappedCount);
+        }
+
+        return unmappedCount;
     }
 
     private void setReadLength()

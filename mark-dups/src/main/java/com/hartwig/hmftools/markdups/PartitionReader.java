@@ -225,6 +225,11 @@ public class PartitionReader implements Consumer<List<Fragment>>
                 && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
             ++mStats.MissingMateCigar;
+
+            if(mStats.MissingMateCigar < 3 && mConfig.PerfDebug)
+            {
+                MD_LOGGER.debug("read without mate cigar: {}", readToString(read));
+            }
         }
     }
 
