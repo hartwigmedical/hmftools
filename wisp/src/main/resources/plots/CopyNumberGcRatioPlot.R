@@ -36,8 +36,11 @@ if (!file.exists(cnSegmentFile))
 sampleSummary = read.csv(summaryFile,sep='\t')
 cnGcRatioSegments = read.csv(cnSegmentFile,sep='\t')
 
-sampleSummary = sampleSummary %>% filter(SampleId==sampleId)
-cnGcRatioSegments = cnGcRatioSegments %>% filter(SampleId==sampleId)
+if('SampleId' %in% colnames(sampleSummary))
+{
+    sampleSummary = sampleSummary %>% filter(SampleId==sampleId)
+    cnGcRatioSegments = cnGcRatioSegments %>% filter(SampleId==sampleId)
+}
 
 if(nrow(sampleSummary) == 0 | nrow(cnGcRatioSegments) == 0)
 {
@@ -45,11 +48,14 @@ if(nrow(sampleSummary) == 0 | nrow(cnGcRatioSegments) == 0)
   stop()
 }
 
-cnGcRatioSegments = merge(cnGcRatioSegments,sampleSummary %>% select(SampleId,CnFitIntercept,CnFitCoeff),by='SampleId',all.x=T)
+cnFitIntercept=sampleSummary$CnFitIntercept
+cnFitCoeff=sampleSummary$CnFitCoeff
+
+# cnGcRatioSegments = merge(cnGcRatioSegments,sampleSummary %>% select(SampleId,CnFitIntercept,CnFitCoeff),by='SampleId',all.x=T)
 
 cnGcRatioSegments = cnGcRatioSegments %>%
-    mutate(GcRatioMedianFit=CnFitIntercept+CnFitCoeff*CopyNumber,
-           CopyNumberFit=(GcRatioMedian-CnFitIntercept)/CnFitCoeff)
+    mutate(GcRatioMedianFit=cnFitIntercept+cnFitCoeff*CopyNumber,
+           CopyNumberFit=(GcRatioMedian-cnFitIntercept)/cnFitCoeff)
 
 cnGcRatioPlot = ggplot(cnGcRatioSegments) +
   geom_point(aes(x=CopyNumber,y=CopyNumberFit),color='blue') +

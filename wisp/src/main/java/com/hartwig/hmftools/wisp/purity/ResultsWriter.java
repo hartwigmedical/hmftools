@@ -37,6 +37,8 @@ public class ResultsWriter
     private final BufferedWriter mCnRatioWriter;
     private final BufferedWriter mDropoutCalcWriter;
     private final boolean mHasBatchControls;
+    private final boolean mWritePatientId;
+    private final boolean mWriteSampleId;
 
     public static final String SUMMARY_FILE_ID = "summary";
     public static final String SOMATICS_FILE_ID = "somatic_variants";
@@ -47,6 +49,8 @@ public class ResultsWriter
     {
         mConfig = config;
         mHasBatchControls = config.hasBatchControls();
+        mWritePatientId = config.multiplePatients();
+        mWriteSampleId = config.multipleSamples();
 
         mSampleWriter = initialiseWriter();
         mVariantWriter = config.writeType(SOMATICS) || config.writeType(SOMATICS_ALL) ? initialiseVariantWriter() : null;
@@ -64,13 +68,16 @@ public class ResultsWriter
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            if(mConfig.multipleSamples())
+            if(mWritePatientId)
                 writer.write("PatientId\t");
+
+            if(mWriteSampleId)
+                writer.write("SampleId\t");
 
             if(mHasBatchControls)
                 writer.write("BatchControl\t");
 
-            writer.write("SampleId\tTumorPurity\tTumorPloidy");
+            writer.write("TumorPurity\tTumorPloidy");
             writer.write(format("\t%s", SomaticVariantResult.header()));
             writer.write(String.format("\t%s", CnPurityResult.header()));
             writer.newLine();
@@ -90,13 +97,16 @@ public class ResultsWriter
     {
         try
         {
-            if(mConfig.multipleSamples())
+            if(mWritePatientId)
                 mSampleWriter.write(format("%s\t", sampleData.PatientId));
+
+            if(mWriteSampleId)
+                mSampleWriter.write(format("%s\t", sampleId));
 
             if(mHasBatchControls)
                 mSampleWriter.write(format("%s\t", sampleData.isBatchControl()));
 
-            mSampleWriter.write(format("%s\t%.2f\t%.2f", sampleId, purityContext.bestFit().purity(), purityContext.bestFit().ploidy()));
+            mSampleWriter.write(format("%.2f\t%.2f", purityContext.bestFit().purity(), purityContext.bestFit().ploidy()));
             mSampleWriter.write(format("\t%s", somaticVariantResult.toTsv()));
             mSampleWriter.write(format("\t%s", cnPurityResult.toTsv()));
             mSampleWriter.newLine();
@@ -117,13 +127,16 @@ public class ResultsWriter
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            if(mConfig.multipleSamples())
-                sj.add("PatientId");
+            if(mWritePatientId)
+                writer.write("PatientId\t");
+
+            if(mWriteSampleId)
+                writer.write("SampleId\t");
 
             if(mHasBatchControls)
                 sj.add("BatchControl");
 
-            sj.add("SampleId").add("Chromosome").add("Position").add("Ref").add("Alt").add("IsProbe");
+            sj.add("Chromosome").add("Position").add("Ref").add("Alt").add("IsProbe");
             sj.add("Filter").add("Tier").add("Type").add("RepeatCount").add("Mappability").add("SubclonalPerc");
             sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported").add("VCN").add("CopyNumber");
             sj.add("TumorDP").add("TumorAD");
@@ -155,13 +168,16 @@ public class ResultsWriter
 
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-            if(mConfig.multipleSamples())
-                sj.add(sampleData.PatientId);
+            if(mWritePatientId)
+                mVariantWriter.write(format("%s\t", sampleData.PatientId));
+
+            if(mWriteSampleId)
+                mVariantWriter.write(format("%s\t", sampleId));
 
             if(mHasBatchControls)
                 sj.add(String.valueOf(sampleData.isBatchControl()));
 
-            sj.add(sampleId).add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
+            sj.add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
             sj.add(String.valueOf(variant.isProbeVariant()));
 
             String filtersStr = filterReasons.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
@@ -201,10 +217,13 @@ public class ResultsWriter
 
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            if(mConfig.multipleSamples())
+            if(mWritePatientId)
                 writer.write("PatientId\t");
 
-            writer.write("SampleId\tChromosome\tSegmentStart\tSegmentEnd\tCopyNumber\tGcRatioCount\tGcRatioMedian\tGcRatioMean");
+            if(mWriteSampleId)
+                writer.write("SampleId\t");
+
+            writer.write("Chromosome\tSegmentStart\tSegmentEnd\tCopyNumber\tGcRatioCount\tGcRatioMedian\tGcRatioMean");
             writer.newLine();
             return writer;
         }
@@ -224,11 +243,14 @@ public class ResultsWriter
 
         try
         {
-            if(mConfig.multipleSamples())
+            if(mWritePatientId)
                 mCnRatioWriter.write(format("%s\t", patientId));
 
-            mCnRatioWriter.write(format("%s\t%s\t%d\t%d\t%.2f\t%d\t%.4f\t%.4f",
-                    sampleId, cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
+            if(mWriteSampleId)
+                mCnRatioWriter.write(format("%s\t", sampleId));
+
+            mCnRatioWriter.write(format("%s\t%d\t%d\t%.2f\t%d\t%.4f\t%.4f",
+                    cnSegment.Chromosome, cnSegment.SegmentStart, cnSegment.SegmentEnd, cnSegment.CopyNumber,
                     cnSegment.count(), cnSegment.median(), cnSegment.mean()));
             mCnRatioWriter.newLine();
         }

@@ -33,8 +33,14 @@ if (!file.exists(somaticFile))
   stop()
 }
 
-sampleSummary = read.csv(summaryFile,sep='\t') %>% filter(SampleId==sampleId)
-allVariants = read.csv(somaticFile,sep='\t') %>% filter(SampleId==sampleId)
+sampleSummary = read.csv(summaryFile,sep='\t')
+allVariants = read.csv(somaticFile,sep='\t')
+
+if('SampleId' %in% colnames(sampleSummary))
+{
+    sampleSummary = sampleSummary %>% filter(SampleId==sampleId)
+    allVariants = allVariants %>% filter(SampleId==sampleId)
+}
 
 if(nrow(sampleSummary) == 0 | nrow(allVariants) == 0)
 {
@@ -57,7 +63,7 @@ estimatedVaf=sampleSummary$SampleVAF
 rawSomaticPurity=sampleSummary$RawSomaticPurity
 peakPurity=sampleSummary$SNVPurity
 weightedAvgDepth=sampleSummary$WeightedAvgDepth
-clonalMethod=samplePurityData$ClonalMethod
+clonalMethod=sampleSummary$ClonalMethod
 
 depthThreshold=max(minSampleDepth,minSampleDepthPerc*weightedAvgDepth)
 

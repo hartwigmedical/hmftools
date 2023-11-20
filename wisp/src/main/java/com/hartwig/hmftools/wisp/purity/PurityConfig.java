@@ -131,7 +131,8 @@ public class PurityConfig
 
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
     public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
-    public boolean multipleSamples() { return Samples.size() > 1; }
+    public boolean multiplePatients() { return Samples.size() > 1; }
+    public boolean multipleSamples() { return multiplePatients() || Samples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum() > 1; }
     public boolean hasBatchControls() { return Samples.stream().anyMatch(x -> x.isBatchControl()); }
 
     public String getPurpleDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
@@ -165,7 +166,7 @@ public class PurityConfig
     {
         String fileName = OutputDir;
 
-        if(multipleSamples())
+        if(multiplePatients())
         {
             fileName += "wisp_cohort.";
         }
