@@ -1,7 +1,13 @@
 package com.hartwig.hmftools.sage.sync;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
+import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
+import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
+import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
+import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
+import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.compatibleCigars;
 
@@ -16,6 +22,16 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
+import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
+import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.TestUtils;
+import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.quality.QualityCalculator;
+
+import org.apache.logging.log4j.util.Strings;
 import org.junit.Test;
 
 import htsjdk.samtools.Cigar;
@@ -157,6 +173,53 @@ public class FragmentSyncTest
         assertEquals("3S10M5S", combined.getCigarString());
     }
 
+    @Test
+    public void testReadStrandMismatches()
+    {
+        // one read supports the variant, one doesn't and this factors into the read strand determination
+        int position = 20;
+
+        String refBase = REF_BASES.substring(position, position + 1);
+        String altBase = getNextBase(refBase);
+
+        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder()
+                .chromosome(CHR_1).ref(refBase).alt(altBase).position(position).build();
+
+        String readBases = REF_BASES.substring(8, position) + altBase + REF_BASES.substring(position + 1, 33);
+        final ReadContext readContext = createReadContext(position, 12, 10, 14, readBases, Strings.EMPTY);
+
+        final IndexedBases REF_INDEXED_BASES = new IndexedBases(1, 0, REF_BASES.getBytes());
+        final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_INDEXED_BASES);
+
+        final ReadContextCounter readContextCounter = new ReadContextCounter(
+                1, hotspot, readContext, VariantTier.PANEL, 100, 0,
+                TEST_CONFIG, QUALITY_CALCULATOR, null);
+
+        String readId = "READ_01";
+
+        SAMRecord first = createSamRecord(
+                readId, CHR_1, 10, REF_BASES.substring(10, 40), "30M");
+        first.getBaseQualities()[10] = (byte)11;
+
+        SAMRecord second = createSamRecord(
+                readId, CHR_1, 10, REF_BASES.substring(10, position) + altBase + REF_BASES.substring(position + 1, 40), "30M");
+        second.setReadNegativeStrandFlag(true);
+
+        SAMRecord consensusRead = formFragmentRead(first, second);
+
+        readContextCounter.processRead(consensusRead, 1, new FragmentData(first, second));
+        readContextCounter.processRead(consensusRead, 1, new FragmentData(first, second));
+        readContextCounter.processRead(consensusRead, 1, new FragmentData(first, second));
+
+        // swap and re-process
+        first.setReadNegativeStrandFlag(true);
+        second.setReadNegativeStrandFlag(false);
+
+        readContextCounter.processRead(consensusRead, 1, new FragmentData(first, second));
+
+        assertEquals(4, readContextCounter.readStrandBias().depth());
+        assertEquals(0.25, readContextCounter.readStrandBias().bias(), 0.01);
+    }
 
     @Test
     public void testSplitReads()

@@ -1,17 +1,17 @@
 package com.hartwig.hmftools.sage.sync;
 
+import htsjdk.samtools.SAMRecord;
+
 public class FragmentData
 {
-    public final int FirstPosStart;
-    public final int FirstPosEnd;
-    public final int SecondPosStart;
-    public final int SecondPosEnd;
+    public final SAMRecord First;
+    public final SAMRecord Second;
 
-    public FragmentData(final int firstPosStart, final int firstPosEnd, final int secondPosStart, final int secondPosEnd)
+    public FragmentData(final SAMRecord first, final SAMRecord second)
     {
-        FirstPosStart = firstPosStart;
-        FirstPosEnd = firstPosEnd;
-        SecondPosStart = secondPosStart;
-        SecondPosEnd = secondPosEnd;
+        First = first;
+        Second = second;
     }
+
+
 }

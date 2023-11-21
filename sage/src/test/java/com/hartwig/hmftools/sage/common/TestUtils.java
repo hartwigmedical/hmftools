@@ -26,7 +26,7 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 public class TestUtils
 {
     public static final SageConfig TEST_CONFIG = new SageConfig();
-    private static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
+    public static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
     private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
     public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_BASES);
 

@@ -811,29 +811,8 @@ public class ReadContextCounter implements VariantHotspot
 
     private void countStrandedness(final SAMRecord record, final FragmentData fragmentData)
     {
-        if(fragmentData != null)
-            return;
-
-        boolean readIsForward = !record.getReadNegativeStrandFlag();
-
-        // SG_LOGGER.debug("read({}) strand({})", record.getReadName(), readIsForward ? "forward" : "reverse");
-
-        mReadStrandBias.add(readIsForward);
-
-        if(!record.getReadPairedFlag())
-        {
-            mFragmentStrandBias.add(readIsForward);
-            return;
-        }
-
-        // make the distinction between F1R2 and F2R1
-        boolean firstIsForward = record.getFirstOfPairFlag() ? readIsForward : !record.getMateNegativeStrandFlag();
-        boolean secondIsForward = !record.getFirstOfPairFlag() ? readIsForward : !record.getMateNegativeStrandFlag();
-
-        if(firstIsForward != secondIsForward)
-        {
-            mFragmentStrandBias.add(firstIsForward);
-        }
+        mReadStrandBias.registerRead(record, fragmentData, this);
+        mFragmentStrandBias.registerFragment(record);
     }
 
     private void updateDistanceFromReadEdge(final SAMRecord record, final FragmentData fragmentData)
@@ -852,19 +831,25 @@ public class ReadContextCounter implements VariantHotspot
 
         if(fragmentData != null)
         {
-            if(positionWithin(mAdjustedVariantPosition, fragmentData.FirstPosStart, fragmentData.FirstPosEnd))
+            int firstPosStart = fragmentData.First.getAlignmentStart();
+            int firstPosEnd = fragmentData.First.getAlignmentEnd();
+
+            if(positionWithin(mAdjustedVariantPosition, firstPosStart, firstPosEnd))
             {
-                distFromStart = mAdjustedVariantPosition - fragmentData.FirstPosStart;
-                distFromEnd = fragmentData.FirstPosEnd - mAdjustedVariantPosition;
+                distFromStart = mAdjustedVariantPosition - firstPosStart;
+                distFromEnd = firstPosEnd - mAdjustedVariantPosition;
             }
 
-            if(positionWithin(mAdjustedVariantPosition, fragmentData.SecondPosStart, fragmentData.SecondPosEnd))
-            {
-                if(distFromStart == -1 || mAdjustedVariantPosition - fragmentData.SecondPosStart < distFromStart)
-                    distFromStart = mAdjustedVariantPosition - fragmentData.SecondPosStart;
+            int secondPosStart = fragmentData.Second.getAlignmentStart();
+            int secondPosEnd = fragmentData.Second.getAlignmentEnd();
 
-                if(distFromEnd == -1 || fragmentData.SecondPosEnd - mAdjustedVariantPosition < distFromEnd)
-                    distFromEnd = fragmentData.SecondPosEnd - mAdjustedVariantPosition;
+            if(positionWithin(mAdjustedVariantPosition, secondPosStart, secondPosEnd))
+            {
+                if(distFromStart == -1 || mAdjustedVariantPosition - secondPosStart < distFromStart)
+                    distFromStart = mAdjustedVariantPosition - secondPosStart;
+
+                if(distFromEnd == -1 || secondPosEnd - mAdjustedVariantPosition < distFromEnd)
+                    distFromEnd = secondPosEnd - mAdjustedVariantPosition;
             }
         }
         else

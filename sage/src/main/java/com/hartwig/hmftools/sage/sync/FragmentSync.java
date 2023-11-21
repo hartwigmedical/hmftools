@@ -79,9 +79,7 @@ public class FragmentSync
 
                 if(fragmentRecord != null)
                 {
-                    FragmentData fragmentData = new FragmentData(
-                            otherRecord.getAlignmentStart(), otherRecord.getAlignmentEnd(),
-                            record.getAlignmentStart(), record.getAlignmentEnd());
+                    FragmentData fragmentData = new FragmentData(otherRecord, record);
 
                     mReadHandler.processReadRecord(fragmentRecord, false, fragmentData);
                 }
