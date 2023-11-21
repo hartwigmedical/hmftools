@@ -183,7 +183,7 @@ to fit to longer telomere lengths. We apply the following adjustment separately 
 
 For tumor samples, we need to recognise that we are observing a mix of reference and tumor. We use the purity and ploidy obtained from PURPLE, we can solve the following equation for the tumor reference mix. 
 
-$$ TumorMixLength = \frac{ TumorLength \times Purity \times Ploidy + RefLength \times (1-purity) \times 2 }{ [Purity \times Ploidy + 2 \times (1-purity)] } $$
+$$ TumorMixLength = \frac{ TumorLength \times Purity \times Ploidy + RefLength \times (1-purity) \times 2 }{ Purity \times Ploidy + 2 \times (1-purity) } $$
 
 Rearrangement of this formula gives the following expression for tumor length:
 
@@ -213,7 +213,8 @@ The following soft filters are applied:
 | duplicate          | Must not be a duplicate of another nearby breakend                               | =FALSE                      |
 
 
-The following regions are blacklisted from calling telomeric rearrangements as they are frequently found to have telomeric sequences in recurrent artefacts across samples (currently for hg19/grch37 assembly only)  
+The following regions are blacklisted from calling telomeric rearrangements as they are frequently found to have telomeric sequences in
+recurrent artefacts across samples (currently for hg19/grch37 assembly only)  
 
 | Chromosome | Start Position | End Position |
 |------------|----------------|--------------|
@@ -249,7 +250,8 @@ The following regions are blacklisted from calling telomeric rearrangements as t
 
 ## Outputs
 
-The outputs of TEAL is a 'telbam' file (ie a bam restricted to fragments where at least 1 read contains telomeric content), a file which details the estimated  telomeric length and content and finally a file which predicts the telomeric reararrangements
+The outputs of TEAL is a 'telbam' file (ie a bam restricted to fragments where at least 1 read contains telomeric content), a file which
+details the estimated  telomeric length and content and finally a file which predicts the telomeric reararrangements
   
 ### Telomeric Length and content
 | Column                | Description                                                                                           |
@@ -299,6 +301,11 @@ The outputs of TEAL is a 'telbam' file (ie a bam restricted to fragments where a
 * TEAL could aslo count relatve amount T-Type, C-Type, G-Type and J-Type content per sample (relevant for ALT pathway identification)
 
 # Version History and Download Links
+- [1.2.0](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.2.0)
+  - Update to match cobalt v1.16+.
+  - Use mean read depth and gc50 read depth instead of read count per 1000 bases window.
+  - removed reference / tumor mean_reads_per_kb and gc50_reads_per_kb command line arguments in standalone mode
+  - added reference / tumor mean_read_depth and gc50_read_depth command line arguments in standalone mode
 - [1.1.0](https://github.com/hartwigmedical/hmftools/releases/tag/teal-v1.1.0)
   - Update to use Smith-Waterman instead.
   - Update to parse newer inputs from purple and cobalt
