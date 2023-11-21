@@ -46,6 +46,14 @@ public class TestUtils
         return createVariant(position, ref, alt, indexBases);
     }
 
+    public static SageVariant createVariant(final ReadContextCounter readContextCounter)
+    {
+        Candidate candidate = new Candidate(
+                VariantTier.HIGH_CONFIDENCE, readContextCounter.variant(), readContextCounter.readContext(), 1, 1);
+
+        return new SageVariant(candidate, Collections.emptyList(), Lists.newArrayList(readContextCounter));
+    }
+
     public static SageVariant createVariant(int position, final String ref, final String alt, final IndexedBases indexBases)
     {
         VariantHotspot variant = createVariantHotspot(position, ref, alt);
@@ -110,24 +118,6 @@ public class TestUtils
     public static VariantHotspot createVariantHotspot(int position, final String ref, final String alt)
     {
         return ImmutableVariantHotspotImpl.builder().chromosome("1").position(position).ref(ref).alt(alt).build();
-    }
-
-    public static ReadContextCounter createReadCounter(
-            int position, final String ref, final String alt,
-            int index, int leftCoreIndex, int rightCoreIndex, int flankSize, final String readBases)
-    {
-        VariantHotspot variant = ImmutableVariantHotspotImpl.builder()
-                .chromosome("1")
-                .position(position)
-                .ref(ref)
-                .alt(alt).build();
-
-        IndexedBases indexBases = new IndexedBases(position, index, leftCoreIndex, rightCoreIndex, flankSize, readBases.getBytes());
-        ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
-
-        return new ReadContextCounter(
-                0, variant, readContext, VariantTier.LOW_CONFIDENCE,
-                100, 1, TEST_CONFIG, QUALITY_CALCULATOR, null);
     }
 
     public static ReadContext createReadContext(

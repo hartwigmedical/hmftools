@@ -65,7 +65,8 @@ public class SageConstants
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
     public static final double MQ_RATIO_SMOOTHING = 3;
 
-    public static final int INDEL_DEDUP_MAX_DIST_THRESHOLD = 40;
+    public static final int MAX_READ_EDGE_DISTANCE = 40;
+    public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
 
     public static final int SYNC_FRAG_MAX_MISMATCHES = 10;
 

@@ -6,7 +6,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.SageConstants.INDEL_DEDUP_MAX_DIST_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_AVG_BASE_QUALITY;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.MIN_TUMOR_QUAL;
 import static com.hartwig.hmftools.sage.filter.SoftFilter.STRAND_BIAS;
@@ -235,7 +235,7 @@ public class IndelDeduper
         if(positionsWithin(variant.position(), variant.CorePosEnd, indel.FlankPosStart, indel.FlankPosEnd))
             return true;
 
-        if(variant.ReadCounter.maxDistanceFromEdge() < INDEL_DEDUP_MAX_DIST_THRESHOLD)
+        if(variant.ReadCounter.maxDistanceFromEdge() < MAX_READ_EDGE_DISTANCE)
             return true;
 
         return false;

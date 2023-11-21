@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.evidence;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
@@ -16,12 +17,12 @@ public class ReadContextCounters
     private final List<List<ReadContextCounter>> mSampleCandidateReadCounters;
     private final List<Integer> mFilteredCandidateIndex; // index of the filtered candidates into the original/full list
 
-    public ReadContextCounters(final FilterConfig filterConfig, final List<Candidate> candidates)
+    public ReadContextCounters(final SageConfig config, final List<Candidate> candidates)
     {
         mCandidates = candidates;
         mSampleCandidateReadCounters = Lists.newArrayList();
         mFilteredCandidateIndex = Lists.newArrayList();
-        mVariantFilters = new VariantFilters(filterConfig);
+        mVariantFilters = new VariantFilters(config);
     }
 
     public int candidateCount() { return mCandidates.size(); }

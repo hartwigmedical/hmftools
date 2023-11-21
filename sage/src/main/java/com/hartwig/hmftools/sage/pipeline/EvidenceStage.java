@@ -42,10 +42,10 @@ public class EvidenceStage
     {
         // search BAMs for evidence of each candidate variant
         if(samples.isEmpty())
-            return new ReadContextCounters(mConfig.Filter, candidates);
+            return new ReadContextCounters(mConfig, candidates);
 
         int sampleCount = samples.size();
-        final ReadContextCounters readContextCounters = new ReadContextCounters(mConfig.Filter, candidates);
+        final ReadContextCounters readContextCounters = new ReadContextCounters(mConfig, candidates);
 
         for(int i = 0; i < samples.size(); i++)
         {

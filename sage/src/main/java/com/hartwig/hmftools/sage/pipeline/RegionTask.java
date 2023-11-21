@@ -139,7 +139,7 @@ public class RegionTask
         {
             mPerfCounters.get(PC_VARIANTS).start();
 
-            VariantFilters filters = new VariantFilters(mConfig.Common.Filter);
+            VariantFilters filters = new VariantFilters(mConfig.Common);
 
             // combine normal and tumor together to create variants, then apply soft filters
             Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
