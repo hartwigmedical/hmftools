@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.utils.MemoryCalcs;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -32,7 +31,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
 public class RegionTask
 {
@@ -61,7 +60,7 @@ public class RegionTask
             final int taskId, final ChrBaseRegion region, final RegionResults results, final SageCallConfig config,
             final RefGenomeInterface refGenome, final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
-            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter,
             final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengths fragmentLengths)
     {
         mTaskId = taskId;

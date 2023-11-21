@@ -29,7 +29,7 @@ import com.hartwig.hmftools.sage.common.PartitionTask;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.vcf.VcfWriter;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -40,7 +40,7 @@ public class ChromosomePipeline implements AutoCloseable
     private final SageCallConfig mConfig;
     private final IndexedFastaSequenceFile mRefGenome;
 
-    private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
+    private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
     private final Coverage mCoverage;
     private  final PhaseSetCounter mPhaseSetCounter;
 
@@ -57,7 +57,7 @@ public class ChromosomePipeline implements AutoCloseable
 
     public ChromosomePipeline(
             final String chromosome, final SageCallConfig config,
-            final ReferenceData refData, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap,
+            final ReferenceData refData, final Map<String, BqrRecordMap> qualityRecalibrationMap,
             final Coverage coverage, final PhaseSetCounter phaseSetCounter, final VcfWriter vcfWriter, final FragmentLengths fragmentLengths)
     {
         mChromosome = chromosome;

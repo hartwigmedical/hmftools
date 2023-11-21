@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
-class QualityCounter
+public class BqrKeyCounter
 {
-    public final BaseQualityKey Key;
+    public final BqrKey Key;
 
     private int mCount;
 
-    public QualityCounter(final BaseQualityKey key)
+    public BqrKeyCounter(final BqrKey key)
     {
         Key = key;
         mCount = 0;
@@ -16,8 +16,6 @@ class QualityCounter
     {
         return mCount;
     }
-
-    public void increment() { ++mCount; }
     public void increment(int increment) { mCount += increment;}
 
     public byte ref() { return Key.Ref; }
@@ -25,10 +23,4 @@ class QualityCounter
     {
         return Key.Alt;
     }
-
-    public byte[] trinucleotideContext()
-    {
-        return Key.TrinucleotideContext;
-    }
-
 }

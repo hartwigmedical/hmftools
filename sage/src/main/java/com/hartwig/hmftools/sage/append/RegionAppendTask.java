@@ -16,7 +16,6 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.RefSequence;
-import com.hartwig.hmftools.sage.common.SageVariant;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.evidence.FragmentLengthData;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
@@ -24,7 +23,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.EvidenceStage;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.variant.variantcontext.Genotype;
@@ -48,7 +47,7 @@ public class RegionAppendTask implements Callable
     public RegionAppendTask(
             final int taskId, final ChrBaseRegion region, final List<VariantContext> variants,
             final SageAppendConfig config, final IndexedFastaSequenceFile refGenome,
-            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap, final FragmentLengths fragmentLengths)
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final FragmentLengths fragmentLengths)
     {
         mTaskId = taskId;
         mRegion = region;

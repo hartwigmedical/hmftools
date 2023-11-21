@@ -27,7 +27,7 @@ import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.sync.FragmentData;
@@ -41,7 +41,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     private final SageConfig mConfig;
     private final RefGenomeInterface mRefGenome;
     private final ReadContextCounterFactory mFactory;
-    private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
+    private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
 
     // state per slice region
     private RefSequence mRefSequence;
@@ -54,7 +54,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     private final EvidenceStats mStats;
 
     public ReadContextEvidence(
-            final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
+            final SageConfig config, final RefGenomeInterface refGenome, final Map<String, BqrRecordMap> qualityRecalibrationMap)
     {
         mConfig = config;
         mRefGenome = refGenome;
@@ -102,7 +102,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         mRefSequence = new RefSequence(regionBounds, mRefGenome);
 
-        QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
+        BqrRecordMap qrMap = mQualityRecalibrationMap.get(sample);
         QualityCalculator qualityCalculator = new QualityCalculator(mConfig.Quality, qrMap, mRefSequence.IndexedBases);
 
         mReadCounters = mFactory.create(candidates, mConfig, qualityCalculator, sample);

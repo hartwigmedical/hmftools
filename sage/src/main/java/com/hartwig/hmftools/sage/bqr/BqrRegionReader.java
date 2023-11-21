@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -24,7 +24,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.reference.ReferenceSequenceFile;
 
-public class BaseQualityRegionCounter implements CigarHandler
+public class BqrRegionReader implements CigarHandler
 {
     private final SamReader mBamReader;
     private final ReferenceSequenceFile mRefGenome;
@@ -34,8 +34,8 @@ public class BaseQualityRegionCounter implements CigarHandler
     private ChrBaseRegion mRegion;
     private IndexedBases mIndexedBases;
 
-    private final Set<QualityCounter> mQualityCounts; // summarised counts with position removed
-    private final Map<BaseQualityKey,Integer> mKeyCountsMap;
+    private final Set<BqrKeyCounter> mQualityCounts; // summarised counts with position removed
+    private final Map<BqrKey,Integer> mKeyCountsMap;
     private int mPurgeIndex;
     private int mMaxIndex;
 
@@ -48,7 +48,7 @@ public class BaseQualityRegionCounter implements CigarHandler
     private static final byte N = (byte) 'N';
     private static final int BASE_DATA_POS_BUFFER = 100;
 
-    public BaseQualityRegionCounter(
+    public BqrRegionReader(
             final SageConfig config, final SamReader bamReader, final ReferenceSequenceFile refGenome, final BaseQualityResults results)
     {
         mConfig = config;
@@ -103,7 +103,7 @@ public class BaseQualityRegionCounter implements CigarHandler
         mPerfCounter.reset();
     }
 
-    public Collection<QualityCounter> getQualityCounts() { return mQualityCounts; }
+    public Collection<BqrKeyCounter> getQualityCounts() { return mQualityCounts; }
 
     public void run()
     {
@@ -118,9 +118,9 @@ public class BaseQualityRegionCounter implements CigarHandler
             mapBaseQualityData(mBaseQualityData[i]);
         }
 
-        for(Map.Entry<BaseQualityKey,Integer> entry : mKeyCountsMap.entrySet())
+        for(Map.Entry<BqrKey,Integer> entry : mKeyCountsMap.entrySet())
         {
-            QualityCounter counter = new QualityCounter(entry.getKey());
+            BqrKeyCounter counter = new BqrKeyCounter(entry.getKey());
             counter.increment(entry.getValue());
             mQualityCounts.add(counter);
         }
@@ -147,10 +147,10 @@ public class BaseQualityRegionCounter implements CigarHandler
         if(bqData.hasIndel())
             return;
 
-        Map<BaseQualityKey,Integer> keyCounts = bqData.formKeyCounts(
+        Map<BqrKey,Integer> keyCounts = bqData.formKeyCounts(
                 mConfig.QualityRecalibration.MaxAltCount, mConfig.QualityRecalibration.MaxAltPerc);
 
-        for(Map.Entry<BaseQualityKey,Integer> entry : keyCounts.entrySet())
+        for(Map.Entry<BqrKey,Integer> entry : keyCounts.entrySet())
         {
             Integer count = mKeyCountsMap.get(entry.getKey());
             mKeyCountsMap.put(entry.getKey(), count != null ? count + entry.getValue() : entry.getValue());
@@ -237,7 +237,7 @@ public class BaseQualityRegionCounter implements CigarHandler
                 continue;
 
             BaseQualityData baseQualityData = getOrCreateBaseQualData(position, ref, trinucleotideContext);
-            baseQualityData.processRead(alt, quality);
+            baseQualityData.processReadBase(alt, quality);
         }
     }
 

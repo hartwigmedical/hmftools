@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_COUNT;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_MAX_ALT_PERC;
@@ -7,7 +7,7 @@ import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BQR_SAMPLE_SIZE;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
-public class QualityRecalibrationConfig
+public class BqrConfig
 {
     public final boolean Enabled;
     public final boolean LoadBqrFiles;
@@ -27,7 +27,7 @@ public class QualityRecalibrationConfig
     private static final String WRITE_BQR_PLOT = "write_bqr_plot";
     private static final String LOAD_BQR_FILES = "load_bqr_files";
 
-    public QualityRecalibrationConfig(final ConfigBuilder configBuilder)
+    public BqrConfig(final ConfigBuilder configBuilder)
     {
         Enabled = !configBuilder.hasFlag(DISABLE_BQR);
 
@@ -50,7 +50,7 @@ public class QualityRecalibrationConfig
         MinMapQuality = configBuilder.getInteger(BQR_MIN_MAP_QUAL);
     }
 
-    public QualityRecalibrationConfig()
+    public BqrConfig()
     {
         Enabled = false;
         WritePlot = false;

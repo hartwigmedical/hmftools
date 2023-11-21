@@ -22,7 +22,7 @@ import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.coverage.Coverage;
 import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 
@@ -33,7 +33,7 @@ public class RegionThread extends Thread
     private final IndexedFastaSequenceFile mRefGenomeFile;
     private final RefGenomeSource mRefGenome;
 
-    private final Map<String, QualityRecalibrationMap> mQualityRecalibrationMap;
+    private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
     private final Coverage mCoverage;
     private  final PhaseSetCounter mPhaseSetCounter;
 
@@ -51,7 +51,7 @@ public class RegionThread extends Thread
 
     public RegionThread(
             final String chromosome, final SageCallConfig config,
-            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap, final Coverage coverage,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final Coverage coverage,
             final PhaseSetCounter phaseSetCounter, final List<BaseRegion> panelRegions, final List<VariantHotspot> hotspots,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
             final Queue<PartitionTask> partitions, final RegionResults regionResults, final FragmentLengths fragmentLengths)

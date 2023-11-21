@@ -17,7 +17,7 @@ import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +28,7 @@ public class TestUtils
 {
     public static final SageConfig TEST_CONFIG = createSageConfig();
 
-    public static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
+    public static final BqrRecordMap RECALIBRATION = new BqrRecordMap(Collections.emptyList());
 
     private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
     public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_BASES);
