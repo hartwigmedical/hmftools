@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -305,13 +306,14 @@ public class SageConfig
         addThreadOptions(configBuilder);
     }
 
-    public SageConfig()
+    @VisibleForTesting
+    public SageConfig(boolean highDepthMode)
     {
         SampleDataDir = "";
         ReferenceIds = Lists.newArrayList();
         ReferenceBams = Lists.newArrayList();
         Filter = new FilterConfig();
-        Quality = new QualityConfig();
+        Quality = new QualityConfig(highDepthMode);
         QualityRecalibration = new QualityRecalibrationConfig();
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;

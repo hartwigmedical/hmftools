@@ -17,6 +17,7 @@ public enum SoftFilter
             "maxGermlineAltSupport", "max_germline_alt_support", false, true, "Excess germline alt support"),
     MIN_AVG_BASE_QUALITY("minAvgBaseQual", "", true, false, "Variant average base quality below limit"),
     STRAND_BIAS("strandBias", "", true, false, "Variant exceeds strand bias limit"),
+    FRAGMENT_COORDS("minFragmentCoords", "", true, false, "Insufficient fragment coordinate variation"),
     MAX_EDGE_DISTANCE("maxEdgeDistance", "", true, false, "Variant close to read edge");
 
     private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();

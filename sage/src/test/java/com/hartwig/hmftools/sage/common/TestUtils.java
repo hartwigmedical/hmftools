@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.common;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
@@ -25,10 +26,18 @@ import htsjdk.samtools.SAMRecordSetBuilder;
 
 public class TestUtils
 {
-    public static final SageConfig TEST_CONFIG = new SageConfig();
+    public static final SageConfig TEST_CONFIG = createSageConfig();
+
     public static final QualityRecalibrationMap RECALIBRATION = new QualityRecalibrationMap(Collections.emptyList());
+
     private static final IndexedBases REF_BASES = new IndexedBases(550, 0, "TGTTTCTGTTTC".getBytes());
     public static final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_BASES);
+
+    public static SageConfig createSageConfig()
+    {
+        // add input arguments as necessary or take the defaults
+        return new SageConfig(false);
+    }
 
     public static SageVariant createVariant(int position, final String ref, final String alt)
     {
@@ -154,6 +163,12 @@ public class TestUtils
         record.setBaseQualities(qualities);
         record.setReferenceName(chrStr);
         record.setReferenceIndex(chromosome.ordinal()); // need to override since no header is present
+
+        record.setMateReferenceName(chrStr);
+        record.setMateReferenceIndex(chromosome.ordinal());
+        record.setMateAlignmentStart(readStart + 300);
+        record.setMateNegativeStrandFlag(true);
+        record.setAttribute(MATE_CIGAR_ATTRIBUTE, cigar);
 
         // to be correct this should match the cigar element count
         record.setAttribute(NUM_MUTATONS_ATTRIBUTE, 1);

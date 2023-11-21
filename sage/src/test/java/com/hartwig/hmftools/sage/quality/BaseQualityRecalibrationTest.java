@@ -1,5 +1,7 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.sage.common.TestUtils.createSageConfig;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -16,7 +18,7 @@ public class BaseQualityRecalibrationTest
     public void testBaseQualityCounts()
     {
         BaseQualityRegionCounter bqrCounter = new BaseQualityRegionCounter(
-                new SageConfig(), null, null, new BaseQualityResults());
+                createSageConfig(), null, null, new BaseQualityResults());
 
         bqrCounter.initialise(new ChrBaseRegion("1", 100, 300));
 

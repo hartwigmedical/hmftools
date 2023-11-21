@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.evidence;
+package com.hartwig.hmftools.sage.filter;
 
 import static java.lang.String.format;
 
@@ -6,6 +6,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.evidence.RawContext;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
 import htsjdk.samtools.SAMRecord;

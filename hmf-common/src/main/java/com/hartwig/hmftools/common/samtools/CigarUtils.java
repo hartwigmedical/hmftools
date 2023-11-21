@@ -118,7 +118,7 @@ public final class CigarUtils
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
 
-    public static int getUnclippedPosition(final int readStart, final String cigarStr, final boolean forwardStrand)
+    public static int getUnclippedPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand)
     {
         int currentPosition = readStart;
         int elementLength = 0;

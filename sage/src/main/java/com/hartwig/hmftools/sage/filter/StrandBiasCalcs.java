@@ -5,7 +5,6 @@ import static java.lang.Math.min;
 import static java.lang.Math.round;
 
 import com.hartwig.hmftools.common.utils.Doubles;
-import com.hartwig.hmftools.sage.evidence.StrandBiasData;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 

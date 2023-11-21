@@ -38,7 +38,7 @@ Argument | Description
 ---|---
 tumor | Comma separated names of the tumor sample
 tumor_bam | Comma separated paths to indexed tumor BAM file
-out | Name of the output VCF
+output_vcf | Name of the output VCF
 ref_genome | Path to reference genome fasta file
 ref_genome_version | One of `37` or `38`
 hotspots | Path to hotspots vcf
@@ -119,7 +119,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
-    -out /path/to/COLO829v003.sage.vcf.gz
+    -output_vcf /path/to/COLO829v003.sage.vcf.gz
 ```
 
 Typical arguments running in paired tumor-normal mode:
@@ -135,7 +135,7 @@ java -Xms4G -Xmx32G -cp sage.jar com.hartwig.hmftools.sage.SageApplication \
     -panel_bed /path/to/ActionableCodingPanel.somatic.37.bed.gz \
     -high_confidence_bed /path/to/NA12878_GIAB_highconf_IllFB-IllGATKHC-CG-Ion-Solid_ALLCHROM_v3.2.2_highconf.bed \
     -ensembl_data_dir /path_to_ensembl_cache/ \
-    -out /path/to/COLO829v003.sage.vcf.gz
+    -output_vcf /path/to/COLO829v003.sage.vcf.gz
 ```
 
 # SAGE append mode usage
@@ -147,7 +147,7 @@ Argument | Description
 reference | Comma separated names of the reference sample
 reference_bam | Comma separated paths to indexed reference BAM file
 input_vcf | Name of the existing SAGE 2.4+ VCF
-out | Name of the output VCF
+output_vcf | Name of the output VCF
 ref_genome | Path to reference genome fasta file
 
 The cardinality of `reference` must match `reference_bam` and must not already exist in the input VCF.
@@ -305,9 +305,9 @@ A typical example of the chart is shown below. Note that each bar represents the
 
 ![Base Quality Adjustment](src/main/resources/readme/COLO829v003T.bqr.png)
 
-Base quality recalibration is enabled by default but can be disabled by supplying including the`-bqr_enabled false` argument.
+Base quality recalibration is enabled by default but can be disabled by supplying including the`-disable_bqr` argument.
 
-The base quality recalibration chart can be independently disabled by including the `-bqr_plot false` argument.
+The base quality recalibration chart is generated with the config `-write_bqr_plot` and the BQR table data with `write_bqr_data`.
  
 ## 2. Candidate Variants
 

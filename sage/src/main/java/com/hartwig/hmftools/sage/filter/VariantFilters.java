@@ -160,6 +160,11 @@ public class VariantFilters
             filters.add(SoftFilter.MAX_EDGE_DISTANCE.filterName());
         }
 
+        if(primaryTumor.belowMinFragmentCoords())
+        {
+            filters.add(SoftFilter.FRAGMENT_COORDS.filterName());
+        }
+
         if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBias())
         || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBias()))
         {

@@ -130,7 +130,7 @@ public class SageCallConfig
 
     public SageCallConfig()
     {
-        Common = new SageConfig();
+        Common = new SageConfig(false);
         TumorIds = Lists.newArrayList();
         TumorBams = Lists.newArrayList();
         HighConfidenceBed = "highConf";

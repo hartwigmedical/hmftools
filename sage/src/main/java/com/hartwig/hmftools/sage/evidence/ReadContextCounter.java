@@ -26,6 +26,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MQ_RATIO_SMOOTHING;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_BUFFER;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_CONTEXT_MIN_SEARCH_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.REALIGN_READ_MIN_INDEL_LENGTH;
+import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORDS;
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
@@ -54,6 +55,8 @@ import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.filter.FragmentCoords;
+import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.read.SplitReadUtils;
 import com.hartwig.hmftools.sage.read.NumberEvents;
@@ -116,6 +119,7 @@ public class ReadContextCounter implements VariantHotspot
     private List<int[]> mLpsCounts;
     private int[] mUmiTypeCounts;
     private FragmentLengthData mFragmentLengthData;
+    private FragmentCoords mFragmentCoords;
 
     public ReadContextCounter(
             final int id, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
@@ -174,6 +178,7 @@ public class ReadContextCounter implements VariantHotspot
         mLpsCounts = null;
         mUmiTypeCounts = null;
         mFragmentLengthData = mConfig.WriteFragmentLengths ? new FragmentLengthData() : null;
+        mFragmentCoords = mConfig.Quality.HighBaseMode ? new FragmentCoords(REQUIRED_UNIQUE_FRAG_COORDS) : null;
     }
 
     public int id() { return mId; }
@@ -258,6 +263,8 @@ public class ReadContextCounter implements VariantHotspot
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
 
+    public boolean belowMinFragmentCoords() { return mFragmentCoords != null && !mFragmentCoords.atCapacity(); }
+
     public String toString()
     {
         return format("id(%d) var(%s) core(%s) counts(f=%d p=%d c=%d)",
@@ -293,7 +300,7 @@ public class ReadContextCounter implements VariantHotspot
 
         RawContext rawContext = RawContext.create(mVariant, record);
 
-        if(mConfig.Quality.HighBaseQualLimit > 0)
+        if(mConfig.Quality.HighBaseMode)
         {
             if(isChimericRead(record))
                 return UNRELATED;
@@ -351,10 +358,10 @@ public class ReadContextCounter implements VariantHotspot
 
         double rawBaseQuality = mQualityCalculator.rawBaseQuality(this, readIndex, record);
 
-        if(mConfig.Quality.HighBaseQualLimit > 0 && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
+        if(mConfig.Quality.HighBaseMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
         {
             if(rawContext.AltSupport)
-                countStrandedness(record, fragmentData);
+                countAltSupportMetrics(record, fragmentData);
 
             return UNRELATED;
         }
@@ -415,7 +422,7 @@ public class ReadContextCounter implements VariantHotspot
                 */
 
                 if(rawContext.AltSupport || readSupport != null)
-                    countStrandedness(record, fragmentData);
+                    countAltSupportMetrics(record, fragmentData);
 
                 checkImproperCount(record);
                 return SUPPORT;
@@ -481,7 +488,7 @@ public class ReadContextCounter implements VariantHotspot
             mTotalAltMapQuality += record.getMappingQuality();
             mTotalAltNmCount += numberOfEvents;
 
-            countStrandedness(record, fragmentData);
+            countAltSupportMetrics(record, fragmentData);
         }
 
         registerReadSupport(record, readSupport, quality);
@@ -809,10 +816,18 @@ public class ReadContextCounter implements VariantHotspot
         mLpsCounts.add(index, new int[] { readCount, (int)allocCount } );
     }
 
-    private void countStrandedness(final SAMRecord record, final FragmentData fragmentData)
+    private void countAltSupportMetrics(final SAMRecord record, final FragmentData fragmentData)
     {
         mReadStrandBias.registerRead(record, fragmentData, this);
         mFragmentStrandBias.registerFragment(record);
+
+        if(mFragmentCoords != null)
+        {
+            if(fragmentData != null)
+                mFragmentCoords.addRead(fragmentData.First, fragmentData.Second);
+            else
+                mFragmentCoords.addRead(record, null);
+        }
     }
 
     private void updateDistanceFromReadEdge(final SAMRecord record, final FragmentData fragmentData)
@@ -908,4 +923,5 @@ public class ReadContextCounter implements VariantHotspot
     @VisibleForTesting
     public ReadSupportCounts readSupportQualityCounts() { return mQualities; };
     public ReadSupportCounts readSupportCounts() { return mCounts; }
+    public FragmentCoords fragmentCoords() { return mFragmentCoords; }
 }
