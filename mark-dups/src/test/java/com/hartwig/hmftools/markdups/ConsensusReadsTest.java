@@ -2,6 +2,7 @@ package com.hartwig.hmftools.markdups;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
@@ -228,6 +229,56 @@ public class ConsensusReadsTest
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals(cigar4, readInfo.ConsensusRead.getCigarString());
         assertEquals(posStart + 94, readInfo.ConsensusRead.getAlignmentStart());
+    }
+
+    @Test
+    public void testMateAlignmentConsensus()
+    {
+        // variable mate alignments from soft-clips
+        final List<SAMRecord> reads = Lists.newArrayList();
+
+        int posStart = 1;
+
+        String consensusBases = REF_BASES.substring(1);
+        String readCigar = "100M";
+
+        String mateCigar1 = "100M";
+
+        SAMRecord read1 = SamRecordTestUtils.createSamRecord(
+                nextReadId(), CHR_1, posStart, consensusBases, readCigar, CHR_1,
+                1000, false, false, null);
+        read1.setMateNegativeStrandFlag(false);
+        read1.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar1);
+
+        reads.add(read1);
+
+        String mateCigar2 = "10S90M";
+
+        SAMRecord read2 = SamRecordTestUtils.createSamRecord(
+                nextReadId(), CHR_1, posStart, consensusBases, readCigar, CHR_1,
+                1010, false, false, null);
+        read2.setMateNegativeStrandFlag(false);
+        read2.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar2);
+
+        reads.add(read2);
+        reads.add(read2);
+
+        String mateCigar3 = "5S95M";
+
+        SAMRecord read3 = SamRecordTestUtils.createSamRecord(
+                nextReadId(), CHR_1, posStart, consensusBases, readCigar, CHR_1,
+                1005, false, false, null);
+        read3.setMateNegativeStrandFlag(false);
+        read3.setAttribute(MATE_CIGAR_ATTRIBUTE, mateCigar3);
+
+        reads.add(read3);
+        reads.add(read3);
+        reads.add(read3);
+
+        ConsensusReadInfo readInfo = mConsensusReads.createConsensusRead(reads, UMI_ID_1);
+        assertEquals(ALIGNMENT_ONLY, readInfo.Outcome);
+        assertEquals(1005, readInfo.ConsensusRead.getMateAlignmentStart());
+        assertEquals(mateCigar3, readInfo.ConsensusRead.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
     }
 
     @Test
