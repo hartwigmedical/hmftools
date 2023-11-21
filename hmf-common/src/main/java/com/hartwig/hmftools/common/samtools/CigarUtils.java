@@ -117,4 +117,51 @@ public final class CigarUtils
 
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
+
+    public static int getUnclippedPosition(final int readStart, final String cigarStr, final boolean forwardStrand)
+    {
+        int currentPosition = readStart;
+        int elementLength = 0;
+
+        for(int i = 0; i < cigarStr.length(); ++i)
+        {
+            char c = cigarStr.charAt(i);
+            boolean isAddItem = (c == 'D' || c == 'M' || c == 'S' || c == 'N');
+
+            if(isAddItem)
+            {
+                if(forwardStrand)
+                {
+                    // back out the left clip if present
+                    return c == 'S' ? readStart - elementLength : readStart;
+                }
+
+                if(c == 'S' && readStart == currentPosition)
+                {
+                    // ignore left-clip when getting reverse strand position
+                }
+                else
+                {
+                    currentPosition += elementLength;
+                }
+
+                elementLength = 0;
+                continue;
+            }
+
+            int digit = c - '0';
+            if (digit >= 0 && digit <= 9)
+            {
+                elementLength = elementLength * 10 + digit;
+            }
+            else
+            {
+                elementLength = 0;
+            }
+        }
+
+        // always pointing to the start of the next element, so need to move back a base
+        return currentPosition - 1;
+    }
+
 }

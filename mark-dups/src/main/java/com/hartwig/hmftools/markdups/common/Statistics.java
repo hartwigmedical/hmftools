@@ -31,7 +31,6 @@ public class Statistics
     public long MissingMateCigar;
     public long Unmapped; // fully, ie primary and mate
     public long PairedAltChromosome; // paired with a non-human chromosome
-    public long Secondary;
 
     public final Map<Integer,DuplicateFrequency> DuplicateFrequencies;
 
@@ -50,7 +49,6 @@ public class Statistics
         MissingMateCigar = 0;
         Unmapped = 0;
         PairedAltChromosome = 0;
-        Secondary = 0;
         DuplicateFrequencies = Maps.newHashMap();
         UmiStats = new UmiStatistics();
         ConsensusStats = new ConsensusStatistics();
@@ -67,7 +65,6 @@ public class Statistics
         MissingMateCigar += other.MissingMateCigar;
         Unmapped += other.Unmapped;
         PairedAltChromosome += other.PairedAltChromosome;
-        Secondary += other.Secondary;
 
         for(DuplicateFrequency dupFreq : other.DuplicateFrequencies.values())
         {
@@ -120,8 +117,8 @@ public class Statistics
 
     public void logStats()
     {
-        MD_LOGGER.info("stats: totalReads({}) secondaries({}) duplicates({}) duplicationGroups({}) umiGroups({}) {}",
-                TotalReads, Secondary, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, ConsensusStats);
+        MD_LOGGER.info("stats: totalReads({}) duplicates({}) duplicationGroups({}) umiGroups({}) {}",
+                TotalReads, DuplicateReads, DuplicateGroups, UmiStats.UmiGroups, ConsensusStats);
 
         if(MD_LOGGER.isDebugEnabled())
         {

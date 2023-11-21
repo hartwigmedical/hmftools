@@ -186,7 +186,6 @@ public class PartitionReader implements Consumer<List<Fragment>>
         {
             mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
             mBamWriter.writeRead(read, FragmentStatus.UNSET);
-            ++mStats.Secondary;
             return;
         }
 

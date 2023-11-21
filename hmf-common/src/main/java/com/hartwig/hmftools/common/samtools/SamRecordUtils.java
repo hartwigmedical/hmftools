@@ -131,6 +131,26 @@ public final class SamRecordUtils
         return umiReadType;
     }
 
+    public static int getUnclippedPosition(final SAMRecord read)
+    {
+        int position;
+
+        if(orientation(read) == POS_ORIENT)
+        {
+            position = read.getAlignmentStart();
+            if(read.getCigar().isLeftClipped())
+                position -= read.getCigar().getFirstCigarElement().getLength();
+        }
+        else
+        {
+            position = read.getAlignmentEnd();
+            if(read.getCigar().isRightClipped())
+                position += read.getCigar().getLastCigarElement().getLength();
+        }
+
+        return position;
+    }
+
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
     {
         final List<int[]> mappedCoords = Lists.newArrayList();
