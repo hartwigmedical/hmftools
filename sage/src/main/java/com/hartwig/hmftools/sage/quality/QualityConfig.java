@@ -35,7 +35,7 @@ public class QualityConfig
     private static final double DEFAULT_JITTER_PENALTY = 0.25;
     private static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
     private static final int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
-    private static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 0;
+    private static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 3;
     private static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     private static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     private static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
