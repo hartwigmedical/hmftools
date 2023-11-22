@@ -22,8 +22,6 @@ import htsjdk.samtools.SAMRecord;
 
 public final class SamRecordUtils
 {
-    public static final int PHRED_OFFSET = 33;
-
     public static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
     public static final String MATE_CIGAR_ATTRIBUTE = "MC";
     public static final String NUM_MUTATONS_ATTRIBUTE = "NM";
@@ -40,17 +38,10 @@ public final class SamRecordUtils
     public static final int NO_CHROMOSOME_INDEX = -1;
     public static final int NO_POSITION = 0;
 
+    private static final int PHRED_OFFSET = 33;
+
+
     public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
-
-    public static int getBaseQuality(final char quality)
-    {
-        return quality - PHRED_OFFSET;
-    }
-
-    public static int getBaseQuality(final SAMRecord record, int readPosition)
-    {
-        return getAvgBaseQuality(record, readPosition, 1);
-    }
 
     // convenience methods to avoid triggering a crash if unpaired
     public static boolean firstInPair(final SAMRecord record)
@@ -80,18 +71,9 @@ public final class SamRecordUtils
 
     public static byte orientation(final SAMRecord read) { return !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT; }
 
-    public static int getAvgBaseQuality(final SAMRecord record, int readPosition, int length)
+    public static int getBaseQuality(final char quality)
     {
-        assert (readPosition > 0);
-
-        int score = 0;
-        final String baseQualities = record.getBaseQualityString();
-        for(int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++)
-        {
-            int baseScore = getBaseQuality(baseQualities.charAt(index));
-            score += baseScore;
-        }
-        return score / length;
+        return quality - PHRED_OFFSET;
     }
 
     public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType)
