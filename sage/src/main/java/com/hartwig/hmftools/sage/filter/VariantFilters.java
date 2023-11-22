@@ -204,8 +204,16 @@ public class VariantFilters
             return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
     }
 
+    private static boolean isLongInsert(final ReadContextCounter variant)
+    {
+        return variant.isIndel() && variant.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
+    }
+
     private boolean belowMaxEdgeDistance(final ReadContextCounter primaryTumor)
     {
+        if(isLongInsert(primaryTumor))
+            return false;
+
         int med = primaryTumor.maxDistanceFromEdge();
 
         if(med >= MAX_READ_EDGE_DISTANCE)
@@ -249,7 +257,7 @@ public class VariantFilters
         boolean chromosomeIsAllosome = HumanChromosome.contains(normal.chromosome())
                 && HumanChromosome.fromString(normal.chromosome()).isAllosome();
 
-        boolean isLongInsert = normal.isIndel() && normal.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
+        boolean isLongInsert = isLongInsert(normal);
 
         int minGermlineCoverage = chromosomeIsAllosome ?
                 (isLongInsert ? config.MinGermlineCoverageAllosomeLongInsert : config.MinGermlineCoverageAllosome)

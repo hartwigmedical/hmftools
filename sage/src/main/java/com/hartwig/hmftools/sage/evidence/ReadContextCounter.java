@@ -869,8 +869,11 @@ public class ReadContextCounter implements VariantHotspot
         }
         else
         {
-            distFromStart = mAdjustedVariantPosition - record.getAlignmentStart();
-            distFromEnd = record.getAlignmentEnd() - mAdjustedVariantPosition;
+            if(positionWithin(mAdjustedVariantPosition, record.getAlignmentStart(), record.getAlignmentEnd()))
+            {
+                distFromStart = mAdjustedVariantPosition - record.getAlignmentStart();
+                distFromEnd = record.getAlignmentEnd() - mAdjustedVariantPosition;
+            }
         }
 
         int minDistance = min(distFromStart, distFromEnd);
