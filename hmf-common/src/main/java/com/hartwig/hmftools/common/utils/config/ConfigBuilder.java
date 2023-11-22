@@ -12,6 +12,7 @@ import static com.hartwig.hmftools.common.utils.config.ConfigItemType.STRING;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -341,6 +342,8 @@ public class ConfigBuilder
 
             output.add(sb.toString());
         }
+
+        Collections.sort(output);
 
         if(asLog)
             output.forEach(x -> LOGGER.info(x));
