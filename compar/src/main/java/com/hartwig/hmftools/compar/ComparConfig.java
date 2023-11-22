@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addSampleIdFile;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -27,6 +28,7 @@ import static com.hartwig.hmftools.compar.common.Category.PURPLE_CATEGORIES;
 import static com.hartwig.hmftools.compar.common.Category.purpleCategories;
 import static com.hartwig.hmftools.compar.common.Category.linxCategories;
 import static com.hartwig.hmftools.compar.common.FileSources.fromConfig;
+import static com.hartwig.hmftools.compar.common.FileSources.registerConfig;
 import static com.hartwig.hmftools.compar.common.MatchLevel.REPORTABLE;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.DB_DEFAULT_ARGS;
 import static com.hartwig.hmftools.patientdb.dao.DatabaseAccess.addDatabaseCmdLineArgs;
@@ -395,7 +397,7 @@ public class ComparConfig
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, REF_SOURCE), false, "Database configurations for reference data");
         configBuilder.addConfigItem(formConfigSourceStr(DB_SOURCE, NEW_SOURCE), false, "Database configurations for new data");
 
-        com.hartwig.hmftools.compar.common.FileSources.registerConfig(configBuilder);
+        registerConfig(configBuilder);
 
         configBuilder.addFlag(WRITE_DETAILED_FILES, "Write per-type details files");
         configBuilder.addFlag(RESTRICT_TO_DRIVERS, "Restrict any comparison involving genes to driver gene panel");
@@ -403,7 +405,7 @@ public class ComparConfig
 
         addDatabaseCmdLineArgs(configBuilder, false);
         addOutputOptions(configBuilder);
-        ConfigUtils.addLoggingOptions(configBuilder);
+        addLoggingOptions(configBuilder);
         addThreadOptions(configBuilder);
     }
 
