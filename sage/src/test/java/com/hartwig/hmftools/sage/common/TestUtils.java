@@ -2,6 +2,7 @@ package com.hartwig.hmftools.sage.common;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_CONTEXT_FLANK_SIZE;
 import static com.hartwig.hmftools.sage.SageConstants.MIN_CORE_DISTANCE;
@@ -52,7 +53,7 @@ public class TestUtils
         IndexedBases indexBases = new IndexedBases(
                 position, index, leftCoreIndex, rightCoreIndex, DEFAULT_READ_CONTEXT_FLANK_SIZE, readBases.getBytes());
 
-        return createVariant(position, ref, alt, indexBases);
+        return createVariant(CHR_1, position, ref, alt, indexBases);
     }
 
     public static SageVariant createVariant(final ReadContextCounter readContextCounter)
@@ -63,9 +64,9 @@ public class TestUtils
         return new SageVariant(candidate, Collections.emptyList(), Lists.newArrayList(readContextCounter));
     }
 
-    public static SageVariant createVariant(int position, final String ref, final String alt, final IndexedBases indexBases)
+    public static SageVariant createVariant(final String chromosome, int position, final String ref, final String alt, final IndexedBases indexBases)
     {
-        VariantHotspot variant = createVariantHotspot(position, ref, alt);
+        VariantHotspot variant = createVariantHotspot(chromosome, position, ref, alt);
 
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
@@ -124,9 +125,14 @@ public class TestUtils
         return flank + core + alt + core + flank;
     }
 
+    public static VariantHotspot createVariantHotspot(final String chromosome, int position, final String ref, final String alt)
+    {
+        return ImmutableVariantHotspotImpl.builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
+    }
+
     public static VariantHotspot createVariantHotspot(int position, final String ref, final String alt)
     {
-        return ImmutableVariantHotspotImpl.builder().chromosome("1").position(position).ref(ref).alt(alt).build();
+        return createVariantHotspot(CHR_1, position, ref, alt);
     }
 
     public static ReadContext createReadContext(

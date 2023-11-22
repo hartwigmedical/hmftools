@@ -7,6 +7,7 @@ import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE;
+import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
 
@@ -28,21 +29,25 @@ import com.hartwig.hmftools.sage.filter.SoftFilter;
 
 public class IndelDeduper
 {
-    /* TO-DO: describe the logic
-
-    */
-
     private final RefGenomeInterface mRefGenome;
     private int mGroupIterations;
+    private boolean mRunOldDedup;
 
     public IndelDeduper(final RefGenomeInterface refGenome)
     {
         mRefGenome = refGenome;
         mGroupIterations = 0;
+        mRunOldDedup = false;
     }
+
+    public void setRunOldDedup() { mRunOldDedup = true; }
 
     public void dedupVariants(final List<SageVariant> variants)
     {
+        // first mark indels with the old method for comparison's sake
+        if(mRunOldDedup)
+            dedupIndelsOld(variants);
+
         List<VariantData> indels = Lists.newArrayList();
         List<VariantData> candidates = Lists.newArrayList();
 
@@ -88,6 +93,16 @@ public class IndelDeduper
 
                 if(variant.Variant.isIndel())
                     indels.remove(variant);
+            }
+        }
+
+        if(mRunOldDedup)
+        {
+            // mark any differences and clear the old filter
+            for(SageVariant variant : variants)
+            {
+                if(variant.filters().contains(DEDUP_INDEL_FILTER_OLD))
+                    variant.filters().remove(DEDUP_INDEL_FILTER_OLD);
             }
         }
     }
@@ -191,7 +206,7 @@ public class IndelDeduper
             }
             else if(recoverFilteredVariant(variant.Variant))
             {
-                if(variant.Variant.filters().contains(DEDUP_INDEL_FILTER_OLD))
+                if(mRunOldDedup && variant.Variant.filters().contains(DEDUP_INDEL_FILTER_OLD))
                     variant.Variant.markDedupIndelDiff();
 
                 variant.Variant.filters().clear();
@@ -207,18 +222,13 @@ public class IndelDeduper
         return variant.filters().stream().noneMatch(x -> SoftFilter.GERMLINE_FILTERS.contains(x));
     }
 
-    private static void markAsDedup(final SageVariant variant)
+    private void markAsDedup(final SageVariant variant)
     {
         // mark only otherwise passing
-        if(variant.isPassing())
-        {
+        if(mRunOldDedup && variant.isPassing())
             variant.markDedupIndelDiff();
-            variant.filters().add(DEDUP_INDEL_FILTER);
-        }
-        else if(variant.filters().contains(DEDUP_INDEL_FILTER_OLD))
-        {
-            variant.filters().add(DEDUP_INDEL_FILTER);
-        }
+
+        variant.filters().add(DEDUP_INDEL_FILTER);
     }
 
     private static boolean isDedupCandidate(final VariantData indel, final VariantData variant)
