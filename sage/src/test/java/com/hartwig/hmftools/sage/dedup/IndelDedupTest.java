@@ -10,6 +10,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.createVariant;
 import static com.hartwig.hmftools.sage.common.TestUtils.setTumorQuality;
 import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.dedup.IndelDeduper.buildAltBasesString;
+import static com.hartwig.hmftools.sage.filter.SoftFilter.MAX_GERMLINE_VAF;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.DEDUP_INDEL_FILTER_OLD;
 
@@ -94,7 +95,7 @@ public class IndelDedupTest
     }
 
     @Test
-    public void testIndelsNew1()
+    public void testIndels1()
     {
         // only the first INDEL is required to explain the read context, and so the others are de-duped
         String readBases1 = CHR_1_REF_BASES.substring(0, 21) + CHR_1_REF_BASES.substring(30, 50);
@@ -124,43 +125,62 @@ public class IndelDedupTest
     }
 
     @Test
-    public void testIndelsNew2()
+    public void testIndels2()
     {
         // all 3 variants are required to explain the read context, and so all remain passing
-        String combinedReadBases = CHR_1_REF_BASES.substring(0, 21) + CHR_1_REF_BASES.substring(30, 36) + "A"
+        String combinedReadBases = CHR_1_REF_BASES.substring(0, 21)
+                + CHR_1_REF_BASES.substring(30, 32) + "A" // SNV 1
+                + CHR_1_REF_BASES.substring(33, 36) + "A" // SNV 2
                 + CHR_1_REF_BASES.substring(37, 41) + CHR_1_REF_BASES.substring(45, 70);
 
-        SageVariant var1 = createSageVariant(
+        SageVariant del1 = createSageVariant(
                 20, 20, combinedReadBases,
                 CHR_1_REF_BASES.substring(20, 30), CHR_1_REF_BASES.substring(20, 21), 1);
 
-        // SNV further up
+        // germline variant part of the solution but cannot be recovered
         SageVariant var2 = createSageVariant(
+                32, 32, combinedReadBases,
+                CHR_1_REF_BASES.substring(32, 33), "A", 1);
+
+        var2.filters().add(MAX_GERMLINE_VAF.filterName());
+
+        // SNV further up
+        SageVariant var1 = createSageVariant(
                 36, 36, combinedReadBases,
                 CHR_1_REF_BASES.substring(36, 37), "A", 1);
 
-        SageVariant var3 = createSageVariant(
+        SageVariant del2 = createSageVariant(
                 40, 40, combinedReadBases,
                 CHR_1_REF_BASES.substring(40, 45), CHR_1_REF_BASES.substring(40, 41), 1);
 
         // initially filtered but still considered
-        var2.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
-        var3.filters().add(SoftFilter.STRAND_BIAS.filterName());
+        var1.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
+        del2.filters().add(SoftFilter.STRAND_BIAS.filterName());
 
-        mIndelDeduper.dedupVariants(Lists.newArrayList(var1, var2, var3));
+        // variants not part of the solution
+        SageVariant var3 = createSageVariant(
+                38, 38, combinedReadBases,
+                CHR_1_REF_BASES.substring(38, 39), "A", 1);
 
+        mIndelDeduper.dedupVariants(Lists.newArrayList(del1, var1, del2, var2, var3));
+
+        assertTrue(del1.isPassing());
         assertTrue(var1.isPassing());
-        assertTrue(var2.isPassing());
-        assertTrue(var3.isPassing());
+        assertTrue(del2.isPassing());
+
+        assertTrue(var2.filters().contains(MAX_GERMLINE_VAF.filterName()));
+        assertFalse(var2.filters().contains(DEDUP_INDEL_FILTER));
+
+        assertTrue(var3.filters().contains(DEDUP_INDEL_FILTER));
     }
 
     @Test
-    public void testIndelsNew3()
+    public void testIndels3()
     {
         // only the 2 INDELs are required to explain the read context, and so all remain passing
         String combinedReadBases = CHR_1_REF_BASES.substring(0, 21) + CHR_1_REF_BASES.substring(30, 41) + CHR_1_REF_BASES.substring(45, 70);
 
-        SageVariant var1 = createSageVariant(
+        SageVariant del1 = createSageVariant(
                 20, 20, combinedReadBases,
                 CHR_1_REF_BASES.substring(20, 30), CHR_1_REF_BASES.substring(20, 21), 1);
 
@@ -169,22 +189,35 @@ public class IndelDedupTest
                 36, 36, combinedReadBases,
                 CHR_1_REF_BASES.substring(36, 37), "A", 1);
 
-        SageVariant var3 = createSageVariant(
+        SageVariant del2 = createSageVariant(
                 40, 40, combinedReadBases,
                 CHR_1_REF_BASES.substring(40, 45), CHR_1_REF_BASES.substring(40, 41), 1);
 
+        // variants not part of the solution
+        SageVariant var4 = createSageVariant(
+                32, 32, combinedReadBases,
+                CHR_1_REF_BASES.substring(32, 33), "A", 1);
+
+        SageVariant var5 = createSageVariant(
+                38, 38, combinedReadBases,
+                CHR_1_REF_BASES.substring(38, 39), "A", 1);
+
         // initially filtered but still considered
-        var3.filters().add(SoftFilter.STRAND_BIAS.filterName());
+        del2.filters().add(SoftFilter.STRAND_BIAS.filterName());
+        var4.filters().add(SoftFilter.MIN_TUMOR_QUAL.filterName());
+        var5.filters().add(SoftFilter.MIN_TUMOR_VAF.filterName());
 
-        mIndelDeduper.dedupVariants(Lists.newArrayList(var1, var2, var3));
+        mIndelDeduper.dedupVariants(Lists.newArrayList(del1, var2, del2, var4, var5));
 
-        assertTrue(var1.isPassing());
+        assertTrue(del1.isPassing());
+        assertTrue(del2.isPassing());
         assertTrue(var2.filters().contains(DEDUP_INDEL_FILTER));
-        assertTrue(var3.isPassing());
+        assertFalse(var4.isPassing());
+        assertFalse(var5.isPassing());
     }
 
     @Test
-    public void testIndels()
+    public void testIndelsOld()
     {
         // var1: GATCGATCGA AACTCTCTC TCTCTCTCTC
         // var2: GATCGATCGA AACTC TCTCTCTCTC
@@ -286,7 +319,7 @@ public class IndelDedupTest
     }
 
     @Test
-    public void testMultipleIndelDedup()
+    public void testMultipleIndelDedupOld()
     {
         // ref:  GATCGATCGA TCTCTCTCTC GATCGATCGA
 
@@ -347,7 +380,7 @@ public class IndelDedupTest
     }
 
     @Test
-    public void testMultipleIndelDedup2()
+    public void testMultipleIndelDedup2Old()
     {
         ChrBaseRegion region = new ChrBaseRegion(CHR_1, 1, 150);
 

@@ -21,7 +21,7 @@ public enum SoftFilter
     MAX_EDGE_DISTANCE("maxEdgeDistance", "", true, false, "Variant close to read edge");
 
     private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();
-    private static final Set<String> GERMLINE_FILTERS = Sets.newHashSet();
+    public static final Set<String> GERMLINE_FILTERS = Sets.newHashSet();
 
     static
     {
