@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.common.region.PartitionUtils.partitionChromos
 import static com.hartwig.hmftools.common.utils.PerformanceCounter.runTimeMinsStr;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -70,6 +71,8 @@ public class BamMetrics
             {
                 entry.getValue().forEach(x -> allRegions.add(new ChrBaseRegion(entry.getKey(), x.start(), x.end())));
             }
+
+            Collections.sort(allRegions);
         }
 
         BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);

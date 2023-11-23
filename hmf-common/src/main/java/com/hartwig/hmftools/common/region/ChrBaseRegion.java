@@ -180,6 +180,9 @@ public class ChrBaseRegion implements Cloneable, Comparable<ChrBaseRegion>
 
     public static Map<String,List<BaseRegion>> loadChrBaseRegions(final String filename)
     {
+        if(filename == null)
+            return Collections.emptyMap();
+
         boolean isBedFile = filename.endsWith(".bed") || filename.endsWith(".bed.gz");
         return loadChrBaseRegions(filename, isBedFile);
     }
