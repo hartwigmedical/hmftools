@@ -35,7 +35,8 @@ public class QualityConfig
     private static final double DEFAULT_JITTER_PENALTY = 0.25;
     private static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
     private static final int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
-    private static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 3;
+    private static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 0;
+    private static final int DEFAULT_READ_EDGE_FACTOR = 3;
     private static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     private static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     private static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
@@ -63,7 +64,7 @@ public class QualityConfig
         JitterMinRepeatCount = DEFAULT_JITTER_MIN_REPEAT_COUNT;
         BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
         DistanceFromReadEdgeFixedPenalty = DEFAULT_READ_EDGE_FIXED_PENALTY;
-        DistanceFromReadEdgeFactor = 0;
+        DistanceFromReadEdgeFactor = DEFAULT_READ_EDGE_FACTOR;
         FixedPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
         ReadEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
         ImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
@@ -95,7 +96,7 @@ public class QualityConfig
         configBuilder.addInteger(
                 READ_EDGE_FIXED_PENALTY, "Fixed penalty to apply to distance from read edge", DEFAULT_READ_EDGE_FIXED_PENALTY);
 
-        configBuilder.addInteger(READ_EDGE_FACTOR, "Distance from read edge factor", 0);
+        configBuilder.addInteger(READ_EDGE_FACTOR, "Distance from read edge factor", DEFAULT_READ_EDGE_FACTOR);
 
         configBuilder.addInteger(
                 MAP_QUAL_IMPROPER_PAIR_PENALTY,
