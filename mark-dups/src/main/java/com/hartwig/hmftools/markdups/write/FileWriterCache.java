@@ -33,9 +33,8 @@ public class FileWriterCache
 
     private static final String BAM_FILE_ID = "mark_dups";
     private static final String SORTED_ID = "sorted";
-    private static final String SHARED_ID = "shared";
     private static final String UNSORTED_ID = "unsorted";
-
+    
     public FileWriterCache(final MarkDupsConfig config)
     {
         mConfig = config;
@@ -53,14 +52,7 @@ public class FileWriterCache
             return;
         }
 
-        if(!mConfig.MultiBam)
-        {
-            mSharedUnsortedWriter = createBamWriter(SHARED_ID, true, false);
-        }
-        else
-        {
-            mSharedUnsortedWriter = null;
-        }
+        mSharedUnsortedWriter = createBamWriter(null, true, false);
     }
 
     public BamWriter getPartitionBamWriter(final String fileId)
