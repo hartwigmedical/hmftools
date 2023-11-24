@@ -152,10 +152,14 @@ public class IndelDeduper
         List<VariantData> overlappedIndels = Lists.newArrayList();
 
         // any DEL overlapping the main INDEL can be de-duped immediately
+        boolean hasPassingVariant = false;
+
         int index = 0;
         while(index < dedupGroup.size())
         {
             VariantData variant = dedupGroup.get(index);
+
+            hasPassingVariant |= variant.Variant.isPassing();
 
             if(variant.Variant.isDelete() && positionsOverlap(indelPosStart, indelPosEnd, variant.position(), variant.positionEnd()))
             {
@@ -167,6 +171,10 @@ public class IndelDeduper
                 ++index;
             }
         }
+
+        // must be at least one passing variant in the group
+        if(!hasPassingVariant)
+            return;
 
         String refBases = mRefGenome.getBaseString(indel.Variant.chromosome(), indel.FlankPosStart, indel.FlankPosEnd);
 
