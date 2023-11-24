@@ -35,6 +35,8 @@ public class ConfigUtils
     public static final String SAMPLE_ID_COLUMN = "SampleId";
     public static final String IGNORE_SAMPLE_ID = "#";
 
+    public static final String CONFIG_FILE_DELIM = ",";
+
     private static final Logger LOGGER = LogManager.getLogger(ConfigUtils.class);
 
     public static void addLoggingOptions(final ConfigBuilder configBuilder)
