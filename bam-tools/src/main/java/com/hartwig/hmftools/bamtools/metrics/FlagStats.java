@@ -1,64 +1,41 @@
 package com.hartwig.hmftools.bamtools.metrics;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import htsjdk.samtools.SAMRecord;
 
 public class FlagStats
 {
-    private final FlagQCStats mTotal;
-    private final FlagQCStats mPrimary;
-    private final FlagQCStats mSecondary;
-    private final FlagQCStats mSupp;
-    private final FlagQCStats mDuplicate;
-    private final FlagQCStats mPrimaryDuplicate;
-    private final FlagQCStats mMapped;
-    private final FlagQCStats mPrimaryMapped;
-    private final FlagQCStats mPaired;
-    private final FlagQCStats mRead1;
-    private final FlagQCStats mRead2;
-    private final FlagQCStats mProperlyPaired;
-    private final FlagQCStats mPairMapped;
-    private final FlagQCStats mSingleton;
-    private final FlagQCStats mInterChrPairMapped;
-    private final FlagQCStats mInterChrPairMapQGE5;
+    private final List<FlagQCStats> mTypeStats;
+
+    private static final int MAP_QUAL_THRESHOLD = 5;
 
     public FlagStats()
     {
-        mTotal = new FlagQCStats();
-        mPrimary = new FlagQCStats();
-        mSecondary = new FlagQCStats();
-        mSupp = new FlagQCStats();
-        mDuplicate = new FlagQCStats();
-        mPrimaryDuplicate = new FlagQCStats();
-        mMapped = new FlagQCStats();
-        mPrimaryMapped = new FlagQCStats();
-        mPaired = new FlagQCStats();
-        mRead1 = new FlagQCStats();
-        mRead2 = new FlagQCStats();
-        mProperlyPaired = new FlagQCStats();
-        mPairMapped = new FlagQCStats();
-        mSingleton = new FlagQCStats();
-        mInterChrPairMapped = new FlagQCStats();
-        mInterChrPairMapQGE5 = new FlagQCStats();
+        mTypeStats = Arrays.stream(FlagStatType.values()).map(x -> new FlagQCStats()).collect(Collectors.toList());
     }
+
+    public List<FlagQCStats> typeStats() { return mTypeStats; }
+    public int passCount(final FlagStatType type) { return mTypeStats.get(type.ordinal()).getPassed(); }
 
     public void merge(final FlagStats other)
     {
-        mTotal.merge(other.mTotal);
-        mPrimary.merge(other.mPrimary);
-        mSecondary.merge(other.mSecondary);
-        mSupp.merge(other.mSupp);
-        mDuplicate.merge(other.mDuplicate);
-        mPrimaryDuplicate.merge(other.mPrimaryDuplicate);
-        mMapped.merge(other.mMapped);
-        mPrimaryMapped.merge(other.mPrimaryMapped);
-        mPaired.merge(other.mPaired);
-        mRead1.merge(other.mRead1);
-        mRead2.merge(other.mRead2);
-        mProperlyPaired.merge(other.mProperlyPaired);
-        mPairMapped.merge(other.mPairMapped);
-        mSingleton.merge(other.mSingleton);
-        mInterChrPairMapped.merge(other.mInterChrPairMapped);
-        mInterChrPairMapQGE5.merge(other.mInterChrPairMapQGE5);
+        for(FlagStatType type : FlagStatType.values())
+        {
+            mTypeStats.get(type.ordinal()).merge(other.typeStats().get(type.ordinal()));
+        }
+    }
+
+    private void increment(final FlagStatType type, boolean passes)
+    {
+        mTypeStats.get(type.ordinal()).record(passes);
+    }
+
+    private void decrement(final FlagStatType type, boolean passes)
+    {
+        mTypeStats.get(type.ordinal()).decrement(passes);
     }
 
     public void processRead(final SAMRecord read)
@@ -71,169 +48,102 @@ public class FlagStats
         final boolean isPaired = read.getReadPairedFlag();
         final boolean isProperPair = read.getProperPairFlag();
 
-        mTotal.record(passesQC);
+        increment(FlagStatType.TOTAL, passesQC);
 
         if(isDuplicate)
         {
-            mDuplicate.record(passesQC);
+            increment(FlagStatType.DUPLICATE, passesQC);
         }
 
         if(isMapped)
         {
-            mMapped.record(passesQC);
+            increment(FlagStatType.MAPPED, passesQC);
         }
 
         if(isSecondary)
         {
-            mSecondary.record(passesQC);
+            increment(FlagStatType.SECONDARY, passesQC);
             return;
         }
 
         if(isSupp)
         {
-            mSupp.record(passesQC);
+            increment(FlagStatType.SUPPLEMENTARY, passesQC);
             return;
         }
 
-        // It is a primary read.
-        mPrimary.record(passesQC);
+        increment(FlagStatType.PRIMARY, passesQC);
+
         if(isDuplicate)
         {
-            mPrimaryDuplicate.record(passesQC);
+            increment(FlagStatType.PRIMARY_DUPLICATE, passesQC);
         }
 
         if(isMapped)
         {
-            mPrimaryMapped.record(passesQC);
+            increment(FlagStatType.PRIMARY_MAPPED, passesQC);
         }
 
         if(!isPaired)
-        {
             return;
-        }
 
         // It is a paired primary read.
-        mPaired.record(passesQC);
+        increment(FlagStatType.PAIRED, passesQC);
 
         if(read.getFirstOfPairFlag())
         {
-            mRead1.record(passesQC);
+            increment(FlagStatType.READ1, passesQC);
         }
 
         if(read.getSecondOfPairFlag())
         {
-            mRead2.record(passesQC);
+            increment(FlagStatType.READ2, passesQC);
         }
 
         if(!isMapped)
-        {
             return;
-        }
 
         // It is a mapped paired primary read.
         if(isProperPair)
         {
-            mProperlyPaired.record(passesQC);
+            increment(FlagStatType.PROPERLY_PAIRED, passesQC);
         }
 
         if(read.getMateUnmappedFlag())
         {
-            mSingleton.record(passesQC);
+            increment(FlagStatType.SINGLETON, passesQC);
             return;
         }
 
         // It is a mapped paired primary read with a mapped mate.
-        mPairMapped.record(passesQC);
+        increment(FlagStatType.PAIR_MAPPED, passesQC);
+
         if(read.getReferenceName().equals(read.getMateReferenceName()))
-        {
             return;
-        }
 
         // It is a mapped paired primary read with a mapped mate toa different chromosome.
-        mInterChrPairMapped.record(passesQC);
-        if(read.getMappingQuality() >= 5)
+        increment(FlagStatType.INTER_CHR_PAIR_MAPPED, passesQC);
+
+        if(read.getMappingQuality() >= MAP_QUAL_THRESHOLD)
         {
-            mInterChrPairMapQGE5.record(passesQC);
+            increment(FlagStatType.INTER_CHR_PAIR_MAP_QUAL_GE5, passesQC);
         }
     }
 
-    public FlagQCStats getTotal()
+
+    public void registerConsensusRead(final SAMRecord read)
     {
-        return mTotal;
+        final boolean passesQC = !read.getReadFailsVendorQualityCheckFlag();
+        final boolean isSupp = read.getSupplementaryAlignmentFlag();
+
+        decrement(FlagStatType.DUPLICATE, passesQC);
+
+        if(!isSupp)
+        {
+            decrement(FlagStatType.PRIMARY_DUPLICATE, passesQC);
+        }
     }
 
-    public FlagQCStats getPrimary()
-    {
-        return mPrimary;
-    }
-
-    public FlagQCStats getSecondary()
-    {
-        return mSecondary;
-    }
-
-    public FlagQCStats getSupp()
-    {
-        return mSupp;
-    }
-
-    public FlagQCStats getDuplicate()
-    {
-        return mDuplicate;
-    }
-
-    public FlagQCStats getPrimaryDuplicate()
-    {
-        return mPrimaryDuplicate;
-    }
-
-    public FlagQCStats getMapped()
-    {
-        return mMapped;
-    }
-
-    public FlagQCStats getPrimaryMapped()
-    {
-        return mPrimaryMapped;
-    }
-
-    public FlagQCStats getPaired()
-    {
-        return mPaired;
-    }
-
-    public FlagQCStats getRead1()
-    {
-        return mRead1;
-    }
-
-    public FlagQCStats getRead2()
-    {
-        return mRead2;
-    }
-
-    public FlagQCStats getProperlyPaired()
-    {
-        return mProperlyPaired;
-    }
-
-    public FlagQCStats getPairMapped()
-    {
-        return mPairMapped;
-    }
-
-    public FlagQCStats getSingleton()
-    {
-        return mSingleton;
-    }
-
-    public FlagQCStats getInterChrPairMapped()
-    {
-        return mInterChrPairMapped;
-    }
-
-    public FlagQCStats getInterChrPairMapQGE5()
-    {
-        return mInterChrPairMapQGE5;
-    }
+    public FlagQCStats getStat(final FlagStatType type) { return mTypeStats.get(type.ordinal()); }
+    public String statAsString(final FlagStatType type) { return mTypeStats.get(type.ordinal()).toString(); }
 }

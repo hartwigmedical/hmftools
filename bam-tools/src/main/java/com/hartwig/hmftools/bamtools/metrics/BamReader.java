@@ -86,6 +86,12 @@ public class BamReader
         mBamSlicer.slice(mSamReader, mRegion, this::processSamRecord);
         mPerfCounter.stop();
 
+        postSliceProcess();
+    }
+
+    @VisibleForTesting
+    protected void postSliceProcess()
+    {
         // process overlapping groups
         for(ReadGroup readGroup : mReadGroupMap.values())
         {
@@ -112,6 +118,8 @@ public class BamReader
 
             // lower the duplicate count to reflect the use of consensus reads
             --mReadCounts.Duplicates;
+
+            mFlagStats.registerConsensusRead(read);
 
             if(isDualStrand)
                 ++mReadCounts.DualStrand;
