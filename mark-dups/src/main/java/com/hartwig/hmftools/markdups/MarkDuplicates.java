@@ -12,11 +12,11 @@ import static com.hartwig.hmftools.markdups.MarkDupsConfig.addConfig;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_READ_LENGTH;
 import static com.hartwig.hmftools.markdups.common.Constants.LOCK_ACQUIRE_LONG_TIME_MS;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -34,8 +34,6 @@ import com.hartwig.hmftools.markdups.write.FileWriterCache;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 
 public class MarkDuplicates
 {
@@ -191,16 +189,22 @@ public class MarkDuplicates
 
     private long writeUnmappedReads(final FileWriterCache fileWriterCache)
     {
-        if(mConfig.BamFile == null)
-            return 0;
-
         BamWriter bamWriter = fileWriterCache.getFullyUnmappedReadsBamWriter();
 
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
-                .open(new File(mConfig.BamFile));
+        BamReader bamReader = new BamReader(mConfig);
 
-        long unmappedCount = 0;
+        // SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
+        //        .open(new File(mConfig.BamFile));
 
+        AtomicLong unmappedCount = new AtomicLong();
+
+        bamReader.queryUnmappedReads((final SAMRecord record) ->
+        {
+            bamWriter.writeRead(record, FragmentStatus.UNSET);
+            unmappedCount.incrementAndGet();
+        });
+
+        /*
         try(final SAMRecordIterator iterator = samReader.queryUnmapped())
         {
             while(iterator.hasNext())
@@ -208,16 +212,17 @@ public class MarkDuplicates
                 final SAMRecord record = iterator.next();
 
                 bamWriter.writeRead(record, FragmentStatus.UNSET);
-                ++unmappedCount;
+                unmappedCount.incrementAndGet();
             }
         }
+        */
 
-        if(unmappedCount > 0)
+        if(unmappedCount.get() > 0)
         {
             MD_LOGGER.debug("wrote {} unmapped reads", unmappedCount);
         }
 
-        return unmappedCount;
+        return unmappedCount.get();
     }
 
     private void setReadLength()
@@ -233,7 +238,7 @@ public class MarkDuplicates
 
         int readLength = DEFAULT_READ_LENGTH;
 
-        if(bamSampler.calcBamCharacteristics(mConfig.BamFile, sampleRegion) && bamSampler.maxReadLength() > 0)
+        if(bamSampler.calcBamCharacteristics(mConfig.BamFiles.get(0), sampleRegion) && bamSampler.maxReadLength() > 0)
         {
             readLength = bamSampler.maxReadLength();
             MD_LOGGER.info("BAM sampled max read-length({})", readLength);

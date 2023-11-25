@@ -22,7 +22,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.markdups.common.CandidateDuplicates;
 import com.hartwig.hmftools.markdups.common.DuplicateGroup;
@@ -38,14 +37,12 @@ import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 import com.hartwig.hmftools.markdups.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
 
 public class PartitionReader implements Consumer<List<Fragment>>
 {
     private final MarkDupsConfig mConfig;
 
-    private final SamReader mSamReader;
-    private final BamSlicer mBamSlicer;
+    private final BamReader mBamReader;
     private final PartitionDataStore mPartitionDataStore;
     private final BamWriter mBamWriter;
     private final ReadPositionsCache mReadPositions;
@@ -68,18 +65,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
     private final PerformanceCounter mPcPendingIncompletes;
 
     public PartitionReader(
-            final MarkDupsConfig config, final SamReader samReader,
+            final MarkDupsConfig config, final BamReader bamReader,
             final BamWriter bamWriter, final PartitionDataStore partitionDataStore)
     {
         mConfig = config;
-        mCurrentRegion = null;
         mPartitionDataStore = partitionDataStore;
         mBamWriter = bamWriter;
-
-        mSamReader = samReader;
-
-        mBamSlicer = new BamSlicer(0, true, true, true);
-        mBamSlicer.setKeepUnmapped();
+        mBamReader = bamReader;
 
         mReadPositions = new ReadPositionsCache(config.BufferSize, !config.NoMateCigar, this);
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
@@ -87,6 +79,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         mConsensusReads = new ConsensusReads(config.RefGenome, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
+        mCurrentRegion = null;
         mUnmapRegionState = null;
 
         mPendingIncompleteReads = Maps.newHashMap();
@@ -125,9 +118,9 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     public void processRegion()
     {
-        if(mSamReader != null)
+        if(mBamReader != null)
         {
-            mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
+            mBamReader.sliceRegion(mCurrentRegion, this::processSamRecord);
         }
 
         postProcessRegion();

@@ -31,8 +31,10 @@ import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_HIGH_DEPT
 import static com.hartwig.hmftools.markdups.write.ReadOutput.NONE;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -59,7 +61,7 @@ import htsjdk.samtools.ValidationStringency;
 public class MarkDupsConfig
 {
     public final String SampleId;
-    public final String BamFile;
+    public final List<String> BamFiles;
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
     public final RefGenomeInterface RefGenome;
@@ -129,7 +131,15 @@ public class MarkDupsConfig
     {
         mIsValid = true;
         SampleId = configBuilder.getValue(SAMPLE);
-        BamFile = configBuilder.getValue(BAM_FILE);
+
+        BamFiles = Arrays.stream(configBuilder.getValue(BAM_FILE).split(",", -1)).collect(Collectors.toList());
+
+        if(BamFiles.isEmpty())
+        {
+            MD_LOGGER.error("no BAM files configured");
+            System.exit(1);
+        }
+
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenome = loadRefGenome(RefGenomeFile);
 
@@ -139,21 +149,21 @@ public class MarkDupsConfig
         }
         else
         {
-            OutputDir = checkAddDirSeparator(Paths.get(BamFile).getParent().toString());
+            OutputDir = checkAddDirSeparator(Paths.get(BamFiles.get(0)).getParent().toString());
         }
 
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)
+        if(SampleId == null|| OutputDir == null || RefGenomeFile == null)
         {
-            MD_LOGGER.error("missing config: sample({}) bam({}) refGenome({}) outputDir({})",
-                    SampleId != null, BamFile != null, RefGenomeFile != null, OutputDir != null);
+            MD_LOGGER.error("missing config: sample({}) refGenome({}) outputDir({})",
+                    SampleId != null, RefGenomeFile != null, OutputDir != null);
             mIsValid = false;
         }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
+        // MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         MD_LOGGER.info("output({})", OutputDir);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
@@ -243,7 +253,7 @@ public class MarkDupsConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addPath(BAM_FILE, true, "BAM file location");
+        configBuilder.addPaths(BAM_FILE, true, "BAM file path, separated by ',' if multiple");
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
         configBuilder.addInteger(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
@@ -283,7 +293,7 @@ public class MarkDupsConfig
     {
         mIsValid = true;
         SampleId = "";
-        BamFile = null;
+        BamFiles = Lists.newArrayList();
         RefGenomeFile = null;
         OutputDir = null;
         OutputId = "";

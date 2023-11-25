@@ -141,7 +141,8 @@ public class FileWriterCache
 
     private SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
     {
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
+                .open(new File(mConfig.BamFiles.get(0)));
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
 
