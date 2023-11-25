@@ -20,6 +20,8 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -148,6 +150,22 @@ public class FileWriterCache
                 .open(new File(mConfig.BamFiles.get(0)));
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
+
+        if(mConfig.BamFiles.size() > 1)
+        {
+            for(int i = 1; i < mConfig.BamFiles.size(); ++i)
+            {
+                SamReader nextReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
+                        .open(new File(mConfig.BamFiles.get(i)));
+
+                nextReader.getFileHeader().getReadGroups().forEach(x -> fileHeader.addReadGroup(x));
+
+                final SAMProgramRecord nextProgramRecord = nextReader.getFileHeader().getProgramRecords().get(0);
+                String newProgramId = String.format("%s.%d", nextProgramRecord.getId(), i);
+
+                fileHeader.addProgramRecord(new SAMProgramRecord(newProgramId, nextProgramRecord));
+            }
+        }
 
         // note that while the sort order may be set to coordinate, the BAM writer is marked as presorted so
         // the BAM will not actually be sorted by the SAMTools library
