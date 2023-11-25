@@ -123,6 +123,9 @@ public class FileWriterCache
 
     private String formBamFilename(@Nullable final String sorted, @Nullable final String multiId)
     {
+        if(!mConfig.MultiBam && mConfig.Threads == 1 && mConfig.OutputBam != null)
+            return mConfig.OutputBam;
+
         String filename = mConfig.OutputDir + mConfig.SampleId + "." + BAM_FILE_ID;
 
         if(mConfig.OutputId != null)
@@ -164,7 +167,7 @@ public class FileWriterCache
         if(!runSortMergeIndex())
             return;
 
-        String finalBamFilename = formBamFilename(null, null);
+        String finalBamFilename = mConfig.OutputBam != null ? mConfig.OutputBam : formBamFilename(null, null);
 
         List<String> interimBams = Lists.newArrayList();
         List<String> sortedThreadBams = Lists.newArrayList();
