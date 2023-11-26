@@ -9,7 +9,7 @@ public class SignatureQuantileEntry
     public final int Rank;
     public final int RankGroup;
 
-    SignatureQuantileEntry(
+    public SignatureQuantileEntry(
             final String featName,
             final double featValue,
             final String cancerType,

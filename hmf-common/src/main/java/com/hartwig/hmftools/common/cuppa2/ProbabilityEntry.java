@@ -8,7 +8,7 @@ public class ProbabilityEntry
     public final int Rank;
     public final int RankGroup;
 
-    ProbabilityEntry(
+    public ProbabilityEntry(
             final String clfName,
             final String cancerType,
             final double dataValue,

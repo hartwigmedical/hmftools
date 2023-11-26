@@ -10,7 +10,7 @@ public class FeatureContributionEntry
     public final int Rank;
     public final int RankGroup;
 
-    FeatureContributionEntry(
+    public FeatureContributionEntry(
             final String clfName,
             final String featName,
             final double featValue,

@@ -29,7 +29,7 @@ public class CuppaPredictionEntry
     public final int Rank;
     public final int RankGroup;
 
-    CuppaPredictionEntry(
+    public CuppaPredictionEntry(
             @NotNull final String sampleId,
             @NotNull final Categories.DataType dataType,
             @NotNull final Categories.ClfGroup clfGroup,
