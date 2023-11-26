@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -180,10 +181,10 @@ public class FileWriterCache
 
     public boolean runSortMergeIndex() { return mConfig.SamToolsPath != null || mConfig.SambambaPath != null; }
 
-    public void sortAndIndexBams()
+    public boolean sortAndIndexBams()
     {
         if(!runSortMergeIndex())
-            return;
+            return true;
 
         String finalBamFilename = mConfig.OutputBam != null ? mConfig.OutputBam : formBamFilename(null, null);
 
@@ -193,7 +194,7 @@ public class FileWriterCache
         if(mConfig.SamToolsPath == null)
         {
             MD_LOGGER.error("samtools required for sort");
-            return;
+            return false;
         }
 
         MD_LOGGER.info("sorting, merging and indexing final BAM");
@@ -240,26 +241,33 @@ public class FileWriterCache
             MD_LOGGER.debug("sorting {} bam file(s)", sortTasks.size());
 
             if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
-                System.exit(1);
-
-            sortingOk = sortTasks.stream().allMatch(x -> x.success());
+            {
+                sortingOk = false;
+            }
+            else
+            {
+                sortingOk = sortTasks.stream().allMatch(x -> x.success());
+            }
         }
 
         if(!sortingOk)
-            return;
+            return false;
 
         MD_LOGGER.debug("sort complete");
 
-        boolean finalBamOk = true;
-
         if(mBamWriters.size() > 1)
-            finalBamOk = mergeBams(finalBamFilename, sortedThreadBams);
+        {
+            if(!mergeBams(finalBamFilename, sortedThreadBams))
+                return false;
+        }
 
-        if(!mConfig.KeepInterimBams && finalBamOk)
+        if(!mConfig.KeepInterimBams)
             deleteInterimBams(interimBams);
 
-        if(finalBamOk)
-            indexFinalBam(finalBamFilename);
+        if(!indexFinalBam(finalBamFilename))
+            return false;
+
+        return true;
     }
 
     private boolean mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
@@ -315,11 +323,11 @@ public class FileWriterCache
         }
     }
 
-    private void indexFinalBam(String finalBamFilename)
+    private boolean indexFinalBam(String finalBamFilename)
     {
         // no need to index if Sambamba merge was used
         if(mConfig.SambambaPath != null && mBamWriters.size() > 1)
-            return;
+            return true;
 
         MD_LOGGER.debug("indexing final bam");
 
@@ -332,9 +340,11 @@ public class FileWriterCache
         command[index++] = String.valueOf(mConfig.Threads);
         command[index++] = finalBamFilename;
 
-        executeCommand(command, finalBamFilename);
+        if(!executeCommand(command, finalBamFilename))
+            return false;
 
         MD_LOGGER.debug("index complete");
+        return true;
     }
 
     private class SortBamTask implements Callable
@@ -362,6 +372,8 @@ public class FileWriterCache
                 MD_LOGGER.error("invalid bam filename({})", mBamfile);
                 return (long)0;
             }
+
+            MD_LOGGER.debug("sorting unsorted bam({}) to sorted bam({})", mBamfile, mSortedBamfile);
 
             // String sortArgs = format("sort -@ %s -m %dG -T tmp -O bam %s -o %s", Bash.allCpus(), SORT_MEMORY_PER_CORE, inputBam, outputBam);
 
@@ -407,7 +419,7 @@ public class FileWriterCache
 
             if(result != 0)
             {
-                MD_LOGGER.error("error running command({}:{}) for file({})", command[0], command[1], outputPrefix);
+                MD_LOGGER.error("error running command({}) for file({})", commandToStr(command), outputPrefix);
                 return false;
             }
 
@@ -417,10 +429,15 @@ public class FileWriterCache
         }
         catch(Exception e)
         {
-            MD_LOGGER.error("error running command({}:{}) for file({}): {}", command[0], command[1], outputPrefix, e.toString());
+            MD_LOGGER.error("error running command({}) for file({}): {}", commandToStr(command), outputPrefix, e.toString());
             return false;
         }
 
         return true;
+    }
+
+    private static String commandToStr(final String[] command)
+    {
+        return Arrays.stream(command).collect(Collectors.joining(" "));
     }
 }

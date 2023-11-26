@@ -337,15 +337,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
         boolean logDetails = mConfig.PerfDebug && posFragmentCount > LOG_PERF_FRAG_COUNT; // was 10000
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
-        boolean inExcludedRegion = false; // dropped logic since added region unmapping logic
-
         findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList, mConfig.UMIs.Enabled);
 
-        List<Fragment> singleFragments = mConfig.UMIs.Enabled && !inExcludedRegion ?
+        List<Fragment> singleFragments = mConfig.UMIs.Enabled ?
                 resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).collect(Collectors.toList()) : Collections.EMPTY_LIST;
 
         List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
-                positionDuplicateGroups, true, singleFragments, inExcludedRegion);
+                positionDuplicateGroups, true, singleFragments);
 
         if(logDetails)
         {

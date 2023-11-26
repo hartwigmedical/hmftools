@@ -57,7 +57,6 @@ public class PartitionData
 
     private Set<DuplicateGroup> mUpdatedDuplicateGroups;
     private Set<CandidateDuplicates> mUpdatedCandidateDuplicates;
-    private ChrBaseRegion mExcludedRegion;
 
     private static final int LOG_CACHE_COUNT = 50000;
 
@@ -71,7 +70,6 @@ public class PartitionData
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
         mUpdatedDuplicateGroups = Sets.newHashSet();
         mUpdatedCandidateDuplicates = Sets.newHashSet();
-        mExcludedRegion = null;
 
         mLock = new ReentrantLock();
         mLockAcquireTime = 0;
@@ -353,11 +351,8 @@ public class PartitionData
 
         List<List<Fragment>> rawDuplicateGroups = candidateDuplicates.finaliseFragmentStatus(mDuplicateGroupBuilder.umiConfig().Enabled);
 
-        boolean inExcludedRegion = mExcludedRegion != null && rawDuplicateGroups.stream()
-                .anyMatch(x -> x.stream().anyMatch(y -> y.reads().stream().anyMatch(z -> overlapsExcludedRegion(mExcludedRegion, z))));
-
         List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
-                rawDuplicateGroups, false, Collections.EMPTY_LIST, inExcludedRegion);
+                rawDuplicateGroups, false, Collections.EMPTY_LIST);
 
         if(duplicateGroups != null)
         {

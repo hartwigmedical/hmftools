@@ -145,7 +145,11 @@ public class MarkDuplicates
             // log interim time
             MD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
 
-            fileWriterCache.sortAndIndexBams();
+            if(!fileWriterCache.sortAndIndexBams())
+            {
+                MD_LOGGER.error("sort-merge-index failed");
+                System.exit(1);
+            }
         }
 
         combinedStats.logStats();
@@ -193,9 +197,6 @@ public class MarkDuplicates
 
         BamReader bamReader = new BamReader(mConfig);
 
-        // SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
-        //        .open(new File(mConfig.BamFile));
-
         AtomicLong unmappedCount = new AtomicLong();
 
         bamReader.queryUnmappedReads((final SAMRecord record) ->
@@ -203,19 +204,6 @@ public class MarkDuplicates
             bamWriter.writeRead(record, FragmentStatus.UNSET);
             unmappedCount.incrementAndGet();
         });
-
-        /*
-        try(final SAMRecordIterator iterator = samReader.queryUnmapped())
-        {
-            while(iterator.hasNext())
-            {
-                final SAMRecord record = iterator.next();
-
-                bamWriter.writeRead(record, FragmentStatus.UNSET);
-                unmappedCount.incrementAndGet();
-            }
-        }
-        */
 
         if(unmappedCount.get() > 0)
         {
