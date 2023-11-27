@@ -13,7 +13,7 @@ import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppaPredictions;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CuppaPredictionDataFactory
+public class CuppaPredictionsFactory
 {
     @NotNull
     public static ImmutableCuppaPredictions create(@NotNull CuppaPredictions cuppaPredictions)
