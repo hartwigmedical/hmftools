@@ -2,10 +2,10 @@ package com.hartwig.hmftools.orange.algo.cuppa2;
 import java.io.IOException;
 
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
-import com.hartwig.hmftools.common.cuppa2.FeatureContributionEntry;
-import com.hartwig.hmftools.common.cuppa2.ProbabilityEntry;
-import com.hartwig.hmftools.common.cuppa2.SignatureQuantileEntry;
-import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppaPredictionData;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppaPredictions;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableFeatureContributionEntry;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableProbabilityEntry;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableSignatureQuantileEntry;
 
 import org.junit.Test;
 
@@ -19,39 +19,39 @@ public class CuppaPredictionDataFactoryTest
     @Test
     public void topPredictionIsCorrect()
     {
-        ProbabilityEntry probabilityEntry = CuppaPredictionDataFactory.getTopPrediction(cuppaPredictions);
-        assert probabilityEntry.CancerType.equals("Breast: Triple negative");
+        ImmutableProbabilityEntry probabilityEntry = CuppaPredictionsFactory.getTopPrediction(cuppaPredictions);
+        assert probabilityEntry.cancerType().equals("Breast: Triple negative");
     }
 
     @Test
-    public void getProbabilityEntriesSucceeds()
+    public void getProbabilitiesSucceeds()
     {
-        ProbabilityEntry probabilityEntry = CuppaPredictionDataFactory.getProbabilities(cuppaPredictions).get(0);
-        // System.out.println(probabilityEntry.DataValue);
+        ImmutableProbabilityEntry probabilityEntry = CuppaPredictionsFactory.getProbabilities(cuppaPredictions).get(0);
+        // System.out.println(probabilityEntry.dataValue());
         assert true;
     }
 
     @Test
     public void getFeatureContributionEntriesSucceeds()
     {
-        FeatureContributionEntry featureContributionEntry = CuppaPredictionDataFactory.getFeatureContributions(cuppaPredictions).get(0);
-        // System.out.println(featureContributionEntry.DataValue);
+        ImmutableFeatureContributionEntry featureContributionEntry = CuppaPredictionsFactory.getFeatureContributions(cuppaPredictions).get(0);
+        // System.out.println(featureContributionEntry.dataValue());
         assert true;
     }
 
     @Test
     public void getSignatureQuantilesSucceeds()
     {
-        SignatureQuantileEntry signatureQuantileEntry = CuppaPredictionDataFactory.getSignatureQuantiles(cuppaPredictions).get(0);
-        // System.out.println(signatureQuantileEntry.DataValue);
+        ImmutableSignatureQuantileEntry signatureQuantileEntry = CuppaPredictionsFactory.getSignatureQuantiles(cuppaPredictions).get(0);
+        // System.out.println(signatureQuantileEntry.dataValue());
         assert true;
     }
 
     @Test
     public void createImmutableDataSucceeds()
     {
-        ImmutableCuppaPredictionData data = CuppaPredictionDataFactory.create(cuppaPredictions);
-        assert data.topPrediction().CancerType.equals("Breast: Triple negative");
+        ImmutableCuppaPredictions data = CuppaPredictionsFactory.create(cuppaPredictions);
+        assert data.topPrediction().cancerType().equals("Breast: Triple negative");
         assert data.probs().size()==320;
         assert data.featContribs().size()==640;
         assert data.sigQuantiles().size()==200;
