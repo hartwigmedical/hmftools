@@ -49,7 +49,15 @@ public class FragmentSync
         mSyncCounts = new int[FragmentSyncType.values().length];
     }
 
-    public void clear() { mCachedReads.clear(); }
+    public void emptyCachedReads()
+    {
+        if(!mCachedReads.isEmpty())
+        {
+            mCachedReads.values().forEach(x -> mReadHandler.processReadRecord(x, false, null));
+            mCachedReads.clear();
+        }
+    }
+
     public final int[] getSynCounts() { return mSyncCounts; }
 
     public boolean handleOverlappingReads(final SAMRecord record)
@@ -128,6 +136,10 @@ public class FragmentSync
 
         // no cache for reads where the mate doesn't overlap
         if(!record.getContig().equals(record.getMateReferenceName()))
+            return false;
+
+        // if the mate is earlier, then it should have been processed and so no point in not handling this read now
+        if(record.getMateAlignmentStart() < record.getAlignmentStart())
             return false;
 
         if(!positionsOverlap(

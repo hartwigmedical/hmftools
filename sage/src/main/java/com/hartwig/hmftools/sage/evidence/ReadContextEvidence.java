@@ -70,6 +70,8 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mStats = new EvidenceStats();
     }
 
+    private static final int SLICE_SOFT_CLIP_BUFFER = 30;
+
     public List<ReadContextCounter> collectEvidence(
             final List<Candidate> candidates, final String sample, final SamSlicerFactory samSlicerFactory, final VariantPhaser variantPhaser)
     {
@@ -79,12 +81,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         List<ChrBaseRegion> sliceRegions = buildCandidateRegions(candidates);
 
         // add a buffer around each slice to support variants in soft-clip regions
-        int softClipBuffer = 30;
-
         for(ChrBaseRegion sliceRegion : sliceRegions)
         {
-            sliceRegion.setStart(max(sliceRegion.start() - softClipBuffer, 1));
-            sliceRegion.setEnd(sliceRegion.end() + softClipBuffer);
+            sliceRegion.setStart(max(sliceRegion.start() - SLICE_SOFT_CLIP_BUFFER, 1));
+            sliceRegion.setEnd(sliceRegion.end() + SLICE_SOFT_CLIP_BUFFER);
         }
 
         ++mStats.PartitionCount;
@@ -122,10 +122,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
                 readContextCounter.setMaxCandidateDeleteLength(maxCloseDel);
         }
 
-        mFragmentSync.clear();
-
         final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, sliceRegions, false);
         samSlicer.slice(this::processReadRecord);
+
+        mFragmentSync.emptyCachedReads();
 
         if(mConfig.PerfWarnTime > 0)
         {
@@ -172,9 +172,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         int gapCount = gapDistances.size();
         int nth = min(mConfig.MaxPartitionSlices, gapDistances.size());
         int nthGap = gapDistances.get(nth - 1);
-        int medianGap = gapDistances.get(gapCount / 2);
 
         /*
+        int medianGap = gapDistances.get(gapCount / 2);
+
         SG_LOGGER.debug("region({}:{}-{} len={}) candidates({}) gap(n={} nth={}, max={} avg={} median={})",
                 firstCandidate.chromosome(), firstCandidate.position(), lastCandidate.position(), sliceLength,
                 candidates.size(), nth, nthGap, gapDistances.get(0), averageGap, medianGap);
