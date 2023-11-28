@@ -1,9 +1,6 @@
 package com.hartwig.hmftools.datamodel.cuppa2;
-import java.util.List;
 
-import com.hartwig.hmftools.common.cuppa2.FeatureContributionEntry;
-import com.hartwig.hmftools.common.cuppa2.ProbabilityEntry;
-import com.hartwig.hmftools.common.cuppa2.SignatureQuantileEntry;
+import java.util.List;
 
 import org.immutables.gson.Gson;
 import org.immutables.value.Value;
@@ -13,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface CuppaPredictionData
+public interface CuppaPredictions
 {
     @NotNull
     ProbabilityEntry topPrediction();
