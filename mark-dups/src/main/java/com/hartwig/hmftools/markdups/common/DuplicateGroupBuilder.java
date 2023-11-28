@@ -1,7 +1,5 @@
 package com.hartwig.hmftools.markdups.common;
 
-import static java.lang.Math.abs;
-
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.CANDIDATE;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;

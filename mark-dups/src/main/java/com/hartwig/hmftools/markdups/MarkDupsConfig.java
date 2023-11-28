@@ -150,6 +150,12 @@ public class MarkDupsConfig
 
         OutputBam = configBuilder.getValue(OUTPUT_BAM);
 
+        if(OutputBam != null && BamFiles.stream().anyMatch(x -> x.equals(OutputBam)))
+        {
+            MD_LOGGER.error("output BAM({}) matches input BAM filename", OutputBam);
+            System.exit(1);
+        }
+
         if(configBuilder.hasValue(OUTPUT_DIR))
         {
             OutputDir = parseOutputDir(configBuilder);
