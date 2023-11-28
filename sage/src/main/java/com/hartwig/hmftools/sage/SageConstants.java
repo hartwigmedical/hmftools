@@ -70,6 +70,10 @@ public class SageConstants
 
     public static final int SYNC_FRAG_MAX_MISMATCHES = 10;
 
+    public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.1;
+    public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;
+    public static final double STRAND_BIAS_REF_MIN_BIAS = 0.25;
+
     public static final int REQUIRED_UNIQUE_FRAG_COORDS = 3;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(

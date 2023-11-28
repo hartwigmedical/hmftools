@@ -22,14 +22,16 @@ public class StrandBiasData
         mReverseCount = 0;
     }
 
-    public void add(boolean isFoward)
+    public void add(boolean isForward)
     {
-        if(isFoward)
+        if(isForward)
             ++mForwardCount;
         else
             ++mReverseCount;
     }
 
+    public int forward() { return mForwardCount; }
+    public int reverse() { return mReverseCount; }
     public int depth() { return mForwardCount + mReverseCount; }
 
     public double bias()

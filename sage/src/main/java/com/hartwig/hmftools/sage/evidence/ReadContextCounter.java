@@ -93,8 +93,10 @@ public class ReadContextCounter implements VariantHotspot
     private final ReadSupportCounts mQualities;
     private final ReadSupportCounts mCounts;
 
-    private final StrandBiasData mFragmentStrandBias;
-    private final StrandBiasData mReadStrandBias;
+    private final StrandBiasData mAltFragmentStrandBias;
+    private final StrandBiasData mRefFragmentStrandBias;
+    private final StrandBiasData mAltReadStrandBias;
+    private final StrandBiasData mRefReadStrandBias;
 
     private final JitterData mJitterData;
     private int mImproperPairCount;
@@ -155,8 +157,10 @@ public class ReadContextCounter implements VariantHotspot
 
         mJitterData = new JitterData();
 
-        mFragmentStrandBias = new StrandBiasData();
-        mReadStrandBias = new StrandBiasData();
+        mAltFragmentStrandBias = new StrandBiasData();
+        mRefFragmentStrandBias = new StrandBiasData();
+        mAltReadStrandBias = new StrandBiasData();
+        mRefReadStrandBias = new StrandBiasData();
 
         mImproperPairCount = 0;
 
@@ -225,8 +229,10 @@ public class ReadContextCounter implements VariantHotspot
         return mJitterData.summary();
     }
 
-    public StrandBiasData fragmentStrandBias() { return mFragmentStrandBias; }
-    public StrandBiasData readStrandBias() { return mReadStrandBias; }
+    public StrandBiasData fragmentStrandBiasAlt() { return mAltFragmentStrandBias; }
+    public StrandBiasData fragmentStrandBiasRef() { return mRefFragmentStrandBias; }
+    public StrandBiasData readStrandBiasAlt() { return mAltReadStrandBias; }
+    public StrandBiasData readStrandBiasRef() { return mRefReadStrandBias; }
     public int improperPairCount() { return mImproperPairCount; }
 
     public int rawDepth() { return mRawDepth; }
@@ -480,6 +486,9 @@ public class ReadContextCounter implements VariantHotspot
         {
             readSupport = REF;
             readMatchType = NO_SUPPORT;
+
+            mRefFragmentStrandBias.registerFragment(record);
+            mRefReadStrandBias.registerRead(record, fragmentData, this);
         }
         else if(rawContext.AltSupport)
         {
@@ -818,8 +827,8 @@ public class ReadContextCounter implements VariantHotspot
 
     private void countAltSupportMetrics(final SAMRecord record, final FragmentData fragmentData)
     {
-        mReadStrandBias.registerRead(record, fragmentData, this);
-        mFragmentStrandBias.registerFragment(record);
+        mAltReadStrandBias.registerRead(record, fragmentData, this);
+        mAltFragmentStrandBias.registerFragment(record);
 
         if(mFragmentCoords != null)
         {

@@ -4,7 +4,6 @@ import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarFromStr;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
-import static com.hartwig.hmftools.sage.common.TestUtils.QUALITY_CALCULATOR;
 import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
@@ -26,7 +25,6 @@ import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
-import com.hartwig.hmftools.sage.common.TestUtils;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -217,8 +215,8 @@ public class FragmentSyncTest
 
         readContextCounter.processRead(consensusRead, 1, new FragmentData(first, second));
 
-        assertEquals(4, readContextCounter.readStrandBias().depth());
-        assertEquals(0.25, readContextCounter.readStrandBias().bias(), 0.01);
+        assertEquals(4, readContextCounter.readStrandBiasAlt().depth());
+        assertEquals(0.25, readContextCounter.readStrandBiasAlt().bias(), 0.01);
     }
 
     @Test

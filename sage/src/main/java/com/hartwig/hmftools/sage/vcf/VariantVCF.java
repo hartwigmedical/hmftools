@@ -193,7 +193,7 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 1, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 1, VCFHeaderLineType.String, FRAG_STRAND_BIAS_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 1, VCFHeaderLineType.String, READ_STRAND_BIAS_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
 

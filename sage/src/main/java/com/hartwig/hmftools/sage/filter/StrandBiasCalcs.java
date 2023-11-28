@@ -4,6 +4,10 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_CHECK_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_BIAS;
+import static com.hartwig.hmftools.sage.SageConstants.STRAND_BIAS_REF_MIN_DEPTH;
+
 import com.hartwig.hmftools.common.utils.Doubles;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
@@ -20,7 +24,6 @@ public class StrandBiasCalcs
     private static final double PROB_DIFF = 0.0001;
     private static final double EXPECTED_RATE = 0.5;
     private static final double INVALID_STRAND_BIAS = -1;
-    private static final double STRAND_BIAS_CHECK_THRESHOLD = 0.1;
 
     public StrandBiasCalcs()
     {
@@ -29,10 +32,19 @@ public class StrandBiasCalcs
         mMaxStrandBiasValue = mStrandBiasValues[mStrandBiasValues.length - 1];
     }
 
-    public boolean isDepthBelowProbability(final StrandBiasData strandBiasData)
+    public boolean isDepthBelowProbability(final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef)
     {
-        double strandBias = strandBiasData.bias();
-        int depth = strandBiasData.depth();
+        // ignore if the ref is uneven
+        if(strandBiasDataRef.forward() < STRAND_BIAS_REF_MIN_DEPTH || strandBiasDataRef.reverse() < STRAND_BIAS_REF_MIN_DEPTH)
+            return false;
+
+        double refBias = strandBiasDataRef.bias();
+
+        if(refBias < STRAND_BIAS_REF_MIN_BIAS || refBias > (1 - STRAND_BIAS_REF_MIN_BIAS))
+            return false;
+
+        double strandBias = strandBiasDataAlt.bias();
+        int depth = strandBiasDataAlt.depth();
 
         double minStrandBias = min(strandBias, 1 - strandBias);
         if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)

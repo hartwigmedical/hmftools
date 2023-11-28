@@ -165,8 +165,8 @@ public class VariantFilters
             filters.add(SoftFilter.FRAGMENT_COORDS.filterName());
         }
 
-        if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBias())
-        || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBias()))
+        if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef())
+        || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef()))
         {
             filters.add(SoftFilter.STRAND_BIAS.filterName());
         }
