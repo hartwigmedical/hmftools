@@ -716,6 +716,12 @@ public class OrangeAlgo
             cuppaChartPlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaChartPlot());
         }
 
+        String cuppa2Visualization = null;
+        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaChartPlot() != null)
+        {
+            cuppa2Visualization = plotManager.processPlotFile(config.wgsRefConfig().cuppa2Visualization());
+        }
+
         return ImmutableOrangePlots.builder()
                 .sageReferenceBQRPlot(sageReferenceBQRPlot)
                 .sageTumorBQRPlot(sageTumorBQRPlot)
@@ -730,6 +736,7 @@ public class OrangeAlgo
                 .cuppaSummaryPlot(cuppaSummaryPlot)
                 .cuppaFeaturePlot(cuppaFeaturePlot)
                 .cuppaChartPlot(cuppaChartPlot)
+                .cuppa2Visualization(cuppa2Visualization)
                 .build();
     }
 
