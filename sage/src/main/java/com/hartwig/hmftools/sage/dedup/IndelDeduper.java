@@ -110,7 +110,7 @@ public class IndelDeduper
     private static final int INDEL_DEDUP_PHASED_DIST_THRESHOLD = 60;
     private static final int LARGE_DEDUP_GROUP_SIZE = 6;
     private static final int LARGE_DEDUP_SELECT_MAX = 3;
-    private static final int INDEL_DEDUP_LOG_ITERATIONS = 25;
+    private static final int INDEL_DEDUP_MAX_ITERATIONS = 100;
 
     private List<VariantData> findDedupGroup(final VariantData indel, final List<VariantData> candidates)
     {
@@ -191,11 +191,6 @@ public class IndelDeduper
             overlappedIndels.forEach(x -> markAsDedup(x.Variant));
             dedupGroup.addAll(overlappedIndels); // add back in so they're removed from further consideration
             return;
-        }
-
-        if(mGroupIterations >= INDEL_DEDUP_LOG_ITERATIONS)
-        {
-            SG_LOGGER.debug("indel({}) deduped {} variants, iterations({})", indel, dedupGroup.size(), mGroupIterations);
         }
 
         dedupGroup.addAll(overlappedIndels);
@@ -290,13 +285,16 @@ public class IndelDeduper
                     return true;
                 }
             }
-        }
 
-        if(dedupGroup.size() > LARGE_DEDUP_GROUP_SIZE)
-        {
-            // add them all, so only the INDEL will be kept plus any outside the flanks with high enough max edge distance
-            dedupedVariants.addAll(dedupGroup);
-            return true;
+            if(mGroupIterations >= INDEL_DEDUP_MAX_ITERATIONS)
+            {
+                SG_LOGGER.debug("indel({}) deduped all {} variants, at iteration limit({} select=={})",
+                        indel, dedupGroup.size(), mGroupIterations, i);
+
+                // add them all, so only the INDEL will be kept plus any outside the flanks with high enough max edge distance
+                dedupedVariants.addAll(dedupGroup);
+                return true;
+            }
         }
 
         return false;

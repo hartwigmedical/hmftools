@@ -87,7 +87,15 @@ public class SoftFilterTest
         readContextCounter.processRead(read2, 1, null);
         readContextCounter.processRead(read2, 1, null);
 
+        // factor in soft-clipped bases
+        SAMRecord read3 = createSamRecord(
+                TEST_READ_ID, CHR_1, 5,
+                REF_BASES.substring(2, position) + altBase + REF_BASES.substring(position + 1, 39), "3S30M4S");
+
+        readContextCounter.processRead(read3, 1, null);
+
         assertEquals(14, readContextCounter.maxDistanceFromEdge());
+        assertEquals(18, readContextCounter.maxDistanceFromEdgeUnclipped());
 
         SageVariant variant = createVariant(readContextCounter);
 

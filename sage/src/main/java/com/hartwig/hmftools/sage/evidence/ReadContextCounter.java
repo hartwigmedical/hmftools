@@ -37,6 +37,8 @@ import static com.hartwig.hmftools.sage.evidence.RealignedType.CORE_PARTIAL;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.SHORTENED;
+import static com.hartwig.hmftools.sage.filter.ReadFilters.NO_READ_EDGE_DISTANCE;
+import static com.hartwig.hmftools.sage.filter.ReadFilters.calcDistanceFromReadEdge;
 import static com.hartwig.hmftools.sage.filter.ReadFilters.isChimericRead;
 import static com.hartwig.hmftools.sage.quality.QualityCalculator.isImproperPair;
 
@@ -116,6 +118,7 @@ public class ReadContextCounter implements VariantHotspot
     private int mSoftClipInsertSupport;
     private int mMaxCandidateDeleteLength;
     private int mMaxDistanceFromEdge;
+    private int mMaxDistanceFromEdgeUnclipped;
 
     private List<Integer> mLocalPhaseSets;
     private List<int[]> mLpsCounts;
@@ -177,6 +180,7 @@ public class ReadContextCounter implements VariantHotspot
         mTotalNmCount = 0;
         mTotalAltNmCount = 0;
         mMaxDistanceFromEdge = 0;
+        mMaxDistanceFromEdgeUnclipped = 0;
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
@@ -247,6 +251,7 @@ public class ReadContextCounter implements VariantHotspot
     public long totalNmCount() { return mTotalNmCount; }
     public long altNmCount() { return mTotalAltNmCount; }
     public int maxDistanceFromEdge() { return mMaxDistanceFromEdge; }
+    public int maxDistanceFromEdgeUnclipped() { return mMaxDistanceFromEdgeUnclipped; }
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
 
     public double averageAltBaseQuality()
@@ -298,7 +303,7 @@ public class ReadContextCounter implements VariantHotspot
         if(exceedsMaxCoverage())
             return UNRELATED;
 
-        if(!mTier.equals(VariantTier.HOTSPOT))
+        if(mTier != VariantTier.HOTSPOT)
         {
             if(mConfig.Quality.MapQualityRatioFactor == 0 && record.getMappingQuality() < EVIDENCE_MIN_MAP_QUAL)
                 return UNRELATED;
@@ -841,7 +846,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private void updateDistanceFromReadEdge(final SAMRecord record, final FragmentData fragmentData)
     {
-        if(mMaxDistanceFromEdge >= record.getReadBases().length / 2)
+        if(mMaxDistanceFromEdgeUnclipped >= record.getReadBases().length / 2)
             return;
 
         if(record.getCigar().containsOperator(CigarOperator.N)) // unnecessary in append mode
@@ -850,44 +855,41 @@ public class ReadContextCounter implements VariantHotspot
         // determine how far from the edge of the read the variant is, ignoring soft-clip bases and realigned reads
         // and for INDELs use the position of the middle base of INDEL
         // take the lower of the 2 distances for each read, eg 50 and 100 bases, then take 50
-        int distFromStart = -1;
-        int distFromEnd = -1;
+
+        int minDistance = NO_READ_EDGE_DISTANCE;
+        int minDistanceUnclipped = NO_READ_EDGE_DISTANCE;
 
         if(fragmentData != null)
         {
-            int firstPosStart = fragmentData.First.getAlignmentStart();
-            int firstPosEnd = fragmentData.First.getAlignmentEnd();
+            int minDistanceFirst = calcDistanceFromReadEdge(mAdjustedVariantPosition, fragmentData.First, false);
+            int minDistanceSecond = calcDistanceFromReadEdge(mAdjustedVariantPosition, fragmentData.Second, false);
 
-            if(positionWithin(mAdjustedVariantPosition, firstPosStart, firstPosEnd))
-            {
-                distFromStart = mAdjustedVariantPosition - firstPosStart;
-                distFromEnd = firstPosEnd - mAdjustedVariantPosition;
-            }
+            if(minDistanceFirst > NO_READ_EDGE_DISTANCE && minDistanceSecond > NO_READ_EDGE_DISTANCE)
+                minDistance = min(minDistanceFirst, minDistanceSecond);
+            else if(minDistanceFirst > NO_READ_EDGE_DISTANCE)
+                minDistance = minDistanceFirst;
+            else if(minDistanceSecond > NO_READ_EDGE_DISTANCE)
+                minDistance = minDistanceSecond;
 
-            int secondPosStart = fragmentData.Second.getAlignmentStart();
-            int secondPosEnd = fragmentData.Second.getAlignmentEnd();
+            // again for the unclipped distances
+            minDistanceFirst = calcDistanceFromReadEdge(mAdjustedVariantPosition, fragmentData.First, true);
+            minDistanceSecond = calcDistanceFromReadEdge(mAdjustedVariantPosition, fragmentData.Second, true);
 
-            if(positionWithin(mAdjustedVariantPosition, secondPosStart, secondPosEnd))
-            {
-                if(distFromStart == -1 || mAdjustedVariantPosition - secondPosStart < distFromStart)
-                    distFromStart = mAdjustedVariantPosition - secondPosStart;
-
-                if(distFromEnd == -1 || secondPosEnd - mAdjustedVariantPosition < distFromEnd)
-                    distFromEnd = secondPosEnd - mAdjustedVariantPosition;
-            }
+            if(minDistanceFirst > NO_READ_EDGE_DISTANCE && minDistanceSecond > NO_READ_EDGE_DISTANCE)
+                minDistanceUnclipped = min(minDistanceFirst, minDistanceSecond);
+            else if(minDistanceFirst > NO_READ_EDGE_DISTANCE)
+                minDistanceUnclipped = minDistanceFirst;
+            else if(minDistanceSecond > NO_READ_EDGE_DISTANCE)
+                minDistanceUnclipped = minDistanceSecond;
         }
         else
         {
-            if(positionWithin(mAdjustedVariantPosition, record.getAlignmentStart(), record.getAlignmentEnd()))
-            {
-                distFromStart = mAdjustedVariantPosition - record.getAlignmentStart();
-                distFromEnd = record.getAlignmentEnd() - mAdjustedVariantPosition;
-            }
+            minDistance = calcDistanceFromReadEdge(mAdjustedVariantPosition, record, false);
+            minDistanceUnclipped = calcDistanceFromReadEdge(mAdjustedVariantPosition, record, true);
         }
 
-        int minDistance = min(distFromStart, distFromEnd);
-
         mMaxDistanceFromEdge = max(minDistance, mMaxDistanceFromEdge);
+        mMaxDistanceFromEdgeUnclipped = max(minDistanceUnclipped, mMaxDistanceFromEdge);
     }
 
     private int getMaxRealignDistance(final SAMRecord record)

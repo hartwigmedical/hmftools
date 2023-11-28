@@ -165,10 +165,15 @@ public class VariantFilters
             filters.add(SoftFilter.FRAGMENT_COORDS.filterName());
         }
 
-        if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef())
-        || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef()))
+        if(tier != VariantTier.HOTSPOT)
         {
-            filters.add(SoftFilter.STRAND_BIAS.filterName());
+            boolean checkRefBias = tier == VariantTier.PANEL;
+
+            if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef(), checkRefBias)
+            || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef(), checkRefBias))
+            {
+                filters.add(SoftFilter.STRAND_BIAS.filterName());
+            }
         }
 
         if(belowMinAverageBaseQuality(primaryTumor, tier))
@@ -179,7 +184,7 @@ public class VariantFilters
 
     private boolean skipMinTumorQualTest(final VariantTier tier, final ReadContextCounter primaryTumor)
     {
-        return tier.equals(VariantTier.HOTSPOT)
+        return tier == VariantTier.HOTSPOT
                 && primaryTumor.altSupport() >= HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL
                 && Doubles.greaterOrEqual(primaryTumor.vaf(), HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL)
                 && primaryTumor.rawAltBaseQuality() >= HOTSPOT_MIN_RAW_ALT_BASE_QUAL;
@@ -214,7 +219,7 @@ public class VariantFilters
         if(isLongInsert(primaryTumor))
             return false;
 
-        int med = primaryTumor.maxDistanceFromEdge();
+        int med = primaryTumor.maxDistanceFromEdgeUnclipped();
 
         if(med >= MAX_READ_EDGE_DISTANCE)
             return false;

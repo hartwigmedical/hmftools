@@ -77,7 +77,7 @@ public class SageConstants
     public static final int REQUIRED_UNIQUE_FRAG_COORDS = 3;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
-            "hotspot", 70, 0.005,
+            "hotspot", 55, 0.005,
             0, 0, 0, 0,
             0.1, 0.5);
 
