@@ -9,9 +9,9 @@ import com.hartwig.hmftools.datamodel.cuppa2.ImmutableSignatureQuantileEntry;
 
 import org.junit.Test;
 
-public class CuppaPredictionDataFactoryTest
+public class CuppaPredictionsFactoryTest
 {
-    public CuppaPredictionDataFactoryTest() throws IOException {}
+    public CuppaPredictionsFactoryTest() throws IOException {}
 
     private static final String CUPPA_VIS_DATA_TSV = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/hmf-common/src/test/resources/cuppa/cuppa_vis_data.tsv";
     CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
