@@ -88,6 +88,9 @@ public interface OrangeWGSRefConfig
     @Nullable
     String cuppaChartPlot();
 
+    @Nullable
+    String cuppa2Visualization();
+
     @NotNull
     String sigsAllocationTsv();
 
