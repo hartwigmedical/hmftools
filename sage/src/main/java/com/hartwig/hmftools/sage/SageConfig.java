@@ -200,8 +200,7 @@ public class SageConfig
 
     public String outputDir()
     {
-        return OutputFile.contains(File.separator) ?
-                new File(OutputFile).getParent() + File.separator : "./";
+        return OutputFile.contains(File.separator) ? new File(OutputFile).getParent() + File.separator : "./";
     }
 
     public boolean isValid()

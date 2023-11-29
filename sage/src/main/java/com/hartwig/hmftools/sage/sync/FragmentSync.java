@@ -132,6 +132,8 @@ public class FragmentSync
                         record.getReadName(), record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd(),
                         record.getCigarString());
             }
+
+            return true;
         }
 
         // no cache for reads where the mate doesn't overlap
