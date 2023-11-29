@@ -23,7 +23,7 @@ public class EventsPerGeneFile
     }
 
     @NotNull
-    private static List<String> toLines(Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
+    public static List<String> toLines(Map<String, HaplotypeAnalysis> geneToHaplotypeAnalysis)
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());

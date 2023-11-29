@@ -20,7 +20,7 @@ public class EventsFile
     }
 
     @NotNull
-    private static List<String> toLines(Map<String, Integer> eventIdToCount)
+    public static List<String> toLines(Map<String, Integer> eventIdToCount)
     {
         List<String> lines = new ArrayList<>();
         lines.add(header());
