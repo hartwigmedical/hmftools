@@ -13,14 +13,10 @@ import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createField
 public class CuppaPredictions
 {
     public final List<CuppaPredictionEntry> PredictionEntries;
-    public final boolean HasRnaPredictions;
-    public final Categories.ClfName MainCombinedClfName;
 
-    public CuppaPredictions(final List<CuppaPredictionEntry> predictionEntries) throws IOException
+    public CuppaPredictions(final List<CuppaPredictionEntry> predictionEntries)
     {
         PredictionEntries = predictionEntries;
-        HasRnaPredictions = checkHasRnaPredictions();
-        MainCombinedClfName = getMainCombinedClfName();
     }
 
     private static double parseDouble(String string)
@@ -143,7 +139,22 @@ public class CuppaPredictions
         return PredictionEntries.size();
     }
 
-    private boolean checkHasRnaPredictions()
+    private boolean checkIsOneSample()
+    {
+        String targetSampleId = PredictionEntries.get(0).SampleId;
+
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
+        {
+            if(!cuppaPrediction.SampleId.equals(targetSampleId))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean checkHasRnaPredictions()
     {
         for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
@@ -161,16 +172,16 @@ public class CuppaPredictions
         return false;
     }
 
-    private Categories.ClfName getMainCombinedClfName()
+    public Categories.ClfName getMainCombinedClfName()
     {
-        if(HasRnaPredictions)
+        if(checkHasRnaPredictions())
         {
             return Categories.ClfName.COMBINED;
         }
         return Categories.ClfName.DNA_COMBINED;
     }
 
-    public CuppaPredictions subsetByDataType(Categories.DataType dataType) throws IOException
+    public CuppaPredictions subsetByDataType(Categories.DataType dataType)
     {
         List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
         for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
@@ -184,7 +195,21 @@ public class CuppaPredictions
         return new CuppaPredictions(newPredictionEntries);
     }
 
-    public CuppaPredictions getTopPredictions(int n) throws IOException
+    public CuppaPredictions subsetByClfName(Categories.ClfName clfName)
+    {
+        List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
+        {
+            if(!cuppaPrediction.ClfName.equals(clfName))
+            {
+                continue;
+            }
+            newPredictionEntries.add(cuppaPrediction);
+        }
+        return new CuppaPredictions(newPredictionEntries);
+    }
+
+    public CuppaPredictions getTopPredictions(int n)
     {
         List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
         for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
@@ -197,7 +222,7 @@ public class CuppaPredictions
         return new CuppaPredictions(newPredictionEntries);
     }
 
-    public CuppaPredictions sortByRank() throws IOException
+    public CuppaPredictions sortByRank()
     {
         Comparator<CuppaPredictionEntry> comparator = Comparator.comparing(cuppaPrediction -> cuppaPrediction.RankGroup);
         comparator = comparator.thenComparing(cuppaPrediction -> cuppaPrediction.Rank);

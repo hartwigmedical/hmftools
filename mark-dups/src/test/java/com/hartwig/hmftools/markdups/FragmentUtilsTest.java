@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.markdups;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.common.test.SamRecordTestUtils.createSamRecord;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.calcBaseQualAverage;
 import static com.hartwig.hmftools.markdups.common.DuplicateGroupBuilder.findPrimaryFragment;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.NO_COORDS;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.formChromosomePartition;
-import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.markdups.TestUtils.DEFAULT_QUAL;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_BASES;
 import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_CIGAR;
@@ -13,6 +13,7 @@ import static com.hartwig.hmftools.markdups.TestUtils.TEST_READ_ID;
 import static com.hartwig.hmftools.markdups.TestUtils.createFragment;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.samtools.CigarUtils;
 import com.hartwig.hmftools.markdups.common.Fragment;
 import com.hartwig.hmftools.markdups.common.FragmentCoordinates;
 import com.hartwig.hmftools.markdups.common.FragmentUtils;
@@ -89,22 +90,22 @@ public class FragmentUtilsTest
     {
         // test coordinates from CIGAR strings
         String cigarStr = "5S100M5S";
-        int ucPos = getUnclippedPosition(100, cigarStr, true);
+        int ucPos = CigarUtils.getUnclippedPosition(100, cigarStr, true);
         assertEquals(95, ucPos);
 
-        ucPos = getUnclippedPosition(100, cigarStr, false);
+        ucPos = CigarUtils.getUnclippedPosition(100, cigarStr, false);
         assertEquals(204, ucPos);
 
         cigarStr = "5S10M5D10I15D20M5S"; // +10 + 5, ignore 10, +15, +20, +5 = 40
-        ucPos = getUnclippedPosition(100, cigarStr, false);
+        ucPos = CigarUtils.getUnclippedPosition(100, cigarStr, false);
         assertEquals(154, ucPos);
 
         // RNA
         cigarStr = "5S60M2000N40M10S";
-        ucPos = getUnclippedPosition(100, cigarStr, true); // -5
+        ucPos = CigarUtils.getUnclippedPosition(100, cigarStr, true); // -5
         assertEquals(95, ucPos);
 
-        ucPos = getUnclippedPosition(100, cigarStr, false); // +60, +2000, +40, +10
+        ucPos = CigarUtils.getUnclippedPosition(100, cigarStr, false); // +60, +2000, +40, +10
         assertEquals(2209, ucPos);
 
         // test coordinates from reads

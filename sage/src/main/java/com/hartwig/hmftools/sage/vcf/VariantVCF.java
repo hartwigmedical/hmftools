@@ -193,8 +193,8 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFormatHeaderLine(
                 READ_CONTEXT_IMPROPER_PAIR, 1, VCFHeaderLineType.Integer, READ_CONTEXT_IMPROPER_PAIR_DESCRIPTION));
 
-        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 1, VCFHeaderLineType.Float, FRAG_STRAND_BIAS_DESC));
-        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 1, VCFHeaderLineType.Float, READ_STRAND_BIAS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(FRAG_STRAND_BIAS, 1, VCFHeaderLineType.String, FRAG_STRAND_BIAS_DESC));
+        header.addMetaDataLine(new VCFFormatHeaderLine(READ_STRAND_BIAS, 1, VCFHeaderLineType.String, READ_STRAND_BIAS_DESC));
         header.addMetaDataLine(new VCFFormatHeaderLine(AVG_BASE_QUAL, 1, VCFHeaderLineType.Integer, AVG_BASE_QUAL_DESC));
 
         header.addMetaDataLine(new VCFFormatHeaderLine(
@@ -219,15 +219,11 @@ public class VariantVCF implements AutoCloseable
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MIXED_GERMLINE_SOMATIC_FILTER, "Variant duplicate mixed somatic/germline"));
         header.addMetaDataLine(new VCFFilterHeaderLine(DEDUP_MATCH, "Variant duplicate with different read contexts"));
 
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_AVG_BASE_QUALITY.filterName(), "Variant average base quality below limit"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.STRAND_BIAS.filterName(), "Variant exceeds strand bias limit"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_QUAL.filterName(), "Insufficient tumor quality"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_TUMOR_VAF.filterName(), "Insufficient tumor VAF"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MIN_GERMLINE_DEPTH.filterName(), "Insufficient germline depth"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_VAF.filterName(), "Excess germline VAF"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_REL_RAW_BASE_QUAL.filterName(),
-                "Excess germline relative quality"));
-        header.addMetaDataLine(new VCFFilterHeaderLine(SoftFilter.MAX_GERMLINE_ALT_SUPPORT.filterName(), "Excess germline alt support"));
+        for(SoftFilter filter : SoftFilter.values())
+        {
+            header.addMetaDataLine(new VCFFilterHeaderLine(filter.filterName(), filter.vcfDescription()));
+        }
+
         header.addMetaDataLine(new VCFFilterHeaderLine(PASS, "All filters passed"));
 
         header.addMetaDataLine(new VCFInfoHeaderLine(

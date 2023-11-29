@@ -2,6 +2,8 @@ package com.hartwig.hmftools.markdups.consensus;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+
 import java.util.List;
 import java.util.Map;
 
@@ -27,14 +29,29 @@ public class CigarFrequency
 
     public static Map<String,CigarFrequency> buildFrequencies(final List<SAMRecord> reads)
     {
+        return buildFrequencies(reads, false);
+    }
+
+    public static Map<String,CigarFrequency> buildMateFrequencies(final List<SAMRecord> reads)
+    {
+        return buildFrequencies(reads, true);
+    }
+
+    private static Map<String,CigarFrequency> buildFrequencies(final List<SAMRecord> reads, boolean useMateCigar)
+    {
         Map<String,CigarFrequency> cigarFrequencies = Maps.newHashMap();
 
         for(SAMRecord read : reads)
         {
-            CigarFrequency frequency = cigarFrequencies.get(read.getCigarString());
+            final String cigarStr = useMateCigar ? read.getStringAttribute(MATE_CIGAR_ATTRIBUTE) : read.getCigarString();
+
+            if(useMateCigar && (cigarStr == null || cigarStr.isEmpty()))
+                continue;
+
+            CigarFrequency frequency = cigarFrequencies.get(cigarStr);
 
             if(frequency == null)
-                cigarFrequencies.put(read.getCigarString(), new CigarFrequency(read));
+                cigarFrequencies.put(cigarStr, new CigarFrequency(read));
             else
                 ++frequency.Frequency;
         }

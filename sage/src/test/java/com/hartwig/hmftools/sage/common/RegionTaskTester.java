@@ -17,7 +17,7 @@ import com.hartwig.hmftools.sage.evidence.FragmentLengths;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.pipeline.RegionResults;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
 public class RegionTaskTester
 {
@@ -29,7 +29,7 @@ public class RegionTaskTester
     public final List<BaseRegion> PanelRegions;
     public final List<TranscriptData> Transcripts;
     public final List<BaseRegion> HighConfidenceRegions;
-    public final Map<String, QualityRecalibrationMap> QualityRecalibrationMap;
+    public final Map<String, BqrRecordMap> QualityRecalibrationMap;
     public final PhaseSetCounter PhaseSetCounter;
     public final Coverage Coverage;
     public final SamSlicerFactory SamSlicerFactory;

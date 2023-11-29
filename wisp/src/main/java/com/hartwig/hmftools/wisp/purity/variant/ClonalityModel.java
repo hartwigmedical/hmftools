@@ -24,7 +24,7 @@ public abstract class ClonalityModel
         mVariants = variants;
     }
 
-    abstract ClonalityResult calculate(final String sampleId, final FragmentCalcResult estimatedResult);
+    abstract ClonalityResult calculate(final String sampleId, final FragmentCalcResult estimatedResult, final double weightedAvgDepth);
 
     public boolean useVariant(final SomaticVariant variant, final GenotypeFragments sampleFragData)
     {

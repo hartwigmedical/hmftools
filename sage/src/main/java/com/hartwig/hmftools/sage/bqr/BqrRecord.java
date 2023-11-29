@@ -1,13 +1,13 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
-public class QualityRecalibrationRecord implements Comparable<QualityRecalibrationRecord>
+public class BqrRecord implements Comparable<BqrRecord>
 {
-    public final BaseQualityKey Key;
+    public final BqrKey Key;
 
     public final int Count;
     public final double RecalibratedQuality;
 
-    public QualityRecalibrationRecord(final BaseQualityKey key, final int count, final double recalibratedQual)
+    public BqrRecord(final BqrKey key, final int count, final double recalibratedQual)
     {
         Key = key;
         Count = count;
@@ -15,7 +15,7 @@ public class QualityRecalibrationRecord implements Comparable<QualityRecalibrati
     }
 
     @Override
-    public int compareTo(final QualityRecalibrationRecord other)
+    public int compareTo(final BqrRecord other)
     {
         int countCompare = Integer.compare(other.Count, Count);
         if(countCompare != 0)

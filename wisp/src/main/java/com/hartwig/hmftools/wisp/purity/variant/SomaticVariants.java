@@ -34,6 +34,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
+import com.hartwig.hmftools.common.utils.r.RExecutor;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.VariantTier;
@@ -75,7 +76,7 @@ public class SomaticVariants
 
         if(mConfig.SomaticVcf.isEmpty())
         {
-            somaticVcf = mConfig.SampleDataDir + mSample.TumorId + PurityConstants.PURPLE_CTDNA_SOMATIC_VCF_ID;
+            somaticVcf = mConfig.SomaticDir + mSample.TumorId + PurityConstants.PURPLE_CTDNA_SOMATIC_VCF_ID;
 
             if(!mSample.VcfTag.isEmpty())
                 somaticVcf += mSample.VcfTag + ".";
@@ -348,7 +349,7 @@ public class SomaticVariants
         if(frag2PlusVariants >= PurityConstants.VAF_PEAK_MODEL_MIN_FRAG_VARIANTS && weightedAvgDepth > PurityConstants.VAF_PEAK_MODEL_MIN_AVG_DEPTH)
         {
             ClonalityModel model = new VafPeakModel(mConfig, mResultsWriter, mSample, mVariants);
-            modelResult = model.calculate(sampleId, allFragsResult);
+            modelResult = model.calculate(sampleId, allFragsResult, weightedAvgDepth);
 
             if(modelResult == ClonalityResult.INVALID_RESULT)
                 clonalityMethod = ClonalityMethod.NO_PEAK; // record the attempt
@@ -356,7 +357,7 @@ public class SomaticVariants
         else if(frag1Variants + frag2PlusVariants >= PurityConstants.LOW_COUNT_MODEL_MIN_FRAG_VARIANTS && weightedAvgDepth < PurityConstants.LOW_COUNT_MODEL_MIN_AVG_DEPTH)
         {
             ClonalityModel model = new LowCountModel(mConfig, mResultsWriter, mSample, mVariants);
-            modelResult = model.calculate(sampleId, allFragsResult);
+            modelResult = model.calculate(sampleId, allFragsResult, weightedAvgDepth);
         }
 
         int clonalityVarCount = calcVariants;
@@ -399,14 +400,6 @@ public class SomaticVariants
                 tumorVaf, adjustedTumorVaf, rawSamplePurity, allFragsResult, dualFragsResult, lodFragsResult);
     }
 
-    /*
-    private boolean useVariantForPurityCalcs(final SomaticVariant variant, final GenotypeFragments sampleFragData)
-    {
-        return !variant.isFiltered()
-                && (sampleFragData.qualPerAlleleFragment() > PurityConstants.MIN_QUAL_PER_AD || sampleFragData.UmiCounts.alleleTotal() == 0);
-    }
-    */
-
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
     {
         List<FilterReason> filters = Lists.newArrayList();
@@ -435,4 +428,30 @@ public class SomaticVariants
 
         return filters;
     }
+
+    public static boolean plotSomaticVafs(final String patientId, final String sampleId, final PurityConfig config)
+    {
+        try
+        {
+            String summaryFile = config.formFilename(ResultsWriter.SUMMARY_FILE_ID);
+            String somaticsFile = config.formFilename(ResultsWriter.SOMATICS_FILE_ID);
+
+            if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(somaticsFile)))
+            {
+                CT_LOGGER.warn("plots missing required files: summary({}) somatics({})", summaryFile, somaticsFile);
+                return false;
+            }
+
+            int runCode = RExecutor.executeFromClasspath(
+                    "plots/SomaticVafPlot.R", patientId, sampleId, summaryFile, somaticsFile, config.PlotDir);
+
+            return runCode == 0;
+        }
+        catch(Exception e)
+        {
+            CT_LOGGER.error("failed to generate CN plot with R script: {}", e.toString());
+            return false;
+        }
+    }
+
 }

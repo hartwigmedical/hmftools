@@ -11,18 +11,21 @@ public class CuppaPredictionsTest
     CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
 
     @Test
-    public void testPrintTopPredictions() throws IOException
+    public void testPrintPredictions()
     {
-        cuppaPredictions
-            .subsetByDataType(Categories.DataType.PROB)
-            .getTopPredictions(3)
-            .sortByRank();
-
         // cuppaPredictions.printPredictions(20);
     }
 
     @Test
-    public void sortByRankHasCorrectOrder() throws IOException
+    public void subsetByDataTypeReturnsCorrectDataType()
+    {
+        CuppaPredictionEntry predictionEntry = cuppaPredictions.subsetByDataType(Categories.DataType.FEAT_CONTRIB).get(0);
+        assert predictionEntry.DataType.equals(Categories.DataType.FEAT_CONTRIB);
+    }
+
+
+    @Test
+    public void sortByRankHasCorrectOrder()
     {
         CuppaPredictions sortedCuppaPredictions = cuppaPredictions.sortByRank();
 

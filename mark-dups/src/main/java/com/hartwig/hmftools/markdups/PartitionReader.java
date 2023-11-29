@@ -22,7 +22,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.common.samtools.BamSlicer;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.markdups.common.CandidateDuplicates;
 import com.hartwig.hmftools.markdups.common.DuplicateGroup;
@@ -38,14 +37,12 @@ import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
 import com.hartwig.hmftools.markdups.write.BamWriter;
 
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
 
 public class PartitionReader implements Consumer<List<Fragment>>
 {
     private final MarkDupsConfig mConfig;
 
-    private final SamReader mSamReader;
-    private final BamSlicer mBamSlicer;
+    private final BamReader mBamReader;
     private final PartitionDataStore mPartitionDataStore;
     private final BamWriter mBamWriter;
     private final ReadPositionsCache mReadPositions;
@@ -68,18 +65,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
     private final PerformanceCounter mPcPendingIncompletes;
 
     public PartitionReader(
-            final MarkDupsConfig config, final SamReader samReader,
+            final MarkDupsConfig config, final BamReader bamReader,
             final BamWriter bamWriter, final PartitionDataStore partitionDataStore)
     {
         mConfig = config;
-        mCurrentRegion = null;
         mPartitionDataStore = partitionDataStore;
         mBamWriter = bamWriter;
-
-        mSamReader = samReader;
-
-        mBamSlicer = new BamSlicer(0, true, true, false);
-        mBamSlicer.setKeepUnmapped();
+        mBamReader = bamReader;
 
         mReadPositions = new ReadPositionsCache(config.BufferSize, !config.NoMateCigar, this);
         mDuplicateGroupBuilder = new DuplicateGroupBuilder(config);
@@ -87,6 +79,7 @@ public class PartitionReader implements Consumer<List<Fragment>>
         mConsensusReads = new ConsensusReads(config.RefGenome, mStats.ConsensusStats);
         mConsensusReads.setDebugOptions(config.RunChecks);
 
+        mCurrentRegion = null;
         mUnmapRegionState = null;
 
         mPendingIncompleteReads = Maps.newHashMap();
@@ -125,9 +118,9 @@ public class PartitionReader implements Consumer<List<Fragment>>
 
     public void processRegion()
     {
-        if(mSamReader != null)
+        if(mBamReader != null)
         {
-            mBamSlicer.slice(mSamReader, mCurrentRegion, this::processSamRecord);
+            mBamReader.sliceRegion(mCurrentRegion, this::processSamRecord);
         }
 
         postProcessRegion();
@@ -182,6 +175,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
             MD_LOGGER.debug("specific read: {}", readToString(read));
         }
 
+        if(read.isSecondaryAlignment())
+        {
+            mBamWriter.setBoundaryPosition(read.getAlignmentStart(), false);
+            mBamWriter.writeRead(read, FragmentStatus.UNSET);
+            return;
+        }
+
         if(mConfig.UnmapRegions.enabled())
         {
             mConfig.UnmapRegions.checkTransformRead(read, mUnmapRegionState);
@@ -217,6 +217,11 @@ public class PartitionReader implements Consumer<List<Fragment>>
                 && !read.hasAttribute(MATE_CIGAR_ATTRIBUTE))
         {
             ++mStats.MissingMateCigar;
+
+            if(mStats.MissingMateCigar < 3 && mConfig.PerfDebug)
+            {
+                MD_LOGGER.debug("read without mate cigar: {}", readToString(read));
+            }
         }
     }
 
@@ -332,15 +337,13 @@ public class PartitionReader implements Consumer<List<Fragment>>
         boolean logDetails = mConfig.PerfDebug && posFragmentCount > LOG_PERF_FRAG_COUNT; // was 10000
         long startTimeMs = logDetails ? System.currentTimeMillis() : 0;
 
-        boolean inExcludedRegion = false; // dropped logic since added region unmapping logic
-
         findDuplicateFragments(positionFragments, resolvedFragments, positionDuplicateGroups, candidateDuplicatesList, mConfig.UMIs.Enabled);
 
-        List<Fragment> singleFragments = mConfig.UMIs.Enabled && !inExcludedRegion ?
+        List<Fragment> singleFragments = mConfig.UMIs.Enabled ?
                 resolvedFragments.stream().filter(x -> x.status() == FragmentStatus.NONE).collect(Collectors.toList()) : Collections.EMPTY_LIST;
 
         List<DuplicateGroup> duplicateGroups = mDuplicateGroupBuilder.processDuplicateGroups(
-                positionDuplicateGroups, true, singleFragments, inExcludedRegion);
+                positionDuplicateGroups, true, singleFragments);
 
         if(logDetails)
         {

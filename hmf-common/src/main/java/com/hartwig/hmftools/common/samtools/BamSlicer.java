@@ -224,7 +224,7 @@ public class BamSlicer
         return mateRecord != null && passesFilters(mateRecord) ? mateRecord : null;
     }
 
-    private static QueryInterval[] createIntervals(final List<ChrBaseRegion> regions, final SAMFileHeader header)
+    public static QueryInterval[] createIntervals(final List<ChrBaseRegion> regions, final SAMFileHeader header)
     {
         final QueryInterval[] queryIntervals = new QueryInterval[regions.size()];
 

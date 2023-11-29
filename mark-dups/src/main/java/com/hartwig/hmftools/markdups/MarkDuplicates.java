@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -24,14 +25,15 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.samtools.BamSampler;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.markdups.common.FragmentStatus;
 import com.hartwig.hmftools.markdups.common.PartitionData;
 import com.hartwig.hmftools.markdups.common.Statistics;
 import com.hartwig.hmftools.markdups.consensus.ConsensusReads;
-import com.hartwig.hmftools.markdups.consensus.ConsensusStatistics;
 import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.write.FileWriterCache;
 
-import org.jetbrains.annotations.NotNull;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 
 public class MarkDuplicates
 {
@@ -102,6 +104,8 @@ public class MarkDuplicates
 
         MD_LOGGER.info("all partition tasks complete");
 
+        long unmappedReads = writeUnmappedReads(fileWriterCache);
+
         List<PartitionReader> partitionReaders = partitionTasks.stream().map(x -> x.partitionReader()).collect(Collectors.toList());
 
         int maxLogFragments = (mConfig.RunChecks || mConfig.LogFinalCache) ? 100 : 0;
@@ -141,7 +145,11 @@ public class MarkDuplicates
             // log interim time
             MD_LOGGER.info("BAM duplicate processing complete, mins({})", runTimeMinsStr(startTimeMs));
 
-            fileWriterCache.sortAndIndexBams();
+            if(!fileWriterCache.sortAndIndexBams())
+            {
+                MD_LOGGER.error("sort-merge-index failed");
+                System.exit(1);
+            }
         }
 
         combinedStats.logStats();
@@ -154,10 +162,12 @@ public class MarkDuplicates
             MD_LOGGER.info("unmapped stats: {}", mConfig.UnmapRegions.stats().toString());
         }
 
-        if(combinedStats.TotalReads != totalWrittenReads + unmappedDroppedReads)
+        if(combinedStats.TotalReads + unmappedReads != totalWrittenReads + unmappedDroppedReads)
         {
+            long difference = combinedStats.TotalReads + unmappedReads - totalWrittenReads - unmappedDroppedReads;
+
             MD_LOGGER.warn("reads processed({}) vs written({}) mismatch diffLessDropped({})",
-                    combinedStats.TotalReads, totalWrittenReads, combinedStats.TotalReads - totalWrittenReads - unmappedDroppedReads);
+                    combinedStats.TotalReads + unmappedReads, totalWrittenReads, difference);
         }
 
         if(mConfig.WriteStats)
@@ -181,6 +191,28 @@ public class MarkDuplicates
         MD_LOGGER.info("Mark duplicates complete, mins({})", runTimeMinsStr(startTimeMs));
     }
 
+    private long writeUnmappedReads(final FileWriterCache fileWriterCache)
+    {
+        BamWriter bamWriter = fileWriterCache.getFullyUnmappedReadsBamWriter();
+
+        BamReader bamReader = new BamReader(mConfig);
+
+        AtomicLong unmappedCount = new AtomicLong();
+
+        bamReader.queryUnmappedReads((final SAMRecord record) ->
+        {
+            bamWriter.writeRead(record, FragmentStatus.UNSET);
+            unmappedCount.incrementAndGet();
+        });
+
+        if(unmappedCount.get() > 0)
+        {
+            MD_LOGGER.debug("wrote {} unmapped reads", unmappedCount);
+        }
+
+        return unmappedCount.get();
+    }
+
     private void setReadLength()
     {
         if(mConfig.readLength() > 0) // skip if set in config
@@ -194,7 +226,7 @@ public class MarkDuplicates
 
         int readLength = DEFAULT_READ_LENGTH;
 
-        if(bamSampler.calcBamCharacteristics(mConfig.BamFile, sampleRegion) && bamSampler.maxReadLength() > 0)
+        if(bamSampler.calcBamCharacteristics(mConfig.BamFiles.get(0), sampleRegion) && bamSampler.maxReadLength() > 0)
         {
             readLength = bamSampler.maxReadLength();
             MD_LOGGER.info("BAM sampled max read-length({})", readLength);

@@ -1,16 +1,16 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public class BaseQualityKey
+public class BqrKey
 {
     public final byte Ref;
     public final byte Alt;
     public final byte[] TrinucleotideContext;
     public final byte Quality;
 
-    public BaseQualityKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality)
+    public BqrKey(final byte ref, final byte alt, final byte[] trinucleotideContext, final byte quality)
     {
         Ref = ref;
         Alt = alt;
@@ -24,10 +24,10 @@ public class BaseQualityKey
         if(this == other)
             return true;
 
-        if (!(other instanceof BaseQualityKey))
+        if (!(other instanceof BqrKey))
             return false;
 
-        BaseQualityKey otherKey = (BaseQualityKey)other;
+        BqrKey otherKey = (BqrKey)other;
         return matches(otherKey.Ref, otherKey.Alt, otherKey.Quality, otherKey.TrinucleotideContext);
     }
 

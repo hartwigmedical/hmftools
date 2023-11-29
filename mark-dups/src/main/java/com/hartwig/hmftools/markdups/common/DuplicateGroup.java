@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.addConsensusReadAttribute;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.orientation;
 import static com.hartwig.hmftools.common.samtools.UmiReadType.DUAL;
 import static com.hartwig.hmftools.common.samtools.UmiReadType.SINGLE;
@@ -14,7 +15,6 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
-import static com.hartwig.hmftools.markdups.common.FragmentUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.markdups.common.FragmentUtils.readToString;
 
 import java.util.Arrays;

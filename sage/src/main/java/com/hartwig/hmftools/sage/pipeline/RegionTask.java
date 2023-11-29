@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.utils.MemoryCalcs;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -32,7 +31,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.dedup.VariantDeduper;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 
 public class RegionTask
 {
@@ -61,7 +60,7 @@ public class RegionTask
             final int taskId, final ChrBaseRegion region, final RegionResults results, final SageCallConfig config,
             final RefGenomeInterface refGenome, final List<VariantHotspot> hotspots, final List<BaseRegion> panelRegions,
             final List<TranscriptData> transcripts, final List<BaseRegion> highConfidenceRegions,
-            final Map<String,QualityRecalibrationMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter,
+            final Map<String, BqrRecordMap> qualityRecalibrationMap, final PhaseSetCounter phaseSetCounter,
             final Coverage coverage, final SamSlicerFactory samSlicerFactory, final FragmentLengths fragmentLengths)
     {
         mTaskId = taskId;
@@ -74,7 +73,7 @@ public class RegionTask
         mCandidateState = new CandidateStage(config, hotspots, panelRegions, highConfidenceRegions, coverage, samSlicerFactory);
         mEvidenceStage = new EvidenceStage(config.Common, refGenome, qualityRecalibrationMap, phaseSetCounter, samSlicerFactory);
 
-        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.NewIndelDedup);
+        mVariantDeduper = new VariantDeduper(transcripts, mRefGenome, mConfig.OldIndelDedup);
 
         mSageVariants = Lists.newArrayList();
         mPassingPhaseSets = Sets.newHashSet();
@@ -139,7 +138,7 @@ public class RegionTask
         {
             mPerfCounters.get(PC_VARIANTS).start();
 
-            VariantFilters filters = new VariantFilters(mConfig.Common.Filter);
+            VariantFilters filters = new VariantFilters(mConfig.Common);
 
             // combine normal and tumor together to create variants, then apply soft filters
             Set<ReadContextCounter> passingTumorReadCounters = Sets.newHashSet();
@@ -211,14 +210,12 @@ public class RegionTask
             {
                 String variantInfo = format("%s:%d %s>%s", variant.chromosome(), variant.position(), variant.ref(), variant.alt());
 
-                FragmentLengthData fragmentLengthData = variant.tumorReadCounters().get(0).fragmentLengths();
-
-                for(int i = 1; i < variant.tumorReadCounters().size(); ++i)
+                for(int s = 0; s < mConfig.TumorIds.size(); ++s)
                 {
-                    fragmentLengthData.merge(variant.tumorReadCounters().get(i).fragmentLengths());
+                    String sampleId = mConfig.TumorIds.get(s);
+                    FragmentLengthData fragmentLengthData = variant.tumorReadCounters().get(s).fragmentLengths();
+                    mFragmentLengths.writeVariantFragmentLength(variantInfo, sampleId, fragmentLengthData);
                 }
-
-                mFragmentLengths.writeVariantFragmentLength(variantInfo, fragmentLengthData);
             }
         }
     }

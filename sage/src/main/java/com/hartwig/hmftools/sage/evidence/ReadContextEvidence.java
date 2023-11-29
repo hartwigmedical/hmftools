@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
@@ -25,9 +27,10 @@ import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationMap;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
 import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.read.NumberEvents;
+import com.hartwig.hmftools.sage.sync.FragmentData;
 import com.hartwig.hmftools.sage.sync.FragmentSync;
 import com.hartwig.hmftools.sage.sync.FragmentSyncReadHandler;
 
@@ -38,7 +41,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     private final SageConfig mConfig;
     private final RefGenomeInterface mRefGenome;
     private final ReadContextCounterFactory mFactory;
-    private final Map<String,QualityRecalibrationMap> mQualityRecalibrationMap;
+    private final Map<String, BqrRecordMap> mQualityRecalibrationMap;
 
     // state per slice region
     private RefSequence mRefSequence;
@@ -51,7 +54,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     private final EvidenceStats mStats;
 
     public ReadContextEvidence(
-            final SageConfig config, final RefGenomeInterface refGenome, final Map<String,QualityRecalibrationMap> qualityRecalibrationMap)
+            final SageConfig config, final RefGenomeInterface refGenome, final Map<String, BqrRecordMap> qualityRecalibrationMap)
     {
         mConfig = config;
         mRefGenome = refGenome;
@@ -67,6 +70,8 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         mStats = new EvidenceStats();
     }
 
+    private static final int SLICE_SOFT_CLIP_BUFFER = 30;
+
     public List<ReadContextCounter> collectEvidence(
             final List<Candidate> candidates, final String sample, final SamSlicerFactory samSlicerFactory, final VariantPhaser variantPhaser)
     {
@@ -76,12 +81,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         List<ChrBaseRegion> sliceRegions = buildCandidateRegions(candidates);
 
         // add a buffer around each slice to support variants in soft-clip regions
-        int softClipBuffer = 30;
-
         for(ChrBaseRegion sliceRegion : sliceRegions)
         {
-            sliceRegion.setStart(max(sliceRegion.start() - softClipBuffer, 1));
-            sliceRegion.setEnd(sliceRegion.end() + softClipBuffer);
+            sliceRegion.setStart(max(sliceRegion.start() - SLICE_SOFT_CLIP_BUFFER, 1));
+            sliceRegion.setEnd(sliceRegion.end() + SLICE_SOFT_CLIP_BUFFER);
         }
 
         ++mStats.PartitionCount;
@@ -99,7 +102,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         mRefSequence = new RefSequence(regionBounds, mRefGenome);
 
-        QualityRecalibrationMap qrMap = mQualityRecalibrationMap.get(sample);
+        BqrRecordMap qrMap = mQualityRecalibrationMap.get(sample);
         QualityCalculator qualityCalculator = new QualityCalculator(mConfig.Quality, qrMap, mRefSequence.IndexedBases);
 
         mReadCounters = mFactory.create(candidates, mConfig, qualityCalculator, sample);
@@ -119,10 +122,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
                 readContextCounter.setMaxCandidateDeleteLength(maxCloseDel);
         }
 
-        mFragmentSync.clear();
-
         final SamSlicerInterface samSlicer = samSlicerFactory.getSamSlicer(sample, sliceRegions, false);
         samSlicer.slice(this::processReadRecord);
+
+        mFragmentSync.emptyCachedReads();
 
         if(mConfig.PerfWarnTime > 0)
         {
@@ -169,9 +172,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         int gapCount = gapDistances.size();
         int nth = min(mConfig.MaxPartitionSlices, gapDistances.size());
         int nthGap = gapDistances.get(nth - 1);
-        int medianGap = gapDistances.get(gapCount / 2);
 
         /*
+        int medianGap = gapDistances.get(gapCount / 2);
+
         SG_LOGGER.debug("region({}:{}-{} len={}) candidates({}) gap(n={} nth={}, max={} avg={} median={})",
                 firstCandidate.chromosome(), firstCandidate.position(), lastCandidate.position(), sliceLength,
                 candidates.size(), nth, nthGap, gapDistances.get(0), averageGap, medianGap);
@@ -209,7 +213,10 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
     }
 
     @Override
-    public void processReadRecord(final SAMRecord record, boolean checkSync)
+    public void processReadRecord(final SAMRecord record, boolean checkSync) { processReadRecord(record, checkSync, null); }
+
+    @Override
+    public void processReadRecord(final SAMRecord record, boolean checkSync, @Nullable final FragmentData fragmentData)
     {
         ++mStats.ReadCount;
 
@@ -292,7 +299,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
         for(ReadContextCounter readCounter : mSelectedReadCounters)
         {
-            ReadMatchType matchType = readCounter.processRead(record, numberOfEvents);
+            ReadMatchType matchType = readCounter.processRead(record, numberOfEvents, fragmentData);
 
             ++mStats.SupportCounts[matchType.ordinal()];
 

@@ -1,12 +1,15 @@
 package com.hartwig.hmftools.sage.filter;
 
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_TUMOR_VAF_SKIP_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.HOTSPOT_MIN_RAW_ALT_BASE_QUAL;
 import static com.hartwig.hmftools.sage.SageConstants.LONG_GERMLINE_INSERT_LENGTH;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_INDEL_GERMLINE_ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE;
+import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 
 import java.util.EnumSet;
@@ -25,6 +28,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 public class VariantFilters
 {
     private final FilterConfig mConfig;
+    private final int mReadLength;
     private final StrandBiasCalcs mStrandBiasCalcs;
 
     private final int[] mFilterCounts;
@@ -34,9 +38,10 @@ public class VariantFilters
     public static int HARD_FC_TUMOR_QUAL = 2;
     public static int HARD_FC_TUMOR_VAF = 3;
 
-    public VariantFilters(final FilterConfig config)
+    public VariantFilters(final SageConfig config)
     {
-        mConfig = config;
+        mConfig = config.Filter;
+        mReadLength = config.getReadLength();
         mStrandBiasCalcs = new StrandBiasCalcs();
         mFilterCounts = new int[HARD_FC_TUMOR_VAF+1];
     }
@@ -150,9 +155,18 @@ public class VariantFilters
                 filters.add(SoftFilter.MIN_TUMOR_VAF.filterName());
         }
 
+        if(belowMaxEdgeDistance(primaryTumor))
+        {
+            filters.add(SoftFilter.MAX_EDGE_DISTANCE.filterName());
+        }
 
-        if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBias())
-        || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBias()))
+        if(primaryTumor.belowMinFragmentCoords())
+        {
+            filters.add(SoftFilter.FRAGMENT_COORDS.filterName());
+        }
+
+        if(mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.fragmentStrandBiasAlt(), primaryTumor.fragmentStrandBiasRef())
+        || mStrandBiasCalcs.isDepthBelowProbability(primaryTumor.readStrandBiasAlt(), primaryTumor.readStrandBiasRef()))
         {
             filters.add(SoftFilter.STRAND_BIAS.filterName());
         }
@@ -190,6 +204,26 @@ public class VariantFilters
             return Doubles.lessThan(primaryTumor.averageAltBaseQuality(), mConfig.MinAvgBaseQual);
     }
 
+    private static boolean isLongInsert(final ReadContextCounter variant)
+    {
+        return variant.isIndel() && variant.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
+    }
+
+    private boolean belowMaxEdgeDistance(final ReadContextCounter primaryTumor)
+    {
+        if(isLongInsert(primaryTumor))
+            return false;
+
+        int med = primaryTumor.maxDistanceFromEdge();
+
+        if(med >= MAX_READ_EDGE_DISTANCE)
+            return false;
+
+        double medProb = pow(2 * med / (double)mReadLength, primaryTumor.altSupport());
+
+        return medProb < MAX_READ_EDGE_DISTANCE_PROB;
+    }
+
     // normal and paired tumor-normal tests
     public void applyTumorNormalFilters(
             final VariantTier tier, final SoftFilterConfig config,
@@ -223,7 +257,7 @@ public class VariantFilters
         boolean chromosomeIsAllosome = HumanChromosome.contains(normal.chromosome())
                 && HumanChromosome.fromString(normal.chromosome()).isAllosome();
 
-        boolean isLongInsert = normal.isIndel() && normal.alt().length() > LONG_GERMLINE_INSERT_LENGTH;
+        boolean isLongInsert = isLongInsert(normal);
 
         int minGermlineCoverage = chromosomeIsAllosome ?
                 (isLongInsert ? config.MinGermlineCoverageAllosomeLongInsert : config.MinGermlineCoverageAllosome)

@@ -2,6 +2,7 @@ package com.hartwig.hmftools.neo.score;
 
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.ISOFOX_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.SAMPLE_ID_FILE;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -56,7 +57,7 @@ public class SampleData
 
                 for(String line : fileContents)
                 {
-                    if(line.startsWith("#") || line.isEmpty())
+                    if(line.isEmpty() || line.startsWith(IGNORE_SAMPLE_ID))
                         continue;
 
                     String[] values = line.split(CSV_DELIM, -1);

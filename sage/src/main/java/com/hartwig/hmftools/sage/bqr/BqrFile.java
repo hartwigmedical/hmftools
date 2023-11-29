@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -15,23 +15,23 @@ import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
-public final class QualityRecalibrationFile
+public final class BqrFile
 {
-    public static void write(final String filename, final List<QualityRecalibrationRecord> counts) throws IOException
+    public static void write(final String filename, final List<BqrRecord> counts) throws IOException
     {
         Collections.sort(counts);
         Files.write(new File(filename).toPath(), toLines(counts));
     }
 
-    private static List<String> toLines(final Collection<QualityRecalibrationRecord> bafs)
+    private static List<String> toLines(final Collection<BqrRecord> bafs)
     {
         final List<String> lines = Lists.newArrayList();
         lines.add(header());
-        bafs.stream().map(QualityRecalibrationFile::toString).forEach(lines::add);
+        bafs.stream().map(BqrFile::toString).forEach(lines::add);
         return lines;
     }
 
-    private static String toString(final QualityRecalibrationRecord baf)
+    private static String toString(final BqrRecord baf)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add(String.valueOf((char)baf.Key.Alt));
@@ -55,9 +55,9 @@ public final class QualityRecalibrationFile
                 .toString();
     }
 
-    public static List<QualityRecalibrationRecord> read(final String filename)
+    public static List<BqrRecord> read(final String filename)
     {
-        List<QualityRecalibrationRecord> counts = Lists.newArrayList();
+        List<BqrRecord> counts = Lists.newArrayList();
 
         try
         {
@@ -78,9 +78,9 @@ public final class QualityRecalibrationFile
                 byte origQuality = (byte)Integer.parseInt(values[fieldsIndexMap.get("originalQual")]);
                 double recalibQuality = Double.parseDouble(values[fieldsIndexMap.get("recalibratedQual")]);
 
-                BaseQualityKey key = new BaseQualityKey(ref, alt, triContext.getBytes(), origQuality);
+                BqrKey key = new BqrKey(ref, alt, triContext.getBytes(), origQuality);
 
-                counts.add(new QualityRecalibrationRecord(key, count, recalibQuality));
+                counts.add(new BqrRecord(key, count, recalibQuality));
             }
         }
         catch(Exception e)

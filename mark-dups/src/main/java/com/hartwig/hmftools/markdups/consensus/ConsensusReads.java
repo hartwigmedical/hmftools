@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.cigarBaseLength;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 import static com.hartwig.hmftools.markdups.common.Constants.CONSENSUS_MAX_DEPTH;
@@ -106,8 +107,8 @@ public class ConsensusReads
         else
         {
             Map<String, CigarFrequency> cigarFrequencies = CigarFrequency.buildFrequencies(readsView);
-
             SAMRecord selectedConsensusRead = cigarFrequencies.size() > 1 ? selectConsensusRead(cigarFrequencies) : readsView.get(0);
+
             consensusState.setBaseLength(selectedConsensusRead.getBaseQualities().length);
             consensusState.setBoundaries(selectedConsensusRead);
             mBaseBuilder.buildReadBases(readsView, consensusState);
@@ -137,6 +138,9 @@ public class ConsensusReads
     {
         int maxCigarFreq = cigarFrequencies.values().stream().mapToInt(x -> x.Frequency).max().orElse(0);
         List<CigarFrequency> maxCigarFrequencies = cigarFrequencies.values().stream().filter(x -> x.Frequency == maxCigarFreq).collect(Collectors.toList());
+
+        if(maxCigarFrequencies.size() == 1)
+            return maxCigarFrequencies.get(0).SampleRead;
 
         // find the most common read by CIGAR, and where there are equal counts choose the one with the least soft-clips
         SAMRecord selectedRead = null;
@@ -235,7 +239,7 @@ public class ConsensusReads
                 : templateReadId + READ_ID_DELIM + CONSENSUS_PREFIX + groupIdentifier;
     }
 
-    public static SAMRecord createConsensusRead(final ConsensusState state, final List<SAMRecord> reads, final String groupIdentifier)
+    private static SAMRecord createConsensusRead(final ConsensusState state, final List<SAMRecord> reads, final String groupIdentifier)
     {
         SAMRecord initialRead = reads.get(0);
         SAMRecord record = new SAMRecord(initialRead.getHeader());
@@ -253,11 +257,25 @@ public class ConsensusReads
         else
             record.setCigar(initialRead.getCigar());
 
+        Map<String,CigarFrequency> mateCigarFrequencies = CigarFrequency.buildMateFrequencies(reads);
+
+        SAMRecord selectedMateRead;
+
+        if(mateCigarFrequencies.isEmpty())
+            selectedMateRead = initialRead;
+        else if(mateCigarFrequencies.size() == 1)
+            selectedMateRead = mateCigarFrequencies.values().iterator().next().SampleRead;
+        else
+            selectedMateRead = selectConsensusRead(mateCigarFrequencies);
+
+        initialRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
+
         if(initialRead.getMateReferenceIndex() >= 0)
         {
-            record.setMateReferenceName(initialRead.getMateReferenceName());
-            record.setMateAlignmentStart(initialRead.getMateAlignmentStart());
-            record.setMateReferenceIndex(initialRead.getMateReferenceIndex());
+            record.setMateReferenceName(selectedMateRead.getMateReferenceName());
+            record.setMateAlignmentStart(selectedMateRead.getMateAlignmentStart());
+            record.setMateReferenceIndex(selectedMateRead.getMateReferenceIndex());
+            record.setAttribute(MATE_CIGAR_ATTRIBUTE, selectedMateRead.getStringAttribute(MATE_CIGAR_ATTRIBUTE));
             record.setReadPairedFlag(true);
             record.setProperPairFlag(true);
         }
@@ -269,7 +287,6 @@ public class ConsensusReads
 
         record.setFlags(initialRead.getFlags());
         record.setDuplicateReadFlag(false); // being the new primary
-        initialRead.getAttributes().forEach(x -> record.setAttribute(x.tag, x.value));
 
         record.setInferredInsertSize(initialRead.getInferredInsertSize());
         record.setAttribute(NUM_MUTATONS_ATTRIBUTE, state.NumMutations);

@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
@@ -36,7 +37,7 @@ import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
-import com.hartwig.hmftools.sage.quality.QualityRecalibrationConfig;
+import com.hartwig.hmftools.sage.bqr.BqrConfig;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -54,7 +55,7 @@ public class SageConfig
     public final String OutputFile;
     public final FilterConfig Filter;
     public final QualityConfig Quality;
-    public final QualityRecalibrationConfig QualityRecalibration;
+    public final BqrConfig QualityRecalibration;
     public final boolean IncludeMT;
     public final boolean SyncFragments;
     public final int RegionSliceSize;
@@ -152,7 +153,7 @@ public class SageConfig
 
         Filter = new FilterConfig(configBuilder);
         Quality = new QualityConfig(configBuilder);
-        QualityRecalibration = new QualityRecalibrationConfig(configBuilder);
+        QualityRecalibration = new BqrConfig(configBuilder);
 
         if(Quality.MapQualityRatioFactor > 0)
             MinMapQuality = 0; // force to zero so all reads are considered
@@ -290,7 +291,7 @@ public class SageConfig
 
         FilterConfig.registerConfig(configBuilder);
         QualityConfig.registerConfig(configBuilder);
-        QualityRecalibrationConfig.registerConfig(configBuilder);
+        BqrConfig.registerConfig(configBuilder);
 
         addSpecificChromosomesRegionsConfig(configBuilder);
         configBuilder.addFlag(LOG_EVIDENCE_READS, "Write evidence read data");
@@ -305,14 +306,15 @@ public class SageConfig
         addThreadOptions(configBuilder);
     }
 
-    public SageConfig()
+    @VisibleForTesting
+    public SageConfig(boolean highDepthMode)
     {
         SampleDataDir = "";
         ReferenceIds = Lists.newArrayList();
         ReferenceBams = Lists.newArrayList();
         Filter = new FilterConfig();
-        Quality = new QualityConfig();
-        QualityRecalibration = new QualityRecalibrationConfig();
+        Quality = new QualityConfig(highDepthMode);
+        QualityRecalibration = new BqrConfig();
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
         RegionSliceSize = 500_000;

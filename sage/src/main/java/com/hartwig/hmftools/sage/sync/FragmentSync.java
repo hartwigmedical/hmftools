@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.SYNC_FRAG_MAX_MISMATCHES;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.BASE_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.CIGAR_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.COMBINED;
@@ -48,11 +49,22 @@ public class FragmentSync
         mSyncCounts = new int[FragmentSyncType.values().length];
     }
 
-    public void clear() { mCachedReads.clear(); }
+    public void emptyCachedReads()
+    {
+        if(!mCachedReads.isEmpty())
+        {
+            mCachedReads.values().forEach(x -> mReadHandler.processReadRecord(x, false, null));
+            mCachedReads.clear();
+        }
+    }
+
     public final int[] getSynCounts() { return mSyncCounts; }
 
     public boolean handleOverlappingReads(final SAMRecord record)
     {
+        if(!record.getReadPairedFlag() || record.getMateUnmappedFlag())
+            return false;
+
         final SAMRecord otherRecord = mCachedReads.get(record.getReadName());
 
         if(otherRecord != null)
@@ -75,7 +87,9 @@ public class FragmentSync
 
                 if(fragmentRecord != null)
                 {
-                    mReadHandler.processReadRecord(fragmentRecord, false);
+                    FragmentData fragmentData = new FragmentData(otherRecord, record);
+
+                    mReadHandler.processReadRecord(fragmentRecord, false, fragmentData);
                 }
                 else if(syncOutcome.SyncType.processSeparately())
                 {
@@ -122,6 +136,10 @@ public class FragmentSync
 
         // no cache for reads where the mate doesn't overlap
         if(!record.getContig().equals(record.getMateReferenceName()))
+            return false;
+
+        // if the mate is earlier, then it should have been processed and so no point in not handling this read now
+        if(record.getMateAlignmentStart() < record.getAlignmentStart())
             return false;
 
         if(!positionsOverlap(
@@ -381,7 +399,7 @@ public class FragmentSync
                 {
                     ++baseMismatches;
 
-                    if(baseMismatches >= 10)
+                    if(baseMismatches >= SYNC_FRAG_MAX_MISMATCHES)
                     {
                         return new FragmentSyncOutcome(BASE_MISMATCH);
                     }
@@ -416,8 +434,7 @@ public class FragmentSync
         combinedCigar.add(new CigarElement(combinedCigarElementLength, combinedCigarOperator));
 
         SAMRecord combinedRecord = buildSyncedRead(
-                first, combinedPosStart, combinedPosEnd, combinedBases, combinedBaseQualities, combinedCigar,
-                format("%d;%d;%d;%d", firstPosStart, firstPosEnd, secondPosStart, secondPosEnd), trucatedBases);
+                first, combinedPosStart, combinedPosEnd, combinedBases, combinedBaseQualities, combinedCigar, trucatedBases);
 
         return new FragmentSyncOutcome(combinedRecord, COMBINED);
     }

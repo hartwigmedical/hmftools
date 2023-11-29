@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.common.utils.config.CommonConfig.PERF_DEBUG_D
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.parseLogReadIds;
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.CONFIG_FILE_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
@@ -31,8 +32,10 @@ import static com.hartwig.hmftools.markdups.common.Constants.UNMAP_MIN_HIGH_DEPT
 import static com.hartwig.hmftools.markdups.write.ReadOutput.NONE;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -59,7 +62,7 @@ import htsjdk.samtools.ValidationStringency;
 public class MarkDupsConfig
 {
     public final String SampleId;
-    public final String BamFile;
+    public final List<String> BamFiles;
     public final String RefGenomeFile;
     public final RefGenomeVersion RefGenVersion;
     public final RefGenomeInterface RefGenome;
@@ -75,11 +78,11 @@ public class MarkDupsConfig
 
     public final ReadUnmapper UnmapRegions;
 
+    public final String OutputBam;
     public final String OutputDir;
     public final String OutputId;
     public final boolean WriteBam;
     public final boolean MultiBam;
-    public final boolean UseSortCache;
     public final boolean WriteStats;
 
     public final boolean NoMateCigar;
@@ -105,7 +108,9 @@ public class MarkDupsConfig
     public static final String APP_NAME = "MarkDups";
 
     // config strings
+    private  static final String INPUT_BAM = "input_bam";
     private  static final String BAM_FILE = "bam_file";
+    private  static final String OUTPUT_BAM = "output_bam";
     private static final String PARTITION_SIZE = "partition_size";
     private static final String BUFFER_SIZE = "buffer_size";
     private static final String READ_OUTPUTS = "read_output";
@@ -114,7 +119,6 @@ public class MarkDupsConfig
     private static final String READ_LENGTH = "read_length";
 
     private static final String MULTI_BAM = "multi_bam";
-    private static final String USE_SORT_CACHE = "use_sort_cache";
     private static final String SAMTOOLS_PATH = "samtools";
     private static final String SAMBAMBA_PATH = "sambamba";
     private static final String UNMAP_REGIONS = "unmap_regions";
@@ -131,31 +135,52 @@ public class MarkDupsConfig
     {
         mIsValid = true;
         SampleId = configBuilder.getValue(SAMPLE);
-        BamFile = configBuilder.getValue(BAM_FILE);
+
+        String bamFiles = configBuilder.hasValue(INPUT_BAM) ? configBuilder.getValue(INPUT_BAM) : configBuilder.getValue(BAM_FILE);
+        BamFiles = Arrays.stream(bamFiles.split(CONFIG_FILE_DELIM, -1)).collect(Collectors.toList());
+
+        if(BamFiles.isEmpty())
+        {
+            MD_LOGGER.error("no BAM files configured");
+            System.exit(1);
+        }
+
         RefGenomeFile = configBuilder.getValue(REF_GENOME);
         RefGenome = loadRefGenome(RefGenomeFile);
+
+        OutputBam = configBuilder.getValue(OUTPUT_BAM);
+
+        if(OutputBam != null && BamFiles.stream().anyMatch(x -> x.equals(OutputBam)))
+        {
+            MD_LOGGER.error("output BAM({}) matches input BAM filename", OutputBam);
+            System.exit(1);
+        }
 
         if(configBuilder.hasValue(OUTPUT_DIR))
         {
             OutputDir = parseOutputDir(configBuilder);
         }
+        else if(OutputBam != null)
+        {
+            OutputDir = checkAddDirSeparator(Paths.get(OutputBam).getParent().toString());
+        }
         else
         {
-            OutputDir = checkAddDirSeparator(Paths.get(BamFile).getParent().toString());
+            OutputDir = checkAddDirSeparator(Paths.get(BamFiles.get(0)).getParent().toString());
         }
 
         OutputId = configBuilder.getValue(OUTPUT_ID);
 
-        if(SampleId == null || BamFile == null || OutputDir == null || RefGenomeFile == null)
+        if(SampleId == null|| OutputDir == null || RefGenomeFile == null)
         {
-            MD_LOGGER.error("missing config: sample({}) bam({}) refGenome({}) outputDir({})",
-                    SampleId != null, BamFile != null, RefGenomeFile != null, OutputDir != null);
+            MD_LOGGER.error("missing config: sample({}) refGenome({}) outputDir({})",
+                    SampleId != null, RefGenomeFile != null, OutputDir != null);
             mIsValid = false;
         }
 
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
-        MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
+        // MD_LOGGER.info("refGenome({}), bam({})", RefGenVersion, BamFile);
         MD_LOGGER.info("output({})", OutputDir);
 
         PartitionSize = configBuilder.getInteger(PARTITION_SIZE);
@@ -204,7 +229,6 @@ public class MarkDupsConfig
 
         WriteBam = !configBuilder.hasFlag(NO_WRITE_BAM);
         MultiBam = WriteBam && Threads > 1 && configBuilder.hasFlag(MULTI_BAM);
-        UseSortCache = configBuilder.hasFlag(USE_SORT_CACHE);
         KeepInterimBams = configBuilder.hasFlag(KEEP_INTERIM_BAMS);
 
         LogReadIds = parseLogReadIds(configBuilder);
@@ -246,7 +270,9 @@ public class MarkDupsConfig
     public static void addConfig(final ConfigBuilder configBuilder)
     {
         configBuilder.addConfigItem(SAMPLE, true, SAMPLE_DESC);
-        configBuilder.addPath(BAM_FILE, true, "BAM file location");
+        configBuilder.addPath(BAM_FILE, false, "BAM filename, deprecated, use 'input_bam' instead");
+        configBuilder.addPaths(INPUT_BAM, false, "BAM file path, separated by ',' if multiple");
+        configBuilder.addConfigItem(OUTPUT_BAM, false, "Output BAM filename");
         addRefGenomeConfig(configBuilder, true);
         configBuilder.addInteger(PARTITION_SIZE, "Partition size", DEFAULT_PARTITION_SIZE);
         configBuilder.addInteger(BUFFER_SIZE, "Read buffer size", DEFAULT_POS_BUFFER_SIZE);
@@ -259,7 +285,6 @@ public class MarkDupsConfig
 
         configBuilder.addFlag(NO_WRITE_BAM, "BAM not written, producing only TSV reads and/or statistics");
         configBuilder.addFlag(MULTI_BAM, "Write temporary BAMs with multi-threading");
-        configBuilder.addFlag(USE_SORT_CACHE, "Use sort cache for BAM writing");
         configBuilder.addFlag(KEEP_INTERIM_BAMS, "Do no delete per-thread BAMs");
         configBuilder.addPath(SAMTOOLS_PATH, false, "Path to samtools for sort");
         configBuilder.addPath(SAMBAMBA_PATH, false, "Path to sambamba for merge");
@@ -287,8 +312,9 @@ public class MarkDupsConfig
     {
         mIsValid = true;
         SampleId = "";
-        BamFile = null;
+        BamFiles = Lists.newArrayList();
         RefGenomeFile = null;
+        OutputBam = null;
         OutputDir = null;
         OutputId = "";
         RefGenVersion = V37;
@@ -314,7 +340,6 @@ public class MarkDupsConfig
 
         WriteBam = false;
         MultiBam = false;
-        UseSortCache = false;
         KeepInterimBams = false;
         LogReadType = NONE;
 

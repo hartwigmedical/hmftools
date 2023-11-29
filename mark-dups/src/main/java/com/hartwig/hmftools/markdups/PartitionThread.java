@@ -2,7 +2,6 @@ package com.hartwig.hmftools.markdups;
 
 import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
 
-import java.io.File;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
@@ -10,13 +9,11 @@ import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.markdups.write.BamWriter;
 import com.hartwig.hmftools.markdups.write.FileWriterCache;
 
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-
 public class PartitionThread extends Thread
 {
     private final MarkDupsConfig mConfig;
 
+    private final BamReader mBamReader;
     private final BamWriter mBamWriter;
     private final Queue<ChrBaseRegion> mPartitions;
     private final int mPartitionCount;
@@ -34,10 +31,9 @@ public class PartitionThread extends Thread
 
         mBamWriter = fileWriterCache.getPartitionBamWriter(String.valueOf(threadId));
 
-        SamReader samReader = mConfig.BamFile != null ?
-                SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile)) : null;
+        mBamReader = new BamReader(config);
 
-        mPartitionReader = new PartitionReader(config, samReader, mBamWriter, partitionDataStore);
+        mPartitionReader = new PartitionReader(config, mBamReader, mBamWriter, partitionDataStore);
 
         start();
     }

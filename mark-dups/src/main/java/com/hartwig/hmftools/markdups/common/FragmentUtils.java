@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.getUnclippedPosition;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.formCoordinate;
 import static com.hartwig.hmftools.markdups.common.FragmentCoordinates.formKey;
 import static com.hartwig.hmftools.markdups.common.FragmentStatus.DUPLICATE;
@@ -16,31 +17,12 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import java.util.List;
 
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
+import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import htsjdk.samtools.SAMRecord;
 
 public class FragmentUtils
 {
-    public static int getUnclippedPosition(final SAMRecord read)
-    {
-        int position;
-
-        if(orientation(read) == POS_ORIENT)
-        {
-            position = read.getAlignmentStart();
-            if(read.getCigar().isLeftClipped())
-                position -= read.getCigar().getFirstCigarElement().getLength();
-        }
-        else
-        {
-            position = read.getAlignmentEnd();
-            if(read.getCigar().isRightClipped())
-                position += read.getCigar().getLastCigarElement().getLength();
-        }
-
-        return position;
-    }
-
     public static FragmentCoordinates getFragmentCoordinates(final List<SAMRecord> reads, final boolean useMateCigar)
     {
         SAMRecord firstRead = null;
@@ -71,7 +53,8 @@ public class FragmentUtils
         boolean readForwardStrand = orientation(firstRead) == POS_ORIENT;
 
         int readCoordinate = firstRead.getCigar() != null ?
-                getUnclippedPosition(firstRead) : getUnclippedPosition(firstRead.getAlignmentStart(), firstRead.getCigarString(), readForwardStrand);
+                SamRecordUtils.getUnclippedPosition(firstRead) :
+                getUnclippedPosition(firstRead.getAlignmentStart(), firstRead.getCigarString(), readForwardStrand);
 
         int readStrandPosition = readForwardStrand ? readCoordinate : -readCoordinate;
         String readCoordStr = formCoordinate(firstRead.getReferenceName(), readCoordinate, readForwardStrand);
@@ -99,7 +82,8 @@ public class FragmentUtils
         {
             mateRead.getReferenceName();
             mateCoordinate = mateRead.getCigar() != null ?
-                    getUnclippedPosition(mateRead) : getUnclippedPosition(mateRead.getAlignmentStart(), mateRead.getCigarString(), mateForwardStrand);
+                    SamRecordUtils.getUnclippedPosition(mateRead) :
+                    getUnclippedPosition(mateRead.getAlignmentStart(), mateRead.getCigarString(), mateForwardStrand);
         }
         else
         {
@@ -172,51 +156,6 @@ public class FragmentUtils
                 read.getCigarString(), read.getMateReferenceName(), read.getMateAlignmentStart(), read.getFlags());
     }
 
-    public static int getUnclippedPosition(final int readStart, final String cigarStr, final boolean forwardStrand)
-    {
-        int currentPosition = readStart;
-        int elementLength = 0;
-
-        for(int i = 0; i < cigarStr.length(); ++i)
-        {
-            char c = cigarStr.charAt(i);
-            boolean isAddItem = (c == 'D' || c == 'M' || c == 'S' || c == 'N');
-
-            if(isAddItem)
-            {
-                if(forwardStrand)
-                {
-                    // back out the left clip if present
-                    return c == 'S' ? readStart - elementLength : readStart;
-                }
-
-                if(c == 'S' && readStart == currentPosition)
-                {
-                    // ignore left-clip when getting reverse strand position
-                }
-                else
-                {
-                    currentPosition += elementLength;
-                }
-
-                elementLength = 0;
-                continue;
-            }
-
-            int digit = c - '0';
-            if (digit >= 0 && digit <= 9)
-            {
-                elementLength = elementLength * 10 + digit;
-            }
-            else
-            {
-                elementLength = 0;
-            }
-        }
-
-        // always pointing to the start of the next element, so need to move back a base
-        return currentPosition - 1;
-    }
 
     public static boolean overlapsExcludedRegion(final ChrBaseRegion excludedRegion, final SAMRecord read)
     {

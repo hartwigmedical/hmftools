@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
 import java.util.Map;
 
@@ -7,7 +7,7 @@ import com.hartwig.hmftools.common.utils.PerformanceCounter;
 
 public class BaseQualityResults
 {
-    private final Map<BaseQualityKey,Integer> mCombinedQualityCounts;
+    private final Map<BqrKey,Integer> mCombinedQualityCounts;
 
     private PerformanceCounter mPerfCounter;
 
@@ -22,9 +22,9 @@ public class BaseQualityResults
         mCombinedQualityCounts.clear();
     }
 
-    public synchronized void addBaseQualityRegionCounter(final BaseQualityRegionCounter regionCounter)
+    public synchronized void addBaseQualityRegionCounter(final BqrRegionReader regionCounter)
     {
-        for(QualityCounter counter : regionCounter.getQualityCounts())
+        for(BqrKeyCounter counter : regionCounter.getQualityCounts())
         {
             Integer count = mCombinedQualityCounts.get(counter.Key);
             mCombinedQualityCounts.put(counter.Key, count != null ? count + counter.count() : counter.count());
@@ -43,7 +43,7 @@ public class BaseQualityResults
         }
     }
 
-    public Map<BaseQualityKey,Integer> getCombinedQualityCounts() { return mCombinedQualityCounts; }
+    public Map<BqrKey,Integer> getCombinedQualityCounts() { return mCombinedQualityCounts; }
 
     public void logPerfStats()
     {

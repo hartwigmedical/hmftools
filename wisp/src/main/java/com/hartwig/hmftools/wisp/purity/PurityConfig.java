@@ -48,6 +48,7 @@ public class PurityConfig
     public final List<PurityMethod> PurityMethods;
 
     public final String SomaticVcf;
+    public final String SomaticDir; // if different from sample data dir and not specifying a VCF path
     public final String SampleDataDir;
     public final String PurpleDir;
     public final String CobaltDir;
@@ -55,6 +56,7 @@ public class PurityConfig
     public final ProbeVariantCache ProbeVariants;
 
     public final String OutputDir;
+    public final String PlotDir;
     public final String OutputId;
     public final RefGenomeInterface RefGenome;
     public final Set<WriteType> WriteTypes;
@@ -68,6 +70,8 @@ public class PurityConfig
     private static final String CTDNA_SAMPLES = "ctdna_samples";
     private static final String PURITY_METHODS = "purity_methods";
     private static final String SOMATIC_VCF = "somatic_vcf";
+    private static final String SOMATIC_DIR = "somatic_dir";
+    private static final String PLOT_DIR = "plot_dir";
     private static final String NOISE_READS_PER_MILLION = "noise_per_mill";
     private static final String NOISE_READS_PER_MILLION_DUAL = "noise_per_mill_dual";
     private static final String GC_RATIO_MIN = "gc_ratio_min";
@@ -94,10 +98,13 @@ public class PurityConfig
         }
 
         SomaticVcf = configBuilder.getValue(SOMATIC_VCF);
+        SomaticDir = checkAddDirSeparator(configBuilder.getValue(SOMATIC_DIR, SampleDataDir));
         PurpleDir = checkAddDirSeparator(configBuilder.getValue(PURPLE_DIR_CFG, SampleDataDir));
         CobaltDir = checkAddDirSeparator(configBuilder.getValue(COBALT_DIR_CFG, SampleDataDir));
         OutputDir = checkAddDirSeparator(configBuilder.getValue(OUTPUT_DIR, SampleDataDir));
         OutputId = configBuilder.getValue(OUTPUT_ID);
+
+        PlotDir = checkAddDirSeparator(configBuilder.getValue(PLOT_DIR, OutputDir));
 
         ProbeVariants = new ProbeVariantCache(configBuilder.getValue(PROBE_VARIANTS_FILE));
 
@@ -116,7 +123,7 @@ public class PurityConfig
             if(writeTypes.equals(WriteType.ALL))
                 Arrays.stream(WriteType.values()).forEach(x -> WriteTypes.add(x));
             else
-                Arrays.stream(writeTypes.split(",", -1)).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
+                Arrays.stream(writeTypes.split(ITEM_DELIM, -1)).forEach(x -> WriteTypes.add(WriteType.valueOf(x)));
         }
 
         Threads = parseThreads(configBuilder);
@@ -124,7 +131,8 @@ public class PurityConfig
 
     public boolean writeType(final WriteType writeType) { return WriteTypes.contains(writeType); }
     public boolean hasSyntheticTumor() { return PurpleDir == null || PurpleDir.isEmpty(); }
-    public boolean multipleSamples() { return Samples.size() > 1; }
+    public boolean multiplePatients() { return Samples.size() > 1; }
+    public boolean multipleSamples() { return multiplePatients() || Samples.stream().mapToInt(x -> x.CtDnaSamples.size()).sum() > 1; }
     public boolean hasBatchControls() { return Samples.stream().anyMatch(x -> x.isBatchControl()); }
 
     public String getPurpleDir(final String sampleId) { return convertWildcardSamplePath(PurpleDir, sampleId); }
@@ -158,7 +166,7 @@ public class PurityConfig
     {
         String fileName = OutputDir;
 
-        if(multipleSamples())
+        if(multiplePatients())
         {
             fileName += "wisp_cohort.";
         }
@@ -194,9 +202,11 @@ public class PurityConfig
                         + Arrays.stream(PurityMethod.values()).map(x -> x.toString()).collect(Collectors.joining(",")));
 
         configBuilder.addConfigItem(SOMATIC_VCF, false, "Somatic VCF files, separated by ','", "");
+        configBuilder.addConfigItem(SOMATIC_DIR, false, "Somatic VCF directory");
         configBuilder.addConfigItem(SAMPLE_DATA_DIR_CFG, false, SAMPLE_DATA_DIR_DESC);
         configBuilder.addConfigItem(PURPLE_DIR_CFG, false, PURPLE_DIR_DESC);
         configBuilder.addConfigItem(COBALT_DIR_CFG, false, COBALT_DIR_DESC);
+        configBuilder.addConfigItem(PLOT_DIR, false, "Plot output directory, defaults to sample or output dir");
 
         configBuilder.addConfigItem(
                 WRITE_TYPES, "Output file types: default(none), 'ALL' or set separated by ',': "

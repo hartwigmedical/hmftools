@@ -239,7 +239,7 @@ public class CopyNumberProfile
             }
 
             int runCode = RExecutor.executeFromClasspath(
-                    "plots/CopyNumberGcRatioPlot.R", patientId, sampleId, summaryFile, cnSegmentsFile, config.OutputDir);
+                    "plots/CopyNumberGcRatioPlot.R", patientId, sampleId, summaryFile, cnSegmentsFile, config.PlotDir);
 
             return runCode == 0;
         }

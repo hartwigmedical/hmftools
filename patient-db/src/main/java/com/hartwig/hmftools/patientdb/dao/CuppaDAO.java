@@ -1,21 +1,24 @@
 package com.hartwig.hmftools.patientdb.dao;
 
+import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPA;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
-
-import static com.hartwig.hmftools.patientdb.database.hmfpatients.Tables.CUPPA;
 
 import com.hartwig.hmftools.common.cuppa2.Categories;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.CuppaRecord;
+
 import org.jetbrains.annotations.NotNull;
 import org.jooq.DSLContext;
 import org.jooq.InsertValuesStep7;
 
-public class CuppaDAO {
+public class CuppaDAO
+{
 
-    @NotNull private final DSLContext context;
+    @NotNull
+    private final DSLContext context;
 
     CuppaDAO(@NotNull final DSLContext context)
     {
@@ -51,7 +54,8 @@ public class CuppaDAO {
         return category.toString();
     }
 
-    void deleteCuppaForSample(@NotNull String sample) {
+    void deleteCuppaForSample(@NotNull String sample)
+    {
         context.delete(CUPPA).where(CUPPA.SAMPLEID.eq(sample)).execute();
     }
 
@@ -63,7 +67,8 @@ public class CuppaDAO {
     {
         deleteCuppaForSample(sample);
 
-        @NotNull InsertValuesStep7<CuppaRecord, LocalDateTime, String, String, String, Double, Integer, Integer> inserter = context.insertInto(CUPPA,
+        @NotNull
+        InsertValuesStep7<CuppaRecord, LocalDateTime, String, String, String, Double, Integer, Byte> inserter = context.insertInto(CUPPA,
                 CUPPA.MODIFIED,
                 CUPPA.SAMPLEID,
                 CUPPA.CLFNAME,
@@ -89,7 +94,7 @@ public class CuppaDAO {
                     cuppaPredictionEntry.CancerType,
                     parseDouble(cuppaPredictionEntry.DataValue),
                     cuppaPredictionEntry.Rank,
-                    0
+                    (byte) 0
             );
         }
 
@@ -102,21 +107,21 @@ public class CuppaDAO {
         LocalDateTime timestamp = LocalDateTime.now();
 
         context.insertInto(CUPPA,
-                        CUPPA.MODIFIED,
-                        CUPPA.SAMPLEID,
-                        CUPPA.CLFNAME,
-                        CUPPA.CANCERTYPE,
-                        CUPPA.PROB,
-                        CUPPA.RANK,
-                        CUPPA.ISOLDCUPPAOUTPUT
-                ).values(
-                        timestamp,
-                        sample,
-                        null,
-                        cancerType,
-                        likelihood,
-                        1,
-                        1
-                ).execute();
+                CUPPA.MODIFIED,
+                CUPPA.SAMPLEID,
+                CUPPA.CLFNAME,
+                CUPPA.CANCERTYPE,
+                CUPPA.PROB,
+                CUPPA.RANK,
+                CUPPA.ISOLDCUPPAOUTPUT
+        ).values(
+                timestamp,
+                sample,
+                null,
+                cancerType,
+                likelihood,
+                1,
+                (byte) 1
+        ).execute();
     }
 }

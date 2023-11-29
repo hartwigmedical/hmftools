@@ -18,15 +18,15 @@ import org.junit.Test;
 
 import htsjdk.samtools.SAMRecord;
 
-public class CoverageMetricsTest
+public class CoverageTest
 {
     private final ReadIdGenerator mReadIdGen;
     private final MetricsConfig mConfig;
 
-    private static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(10);
-    private static final String TEST_CIGAR = "10M";
+    protected static final String TEST_READ_BASES = MockRefGenome.generateRandomBases(10);
+    protected static final String TEST_CIGAR = "10M";
 
-    public CoverageMetricsTest()
+    public CoverageTest()
     {
         mReadIdGen = new ReadIdGenerator();
         mConfig = new MetricsConfig(10);

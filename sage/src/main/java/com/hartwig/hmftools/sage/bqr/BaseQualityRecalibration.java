@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
 import static java.lang.Math.min;
 
@@ -36,7 +36,7 @@ public class BaseQualityRecalibration
     private final List<String> mTumorBams;
     private final IndexedFastaSequenceFile mRefGenome;
 
-    private final Map<String,QualityRecalibrationMap> mSampleRecalibrationMap;
+    private final Map<String, BqrRecordMap> mSampleRecalibrationMap;
     private final Queue<PartitionTask> mRegions;
     private final BaseQualityResults mResults;
     private boolean mIsValid;
@@ -59,7 +59,7 @@ public class BaseQualityRecalibration
 
     public boolean isValid(){ return mIsValid; }
 
-    public Map<String,QualityRecalibrationMap> getSampleRecalibrationMap() { return mSampleRecalibrationMap; }
+    public Map<String, BqrRecordMap> getSampleRecalibrationMap() { return mSampleRecalibrationMap; }
 
     public void produceRecalibrationMap()
     {
@@ -81,7 +81,7 @@ public class BaseQualityRecalibration
                 String sampleId = entry.getKey();
                 String filename = entry.getValue();
 
-                final List<QualityRecalibrationRecord> counts = QualityRecalibrationFile.read(filename);
+                final List<BqrRecord> counts = BqrFile.read(filename);
 
                 if(counts == null)
                 {
@@ -90,7 +90,7 @@ public class BaseQualityRecalibration
                 }
 
                 SG_LOGGER.info("loaded sample({}) {} base quality recalibration records from {}", sampleId, counts.size(), filename);
-                mSampleRecalibrationMap.put(sampleId, new QualityRecalibrationMap(counts));
+                mSampleRecalibrationMap.put(sampleId, new BqrRecordMap(counts));
             }
 
             return;
@@ -145,11 +145,11 @@ public class BaseQualityRecalibration
         }
 
         // merge results for this sample across all regions
-        final Map<BaseQualityKey,Integer> allQualityCounts = mResults.getCombinedQualityCounts();
+        final Map<BqrKey,Integer> allQualityCounts = mResults.getCombinedQualityCounts();
 
-        final List<QualityRecalibrationRecord> records = convertToRecords(allQualityCounts);
+        final List<BqrRecord> records = convertToRecords(allQualityCounts);
 
-        mSampleRecalibrationMap.put(sampleId, new QualityRecalibrationMap(records));
+        mSampleRecalibrationMap.put(sampleId, new BqrRecordMap(records));
 
         // write results to file
         if(mConfig.QualityRecalibration.WriteFile)
@@ -160,27 +160,27 @@ public class BaseQualityRecalibration
     {
         for(String sample : mConfig.ReferenceIds)
         {
-            mSampleRecalibrationMap.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
+            mSampleRecalibrationMap.put(sample, new BqrRecordMap(Collections.emptyList()));
         }
 
         for(String sample : mTumorIds)
         {
-            mSampleRecalibrationMap.put(sample, new QualityRecalibrationMap(Collections.emptyList()));
+            mSampleRecalibrationMap.put(sample, new BqrRecordMap(Collections.emptyList()));
         }
     }
 
-    private List<QualityRecalibrationRecord> convertToRecords(final Map<BaseQualityKey,Integer> allQualityCounts)
+    private List<BqrRecord> convertToRecords(final Map<BqrKey,Integer> allQualityCounts)
     {
-        final List<QualityRecalibrationRecord> result = Lists.newArrayList();
+        final List<BqrRecord> result = Lists.newArrayList();
 
-        final Map<BaseQualityKey,Integer> refCountMap = allQualityCounts.entrySet().stream()
+        final Map<BqrKey,Integer> refCountMap = allQualityCounts.entrySet().stream()
                 .filter(x -> x.getKey().Ref == x.getKey().Alt)
                 .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
 
-        for(Map.Entry<BaseQualityKey,Integer> entry : allQualityCounts.entrySet())
+        for(Map.Entry<BqrKey,Integer> entry : allQualityCounts.entrySet())
         {
-            BaseQualityKey key = entry.getKey();
-            BaseQualityKey refKey = new BaseQualityKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality);
+            BqrKey key = entry.getKey();
+            BqrKey refKey = new BqrKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality);
 
             int refCount = refCountMap.getOrDefault(refKey, 0);
             if(refCount > 0)
@@ -188,7 +188,7 @@ public class BaseQualityRecalibration
                 double recalibratedQual = key.Alt == key.Ref
                         ? key.Quality : recalibratedQual(refCount, entry.getValue());
 
-                result.add(new QualityRecalibrationRecord(key, entry.getValue(), recalibratedQual));
+                result.add(new BqrRecord(key, entry.getValue(), recalibratedQual));
             }
         }
 
@@ -257,14 +257,14 @@ public class BaseQualityRecalibration
         return regionTasks;
     }
 
-    private void writeSampleData(final String sampleId, final Collection<QualityRecalibrationRecord> records)
+    private void writeSampleData(final String sampleId, final Collection<BqrRecord> records)
     {
         try
         {
             final String tsvFile = generateBqrFilename(mConfig.outputDir(), sampleId);
             SG_LOGGER.debug("writing base quality recalibration file: {}", tsvFile);
 
-            QualityRecalibrationFile.write(tsvFile, records.stream().collect(Collectors.toList()));
+            BqrFile.write(tsvFile, records.stream().collect(Collectors.toList()));
 
             if(mConfig.QualityRecalibration.WritePlot)
             {

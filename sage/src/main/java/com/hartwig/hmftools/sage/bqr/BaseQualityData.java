@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class BaseQualityData
         mAltQualityCounts = Lists.newArrayList();
     }
 
-    public void processRead(byte alt, byte quality)
+    public void processReadBase(byte alt, byte quality)
     {
         for(AltQualityCount altQualityCount : mAltQualityCounts)
         {
@@ -42,9 +42,9 @@ public class BaseQualityData
     public void setHasIndel() { mHasIndel = true; }
     public boolean hasIndel() { return mHasIndel; }
 
-    public Map<BaseQualityKey,Integer> formKeyCounts(int maxAltCount, double maxAltPerc)
+    public Map<BqrKey,Integer> formKeyCounts(int maxAltCount, double maxAltPerc)
     {
-        Map<BaseQualityKey,Integer> keyCounts = Maps.newHashMap();
+        Map<BqrKey,Integer> keyCounts = Maps.newHashMap();
 
         // exclude any alt with too much support (regardless of quality)
         Map<Byte,Integer> altCounts = Maps.newHashMap();
@@ -71,7 +71,7 @@ public class BaseQualityData
                     continue;
             }
 
-            keyCounts.put(new BaseQualityKey(Ref, aqCount.Alt, TrinucleotideContext, aqCount.Quality), aqCount.Count);
+            keyCounts.put(new BqrKey(Ref, aqCount.Alt, TrinucleotideContext, aqCount.Quality), aqCount.Count);
         }
 
         return keyCounts;

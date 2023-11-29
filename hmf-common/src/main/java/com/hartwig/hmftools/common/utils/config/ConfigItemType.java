@@ -4,6 +4,7 @@ public enum ConfigItemType
 {
     STRING,
     PATH,
+    PATHS,
     DECIMAL,
     INTEGER,
     BOOL,

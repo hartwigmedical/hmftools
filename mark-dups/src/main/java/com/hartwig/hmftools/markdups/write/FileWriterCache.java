@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -20,6 +21,8 @@ import org.jetbrains.annotations.Nullable;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMProgramRecord;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
@@ -34,7 +37,7 @@ public class FileWriterCache
     private static final String BAM_FILE_ID = "mark_dups";
     private static final String SORTED_ID = "sorted";
     private static final String UNSORTED_ID = "unsorted";
-
+    
     public FileWriterCache(final MarkDupsConfig config)
     {
         mConfig = config;
@@ -52,23 +55,23 @@ public class FileWriterCache
             return;
         }
 
-        if(!mConfig.MultiBam || mConfig.UseSortCache)
-        {
-            String fileId = mConfig.UseSortCache ? "shared" : null;
-            mSharedUnsortedWriter = createBamWriter(fileId, true, false);
-        }
-        else
-        {
-            mSharedUnsortedWriter = null;
-        }
+        mSharedUnsortedWriter = createBamWriter(null, true, false);
     }
 
     public BamWriter getPartitionBamWriter(final String fileId)
     {
-        if(!mConfig.MultiBam && !mConfig.UseSortCache)
+        if(!mConfig.MultiBam)
             return mSharedUnsortedWriter;
 
-        return createBamWriter(fileId, false, mConfig.UseSortCache);
+        return createBamWriter(fileId, false, true);
+    }
+
+    public BamWriter getFullyUnmappedReadsBamWriter()
+    {
+        if(!mConfig.MultiBam)
+            return mSharedUnsortedWriter;
+
+        return mBamWriters.get(0);
     }
 
     public long totalWrittenReads()
@@ -123,6 +126,9 @@ public class FileWriterCache
 
     private String formBamFilename(@Nullable final String sorted, @Nullable final String multiId)
     {
+        if(!mConfig.MultiBam && mConfig.Threads == 1 && mConfig.OutputBam != null)
+            return mConfig.OutputBam;
+
         String filename = mConfig.OutputDir + mConfig.SampleId + "." + BAM_FILE_ID;
 
         if(mConfig.OutputId != null)
@@ -141,9 +147,26 @@ public class FileWriterCache
 
     private SAMFileWriter initialiseSamFileWriter(final String filename, boolean isSorted)
     {
-        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile)).open(new File(mConfig.BamFile));
+        SamReader samReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
+                .open(new File(mConfig.BamFiles.get(0)));
 
         SAMFileHeader fileHeader = samReader.getFileHeader().clone();
+
+        if(mConfig.BamFiles.size() > 1)
+        {
+            for(int i = 1; i < mConfig.BamFiles.size(); ++i)
+            {
+                SamReader nextReader = SamReaderFactory.makeDefault().referenceSequence(new File(mConfig.RefGenomeFile))
+                        .open(new File(mConfig.BamFiles.get(i)));
+
+                nextReader.getFileHeader().getReadGroups().forEach(x -> fileHeader.addReadGroup(x));
+
+                final SAMProgramRecord nextProgramRecord = nextReader.getFileHeader().getProgramRecords().get(0);
+                String newProgramId = String.format("%s.%d", nextProgramRecord.getId(), i);
+
+                fileHeader.addProgramRecord(new SAMProgramRecord(newProgramId, nextProgramRecord));
+            }
+        }
 
         // note that while the sort order may be set to coordinate, the BAM writer is marked as presorted so
         // the BAM will not actually be sorted by the SAMTools library
@@ -158,12 +181,12 @@ public class FileWriterCache
 
     public boolean runSortMergeIndex() { return mConfig.SamToolsPath != null || mConfig.SambambaPath != null; }
 
-    public void sortAndIndexBams()
+    public boolean sortAndIndexBams()
     {
         if(!runSortMergeIndex())
-            return;
+            return true;
 
-        String finalBamFilename = formBamFilename(null, null);
+        String finalBamFilename = mConfig.OutputBam != null ? mConfig.OutputBam : formBamFilename(null, null);
 
         List<String> interimBams = Lists.newArrayList();
         List<String> sortedThreadBams = Lists.newArrayList();
@@ -171,7 +194,7 @@ public class FileWriterCache
         if(mConfig.SamToolsPath == null)
         {
             MD_LOGGER.error("samtools required for sort");
-            return;
+            return false;
         }
 
         MD_LOGGER.info("sorting, merging and indexing final BAM");
@@ -218,26 +241,33 @@ public class FileWriterCache
             MD_LOGGER.debug("sorting {} bam file(s)", sortTasks.size());
 
             if(!TaskExecutor.executeTasks(callableTasks, mConfig.Threads))
-                System.exit(1);
-
-            sortingOk = sortTasks.stream().allMatch(x -> x.success());
+            {
+                sortingOk = false;
+            }
+            else
+            {
+                sortingOk = sortTasks.stream().allMatch(x -> x.success());
+            }
         }
 
         if(!sortingOk)
-            return;
+            return false;
 
         MD_LOGGER.debug("sort complete");
 
-        boolean finalBamOk = true;
-
         if(mBamWriters.size() > 1)
-            finalBamOk = mergeBams(finalBamFilename, sortedThreadBams);
+        {
+            if(!mergeBams(finalBamFilename, sortedThreadBams))
+                return false;
+        }
 
-        if(!mConfig.KeepInterimBams && finalBamOk)
+        if(!mConfig.KeepInterimBams)
             deleteInterimBams(interimBams);
 
-        if(finalBamOk)
-            indexFinalBam(finalBamFilename);
+        if(!indexFinalBam(finalBamFilename))
+            return false;
+
+        return true;
     }
 
     private boolean mergeBams(final String finalBamFilename, final List<String> sortedThreadBams)
@@ -293,11 +323,11 @@ public class FileWriterCache
         }
     }
 
-    private void indexFinalBam(String finalBamFilename)
+    private boolean indexFinalBam(String finalBamFilename)
     {
         // no need to index if Sambamba merge was used
         if(mConfig.SambambaPath != null && mBamWriters.size() > 1)
-            return;
+            return true;
 
         MD_LOGGER.debug("indexing final bam");
 
@@ -310,9 +340,11 @@ public class FileWriterCache
         command[index++] = String.valueOf(mConfig.Threads);
         command[index++] = finalBamFilename;
 
-        executeCommand(command, finalBamFilename);
+        if(!executeCommand(command, finalBamFilename))
+            return false;
 
         MD_LOGGER.debug("index complete");
+        return true;
     }
 
     private class SortBamTask implements Callable
@@ -340,6 +372,8 @@ public class FileWriterCache
                 MD_LOGGER.error("invalid bam filename({})", mBamfile);
                 return (long)0;
             }
+
+            MD_LOGGER.debug("sorting unsorted bam({}) to sorted bam({})", mBamfile, mSortedBamfile);
 
             // String sortArgs = format("sort -@ %s -m %dG -T tmp -O bam %s -o %s", Bash.allCpus(), SORT_MEMORY_PER_CORE, inputBam, outputBam);
 
@@ -385,7 +419,7 @@ public class FileWriterCache
 
             if(result != 0)
             {
-                MD_LOGGER.error("error running command({}:{}) for file({})", command[0], command[1], outputPrefix);
+                MD_LOGGER.error("error running command({}) for file({})", commandToStr(command), outputPrefix);
                 return false;
             }
 
@@ -395,10 +429,15 @@ public class FileWriterCache
         }
         catch(Exception e)
         {
-            MD_LOGGER.error("error running command({}:{}) for file({}): {}", command[0], command[1], outputPrefix, e.toString());
+            MD_LOGGER.error("error running command({}) for file({}): {}", commandToStr(command), outputPrefix, e.toString());
             return false;
         }
 
         return true;
+    }
+
+    private static String commandToStr(final String[] command)
+    {
+        return Arrays.stream(command).collect(Collectors.joining(" "));
     }
 }

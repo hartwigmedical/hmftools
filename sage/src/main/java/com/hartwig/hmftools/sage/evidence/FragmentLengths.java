@@ -39,7 +39,7 @@ public class FragmentLengths
         {
             BufferedWriter writer = createBufferedWriter(fileName, false);
 
-            writer.write("Variant\tLength\tRefCount\tAltCount");
+            writer.write("SampleId\tVariant\tLength\tRefCount\tAltCount");
             writer.newLine();
             return writer;
         }
@@ -50,7 +50,8 @@ public class FragmentLengths
         }
     }
 
-    public synchronized void writeVariantFragmentLength(final String variantInfo, final FragmentLengthData fragmentLengthData)
+    public synchronized void writeVariantFragmentLength(
+            final String variantInfo, final String sampleId, final FragmentLengthData fragmentLengthData)
     {
         if(mWriter == null)
             return;
@@ -59,8 +60,8 @@ public class FragmentLengths
         {
             for(Map.Entry<Integer,int[]> entry : fragmentLengthData.lengthCounts().entrySet())
             {
-                mWriter.write(format("%s\t%d\t%d\t%d",
-                        variantInfo, entry.getKey(), entry.getValue()[REF_COUNT], entry.getValue()[ALT_COUNT]));
+                mWriter.write(format("%s\t%s\t%d\t%d\t%d",
+                        sampleId, variantInfo, entry.getKey(), entry.getValue()[REF_COUNT], entry.getValue()[ALT_COUNT]));
 
                 mWriter.newLine();
             }

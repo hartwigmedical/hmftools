@@ -6,18 +6,22 @@ import com.google.common.collect.Sets;
 
 public enum SoftFilter
 {
-    MIN_TUMOR_QUAL("minTumorQual", "min_tumor_qual", true, false),
-    MIN_TUMOR_VAF("minTumorVAF", "min_tumor_vaf", true, false),
-    MIN_GERMLINE_DEPTH("minGermlineDepth", "min_germline_depth", false, true),
-    MIN_GERMLINE_DEPTH_ALLOSOME("minGermlineDepthAllosome", "min_germline_depth_allosome",  false, true),
-    MAX_GERMLINE_VAF("maxGermlineVAF", "max_germline_vaf", false, true),
-    MAX_GERMLINE_REL_RAW_BASE_QUAL("maxGermlineRelRawBaseQual", "max_germline_rel_raw_base_qual", false, true),
-    MAX_GERMLINE_ALT_SUPPORT("maxGermlineAltSupport", "max_germline_alt_support", false, true),
-    MIN_AVG_BASE_QUALITY("minAvgBaseQual", "", true, false),
-    STRAND_BIAS("strandBias", "", true, false);
+    MIN_TUMOR_QUAL("minTumorQual", "min_tumor_qual", true, false, "Insufficient tumor quality"),
+    MIN_TUMOR_VAF("minTumorVAF", "min_tumor_vaf", true, false, "Insufficient tumor VAF"),
+    MIN_GERMLINE_DEPTH("minGermlineDepth", "min_germline_depth", false, true, "Insufficient germline depth"),
+    MAX_GERMLINE_VAF("maxGermlineVAF", "max_germline_vaf", false, true, "Excess germline VAF"),
+    MAX_GERMLINE_REL_RAW_BASE_QUAL(
+            "maxGermlineRelRawBaseQual", "max_germline_rel_raw_base_qual", false, true,
+            "Excess germline relative quality"),
+    MAX_GERMLINE_ALT_SUPPORT(
+            "maxGermlineAltSupport", "max_germline_alt_support", false, true, "Excess germline alt support"),
+    MIN_AVG_BASE_QUALITY("minAvgBaseQual", "", true, false, "Variant average base quality below limit"),
+    STRAND_BIAS("strandBias", "", true, false, "Variant exceeds strand bias limit"),
+    FRAGMENT_COORDS("minFragmentCoords", "", true, false, "Insufficient fragment coordinate variation"),
+    MAX_EDGE_DISTANCE("maxEdgeDistance", "", true, false, "Variant close to read edge");
 
     private static final Set<String> TUMOR_FILTERS = Sets.newHashSet();
-    private static final Set<String> GERMLINE_FILTERS = Sets.newHashSet();
+    public static final Set<String> GERMLINE_FILTERS = Sets.newHashSet();
 
     static
     {
@@ -38,17 +42,20 @@ public enum SoftFilter
     private final String mConfig;
     private final boolean mTumor;
     private final boolean mGermline;
+    private final String mVcfDescription;
 
-    SoftFilter(final String filter, final String config, boolean tumor, boolean germline)
+    SoftFilter(final String filter, final String config, boolean tumor, boolean germline, final String desc)
     {
         mFilter = filter;
         mConfig = config;
         mTumor = tumor;
         mGermline = germline;
+        mVcfDescription = desc;
     }
 
     public String configName() { return mConfig; }
     public String filterName() { return mFilter; }
+    public String vcfDescription() { return mVcfDescription; }
 
     public String toString() { return mFilter; }
 

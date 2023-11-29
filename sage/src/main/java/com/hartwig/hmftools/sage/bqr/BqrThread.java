@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.quality;
+package com.hartwig.hmftools.sage.bqr;
 
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
@@ -23,7 +23,7 @@ public class BqrThread extends Thread
     private final Queue<PartitionTask> mRegions;
     private final BaseQualityResults mResults;
 
-    private final BaseQualityRegionCounter mRegionCounter; // will be reused for each region
+    private final BqrRegionReader mRegionCounter; // will be reused for each region
 
     public BqrThread(
             final SageConfig config, final IndexedFastaSequenceFile refGenome, final String bamFile,
@@ -39,7 +39,7 @@ public class BqrThread extends Thread
                 .referenceSource(new ReferenceSource(mRefGenome))
                 .open(new File(bamFile));
 
-        mRegionCounter = new BaseQualityRegionCounter(mConfig, mBamReader, mRefGenome, mResults);
+        mRegionCounter = new BqrRegionReader(mConfig, mBamReader, mRefGenome, mResults);
 
         start();
     }

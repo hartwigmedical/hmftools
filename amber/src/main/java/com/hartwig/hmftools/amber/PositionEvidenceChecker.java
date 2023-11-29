@@ -1,7 +1,6 @@
 package com.hartwig.hmftools.amber;
 
 import com.hartwig.hmftools.common.amber.AmberSite;
-import com.hartwig.hmftools.common.samtools.SamRecordUtils;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -65,15 +64,16 @@ public class PositionEvidenceChecker
         return false;
     }
 
-    public static int getBaseQuality(final int position, final SAMRecord samRecord)
+    private static int getBaseQuality(final int position, final SAMRecord samRecord)
     {
-        // Get quality of base after del if necessary
+        // get quality of base after del if necessary
         for(int pos = position; pos <= samRecord.getAlignmentEnd(); pos++)
         {
             int readPosition = samRecord.getReadPositionAtReferencePosition(pos);
-            if(readPosition != 0)
+
+            if(readPosition > 0)
             {
-                return SamRecordUtils.getBaseQuality(samRecord, readPosition);
+                return samRecord.getBaseQualities()[readPosition - 1];
             }
         }
 

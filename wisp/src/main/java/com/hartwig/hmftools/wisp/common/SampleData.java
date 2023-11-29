@@ -2,6 +2,7 @@ package com.hartwig.hmftools.wisp.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.utils.config.ConfigUtils.IGNORE_SAMPLE_ID;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.CSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
@@ -66,7 +67,7 @@ public class SampleData
 
             for(String line : fileContents)
             {
-                if(line.startsWith("#") || line.isEmpty())
+                if(line.isEmpty() || line.startsWith(IGNORE_SAMPLE_ID))
                     continue;
 
                 String[] values = line.split(CSV_DELIM, -1);

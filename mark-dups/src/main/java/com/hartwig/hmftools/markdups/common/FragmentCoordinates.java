@@ -7,7 +7,7 @@ public class FragmentCoordinates
 {
     public final String Key;
     public final int InitialPosition; // negative/reverse strand positions are negated
-    public final boolean IsForward;
+    public final boolean IsForward; // forward = F1R2, reverse is F2R1 - relates to collapsing and dual-strand classification
     public final boolean Incomplete;
 
     public static final FragmentCoordinates NO_COORDS = new FragmentCoordinates("", 0, true, true);

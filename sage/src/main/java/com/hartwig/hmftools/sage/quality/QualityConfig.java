@@ -17,6 +17,7 @@ public class QualityConfig
     public final double ReadEventsPenalty;
     public final int ImproperPairPenalty;
     public final double MapQualityRatioFactor;
+    public final boolean HighBaseMode;
     public final int HighBaseQualLimit;
 
     private static final String JITTER_PENALTY = "jitter_penalty";
@@ -28,15 +29,18 @@ public class QualityConfig
     private static final String MAP_QUAL_IMPROPER_PAIR_PENALTY = "improper_pair_qual_penalty";
     private static final String MAP_QUAL_READ_EVENTS_PENALTY = "read_events_qual_penalty";
     private static final String MAP_QUAL_RATIO_FACTOR = "map_qual_ratio_factor";
-    private static final String HIGH_BASE_QUAL_LIMIT = "high_base_qual_limit";
+    private static final String HIGH_DEPTH_BASE_QUAL_LIMIT = "high_depth_base_qual";
+    private static final String HIGH_DEPTH_MODE = "high_depth_mode";
 
     private static final double DEFAULT_JITTER_PENALTY = 0.25;
     private static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
     private static final int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
     private static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 0;
+    private static final int DEFAULT_READ_EDGE_FACTOR = 3;
     private static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
     private static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
     private static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
+    private static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
 
     public QualityConfig(final ConfigBuilder configBuilder)
     {
@@ -49,21 +53,25 @@ public class QualityConfig
         ReadEventsPenalty = configBuilder.getDecimal(MAP_QUAL_READ_EVENTS_PENALTY);
         ImproperPairPenalty = configBuilder.getInteger(MAP_QUAL_IMPROPER_PAIR_PENALTY);
         MapQualityRatioFactor = configBuilder.getDecimal(MAP_QUAL_RATIO_FACTOR);
-        HighBaseQualLimit = configBuilder.getInteger(HIGH_BASE_QUAL_LIMIT);
+
+        HighBaseMode = configBuilder.hasFlag(HIGH_DEPTH_MODE);
+        HighBaseQualLimit = HighBaseMode ? configBuilder.getInteger(HIGH_DEPTH_BASE_QUAL_LIMIT) : 0;
     }
 
-    public QualityConfig()
+    public QualityConfig(boolean highDepthMode)
     {
         JitterPenalty = DEFAULT_JITTER_PENALTY;
         JitterMinRepeatCount = DEFAULT_JITTER_MIN_REPEAT_COUNT;
         BaseQualityFixedPenalty = DEFAULT_BASE_QUAL_FIXED_PENALTY;
         DistanceFromReadEdgeFixedPenalty = DEFAULT_READ_EDGE_FIXED_PENALTY;
-        DistanceFromReadEdgeFactor = 0;
+        DistanceFromReadEdgeFactor = DEFAULT_READ_EDGE_FACTOR;
         FixedPenalty = DEFAULT_MAP_QUAL_FIXED_PENALTY;
         ReadEventsPenalty = DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
         ImproperPairPenalty = DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
         MapQualityRatioFactor = DEFAULT_MQ_RATIO_FACTOR;
-        HighBaseQualLimit = 0;
+
+        HighBaseMode = highDepthMode;
+        HighBaseQualLimit = HighBaseMode ? DEFAULT_HIGH_DEPTH_BASE_QUAL : 0;
     }
 
     public boolean isHighlyPolymorphic(final GenomePosition position)
@@ -88,7 +96,7 @@ public class QualityConfig
         configBuilder.addInteger(
                 READ_EDGE_FIXED_PENALTY, "Fixed penalty to apply to distance from read edge", DEFAULT_READ_EDGE_FIXED_PENALTY);
 
-        configBuilder.addInteger(READ_EDGE_FACTOR, "Distance from read edge factor", 0);
+        configBuilder.addInteger(READ_EDGE_FACTOR, "Distance from read edge factor", DEFAULT_READ_EDGE_FACTOR);
 
         configBuilder.addInteger(
                 MAP_QUAL_IMPROPER_PAIR_PENALTY,
@@ -101,6 +109,7 @@ public class QualityConfig
 
         configBuilder.addDecimal(MAP_QUAL_RATIO_FACTOR, "Map quality ratio factor (0 = disabled)", DEFAULT_MQ_RATIO_FACTOR);
 
-        configBuilder.addInteger(HIGH_BASE_QUAL_LIMIT, "Enable high-qual checks including min base qual", 0);
+        configBuilder.addFlag(HIGH_DEPTH_MODE, "Enable high-depth mode");
+        configBuilder.addInteger(HIGH_DEPTH_BASE_QUAL_LIMIT, "High-depth mode min base qual", DEFAULT_HIGH_DEPTH_BASE_QUAL);
     }
 }

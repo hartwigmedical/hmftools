@@ -65,7 +65,16 @@ public class SageConstants
     public static final double DEFAULT_MQ_RATIO_FACTOR = 0; // ie disabled,  but for germline should be set to 2.5
     public static final double MQ_RATIO_SMOOTHING = 3;
 
-    public static final int INDEL_DEDUP_MAX_DIST_THRESHOLD = 40;
+    public static final int MAX_READ_EDGE_DISTANCE = 40;
+    public static final double MAX_READ_EDGE_DISTANCE_PROB = 0.001;
+
+    public static final int SYNC_FRAG_MAX_MISMATCHES = 10;
+
+    public static final double STRAND_BIAS_CHECK_THRESHOLD = 0.1;
+    public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;
+    public static final double STRAND_BIAS_REF_MIN_BIAS = 0.25;
+
+    public static final int REQUIRED_UNIQUE_FRAG_COORDS = 3;
 
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
             "hotspot", 70, 0.005,

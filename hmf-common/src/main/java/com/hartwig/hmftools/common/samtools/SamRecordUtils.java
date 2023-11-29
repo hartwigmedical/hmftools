@@ -9,7 +9,6 @@ import static com.hartwig.hmftools.common.utils.sv.SvCommonUtils.POS_ORIENT;
 import static htsjdk.samtools.CigarOperator.D;
 
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.google.common.collect.Lists;
 
@@ -23,8 +22,6 @@ import htsjdk.samtools.SAMRecord;
 
 public final class SamRecordUtils
 {
-    public static final int PHRED_OFFSET = 33;
-
     public static final String SUPPLEMENTARY_ATTRIBUTE = "SA";
     public static final String MATE_CIGAR_ATTRIBUTE = "MC";
     public static final String NUM_MUTATONS_ATTRIBUTE = "NM";
@@ -41,17 +38,10 @@ public final class SamRecordUtils
     public static final int NO_CHROMOSOME_INDEX = -1;
     public static final int NO_POSITION = 0;
 
+    private static final int PHRED_OFFSET = 33;
+
+
     public static final Logger SAM_LOGGER = LogManager.getLogger(SamRecordUtils.class);
-
-    public static int getBaseQuality(final char quality)
-    {
-        return quality - PHRED_OFFSET;
-    }
-
-    public static int getBaseQuality(final SAMRecord record, int readPosition)
-    {
-        return getAvgBaseQuality(record, readPosition, 1);
-    }
 
     // convenience methods to avoid triggering a crash if unpaired
     public static boolean firstInPair(final SAMRecord record)
@@ -81,24 +71,66 @@ public final class SamRecordUtils
 
     public static byte orientation(final SAMRecord read) { return !read.getReadNegativeStrandFlag() ? POS_ORIENT : NEG_ORIENT; }
 
-    public static int getAvgBaseQuality(final SAMRecord record, int readPosition, int length)
+    public static int getBaseQuality(final char quality)
     {
-        assert (readPosition > 0);
-
-        int score = 0;
-        final String baseQualities = record.getBaseQualityString();
-        for(int index = readPosition - 1; index < Math.min(readPosition - 1 + length, baseQualities.length()); index++)
-        {
-            int baseScore = getBaseQuality(baseQualities.charAt(index));
-            score += baseScore;
-        }
-        return score / length;
+        return quality - PHRED_OFFSET;
     }
 
     public static void addConsensusReadAttribute(final SAMRecord record, int readCount, int firstInPairCount, final UmiReadType umiReadType)
     {
         record.setAttribute(CONSENSUS_READ_ATTRIBUTE, format("%d;%d", readCount, firstInPairCount));
         record.setAttribute(UMI_TYPE_ATTRIBUTE, umiReadType.toString());
+    }
+
+    @Deprecated
+    private static final String DUAL_STRAND_OLD = "DUAL_STRAND";
+
+    public static UmiReadType extractUmiType(final SAMRecord record)
+    {
+        UmiReadType umiReadType = UmiReadType.NONE;
+
+        if(record.hasAttribute(UMI_TYPE_ATTRIBUTE))
+        {
+            String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+
+            if(umiType != null)
+                umiReadType = umiType.equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(umiType);
+        }
+        else
+        {
+            // to be deprecated since have return to using UMI type attribute above
+            String consensusInfo = record.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
+
+            if(consensusInfo != null && consensusInfo.contains(CONSENSUS_INFO_DELIM))
+            {
+                String[] values = consensusInfo.split(CONSENSUS_INFO_DELIM, 3);
+
+                if(values.length == 3)
+                    umiReadType = values[2].equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(values[2]);
+            }
+        }
+
+        return umiReadType;
+    }
+
+    public static int getUnclippedPosition(final SAMRecord read)
+    {
+        int position;
+
+        if(orientation(read) == POS_ORIENT)
+        {
+            position = read.getAlignmentStart();
+            if(read.getCigar().isLeftClipped())
+                position -= read.getCigar().getFirstCigarElement().getLength();
+        }
+        else
+        {
+            position = read.getAlignmentEnd();
+            if(read.getCigar().isRightClipped())
+                position += read.getCigar().getLastCigarElement().getLength();
+        }
+
+        return position;
     }
 
     public static List<int[]> generateMappedCoords(final Cigar cigar, int posStart)
