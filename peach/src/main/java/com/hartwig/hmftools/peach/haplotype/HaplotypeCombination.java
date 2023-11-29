@@ -3,7 +3,6 @@ package com.hartwig.hmftools.peach.haplotype;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
@@ -11,7 +10,7 @@ import static com.hartwig.hmftools.peach.PeachUtils.GERMLINE_TOTAL_COPY_NUMBER;
 public class HaplotypeCombination
 {
     @NotNull
-    Map<String, Integer> haplotypeNameToCount;
+    private final Map<String, Integer> haplotypeNameToCount;
 
     public HaplotypeCombination(@NotNull Map<String, Integer> haplotypeNameToCount)
     {

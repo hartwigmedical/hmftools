@@ -6,8 +6,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class HaplotypeAnalysis
@@ -44,9 +46,9 @@ public class HaplotypeAnalysis
                 ')';
     }
 
-    public List<String> getEventIds()
+    public Set<String> getEventIds()
     {
-        return new ArrayList<>(eventIdToCount.keySet());
+        return new HashSet<>(eventIdToCount.keySet());
     }
 
     public List<HaplotypeCombination> getHaplotypeCombinations()
