@@ -70,11 +70,10 @@ public class HaplotypeAnalysis
 
     public PeachQCStatus getAnalysisStatus()
     {
-        if (haplotypeCombinations.isEmpty())
-            return PeachQCStatus.FAIL_NO_COMBINATION_FOUND;
-
         List<HaplotypeCombination> minimumCombinations = getMinimumCombinations();
-        if (minimumCombinations.size() != 1)
+        if (minimumCombinations.isEmpty())
+            return PeachQCStatus.FAIL_NO_COMBINATION_FOUND;
+        else if (minimumCombinations.size() != 1)
             return PeachQCStatus.FAIL_NO_UNIQUE_BEST_COMBINATION_FOUND;
         else if (minimumCombinations.get(0).getHaplotypeCount() > 2)
             return PeachQCStatus.WARN_TOO_MANY_ALLELES_FOUND;

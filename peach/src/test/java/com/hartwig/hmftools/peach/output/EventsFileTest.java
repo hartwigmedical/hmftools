@@ -6,9 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.hartwig.hmftools.peach.HaplotypeAnalysis;
-import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
-
 import org.junit.Test;
 
 public class EventsFileTest
