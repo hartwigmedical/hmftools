@@ -11,6 +11,7 @@ import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAX_PARTITION_SLICES;
@@ -198,10 +199,7 @@ public class SageConfig
         mReadLength = readLength;
     }
 
-    public String outputDir()
-    {
-        return OutputFile.contains(File.separator) ? new File(OutputFile).getParent() + File.separator : "./";
-    }
+    public String outputDir() { return pathFromFile(OutputFile); }
 
     public boolean isValid()
     {

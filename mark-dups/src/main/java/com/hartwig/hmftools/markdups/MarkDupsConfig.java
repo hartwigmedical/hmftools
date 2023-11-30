@@ -24,6 +24,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_ID;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOptions;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.parseOutputDir;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_DUPLEX_UMI_DELIM;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_PARTITION_SIZE;
 import static com.hartwig.hmftools.markdups.common.Constants.DEFAULT_POS_BUFFER_SIZE;
@@ -162,11 +163,11 @@ public class MarkDupsConfig
         }
         else if(OutputBam != null)
         {
-            OutputDir = checkAddDirSeparator(Paths.get(OutputBam).getParent().toString());
+            OutputDir = pathFromFile(OutputBam);
         }
         else
         {
-            OutputDir = checkAddDirSeparator(Paths.get(BamFiles.get(0)).getParent().toString());
+            OutputDir = pathFromFile(BamFiles.get(0));
         }
 
         OutputId = configBuilder.getValue(OUTPUT_ID);
