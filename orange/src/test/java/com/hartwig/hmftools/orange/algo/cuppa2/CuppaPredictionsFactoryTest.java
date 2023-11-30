@@ -1,6 +1,7 @@
 package com.hartwig.hmftools.orange.algo.cuppa2;
 import java.io.IOException;
 
+import com.google.common.io.Resources;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableFeatureContributionEntry;
@@ -9,11 +10,11 @@ import com.hartwig.hmftools.datamodel.cuppa2.ImmutableSignatureQuantileEntry;
 
 import org.junit.Test;
 
-public class CuppaPredictionDataFactoryTest
+public class CuppaPredictionsFactoryTest
 {
-    public CuppaPredictionDataFactoryTest() throws IOException {}
+    public CuppaPredictionsFactoryTest() throws IOException {}
 
-    private static final String CUPPA_VIS_DATA_TSV = "/Users/lnguyen/Hartwig/hartwigmedical/hmftools/hmf-common/src/test/resources/cuppa/cuppa_vis_data.tsv";
+    private static final String CUPPA_VIS_DATA_TSV = Resources.getResource("cuppa/cuppa_vis_data.tsv").getPath();
     CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
 
     @Test
