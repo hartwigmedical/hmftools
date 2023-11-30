@@ -1,6 +1,6 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-public class ClonalityResult
+public class ClonalityData
 {
     public final ClonalityMethod Method;
     public final double Vaf;
@@ -9,7 +9,7 @@ public class ClonalityResult
     public final int VariantCount;
     public final double DropoutRate;
 
-    public ClonalityResult(
+    public ClonalityData(
             final ClonalityMethod method, final double vaf, final double vafLow, final double vafHigh, int varCount, double dropoutRate)
     {
         Method = method;
@@ -20,6 +20,6 @@ public class ClonalityResult
         DropoutRate = dropoutRate;
     }
 
-    public static ClonalityResult INVALID_RESULT = new ClonalityResult(
+    public static ClonalityData NO_RESULT = new ClonalityData(
             ClonalityMethod.NONE, 0, 0, 0, 0, 0);
 }

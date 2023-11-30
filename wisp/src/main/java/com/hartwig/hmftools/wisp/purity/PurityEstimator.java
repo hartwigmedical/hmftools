@@ -4,9 +4,6 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.wisp.common.CommonUtils.APP_NAME;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.wisp.purity.WriteType.CN_DATA;
-import static com.hartwig.hmftools.wisp.purity.WriteType.CN_PLOTS;
-import static com.hartwig.hmftools.wisp.purity.WriteType.SOMATIC_PLOTS;
 import static com.hartwig.hmftools.wisp.purity.WriteType.plotCopyNumber;
 import static com.hartwig.hmftools.wisp.purity.WriteType.plotSomatics;
 
@@ -35,7 +32,7 @@ import com.hartwig.hmftools.common.variant.msi.MicrosatelliteStatus;
 import com.hartwig.hmftools.wisp.common.SampleData;
 import com.hartwig.hmftools.wisp.purity.cn.CnPurityResult;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile;
-import com.hartwig.hmftools.wisp.purity.variant.SomaticVariantResult;
+import com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult;
 import com.hartwig.hmftools.wisp.purity.variant.SomaticVariants;
 
 public class PurityEstimator
@@ -167,10 +164,10 @@ public class PurityEstimator
                 CnPurityResult cnPurityResult = copyNumberProfile != null ?
                         copyNumberProfile.processSample(ctDnaSample, purityContext) : CnPurityResult.INVALID_RESULT;
 
-                SomaticVariantResult somaticVariantResult = somaticVariants != null ?
-                        somaticVariants.processSample(ctDnaSample, purityContext) : SomaticVariantResult.INVALID_RESULT;
+                SomaticPurityResult somaticPurityResult = somaticVariants != null ?
+                        somaticVariants.processSample(ctDnaSample, purityContext) : SomaticPurityResult.INVALID_RESULT;
 
-                mResultsWriter.writeSampleSummary(sample, ctDnaSample, purityContext, cnPurityResult, somaticVariantResult);
+                mResultsWriter.writeSampleSummary(sample, ctDnaSample, purityContext, cnPurityResult, somaticPurityResult);
             }
         }
 

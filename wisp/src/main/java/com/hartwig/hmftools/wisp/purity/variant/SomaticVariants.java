@@ -1,9 +1,13 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.round;
+import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.filenamePart;
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.common.variant.PurpleVcfTags.SUBCLONAL_LIKELIHOOD_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LIST_SEPARATOR;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_QUALITY;
@@ -12,8 +16,14 @@ import static com.hartwig.hmftools.common.variant.SomaticVariantFactory.MAPPABIL
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.DEFAULT_PROBE_LENGTH;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.generateMutationSequence;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_ALLELE_FRAGS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.CHIP_MIN_SAMPLE_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MAX_SUBCLONAL_LIKELIHOOD;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SUBCLONAL_VCN_THRESHOLD;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.SOMATICS_FILE_ID;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
+import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.CHIP;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.GC_RATIO;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_CONFIDENCE;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.LOW_QUAL_PER_AD;
@@ -22,24 +32,27 @@ import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NON_SNV;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.NO_PASS;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.REPEAT_COUNT;
 import static com.hartwig.hmftools.wisp.purity.variant.FilterReason.SUBCLONAL;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalc.LOW_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalc.calcPoissonNoiseValue;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalc.estimatedPurity;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticVariantResult.INVALID_RESULT;
+import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVALID_RESULT;
 import static com.hartwig.hmftools.wisp.purity.variant.UmiTypeCounts.NO_UMI_COUNTS;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.purple.PurityContext;
 import com.hartwig.hmftools.common.utils.r.RExecutor;
+import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.common.variant.VariantTier;
 import com.hartwig.hmftools.common.variant.VariantType;
 import com.hartwig.hmftools.common.variant.VcfFileReader;
+import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.WriteType;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
@@ -58,12 +71,16 @@ public class SomaticVariants
     private final SampleData mSample;
     private final List<SomaticVariant> mVariants;
     private final List<ProbeVariant> mProbeVariants;
+    private final SomaticPurityEstimator mEstimator;
+    private final BufferedWriter mSomaticWriter;
 
     public SomaticVariants(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
     {
         mConfig = config;
         mResultsWriter = resultsWriter;
         mSample = sample;
+        mEstimator = new SomaticPurityEstimator(mConfig, resultsWriter, sample);
+        mSomaticWriter = mResultsWriter.getSomaticWriter();
 
         mVariants = Lists.newArrayList();
 
@@ -226,21 +243,17 @@ public class SomaticVariants
         }
     }
 
-    public SomaticVariantResult processSample(final String sampleId, final PurityContext purityContext)
+    public SomaticPurityResult processSample(final String sampleId, final PurityContext purityContext)
     {
         // only include variants which satisfy the min avg qual check in the ctDNA sample
-        SomaticVariantCounts tumorCounts = new SomaticVariantCounts();
-        SomaticVariantCounts sampleCounts = new SomaticVariantCounts();
-        SomaticVariantCounts sampleCountsDual = new SomaticVariantCounts();
 
-        int totalVariants = 0;
-        int calcVariants = 0;
-        int frag1Variants = 0;
-        int frag2PlusVariants = 0;
-        int fragTotal = 0;
-        double depthFragTotal = 0;
+        List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
-        UmiTypeCounts umiTypeCounts = new UmiTypeCounts();
+        // int totalVariants = 0;
+        int sampleTotalAD = 0;
+
+        // UmiTypeCounts umiTypeCounts = new UmiTypeCounts();
+        // SomaticVariantCounts sampleCountsDual = new SomaticVariantCounts();
 
         for(SomaticVariant variant : mVariants)
         {
@@ -250,7 +263,7 @@ public class SomaticVariants
             if(sampleFragData == null || tumorFragData == null)
                 continue;
 
-            ++totalVariants;
+            // ++totalVariants;
 
             List<FilterReason> filterReasons = Lists.newArrayList(variant.filterReasons());
 
@@ -268,136 +281,44 @@ public class SomaticVariants
                 }
             }
 
-            if(mConfig.writeType(WriteType.SOMATICS_ALL) || useForTotals)
+            if(mConfig.writeType(WriteType.SOMATIC_ALL) || useForTotals)
             {
-                // String filter = variant.PassFilters && useForTotals ? "PASS" : (!variant.PassFilters ? "FILTERED" : "NO_FRAGS");
-                mResultsWriter.writeVariant(mSample, sampleId, variant, sampleFragData, tumorFragData, filterReasons);
+                writeVariant(mSomaticWriter, mConfig, mSample, sampleId, variant, sampleFragData, tumorFragData, filterReasons);
             }
 
             if(!useForTotals)
                 continue;
 
-            ++calcVariants;
+            filteredVariants.add(variant);
 
-            if(sampleFragData.AlleleCount >= 2)
-                ++frag2PlusVariants;
-            else if(sampleFragData.AlleleCount == 1)
-                ++frag1Variants;
+            sampleTotalAD += sampleFragData.AlleleCount;
 
-            fragTotal += sampleFragData.AlleleCount;
-            depthFragTotal += sampleFragData.AlleleCount * sampleFragData.Depth;
-
-            // take the tumor values
-            tumorCounts.addFragmentCount(tumorFragData.Depth);
-            tumorCounts.addAlleleFragmentCount(tumorFragData.AlleleCount, tumorFragData.QualTotal);
-
-            // take the sample values
-            sampleCounts.addFragmentCount(sampleFragData.Depth);
-            sampleCountsDual.addFragmentCount(sampleFragData.UmiCounts.dualCount());
-
+            /*
             umiTypeCounts.add(sampleFragData.UmiCounts);
-
-            sampleCounts.addAlleleFragmentCount(sampleFragData.AlleleCount, sampleFragData.QualTotal);
+            sampleCountsDual.addFragmentCount(sampleFragData.UmiCounts.dualCount());
             sampleCountsDual.addAlleleFragmentCount(sampleFragData.UmiCounts.AlleleDual, 0);
+            */
         }
 
-        if(totalVariants == 0)
+        if(filteredVariants.isEmpty())
             return INVALID_RESULT;
 
-        int sampleDepthTotal = sampleCounts.totalFragments();
-        if(sampleDepthTotal == 0)
-            return INVALID_RESULT;
+        // check for CHIP variants and remove them from variants used for purity estimates
+        final double sampleAlleleTotal = sampleTotalAD;
 
-        double tumorVaf;
+        List<SomaticVariant> chipVariants = filteredVariants.stream()
+                .filter(x -> isLikelyChipVariant(x, x.findGenotypeData(sampleId), sampleAlleleTotal)).collect(Collectors.toList());
 
-        if(!mConfig.hasSyntheticTumor())
+        for(SomaticVariant variant : chipVariants)
         {
-            double tumorDepthTotal = tumorCounts.totalFragments();
-            if(tumorDepthTotal == 0)
-                return INVALID_RESULT;
+            CT_LOGGER.debug("sample({}) chip variant({}) ad({}) vs sampleTotal({})",
+                    variant, variant.findGenotypeData(sampleId).AlleleCount, sampleTotalAD);
 
-            tumorVaf = mConfig.hasSyntheticTumor() ? 0.5 : tumorCounts.alleleFragments() / tumorDepthTotal;
-        }
-        else
-        {
-            tumorVaf = 0.5;
+            filteredVariants.remove(variant);
+            variant.addFilterReason(CHIP);
         }
 
-        double tumorPurity = purityContext.bestFit().purity();
-        double tumorPloidy = purityContext.bestFit().ploidy();
-
-        double adjustedTumorVaf = tumorVaf * (tumorPloidy * tumorPurity + 2 * (1 - tumorPurity)) / tumorPurity / tumorPloidy;
-
-        double qualPerAllele = sampleCounts.alleleFragments() > 0 ? sampleCounts.allelelQualTotal() / (double)sampleCounts.alleleFragments() : 0;
-
-        double lowQualNoiseFactor = qualPerAllele < PurityConstants.LOW_QUAL_NOISE_CUTOFF ?
-                1.0 * (PurityConstants.LOW_QUAL_NOISE_CUTOFF - qualPerAllele) / (
-                        PurityConstants.LOW_QUAL_NOISE_CUTOFF - PurityConstants.MIN_QUAL_PER_AD) : 0;
-
-        double allFragsNoise = sampleDepthTotal / 1000000.0 * mConfig.NoiseReadsPerMillion + lowQualNoiseFactor;
-
-        FragmentCalcResult allFragsResult = SomaticPurityCalc.calc(
-                tumorPloidy, adjustedTumorVaf, sampleDepthTotal, sampleCounts.alleleFragments(), allFragsNoise);
-
-        double rawSamplePurity = allFragsResult.EstimatedPurity;
-
-        double weightedAvgDepth = fragTotal > 0 ? depthFragTotal / fragTotal : sampleDepthTotal / (double)calcVariants;
-
-        ClonalityResult modelResult = ClonalityResult.INVALID_RESULT;
-        ClonalityMethod clonalityMethod = ClonalityMethod.NONE;
-
-        if(frag2PlusVariants >= PurityConstants.VAF_PEAK_MODEL_MIN_FRAG_VARIANTS && weightedAvgDepth > PurityConstants.VAF_PEAK_MODEL_MIN_AVG_DEPTH)
-        {
-            ClonalityModel model = new VafPeakModel(mConfig, mResultsWriter, mSample, mVariants);
-            modelResult = model.calculate(sampleId, allFragsResult, weightedAvgDepth);
-
-            if(modelResult == ClonalityResult.INVALID_RESULT)
-                clonalityMethod = ClonalityMethod.NO_PEAK; // record the attempt
-        }
-        else if(frag1Variants + frag2PlusVariants >= PurityConstants.LOW_COUNT_MODEL_MIN_FRAG_VARIANTS && weightedAvgDepth < PurityConstants.LOW_COUNT_MODEL_MIN_AVG_DEPTH)
-        {
-            ClonalityModel model = new LowCountModel(mConfig, mResultsWriter, mSample, mVariants);
-            modelResult = model.calculate(sampleId, allFragsResult, weightedAvgDepth);
-        }
-
-        int clonalityVarCount = calcVariants;
-        double clonalityDropout = 0;
-
-        if(modelResult != ClonalityResult.INVALID_RESULT)
-        {
-            clonalityMethod = modelResult.Method;
-            clonalityVarCount = modelResult.VariantCount;
-            clonalityDropout = modelResult.DropoutRate;
-
-            double modelPurity = estimatedPurity(modelResult.Vaf, tumorPloidy, adjustedTumorVaf);
-            double modelPurityLow = estimatedPurity(modelResult.VafLow, tumorPloidy, adjustedTumorVaf);
-            double modelPurityHigh = estimatedPurity(modelResult.VafHigh, tumorPloidy, adjustedTumorVaf);
-
-            // CT_LOGGER.debug(format("sample(%s) tumor(purity=%.4f ploidy=%.1f adjVaf=%.4f) vaf(basic=%.6f peak=%.6f) newPurity(%.6f)",
-            //        sampleId, tumorPurity, tumorPloidy, adjustedTumorVaf, allFragsResult.VAF, modelResult.Vaf, modelPurity));
-
-            allFragsResult = new FragmentCalcResult(
-                    modelResult.Vaf, modelPurity, allFragsResult.PurityProbability, modelPurityLow, modelPurityHigh);
-        }
-
-        double dualFragsNoise = sampleCountsDual.totalFragments() / 1000000.0 * mConfig.NoiseReadsPerMillionDualStrand + lowQualNoiseFactor;
-
-        FragmentCalcResult dualFragsResult = SomaticPurityCalc.calc(
-                tumorPloidy, adjustedTumorVaf, sampleCountsDual.totalFragments(), sampleCountsDual.alleleFragments(), dualFragsNoise);
-
-        // calculate a limit-of-detection (LOD), being the number of fragments that would return a 95% confidence of a tumor presence
-        double lodFragments = calcPoissonNoiseValue((int)round(allFragsNoise), LOW_PROBABILITY);
-
-        FragmentCalcResult lodFragsResult = SomaticPurityCalc.calc(
-                tumorPloidy, adjustedTumorVaf, sampleDepthTotal, (int)round(lodFragments), allFragsNoise);
-
-        // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
-        //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
-
-        return new SomaticVariantResult(
-                true, totalVariants, calcVariants,  frag1Variants, frag2PlusVariants,
-                clonalityVarCount, clonalityMethod, clonalityDropout, weightedAvgDepth, sampleCounts, umiTypeCounts,
-                tumorVaf, adjustedTumorVaf, rawSamplePurity, allFragsResult, dualFragsResult, lodFragsResult);
+        return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants);
     }
 
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
@@ -429,12 +350,98 @@ public class SomaticVariants
         return filters;
     }
 
+    private static boolean isLikelyChipVariant(
+            final SomaticVariant variant, final GenotypeFragments sampleFragData, final double sampleAlleleTotal)
+    {
+        return sampleFragData.AlleleCount > CHIP_MIN_ALLELE_FRAGS
+            && sampleFragData.AlleleCount / sampleAlleleTotal > CHIP_MIN_SAMPLE_PERC;
+    }
+
+    public static BufferedWriter initialiseVariantWriter(final PurityConfig config)
+    {
+        try
+        {
+            String fileName = config.formFilename(SOMATICS_FILE_ID);
+
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            addCommonHeaderFields(sj, config);
+
+            sj.add("Chromosome").add("Position").add("Ref").add("Alt").add("IsProbe");
+            sj.add("Filter").add("Tier").add("Type").add("RepeatCount").add("Mappability").add("SubclonalPerc");
+            sj.add("Gene").add("CodingEffect").add("Hotspot").add("Reported").add("VCN").add("CopyNumber");
+            sj.add("TumorDP").add("TumorAD");
+            sj.add("SampleDP").add("SampleAD").add("SampleDualDP").add("SampleDualAD").add("SampleQualPerAD").add("SeqGcRatio");
+
+            writer.write(sj.toString());
+            writer.newLine();
+
+            return writer;
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to initialise variant output file: {}", e.toString());
+            return null;
+        }
+    }
+
+    public static synchronized void writeVariant(
+            final BufferedWriter writer, final PurityConfig config,
+            final SampleData sampleData, final String sampleId, final SomaticVariant variant,
+            final GenotypeFragments sampleFragData, final GenotypeFragments tumorData, final List<FilterReason> filterReasons)
+    {
+        if(writer == null)
+            return;
+
+        try
+        {
+            VariantContextDecorator decorator = variant.decorator();
+            VariantImpact variantImpact = decorator.variantImpact();
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            addCommonFields(sj, config, sampleData, sampleId);
+
+            sj.add(variant.Chromosome).add(String.valueOf(variant.Position)).add(variant.Ref).add(variant.Alt);
+            sj.add(String.valueOf(variant.isProbeVariant()));
+
+            String filtersStr = filterReasons.stream().map(x -> x.toString()).collect(Collectors.joining(";"));
+
+            if(filtersStr.isEmpty())
+                filtersStr = PASS;
+
+            sj.add(filtersStr).add(decorator.tier().toString()).add(variant.Type.toString()).add(String.valueOf(decorator.repeatCount()))
+                    .add(format("%.2f", decorator.mappability())).add(format("%.2f", variant.SubclonalPerc));
+
+            sj.add(variantImpact.CanonicalGeneName).add(variantImpact.CanonicalCodingEffect.toString())
+                    .add(Hotspot.fromVariant(decorator.context()).toString()).add(String.valueOf(decorator.reported()))
+                    .add(format("%.2f", decorator.variantCopyNumber())).add(format("%.2f", decorator.adjustedCopyNumber()));
+
+            sj.add(String.valueOf(tumorData.Depth)).add(String.valueOf(tumorData.AlleleCount));
+            sj.add(String.valueOf(sampleFragData.Depth)).add(String.valueOf(sampleFragData.AlleleCount));
+            sj.add(String.valueOf(sampleFragData.UmiCounts.TotalDual)).add(String.valueOf(sampleFragData.UmiCounts.AlleleDual));
+            sj.add(format("%.1f", sampleFragData.qualPerAlleleFragment()));
+            sj.add(format("%.3f", variant.sequenceGcRatio()));
+
+            writer.write(sj.toString());
+
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to write output file: {}", e.toString());
+            System.exit(1);
+        }
+    }
+
     public static boolean plotSomaticVafs(final String patientId, final String sampleId, final PurityConfig config)
     {
         try
         {
             String summaryFile = config.formFilename(ResultsWriter.SUMMARY_FILE_ID);
-            String somaticsFile = config.formFilename(ResultsWriter.SOMATICS_FILE_ID);
+            String somaticsFile = config.formFilename(SOMATICS_FILE_ID);
 
             if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(somaticsFile)))
             {

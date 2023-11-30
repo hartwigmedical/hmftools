@@ -7,7 +7,7 @@ import static java.lang.String.format;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.DROPOUT_FILE_ID;
-import static com.hartwig.hmftools.wisp.purity.variant.ClonalityResult.INVALID_RESULT;
+import static com.hartwig.hmftools.wisp.purity.variant.ClonalityData.NO_RESULT;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -30,15 +30,17 @@ public class LowCountModel extends ClonalityModel
     }
 
     @Override
-    public ClonalityResult calculate(final String sampleId, final FragmentCalcResult estimatedResult, final double weightedAvgDepth)
+    public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final double rawEstimatedPurity)
     {
-        if(estimatedResult.VAF == 0)
-            return INVALID_RESULT;
+        double estimateVaf = fragmentTotals.adjSampleVaf();
+
+        if(estimateVaf == 0)
+            return NO_RESULT;
 
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
-        int observedFrag1 = 0;
-        int observedFrag2Plus = 0;
+        int observedFrag1 = fragmentTotals.sampleOneFragmentCount();
+        int observedFrag2Plus = fragmentTotals.sampleTwoPlusCount();
 
         for(SomaticVariant variant : mVariants)
         {
@@ -55,15 +57,15 @@ public class LowCountModel extends ClonalityModel
             }
         }
 
-        if(observedFrag1 == 0)
-            return INVALID_RESULT;
+        if(fragmentTotals.sampleOneFragmentCount() == 0)
+            return NO_RESULT;
 
         List<SimulatedVafCalcs> simulatedVafCalcs = Lists.newArrayList();
 
         // now test each simluated dropout rate and VAF
         for(double dropoutRate = PurityConstants.DROPOUT_RATE_INCREMENT; dropoutRate < 0.95; dropoutRate += PurityConstants.DROPOUT_RATE_INCREMENT)
         {
-            double simulatedVaf = estimatedResult.VAF / (1 - dropoutRate);
+            double simulatedVaf = estimateVaf / (1 - dropoutRate);
 
             if(simulatedVaf >= 1)
                 break;
@@ -109,7 +111,7 @@ public class LowCountModel extends ClonalityModel
         CT_LOGGER.debug(format("sample(%s) low-count model: obsRatio(%.2f 1=%d 2+=%d) vaf((%.6f low=%.6f high=%.6f)",
                 sampleId, observedRatio, observedFrag1, observedFrag2Plus, calcVaf, lowCalcVaf, highCalcVaf));
 
-        return new ClonalityResult(
+        return new ClonalityData(
                 ClonalityMethod.LOW_COUNT, calcVaf, lowCalcVaf, highCalcVaf, observedFrag1 + observedFrag2Plus, calcDropout);
     }
 

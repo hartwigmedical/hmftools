@@ -7,12 +7,20 @@ import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.Integers.median;
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.CN_SEGMENT_FILE_ID;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
+import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -36,24 +44,22 @@ import com.hartwig.hmftools.wisp.purity.PurityConstants;
 public class CopyNumberProfile
 {
     private final PurityConfig mConfig;
-    private final ResultsWriter mResultsWriter;
+    private final BufferedWriter mCnDataWriter;
 
     private final SampleData mSample;
     private final List<PurpleCopyNumber> mCopyNumbers;
 
     private final List<CopyNumberGcData> mCopyNumberGcRatios;
-    private final CnPurityCalculator mPurityCalculator;
 
     public CopyNumberProfile(final PurityConfig config, final ResultsWriter resultsWriter, final SampleData sample)
     {
         mConfig = config;
-        mResultsWriter = resultsWriter;
+        mCnDataWriter = resultsWriter.getCnRatioWriter();
         mSample = sample;
 
         mCopyNumbers = Lists.newArrayList();
 
         mCopyNumberGcRatios = Lists.newArrayList();
-        mPurityCalculator = new CnPurityCalculator();
 
         try
         {
@@ -88,9 +94,9 @@ public class CopyNumberProfile
 
             buildCopyNumberGcRatios(cobaltRatios);
 
-            if(mResultsWriter != null)
+            if(mCnDataWriter != null)
             {
-                mCopyNumberGcRatios.forEach(x -> mResultsWriter.writeCnSegmentData(mSample.PatientId, sampleId, x));
+                mCopyNumberGcRatios.forEach(x -> writeCnSegmentData(mCnDataWriter, mConfig, mSample, sampleId, x));
             }
 
             double samplePloidy = purityContext.bestFit().ploidy();
@@ -225,12 +231,69 @@ public class CopyNumberProfile
         plotCopyNumberGcRatioFit(mSample.PatientId, sampleId, mConfig);
     }
 
+    public static BufferedWriter initialiseCnRatioWriter(final PurityConfig config)
+    {
+        try
+        {
+            String fileName = config.formFilename(CN_SEGMENT_FILE_ID);
+
+            BufferedWriter writer = createBufferedWriter(fileName, false);
+
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+            addCommonHeaderFields(sj, config);
+
+            sj.add("Chromosome").add("SegmentStart").add("SegmentEnd").add("CopyNumber");
+            sj.add("GcRatioCount").add("GcRatioMedian").add("GcRatioMean");
+
+            writer.write(sj.toString());
+            writer.newLine();
+            return writer;
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to initialise copy number segment file: {}", e.toString());
+            return null;
+        }
+    }
+
+    public static synchronized void writeCnSegmentData(
+            final BufferedWriter writer, final PurityConfig config,
+            final SampleData sampleData, final String sampleId, final CopyNumberGcData cnSegment)
+    {
+        if(writer == null)
+            return;
+
+        // writeGcRatioData(sampleId, cnSegment); // ratios are written before they are sorted for median calcs
+
+        try
+        {
+            StringJoiner sj = new StringJoiner(TSV_DELIM);
+            addCommonFields(sj, config, sampleData, sampleId);
+
+            sj.add(cnSegment.Chromosome);
+            sj.add(String.valueOf(cnSegment.SegmentStart));
+            sj.add(String.valueOf(cnSegment.SegmentEnd));
+            sj.add(format("%.2f", cnSegment.CopyNumber));
+            sj.add(String.valueOf(cnSegment.count()));
+            sj.add(format("%.4f", cnSegment.median()));
+            sj.add(format("%.4f", cnSegment.mean()));
+
+            writer.write(sj.toString());
+            writer.newLine();
+        }
+        catch(IOException e)
+        {
+            CT_LOGGER.error("failed to write copy number segment file: {}", e.toString());
+        }
+    }
+
     public static boolean plotCopyNumberGcRatioFit(final String patientId, final String sampleId, final PurityConfig config)
     {
         try
         {
             String summaryFile = config.formFilename(ResultsWriter.SUMMARY_FILE_ID);
-            String cnSegmentsFile = config.formFilename(ResultsWriter.CN_SEGMENT_FILE_ID);
+            String cnSegmentsFile = config.formFilename(CN_SEGMENT_FILE_ID);
 
             if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(cnSegmentsFile)))
             {

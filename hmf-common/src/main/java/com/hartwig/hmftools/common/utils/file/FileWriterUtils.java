@@ -84,6 +84,12 @@ FileWriterUtils
         return separatorIndex >= 0 ? filename.substring(separatorIndex + 1) : filename;
     }
 
+    public static String pathFromFile(final String filePath)
+    {
+        // return currently working directory if no relative or absolute path is given
+        return filePath.contains(File.separator) ? new File(filePath).getParent() + File.separator : "./";
+    }
+
     // Note: if filename ends with .gz returns a Gzipped buffered writer
     @NotNull
     public static BufferedWriter createBufferedWriter(final String outputFile, boolean appendIfExists) throws IOException
