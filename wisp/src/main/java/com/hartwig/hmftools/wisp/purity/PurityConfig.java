@@ -138,6 +138,11 @@ public class PurityConfig
     public String getSomaticVcf(final String sampleId) { return convertWildcardSamplePath(SomaticVcf, sampleId); }
     public String getCobaltDir(final String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
 
+    public double noiseRate(boolean useDual)
+    {
+        return (useDual ? NoiseReadsPerMillionDualStrand : NoiseReadsPerMillion) / 1_000_000d;
+    }
+
     private void loadSampleData(final ConfigBuilder configBuilder)
     {
         if(configBuilder.hasValue(SAMPLE_ID_FILE))

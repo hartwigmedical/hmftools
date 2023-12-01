@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static java.lang.Math.round;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.gc.GcCalcs.calcGcPercent;
@@ -249,7 +248,6 @@ public class SomaticVariants
 
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
-        // int totalVariants = 0;
         int sampleTotalAD = 0;
 
         // UmiTypeCounts umiTypeCounts = new UmiTypeCounts();
@@ -262,8 +260,6 @@ public class SomaticVariants
 
             if(sampleFragData == null || tumorFragData == null)
                 continue;
-
-            // ++totalVariants;
 
             List<FilterReason> filterReasons = Lists.newArrayList(variant.filterReasons());
 
@@ -318,7 +314,7 @@ public class SomaticVariants
             variant.addFilterReason(CHIP);
         }
 
-        return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants);
+        return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants, mVariants.size());
     }
 
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
@@ -387,7 +383,7 @@ public class SomaticVariants
         }
     }
 
-    public static synchronized void writeVariant(
+    private static synchronized void writeVariant(
             final BufferedWriter writer, final PurityConfig config,
             final SampleData sampleData, final String sampleId, final SomaticVariant variant,
             final GenotypeFragments sampleFragData, final GenotypeFragments tumorData, final List<FilterReason> filterReasons)
@@ -441,16 +437,17 @@ public class SomaticVariants
         try
         {
             String summaryFile = config.formFilename(ResultsWriter.SUMMARY_FILE_ID);
-            String somaticsFile = config.formFilename(SOMATICS_FILE_ID);
+            String somaticPeaksFile = config.formFilename(ResultsWriter.SOMATIC_PEAK_FILE_ID);
+            //String somaticsFile = config.formFilename(SOMATICS_FILE_ID);
 
-            if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(somaticsFile)))
+            if(!Files.exists(Paths.get(summaryFile)) || !Files.exists(Paths.get(somaticPeaksFile)))
             {
-                CT_LOGGER.warn("plots missing required files: summary({}) somatics({})", summaryFile, somaticsFile);
+                CT_LOGGER.warn("plots missing required files: summary({}) somatics({})", summaryFile, somaticPeaksFile);
                 return false;
             }
 
             int runCode = RExecutor.executeFromClasspath(
-                    "plots/SomaticVafPlot.R", patientId, sampleId, summaryFile, somaticsFile, config.PlotDir);
+                    "plots/SomaticVafPlot.R", patientId, sampleId, summaryFile, somaticPeaksFile, config.PlotDir);
 
             return runCode == 0;
         }

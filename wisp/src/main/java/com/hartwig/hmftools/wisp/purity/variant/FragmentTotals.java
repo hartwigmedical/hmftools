@@ -74,10 +74,8 @@ public class FragmentTotals
     public int sampleOneFragmentCount() { return mSampleOneFragmentCount; }
     public int sampleTwoPlusCount() { return mSampleTwoPlusCount; }
 
-    public double rawTumorVaf() { return mTumorDepthTotal > 0 ? mTumorAdTotal / mTumorDepthTotal : 0; }
-
+    public double rawTumorVaf() { return mTumorDepthTotal > 0 ? mTumorAdTotal / (double)mTumorDepthTotal : 0; }
     public double adjTumorVaf() { return mTumorAdjustedDepthTotal > 0 ? mTumorAdjustedAdTotal / mTumorAdjustedDepthTotal : 0; }
-
     public double adjSampleVaf() { return mSampleAdjustedDepthTotal > 0 ? mSampleAdjustedAdTotal / mSampleAdjustedDepthTotal : 0; }
 
     public double weightedSampleDepth()
@@ -86,7 +84,7 @@ public class FragmentTotals
         return mTumorAdjustedDepthTotal > 0 ? mSampleWeightedDepthTotal / mTumorAdjustedDepthTotal : 0;
     }
 
-    public double qualPerAllele()
+    public double qualPerAlleleFragment()
     {
         return mSampleAdTotal > 0 ? mSampleAllelelQualTotal / mSampleAdTotal : 0;
     }

@@ -2,11 +2,11 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.round;
 
+import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_QUAL_NOISE_CUTOFF;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.MIN_QUAL_PER_AD;
-
-import com.hartwig.hmftools.common.stats.PoissonCalcs;
 
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
@@ -16,19 +16,18 @@ public final class SomaticPurityCalcs
     public static final double HIGH_PROBABILITY = 1 - LOW_PROBABILITY;
     private static final double OBSERVED_ZERO_LOW_MEAN = 3.0;
 
-    public static double expectedNoise(final FragmentTotals fragmentTotals, final double noiseReadsPerMillion)
+    public static double estimatedPurity(final double tumorPurity, final double tumorVaf, final double sampleVaf, final double noiseRate)
     {
-        double qualPerAllele = fragmentTotals.qualPerAllele();
-
-        double lowQualNoiseFactor = qualPerAllele < LOW_QUAL_NOISE_CUTOFF ?
-                (LOW_QUAL_NOISE_CUTOFF - qualPerAllele) / (LOW_QUAL_NOISE_CUTOFF - MIN_QUAL_PER_AD) : 0;
-
-        return fragmentTotals.sampleDepthTotal() / 1000000.0 * noiseReadsPerMillion + lowQualNoiseFactor;
+        return max(sampleVaf - noiseRate, 0) / tumorVaf * tumorPurity;
     }
 
-    public static double estimatedPurity(final double tumorPurity, final double tumorVaf, final double sampleVaf, final double sampleNoise)
+    public static double calcLimitOfDetection(final FragmentTotals fragmentTotals, final double tumorPurity, final double noiseRate)
     {
-        return (sampleVaf - sampleNoise) / tumorVaf * tumorPurity;
+        double sampleDepthTotal = fragmentTotals.sampleDepthTotal();
+        double expectedNoiseFragments = noiseRate * sampleDepthTotal;
+        double lodFragments = calcPoissonNoiseValue((int)round(expectedNoiseFragments), LOW_PROBABILITY);
+        double lodSampleVaf = lodFragments / sampleDepthTotal;
+        return estimatedPurity(tumorPurity, fragmentTotals.rawTumorVaf(), lodSampleVaf, noiseRate);
     }
 
     public static double estimatedProbability(int alleleCount, double noise)
@@ -41,12 +40,23 @@ public final class SomaticPurityCalcs
         return probability;
     }
 
+    public static double expectedNoiseOld(final int sampleDepthTotal, final double qualPerAlleleFrag, final double noiseReadsPerMillion)
+    {
+        double lowQualNoiseFactor = qualPerAlleleFrag < LOW_QUAL_NOISE_CUTOFF ?
+                (LOW_QUAL_NOISE_CUTOFF - qualPerAlleleFrag) / (LOW_QUAL_NOISE_CUTOFF - MIN_QUAL_PER_AD) : 0;
+
+        return sampleDepthTotal / 1000000.0 * noiseReadsPerMillion + lowQualNoiseFactor;
+    }
+
+    protected static double estimatedPurityOld(double sampleVaf, double tumorPloidy, double tumorVaf)
+    {
+        return max(min(2 * sampleVaf / (tumorPloidy * tumorVaf + sampleVaf * (2 - tumorPloidy)), 1), 0);
+    }
+
     /*
     public static PurityCalcData calc(double tumorPloidy, double tumorVaf, int totalCount, int alleleCount, double noise)
     {
         // TFctDNA = [wVAFctDNA-ε]/ wVAFtissue / Puritytissue
-
-
 
         double sampleVaf = totalCount > 0 ? max(alleleCount - noise, 0) / (double)totalCount : 0;
         double estimatedPurity = estimatedPurityOld(sampleVaf, tumorPloidy, tumorVaf);
@@ -83,11 +93,6 @@ public final class SomaticPurityCalcs
             return requiredProb == LOW_PROBABILITY ? OBSERVED_ZERO_LOW_MEAN : 0;
 
         return PoissonCalcs.calcPoissonNoiseValue(alleleCount, requiredProb);
-    }
-
-    protected static double estimatedPurityOld(double sampleVaf, double tumorPloidy, double tumorVaf)
-    {
-        return max(min(2 * sampleVaf / (tumorPloidy * tumorVaf + sampleVaf * (2 - tumorPloidy)), 1), 0);
     }
     */
 }

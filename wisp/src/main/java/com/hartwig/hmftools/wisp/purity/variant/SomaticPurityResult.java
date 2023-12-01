@@ -75,22 +75,21 @@ public class SomaticPurityResult
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("TotalVariants");
         sj.add("CalcVariants");
+        sj.add("SNVPurity");
+        sj.add("RawSomaticPurity");
+        sj.add("ClonalMethod");
+        sj.add("TumorVaf");
+        sj.add("AdjSampleVaf");
         sj.add("Frag1Variants");
         sj.add("Frag2PlusVariants");
         sj.add("ClonalPeakVariants");
-        sj.add("ClonalMethod");
         sj.add("ClonalDropoutRate");
-        sj.add("RawSomaticPurity");
-        sj.add("SNVPurity");
-        // sj.add(PurityCalcData.header(""));
-        // sj.add("DualSNVProbability");
+        sj.add("DualSNVProbability");
         sj.add("LodPurity");
         sj.add("TotalFragments");
         sj.add("TotalDual");
         sj.add("AlleleFragments");
         sj.add("AlleleDual");
-        sj.add("TumorVaf");
-        sj.add("AdjustedTumorVaf");
         sj.add("WeightedAvgDepth");
         return sj.toString();
     }
@@ -101,24 +100,24 @@ public class SomaticPurityResult
 
         sj.add(format("%d", TotalVariants));
         sj.add(format("%d", FragTotals.variantCount()));
+        sj.add(formatPurityValue(PurityCalcs.PurityEstimate));
+        sj.add(formatPurityValue(PurityCalcs.RawPurityEstimate));
+        sj.add(String.valueOf(PurityCalcs.Clonality.Method));
+        sj.add(formatPurityValue(FragTotals.rawTumorVaf()));
+        sj.add(formatPurityValue(FragTotals.adjSampleVaf()));
+
         sj.add(format("%d", FragTotals.sampleOneFragmentCount()));
         sj.add(format("%d", FragTotals.sampleTwoPlusCount()));
         sj.add(format("%d", PurityCalcs.Clonality.VariantCount));
-        sj.add(String.valueOf(PurityCalcs.Clonality.Method));
         sj.add(format("%.2f", PurityCalcs.Clonality.DropoutRate));
-        sj.add(formatPurityValue(PurityCalcs.RawPurityEstimate));
-        sj.add(formatPurityValue(PurityCalcs.PurityEstimate));
-        // sj.add(FragCalcResult.toTsv());
-        // sj.add(formatProbabilityValue(-1)); // DualFragsResult.PurityProbability
+        sj.add(formatProbabilityValue(PurityCalcs.DualProbability));
         sj.add(formatPurityValue(PurityCalcs.LodPurityEstimate));
 
         sj.add(format("%d", FragTotals.sampleDepthTotal()));
         sj.add(format("%d", UmiCounts.TotalDual));
         sj.add(format("%d", FragTotals.sampleAdTotal()));
         sj.add(format("%d", UmiCounts.AlleleDual));
-        sj.add(formatPurityValue(FragTotals.rawTumorVaf()));
-        sj.add(formatPurityValue(FragTotals.adjTumorVaf()));
-        sj.add(format("%.0f", FragTotals.weightedSampleDepth()));
+        sj.add(format("%.1f", FragTotals.weightedSampleDepth()));
 
         return sj.toString();
     }

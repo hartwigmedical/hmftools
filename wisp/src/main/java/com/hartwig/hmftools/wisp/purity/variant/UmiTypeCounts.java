@@ -58,6 +58,4 @@ public class UmiTypeCounts
 
     public int alleleCount() { return AlleleNone + AlleleSingle + AlleleDual; }
     public int totalCount() { return TotalNone + TotalSingle + TotalDual; }
-    public int dualCount() { return TotalDual; }
-    public int dualAlleleCount() { return TotalDual; }
 }

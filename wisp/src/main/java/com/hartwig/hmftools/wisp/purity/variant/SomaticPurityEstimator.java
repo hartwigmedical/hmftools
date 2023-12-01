@@ -10,7 +10,8 @@ import static com.hartwig.hmftools.wisp.purity.PurityConstants.VAF_PEAK_MODEL_MI
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.VAF_PEAK_MODEL_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecomputed;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.LOW_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.expectedNoise;
+import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.calcLimitOfDetection;
+import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedProbability;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedPurity;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVALID_RESULT;
 
@@ -35,12 +36,12 @@ public class SomaticPurityEstimator
     }
 
     public SomaticPurityResult calculatePurity(
-            final String sampleId, final PurityContext purityContext, final List<SomaticVariant> variants)
+            final String sampleId, final PurityContext purityContext, final List<SomaticVariant> variants, final int totalVariantCount)
     {
-        // TO-DO - pass in or set later
-        int totalVariants = 0;
-
         FragmentTotals fragmentTotals = new FragmentTotals();
+
+        int sampleDualDP = 0;
+        int sampleDualAD = 0;
 
         UmiTypeCounts umiTypeCounts = new UmiTypeCounts();
 
@@ -54,10 +55,11 @@ public class SomaticPurityEstimator
                     tumorFragData.Depth, sampleFragData.Depth, sampleFragData.QualTotal);
 
             umiTypeCounts.add(sampleFragData.UmiCounts);
+            sampleDualDP += sampleFragData.UmiCounts.TotalDual;
+            sampleDualAD += sampleFragData.UmiCounts.AlleleDual;
         }
 
-        int sampleDepthTotal = fragmentTotals.sampleAdTotal();
-        if(sampleDepthTotal == 0)
+        if(fragmentTotals.sampleDepthTotal() == 0)
             return INVALID_RESULT;
 
         double tumorPurity = purityContext.bestFit().purity();
@@ -79,13 +81,12 @@ public class SomaticPurityEstimator
         }
         */
 
-        double expectedSampleNoise = expectedNoise(fragmentTotals, mConfig.NoiseReadsPerMillion);
-
         PurityCalcData purityCalcData = new PurityCalcData();
 
         // firstly estimate raw purity without consideration of clonal peaks
+        double noiseRate = mConfig.noiseRate(false);
         purityCalcData.RawPurityEstimate = estimatedPurity(
-                tumorPurity, fragmentTotals.adjTumorVaf(), fragmentTotals.adjSampleVaf(), expectedSampleNoise);
+                tumorPurity, fragmentTotals.adjTumorVaf(), fragmentTotals.adjSampleVaf(), noiseRate);
 
         double weightedAvgDepth = fragmentTotals.weightedSampleDepth();
 
@@ -109,29 +110,29 @@ public class SomaticPurityEstimator
             if(isRecomputed(purityCalcData.Clonality.Method))
             {
                 purityCalcData.PurityEstimate = estimatedPurity(
-                        tumorPurity, fragmentTotals.adjTumorVaf(), purityCalcData.Clonality.Vaf, expectedSampleNoise);
+                        tumorPurity, fragmentTotals.adjTumorVaf(), purityCalcData.Clonality.Vaf, noiseRate);
 
                 purityCalcData.PurityRangeLow = estimatedPurity(
-                        tumorPurity, fragmentTotals.adjTumorVaf(), purityCalcData.Clonality.VafLow, expectedSampleNoise);
+                        tumorPurity, fragmentTotals.adjTumorVaf(), purityCalcData.Clonality.VafLow, noiseRate);
 
                 purityCalcData.PurityRangeHigh = estimatedPurity(
-                        tumorPurity, fragmentTotals.adjTumorVaf(), purityCalcData.Clonality.VafHigh, expectedSampleNoise);
+                        tumorPurity, fragmentTotals.adjTumorVaf(), purityCalcData.Clonality.VafHigh, noiseRate);
             }
         }
 
         // calculate a limit-of-detection (LOD), being the number of fragments that would return a 95% confidence of a tumor presence
-        double lodFragments = calcPoissonNoiseValue((int)round(expectedSampleNoise), LOW_PROBABILITY);
-        double lodSampleVaf = max(lodFragments - expectedSampleNoise, 0) / (double)fragmentTotals.sampleDepthTotal();
+        purityCalcData.LodPurityEstimate = calcLimitOfDetection(fragmentTotals, tumorPurity, noiseRate);
 
-        purityCalcData.LodPurityEstimate = estimatedPurity(tumorPurity, fragmentTotals.adjTumorVaf(), lodSampleVaf, expectedSampleNoise);
-
+        // report final probability as min of Dual and Normal Prob
+        double expectedDualNoiseFragments = mConfig.noiseRate(true) * sampleDualDP;
+        purityCalcData.DualProbability = estimatedProbability(sampleDualAD, expectedDualNoiseFragments);
 
         /*
-        double dualFragsNoise = sampleCountsDual.totalFragments() / 1000000.0 * mConfig.NoiseReadsPerMillionDualStrand + lowQualNoiseFactor;
+
+        double dualFragsNoise = sampleDualDepthTotal / 1000000.0 * mConfig.NoiseReadsPerMillionDualStrand;
 
         FragmentCalcResult dualFragsResult = SomaticPurityCalcs.calc(
                 tumorPloidy, adjustedTumorVaf, sampleCountsDual.totalFragments(), sampleCountsDual.alleleFragments(), dualFragsNoise);
-
 
         FragmentCalcResult lodFragsResult = SomaticPurityCalcs.calc(
                 tumorPloidy, adjustedTumorVaf, sampleDepthTotal, (int)round(lodFragments), expectedSampleNoise);
@@ -140,7 +141,7 @@ public class SomaticPurityEstimator
         // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
 
-        return new SomaticPurityResult(true, totalVariants, fragmentTotals, umiTypeCounts, purityCalcData);
+        return new SomaticPurityResult(true, totalVariantCount, fragmentTotals, umiTypeCounts, purityCalcData);
     }
 
     private void removeChipVariants(final FragmentTotals fragmentTotals)

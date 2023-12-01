@@ -44,7 +44,7 @@ public class ResultsWriter
         mSampleSummaryWriter = initialiseWriter();
         mVariantWriter = config.writeType(SOMATICS) || config.writeType(SOMATIC_ALL) ? initialiseVariantWriter(mConfig) : null;
         mCnRatioWriter = config.writeType(CN_DATA) ? initialiseCnRatioWriter(mConfig) : null;
-        mSomaticPeakWriter = WriteType.writeSomaticPeaks(config.WriteTypes) ? initialiseSomaticPeakWriter(mConfig) : null  ;
+        mSomaticPeakWriter = WriteType.plotSomatics(config.WriteTypes) ? initialiseSomaticPeakWriter(mConfig) : null  ;
         mDropoutCalcWriter = null; // config.WriteSomatics ? LowCountModel.initialiseWriter(mConfig) : null;
     }
 
@@ -90,7 +90,7 @@ public class ResultsWriter
             addCommonHeaderFields(sj, mConfig);
 
             sj.add("TumorPurity").add("TumorPloidy");
-            sj.add(format("\t%s", SomaticPurityResult.header()));
+            sj.add(SomaticPurityResult.header());
             sj.add(CnPurityResult.header());
 
             writer.write(sj.toString());

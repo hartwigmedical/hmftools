@@ -7,6 +7,7 @@ public class PurityCalcData
     public double PurityRangeLow;
     public double PurityRangeHigh;
     public double LodPurityEstimate;
+    public double DualProbability;
 
     public ClonalityData Clonality;
 
@@ -21,6 +22,7 @@ public class PurityCalcData
         PurityRangeLow = 0;
         PurityRangeHigh = 0;
         LodPurityEstimate = 0;
+        DualProbability = 0;
 
         Clonality = ClonalityData.NO_RESULT;
 
