@@ -114,9 +114,9 @@ public class ConsensusReadsTest
         assertEquals("10M", readInfo.ConsensusRead.getCigarString());
 
         assertEquals("AATAATAAAA", readInfo.ConsensusRead.getReadString());
-        assertEquals(19, readInfo.ConsensusRead.getBaseQualities()[2]);
+        assertEquals(11, readInfo.ConsensusRead.getBaseQualities()[2]); // lowered from 19
         assertEquals(0, readInfo.ConsensusRead.getBaseQualities()[5]);
-        assertEquals(18, readInfo.ConsensusRead.getBaseQualities()[8]);
+        assertEquals(11, readInfo.ConsensusRead.getBaseQualities()[8]);
 
         // test preference for reference base when quals are qual
         reads.clear();
