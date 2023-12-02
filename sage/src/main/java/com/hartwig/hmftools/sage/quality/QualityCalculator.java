@@ -137,7 +137,7 @@ public class QualityCalculator
 
         byte[] trinucleotideContext = mRefBases.trinucleotideContext(refPosition);
 
-        return mQualityRecalibrationMap.quality(
+        return mQualityRecalibrationMap.getQualityAdjustment(
                 (byte) readContextCounter.ref().charAt(refAltPos),
                 (byte) readContextCounter.alt().charAt(refAltPos),
                 trinucleotideContext, rawQuality);

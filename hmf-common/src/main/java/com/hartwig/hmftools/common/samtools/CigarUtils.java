@@ -117,8 +117,13 @@ public final class CigarUtils
 
         return record.getReadString().substring(record.getReadString().length() - rightClip);
     }
-
+    
     public static int getUnclippedPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand)
+    {
+        return getEndPosition(readStart, cigarStr, forwardStrand, true);
+    }
+
+    public static int getEndPosition(final int readStart, @NotNull final String cigarStr, final boolean forwardStrand, boolean includeSoftClipped)
     {
         int currentPosition = readStart;
         int elementLength = 0;
@@ -138,7 +143,11 @@ public final class CigarUtils
 
                 if(c == 'S' && readStart == currentPosition)
                 {
-                    // ignore left-clip when getting reverse strand position
+                    // ignore left-clip since getting the read end position
+                }
+                else if(c == 'S' && !includeSoftClipped)
+                {
+                    break;
                 }
                 else
                 {

@@ -69,5 +69,4 @@ public class BqrThread extends Thread
             }
         }
     }
-
 }
