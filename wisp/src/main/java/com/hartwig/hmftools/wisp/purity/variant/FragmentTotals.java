@@ -21,6 +21,8 @@ public class FragmentTotals
     private double mTumorAdjustedAdTotal;
     private double mTumorAdjustedDepthTotal;
 
+    private Double mTumorVafOverride; // for ref variant analysis without a tumor sample
+
     public FragmentTotals()
     {
         mVariantCount = 0;
@@ -36,6 +38,7 @@ public class FragmentTotals
         mSampleWeightedDepthTotal = 0;
         mTumorAdjustedAdTotal = 0;
         mTumorAdjustedDepthTotal = 0;
+        mTumorVafOverride = null;
     }
 
     public void addVariantData(
@@ -74,8 +77,24 @@ public class FragmentTotals
     public int sampleOneFragmentCount() { return mSampleOneFragmentCount; }
     public int sampleTwoPlusCount() { return mSampleTwoPlusCount; }
 
-    public double rawTumorVaf() { return mTumorDepthTotal > 0 ? mTumorAdTotal / (double)mTumorDepthTotal : 0; }
-    public double adjTumorVaf() { return mTumorAdjustedDepthTotal > 0 ? mTumorAdjustedAdTotal / mTumorAdjustedDepthTotal : 0; }
+    public void setTumorVafOverride(final double vaf) { mTumorVafOverride = vaf; }
+
+    public double rawTumorVaf()
+    {
+        if(mTumorVafOverride != null)
+            return mTumorVafOverride;
+
+        return mTumorDepthTotal > 0 ? mTumorAdTotal / (double)mTumorDepthTotal : 0;
+    }
+
+    public double adjTumorVaf()
+    {
+        if(mTumorVafOverride != null)
+            return mTumorVafOverride;
+
+        return mTumorAdjustedDepthTotal > 0 ? mTumorAdjustedAdTotal / mTumorAdjustedDepthTotal : 0;
+    }
+
     public double adjSampleVaf() { return mSampleAdjustedDepthTotal > 0 ? mSampleAdjustedAdTotal / mSampleAdjustedDepthTotal : 0; }
 
     public double weightedSampleDepth()

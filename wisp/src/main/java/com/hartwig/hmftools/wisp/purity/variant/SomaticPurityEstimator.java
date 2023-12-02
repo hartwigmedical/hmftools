@@ -1,15 +1,11 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static java.lang.Math.max;
-import static java.lang.Math.round;
-
-import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_COUNT_MODEL_MIN_AVG_DEPTH;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_COUNT_MODEL_MIN_FRAG_VARIANTS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SYNTHETIC_TUMOR_VAF;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.VAF_PEAK_MODEL_MIN_AVG_DEPTH;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.VAF_PEAK_MODEL_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecomputed;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.calcLimitOfDetection;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedProbability;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedPurity;
@@ -64,22 +60,10 @@ public class SomaticPurityEstimator
 
         double tumorPurity = purityContext.bestFit().purity();
 
-        /*
-        double tumorVaf;
-
-        if(!mConfig.hasSyntheticTumor())
+        if(mConfig.hasSyntheticTumor())
         {
-            double tumorDepthTotal = tumorCounts.totalFragments();
-            if(tumorDepthTotal == 0)
-                return INVALID_RESULT;
-
-            tumorVaf = tumorCounts.alleleFragments() / tumorDepthTotal;
+            fragmentTotals.setTumorVafOverride(SYNTHETIC_TUMOR_VAF);
         }
-        else
-        {
-            tumorVaf = SYNTHETIC_TUMOR_VAF;
-        }
-        */
 
         PurityCalcData purityCalcData = new PurityCalcData();
 
@@ -126,17 +110,6 @@ public class SomaticPurityEstimator
         // report final probability as min of Dual and Normal Prob
         double expectedDualNoiseFragments = mConfig.noiseRate(true) * sampleDualDP;
         purityCalcData.DualProbability = estimatedProbability(sampleDualAD, expectedDualNoiseFragments);
-
-        /*
-
-        double dualFragsNoise = sampleDualDepthTotal / 1000000.0 * mConfig.NoiseReadsPerMillionDualStrand;
-
-        FragmentCalcResult dualFragsResult = SomaticPurityCalcs.calc(
-                tumorPloidy, adjustedTumorVaf, sampleCountsDual.totalFragments(), sampleCountsDual.alleleFragments(), dualFragsNoise);
-
-        FragmentCalcResult lodFragsResult = SomaticPurityCalcs.calc(
-                tumorPloidy, adjustedTumorVaf, sampleDepthTotal, (int)round(lodFragments), expectedSampleNoise);
-        */
 
         // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));

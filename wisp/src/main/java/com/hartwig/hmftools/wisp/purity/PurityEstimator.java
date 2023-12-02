@@ -52,28 +52,40 @@ public class PurityEstimator
 
     public void run()
     {
-        List<PurityTask> sampleTasks = Lists.newArrayList();
+        List<PurityTask> purityCalcTasks = Lists.newArrayList();
+        List<PlotTask> plotTasks = Lists.newArrayList();
+
+        boolean requirePlots = plotSomatics(mConfig.WriteTypes) || plotCopyNumber(mConfig.WriteTypes);
 
         if(mConfig.Threads > 1)
         {
             for(int i = 0; i < min(mConfig.Samples.size(), mConfig.Threads); ++i)
             {
-                sampleTasks.add(new PurityTask());
+                purityCalcTasks.add(new PurityTask());
+
+                if(requirePlots)
+                    plotTasks.add(new PlotTask());
             }
 
             int taskIndex = 0;
             for(SampleData sample : mConfig.Samples)
             {
-                if(taskIndex >= sampleTasks.size())
+                if(taskIndex >= purityCalcTasks.size())
                     taskIndex = 0;
 
-                sampleTasks.get(taskIndex).Samples.add(sample);
+                purityCalcTasks.get(taskIndex).Samples.add(sample);
+
+                if(requirePlots)
+                    plotTasks.get(taskIndex).Samples.add(sample);
 
                 ++taskIndex;
             }
 
-            final List<Callable> callableList = sampleTasks.stream().collect(Collectors.toList());
-            TaskExecutor.executeTasks(callableList, mConfig.Threads);
+            final List<Callable> callableList = purityCalcTasks.stream().collect(Collectors.toList());
+            if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
+            {
+                System.exit(1);
+            }
         }
         else
         {
@@ -84,34 +96,19 @@ public class PurityEstimator
 
         mResultsWriter.close();
 
-        if(plotSomatics(mConfig.WriteTypes) || plotCopyNumber(mConfig.WriteTypes))
+        if(requirePlots)
         {
-            boolean hasError = false;
-            for(SampleData sample : mConfig.Samples)
+            if(plotTasks.size() > 1)
             {
-                for(String sampleId : sample.CtDnaSamples)
+                final List<Callable> callableList = plotTasks.stream().collect(Collectors.toList());
+                if(!TaskExecutor.executeTasks(callableList, mConfig.Threads))
                 {
-                    if(plotCopyNumber(mConfig.WriteTypes))
-                    {
-                        if(!CopyNumberProfile.plotCopyNumberGcRatioFit(sample.PatientId, sampleId, mConfig))
-                        {
-                            hasError = true;
-                            break;
-                        }
-                    }
-
-                    if(plotSomatics(mConfig.WriteTypes))
-                    {
-                        if(!SomaticVariants.plotSomaticVafs(sample.PatientId, sampleId, mConfig))
-                        {
-                            hasError = true;
-                            break;
-                        }
-                    }
+                    System.exit(1);
                 }
-
-                if(hasError)
-                    break;
+            }
+            else
+            {
+                plotTasks.get(0).call();
             }
         }
 
@@ -191,59 +188,74 @@ public class PurityEstimator
                 double ploidy = 2;
 
                 FittedPurity fittedPurity = ImmutableFittedPurity.builder()
-                        .purity(purity)
-                        .normFactor(1)
-                        .ploidy(ploidy)
-                        .score(0D)
-                        .diploidProportion(0D)
-                        .somaticPenalty(0D)
+                        .purity(purity).normFactor(1).ploidy(ploidy).score(0D).diploidProportion(0D).somaticPenalty(0D)
                         .build();
 
                 PurpleQC purpleQC = ImmutablePurpleQC.builder()
-                        .method(FittedPurityMethod.NORMAL)
-                        .amberMeanDepth(0)
-                        .copyNumberSegments(1)
-                        .unsupportedCopyNumberSegments(0)
-                        .deletedGenes(0)
-                        .purity(purity)
-                        .contamination(0D)
-                        .cobaltGender(Gender.FEMALE)
-                        .amberGender(Gender.FEMALE)
+                        .method(FittedPurityMethod.NORMAL).amberMeanDepth(0).copyNumberSegments(1).unsupportedCopyNumberSegments(0)
+                        .deletedGenes(0).purity(purity).contamination(0D).cobaltGender(Gender.FEMALE).amberGender(Gender.FEMALE)
                         .lohPercent(0)
                         .build();
 
                 FittedPurityScore fittedPurityScore = ImmutableFittedPurityScore.builder()
-                        .minPurity(0D)
-                        .maxPurity(0D)
-                        .minPloidy(0D)
-                        .maxPloidy(0D)
-                        .minDiploidProportion(0D)
-                        .maxDiploidProportion(0D)
+                        .minPurity(0D).maxPurity(0D).minPloidy(0D).maxPloidy(0D).minDiploidProportion(0D).maxDiploidProportion(0D)
                         .build();
 
                 PurityContext genericContext = ImmutablePurityContext.builder()
-                        .gender(Gender.FEMALE)
-                        .runMode(RunMode.TUMOR_GERMLINE)
-                        .targeted(false)
-                        .bestFit(fittedPurity)
-                        .method(FittedPurityMethod.NORMAL)
-                        .score(fittedPurityScore)
-                        .qc(purpleQC)
-                        .polyClonalProportion(0D)
-                        .wholeGenomeDuplication(false)
-                        .microsatelliteIndelsPerMb(0D)
-                        .tumorMutationalBurdenPerMb(0D)
-                        .tumorMutationalLoad(0)
-                        .svTumorMutationalBurden(0)
-                        .microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
-                        .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN)
-                        .tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
+                        .gender(Gender.FEMALE).runMode(RunMode.TUMOR_GERMLINE).targeted(false).bestFit(fittedPurity)
+                        .method(FittedPurityMethod.NORMAL).score(fittedPurityScore).qc(purpleQC).polyClonalProportion(0D)
+                        .wholeGenomeDuplication(false).microsatelliteIndelsPerMb(0D).tumorMutationalBurdenPerMb(0D)
+                        .tumorMutationalLoad(0).svTumorMutationalBurden(0).microsatelliteStatus(MicrosatelliteStatus.UNKNOWN)
+                        .tumorMutationalLoadStatus(TumorMutationalStatus.UNKNOWN).tumorMutationalBurdenStatus(TumorMutationalStatus.UNKNOWN)
                         .build();
 
                 return genericContext;
             }
 
             return null;
+        }
+    }
+
+    private class PlotTask implements Callable
+    {
+        public final List<SampleData> Samples;
+
+        public PlotTask()
+        {
+            Samples = Lists.newArrayList();
+        }
+
+        @Override
+        public Long call()
+        {
+            for(SampleData sample : Samples)
+            {
+                createSamplePlots(sample);
+            }
+
+            return (long)0;
+        }
+
+        private void createSamplePlots(final SampleData sample)
+        {
+            // CT_LOGGER.info("processing sample: {}", sample);
+
+            for(String sampleId : sample.CtDnaSamples)
+            {
+                if(plotCopyNumber(mConfig.WriteTypes))
+                {
+                    if(!CopyNumberProfile.plotCopyNumberGcRatioFit(sample.PatientId, sampleId, mConfig))
+                        return;
+                }
+
+                if(plotSomatics(mConfig.WriteTypes))
+                {
+                    if(!SomaticVariants.plotSomaticVafs(sample.PatientId, sampleId, mConfig))
+                    {
+                        CT_LOGGER.error("patient({}) sample({}) somatic plot failed", sample.PatientId, sampleId);
+                    }
+                }
+            }
         }
     }
 

@@ -4,38 +4,36 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
-import static com.hartwig.hmftools.common.variant.CommonVcfTags.PASS;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_DEPTH_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_PEAK_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.VAF_PEAK_MODEL_MIN_AVG_DEPTH;
-import static com.hartwig.hmftools.wisp.purity.ResultsWriter.SOMATICS_FILE_ID;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.SOMATIC_PEAK_FILE_ID;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityData.NO_RESULT;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.NO_PEAK;
 
+import static org.apache.commons.lang3.ObjectUtils.median;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
-import com.hartwig.hmftools.common.variant.Hotspot;
 import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.wisp.common.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
@@ -85,11 +83,7 @@ public class VafPeakModel extends ClonalityModel
 
             SampleExpAd = SampleEstTF * VCN / (CopyNumber * SampleEstTF + (1 - SampleEstTF) * 2) * SampleExpDp
 
-            SampleExpVaf=SampleExpAd/SampleExpDp
-
-            SampleExpDp=((1-SampleEstTF)*SampleWAD*2+SampleEstTF*SampleWAD*CopyNumber)/2
-            SampleExpAd=round(SampleEstTF*VCN/(CopyNumber*SampleEstTF+(1-SampleEstTF)*2)*SampleExpDp,2),
-                                     SampleExpVaf=round(SampleExpAd/SampleExpDp,4)
+            SampleExpVaf= SampleExpAd / SampleExpDp
             */
 
             if(expectedDp <= 0)
@@ -101,17 +95,15 @@ public class VafPeakModel extends ClonalityModel
 
             variantVafRatios.add(vafRatio);
 
-            // variantVafs.add(sampleFragData.vaf());
-
             writePeakData(mResultsWriter.getSomaticPeakWriter(), mConfig, mSample, sampleId, variant, vafRatio);
         }
 
         if(variantVafRatios.size() < SOMATIC_PEAK_MIN_VARIANTS)
             return NO_RESULT;
 
-        // List<VafPeak> vafPeaks = findVafPeaks(variantVafs, estimateVaf);
+        Collections.sort(variantVafRatios);
 
-        List<VafPeak> vafRatioPeaks = findVafRatioPeaks(variantVafRatios, estimateVaf);
+        List<VafPeak> vafRatioPeaks = findVafRatioPeaks(variantVafRatios);
 
         double sampleAdjVaf = fragmentTotals.adjSampleVaf();
 
@@ -166,7 +158,7 @@ public class VafPeakModel extends ClonalityModel
     private static final double VAF_RATIO_BUCKET = 0.1; // ratio buckets
     private static final int MAX_VAF_RATIO = 8;
 
-    private List<VafPeak> findVafRatioPeaks(final List<Double> sampleVafRatios, double estimatedVaf)
+    private List<VafPeak> findVafRatioPeaks(final List<Double> sampleVafRatios)
     {
         double vafRatioTotal = 0;
         double maxVafRatio = 0;
@@ -179,7 +171,11 @@ public class VafPeakModel extends ClonalityModel
         if(vafRatioTotal == 0)
             return Collections.emptyList();
 
-        double densityBandwidth = DENSITY_BANDWIDTH;
+        double averageRatio = vafRatioTotal / sampleVafRatios.size();
+        double medianRatio = sampleVafRatios.get(sampleVafRatios.size() / 2);
+        double densityMultiplier = sqrt(max(averageRatio / medianRatio, 1));
+
+        double densityBandwidth = DENSITY_BANDWIDTH * densityMultiplier;
 
         int maxVafRatioLimit = min((int)ceil(maxVafRatio), MAX_VAF_RATIO);
 
@@ -191,9 +187,6 @@ public class VafPeakModel extends ClonalityModel
         {
             vafRatios[i] = i * VAF_RATIO_BUCKET;
         }
-
-        // double[] vafRatios = IntStream.rangeClosed(0, vafRatioBuckets).mapToDouble(x -> x * VAF_RATIO_BUCKET / maxVafRatioLimit).toArray();
-        // double[] vafs = IntStream.rangeClosed(0, maxVafLimit * vafFraction).mapToDouble(x -> x / (100d * vafFraction)).toArray();
 
         KernelEstimator estimator = new KernelEstimator(VAF_RATIO_BUCKET, densityBandwidth);
 
@@ -271,8 +264,6 @@ public class VafPeakModel extends ClonalityModel
 
         try
         {
-            VariantContextDecorator decorator = variant.decorator();
-
             StringJoiner sj = new StringJoiner(TSV_DELIM);
 
             addCommonFields(sj, config, sampleData, sampleId);
@@ -365,5 +356,4 @@ public class VafPeakModel extends ClonalityModel
 
         return peakVafs;
     }
-
 }
