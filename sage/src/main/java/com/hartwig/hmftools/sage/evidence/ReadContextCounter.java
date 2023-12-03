@@ -889,7 +889,7 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         mMaxDistanceFromEdge = max(minDistance, mMaxDistanceFromEdge);
-        mMaxDistanceFromEdgeUnclipped = max(minDistanceUnclipped, mMaxDistanceFromEdge);
+        mMaxDistanceFromEdgeUnclipped = max(minDistanceUnclipped, mMaxDistanceFromEdgeUnclipped);
     }
 
     private int getMaxRealignDistance(final SAMRecord record)
