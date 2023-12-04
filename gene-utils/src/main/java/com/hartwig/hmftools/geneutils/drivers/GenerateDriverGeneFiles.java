@@ -145,7 +145,6 @@ public class GenerateDriverGeneFiles
             writeGermlineHotspots(refGenomeVersion, driverGenes, sageDir);
         }
 
-
         writeGenePanelRegions(refGenomeVersion, actionableGenes, coverageGenes, sageDir);
     }
 
@@ -201,6 +200,8 @@ public class GenerateDriverGeneFiles
             String chromosomeStr = refGenomeVersion.versionedChromosome(chromosome.toString());
             List<GeneData> geneDataList = chrGeneDataMap.get(chromosomeStr);
 
+            List<CodingRegion> chrPanelRegions = Lists.newArrayList();
+
             for(GeneData geneData : geneDataList)
             {
                 if(!geneSet.contains(geneData.GeneName))
@@ -210,71 +211,49 @@ public class GenerateDriverGeneFiles
 
                 List<CodingRegion> transcriptRegions = getTranscriptRegions(geneData, transData, includeUTR);
 
-                // merge any overlap with the previous gene region
-                CodingRegion lastRegion = !panelRegions.isEmpty() ? panelRegions.get(panelRegions.size() - 1) : null;
-
-                if(!transcriptRegions.isEmpty())
-                {
-                    int regionsRemoved = 0;
-
-                    // check for overlaps with the previous region
-                    for(CodingRegion newRegion : transcriptRegions)
-                    {
-                        if(lastRegion != null && lastRegion.Chromosome.equals(chromosomeStr))
-                        {
-                            if(newRegion.start() <= lastRegion.end())
-                            {
-                                GU_LOGGER.trace("gene({}) merged region({}) with previous({})",
-                                        geneData.GeneName, newRegion, lastRegion);
-
-                                lastRegion.setEnd(newRegion.end());
-                                ++regionsRemoved;
-                                continue;
-                            }
-                        }
-
-                        panelRegions.add(newRegion);
-                        lastRegion = newRegion;
-                    }
-
-                    if(regionsRemoved > 0)
-                    {
-                        GU_LOGGER.debug("gene({}) merged {} regions from overlaps", geneData.GeneName, regionsRemoved);
-                    }
-                }
-
-                /*
-                if(!transcriptRegions.isEmpty() && lastRegion != null && lastRegion.Chromosome.equals(chromosomeStr))
-                {
-                    int newLastRegionEnd = 0;
-                    int regionsRemoved = 0;
-                    while(!transcriptRegions.isEmpty())
-                    {
-                        CodingRegion newRegion = transcriptRegions.get(0);
-                        if(newRegion.start() > lastRegion.end() + 1)
-                            break;
-
-                        // otherwise remove the new region and merge
-                        newLastRegionEnd = max(newRegion.end(), lastRegion.end());
-                        transcriptRegions.remove(0);
-                        ++regionsRemoved;
-                    }
-
-                    if(newLastRegionEnd > 0)
-                    {
-                        CodingRegion newLastRegion = new CodingRegion(
-                                lastRegion.Chromosome, lastRegion.start(), newLastRegionEnd, lastRegion.GeneName, lastRegion.ExonRank);
-
-                        panelRegions.set(panelRegions.size() - 1, newLastRegion);
-
-                        GU_LOGGER.debug("gene({}) removed {} regions from overlap with previous region(gene={} range={}->{})",
-                                geneData.GeneName, regionsRemoved, lastRegion.GeneName, lastRegion.start(), lastRegion.end());
-                    }
-                }
-
-                panelRegions.addAll(transcriptRegions);
-                */
+                chrPanelRegions.addAll(transcriptRegions);
             }
+
+            // sort and merge any overlaps
+            Collections.sort(chrPanelRegions);
+
+            int regionsRemoved = 0;
+
+            int index = 0;
+
+            // check for overlaps with the previous region
+            while(index < chrPanelRegions.size() - 1)
+            {
+                CodingRegion region = chrPanelRegions.get(index);
+
+                int nextIndex = index + 1;
+                while(nextIndex < chrPanelRegions.size())
+                {
+                    CodingRegion nextRegion = chrPanelRegions.get(nextIndex);
+
+                    if(region.end() >= nextRegion.start())
+                    {
+                        GU_LOGGER.trace("gene({}) merged region({}) with next({})", region.GeneName, region, nextRegion);
+
+                        region.setEnd(nextRegion.end());
+                        ++regionsRemoved;
+                        chrPanelRegions.remove(nextIndex);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                ++index;
+            }
+
+            if(regionsRemoved > 0)
+            {
+                GU_LOGGER.debug("chr({}) merged {} regions from overlaps", chromosomeStr, regionsRemoved);
+            }
+
+            panelRegions.addAll(chrPanelRegions);
         }
 
         try
