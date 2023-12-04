@@ -2,6 +2,13 @@ package com.hartwig.hmftools.purple.config;
 
 import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_MATE_QUAL_SCORE;
 import static com.hartwig.hmftools.purple.config.PurpleConstants.DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_PLOIDY_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MAX_PURITY_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_PLOIDY_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.MIN_PURITY_DEFAULT;
+import static com.hartwig.hmftools.purple.config.PurpleConstants.PURITY_INCREMENT_DEFAULT;
 
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -26,6 +33,8 @@ public class FittingConfig
     public final int RecoveryMinMateQualScore;
     public final int RecoveryMinSglQualScore;
 
+    public final double DeviationPenaltyGcAdjust;
+
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
     private static final String PURITY_INCREMENT = "purity_increment";
@@ -34,13 +43,7 @@ public class FittingConfig
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT = "min_diploid_tumor_ratio_count";
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
 
-    public static final double MIN_PURITY_DEFAULT = 0.08;
-    public static final double MAX_PURITY_DEFAULT = 1.0;
-    public static final double PURITY_INCREMENT_DEFAULT = 0.01;
-    public static final double MIN_PLOIDY_DEFAULT = 1.0;
-    public static final double MAX_PLOIDY_DEFAULT = 8;
-    private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
-    private static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 150;
+    private static final String DEVIATION_PENALTY_GC_ADJUST = "deviation_penalty_gc_adjust";
 
     // fitting scores
     private static final String PLOIDY_PENALTY_FACTOR = "ploidy_penalty_factor";
@@ -84,6 +87,8 @@ public class FittingConfig
 
         RecoveryMinMateQualScore = configBuilder.getInteger(CFG_MIN_MATE_QUAL_SCORE);
         RecoveryMinSglQualScore = configBuilder.getInteger(CFG_MIN_SGL_QUAL_SCORE);
+
+        DeviationPenaltyGcAdjust = configBuilder.getDecimal(DEVIATION_PENALTY_GC_ADJUST);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -132,5 +137,7 @@ public class FittingConfig
 
         configBuilder.addInteger(
                 CFG_MIN_SGL_QUAL_SCORE, "SV recovery SGL min qual score", DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE);
+
+        configBuilder.addDecimal(DEVIATION_PENALTY_GC_ADJUST, "Adjust deviation penalty by tumor GC Ratio", 0);
     }
 }
