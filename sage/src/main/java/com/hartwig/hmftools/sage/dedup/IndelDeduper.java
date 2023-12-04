@@ -239,7 +239,7 @@ public class IndelDeduper
         if(positionsWithin(variant.position(), variant.CorePosEnd, indel.FlankPosStart, indel.FlankPosEnd))
             return true;
 
-        if(variant.ReadCounter.maxDistanceFromEdge() < MAX_READ_EDGE_DISTANCE)
+        if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge() < MAX_READ_EDGE_DISTANCE)
             return true;
 
         return false;
@@ -423,7 +423,7 @@ public class IndelDeduper
             if(Variant.isIndel())
             {
                 IndelScore = ReadCounter.indelLength() * INDEL_LENGTH_FACTOR
-                        + ReadCounter.maxDistanceFromEdge()
+                        + ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge()
                         - MIN_EVENTS_FACTOR * ReadCounter.minNumberOfEvents();
             }
             else
@@ -488,8 +488,8 @@ public class IndelDeduper
         public String toString()
         {
             return format("var(%s:%d %s>%s) corePos(%d - %d) flankPos(%d - %d) distFromEdge(%d) score(%d) filters(%s)",
-                Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(),
-                CorePosStart, CorePosEnd, FlankPosStart, FlankPosEnd, ReadCounter.maxDistanceFromEdge(), IndelScore, Variant.filtersStr());
+                Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), CorePosStart, CorePosEnd, FlankPosStart,
+                    FlankPosEnd, ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge(), IndelScore, Variant.filtersStr());
         }
     }
 }

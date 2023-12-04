@@ -219,12 +219,14 @@ public class VariantFilters
         if(isLongInsert(primaryTumor))
             return false;
 
-        int med = primaryTumor.maxDistanceFromEdgeUnclipped();
+        int altMed = primaryTumor.readEdgeDistance().maxAltDistanceFromUnclippedEdge();
+        int maxMed = primaryTumor.readEdgeDistance().maxDistanceFromUnclippedEdge();
 
-        if(med >= MAX_READ_EDGE_DISTANCE)
+        if(altMed >= MAX_READ_EDGE_DISTANCE)
             return false;
 
-        double medProb = pow(2 * med / (double)mReadLength, primaryTumor.altSupport());
+        // note max MED for all reads * 2 covers scenarios were no reads have the variant centred
+        double medProb = pow(2 * altMed / (2.0 * maxMed), primaryTumor.altSupport());
 
         return medProb < MAX_READ_EDGE_DISTANCE_PROB;
     }
