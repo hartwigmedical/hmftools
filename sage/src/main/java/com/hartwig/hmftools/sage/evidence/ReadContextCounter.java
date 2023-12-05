@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORD
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
@@ -174,8 +175,7 @@ public class ReadContextCounter implements VariantHotspot
         mTotalNmCount = 0;
         mTotalAltNmCount = 0;
 
-        int adjustedVariantPosition = mVariant.isIndel() ? mVariant.position() + indelLength() / 2 : mVariant.position();
-        mReadEdgeDistance = new ReadEdgeDistance(adjustedVariantPosition);
+        mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), indelLength()));
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
@@ -190,7 +190,6 @@ public class ReadContextCounter implements VariantHotspot
     public VariantTier tier() { return mTier; }
     public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
     public boolean isSnv() { return mIsSnv; }
-    public boolean isMnv() { return mIsMnv; }
     public boolean isIndel() { return mIsIndel; }
 
     @Override
@@ -206,6 +205,7 @@ public class ReadContextCounter implements VariantHotspot
     public String alt() { return mVariant.alt(); }
 
     public int altSupport() { return mCounts.altSupport(); }
+    public int strongAltSupport() { return mCounts.strongSupport(); }
     public int refSupport() { return mCounts.Ref; }
     public int depth() { return mCounts.Total; }
 

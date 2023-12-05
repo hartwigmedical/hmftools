@@ -65,8 +65,10 @@ public class VariantVCF implements AutoCloseable
 
     public static final String READ_CONTEXT_REPEAT_SEQUENCE = "RC_REPS";
     private static final String READ_CONTEXT_REPEAT_SEQUENCE_DESCRIPTION = "Repeat sequence at read context";
+
     public static final String READ_CONTEXT_MICRO_HOMOLOGY = "RC_MH";
     private static final String READ_CONTEXT_MICRO_HOMOLOGY_DESCRIPTION = "Micro-homology at read context";
+
     private static final String READ_CONTEXT_AF_DESCRIPTION =
             "Allelic frequency calculated from read context counts as (Full + Partial + Core + Realigned + Alt) / Coverage";
 

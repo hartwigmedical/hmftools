@@ -63,6 +63,7 @@ public class ReadSupportCounts
     }
 
     public int altSupport() { return Full + Partial + Core + OtherAlt + Realigned; }
+    public int strongSupport() { return Full + Partial + Realigned; }
 
     public void applyRatio(double ratio)
     {

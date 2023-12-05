@@ -28,6 +28,12 @@ public class ReadEdgeDistance
         mMaxDistanceFromAlignedEdgeAlt = 0;
     }
 
+    public static int calcAdjustedVariantPosition(final int variantPosition, final int indelLength)
+    {
+        // INDELs measure MED from their mid-point
+        return indelLength == 0 ? variantPosition : variantPosition +  indelLength / 2;
+    }
+
     public int maxAltDistanceFromAlignedEdge() { return mMaxDistanceFromAlignedEdgeAlt; }
     public int maxDistanceFromUnclippedEdge() { return mMaxDistanceFromUnclippedEdge; }
     public int maxAltDistanceFromUnclippedEdge() { return mMaxDistanceFromUnclippedEdgeAlt; }
