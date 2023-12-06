@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.REF_GENOME_CFG_DESC;
-import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRefGenomeConfig;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.COBALT_DIR_DESC;
@@ -22,16 +21,16 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.addOutputOp
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
-import static com.hartwig.hmftools.wisp.common.CommonUtils.BATCH_CONTROL_TAG;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
 import static com.hartwig.hmftools.wisp.common.SampleData.ctDnaSamplesFromStr;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
@@ -139,6 +138,11 @@ public class PurityConfig
     public String getSomaticVcf(final String sampleId) { return convertWildcardSamplePath(SomaticVcf, sampleId); }
     public String getCobaltDir(final String sampleId) { return convertWildcardSamplePath(CobaltDir, sampleId); }
 
+    public double noiseRate(boolean useDual)
+    {
+        return (useDual ? NoiseReadsPerMillionDualStrand : NoiseReadsPerMillion) / 1_000_000d;
+    }
+
     private void loadSampleData(final ConfigBuilder configBuilder)
     {
         if(configBuilder.hasValue(SAMPLE_ID_FILE))
@@ -216,13 +220,13 @@ public class PurityConfig
         configBuilder.addPath(PROBE_VARIANTS_FILE, false, "File defining the probe variants");
 
         configBuilder.addDecimal(
-                NOISE_READS_PER_MILLION, "Expected reads-per-million from noise", PurityConstants.DEFAULT_NOISE_READS_PER_MILLION);
+                NOISE_READS_PER_MILLION, "Expected reads-per-million from noise", DEFAULT_NOISE_READS_PER_MILLION);
 
         configBuilder.addDecimal(
                 NOISE_READS_PER_MILLION_DUAL,
-                "Expected reads-per-million from noise for dual-strand reads", PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND);
+                "Expected reads-per-million from noise for dual-strand reads", DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND);
 
-        configBuilder.addDecimal(GC_RATIO_MIN,"GC ratio minimum permitted", PurityConstants.DEFAULT_GC_RATIO_MIN);
+        configBuilder.addRequiredDecimal(GC_RATIO_MIN,"GC ratio minimum permitted");
 
         addOutputOptions(configBuilder);
         addThreadOptions(configBuilder);

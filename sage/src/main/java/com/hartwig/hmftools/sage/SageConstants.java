@@ -58,6 +58,8 @@ public class SageConstants
     public static final int HOTSPOT_MIN_TUMOR_ALT_SUPPORT_SKIP_QUAL = 8;
     public static final int HOTSPOT_MIN_RAW_ALT_BASE_QUAL = 150;
 
+    public static final double VAF_PROBABILITY_THRESHOLD = 10e-14;
+
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY = 25;
     public static final int DEFAULT_MIN_AVG_BASE_QUALITY_HOTSPOT = 18;
 
@@ -74,15 +76,32 @@ public class SageConstants
     public static final double STRAND_BIAS_REF_MIN_DEPTH = 5;
     public static final double STRAND_BIAS_REF_MIN_BIAS = 0.25;
 
+    public static final int JITTER_INDEL_MAX_REPEATS = 3;
+    public static final double JITTER_INDEL_VAF_THRESHOLD = 0.0125;
+
+    public static final int JITTER_NON_INDEL_MAX_REPEATS = 5;
+    public static final double JITTER_NON_INDEL_VAF_THRESHOLD = 0.01;
+
     public static final int REQUIRED_UNIQUE_FRAG_COORDS = 3;
 
+    // quality calcs
+    public static final double DEFAULT_JITTER_PENALTY = 0.25;
+    public static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
+    public static final int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
+    public static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 0;
+    public static final int DEFAULT_READ_EDGE_FACTOR = 3;
+    public static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
+    public static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
+    public static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
+    public static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
+
     public static final SoftFilterConfig DEFAULT_HOTSPOT_FILTER = new SoftFilterConfig(
-            "hotspot", 70, 0.005,
+            "hotspot", 55, 0.005,
             0, 0, 0, 0,
             0.1, 0.5);
 
     public static final SoftFilterConfig DEFAULT_PANEL_FILTER = new SoftFilterConfig(
-            "panel", 100, 0.02  ,
+            "panel", 100, 0.02,
             0, 0, 0, 0,
             0.04, 0.04);
 

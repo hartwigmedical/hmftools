@@ -145,15 +145,17 @@ public class FragmentSyncUtils
         }
 
         // bring in the read bases, quals, coords and cigar to the truncated positions
-        int totalOffset = trucatedBases[0] + trucatedBases[1];
+        int leftOffset = trucatedBases[0];
+        int rightOffset = trucatedBases[1];
+        int totalOffset = leftOffset + rightOffset;
         int truncLength = combinedBases.length - totalOffset;
         byte[] truncBases = new byte[truncLength];
         byte[] truncBaseQuals = new byte[truncLength];
 
         for(int i = 0; i < truncLength; ++i)
         {
-            truncBases[i] = combinedBases[i + trucatedBases[0]];
-            truncBaseQuals[i] = combinedBaseQualities[i + trucatedBases[0]];
+            truncBases[i] = combinedBases[i + leftOffset];
+            truncBaseQuals[i] = combinedBaseQualities[i + leftOffset];
         }
 
         int truncatedFragmentStart = trucatedBases[2];

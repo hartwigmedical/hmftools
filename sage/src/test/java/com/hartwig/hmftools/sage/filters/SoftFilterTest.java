@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.filters;
 
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
-import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_2;
 import static com.hartwig.hmftools.common.test.MockRefGenome.generateRandomBases;
 import static com.hartwig.hmftools.common.test.MockRefGenome.getNextBase;
 import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
@@ -66,7 +65,7 @@ public class SoftFilterTest
     @Test
     public void testMaxReadEdgeDistanceFilter()
     {
-        int position = 20;
+        int position = 50;
 
         ReadContextCounter readContextCounter = createSnvReadContextCounter(position);
 
@@ -75,19 +74,32 @@ public class SoftFilterTest
         String altBase = readContextCounter.alt();
 
         SAMRecord read = createSamRecord(
-                TEST_READ_ID, CHR_1, 15, REF_BASES.substring(15, position) + altBase + REF_BASES.substring(position + 1, 45), TEST_CIGAR);
+                TEST_READ_ID, CHR_1, 45, REF_BASES.substring(45, position) + altBase + REF_BASES.substring(position + 1, 75), TEST_CIGAR);
 
         readContextCounter.processRead(read, 1, null);
         readContextCounter.processRead(read, 1, null);
         readContextCounter.processRead(read, 1, null);
 
         SAMRecord read2 = createSamRecord(
-                TEST_READ_ID, CHR_1, 5,  REF_BASES.substring(5, position) + altBase + REF_BASES.substring(position + 1, 35), TEST_CIGAR);
+                TEST_READ_ID, CHR_1, 45,  REF_BASES.substring(42, position) + altBase + REF_BASES.substring(position + 1, 70), TEST_CIGAR);
 
         readContextCounter.processRead(read2, 1, null);
         readContextCounter.processRead(read2, 1, null);
 
-        assertEquals(14, readContextCounter.maxDistanceFromEdge());
+        // factor in soft-clipped bases
+        SAMRecord read3 = createSamRecord(
+                TEST_READ_ID, CHR_1, 46,
+                REF_BASES.substring(43, position) + altBase + REF_BASES.substring(position + 1, 80), "3S30M4S");
+
+        readContextCounter.processRead(read3, 1, null);
+
+        // a read supporting the ref
+        SAMRecord read4 = createSamRecord(TEST_READ_ID, CHR_1, 1, REF_BASES.substring(1, 99), "98M");
+        readContextCounter.processRead(read4, 1, null);
+
+        assertEquals(5, readContextCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge());
+        assertEquals(7, readContextCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge());
+        assertEquals(48, readContextCounter.readEdgeDistance().maxDistanceFromUnclippedEdge());
 
         SageVariant variant = createVariant(readContextCounter);
 

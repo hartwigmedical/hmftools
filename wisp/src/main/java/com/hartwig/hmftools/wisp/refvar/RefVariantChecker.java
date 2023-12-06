@@ -260,7 +260,7 @@ public class RefVariantChecker
             UmiTypeCounts umiTypeCounts = UmiTypeCounts.fromAttribute(genotype.getExtendedAttribute(UMI_TYPE_COUNTS, null));
             sj.add(String.valueOf(umiTypeCounts.totalCount()));
             sj.add(String.valueOf(umiTypeCounts.alleleCount()));
-            sj.add(String.valueOf(umiTypeCounts.dualCount()));
+            sj.add(String.valueOf(umiTypeCounts.TotalDual));
             sj.add(String.valueOf(umiTypeCounts.AlleleDual));
 
             mWriter.write(sj.toString());

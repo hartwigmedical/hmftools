@@ -5,7 +5,6 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.lang.Math.round;
 import static java.lang.Math.signum;
 
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BAF_PNT_5;
@@ -28,14 +27,14 @@ import com.hartwig.hmftools.common.utils.Doubles;
 public class RegionFitCalculator
 {
     private final double mAmbiguousBaf;
-    private final double mPloidyPenaltyFactor;
+    private final FittingConfig mFitScoreConfig;
     private final PloidyDeviation mPloidyDeviation;
     private final CobaltChromosomes mCobaltChromosomes;
 
     public RegionFitCalculator(final CobaltChromosomes cobaltChromosomes, final FittingConfig fitScoreConfig, int averageReadDepth)
     {
         mCobaltChromosomes = cobaltChromosomes;
-        mPloidyPenaltyFactor = fitScoreConfig.PloidyPenaltyFactor;
+        mFitScoreConfig = fitScoreConfig;
 
         mPloidyDeviation = new PloidyDeviation(
                 fitScoreConfig.PloidyPenaltyStandardDeviation,
@@ -93,8 +92,14 @@ public class RegionFitCalculator
         double majorAllelePloidyDeviation = mPloidyDeviation.majorAlleleDeviation(purity, normFactor, majorAllelePloidy);
         double minorAllelePloidyDeviation = mPloidyDeviation.minorAlleleDeviation(purity, normFactor, minorAllelePloidy);
 
-        double eventPenalty = calculateEventPenalty(mPloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+        double eventPenalty = calculateEventPenalty(mFitScoreConfig.PloidyPenaltyFactor, majorAllelePloidy, minorAllelePloidy);
+
         double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
+
+        if(mFitScoreConfig.DeviationPenaltyGcAdjust > 0)
+        {
+            deviationPenalty /= max(mFitScoreConfig.DeviationPenaltyGcAdjust, observedTumorRatio);
+        }
 
         return new RegionFitCalcs(
                 impliedCopyNumber, impliedBAF, Doubles.replaceNaNWithZero(refNormalisedCopyNumber),

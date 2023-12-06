@@ -28,11 +28,9 @@ public class BqrRecordMap
                 mMap.put(record.Key, record);
             }
         }
-
-        // mMap = records.stream().collect(Collectors.toMap(x -> x.Key, x -> x));
     }
 
-    public double quality(byte ref, byte alt, byte[] trinucleotideContext, byte qual)
+    public double getQualityAdjustment(byte ref, byte alt, byte[] trinucleotideContext, byte qual)
     {
         final BqrKey key = new BqrKey(ref, alt, trinucleotideContext, qual);
 

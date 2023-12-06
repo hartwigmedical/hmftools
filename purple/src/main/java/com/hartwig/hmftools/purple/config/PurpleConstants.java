@@ -37,6 +37,15 @@ public class PurpleConstants
     public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_17 = 75_000_000;
     public static final int GERMLINE_AMP_DEL_EXCLUSION_CHR_19 = 10_000_000;
 
+    // purity calcs
+    public static final double MIN_PURITY_DEFAULT = 0.08;
+    public static final double MAX_PURITY_DEFAULT = 1.0;
+    public static final double PURITY_INCREMENT_DEFAULT = 0.01;
+    public static final double MIN_PLOIDY_DEFAULT = 1.0;
+    public static final double MAX_PLOIDY_DEFAULT = 8;
+    public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_DEFAULT = 30;
+    public static final int MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE_DEFAULT = 150;
+
     // somatic fitting
     public static final double SNV_HOTSPOT_VAF_PROBABILITY = 0.01;
     public static final int SNV_HOTSPOT_MAX_SNV_COUNT = 2000;

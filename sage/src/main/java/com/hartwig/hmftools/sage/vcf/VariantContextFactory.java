@@ -87,7 +87,7 @@ public final class VariantContextFactory
             builder.attribute(OLD_INDEL_DEDUP_FLAG, true);
         }
 
-        builder.attribute(MAX_READ_EDGE_DISTANCE, variant.tumorReadCounters().get(0).maxDistanceFromEdge());
+        builder.attribute(MAX_READ_EDGE_DISTANCE, variant.tumorReadCounters().get(0).readEdgeDistance().maxAltDistanceFromUnclippedEdge());
 
         final VariantContext context = builder.make();
         if(context.isNotFiltered())

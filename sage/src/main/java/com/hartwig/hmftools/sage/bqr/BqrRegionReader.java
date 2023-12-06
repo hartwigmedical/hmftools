@@ -1,6 +1,12 @@
 package com.hartwig.hmftools.sage.bqr;
 
+import static java.lang.Math.abs;
+
+import static com.hartwig.hmftools.common.samtools.CigarUtils.getEndPosition;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.getUnclippedPosition;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MIN_MAP_QUALITY;
 
 import java.util.Collection;
 import java.util.Map;
@@ -162,7 +168,7 @@ public class BqrRegionReader implements CigarHandler
         if(mBamReader == null)
             return;
 
-        BamSlicer slicer = new BamSlicer(mConfig.MinMapQuality);
+        BamSlicer slicer = new BamSlicer(DEFAULT_MIN_MAP_QUALITY);
 
         try
         {
@@ -177,11 +183,51 @@ public class BqrRegionReader implements CigarHandler
     public void processRecord(final SAMRecord record)
     {
         ++mReadCounter;
+        setShortFragmentBoundaries(record);
+
+
         CigarTraversal.traverseCigar(record, this);
 
         if(mReadCounter > 0 && (mReadCounter % 1000) == 0)
         {
             purgeBaseDataList(record.getAlignmentStart());
+        }
+    }
+
+    private static final int SHORT_FRAG_BOUNDARY_NONE = -1;
+    private int mMinReadStartPosition = SHORT_FRAG_BOUNDARY_NONE;
+    private int mMaxReadEndPosition = SHORT_FRAG_BOUNDARY_NONE;
+
+    private void setShortFragmentBoundaries(final SAMRecord record)
+    {
+        // ensure we don’t read past insert size on 3’ end of short fragments
+        mMinReadStartPosition = SHORT_FRAG_BOUNDARY_NONE;
+        mMaxReadEndPosition = SHORT_FRAG_BOUNDARY_NONE;
+
+        if(record.getInferredInsertSize() == 0 || abs(record.getInferredInsertSize()) >= mConfig.getReadLength())
+            return;
+
+        if(record.getReadNegativeStrandFlag() == record.getMateNegativeStrandFlag())
+            return;
+
+        if(record.getReadNegativeStrandFlag())
+        {
+            // set boundary at start
+            mMinReadStartPosition = record.getMateAlignmentStart();
+        }
+        else
+        {
+            // boundary set at end
+            String mateCigar = record.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+
+            if(mateCigar != null)
+            {
+                mMaxReadEndPosition = getEndPosition(record.getMateAlignmentStart(), mateCigar, false, false);
+            }
+            else
+            {
+                mMaxReadEndPosition = record.getAlignmentStart() + abs(abs(record.getInferredInsertSize())) - 1;
+            }
         }
     }
 
@@ -225,6 +271,12 @@ public class BqrRegionReader implements CigarHandler
 
             if(position < mRegion.start())
                 continue;
+
+            if(mMinReadStartPosition > 0 && position < mMinReadStartPosition)
+                continue;
+
+            if(mMaxReadEndPosition > 0 && position > mMaxReadEndPosition)
+                break;
 
             int readIndex = startReadIndex + i;
 

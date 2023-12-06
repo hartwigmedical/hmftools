@@ -1,6 +1,15 @@
 package com.hartwig.hmftools.sage.quality;
 
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_BASE_QUAL_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_HIGH_DEPTH_BASE_QUAL;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_MIN_REPEAT_COUNT;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_JITTER_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_FIXED_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY;
 import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_MQ_RATIO_FACTOR;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_EDGE_FACTOR;
+import static com.hartwig.hmftools.sage.SageConstants.DEFAULT_READ_EDGE_FIXED_PENALTY;
 
 import com.hartwig.hmftools.common.genome.position.GenomePosition;
 import com.hartwig.hmftools.common.hla.HlaCommon;
@@ -31,16 +40,6 @@ public class QualityConfig
     private static final String MAP_QUAL_RATIO_FACTOR = "map_qual_ratio_factor";
     private static final String HIGH_DEPTH_BASE_QUAL_LIMIT = "high_depth_base_qual";
     private static final String HIGH_DEPTH_MODE = "high_depth_mode";
-
-    private static final double DEFAULT_JITTER_PENALTY = 0.25;
-    private static final int DEFAULT_JITTER_MIN_REPEAT_COUNT = 3;
-    private static final int DEFAULT_BASE_QUAL_FIXED_PENALTY = 12;
-    private static final int DEFAULT_READ_EDGE_FIXED_PENALTY = 0;
-    private static final int DEFAULT_READ_EDGE_FACTOR = 3;
-    private static final int DEFAULT_MAP_QUAL_FIXED_PENALTY = 15;
-    private static final int DEFAULT_MAP_QUAL_IMPROPER_PAIR_PENALTY = 15;
-    private static final double DEFAULT_MAP_QUAL_READ_EVENTS_PENALTY = 7;
-    private static final int DEFAULT_HIGH_DEPTH_BASE_QUAL = 30;
 
     public QualityConfig(final ConfigBuilder configBuilder)
     {

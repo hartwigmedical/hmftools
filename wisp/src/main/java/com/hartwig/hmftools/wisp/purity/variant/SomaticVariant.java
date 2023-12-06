@@ -59,6 +59,9 @@ public class SomaticVariant
     public void setSequenceGcRatio(double ratio) { mSequenceGcRatio = ratio; }
     public double sequenceGcRatio() { return mSequenceGcRatio; }
 
+    public double copyNumber() { return mVariant.adjustedCopyNumber(); }
+    public double variantCopyNumber() { return mVariant.variantCopyNumber(); }
+
     public VariantContextDecorator decorator() { return mVariant; }
 
     public String toString() { return format("%s:%d %s>%s", Chromosome, Position, Ref, Alt); }

@@ -30,6 +30,7 @@ import static com.hartwig.hmftools.sage.SageConstants.REQUIRED_UNIQUE_FRAG_COORD
 import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
+import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
@@ -87,7 +88,6 @@ public class ReadContextCounter implements VariantHotspot
     private final boolean mIsIndel;
     private final boolean mAllowWildcardMatchInCore;
     private final int mMaxCoreMismatches;
-    private final int mAdjustedVariantPosition;
 
     // counts of various
     private final ReadSupportCounts mQualities;
@@ -115,7 +115,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private int mSoftClipInsertSupport;
     private int mMaxCandidateDeleteLength;
-    private int mMaxDistanceFromEdge;
+    private final ReadEdgeDistance mReadEdgeDistance;
 
     private List<Integer> mLocalPhaseSets;
     private List<int[]> mLpsCounts;
@@ -150,8 +150,6 @@ public class ReadContextCounter implements VariantHotspot
         mMaxCoreMismatches = mVariant.isIndel() && mVariant.alt().length() >= CORE_LOW_QUAL_MISMATCH_BASE_LENGTH ?
                 mVariant.alt().length() / CORE_LOW_QUAL_MISMATCH_BASE_LENGTH : 0;
 
-        mAdjustedVariantPosition = mVariant.isIndel() ? mVariant.position() + indelLength() / 2 : mVariant.position();
-
         mQualities = new ReadSupportCounts();
         mCounts = new ReadSupportCounts();
 
@@ -176,7 +174,8 @@ public class ReadContextCounter implements VariantHotspot
         mTotalAltMapQuality = 0;
         mTotalNmCount = 0;
         mTotalAltNmCount = 0;
-        mMaxDistanceFromEdge = 0;
+
+        mReadEdgeDistance = new ReadEdgeDistance(calcAdjustedVariantPosition(mVariant.position(), indelLength()));
 
         mLocalPhaseSets = null;
         mLpsCounts = null;
@@ -191,7 +190,6 @@ public class ReadContextCounter implements VariantHotspot
     public VariantTier tier() { return mTier; }
     public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
     public boolean isSnv() { return mIsSnv; }
-    public boolean isMnv() { return mIsMnv; }
     public boolean isIndel() { return mIsIndel; }
 
     @Override
@@ -207,6 +205,7 @@ public class ReadContextCounter implements VariantHotspot
     public String alt() { return mVariant.alt(); }
 
     public int altSupport() { return mCounts.altSupport(); }
+    public int strongAltSupport() { return mCounts.strongSupport(); }
     public int refSupport() { return mCounts.Ref; }
     public int depth() { return mCounts.Total; }
 
@@ -246,7 +245,7 @@ public class ReadContextCounter implements VariantHotspot
 
     public long totalNmCount() { return mTotalNmCount; }
     public long altNmCount() { return mTotalAltNmCount; }
-    public int maxDistanceFromEdge() { return mMaxDistanceFromEdge; }
+    public ReadEdgeDistance readEdgeDistance() { return mReadEdgeDistance; }
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
 
     public double averageAltBaseQuality()
@@ -298,7 +297,7 @@ public class ReadContextCounter implements VariantHotspot
         if(exceedsMaxCoverage())
             return UNRELATED;
 
-        if(!mTier.equals(VariantTier.HOTSPOT))
+        if(mTier != VariantTier.HOTSPOT)
         {
             if(mConfig.Quality.MapQualityRatioFactor == 0 && record.getMappingQuality() < EVIDENCE_MIN_MAP_QUAL)
                 return UNRELATED;
@@ -416,7 +415,7 @@ public class ReadContextCounter implements VariantHotspot
                 registerRawSupport(rawContext);
 
                 if(rawContext.AltSupport)
-                    updateDistanceFromReadEdge(record, fragmentData);
+                    mReadEdgeDistance.update(record, fragmentData, true);
 
                 logReadEvidence(record, matchType, readIndex, quality);
 
@@ -489,6 +488,8 @@ public class ReadContextCounter implements VariantHotspot
 
             mRefFragmentStrandBias.registerFragment(record);
             mRefReadStrandBias.registerRead(record, fragmentData, this);
+
+            mReadEdgeDistance.update(record, fragmentData, false);
         }
         else if(rawContext.AltSupport)
         {
@@ -837,57 +838,6 @@ public class ReadContextCounter implements VariantHotspot
             else
                 mFragmentCoords.addRead(record, null);
         }
-    }
-
-    private void updateDistanceFromReadEdge(final SAMRecord record, final FragmentData fragmentData)
-    {
-        if(mMaxDistanceFromEdge >= record.getReadBases().length / 2)
-            return;
-
-        if(record.getCigar().containsOperator(CigarOperator.N)) // unnecessary in append mode
-            return;
-
-        // determine how far from the edge of the read the variant is, ignoring soft-clip bases and realigned reads
-        // and for INDELs use the position of the middle base of INDEL
-        // take the lower of the 2 distances for each read, eg 50 and 100 bases, then take 50
-        int distFromStart = -1;
-        int distFromEnd = -1;
-
-        if(fragmentData != null)
-        {
-            int firstPosStart = fragmentData.First.getAlignmentStart();
-            int firstPosEnd = fragmentData.First.getAlignmentEnd();
-
-            if(positionWithin(mAdjustedVariantPosition, firstPosStart, firstPosEnd))
-            {
-                distFromStart = mAdjustedVariantPosition - firstPosStart;
-                distFromEnd = firstPosEnd - mAdjustedVariantPosition;
-            }
-
-            int secondPosStart = fragmentData.Second.getAlignmentStart();
-            int secondPosEnd = fragmentData.Second.getAlignmentEnd();
-
-            if(positionWithin(mAdjustedVariantPosition, secondPosStart, secondPosEnd))
-            {
-                if(distFromStart == -1 || mAdjustedVariantPosition - secondPosStart < distFromStart)
-                    distFromStart = mAdjustedVariantPosition - secondPosStart;
-
-                if(distFromEnd == -1 || secondPosEnd - mAdjustedVariantPosition < distFromEnd)
-                    distFromEnd = secondPosEnd - mAdjustedVariantPosition;
-            }
-        }
-        else
-        {
-            if(positionWithin(mAdjustedVariantPosition, record.getAlignmentStart(), record.getAlignmentEnd()))
-            {
-                distFromStart = mAdjustedVariantPosition - record.getAlignmentStart();
-                distFromEnd = record.getAlignmentEnd() - mAdjustedVariantPosition;
-            }
-        }
-
-        int minDistance = min(distFromStart, distFromEnd);
-
-        mMaxDistanceFromEdge = max(minDistance, mMaxDistanceFromEdge);
     }
 
     private int getMaxRealignDistance(final SAMRecord record)

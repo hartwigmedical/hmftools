@@ -29,6 +29,7 @@ import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
@@ -132,6 +133,8 @@ public class FragmentSync
                         record.getReadName(), record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd(),
                         record.getCigarString());
             }
+
+            return true;
         }
 
         // no cache for reads where the mate doesn't overlap
@@ -409,7 +412,7 @@ public class FragmentSync
                             secondBases[secondReadIndex], secondBaseQualities[secondReadIndex]);
 
                     combinedBases[combinedReadIndex] = baseAndQual[0];
-                    combinedBaseQualities[combinedReadIndex] = baseAndQual[1];
+                    combinedBaseQualities[combinedReadIndex] = BaseQualAdjustment.adjustBaseQual(baseAndQual[1]);
                 }
             }
             else if(firstReadIndex >= 0 && firstReadIndex < firstLength)

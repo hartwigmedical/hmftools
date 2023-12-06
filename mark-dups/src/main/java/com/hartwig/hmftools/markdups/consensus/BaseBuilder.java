@@ -3,12 +3,11 @@ package com.hartwig.hmftools.markdups.consensus;
 import static java.lang.Math.max;
 import static java.lang.Math.round;
 
-import static com.hartwig.hmftools.markdups.MarkDupsConfig.MD_LOGGER;
-
 import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.qual.BaseQualAdjustment;
 
 import htsjdk.samtools.SAMRecord;
 
@@ -26,6 +25,10 @@ public class BaseBuilder
         mConsensusStats = consensusStats;
         mChromosomeLength = 0;
     }
+
+    public void setChromosomLength(int chromosomeLength) { mChromosomeLength = chromosomeLength; }
+    public int chromosomeLength() { return mChromosomeLength; }
+    public RefGenomeInterface refGenome() { return mRefGenome; }
 
     public static final byte NO_BASE = 0;
     public static final int INVALID_POSITION = -1;
@@ -118,7 +121,7 @@ public class BaseBuilder
                 }
 
                 consensusState.Bases[baseIndex] = consensusBaseAndQual[0];
-                consensusState.BaseQualities[baseIndex] = consensusBaseAndQual[1];
+                consensusState.BaseQualities[baseIndex] = BaseQualAdjustment.adjustBaseQual(consensusBaseAndQual[1]);
             }
         }
     }
@@ -328,23 +331,4 @@ public class BaseBuilder
 
         return isDualStrand;
     }
-
-    /*
-    public static void logDualStrandWithMismatch(List<SAMRecord> reads)
-    {
-        MD_LOGGER.trace("Mismatched basis found in dual stranded read group readCount({})", reads.size());
-        for(SAMRecord read : reads)
-        {
-            MD_LOGGER.trace("Read in dual stranded read group: {}", read);
-        }
-    }
-    */
-
-    public void setChromosomLength(int chromosomeLength) { mChromosomeLength = chromosomeLength; }
-
-    public int chromosomeLength() { return mChromosomeLength; }
-
-    public RefGenomeInterface refGenome() { return mRefGenome; }
-
-    public ConsensusStatistics stats() { return mConsensusStats; }
 }

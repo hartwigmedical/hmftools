@@ -40,7 +40,7 @@ public class BqrConfig
         else
         {
             LoadBqrFiles = false;
-            WriteFile = configBuilder.hasFlag(WRITE_BQR_DATA);
+            WriteFile = Enabled || configBuilder.hasFlag(WRITE_BQR_DATA); // written by default now
             WritePlot = configBuilder.hasFlag(WRITE_BQR_PLOT);
         }
 

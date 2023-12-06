@@ -110,7 +110,7 @@ public class IndelDeduper
     private static final int INDEL_DEDUP_PHASED_DIST_THRESHOLD = 60;
     private static final int LARGE_DEDUP_GROUP_SIZE = 6;
     private static final int LARGE_DEDUP_SELECT_MAX = 3;
-    private static final int INDEL_DEDUP_LOG_ITERATIONS = 25;
+    private static final int INDEL_DEDUP_MAX_ITERATIONS = 100;
 
     private List<VariantData> findDedupGroup(final VariantData indel, final List<VariantData> candidates)
     {
@@ -131,7 +131,7 @@ public class IndelDeduper
             if(!indel.Variant.hasMatchingLps(variant.Variant.localPhaseSets()))
                 continue;
 
-            if(isDedupCandidate(indel, variant))
+            if(isDedupCandidate(indel, variant, false))
             {
                 dedupGroup.add(variant);
             }
@@ -160,6 +160,9 @@ public class IndelDeduper
             VariantData variant = dedupGroup.get(index);
 
             hasPassingVariant |= variant.Variant.isPassing();
+
+            // treat old indel dedup as PASS for this test
+            hasPassingVariant |= variant.Variant.filters().size() == 1 && variant.Variant.filters().contains(DEDUP_INDEL_FILTER_OLD);
 
             if(variant.Variant.isDelete() && positionsOverlap(indelPosStart, indelPosEnd, variant.position(), variant.positionEnd()))
             {
@@ -193,11 +196,6 @@ public class IndelDeduper
             return;
         }
 
-        if(mGroupIterations >= INDEL_DEDUP_LOG_ITERATIONS)
-        {
-            SG_LOGGER.debug("indel({}) deduped {} variants, iterations({})", indel, dedupGroup.size(), mGroupIterations);
-        }
-
         dedupGroup.addAll(overlappedIndels);
         dedupedVariants.addAll(overlappedIndels);
         dedupGroup.add(indel); // so it can be rescued if required
@@ -207,7 +205,7 @@ public class IndelDeduper
             if(dedupedVariants.contains(variant))
             {
                 // only de-dup variants which fall within the INDEL's bounds
-                if(!isDedupCandidate(indel, variant))
+                if(!isDedupCandidate(indel, variant, true))
                     continue;
 
                 markAsDedup(variant.Variant);
@@ -239,12 +237,20 @@ public class IndelDeduper
         variant.filters().add(DEDUP_INDEL_FILTER);
     }
 
-    private static boolean isDedupCandidate(final VariantData indel, final VariantData variant)
+    private static boolean isDedupCandidate(final VariantData indel, final VariantData variant, boolean requireCoreEndInclusion)
     {
-        if(positionsWithin(variant.position(), variant.CorePosEnd, indel.FlankPosStart, indel.FlankPosEnd))
-            return true;
+        if(requireCoreEndInclusion)
+        {
+            if(positionsWithin(variant.position(), variant.CorePosEnd, indel.FlankPosStart, indel.FlankPosEnd))
+                return true;
+        }
+        else
+        {
+            if(positionWithin(variant.position(), indel.FlankPosStart, indel.FlankPosEnd))
+                return true;
+        }
 
-        if(variant.ReadCounter.maxDistanceFromEdge() < MAX_READ_EDGE_DISTANCE)
+        if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge() < MAX_READ_EDGE_DISTANCE)
             return true;
 
         return false;
@@ -290,13 +296,16 @@ public class IndelDeduper
                     return true;
                 }
             }
-        }
 
-        if(dedupGroup.size() > LARGE_DEDUP_GROUP_SIZE)
-        {
-            // add them all, so only the INDEL will be kept plus any outside the flanks with high enough max edge distance
-            dedupedVariants.addAll(dedupGroup);
-            return true;
+            if(mGroupIterations >= INDEL_DEDUP_MAX_ITERATIONS)
+            {
+                SG_LOGGER.debug("indel({}) deduped all {} variants, at iteration limit({} select=={})",
+                        indel, dedupGroup.size(), mGroupIterations, i);
+
+                // add them all, so only the INDEL will be kept plus any outside the flanks with high enough max edge distance
+                dedupedVariants.addAll(dedupGroup);
+                return true;
+            }
         }
 
         return false;
@@ -425,7 +434,7 @@ public class IndelDeduper
             if(Variant.isIndel())
             {
                 IndelScore = ReadCounter.indelLength() * INDEL_LENGTH_FACTOR
-                        + ReadCounter.maxDistanceFromEdge()
+                        + ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge()
                         - MIN_EVENTS_FACTOR * ReadCounter.minNumberOfEvents();
             }
             else
@@ -490,8 +499,8 @@ public class IndelDeduper
         public String toString()
         {
             return format("var(%s:%d %s>%s) corePos(%d - %d) flankPos(%d - %d) distFromEdge(%d) score(%d) filters(%s)",
-                Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(),
-                CorePosStart, CorePosEnd, FlankPosStart, FlankPosEnd, ReadCounter.maxDistanceFromEdge(), IndelScore, Variant.filtersStr());
+                Variant.chromosome(), Variant.position(), Variant.ref(), Variant.alt(), CorePosStart, CorePosEnd, FlankPosStart,
+                    FlankPosEnd, ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge(), IndelScore, Variant.filtersStr());
         }
     }
 }

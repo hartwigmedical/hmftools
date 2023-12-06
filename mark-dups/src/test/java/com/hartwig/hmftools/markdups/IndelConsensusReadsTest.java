@@ -129,7 +129,7 @@ public class IndelConsensusReadsTest
         assertEquals(INDEL_MISMATCH, readInfo.Outcome);
         assertEquals(consensusBases, readInfo.ConsensusRead.getReadString());
         assertEquals(consensusCigar, readInfo.ConsensusRead.getCigarString());
-        int calcBaseQual = 13;
+        int calcBaseQual = 11; // lowered from 13
         assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[4]);
         assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[5]);
         assertEquals(calcBaseQual, readInfo.ConsensusRead.getBaseQualities()[6]);

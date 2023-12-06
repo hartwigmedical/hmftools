@@ -32,16 +32,19 @@ public class StrandBiasCalcs
         mMaxStrandBiasValue = mStrandBiasValues[mStrandBiasValues.length - 1];
     }
 
-    public boolean isDepthBelowProbability(final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef)
+    public boolean isDepthBelowProbability(final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
     {
-        // ignore if the ref is uneven
-        if(strandBiasDataRef.forward() < STRAND_BIAS_REF_MIN_DEPTH || strandBiasDataRef.reverse() < STRAND_BIAS_REF_MIN_DEPTH)
-            return false;
+        if(checkRef)
+        {
+            // ignore if the ref is uneven
+            if(strandBiasDataRef.forward() < STRAND_BIAS_REF_MIN_DEPTH || strandBiasDataRef.reverse() < STRAND_BIAS_REF_MIN_DEPTH)
+                return false;
 
-        double refBias = strandBiasDataRef.bias();
+            double refBias = strandBiasDataRef.bias();
 
-        if(refBias < STRAND_BIAS_REF_MIN_BIAS || refBias > (1 - STRAND_BIAS_REF_MIN_BIAS))
-            return false;
+            if(refBias < STRAND_BIAS_REF_MIN_BIAS || refBias > (1 - STRAND_BIAS_REF_MIN_BIAS))
+                return false;
+        }
 
         double strandBias = strandBiasDataAlt.bias();
         int depth = strandBiasDataAlt.depth();
@@ -58,6 +61,9 @@ public class StrandBiasCalcs
         return Doubles.lessOrEqual(minStrandBias, requiredStrandBias);
     }
 
+    private static final int INVALID_OBSERVED = -1;
+    private static final double EPSILON = 1e-6;
+
     private void buildProbabilityCache()
     {
         int currentObserved = 0;
@@ -68,13 +74,14 @@ public class StrandBiasCalcs
             {
                 int observed = findMinStrandBiasVsProb(depth, currentObserved);
 
-                if(observed < 0)
+                if(observed == INVALID_OBSERVED)
                 {
                     mStrandBiasValues[depth] = INVALID_STRAND_BIAS;
                 }
                 else
                 {
-                    mStrandBiasValues[depth] = observed / (double) depth;
+                    // the observed level is the first which exceeds the probability threshold, so set this to epsilon below
+                    mStrandBiasValues[depth] = (observed - EPSILON) / depth;
                     currentObserved = observed;
                 }
             }
@@ -97,9 +104,9 @@ public class StrandBiasCalcs
             if(prob > STRAND_BIAS_PROB)
             {
                 if(observed == 0)
-                    return -1;
+                    return INVALID_OBSERVED;
                 else
-                    return observed - 1;
+                    return observed;
             }
         }
 

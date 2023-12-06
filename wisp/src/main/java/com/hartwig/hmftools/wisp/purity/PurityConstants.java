@@ -12,8 +12,6 @@ public class PurityConstants
     public static final double MAX_COPY_NUMBER = 6;
     public static final double CLONAL_COPY_NUMBER_MARGIN = 0.2;
 
-    public static final double DEFAULT_GC_RATIO_MIN = 0.4;
-
     public static final double DEFAULT_NOISE_READS_PER_MILLION = 30;
     public static final double DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND = 1;
 
@@ -27,6 +25,11 @@ public class PurityConstants
     public static final int LOW_COUNT_MODEL_MIN_FRAG_VARIANTS = 5;
     public static final int LOW_COUNT_MODEL_MIN_AVG_DEPTH = 50;
     public static final double DROPOUT_RATE_INCREMENT = 0.1;
+
+    public static final double SYNTHETIC_TUMOR_VAF = 0.5;
+
+    public static final int CHIP_MIN_ALLELE_FRAGS = 5;
+    public static final double CHIP_MIN_SAMPLE_PERC = 0.33;
 
     public static final String PURPLE_CTDNA_SOMATIC_VCF_ID = ".purple.somatic.ctdna.";
 }
