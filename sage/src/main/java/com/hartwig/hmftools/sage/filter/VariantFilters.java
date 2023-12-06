@@ -39,7 +39,6 @@ public class VariantFilters
 {
     private final FilterConfig mConfig;
     private final boolean mHighDepthMode;
-    private final StrandBiasCalcs mStrandBiasCalcs;
 
     private final int[] mFilterCounts;
 
@@ -48,11 +47,12 @@ public class VariantFilters
     public static int HARD_FC_TUMOR_QUAL = 2;
     public static int HARD_FC_TUMOR_VAF = 3;
 
+    private static final StrandBiasCalcs mStrandBiasCalcs = new StrandBiasCalcs();
+
     public VariantFilters(final SageConfig config)
     {
         mConfig = config.Filter;
         mHighDepthMode = config.Quality.HighBaseMode;
-        mStrandBiasCalcs = new StrandBiasCalcs();
         mFilterCounts = new int[HARD_FC_TUMOR_VAF+1];
     }
 
