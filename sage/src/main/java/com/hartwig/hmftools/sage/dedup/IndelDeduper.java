@@ -161,6 +161,9 @@ public class IndelDeduper
 
             hasPassingVariant |= variant.Variant.isPassing();
 
+            // treat old indel dedup as PASS for this test
+            hasPassingVariant |= variant.Variant.filters().size() == 1 && variant.Variant.filters().contains(DEDUP_INDEL_FILTER_OLD);
+
             if(variant.Variant.isDelete() && positionsOverlap(indelPosStart, indelPosEnd, variant.position(), variant.positionEnd()))
             {
                 dedupGroup.remove(index);
