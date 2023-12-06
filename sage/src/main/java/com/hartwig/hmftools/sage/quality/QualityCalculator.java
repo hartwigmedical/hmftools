@@ -132,6 +132,9 @@ public class QualityCalculator
 
     private double recalibrateQuality(final ReadContextCounter readContextCounter, int refPosition, int refAltPos, byte rawQuality)
     {
+        if(rawQuality == 0)
+            return 0; // never adjust a zero qual up
+
         if(mQualityRecalibrationMap == null)
             return rawQuality;
 
