@@ -1,11 +1,11 @@
 package com.hartwig.hmftools.peach;
 
+import static com.hartwig.hmftools.peach.TestUtils.loadTestHaplotypePanel;
+
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.io.Resources;
-import com.hartwig.hmftools.peach.data_loader.PanelLoader;
 import com.hartwig.hmftools.peach.haplotype.HaplotypeCombination;
 import com.hartwig.hmftools.peach.panel.HaplotypePanel;
 
@@ -414,12 +414,5 @@ public class HaplotypeCallerTest
                     matchingActualCombinations.size()
             );
         }
-    }
-        
-
-    private HaplotypePanel loadTestHaplotypePanel(String fileName)
-    {
-        String filePath = Resources.getResource(fileName).getPath();
-        return PanelLoader.loadHaplotypePanel(filePath);
     }
 }
