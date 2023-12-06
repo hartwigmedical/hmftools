@@ -131,7 +131,7 @@ public class IndelDeduper
             if(!indel.Variant.hasMatchingLps(variant.Variant.localPhaseSets()))
                 continue;
 
-            if(isDedupCandidate(indel, variant))
+            if(isDedupCandidate(indel, variant, false))
             {
                 dedupGroup.add(variant);
             }
@@ -202,7 +202,7 @@ public class IndelDeduper
             if(dedupedVariants.contains(variant))
             {
                 // only de-dup variants which fall within the INDEL's bounds
-                if(!isDedupCandidate(indel, variant))
+                if(!isDedupCandidate(indel, variant, true))
                     continue;
 
                 markAsDedup(variant.Variant);
@@ -234,10 +234,18 @@ public class IndelDeduper
         variant.filters().add(DEDUP_INDEL_FILTER);
     }
 
-    private static boolean isDedupCandidate(final VariantData indel, final VariantData variant)
+    private static boolean isDedupCandidate(final VariantData indel, final VariantData variant, boolean requireCoreEndInclusion)
     {
-        if(positionsWithin(variant.position(), variant.CorePosEnd, indel.FlankPosStart, indel.FlankPosEnd))
-            return true;
+        if(requireCoreEndInclusion)
+        {
+            if(positionsWithin(variant.position(), variant.CorePosEnd, indel.FlankPosStart, indel.FlankPosEnd))
+                return true;
+        }
+        else
+        {
+            if(positionWithin(variant.position(), indel.FlankPosStart, indel.FlankPosEnd))
+                return true;
+        }
 
         if(variant.ReadCounter.readEdgeDistance().maxAltDistanceFromAlignedEdge() < MAX_READ_EDGE_DISTANCE)
             return true;
