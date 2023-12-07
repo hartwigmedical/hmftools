@@ -115,7 +115,7 @@ public class VcfPositionConverter implements Callable
     {
         if(!mCurrentMappingChromosome.equals(chromosome))
         {
-            mChromosomeMappings = mMappingCache.getChromosomeMappings(chromosome);
+            mChromosomeMappings = mMappingCache.getChromosomeMappings(chromosome, true);
             mCurrentMappingChromosome = chromosome;
             mCurentMappingIndex = 0;
         }

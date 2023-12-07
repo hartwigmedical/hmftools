@@ -27,24 +27,36 @@ public class Mismatch
         DiffValues = diffValues;
     }
 
-    public static String commonHeader()
-    {
-        return "Category\tMismatchType\tKey\tDifferences";
-    }
-
-    public static String header()
-    {
-        return commonHeader() + "\tAllValues";
-    }
-
-    public static String commonTsv(final Mismatch mismatch)
+    public static String commonHeader(boolean includeSampleId, boolean includeCatagory)
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-        if(mismatch.RefItem != null)
-            sj.add(mismatch.RefItem.category().toString());
-        else
-            sj.add(mismatch.NewItem.category().toString());
+        if(includeSampleId)
+            sj.add("SampleId");
+
+        if(includeCatagory)
+            sj.add("Category");
+
+        sj.add("MismatchType").add("Key").add("Differences");
+        return sj.toString();
+    }
+
+    public static String header(boolean includeSampleId)
+    {
+        return commonHeader(includeSampleId, true) + "\tAllValues";
+    }
+
+    public static String commonTsv(boolean writeCategory, final Mismatch mismatch)
+    {
+        StringJoiner sj = new StringJoiner(TSV_DELIM);
+
+        if(writeCategory)
+        {
+            if(mismatch.RefItem != null)
+                sj.add(mismatch.RefItem.category().toString());
+            else
+                sj.add(mismatch.NewItem.category().toString());
+        }
 
         sj.add(mismatch.MismatchType.toString());
 
@@ -60,7 +72,7 @@ public class Mismatch
     {
         StringJoiner sj = new StringJoiner(TSV_DELIM);
 
-        sj.add(commonTsv(this));
+        sj.add(commonTsv(!writeFieldValues, this));
 
         sj.add(diffsStr(DiffValues));
 

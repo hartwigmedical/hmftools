@@ -2,6 +2,8 @@ package com.hartwig.hmftools.compar.common;
 
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V38;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CHORD_DIR_DESC;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.CUPPA_DIR_CFG;
@@ -22,6 +24,7 @@ import static com.hartwig.hmftools.compar.ComparConfig.REF_SOURCE;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.pipeline.PipelineToolDirectories;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 
@@ -37,15 +40,12 @@ public class FileSources
     public final String SomaticVcf;
     public final String SomaticUnfilteredVcf;
 
-    public final boolean RequiresLiftover;
-
     private static final String SAMPLE_DIR = "sample_dir";
     private static final String SOMATIC_VCF = "somatic_vcf";
     private static final String SOMATIC_UNFILTERED_VCF = "somatic_unfiltered_vcf";
-    private static final String REQUIRES_LIFTOVER = "liftover";
 
     public FileSources(final String source, final String linx, final String purple, final String linxGermline, final String cuppa,
-            final String lilac, final String chord, final String somaticVcf, final String somaticUnfilteredVcf, boolean requiresLiftover)
+            final String lilac, final String chord, final String somaticVcf, final String somaticUnfilteredVcf)
     {
         Source = source;
         Linx = linx;
@@ -56,7 +56,6 @@ public class FileSources
         Chord = chord;
         SomaticVcf = somaticVcf;
         SomaticUnfilteredVcf = somaticUnfilteredVcf;
-        RequiresLiftover = requiresLiftover;
     }
 
     public static FileSources sampleInstance(final FileSources fileSources, final String sampleId)
@@ -70,8 +69,12 @@ public class FileSources
                 convertWildcardSamplePath(fileSources.Lilac, sampleId),
                 convertWildcardSamplePath(fileSources.Chord, sampleId),
                 convertWildcardSamplePath(fileSources.SomaticVcf, sampleId),
-                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId),
-                fileSources.RequiresLiftover);
+                convertWildcardSamplePath(fileSources.SomaticUnfilteredVcf, sampleId));
+    }
+
+    public static RefGenomeVersion liftoverSourceGenomeVersion(final String source)
+    {
+        return source.equals(REF_SOURCE) ? V37 : V38;
     }
 
     private static void addPathConfig(final ConfigBuilder configBuilder, final String toolDir, final String toolDesc, final String sourceName)
@@ -105,9 +108,6 @@ public class FileSources
             configBuilder.addPath(
                     formSourceConfig(SOMATIC_UNFILTERED_VCF, sourceName), false,
                     formSourceDescription("VCF to search for filtered variants", sourceName));
-
-            configBuilder.addFlag(
-                    formSourceConfig(REQUIRES_LIFTOVER, sourceName), formSourceDescription("Liftover positions", sourceName));
         }
     }
 
@@ -142,11 +142,9 @@ public class FileSources
 
         String somaticVcf = getConfigValue(configBuilder, SOMATIC_VCF, sourceName);
         String somaticUnfilteredVcf = getConfigValue(configBuilder, SOMATIC_UNFILTERED_VCF, sourceName);
-        boolean requiresLiftover = configBuilder.hasFlag(formSourceConfig(REQUIRES_LIFTOVER, sourceName));
 
         return new FileSources(
-                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir,
-                somaticVcf, somaticUnfilteredVcf, requiresLiftover);
+                sourceName, linxDir, purpleDir, linxGermlineDir, cuppaDir, lilacDir, chordDir, somaticVcf, somaticUnfilteredVcf);
     }
 
     private static String getDirectory(

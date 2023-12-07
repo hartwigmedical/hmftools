@@ -50,7 +50,7 @@ public class AmberSitesWriter
         mSnpCheckFile = configBuilder.getValue(SNP_CHECKS_FILE);
         mSourceRefGenVersion = RefGenomeVersion.from(configBuilder.getValue(SOURCE_REF_GEN_VERSION));
 
-        mGenomeLiftoverCache = new GenomeLiftoverCache(true, mSourceRefGenVersion == V37);
+        mGenomeLiftoverCache = new GenomeLiftoverCache(true);
     }
 
     public static String amberSitesFilename(final RefGenomeVersion version)
