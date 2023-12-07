@@ -55,7 +55,7 @@ import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.WriteType;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
-import com.hartwig.hmftools.wisp.common.SampleData;
+import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConstants;
 
 import htsjdk.variant.variantcontext.Genotype;
@@ -180,14 +180,16 @@ public class SomaticVariants
         return true;
     }
 
+    private static final double NO_GC_RATIO = -1;
+
     private void processVariant(final List<String> targetSampleIds, final VariantContext variantContext)
     {
         VariantContextDecorator variant = new VariantContextDecorator(variantContext);
 
         double subclonalLikelihood = variant.context().getAttributeAsDouble(SUBCLONAL_LIKELIHOOD_FLAG, 0);
-        double sequenceGcRatio = -1;
+        double sequenceGcRatio = NO_GC_RATIO;
 
-        if(mConfig.RefGenome != null)
+        if(mConfig.RefGenome != null && mSample.ApplyGcRatio)
         {
             String variantRefContext = generateMutationSequence(
                     mConfig.RefGenome, DEFAULT_PROBE_LENGTH, variant.chromosome(), variant.position(), variant.ref(), variant.alt());
@@ -314,7 +316,7 @@ public class SomaticVariants
             variant.addFilterReason(CHIP);
         }
 
-        return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants, mVariants.size());
+        return mEstimator.calculatePurity(sampleId, purityContext, filteredVariants, mVariants.size(), chipVariants.size());
     }
 
     private List<FilterReason> checkFilters(final VariantContextDecorator variant, double subclonalLikelihood, double sequenceGcRatio)
@@ -340,7 +342,7 @@ public class SomaticVariants
             filters.add(SUBCLONAL);
 
         // check GC content
-        if(mConfig.GcRatioMin > 0 && sequenceGcRatio >= 0 && sequenceGcRatio < mConfig.GcRatioMin)
+        if(sequenceGcRatio != NO_GC_RATIO && mConfig.GcRatioMin > 0 && sequenceGcRatio < mConfig.GcRatioMin)
             filters.add(GC_RATIO);
 
         return filters;

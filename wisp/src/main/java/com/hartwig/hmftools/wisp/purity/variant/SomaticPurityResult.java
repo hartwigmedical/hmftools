@@ -11,49 +11,26 @@ import java.util.StringJoiner;
 public class SomaticPurityResult
 {
     public final int TotalVariants;
+    public final int ChipVariants;
     public final FragmentTotals FragTotals; // used in purity fit - passes filters and either avg qual > threshold or has no allele fragments
     public final UmiTypeCounts UmiCounts;
 
-    /*
-    public final int TotalFragments;
-    public final int TotalDualFragments;
-    public final int AlleleFragments;
-    public final int AlleleDualFragments;
-
-    public final double TumorVaf;
-    public final double AdjustedTumorVaf;
-    */
     public final PurityCalcData PurityCalcs;
-
-    /*
-    public final FragmentCalcResult DualFragsResult;
-    public final FragmentCalcResult LimitOfDetectionResult;
-    */
 
     private boolean mValid;
 
     public static final SomaticPurityResult INVALID_RESULT = new SomaticPurityResult(false);
 
     public SomaticPurityResult(
-            boolean valid, int totalVariants, final FragmentTotals fragmentTotals,
+            boolean valid, int totalVariants, int chipVariants, final FragmentTotals fragmentTotals,
             final UmiTypeCounts umiTypeCounts, final PurityCalcData purityCalcData)
     {
         TotalVariants = totalVariants;
+        ChipVariants = chipVariants;
         FragTotals = fragmentTotals;
         UmiCounts = umiTypeCounts;
         PurityCalcs = purityCalcData;
 
-        /*
-        TotalFragments = sampleCounts.totalFragments();
-        AlleleFragments = sampleCounts.alleleFragments();
-        TotalDualFragments = umiTypeCounts.TotalDual;
-        AlleleDualFragments = umiTypeCounts.AlleleDual;
-        TumorVaf = tumorVaf;
-        AdjustedTumorVaf = adjustedTumorVaf;
-        FragCalcResult = fragCalcResult;
-        DualFragsResult = dualFragsResult;
-        LimitOfDetectionResult = lodFragsResult;
-        */
         mValid = valid;
     }
 
@@ -61,11 +38,10 @@ public class SomaticPurityResult
     {
         mValid = valid;
         TotalVariants = 0;
+        ChipVariants = 0;
         PurityCalcs = new PurityCalcData();
         FragTotals = new FragmentTotals();
         UmiCounts = UmiTypeCounts.NO_UMI_COUNTS;
-        // DualFragsResult = FragmentCalcResult.INVALID;
-        // LimitOfDetectionResult = FragmentCalcResult.INVALID;
     }
 
     public boolean valid() { return mValid; }
@@ -75,6 +51,7 @@ public class SomaticPurityResult
         StringJoiner sj = new StringJoiner(TSV_DELIM);
         sj.add("TotalVariants");
         sj.add("CalcVariants");
+        sj.add("ChipVariants");
         sj.add("SNVPurity");
         sj.add("RawSomaticPurity");
         sj.add("ClonalMethod");
@@ -91,6 +68,7 @@ public class SomaticPurityResult
         sj.add("AlleleFragments");
         sj.add("AlleleDual");
         sj.add("WeightedAvgDepth");
+        sj.add("PeakBandwidth");
         return sj.toString();
     }
 
@@ -100,6 +78,7 @@ public class SomaticPurityResult
 
         sj.add(format("%d", TotalVariants));
         sj.add(format("%d", FragTotals.variantCount()));
+        sj.add(format("%d", ChipVariants));
         sj.add(formatPurityValue(PurityCalcs.PurityEstimate));
         sj.add(formatPurityValue(PurityCalcs.RawPurityEstimate));
         sj.add(String.valueOf(PurityCalcs.Clonality.Method));
@@ -118,6 +97,7 @@ public class SomaticPurityResult
         sj.add(format("%d", FragTotals.sampleAdTotal()));
         sj.add(format("%d", UmiCounts.AlleleDual));
         sj.add(format("%.1f", FragTotals.weightedSampleDepth()));
+        sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidth));
 
         return sj.toString();
     }

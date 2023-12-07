@@ -22,7 +22,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
 import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
-import static com.hartwig.hmftools.wisp.common.SampleData.ctDnaSamplesFromStr;
+import static com.hartwig.hmftools.wisp.purity.SampleData.ctDnaSamplesFromStr;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.DEFAULT_NOISE_READS_PER_MILLION_DUAL_STRAND;
 
@@ -37,7 +37,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
-import com.hartwig.hmftools.wisp.common.SampleData;
 import com.hartwig.hmftools.wisp.purity.variant.ProbeVariantCache;
 
 public class PurityConfig
@@ -81,6 +80,8 @@ public class PurityConfig
     {
         SampleDataDir = checkAddDirSeparator(configBuilder.getValue(SAMPLE_DATA_DIR_CFG));
 
+        GcRatioMin = configBuilder.getDecimal(GC_RATIO_MIN);
+
         Samples = Lists.newArrayList();
         loadSampleData(configBuilder);
 
@@ -111,7 +112,6 @@ public class PurityConfig
 
         NoiseReadsPerMillion = configBuilder.getDecimal(NOISE_READS_PER_MILLION);
         NoiseReadsPerMillionDualStrand = configBuilder.getDecimal(NOISE_READS_PER_MILLION_DUAL);
-        GcRatioMin = configBuilder.getDecimal(GC_RATIO_MIN);
 
         WriteTypes = Sets.newHashSet();
 
@@ -159,7 +159,7 @@ public class PurityConfig
             Samples.add(new SampleData(
                     configBuilder.getValue(PATIENT_ID),
                     configBuilder.getValue(TUMOR_ID),
-                    ctDnaSamplesFromStr(configBuilder.getValue(CTDNA_SAMPLES)), ""));
+                    ctDnaSamplesFromStr(configBuilder.getValue(CTDNA_SAMPLES)), "", GcRatioMin > 0));
         }
 
         CT_LOGGER.info("loaded {} patients and {} ctDNA samples",

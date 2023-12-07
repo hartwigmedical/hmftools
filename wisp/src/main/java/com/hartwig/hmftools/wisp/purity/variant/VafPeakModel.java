@@ -4,16 +4,19 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
-import static java.lang.Math.sqrt;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MAX;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MIN;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_DEPTH_PERC;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_PEAK_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_VARIANTS;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.VAF_PEAK_MODEL_MIN_AVG_DEPTH;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_AVG_DEPTH;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_NTH_RATIO;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_NTH_RATIO_MIN;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.SOMATIC_PEAK_FILE_ID;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonFields;
 import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFields;
@@ -33,8 +36,7 @@ import java.util.stream.IntStream;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;
 import com.hartwig.hmftools.common.utils.kde.KernelEstimator;
-import com.hartwig.hmftools.common.variant.VariantContextDecorator;
-import com.hartwig.hmftools.wisp.common.SampleData;
+import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 
@@ -49,17 +51,10 @@ public class VafPeakModel extends ClonalityModel
     @Override
     public ClonalityData calculate(final String sampleId, final FragmentTotals fragmentTotals, final double rawEstimatedPurity)
     {
-        // CHECK - is this still required?
-        // if(estimatedResult.PurityProbability > SOMATIC_PEAK_MAX_PROBABILITY)
-        //    return INVALID_RESULT;
-
         List<Double> variantVafRatios = Lists.newArrayList();
-        // List<Double> variantVafs = Lists.newArrayList();
 
         double sampleWad = fragmentTotals.weightedSampleDepth();
-        int depthThreshold = (int)max(VAF_PEAK_MODEL_MIN_AVG_DEPTH, sampleWad * SOMATIC_PEAK_MIN_DEPTH_PERC);
-
-        double estimateVaf = fragmentTotals.adjSampleVaf();
+        int depthThreshold = (int)max(SOMATIC_PEAK_MIN_AVG_DEPTH, sampleWad * SOMATIC_PEAK_MIN_DEPTH_PERC);
 
         for(SomaticVariant variant : mVariants)
         {
@@ -80,9 +75,7 @@ public class VafPeakModel extends ClonalityModel
 
             /*
             SampleExpDp = ((1 - SampleEstTF) * SampleWAD * 2 + SampleEstTF * SampleWAD * CopyNumber) / 2
-
             SampleExpAd = SampleEstTF * VCN / (CopyNumber * SampleEstTF + (1 - SampleEstTF) * 2) * SampleExpDp
-
             SampleExpVaf= SampleExpAd / SampleExpDp
             */
 
@@ -98,14 +91,32 @@ public class VafPeakModel extends ClonalityModel
             writePeakData(mResultsWriter.getSomaticPeakWriter(), mConfig, mSample, sampleId, variant, vafRatio);
         }
 
-        if(variantVafRatios.size() < SOMATIC_PEAK_MIN_VARIANTS)
+        int variantCount = variantVafRatios.size();
+
+        if(variantCount < SOMATIC_PEAK_MIN_VARIANTS)
             return NO_RESULT;
 
         Collections.sort(variantVafRatios);
 
-        List<VafPeak> vafRatioPeaks = findVafRatioPeaks(variantVafRatios);
-
         double sampleAdjVaf = fragmentTotals.adjSampleVaf();
+
+        /*
+        nthRatio = round(pmax(3,0.08*nrow(peakVars)))
+        calcBW = peakVars %>% arrange(-VafRatio) %>% summarise(NthRatio=nth(VafRatio-1,nthRatio))
+        minBW=10/(adjSampleVaf*weightedAvgDepth)
+        finalBW=pmin(pmax(0.2,pmax(calcBW$NthRatio/4,minBW)),3)
+         */
+
+        int nthItem = (int)round(max(SOMATIC_PEAK_NTH_RATIO_MIN, SOMATIC_PEAK_NTH_RATIO * variantCount));
+
+        double nthRatio = variantVafRatios.get(variantCount - nthItem);
+        double minBandwidth = 10 / (sampleAdjVaf * fragmentTotals.weightedSampleDepth());
+
+        double densityBandwidth = max((nthRatio - 1) / 4, minBandwidth);
+        densityBandwidth =min(max(SOMATIC_PEAK_BANDWIDTH_MIN, densityBandwidth), SOMATIC_PEAK_BANDWIDTH_MAX);
+
+        List<VafPeak> vafRatioPeaks = findVafRatioPeaks(variantVafRatios, densityBandwidth);
+
 
         if(!vafRatioPeaks.isEmpty())
         {
@@ -124,10 +135,11 @@ public class VafPeakModel extends ClonalityModel
             double maxVafPeak = maxPeak.Peak * sampleAdjVaf;
             double minVafPeak = minPeak.Peak * sampleAdjVaf;
 
-            return new ClonalityData(ClonalityMethod.VAF_PEAK, maxVafPeak, maxVafPeak, minVafPeak, maxPeak.Count, 0);
+            return new ClonalityData(
+                    ClonalityMethod.VAF_PEAK, maxVafPeak, maxVafPeak, minVafPeak, maxPeak.Count, 0, densityBandwidth);
         }
 
-        return new ClonalityData(NO_PEAK, 0, 0, 0, 0, 0);
+        return new ClonalityData(NO_PEAK, 0, 0, 0, 0, 0, densityBandwidth);
     }
 
     private class VafPeak implements Comparable<VafPeak>
@@ -154,28 +166,16 @@ public class VafPeakModel extends ClonalityModel
     }
 
     private static final double PEAK_VAF_RATIO_BUFFER = 0.1;
-    private static final double DENSITY_BANDWIDTH = 0.15; // smoothing factor
     private static final double VAF_RATIO_BUCKET = 0.1; // ratio buckets
-    private static final int MAX_VAF_RATIO = 8;
+    private static final int MAX_VAF_RATIO = 20;
 
-    private List<VafPeak> findVafRatioPeaks(final List<Double> sampleVafRatios)
+    private List<VafPeak> findVafRatioPeaks(final List<Double> sampleVafRatios, double densityBandwidth)
     {
-        double vafRatioTotal = 0;
         double maxVafRatio = 0;
         for(double vafRatio : sampleVafRatios)
         {
             maxVafRatio = max(maxVafRatio, vafRatio);
-            vafRatioTotal += vafRatio;
         }
-
-        if(vafRatioTotal == 0)
-            return Collections.emptyList();
-
-        double averageRatio = vafRatioTotal / sampleVafRatios.size();
-        double medianRatio = sampleVafRatios.get(sampleVafRatios.size() / 2);
-        double densityMultiplier = sqrt(max(averageRatio / medianRatio, 1));
-
-        double densityBandwidth = DENSITY_BANDWIDTH * densityMultiplier;
 
         int maxVafRatioLimit = min((int)ceil(maxVafRatio), MAX_VAF_RATIO);
 

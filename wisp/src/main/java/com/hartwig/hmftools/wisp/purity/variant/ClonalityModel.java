@@ -2,7 +2,7 @@ package com.hartwig.hmftools.wisp.purity.variant;
 
 import java.util.List;
 
-import com.hartwig.hmftools.wisp.common.SampleData;
+import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 

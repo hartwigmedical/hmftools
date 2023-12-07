@@ -3,8 +3,8 @@ package com.hartwig.hmftools.wisp.purity.variant;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_COUNT_MODEL_MIN_AVG_DEPTH;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_COUNT_MODEL_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SYNTHETIC_TUMOR_VAF;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.VAF_PEAK_MODEL_MIN_AVG_DEPTH;
-import static com.hartwig.hmftools.wisp.purity.PurityConstants.VAF_PEAK_MODEL_MIN_FRAG_VARIANTS;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_AVG_DEPTH;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecomputed;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.calcLimitOfDetection;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedProbability;
@@ -14,7 +14,7 @@ import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityResult.INVAL
 import java.util.List;
 
 import com.hartwig.hmftools.common.purple.PurityContext;
-import com.hartwig.hmftools.wisp.common.SampleData;
+import com.hartwig.hmftools.wisp.purity.SampleData;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
 import com.hartwig.hmftools.wisp.purity.ResultsWriter;
 
@@ -32,7 +32,8 @@ public class SomaticPurityEstimator
     }
 
     public SomaticPurityResult calculatePurity(
-            final String sampleId, final PurityContext purityContext, final List<SomaticVariant> variants, final int totalVariantCount)
+            final String sampleId, final PurityContext purityContext, final List<SomaticVariant> variants,
+            final int totalVariantCount, final int chipVariants)
     {
         FragmentTotals fragmentTotals = new FragmentTotals();
 
@@ -72,12 +73,14 @@ public class SomaticPurityEstimator
         purityCalcData.RawPurityEstimate = estimatedPurity(
                 tumorPurity, fragmentTotals.adjTumorVaf(), fragmentTotals.adjSampleVaf(), noiseRate);
 
+        purityCalcData.PurityEstimate = purityCalcData.RawPurityEstimate;
+
         double weightedAvgDepth = fragmentTotals.weightedSampleDepth();
 
         ClonalityModel model = null;
 
-        if(fragmentTotals.sampleTwoPlusCount() >= VAF_PEAK_MODEL_MIN_FRAG_VARIANTS
-        && weightedAvgDepth > VAF_PEAK_MODEL_MIN_AVG_DEPTH)
+        if(fragmentTotals.sampleTwoPlusCount() >= SOMATIC_PEAK_MIN_FRAG_VARIANTS
+        && weightedAvgDepth > SOMATIC_PEAK_MIN_AVG_DEPTH)
         {
             model = new VafPeakModel(mConfig, mResultsWriter, mSample, variants);
         }
@@ -114,7 +117,7 @@ public class SomaticPurityEstimator
         // CT_LOGGER.info(format("patient(%s) sample(%s) sampleTotalFrags(%d) noise(%.1f) LOD(%.6f)",
         //        mSample.PatientId, sampleId, sampleDepthTotal, allFragsNoise, lodFragsResult.EstimatedPurity));
 
-        return new SomaticPurityResult(true, totalVariantCount, fragmentTotals, umiTypeCounts, purityCalcData);
+        return new SomaticPurityResult(true, totalVariantCount, chipVariants, fragmentTotals, umiTypeCounts, purityCalcData);
     }
 
     private void removeChipVariants(final FragmentTotals fragmentTotals)

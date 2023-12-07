@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.wisp.common;
+package com.hartwig.hmftools.wisp.purity;
 
 import static java.lang.String.format;
 
@@ -18,6 +18,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.wisp.common.CommonUtils;
 
 public class SampleData
 {
@@ -25,13 +26,15 @@ public class SampleData
     public final String TumorId;
     public final List<String> CtDnaSamples;
     public final String VcfTag;
+    public final boolean ApplyGcRatio;
 
-    public SampleData(final String patientId, final String tumorId, final List<String> ctDnaSamples, final String vcfTag)
+    public SampleData(final String patientId, final String tumorId, final List<String> ctDnaSamples, final String vcfTag, final boolean applyGcRatio)
     {
         PatientId = patientId;
         TumorId = tumorId;
         CtDnaSamples = ctDnaSamples;
         VcfTag = vcfTag;
+        ApplyGcRatio = applyGcRatio;
     }
 
     public boolean isBatchControl() { return VcfTag != null && VcfTag.contains(BATCH_CONTROL_TAG); }
@@ -64,6 +67,7 @@ public class SampleData
             int tumorIndex = fieldsIndexMap.get("TumorId");
             int ctdnaIndex = fieldsIndexMap.get("CtDnaSampleIds");
             Integer vcfIndex = fieldsIndexMap.get("VcfTag");
+            Integer applyGcRatioIndex = fieldsIndexMap.get("ApplyGcRatio");
 
             for(String line : fileContents)
             {
@@ -73,8 +77,11 @@ public class SampleData
                 String[] values = line.split(CSV_DELIM, -1);
                 String vcfTag = vcfIndex != null && vcfIndex < values.length ? values[vcfIndex] : "";
 
+                boolean applyGcRatio = applyGcRatioIndex != null && applyGcRatioIndex < values.length ?
+                        Boolean.parseBoolean(values[applyGcRatioIndex]) : false;
+
                 samples.add(new SampleData(
-                        values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex]), vcfTag));
+                        values[patientIndex], values[tumorIndex], ctDnaSamplesFromStr(values[ctdnaIndex]), vcfTag, applyGcRatio));
             }
         }
         catch (IOException e)

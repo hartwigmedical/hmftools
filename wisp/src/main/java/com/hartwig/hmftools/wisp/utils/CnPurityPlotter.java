@@ -13,7 +13,7 @@ import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
 import com.hartwig.hmftools.common.utils.config.ConfigUtils;
 import com.hartwig.hmftools.wisp.purity.cn.CopyNumberProfile;
 import com.hartwig.hmftools.wisp.purity.PurityConfig;
-import com.hartwig.hmftools.wisp.common.SampleData;
+import com.hartwig.hmftools.wisp.purity.SampleData;
 
 public class CnPurityPlotter
 {
