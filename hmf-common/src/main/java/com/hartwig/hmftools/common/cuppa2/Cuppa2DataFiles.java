@@ -9,9 +9,9 @@ public class Cuppa2DataFiles
         return checkAddDirSeparator(basePath) + sample + ".cuppa_vis_data.tsv";
     }
 
-    public static String generateVisualizationPath(final String basePath, final String sample)
+    public static String generateVisPlotPath(final String basePath, final String sample)
     {
-        return checkAddDirSeparator(basePath) + sample + ".cuppa_vis.tsv";
+        return checkAddDirSeparator(basePath) + sample + ".cuppa_vis.png";
     }
 
     public static String generatePredSummPath(final String basePath, final String sample)
