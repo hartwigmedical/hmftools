@@ -52,5 +52,5 @@ public interface OrangePlots
     String cuppaChartPlot();
 
     @Nullable
-    String cuppa2Visualization();
+    String cuppa2VisPlot();
 }
