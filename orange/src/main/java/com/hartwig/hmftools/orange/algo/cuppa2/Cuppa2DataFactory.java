@@ -6,19 +6,19 @@ import java.util.List;
 import com.hartwig.hmftools.common.cuppa2.Categories;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
 import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppa2Data;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableProbabilityEntry;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableFeatureContributionEntry;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableSignatureQuantileEntry;
-import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppaPredictions;
 
 import org.jetbrains.annotations.NotNull;
 
-public class CuppaPredictionsFactory
+public class Cuppa2DataFactory
 {
     @NotNull
-    public static ImmutableCuppaPredictions create(@NotNull CuppaPredictions cuppaPredictions)
+    public static ImmutableCuppa2Data create(@NotNull CuppaPredictions cuppaPredictions)
     {
-        return ImmutableCuppaPredictions.builder()
+        return ImmutableCuppa2Data.builder()
                 .topPrediction(getTopPrediction(cuppaPredictions))
                 .probs(getProbabilities(cuppaPredictions))
                 .featContribs(getFeatureContributions(cuppaPredictions))
