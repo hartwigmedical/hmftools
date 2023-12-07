@@ -10,9 +10,9 @@ import com.hartwig.hmftools.datamodel.cuppa2.ImmutableSignatureQuantileEntry;
 
 import org.junit.Test;
 
-public class CuppaPredictionsFactoryTest
+public class Cuppa2DataFactoryTest
 {
-    public CuppaPredictionsFactoryTest() throws IOException {}
+    public Cuppa2DataFactoryTest() throws IOException {}
 
     private static final String CUPPA_VIS_DATA_TSV = Resources.getResource("cuppa/cuppa_vis_data.tsv").getPath();
     CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
