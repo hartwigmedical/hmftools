@@ -169,8 +169,6 @@ public class RefVariantChecker
     private VariantContextDecorator findExistingVariant(
             final VariantContextDecorator refVariant, final Map<String,List<VariantContextDecorator>> chrVariantMap)
     {
-        VariantContextDecorator tumorVariant = null;
-
         List<VariantContextDecorator> tumorVariants = chrVariantMap.get(refVariant.chromosome());
 
         if(tumorVariants == null)

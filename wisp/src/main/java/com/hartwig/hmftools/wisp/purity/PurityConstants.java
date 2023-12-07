@@ -20,6 +20,7 @@ public class PurityConstants
     public static final int SOMATIC_PEAK_MIN_VARIANTS = 10;
     public static final double SOMATIC_PEAK_MIN_DEPTH_PERC = 0.1;
     public static final int SOMATIC_PEAK_MIN_PEAK_VARIANTS = 5;
+    public static final double SOMATIC_PEAK_MIN_PEAK_VARIANTS_PERC = 0.05;
 
     public static final int SOMATIC_PEAK_MIN_FRAG_VARIANTS = 10;
     public static final int SOMATIC_PEAK_MIN_AVG_DEPTH = 20;

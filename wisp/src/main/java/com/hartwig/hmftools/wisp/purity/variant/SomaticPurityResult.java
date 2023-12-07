@@ -54,6 +54,8 @@ public class SomaticPurityResult
         sj.add("ChipVariants");
         sj.add("SNVPurity");
         sj.add("RawSomaticPurity");
+        sj.add("SNVPurityLow");
+        sj.add("SNVPurityHigh");
         sj.add("ClonalMethod");
         sj.add("TumorVaf");
         sj.add("AdjSampleVaf");
@@ -69,6 +71,8 @@ public class SomaticPurityResult
         sj.add("AlleleDual");
         sj.add("WeightedAvgDepth");
         sj.add("PeakBandwidth");
+        sj.add("PeakBandwidthLow");
+        sj.add("PeakBandwidthHigh");
         return sj.toString();
     }
 
@@ -81,6 +85,8 @@ public class SomaticPurityResult
         sj.add(format("%d", ChipVariants));
         sj.add(formatPurityValue(PurityCalcs.PurityEstimate));
         sj.add(formatPurityValue(PurityCalcs.RawPurityEstimate));
+        sj.add(formatPurityValue(PurityCalcs.PurityRangeLow));
+        sj.add(formatPurityValue(PurityCalcs.PurityRangeHigh));
         sj.add(String.valueOf(PurityCalcs.Clonality.Method));
         sj.add(formatPurityValue(FragTotals.rawTumorVaf()));
         sj.add(formatPurityValue(FragTotals.adjSampleVaf()));
@@ -98,6 +104,8 @@ public class SomaticPurityResult
         sj.add(format("%d", UmiCounts.AlleleDual));
         sj.add(format("%.1f", FragTotals.weightedSampleDepth()));
         sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidth));
+        sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthLow));
+        sj.add(format("%.3f", PurityCalcs.Clonality.PeakBandwidthHigh));
 
         return sj.toString();
     }

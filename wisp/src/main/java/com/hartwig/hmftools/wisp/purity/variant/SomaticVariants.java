@@ -246,14 +246,9 @@ public class SomaticVariants
 
     public SomaticPurityResult processSample(final String sampleId, final PurityContext purityContext)
     {
-        // only include variants which satisfy the min avg qual check in the ctDNA sample
-
         List<SomaticVariant> filteredVariants = Lists.newArrayList();
 
         int sampleTotalAD = 0;
-
-        // UmiTypeCounts umiTypeCounts = new UmiTypeCounts();
-        // SomaticVariantCounts sampleCountsDual = new SomaticVariantCounts();
 
         for(SomaticVariant variant : mVariants)
         {
@@ -269,6 +264,7 @@ public class SomaticVariants
 
             if(filterReasons.isEmpty())
             {
+                // only include variants which satisfy the min avg qual check in the ctDNA sample
                 if(sampleFragData.isLowQual())
                 {
                     filterReasons.add(LOW_QUAL_PER_AD);
@@ -290,12 +286,6 @@ public class SomaticVariants
             filteredVariants.add(variant);
 
             sampleTotalAD += sampleFragData.AlleleCount;
-
-            /*
-            umiTypeCounts.add(sampleFragData.UmiCounts);
-            sampleCountsDual.addFragmentCount(sampleFragData.UmiCounts.dualCount());
-            sampleCountsDual.addAlleleFragmentCount(sampleFragData.UmiCounts.AlleleDual, 0);
-            */
         }
 
         if(filteredVariants.isEmpty())

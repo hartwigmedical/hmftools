@@ -40,20 +40,12 @@ public final class SomaticPurityCalcs
         return probability;
     }
 
-    public static double expectedNoiseOld(final int sampleDepthTotal, final double qualPerAlleleFrag, final double noiseReadsPerMillion)
-    {
-        double lowQualNoiseFactor = qualPerAlleleFrag < LOW_QUAL_NOISE_CUTOFF ?
-                (LOW_QUAL_NOISE_CUTOFF - qualPerAlleleFrag) / (LOW_QUAL_NOISE_CUTOFF - MIN_QUAL_PER_AD) : 0;
-
-        return sampleDepthTotal / 1000000.0 * noiseReadsPerMillion + lowQualNoiseFactor;
-    }
-
+    /*
     protected static double estimatedPurityOld(double sampleVaf, double tumorPloidy, double tumorVaf)
     {
         return max(min(2 * sampleVaf / (tumorPloidy * tumorVaf + sampleVaf * (2 - tumorPloidy)), 1), 0);
     }
 
-    /*
     public static PurityCalcData calc(double tumorPloidy, double tumorVaf, int totalCount, int alleleCount, double noise)
     {
         // TFctDNA = [wVAFctDNA-ε]/ wVAFtissue / Puritytissue
@@ -93,6 +85,14 @@ public final class SomaticPurityCalcs
             return requiredProb == LOW_PROBABILITY ? OBSERVED_ZERO_LOW_MEAN : 0;
 
         return PoissonCalcs.calcPoissonNoiseValue(alleleCount, requiredProb);
+    }
+
+    public static double expectedNoiseOld(final int sampleDepthTotal, final double qualPerAlleleFrag, final double noiseReadsPerMillion)
+    {
+        double lowQualNoiseFactor = qualPerAlleleFrag < LOW_QUAL_NOISE_CUTOFF ?
+                (LOW_QUAL_NOISE_CUTOFF - qualPerAlleleFrag) / (LOW_QUAL_NOISE_CUTOFF - MIN_QUAL_PER_AD) : 0;
+
+        return sampleDepthTotal / 1000000.0 * noiseReadsPerMillion + lowQualNoiseFactor;
     }
     */
 }

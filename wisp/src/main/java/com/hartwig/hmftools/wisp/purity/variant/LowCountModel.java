@@ -62,7 +62,7 @@ public class LowCountModel extends ClonalityModel
 
         List<SimulatedVafCalcs> simulatedVafCalcs = Lists.newArrayList();
 
-        // now test each simluated dropout rate and VAF
+        // now test each simuluated dropout rate and VAF
         for(double dropoutRate = PurityConstants.DROPOUT_RATE_INCREMENT; dropoutRate < 0.95; dropoutRate += PurityConstants.DROPOUT_RATE_INCREMENT)
         {
             double simulatedVaf = estimateVaf / (1 - dropoutRate);
@@ -112,7 +112,8 @@ public class LowCountModel extends ClonalityModel
                 sampleId, observedRatio, observedFrag1, observedFrag2Plus, calcVaf, lowCalcVaf, highCalcVaf));
 
         return new ClonalityData(
-                ClonalityMethod.LOW_COUNT, calcVaf, lowCalcVaf, highCalcVaf, observedFrag1 + observedFrag2Plus, calcDropout, 0);
+                ClonalityMethod.LOW_COUNT, calcVaf, lowCalcVaf, highCalcVaf, observedFrag1 + observedFrag2Plus, calcDropout,
+                0, 0, 0);
     }
 
     private static double[] findVafRatio(double observedRatio, final List<SimulatedVafCalcs> simulatedVafCalcs)
