@@ -3,8 +3,10 @@ package com.hartwig.hmftools.sage.filter;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
+import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.evidence.RawContext;
 import com.hartwig.hmftools.sage.sync.FragmentData;
@@ -62,6 +64,15 @@ public class StrandBiasData
 
     private void registerRead(final SAMRecord record)
     {
+        UmiReadType umiReadType = extractUmiType(record);
+
+        if(umiReadType == UmiReadType.DUAL)
+        {
+            ++mForwardCount;
+            ++mReverseCount;
+            return;
+        }
+
         add(!record.getReadNegativeStrandFlag());
 
         /*

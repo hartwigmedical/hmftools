@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.sage.dedup;
 
-import static com.hartwig.hmftools.sage.dedup.DedupIndelOld.dedupIndelsOld;
 import static com.hartwig.hmftools.sage.dedup.DedupMatching.dedupMatchingVariants;
 import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvOverlaps;
 import static com.hartwig.hmftools.sage.dedup.DedupSnvMnv.dedupMnvSnvs;

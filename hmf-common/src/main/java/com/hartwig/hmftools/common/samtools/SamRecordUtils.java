@@ -87,30 +87,12 @@ public final class SamRecordUtils
 
     public static UmiReadType extractUmiType(final SAMRecord record)
     {
-        UmiReadType umiReadType = UmiReadType.NONE;
+        String umiTypeStr = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
 
-        if(record.hasAttribute(UMI_TYPE_ATTRIBUTE))
-        {
-            String umiType = record.getStringAttribute(UMI_TYPE_ATTRIBUTE);
-
-            if(umiType != null)
-                umiReadType = umiType.equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(umiType);
-        }
+        if(umiTypeStr != null)
+            return umiTypeStr.equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(umiTypeStr);
         else
-        {
-            // to be deprecated since have return to using UMI type attribute above
-            String consensusInfo = record.getStringAttribute(CONSENSUS_READ_ATTRIBUTE);
-
-            if(consensusInfo != null && consensusInfo.contains(CONSENSUS_INFO_DELIM))
-            {
-                String[] values = consensusInfo.split(CONSENSUS_INFO_DELIM, 3);
-
-                if(values.length == 3)
-                    umiReadType = values[2].equals(DUAL_STRAND_OLD) ? UmiReadType.DUAL : UmiReadType.valueOf(values[2]);
-            }
-        }
-
-        return umiReadType;
+            return UmiReadType.NONE;
     }
 
     public static int getUnclippedPosition(final SAMRecord read)
