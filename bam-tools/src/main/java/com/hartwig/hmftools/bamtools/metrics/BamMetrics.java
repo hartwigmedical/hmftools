@@ -75,8 +75,6 @@ public class BamMetrics
             Collections.sort(allRegions);
         }
 
-        BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
-
         Queue<PartitionTask> partitions = new ConcurrentLinkedQueue<>();
 
         int taskId = 0;
@@ -87,23 +85,33 @@ public class BamMetrics
 
         CombinedStats combinedStats = new CombinedStats(mConfig.MaxCoverage);
 
-        List<Thread> workers = new ArrayList<>();
-
-        for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
+        if(allRegions.size() == 1 || mConfig.Threads <= 1)
         {
-            workers.add(new PartitionThread(mConfig, partitions, combinedStats));
+            PartitionThread partitionThread = new PartitionThread(mConfig, partitions, combinedStats);
+            partitionThread.run();
         }
-
-        for(Thread worker : workers)
+        else
         {
-            try
+            BT_LOGGER.info("splitting {} regions across {} threads", allRegions.size(), mConfig.Threads);
+
+            List<Thread> workers = new ArrayList<>();
+
+            for(int i = 0; i < min(allRegions.size(), mConfig.Threads); ++i)
             {
-                worker.join();
+                workers.add(new PartitionThread(mConfig, partitions, combinedStats));
             }
-            catch(InterruptedException e)
+
+            for(Thread worker : workers)
             {
-                BT_LOGGER.error("task execution error: {}", e.toString());
-                e.printStackTrace();
+                try
+                {
+                    worker.join();
+                }
+                catch(InterruptedException e)
+                {
+                    BT_LOGGER.error("task execution error: {}", e.toString());
+                    e.printStackTrace();
+                }
             }
         }
 

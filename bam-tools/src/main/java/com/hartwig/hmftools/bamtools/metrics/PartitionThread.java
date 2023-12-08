@@ -44,6 +44,9 @@ public class PartitionThread extends Thread
     @Override
     public void run()
     {
+        if(mPartitions.isEmpty())
+            return;
+
         while(true)
         {
             try
