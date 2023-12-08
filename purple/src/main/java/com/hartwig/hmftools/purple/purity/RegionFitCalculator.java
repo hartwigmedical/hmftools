@@ -5,6 +5,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.pow;
 import static java.lang.Math.signum;
 
 import static com.hartwig.hmftools.purple.config.PurpleConstants.BAF_PNT_5;
@@ -80,6 +81,12 @@ public class RegionFitCalculator
         final PurityAdjuster purityAdjuster = new PurityAdjuster(purity, normFactor, mCobaltChromosomes);
 
         double observedTumorRatio = observedRegion.observedTumorRatio();
+
+        if(mFitScoreConfig.GcRatioExponent > 0)
+        {
+            observedTumorRatio = pow(observedTumorRatio, mFitScoreConfig.GcRatioExponent);
+        }
+
         double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
         double observedBAF = observedRegion.observedBAF();
         double impliedBAF = impliedBaf(purityAdjuster, observedRegion.chromosome(), impliedCopyNumber, observedBAF);

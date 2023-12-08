@@ -34,6 +34,7 @@ public class FittingConfig
     public final int RecoveryMinSglQualScore;
 
     public final double DeviationPenaltyGcAdjust;
+    public final double GcRatioExponent;
 
     private static final String MIN_PURITY = "min_purity";
     private static final String MAX_PURITY = "max_purity";
@@ -44,6 +45,7 @@ public class FittingConfig
     private static final String MIN_DIPLOID_TUMOR_RATIO_COUNT_AT_CENTROMERE = "min_diploid_tumor_ratio_count_centromere";
 
     private static final String DEVIATION_PENALTY_GC_ADJUST = "deviation_penalty_gc_adjust";
+    private static final String GC_RATIO_EXPONENT = "gc_ratio_exponent";
 
     // fitting scores
     private static final String PLOIDY_PENALTY_FACTOR = "ploidy_penalty_factor";
@@ -89,6 +91,7 @@ public class FittingConfig
         RecoveryMinSglQualScore = configBuilder.getInteger(CFG_MIN_SGL_QUAL_SCORE);
 
         DeviationPenaltyGcAdjust = configBuilder.getDecimal(DEVIATION_PENALTY_GC_ADJUST);
+        GcRatioExponent = configBuilder.getDecimal(GC_RATIO_EXPONENT);
     }
 
     public static void addConfig(final ConfigBuilder configBuilder)
@@ -139,5 +142,6 @@ public class FittingConfig
                 CFG_MIN_SGL_QUAL_SCORE, "SV recovery SGL min qual score", DEFAULT_RECOVERY_MIN_SGL_QUAL_SCORE);
 
         configBuilder.addDecimal(DEVIATION_PENALTY_GC_ADJUST, "Adjust deviation penalty by tumor GC Ratio", 0);
+        configBuilder.addDecimal(GC_RATIO_EXPONENT, "Adjust GC Ratio by exponent in penalty calc", 0);
     }
 }
