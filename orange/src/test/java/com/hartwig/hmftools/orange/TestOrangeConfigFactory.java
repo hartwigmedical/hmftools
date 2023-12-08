@@ -48,8 +48,9 @@ public final class TestOrangeConfigFactory
     private static final String LILAC_QC_TSV = RUN_DIRECTORY + "/lilac/tumor_sample.lilac.qc.tsv";
     private static final String ANNOTATED_VIRUS_TSV = RUN_DIRECTORY + "/virusinterprtr/tumor_sample.virus.annotated.tsv";
     private static final String CHORD_PREDICTION_TXT = RUN_DIRECTORY + "/chord/tumor_sample_chord_prediction.txt";
-    private static final String CUPPA_PREDICTIONS_TSV = RUN_DIRECTORY + "/cuppa/tumor_sample.cuppa_vis_data.tsv";
-    private static final String CUPPA_VIS_PLOT = RUN_DIRECTORY + "/cuppa/tumor_sample.cuppa_vis.png";
+    private static final String CUPPA2_PREDICTIONS_TSV = RUN_DIRECTORY + "/cuppa2/tumor_sample.cuppa.vis_data.tsv";
+    private static final String CUPPA2_VIS_PLOT = RUN_DIRECTORY + "/cuppa2/tumor_sample.cuppa.vis.png";
+    private static final String CUPPA2_PRED_SUMM = RUN_DIRECTORY + "/cuppa2/tumor_sample.cuppa.pred_summ.png";
     private static final String PEACH_GENOTYPE_TSV = RUN_DIRECTORY + "/peach/tumor_sample.peach.genotype.tsv";
     private static final String SIGS_ALLOCATION_TSV = RUN_DIRECTORY + "/sigs/tumor_sample.sig.allocation.tsv";
 
@@ -103,8 +104,9 @@ public final class TestOrangeConfigFactory
                 .wgsRefConfig(ImmutableOrangeWGSRefConfig.builder()
                         .annotatedVirusTsv(ANNOTATED_VIRUS_TSV)
                         .chordPredictionTxt(CHORD_PREDICTION_TXT)
-                        .cuppa2Predictions(CUPPA_PREDICTIONS_TSV)
-                        .cuppa2VisPlot(CUPPA_VIS_PLOT)
+                        .cuppa2Predictions(CUPPA2_PREDICTIONS_TSV)
+                        .cuppa2VisPlot(CUPPA2_VIS_PLOT)
+                        .cuppa2PredSumm(CUPPA2_PRED_SUMM)
                         .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
                         .build())
                 .build();
