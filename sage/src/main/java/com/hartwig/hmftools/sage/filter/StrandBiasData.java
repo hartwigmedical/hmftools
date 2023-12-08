@@ -15,11 +15,13 @@ import htsjdk.samtools.SAMRecord;
 
 public class StrandBiasData
 {
+    private final boolean mIsAltBias;
     private int mForwardCount;
     private int mReverseCount;
 
-    public StrandBiasData()
+    public StrandBiasData(final boolean isAltBias)
     {
+        mIsAltBias = isAltBias;
         mForwardCount = 0;
         mReverseCount = 0;
     }
@@ -109,7 +111,7 @@ public class StrandBiasData
         {
             RawContext firstRawContext = RawContext.create(variant, fragment.First);
 
-            if(firstRawContext.AltSupport)
+            if(hasSupport(firstRawContext))
                 registerRead(fragment.First);
 
             return;
@@ -118,7 +120,7 @@ public class StrandBiasData
         {
             RawContext secondRawContext = RawContext.create(variant, fragment.Second);
 
-            if(secondRawContext.AltSupport)
+            if(hasSupport(secondRawContext))
                 registerRead(fragment.Second);
 
             return;
@@ -128,16 +130,21 @@ public class StrandBiasData
         RawContext firstRawContext = RawContext.create(variant, fragment.First);
         RawContext secondRawContext = RawContext.create(variant, fragment.Second);
 
-        if(firstRawContext.AltSupport)
+        if(hasSupport(firstRawContext))
             registerRead(fragment.First);
 
-        if(secondRawContext.AltSupport)
+        if(hasSupport(secondRawContext))
             registerRead(fragment.Second);
 
         /*
-        SG_LOGGER.debug("read({}) var({}) altSupport(first={} second={})",
-                record.getReadName(), variant.position(), firstRawContext.AltSupport, secondRawContext.AltSupport);
+        SG_LOGGER.debug("read({}) var({}) isAltBias({}) altSupport(first={} second={})",
+                record.getReadName(), variant.position(), mIsAltBias, firstRawContext.AltSupport, secondRawContext.AltSupport);
         */
+    }
+
+    private boolean hasSupport(final RawContext rawContext)
+    {
+        return mIsAltBias ? rawContext.AltSupport : rawContext.RefSupport;
     }
 
 

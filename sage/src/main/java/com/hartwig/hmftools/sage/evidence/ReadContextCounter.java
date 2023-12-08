@@ -155,10 +155,10 @@ public class ReadContextCounter implements VariantHotspot
 
         mJitterData = new JitterData();
 
-        mAltFragmentStrandBias = new StrandBiasData();
-        mRefFragmentStrandBias = new StrandBiasData();
-        mAltReadStrandBias = new StrandBiasData();
-        mRefReadStrandBias = new StrandBiasData();
+        mAltFragmentStrandBias = new StrandBiasData(true);
+        mRefFragmentStrandBias = new StrandBiasData(false);
+        mAltReadStrandBias = new StrandBiasData(true);
+        mRefReadStrandBias = new StrandBiasData(false);
 
         mImproperPairCount = 0;
 
