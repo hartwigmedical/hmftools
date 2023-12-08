@@ -11,7 +11,7 @@ import java.util.Set;
 import com.hartwig.hmftools.common.amber.AmberAnonymous;
 import com.hartwig.hmftools.common.cider.Cdr3LocusSummary;
 import com.hartwig.hmftools.common.cider.Cdr3Sequence;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.common.cuppa2.CuppaVisData;
 import com.hartwig.hmftools.common.teal.TelomereLength;
 import com.hartwig.hmftools.patientdb.amber.AmberMapping;
 import com.hartwig.hmftools.patientdb.amber.AmberPatient;
@@ -567,8 +567,8 @@ public class DatabaseAccess implements AutoCloseable
         cuppaDAO.writeCuppa(sample, cancerType, likelihood);
     }
 
-    public void writeCuppa2(@NotNull String sample, @NotNull CuppaPredictions cuppaPredictions, int topNProbs) throws IOException {
-        cuppaDAO.writeCuppa2(sample, cuppaPredictions, topNProbs);
+    public void writeCuppa2(@NotNull String sample, @NotNull CuppaVisData visData, int topNProbs) throws IOException {
+        cuppaDAO.writeCuppa2(sample, visData, topNProbs);
     }
 
     public void writeVirusBreakend(@NotNull String sample, @NotNull List<VirusBreakend> virusBreakends)

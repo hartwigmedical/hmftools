@@ -1,6 +1,4 @@
 package com.hartwig.hmftools.patientdb;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
-import java.io.IOException;
 
 public class LoadCuppaTest {
     /*
