@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.orange.algo.cuppa;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -7,6 +8,14 @@ import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.ImmutableCuppaPrediction;
+import com.hartwig.hmftools.datamodel.cuppa2.Cuppa2Data;
+import com.hartwig.hmftools.datamodel.cuppa2.FeatureContributionEntry;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppa2Data;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableFeatureContributionEntry;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableProbabilityEntry;
+import com.hartwig.hmftools.datamodel.cuppa2.ImmutableSignatureQuantileEntry;
+import com.hartwig.hmftools.datamodel.cuppa2.ProbabilityEntry;
+import com.hartwig.hmftools.datamodel.cuppa2.SignatureQuantileEntry;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -26,5 +35,49 @@ public final class TestCuppaFactory
                 .telomericSGLs(0)
                 .lineCount(0)
                 .build();
+    }
+
+    @NotNull
+    public static Cuppa2Data createMinimalCuppa2Data()
+    {
+        ProbabilityEntry minimalTopPrediction = ImmutableProbabilityEntry.builder().
+                clfName("dummy_clf_name").
+                cancerType("dummy_cancer_type_1").
+                dataValue(0.95).
+                rank(1).
+                rankGroup(0).
+                build();
+
+        List<ProbabilityEntry> minimalProbs = Arrays.asList(minimalTopPrediction);
+
+        FeatureContributionEntry minimalFeatureContributionEntry = ImmutableFeatureContributionEntry.builder().
+                clfName("dummy_clf_name").
+                featName("dummy_feat_name").
+                featValue(0.0).
+                cancerType("dummy_cancer_type_1").
+                dataValue(0.0).
+                rank(1).
+                rankGroup(1).
+                build();
+
+        List<FeatureContributionEntry> minimalFeatContribs = Arrays.asList(minimalFeatureContributionEntry);
+
+        SignatureQuantileEntry minimalSignatureQuantileEntry = ImmutableSignatureQuantileEntry.builder().
+                featName("dummy_feat_name").
+                featValue(0.0).
+                cancerType("dummy_cancer_type_1").
+                dataValue(0.0).
+                rank(1).
+                rankGroup(2).
+                build();
+
+        List<SignatureQuantileEntry> minimalSigQuantiles = Arrays.asList(minimalSignatureQuantileEntry);
+
+        return ImmutableCuppa2Data.builder().
+                topPrediction(minimalTopPrediction).
+                probs(minimalProbs).
+                featContribs(minimalFeatContribs).
+                sigQuantiles(minimalSigQuantiles).
+                build();
     }
 }
