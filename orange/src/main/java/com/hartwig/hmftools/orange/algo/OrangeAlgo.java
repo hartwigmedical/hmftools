@@ -19,8 +19,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
-import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.common.cuppa2.CuppaVisData;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -47,8 +46,6 @@ import com.hartwig.hmftools.common.sigs.SignatureAllocationFile;
 import com.hartwig.hmftools.common.virus.VirusInterpreterData;
 import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
-import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
 import com.hartwig.hmftools.datamodel.cuppa2.Cuppa2Data;
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
@@ -65,7 +62,6 @@ import com.hartwig.hmftools.datamodel.purple.PurpleRecord;
 import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRnaConfig;
-import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
 import com.hartwig.hmftools.orange.algo.cuppa2.Cuppa2DataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
@@ -578,17 +574,17 @@ public class OrangeAlgo
             return null;
         }
 
-        String cuppaPredictionsTsv = config.wgsRefConfig().cuppa2Predictions();
-        if(cuppaPredictionsTsv == null)
+        String cuppaVisDataTsv = config.wgsRefConfig().cuppa2VisData();
+        if(cuppaVisDataTsv == null)
         {
             LOGGER.debug("Skipping CUPPA loading as no input has been provided");
             return null;
         }
 
-        LOGGER.info("Loading CUPPA from {}", new File(cuppaPredictionsTsv).getParent());
-        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaPredictionsTsv);
+        LOGGER.info("Loading CUPPA from {}", new File(cuppaVisDataTsv).getParent());
+        CuppaVisData visData = CuppaVisData.fromTsv(cuppaVisDataTsv);
 
-        Cuppa2Data cuppa2Data = Cuppa2DataFactory.create(cuppaPredictions);
+        Cuppa2Data cuppa2Data = Cuppa2DataFactory.create(visData);
         LOGGER.info(
                 " Predicted cancer type '{}' with likelihood {}",
                 cuppa2Data.topPrediction().cancerType(),

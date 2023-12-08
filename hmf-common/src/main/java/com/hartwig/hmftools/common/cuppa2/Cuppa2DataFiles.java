@@ -4,7 +4,7 @@ import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDir
 
 public class Cuppa2DataFiles
 {
-    public static String generatePredictionsPath(final String basePath, final String sample)
+    public static String generateVisDataPath(final String basePath, final String sample)
     {
         return checkAddDirSeparator(basePath) + sample + ".cuppa.vis_data.tsv";
     }
