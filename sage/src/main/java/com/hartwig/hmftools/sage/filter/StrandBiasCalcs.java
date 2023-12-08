@@ -34,24 +34,26 @@ public class StrandBiasCalcs
 
     public boolean isDepthBelowProbability(final StrandBiasData strandBiasDataAlt, final StrandBiasData strandBiasDataRef, boolean checkRef)
     {
-        if(checkRef)
-        {
-            // ignore if the ref is uneven
-            if(strandBiasDataRef.forward() < STRAND_BIAS_REF_MIN_DEPTH || strandBiasDataRef.reverse() < STRAND_BIAS_REF_MIN_DEPTH)
-                return false;
-
-            double refBias = strandBiasDataRef.bias();
-
-            if(refBias < STRAND_BIAS_REF_MIN_BIAS || refBias > (1 - STRAND_BIAS_REF_MIN_BIAS))
-                return false;
-        }
-
         double strandBias = strandBiasDataAlt.bias();
         int depth = strandBiasDataAlt.depth();
 
         double minStrandBias = min(strandBias, 1 - strandBias);
         if(minStrandBias > STRAND_BIAS_CHECK_THRESHOLD)
             return false;
+
+        if(checkRef)
+        {
+            // to use the ref there must be min depth observed
+            if(strandBiasDataRef.forward() < STRAND_BIAS_REF_MIN_DEPTH || strandBiasDataRef.reverse() < STRAND_BIAS_REF_MIN_DEPTH)
+                return false;
+
+            double refBias = strandBiasDataRef.bias();
+
+            double minRefBias = min(refBias, 1 - refBias);
+
+            if(minRefBias < STRAND_BIAS_REF_MIN_BIAS && (refBias < 0.5) == (strandBias < 0.5))
+                return false;
+        }
 
         double requiredStrandBias = depth < mStrandBiasValues.length ? mStrandBiasValues[depth] : mMaxStrandBiasValue;
 
