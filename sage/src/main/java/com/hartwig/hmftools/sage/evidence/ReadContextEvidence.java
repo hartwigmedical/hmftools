@@ -6,8 +6,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
 
 import static htsjdk.samtools.CigarOperator.S;
 
@@ -173,12 +173,12 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         int nth = min(mConfig.MaxPartitionSlices, gapDistances.size());
         int nthGap = gapDistances.get(nth - 1);
 
-        /*
         int medianGap = gapDistances.get(gapCount / 2);
 
         SG_LOGGER.debug("region({}:{}-{} len={}) candidates({}) gap(n={} nth={}, max={} avg={} median={})",
                 firstCandidate.chromosome(), firstCandidate.position(), lastCandidate.position(), sliceLength,
                 candidates.size(), nth, nthGap, gapDistances.get(0), averageGap, medianGap);
+        /*
         */
 
         ChrBaseRegion currentRegion = new ChrBaseRegion(firstCandidate.chromosome(), firstCandidate.position(), firstCandidate.position());
@@ -305,9 +305,9 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
 
             if(mVariantPhaser != null)
             {
-                if(matchType == SUPPORT)
+                if(matchType == ALT_SUPPORT)
                     posPhasedCounters.add(readCounter);
-                else if(matchType == NO_SUPPORT)
+                else if(matchType == REF_SUPPORT)
                     negPhasedCounters.add(readCounter);
             }
         }

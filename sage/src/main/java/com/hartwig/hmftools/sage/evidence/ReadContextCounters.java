@@ -87,6 +87,6 @@ public class ReadContextCounters
             }
         }
 
-        return  validCandidates;
+        return validCandidates;
     }
 }

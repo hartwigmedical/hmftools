@@ -314,7 +314,7 @@ public class SageConfig
         QualityRecalibration = new BqrConfig();
         SpecificChrRegions = new SpecificRegions();
         IncludeMT = false;
-        RegionSliceSize = 500_000;
+        RegionSliceSize = DEFAULT_SLICE_SIZE;
         MinMapQuality = DEFAULT_MIN_MAP_QUALITY;
         MaxReadDepth = DEFAULT_MAX_READ_DEPTH;
         MaxReadDepthPanel = DEFAULT_MAX_READ_DEPTH_PANEL;

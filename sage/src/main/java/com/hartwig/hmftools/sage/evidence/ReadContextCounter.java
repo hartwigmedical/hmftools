@@ -7,7 +7,6 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
-import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
 import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
@@ -31,9 +30,15 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NO_SUPPORT;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.CHIMERIC;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.IN_SPLIT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.MAP_QUAL;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.MAX_COVERAGE;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NON_CORE;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SOFT_CLIP;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.CORE_PARTIAL;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
@@ -295,23 +300,24 @@ public class ReadContextCounter implements VariantHotspot
     public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)
     {
         if(exceedsMaxCoverage())
-            return UNRELATED;
+            return MAX_COVERAGE;
 
         if(mTier != VariantTier.HOTSPOT)
         {
             if(mConfig.Quality.MapQualityRatioFactor == 0 && record.getMappingQuality() < EVIDENCE_MIN_MAP_QUAL)
-                return UNRELATED;
+                return MAP_QUAL;
+        }
+
+        if(mConfig.Quality.HighBaseMode && isChimericRead(record))
+        {
+            return CHIMERIC;
         }
 
         RawContext rawContext = RawContext.create(mVariant, record);
 
-        if(mConfig.Quality.HighBaseMode)
+        if(mConfig.Quality.HighBaseMode && rawContext.ReadIndexInSoftClip)
         {
-            if(isChimericRead(record))
-                return UNRELATED;
-
-            if(rawContext.ReadIndexInSoftClip)
-                return UNRELATED;
+            return SOFT_CLIP;
         }
 
         if(rawContext.ReadIndex < 0 && !ignoreSoftClipAdapter(record))
@@ -330,7 +336,7 @@ public class ReadContextCounter implements VariantHotspot
         }
 
         if(rawContext.ReadIndexInSkipped)
-            return UNRELATED;
+            return IN_SPLIT;
 
         int readIndex = rawContext.ReadIndex;
         boolean baseDeleted = rawContext.ReadIndexInDelete;
@@ -345,7 +351,7 @@ public class ReadContextCounter implements VariantHotspot
         if(!covered)
         {
             registerRawSupport(rawContext);
-            return UNRELATED;
+            return NON_CORE;
         }
 
         double adjustedNumOfEvents = numberOfEvents;
@@ -430,7 +436,7 @@ public class ReadContextCounter implements VariantHotspot
                     countAltSupportMetrics(record, fragmentData);
 
                 checkImproperCount(record);
-                return SUPPORT;
+                return ALT_SUPPORT;
             }
             else if(match == ReadContextMatch.CORE_PARTIAL)
             {
@@ -455,7 +461,7 @@ public class ReadContextCounter implements VariantHotspot
             rawContext.updateSupport(false, rawContext.AltSupport);
             registerRawSupport(rawContext);
 
-            return SUPPORT;
+            return ALT_SUPPORT;
         }
         else if(realignment.Type == CORE_PARTIAL)
         {
@@ -471,7 +477,7 @@ public class ReadContextCounter implements VariantHotspot
         if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
         {
             if(jitterRealign.Type != LENGTHENED && jitterRealign.Type != SHORTENED)
-                return UNRELATED;
+                return SOFT_CLIP;
         }
 
         ReadMatchType readMatchType = UNRELATED;
@@ -484,7 +490,7 @@ public class ReadContextCounter implements VariantHotspot
         if(rawContext.RefSupport)
         {
             readSupport = REF;
-            readMatchType = NO_SUPPORT;
+            readMatchType = REF_SUPPORT;
 
             mRefFragmentStrandBias.registerFragment(record);
             mRefReadStrandBias.registerRead(record, fragmentData, this);
