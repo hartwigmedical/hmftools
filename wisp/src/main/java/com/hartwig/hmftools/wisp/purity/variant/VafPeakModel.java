@@ -106,62 +106,62 @@ public class VafPeakModel extends ClonalityModel
 
         double sampleAdjVaf = fragmentTotals.adjSampleVaf();
 
-        double densityBandwidth = calculateDensityBandwidth(sampleAdjVaf, sampleWad, variantVafRatios);
+        double densityBandwidth = calculateDensityBandwidth(sampleAdjVaf, sampleWad, variantVafRatios, 1);
 
         VafPeak vafRatioPeak = findMaxVafRatioPeak(variantVafRatios, densityBandwidth);
 
-        if(vafRatioPeak != null && vafRatioPeak.Peak < 1) // require a peak above the raw estimate
-            vafRatioPeak = null;
+        ClonalityMethod method = NO_PEAK;
+        double mainPeak = 1;
+
+        if(vafRatioPeak != null && vafRatioPeak.Peak > 1)
+        {
+            mainPeak = vafRatioPeak.Peak;
+            method = VAF_PEAK;
+        }
 
         int alleleCount = fragmentTotals.sampleAdTotal();
 
         double lowProbAlleleCount = calcPoissonNoiseValue(alleleCount, HIGH_PROBABILITY);
         double sampleAdjVafLow = fragmentTotals.adjSampleVaf(lowProbAlleleCount - alleleCount);
-        double densityBandwidthLow = calculateDensityBandwidth(sampleAdjVafLow, sampleWad, variantVafRatios) * 2;
+        double densityBandwidthLow = calculateDensityBandwidth(sampleAdjVafLow, sampleWad, variantVafRatios, 2);
         VafPeak vafRatioPeakLow = findMaxVafRatioPeak(variantVafRatios, densityBandwidthLow);
 
         double highProbAlleleCount = calcPoissonNoiseValue(alleleCount, LOW_PROBABILITY);
         double sampleAdjVafHigh = fragmentTotals.adjSampleVaf(highProbAlleleCount - alleleCount);
-        double densityBandwidthHigh = calculateDensityBandwidth(sampleAdjVafHigh, sampleWad, variantVafRatios) * 0.5;
+        double densityBandwidthHigh = calculateDensityBandwidth(sampleAdjVafHigh, sampleWad, variantVafRatios, 0.5);
         VafPeak vafRatioPeakHigh = findMaxVafRatioPeak(variantVafRatios, densityBandwidthHigh);
 
+        double peakHigh = 0;
+        double peakLow = 0;
+
+        if(vafRatioPeakLow != null && vafRatioPeakHigh != null)
+        {
+            peakHigh = max(max(vafRatioPeakLow.Peak, vafRatioPeakHigh.Peak), mainPeak);
+            peakLow = min(min(vafRatioPeakLow.Peak, vafRatioPeakHigh.Peak), mainPeak);
+        }
+        else if(vafRatioPeakLow != null)
+        {
+            peakHigh = max(vafRatioPeakLow.Peak, mainPeak);
+            peakLow = min(vafRatioPeakLow.Peak, mainPeak);
+        }
+        else if(vafRatioPeakHigh != null)
+        {
+            peakHigh = max(vafRatioPeakHigh.Peak, mainPeak);
+            peakLow = min(vafRatioPeakHigh.Peak, mainPeak);
+        }
+
         return new ClonalityData(
-                vafRatioPeak != null ? VAF_PEAK : NO_PEAK,
-                vafRatioPeak != null ? vafRatioPeak.Peak * sampleAdjVaf : 0,
-                vafRatioPeakLow != null ? vafRatioPeakLow.Peak * sampleAdjVafLow : 0,
-                vafRatioPeakHigh != null ? vafRatioPeakHigh.Peak * sampleAdjVafHigh : 0,
+                method,
+                mainPeak * sampleAdjVaf,
+                peakLow * sampleAdjVafLow,
+                peakHigh * sampleAdjVafHigh,
                 vafRatioPeak != null ? vafRatioPeak.Count : 0,
                 0,
                 densityBandwidth, densityBandwidthLow, densityBandwidthHigh);
-
-
-        /*
-        if(vafRatioPeak != null)
-        {
-            VafPeak maxPeak = vafRatioPeaks.get(vafRatioPeaks.size() - 1);
-            VafPeak minPeak = vafRatioPeaks.get(0);
-
-            CT_LOGGER.debug("sample({}) filteredVars({}) found {} somatic vaf-ratio peaks, max({})",
-                    sampleId, variantVafRatios.size(), vafRatioPeaks.size(), format("%.3f", maxPeak.Peak));
-
-            for(VafPeak vafPeak : vafRatioPeaks)
-            {
-                CT_LOGGER.debug("sample({}) somatic vaf-ratio peak({})", sampleId, vafPeak);
-            }
-
-            // convert VAF ratio back into VAF terms
-            double maxVafPeak = maxPeak.Peak * sampleAdjVaf;
-            double minVafPeak = minPeak.Peak * sampleAdjVaf;
-
-            return new ClonalityData(
-                    ClonalityMethod.VAF_PEAK, maxVafPeak, maxVafPeak, minVafPeak, maxPeak.Count, 0, densityBandwidth);
-        }
-
-        return new ClonalityData(NO_PEAK, 0, 0, 0, 0, 0, densityBandwidth);
-        */
     }
 
-    private double calculateDensityBandwidth(final double sampleAdjVaf, final double weightedSampleDepth, final List<Double> sampleVafRatios)
+    private double calculateDensityBandwidth(
+            final double sampleAdjVaf, final double weightedSampleDepth, final List<Double> sampleVafRatios, final double multiplier)
     {
         /*
         nthRatio = round(pmax(3,0.08*nrow(peakVars)))
@@ -177,8 +177,10 @@ public class VafPeakModel extends ClonalityModel
         double minBandwidth = 10 / (sampleAdjVaf * weightedSampleDepth);
 
         double densityBandwidth = max((nthRatio - 1) / 4, minBandwidth);
-        densityBandwidth = min(max(SOMATIC_PEAK_BANDWIDTH_MIN, densityBandwidth), SOMATIC_PEAK_BANDWIDTH_MAX);
-        return densityBandwidth;
+
+        densityBandwidth *= multiplier;
+
+        return min(max(SOMATIC_PEAK_BANDWIDTH_MIN, densityBandwidth), SOMATIC_PEAK_BANDWIDTH_MAX);
     }
 
     private static final double PEAK_VAF_RATIO_BUFFER = 0.1;
@@ -216,7 +218,6 @@ public class VafPeakModel extends ClonalityModel
         final List<VafPeak> vafPeaks = Lists.newArrayList();
 
         int peakStart = 1;
-        int rawRatioIndex = -1;
         int lastPeakIndex = -1;
 
         for(int i = 1; i < densities.length - 1; i++)
@@ -236,21 +237,11 @@ public class VafPeakModel extends ClonalityModel
 
             double vafRatio = vafRatios[i];
 
-            /*
-            if(vafRatio < 1.0) // below the raw level
-            {
-                rawRatioIndex = i;
-                continue;
-            }
-            */
-
-            if(peakStart < 0) //  && rawRatioIndex < 0
+            if(peakStart < 0)
                 continue;
 
             if(lastPeakIndex > 0 && peakStart < lastPeakIndex)
                 continue;
-
-            // peakStart = max(peakStart, rawRatioIndex + 1);
 
             // sum density observations at this density peak
             double peakDensityTotal = 0;
@@ -290,7 +281,7 @@ public class VafPeakModel extends ClonalityModel
                 continue;
             */
 
-            CT_LOGGER.debug(format("somatic vafRatio peak(%.3f @ %d) count(%d) range(%d - %d)",
+            CT_LOGGER.trace(format("somatic vafRatio peak(%.3f @ %d) count(%d) range(%d - %d)",
                     vafRatio, i, peakCount, peakStart, peakEnd));
 
             vafPeaks.add(new VafPeak(vafRatio, peakCount));

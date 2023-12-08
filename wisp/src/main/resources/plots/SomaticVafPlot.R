@@ -78,16 +78,16 @@ if(nrow(sampleSummary) == 1 & nrow(variantVafRatios) > 0 & clonalMethod!='NONE')
     colourFreqDist = 'grey'
     colourRawPurity = 'red'
     colourPeakPurity = 'orange2'
-    colourLowPurity = 'skyblue1'
-    colourHighPurity = 'steelblue3'
+    colourLowPurity = 'grey'
+    colourHighPurity = 'grey'
 
     rawVafRatio = 1
 
     if(peakPurity > rawSomaticPurity)
     {
-        purityStr = sprintf('purity(%s raw=%s)', format_purity(peakPurity), format_purity(rawSomaticPurity))
+        purityStr = sprintf('TF estimate(%s raw=%s)', format_purity(peakPurity), format_purity(rawSomaticPurity))
     } else {
-        purityStr = sprintf('purity(%s)', format_purity(rawSomaticPurity))
+        purityStr = sprintf('TF estimate(%s)', format_purity(rawSomaticPurity))
     }
 
     plotTitle=sprintf('%s - %s: %s, %s bandwidth(%.2f)',patientId,sampleId,purityStr,clonalMethod,densityBandwidth)
@@ -100,7 +100,7 @@ if(nrow(sampleSummary) == 1 & nrow(variantVafRatios) > 0 & clonalMethod!='NONE')
       theme(plot.title=element_text(size=8),
             axis.title=element_text(size=6),axis.text=element_text(size=6))
 
-    if(clonalMethod == 'VAF_PEAK' | clonalMethod!='NO_PEAK')
+    if(clonalMethod == 'VAF_PEAK' | clonalMethod == 'NO_PEAK')
     {
         somaticPlot = somaticPlot +
             geom_density(data=variantVafRatios,bw=densityBandwidth,mapping = aes(x=VafRatio,y=after_stat(scaled)*20),color=colourKdeLine)

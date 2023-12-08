@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.wisp.purity;
 
+import static java.lang.Math.min;
 import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
@@ -151,9 +152,9 @@ public class ResultsWriter
     public static String formatPurityValue(double purity)
     {
         if(purity >= 0.01)
-            return format("%.4f", purity);
+            return format("%.4f", min(purity, 1.0));
         else
-            return format("%.6f", purity);
+            return format("%.6f", min(purity, 1.0));
     }
 
     public static String formatProbabilityValue(double probability)
