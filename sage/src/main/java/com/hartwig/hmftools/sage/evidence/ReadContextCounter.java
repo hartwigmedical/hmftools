@@ -59,8 +59,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -75,11 +75,11 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 
-public class ReadContextCounter implements VariantHotspot
+public class ReadContextCounter//  extends SimpleVariant
 {
     private final int mId;
     private final VariantTier mTier;
-    private final VariantHotspot mVariant;
+    private final SimpleVariant mVariant;
     private final ReadContext mReadContext;
     private final SageConfig mConfig;
     private final QualityCalculator mQualityCalculator;
@@ -129,7 +129,7 @@ public class ReadContextCounter implements VariantHotspot
     private FragmentCoords mFragmentCoords;
 
     public ReadContextCounter(
-            final int id, final VariantHotspot variant, final ReadContext readContext, final VariantTier tier,
+            final int id, final SimpleVariant variant, final ReadContext readContext, final VariantTier tier,
             final int maxCoverage, final int minNumberOfEvents, final SageConfig config, final QualityCalculator qualityCalculator,
             final String sampleId)
     {
@@ -190,23 +190,16 @@ public class ReadContextCounter implements VariantHotspot
     }
 
     public int id() { return mId; }
-    public VariantHotspot variant() { return mVariant; }
+    public SimpleVariant variant() { return mVariant; }
     public ReadContext readContext() { return mReadContext; }
     public VariantTier tier() { return mTier; }
     public int indelLength() { return mVariant.isIndel() ? max(mVariant.alt().length(), mVariant.ref().length()) : 0; }
     public boolean isSnv() { return mIsSnv; }
     public boolean isIndel() { return mIsIndel; }
 
-    @Override
     public String chromosome() { return mVariant.chromosome(); }
-
-    @Override
     public int position() { return mVariant.position(); }
-
-    @Override
     public String ref() { return mVariant.ref(); }
-
-    @Override
     public String alt() { return mVariant.alt(); }
 
     public int altSupport() { return mCounts.altSupport(); }
@@ -493,7 +486,7 @@ public class ReadContextCounter implements VariantHotspot
             readMatchType = REF_SUPPORT;
 
             mRefFragmentStrandBias.registerFragment(record);
-            mRefReadStrandBias.registerRead(record, fragmentData, this);
+            mRefReadStrandBias.registerRead(record, fragmentData, mVariant);
 
             mReadEdgeDistance.update(record, fragmentData, false);
         }
@@ -834,7 +827,7 @@ public class ReadContextCounter implements VariantHotspot
 
     private void countAltSupportMetrics(final SAMRecord record, final FragmentData fragmentData)
     {
-        mAltReadStrandBias.registerRead(record, fragmentData, this);
+        mAltReadStrandBias.registerRead(record, fragmentData, mVariant);
         mAltFragmentStrandBias.registerFragment(record);
 
         if(mFragmentCoords != null)

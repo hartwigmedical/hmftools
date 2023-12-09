@@ -11,6 +11,7 @@ import com.google.common.collect.Maps;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.common.variant.hotspot.VariantHotspotComparator;
+import com.hartwig.hmftools.sage.common.SimpleVariantComparator;
 import com.hartwig.hmftools.sage.select.TierSelector;
 
 public class Candidates
@@ -37,7 +38,7 @@ public class Candidates
             mCandidateMap = Maps.newHashMap();
 
         final TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
-        final VariantHotspotComparator variantComparator = new VariantHotspotComparator();
+        final SimpleVariantComparator variantComparator = new SimpleVariantComparator();
 
         for(final AltContext altContext : altContexts)
         {
@@ -71,7 +72,7 @@ public class Candidates
     {
         final TierSelector tierSelector = new TierSelector(mHotspots, mPanel, mHighConfidence);
 
-        final VariantHotspotComparator variantComparator = new VariantHotspotComparator();
+        final SimpleVariantComparator variantComparator = new SimpleVariantComparator();
 
         for(final AltContext altContext : altContexts)
         {
@@ -96,7 +97,7 @@ public class Candidates
     {
         if(mCandidateMap != null)
         {
-            final VariantHotspotComparator variantComparator = new VariantHotspotComparator();
+            final SimpleVariantComparator variantComparator = new SimpleVariantComparator();
             mCandidateMap.values().stream().forEach(x -> mCandidateList.addAll(x));
             mCandidateList.sort((o1, o2) -> variantComparator.compare(o1.variant(), o2.variant()));
         }

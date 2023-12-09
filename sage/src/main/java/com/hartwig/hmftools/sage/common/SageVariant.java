@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 
@@ -156,7 +155,7 @@ public class SageVariant
     public boolean isTumorEmpty() { return mTumorReadCounters.isEmpty(); }
     public boolean isNormalEmpty() { return mNormalReadCounters.isEmpty(); }
 
-    public VariantHotspot variant() { return mCandidate.variant(); }
+    public SimpleVariant variant() { return mCandidate.variant(); }
 
     public VariantTier tier() { return mCandidate.tier(); }
 

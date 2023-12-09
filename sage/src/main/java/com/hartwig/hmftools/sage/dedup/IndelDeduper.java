@@ -21,9 +21,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 
@@ -317,7 +317,7 @@ public class IndelDeduper
     {
         ++mGroupIterations;
 
-        List<VariantHotspot> testVariants = Lists.newArrayList(indel.Variant.variant());
+        List<SimpleVariant> testVariants = Lists.newArrayList(indel.Variant.variant());
         selectedVariants.forEach(x -> testVariants.add(x.Variant.variant()));
 
         String netAltBases = buildAltBasesString(refBases, refPosStart, refPosEnd, testVariants);
@@ -336,14 +336,14 @@ public class IndelDeduper
 
     @VisibleForTesting
     public static String buildAltBasesString(
-            final String refBases, final int refPosStart, final int refPosEnd, final List<VariantHotspot> variants)
+            final String refBases, final int refPosStart, final int refPosEnd, final List<SimpleVariant> variants)
     {
         Collections.sort(variants, new VariantReversePositionSorter());
 
         String altBases = refBases;
 
         // add variants into the ref bases from right to left so the earlier positions remain unafffected by the added alts
-        for(VariantHotspot variant : variants)
+        for(SimpleVariant variant : variants)
         {
             if(!positionWithin(variant.position(), refPosStart, refPosEnd))
                 continue;
@@ -375,14 +375,14 @@ public class IndelDeduper
         }
     }
 
-    public static class VariantReversePositionSorter implements Comparator<VariantHotspot>
+    public static class VariantReversePositionSorter implements Comparator<SimpleVariant>
     {
-        public int compare(final VariantHotspot first, final VariantHotspot second)
+        public int compare(final SimpleVariant first, final SimpleVariant second)
         {
-            if(first.position() == second.position())
+            if(first.Position == second.Position)
                 return 0;
 
-            return first.position() > second.position() ? -1 : 1;
+            return first.Position > second.Position ? -1 : 1;
         }
     }
 

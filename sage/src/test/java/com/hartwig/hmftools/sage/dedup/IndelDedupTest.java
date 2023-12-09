@@ -26,11 +26,10 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.region.BaseRegion;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
 import com.hartwig.hmftools.common.test.MockRefGenome;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.RegionTaskTester;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.filter.SoftFilter;
 import com.hartwig.hmftools.sage.pipeline.RegionTask;
 
@@ -58,24 +57,24 @@ public class IndelDedupTest
     @Test
     public void testVariantAltBuilding()
     {
-        List<VariantHotspot> variants = Lists.newArrayList();
+        List<SimpleVariant> variants = Lists.newArrayList();
 
         //                 100       110       120       130
         //                 01234567890123456789012345678901
         String refBases = "AAAAGGGGCCCCTTTTAAAACCCCGGGGTTTT";
 
-        variants.add(createVariantHotspot(102, "A", "T"));
-        variants.add(createVariantHotspot(126, "GGT", "AAA"));
-        variants.add(createVariantHotspot(115, "TAAAAC", "T"));
-        variants.add(createVariantHotspot(109, "C", "CGGGG"));
+        variants.add(createSimpleVariant(102, "A", "T"));
+        variants.add(createSimpleVariant(126, "GGT", "AAA"));
+        variants.add(createSimpleVariant(115, "TAAAAC", "T"));
+        variants.add(createSimpleVariant(109, "C", "CGGGG"));
         String altBases = buildAltBasesString(refBases, 100, 131, variants);
 
         assertEquals(altBases, "AATAGGGGCCGGGGCCTTTTCCCGGAAATTT");
     }
 
-    private static VariantHotspot createVariantHotspot(int position, final String ref, final String alt)
+    private static SimpleVariant createSimpleVariant(int position, final String ref, final String alt)
     {
-        return ImmutableVariantHotspotImpl.builder().chromosome(CHR_1).position(position).ref(ref).alt(alt).build();
+        return new SimpleVariant(CHR_1, position, ref, alt);
     }
 
     private static SageVariant createSageVariant(

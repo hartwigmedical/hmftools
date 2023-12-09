@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.common.TestUtils.createSimpleVariant;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.compatibleCigars;
 
 import static org.junit.Assert.assertEquals;
@@ -21,10 +22,9 @@ import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
 import static htsjdk.samtools.CigarOperator.S;
 
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
@@ -180,8 +180,7 @@ public class FragmentSyncTest
         String refBase = REF_BASES.substring(position, position + 1);
         String altBase = getNextBase(refBase);
 
-        final VariantHotspot hotspot = ImmutableVariantHotspotImpl.builder()
-                .chromosome(CHR_1).ref(refBase).alt(altBase).position(position).build();
+        SimpleVariant variant = new SimpleVariant(CHR_1, position, refBase, altBase);
 
         String readBases = REF_BASES.substring(8, position) + altBase + REF_BASES.substring(position + 1, 33);
         final ReadContext readContext = createReadContext(position, 12, 10, 14, readBases, Strings.EMPTY);
@@ -190,7 +189,7 @@ public class FragmentSyncTest
         final QualityCalculator QUALITY_CALCULATOR = new QualityCalculator(TEST_CONFIG.Quality, RECALIBRATION, REF_INDEXED_BASES);
 
         final ReadContextCounter readContextCounter = new ReadContextCounter(
-                1, hotspot, readContext, VariantTier.PANEL, 100, 0,
+                1, variant, readContext, VariantTier.PANEL, 100, 0,
                 TEST_CONFIG, QUALITY_CALCULATOR, null);
 
         String readId = "READ_01";

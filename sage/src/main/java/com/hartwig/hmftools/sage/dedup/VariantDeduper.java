@@ -8,8 +8,8 @@ import java.util.List;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 
 public class VariantDeduper
 {
@@ -43,7 +43,7 @@ public class VariantDeduper
         return longerContainsShorter(shorter.variant(), longer.variant());
     }
 
-    public static boolean longerContainsShorter(final VariantHotspot shorter, final VariantHotspot longer)
+    public static boolean longerContainsShorter(final SimpleVariant shorter, final SimpleVariant longer)
     {
         int longerStart = longer.position();
         int longerEnd = longer.end();

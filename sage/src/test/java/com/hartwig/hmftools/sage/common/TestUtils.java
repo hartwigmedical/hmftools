@@ -12,8 +12,6 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.chromosome.HumanChromosome;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.SageConfig;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
@@ -38,6 +36,16 @@ public class TestUtils
     {
         // add input arguments as necessary or take the defaults
         return new SageConfig(false);
+    }
+
+    public static SimpleVariant createSimpleVariant(int position)
+    {
+        return new SimpleVariant(CHR_1, position, "A", "C");
+    }
+
+    public static SimpleVariant createSimpleVariant(int position, final String ref, final String alt)
+    {
+        return new SimpleVariant(CHR_1, position, ref, alt);
     }
 
     public static SageVariant createVariant(int position, final String ref, final String alt)
@@ -66,7 +74,7 @@ public class TestUtils
 
     public static SageVariant createVariant(final String chromosome, int position, final String ref, final String alt, final IndexedBases indexBases)
     {
-        VariantHotspot variant = createVariantHotspot(chromosome, position, ref, alt);
+        SimpleVariant variant = new SimpleVariant(chromosome, position, ref, alt);
 
         ReadContext readContext = new ReadContext(position, "", 0, "", indexBases, false);
 
@@ -125,14 +133,9 @@ public class TestUtils
         return flank + core + alt + core + flank;
     }
 
-    public static VariantHotspot createVariantHotspot(final String chromosome, int position, final String ref, final String alt)
+    public static SimpleVariant createSimpleVariant(final String chromosome, int position, final String ref, final String alt)
     {
-        return ImmutableVariantHotspotImpl.builder().chromosome(chromosome).position(position).ref(ref).alt(alt).build();
-    }
-
-    public static VariantHotspot createVariantHotspot(int position, final String ref, final String alt)
-    {
-        return createVariantHotspot(CHR_1, position, ref, alt);
+        return new SimpleVariant(chromosome, position, ref, alt);
     }
 
     public static ReadContext createReadContext(

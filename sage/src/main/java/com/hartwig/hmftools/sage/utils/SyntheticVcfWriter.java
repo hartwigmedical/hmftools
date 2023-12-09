@@ -48,6 +48,7 @@ import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.read.ReadContextFactory;
 import com.hartwig.hmftools.sage.vcf.VariantVCF;
@@ -297,12 +298,7 @@ public class SyntheticVcfWriter
                 .alleles(NO_CALL)
                 .make();
 
-        VariantHotspot variantHotspot = ImmutableVariantHotspotImpl.builder()
-                .chromosome(variant.Chromosome)
-                .position(variant.Position)
-                .ref(variant.Ref)
-                .alt(variant.Alt)
-                .build();
+        SimpleVariant variantHotspot = new SimpleVariant(variant.Chromosome, variant.Position, variant.Ref, variant.Alt);
 
         ReadContext readContext = buildReadContext(variant);
 

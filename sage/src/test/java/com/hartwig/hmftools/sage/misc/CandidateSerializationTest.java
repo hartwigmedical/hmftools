@@ -1,15 +1,16 @@
 package com.hartwig.hmftools.sage.misc;
 
+import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
+
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Sets;
-import com.hartwig.hmftools.common.variant.hotspot.ImmutableVariantHotspotImpl;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
 import com.hartwig.hmftools.sage.append.CandidateSerialization;
 import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.common.IndexedBases;
 import com.hartwig.hmftools.sage.common.IndexedBasesTest;
 import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.common.VariantTier;
 
 import org.jetbrains.annotations.NotNull;
@@ -53,13 +54,13 @@ public class CandidateSerializationTest
         final String expectedMH = "ATGA";
         final int expectedIndex = 1;
         final int expositionPosition = 1000;
-        final VariantHotspot variant =
-                ImmutableVariantHotspotImpl.builder().position(expositionPosition).chromosome("1").ref("T").alt("C").build();
         final IndexedBases refBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ATG", "CG", "TT");
         final IndexedBases readBases = IndexedBasesTest.createIndexedBases(expositionPosition, expectedIndex, "AA", "TA", "ACG", "CG", "TT");
 
         final ReadContext readContext = new ReadContext(
                 expositionPosition, expectedRepeat, expectedRepeatCount, expectedMH, readBases, false);
+
+        final SimpleVariant variant = new SimpleVariant(CHR_1, expositionPosition, "T", "C");
 
         final Candidate candidate = new Candidate(expectedTier, variant, readContext, 2,0);
 

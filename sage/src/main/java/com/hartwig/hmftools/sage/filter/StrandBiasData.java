@@ -4,10 +4,9 @@ import static java.lang.String.format;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
-import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 
 import com.hartwig.hmftools.common.samtools.UmiReadType;
-import com.hartwig.hmftools.common.variant.hotspot.VariantHotspot;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
 import com.hartwig.hmftools.sage.evidence.RawContext;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
@@ -86,7 +85,7 @@ public class StrandBiasData
         */
     }
 
-    public void registerRead(final SAMRecord record, final FragmentData fragment, final VariantHotspot variant)
+    public void registerRead(final SAMRecord record, final FragmentData fragment, final SimpleVariant variant)
     {
         // no fragment sync - take the read's strand
         if(fragment == null)

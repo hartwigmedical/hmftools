@@ -262,7 +262,9 @@ public class VariantFilters
         if(primaryTumor.isIndel())
         {
             // INDELs if inserted/deleted bases == RC_MH and VAF < (MAX_REP - 3) * 0.0125
-            String indelBases = primaryTumor.isInsert() ? primaryTumor.alt().substring(1) : primaryTumor.ref().substring(1);
+            String indelBases = primaryTumor.variant().isInsert() ?
+                    primaryTumor.alt().substring(1) : primaryTumor.ref().substring(1);
+
             double vafLimit = (maxRepeats - JITTER_INDEL_MAX_REPEATS) * JITTER_INDEL_VAF_THRESHOLD;
             return indelBases.equals(primaryTumor.readContext().Microhomology) && primaryTumor.vaf() < vafLimit;
         }
