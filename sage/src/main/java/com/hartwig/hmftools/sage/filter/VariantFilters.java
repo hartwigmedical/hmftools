@@ -90,7 +90,7 @@ public class VariantFilters
 
     public String filterCountsStr()
     {
-        return String.format("bq=%d a=%d tq=%d qv=%d",
+        return String.format("bq=%d alt=%d qual=%d vaf=%d",
                 mFilterCounts[HARD_FC_RAW_BASE_QUAL], mFilterCounts[HARD_FC_RAW_ALT_SUPPORT],
                 mFilterCounts[HARD_FC_TUMOR_QUAL], mFilterCounts[HARD_FC_TUMOR_VAF]);
     }

@@ -1,5 +1,6 @@
 package com.hartwig.hmftools.sage.append;
 
+import static com.hartwig.hmftools.common.variant.CommonVcfTags.getGenotypeAttributeAsInt;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.READ_CONTEXT_REPEAT_COUNT;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.TIER;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.RAW_DEPTH;
@@ -79,7 +80,7 @@ public final class CandidateSerialization
         for(Genotype genotype : context.getGenotypes().immutable())
         {
             maxDepth = Math.max(maxDepth, genotype.getDP());
-            maxDepth = Math.max(maxDepth, genotype.getAttributeAsInt(RAW_DEPTH, 0));
+            maxDepth = Math.max(maxDepth, getGenotypeAttributeAsInt(genotype, RAW_DEPTH, 0));
         }
 
         return new Candidate(tier, variant, readContext, context.getAttributeAsInt(READ_CONTEXT_EVENTS, 0), 0);

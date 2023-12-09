@@ -104,6 +104,6 @@ public class RefContextCache
             return true;
 
         return altContext.rawAltBaseQuality() >= mConfig.Filter.HardMinTumorRawBaseQuality
-                && altContext.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
+            && altContext.rawAltSupport() >= mConfig.Filter.HardMinTumorRawAltSupport;
     }
 }
