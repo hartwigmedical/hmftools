@@ -276,54 +276,64 @@ public class CombinedSyncData
         CigarState combinedCigar = new CigarState(mCombinedCigar);
         int currentPosition = mCombinedEffectiveStart;
 
-        for(int combinedReadIndex = 0; combinedReadIndex < combinedBaseLength; ++combinedReadIndex)
+        for(int combinedReadIndex = 0; combinedReadIndex < combinedBaseLength;)
         {
-            if(firstReadIndex >= 0 && firstReadIndex < firstLength && secondReadIndex >= 0 && secondReadIndex < secondLength)
+            boolean moveReadBases = combinedCigar.currentOperator().consumesReadBases();
+            boolean moveRefPosition = moveEffectivePosition(combinedCigar.currentOperator());
+
+            if(moveReadBases)
             {
-                if(firstBases[firstReadIndex] == secondBases[secondReadIndex])
+                if(firstReadIndex >= 0 && firstReadIndex < firstLength && secondReadIndex >= 0 && secondReadIndex < secondLength)
+                {
+                    if(firstBases[firstReadIndex] == secondBases[secondReadIndex])
+                    {
+                        mCombinedBases[combinedReadIndex] = firstBases[firstReadIndex];
+                        mCombinedBaseQualities[combinedReadIndex] =
+                                (byte)max(firstBaseQualities[firstReadIndex], secondBaseQualities[secondReadIndex]);
+                    }
+                    else
+                    {
+                        ++baseMismatches;
+
+                        if(baseMismatches >= SYNC_FRAG_MAX_MISMATCHES)
+                        {
+                            return false;
+                        }
+
+                        byte[] baseAndQual = getCombinedBaseAndQual(
+                                firstBases[firstReadIndex], firstBaseQualities[firstReadIndex],
+                                secondBases[secondReadIndex], secondBaseQualities[secondReadIndex]);
+
+                        mCombinedBases[combinedReadIndex] = baseAndQual[0];
+                        mCombinedBaseQualities[combinedReadIndex] = BaseQualAdjustment.adjustBaseQual(baseAndQual[1]);
+                    }
+                }
+                else if(firstReadIndex >= 0 && firstReadIndex < firstLength)
                 {
                     mCombinedBases[combinedReadIndex] = firstBases[firstReadIndex];
-                    mCombinedBaseQualities[combinedReadIndex] = (byte)max(firstBaseQualities[firstReadIndex], secondBaseQualities[secondReadIndex]);
+                    mCombinedBaseQualities[combinedReadIndex] = firstBaseQualities[firstReadIndex];
                 }
-                else
+                else if(secondReadIndex >= 0 && secondReadIndex < secondLength)
                 {
-                    ++baseMismatches;
-
-                    if(baseMismatches >= SYNC_FRAG_MAX_MISMATCHES)
-                    {
-                        return false;
-                    }
-
-                    byte[] baseAndQual = getCombinedBaseAndQual(
-                            firstBases[firstReadIndex], firstBaseQualities[firstReadIndex],
-                            secondBases[secondReadIndex], secondBaseQualities[secondReadIndex]);
-
-                    mCombinedBases[combinedReadIndex] = baseAndQual[0];
-                    mCombinedBaseQualities[combinedReadIndex] = BaseQualAdjustment.adjustBaseQual(baseAndQual[1]);
+                    mCombinedBases[combinedReadIndex] = secondBases[secondReadIndex];
+                    mCombinedBaseQualities[combinedReadIndex] = secondBaseQualities[secondReadIndex];
                 }
             }
-            else if(firstReadIndex >= 0 && firstReadIndex < firstLength)
-            {
-                mCombinedBases[combinedReadIndex] = firstBases[firstReadIndex];
-                mCombinedBaseQualities[combinedReadIndex] = firstBaseQualities[firstReadIndex];
-            }
-            else
-            {
-                mCombinedBases[combinedReadIndex] = secondBases[secondReadIndex];
-                mCombinedBaseQualities[combinedReadIndex] = secondBaseQualities[secondReadIndex];
-            }
 
-            if(moveEffectivePosition(combinedCigar.currentOperator()))
+            if(moveRefPosition)
                 ++currentPosition;
 
             combinedCigar.moveNext();
+
+            if(moveReadBases)
+                ++combinedReadIndex;
 
             if(firstReadIndex < 0)
             {
                 if(currentPosition == mFirstEffectivePosStart)
                     firstReadIndex = 0;
             }
-            else
+            else if(moveReadBases)
             {
                 ++firstReadIndex;
             }
@@ -333,7 +343,7 @@ public class CombinedSyncData
                 if(currentPosition == mSecondEffectivePosStart)
                     secondReadIndex = 0;
             }
-            else
+            else if(moveReadBases)
             {
                 ++secondReadIndex;
             }
@@ -377,7 +387,7 @@ public class CombinedSyncData
                     readIndex += positionMove;
             }
 
-            if(readPosition >= effectiveStart)
+            if(readPosition >= mCombinedEffectiveStart)
                 break;
         }
 
