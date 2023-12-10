@@ -3,6 +3,8 @@ package com.hartwig.hmftools.sage.sync;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
+import static com.hartwig.hmftools.sage.sync.TruncatedBases.NO_TRUNCATION;
+
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.M;
 import static htsjdk.samtools.CigarOperator.N;
@@ -71,51 +73,6 @@ public class FragmentSyncUtils
         return firstAdjustedElementPosEnd >= secondAdjustedElementPosStart;
     }
 
-    protected static boolean compatibleCigars(final Cigar firstCigar, final Cigar secondCigar)
-    {
-        // SC at the start and end are optional, but otherwise all elements must match length and type
-        int j = 0;
-        int i = 0;
-
-        CigarElement firstElement = firstCigar.getCigarElements().get(i);
-        CigarElement secondElement = secondCigar.getCigarElements().get(j);
-
-        if(firstElement.getOperator() == S)
-            ++i;
-
-        if(secondElement.getOperator() == S)
-            ++j;
-
-        while(true)
-        {
-            firstElement = i < firstCigar.getCigarElements().size() ? firstCigar.getCigarElements().get(i) : null;
-            secondElement = j < secondCigar.getCigarElements().size() ? secondCigar.getCigarElements().get(j) : null;
-
-            if(firstElement == null && secondElement == null)
-                break;
-
-            if(firstElement == null)
-                return secondElement.getOperator() == S;
-            else if(secondElement == null)
-                return firstElement.getOperator() == S;
-
-            // must match types and lengths if not an alignment
-            if(firstElement.getOperator() != secondElement.getOperator())
-                return false;
-
-            if(firstElement.getOperator() == S)
-                return true;
-
-            if(firstElement.getOperator() != M && firstElement.getLength() != secondElement.getLength())
-                return false;
-
-            ++i;
-            ++j;
-        }
-
-        return true;
-    }
-
     protected static byte[] getCombinedBaseAndQual(byte firstBase, byte firstQual, byte secondBase, byte secondQual)
     {
         if(firstBase == secondBase)
@@ -137,16 +94,16 @@ public class FragmentSyncUtils
     protected static SAMRecord buildSyncedRead(
             final SAMRecord referenceRead, final int combinedPosStart, final int combinedPosEnd,
             final byte[] combinedBases, final byte[] combinedBaseQualities,
-            final List<CigarElement> combinedCigar, final int[] trucatedBases)
+            final List<CigarElement> combinedCigar, final TruncatedBases trucatedBases)
     {
-        if(trucatedBases == null || (trucatedBases[0] == 0 && trucatedBases[0] == 0))
+        if(trucatedBases == NO_TRUNCATION)
         {
             return buildSyncedRead(referenceRead, combinedPosStart, combinedBases, combinedBaseQualities, combinedCigar);
         }
 
         // bring in the read bases, quals, coords and cigar to the truncated positions
-        int leftOffset = trucatedBases[0];
-        int rightOffset = trucatedBases[1];
+        int leftOffset = trucatedBases.StartOffset;
+        int rightOffset = trucatedBases.EndOffset;
         int totalOffset = leftOffset + rightOffset;
         int truncLength = combinedBases.length - totalOffset;
         byte[] truncBases = new byte[truncLength];
@@ -158,11 +115,11 @@ public class FragmentSyncUtils
             truncBaseQuals[i] = combinedBaseQualities[i + leftOffset];
         }
 
-        int truncatedFragmentStart = trucatedBases[2];
+        int truncatedFragmentStart = trucatedBases.ForwardStrandStartPosition;
 
         for(int i = 0; i <= 1; ++i)
         {
-            int offset = trucatedBases[i];
+            int offset = (i == 0) ? trucatedBases.StartOffset : trucatedBases.EndOffset;
 
             while(offset > 0)
             {

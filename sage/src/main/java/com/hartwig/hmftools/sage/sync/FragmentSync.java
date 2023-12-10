@@ -12,7 +12,6 @@ import static com.hartwig.hmftools.sage.sync.FragmentSyncType.CIGAR_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.COMBINED;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.EXCEPTION;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.NO_OVERLAP;
-import static com.hartwig.hmftools.sage.sync.FragmentSyncType.NO_OVERLAP_CIGAR_DIFF;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.buildSyncedRead;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.getCombinedBaseAndQual;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.ignoreCigarOperatorMismatch;
@@ -72,7 +71,7 @@ public class FragmentSync
         {
             try
             {
-                FragmentSyncOutcome syncOutcome = formFragmentRead(otherRecord, record);
+                FragmentSyncOutcome syncOutcome = SyncData.formFragmentRead(otherRecord, record);
                 mCachedReads.remove(record.getReadName());
 
                 SAMRecord fragmentRecord = syncOutcome.CombinedRecord;
@@ -158,7 +157,7 @@ public class FragmentSync
         return true;
     }
 
-    public static FragmentSyncOutcome formFragmentRead(final SAMRecord first, final SAMRecord second)
+    public static FragmentSyncOutcome formFragmentReadOld(final SAMRecord first, final SAMRecord second)
     {
         // take the highest base qual base for any overlapping bases
         // widen the read to cover both reads
@@ -208,32 +207,8 @@ public class FragmentSync
         int combinedPosEnd = max(firstPosEnd, secondPosEnd);
 
         // truncate any fragment with an insert size less than the expected read length
-        int[] trucatedBases = {0, 0, 0};
-
-        if(first.getReadNegativeStrandFlag() != second.getReadNegativeStrandFlag())
-        {
-            // truncate any bases extending past the 5' read end on the 3' read end
-            if(!first.getReadNegativeStrandFlag())
-            {
-                if(secondEffectivePosStart < firstEffectivePosStart)
-                    trucatedBases[0] = firstEffectivePosStart - secondEffectivePosStart;
-
-                if(firstEffectivePosEnd > secondEffectivePosEnd)
-                    trucatedBases[1] = firstEffectivePosEnd - secondEffectivePosEnd;
-
-                trucatedBases[2] = firstPosStart;
-            }
-            else
-            {
-                if(firstEffectivePosStart < secondEffectivePosStart)
-                    trucatedBases[0] = secondEffectivePosStart - firstEffectivePosStart;
-
-                if(secondEffectivePosEnd > firstEffectivePosEnd)
-                    trucatedBases[1] = secondEffectivePosEnd - firstEffectivePosEnd;
-
-                trucatedBases[2] = secondPosStart;
-            }
-        }
+        TruncatedBases truncatedBases = TruncatedBases.checkShortFragmentTruncation(
+                first, second, firstEffectivePosStart, secondEffectivePosStart, firstEffectivePosEnd, secondEffectivePosEnd);
 
         int combinedLength = combinedEffectiveEnd - combinedEffectiveStart + 1 + firstBaseCounts.AdjustedBases;
 
@@ -332,6 +307,7 @@ public class FragmentSync
                         return new FragmentSyncOutcome(CIGAR_MISMATCH);
                     }
                 }
+                /*
                 else if(firstElement != null && firstElement.getOperator().isIndel())
                 {
                     return new FragmentSyncOutcome(NO_OVERLAP_CIGAR_DIFF);
@@ -340,6 +316,7 @@ public class FragmentSync
                 {
                     return new FragmentSyncOutcome(NO_OVERLAP_CIGAR_DIFF);
                 }
+                */
             }
 
             // handle cigar element changes
@@ -386,7 +363,8 @@ public class FragmentSync
             }
             else if(isDeleteOrSplit(combinedCigarOperator))
             {
-                if(combinedCigarElementLength <= firstElement.getLength())
+                int currentElementLength = firstElement != null ? firstElement.getLength() : secondElement.getLength();
+                if(combinedCigarElementLength <= currentElementLength)
                     continue;
             }
 
@@ -424,8 +402,10 @@ public class FragmentSync
             {
                 if(combinedReadIndex >= combinedBases.length || secondReadIndex >= secondBases.length)
                 {
-                    SG_LOGGER.error("here");
-                    return null;
+                    SG_LOGGER.error("invalid readIndex: combined({} second({}) vs combinedLength({})",
+                            combinedReadIndex, secondReadIndex, combinedBases.length);
+
+                    return new FragmentSyncOutcome(EXCEPTION);
                 }
 
                 combinedBases[combinedReadIndex] = secondBases[secondReadIndex];
@@ -437,7 +417,7 @@ public class FragmentSync
         combinedCigar.add(new CigarElement(combinedCigarElementLength, combinedCigarOperator));
 
         SAMRecord combinedRecord = buildSyncedRead(
-                first, combinedPosStart, combinedPosEnd, combinedBases, combinedBaseQualities, combinedCigar, trucatedBases);
+                first, combinedPosStart, combinedPosEnd, combinedBases, combinedBaseQualities, combinedCigar, truncatedBases);
 
         return new FragmentSyncOutcome(combinedRecord, COMBINED);
     }

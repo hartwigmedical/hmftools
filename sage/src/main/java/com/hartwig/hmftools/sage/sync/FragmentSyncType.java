@@ -3,6 +3,7 @@ package com.hartwig.hmftools.sage.sync;
 public enum FragmentSyncType
 {
     COMBINED,
+    INVERSION,
     NO_OVERLAP,
     CIGAR_MISMATCH,
     NO_OVERLAP_CIGAR_DIFF,
