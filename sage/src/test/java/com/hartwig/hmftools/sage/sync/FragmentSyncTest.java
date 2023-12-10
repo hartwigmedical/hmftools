@@ -67,6 +67,7 @@ public class FragmentSyncTest
 
         String secondBases = REF_BASES.substring(6, 11) + REF_BASES.substring(12, 27);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M1D15M");
+        second.setReadNegativeStrandFlag(true);
 
         combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
@@ -82,6 +83,7 @@ public class FragmentSyncTest
 
         secondBases = REF_BASES.substring(6, 11) + REF_BASES.substring(16, 31);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M5D15M");
+        second.setReadNegativeStrandFlag(true);
 
         combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
@@ -97,6 +99,7 @@ public class FragmentSyncTest
 
         secondBases = REF_BASES.substring(6, 11) + REF_BASES.substring(16, 26) + REF_BASES.substring(28, 38) + REF_BASES.substring(41, 51);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M5D10M2D10M3D10M");
+        second.setReadNegativeStrandFlag(true);
 
         combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
@@ -112,6 +115,7 @@ public class FragmentSyncTest
 
         secondBases = REF_BASES.substring(6, 11) + "CCC" + REF_BASES.substring(11, 26);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M3I15M");
+        second.setReadNegativeStrandFlag(true);
 
         combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
@@ -130,6 +134,7 @@ public class FragmentSyncTest
         secondBases = REF_BASES.substring(6, 11) + "CCC" + REF_BASES.substring(11, 21) + REF_BASES.substring(26, 36) + "AA"
                 + REF_BASES.substring(36, 51);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M3I10M5D10M2I15M");
+        second.setReadNegativeStrandFlag(true);
 
         combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
