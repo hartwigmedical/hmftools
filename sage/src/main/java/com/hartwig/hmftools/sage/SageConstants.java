@@ -77,7 +77,7 @@ public class SageConstants
     public static final double STRAND_BIAS_REF_MIN_BIAS = 0.25;
 
     public static final int JITTER_INDEL_MAX_REPEATS = 3;
-    public static final double JITTER_INDEL_VAF_THRESHOLD = 0.0125;
+    public static final double JITTER_INDEL_VAF_THRESHOLD = 0.015;
 
     public static final int JITTER_NON_INDEL_MAX_REPEATS = 5;
     public static final double JITTER_NON_INDEL_VAF_THRESHOLD = 0.01;
