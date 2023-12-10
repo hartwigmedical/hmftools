@@ -82,11 +82,6 @@ public class RegionFitCalculator
 
         double observedTumorRatio = observedRegion.observedTumorRatio();
 
-        if(mFitScoreConfig.GcRatioExponent > 0)
-        {
-            observedTumorRatio = pow(observedTumorRatio, mFitScoreConfig.GcRatioExponent);
-        }
-
         double impliedCopyNumber = purityAdjuster.purityAdjustedCopyNumber(observedRegion.chromosome(), observedTumorRatio);
         double observedBAF = observedRegion.observedBAF();
         double impliedBAF = impliedBaf(purityAdjuster, observedRegion.chromosome(), impliedCopyNumber, observedBAF);
@@ -103,9 +98,17 @@ public class RegionFitCalculator
 
         double deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF;
 
-        if(mFitScoreConfig.DeviationPenaltyGcAdjust > 0)
+        if(mFitScoreConfig.GcRatioExponent > 0 || mFitScoreConfig.DeviationPenaltyGcMinAdjust > 0)
         {
-            deviationPenalty /= max(mFitScoreConfig.DeviationPenaltyGcAdjust, observedTumorRatio);
+            // NEW FORMULA:
+            // deviationPenalty = (minorAllelePloidyDeviation + majorAllelePloidyDeviation) * observedBAF
+            //  / max(DeviationPenaltyGcMinAdjust, observedTumorRatio^GcRatioExponent)
+
+            double adjTumorRatio = mFitScoreConfig.GcRatioExponent > 0 ? pow(observedTumorRatio, mFitScoreConfig.GcRatioExponent) : 1;
+
+            double deviationPenaltyDenom = max(mFitScoreConfig.DeviationPenaltyGcMinAdjust, adjTumorRatio);
+
+            deviationPenalty /= deviationPenaltyDenom;
         }
 
         return new RegionFitCalcs(
