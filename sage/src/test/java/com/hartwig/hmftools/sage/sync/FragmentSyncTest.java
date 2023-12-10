@@ -8,6 +8,7 @@ import static com.hartwig.hmftools.sage.common.TestUtils.RECALIBRATION;
 import static com.hartwig.hmftools.sage.common.TestUtils.TEST_CONFIG;
 import static com.hartwig.hmftools.sage.common.TestUtils.createReadContext;
 import static com.hartwig.hmftools.sage.common.TestUtils.createSamRecord;
+import static com.hartwig.hmftools.sage.sync.CombinedSyncData.formFragmentRead;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -40,7 +41,7 @@ public class FragmentSyncTest
         SAMRecord second = createSamRecord(readId, chromosome, 5, REF_BASES.substring(5, 25), "20M");
         second.setReadNegativeStrandFlag(true);
 
-        SAMRecord combined = SyncData.formFragmentRead(first, second).CombinedRecord;
+        SAMRecord combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(24, combined.getAlignmentEnd());
@@ -53,7 +54,7 @@ public class FragmentSyncTest
         second = createSamRecord(readId, chromosome, 12, REF_BASES.substring(10, 30), "2S16M2S");
         second.setReadNegativeStrandFlag(true);
 
-        combined = SyncData.formFragmentRead(first, second).CombinedRecord;
+        combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
         assertEquals(6, combined.getAlignmentStart());
         assertEquals(27, combined.getAlignmentEnd());
@@ -67,7 +68,7 @@ public class FragmentSyncTest
         String secondBases = REF_BASES.substring(6, 11) + REF_BASES.substring(12, 27);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M1D15M");
 
-        combined = SyncData.formFragmentRead(first, second).CombinedRecord;
+        combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(26, combined.getAlignmentEnd());
@@ -82,7 +83,7 @@ public class FragmentSyncTest
         secondBases = REF_BASES.substring(6, 11) + REF_BASES.substring(16, 31);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M5D15M");
 
-        combined = SyncData.formFragmentRead(first, second).CombinedRecord;
+        combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(30, combined.getAlignmentEnd());
@@ -97,7 +98,7 @@ public class FragmentSyncTest
         secondBases = REF_BASES.substring(6, 11) + REF_BASES.substring(16, 26) + REF_BASES.substring(28, 38) + REF_BASES.substring(41, 51);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M5D10M2D10M3D10M");
 
-        combined = SyncData.formFragmentRead(first, second).CombinedRecord;
+        combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(50, combined.getAlignmentEnd());
@@ -112,7 +113,7 @@ public class FragmentSyncTest
         secondBases = REF_BASES.substring(6, 11) + "CCC" + REF_BASES.substring(11, 26);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M3I15M");
 
-        combined = SyncData.formFragmentRead(first, second).CombinedRecord;
+        combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(25, combined.getAlignmentEnd());
@@ -130,7 +131,7 @@ public class FragmentSyncTest
                 + REF_BASES.substring(36, 51);
         second = createSamRecord(readId, chromosome, 6, secondBases, "5M3I10M5D10M2I15M");
 
-        combined = SyncData.formFragmentRead(first, second).CombinedRecord;
+        combined = formFragmentRead(first, second).CombinedRecord;
         assertNotNull(combined);
         assertEquals(1, combined.getAlignmentStart());
         assertEquals(50, combined.getAlignmentEnd());
@@ -154,7 +155,7 @@ public class FragmentSyncTest
         SAMRecord second = createSamRecord(
                 readId, chromosome, 20, REF_BASES.substring(17, 30), "3S10M");
 
-        FragmentSyncOutcome syncOutcome = SyncData.formFragmentRead(first, second);
+        FragmentSyncOutcome syncOutcome = formFragmentRead(first, second);
         SAMRecord combined = syncOutcome.CombinedRecord;
         assertNotNull(combined);
         assertEquals(20, combined.getAlignmentStart());
@@ -194,7 +195,7 @@ public class FragmentSyncTest
                 readId, CHR_1, 10, REF_BASES.substring(10, position) + altBase + REF_BASES.substring(position + 1, 40), "30M");
         second.setReadNegativeStrandFlag(true);
 
-        FragmentSyncOutcome syncOutcome = SyncData.formFragmentRead(first, second);
+        FragmentSyncOutcome syncOutcome = formFragmentRead(first, second);
         SAMRecord consensusRead = syncOutcome.CombinedRecord;
         assertNotNull(consensusRead);
 
@@ -226,7 +227,7 @@ public class FragmentSyncTest
         SAMRecord second = createSamRecord(
                 readId, chromosome, 10, REF_BASES.substring(10, 30) + REF_BASES.substring(60, 70), "20M30N10M");
 
-        FragmentSyncOutcome syncOutcome = SyncData.formFragmentRead(first, second);
+        FragmentSyncOutcome syncOutcome = formFragmentRead(first, second);
         SAMRecord combined = syncOutcome.CombinedRecord;
         assertNotNull(combined);
         assertEquals(10, combined.getAlignmentStart());
@@ -248,7 +249,7 @@ public class FragmentSyncTest
         SAMRecord second = createSamRecord(readId, chromosome, 5, REF_BASES.substring(5, 25), "20M");
         second.setReadNegativeStrandFlag(true);
 
-        FragmentSyncOutcome syncOutcome = SyncData.formFragmentRead(first, second);
+        FragmentSyncOutcome syncOutcome = formFragmentRead(first, second);
         assertEquals(FragmentSyncType.CIGAR_MISMATCH, syncOutcome.SyncType);
 
         // an inversion
@@ -257,7 +258,7 @@ public class FragmentSyncTest
 
         second = createSamRecord(readId, chromosome, 15, REF_BASES.substring(15, 45), "30M");
 
-        syncOutcome = SyncData.formFragmentRead(first, second);
+        syncOutcome = formFragmentRead(first, second);
         assertEquals(FragmentSyncType.INVERSION, syncOutcome.SyncType);
 
         // off by 1
@@ -268,7 +269,7 @@ public class FragmentSyncTest
                 readId, chromosome, 2, REF_BASES.substring(1, 12) + "C" + REF_BASES.substring(12, 21), "10M1I10M");
         second.setReadNegativeStrandFlag(true);
 
-        syncOutcome = SyncData.formFragmentRead(first, second);
+        syncOutcome = formFragmentRead(first, second);
         assertEquals(FragmentSyncType.CIGAR_MISMATCH, syncOutcome.SyncType);
 
         // too many mismatches
@@ -276,7 +277,7 @@ public class FragmentSyncTest
         second = createSamRecord(readId, chromosome, 1, REF_BASES.substring(2, 22), "20M");
         second.setReadNegativeStrandFlag(true);
 
-        syncOutcome = SyncData.formFragmentRead(first, second);
+        syncOutcome = formFragmentRead(first, second);
         assertEquals(FragmentSyncType.BASE_MISMATCH, syncOutcome.SyncType);
 
         // INDEL vs aligned
@@ -287,7 +288,7 @@ public class FragmentSyncTest
                 readId, chromosome, 15, REF_BASES.substring(15, 45), "30M");
         second.setReadNegativeStrandFlag(true);
 
-        syncOutcome = SyncData.formFragmentRead(first, second);
+        syncOutcome = formFragmentRead(first, second);
         assertEquals(FragmentSyncType.CIGAR_MISMATCH, syncOutcome.SyncType);
 
         // different INDELs
@@ -298,7 +299,7 @@ public class FragmentSyncTest
                 readId, chromosome, 10, REF_BASES.substring(10, 20) + "CC" + REF_BASES.substring(20, 40), "10M2I20M");
         second.setReadNegativeStrandFlag(true);
 
-        syncOutcome = SyncData.formFragmentRead(first, second);
+        syncOutcome = formFragmentRead(first, second);
         assertEquals(FragmentSyncType.CIGAR_MISMATCH, syncOutcome.SyncType);
 
         // non-overlapping but different INDELs
@@ -309,7 +310,7 @@ public class FragmentSyncTest
                 readId, chromosome, 30, REF_BASES.substring(30, 40) + REF_BASES.substring(45, 75), "10M5D30M");
         second.setReadNegativeStrandFlag(true);
 
-        syncOutcome = SyncData.formFragmentRead(first, second);
+        syncOutcome = formFragmentRead(first, second);
         assertEquals(FragmentSyncType.CIGAR_MISMATCH, syncOutcome.SyncType);
     }
 
@@ -326,7 +327,7 @@ public class FragmentSyncTest
         SAMRecord second = createSamRecord(readId, CHR_1, 10, REF_BASES.substring(10, 40), "30M");
         second.setInferredInsertSize(-25);
 
-        FragmentSyncOutcome syncOutcome = SyncData.formFragmentRead(first, second);
+        FragmentSyncOutcome syncOutcome = formFragmentRead(first, second);
         assertEquals(25, syncOutcome.CombinedRecord.getInferredInsertSize());
         assertEquals(10, syncOutcome.CombinedRecord.getAlignmentStart());
         assertEquals(34, syncOutcome.CombinedRecord.getAlignmentEnd());
@@ -348,7 +349,7 @@ public class FragmentSyncTest
         second.setInferredInsertSize(-fragLength);
         second.setReadNegativeStrandFlag(true);
 
-        syncOutcome = SyncData.formFragmentRead(first, second);
+        syncOutcome = formFragmentRead(first, second);
         assertEquals(fragLength, syncOutcome.CombinedRecord.getInferredInsertSize());
         assertEquals(11, syncOutcome.CombinedRecord.getAlignmentStart());
         assertEquals(44, syncOutcome.CombinedRecord.getAlignmentEnd());
@@ -372,7 +373,7 @@ public class FragmentSyncTest
         second.setInferredInsertSize(-fragLength);
         second.setReadNegativeStrandFlag(true);
 
-        syncOutcome = SyncData.formFragmentRead(first, second);
+        syncOutcome = formFragmentRead(first, second);
         assertEquals(fragLength, syncOutcome.CombinedRecord.getInferredInsertSize());
         assertEquals(8, syncOutcome.CombinedRecord.getAlignmentStart());
         assertEquals(42, syncOutcome.CombinedRecord.getAlignmentEnd());
@@ -400,7 +401,7 @@ public class FragmentSyncTest
                 readId, CHR_1, 10, REF_BASES.substring(10, 40) + REF_BASES.substring(42, 46), "30M2D2M2S");
         second.setInferredInsertSize(-30);
 
-        FragmentSyncOutcome syncOutcome = SyncData.formFragmentRead(first, second);
+        FragmentSyncOutcome syncOutcome = formFragmentRead(first, second);
         assertEquals(30, syncOutcome.CombinedRecord.getInferredInsertSize());
         assertEquals(10, syncOutcome.CombinedRecord.getAlignmentStart());
         assertEquals(39, syncOutcome.CombinedRecord.getAlignmentEnd());
@@ -410,18 +411,5 @@ public class FragmentSyncTest
         String readBases = syncOutcome.CombinedRecord.getReadString();
         assertEquals(REF_BASES.substring(10, 40), readBases);
         assertEquals(FragmentSyncType.COMBINED, syncOutcome.SyncType);
-    }
-
-    @Test
-    public void testUtils()
-    {
-        CigarBaseCounts baseCounts = new CigarBaseCounts(cigarFromStr("100M"));
-        assertEquals(100, baseCounts.AlignedBases);
-
-        baseCounts = new CigarBaseCounts(cigarFromStr("4S50M5D50M12I30M10S"));
-        assertEquals(135, baseCounts.AlignedBases);
-        assertEquals(7, baseCounts.AdjustedBases);
-        assertEquals(4, baseCounts.SoftClipStart);
-        assertEquals(10, baseCounts.SoftClipEnd);
     }
 }

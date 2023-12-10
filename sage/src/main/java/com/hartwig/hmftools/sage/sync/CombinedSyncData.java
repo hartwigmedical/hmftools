@@ -11,8 +11,6 @@ import static com.hartwig.hmftools.sage.sync.FragmentSyncType.CIGAR_MISMATCH;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.COMBINED;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.INVERSION;
 import static com.hartwig.hmftools.sage.sync.FragmentSyncType.NO_OVERLAP;
-import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.getCombinedBaseAndQual;
-import static com.hartwig.hmftools.sage.sync.FragmentSyncUtils.ignoreCigarOperatorMismatch;
 
 import static htsjdk.samtools.CigarOperator.I;
 import static htsjdk.samtools.CigarOperator.M;
@@ -29,7 +27,7 @@ import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordSetBuilder;
 
-public class SyncData
+public class CombinedSyncData
 {
     // workings and components of the fragment creation
     private int mFragmentStart;
@@ -41,7 +39,7 @@ public class SyncData
     private byte[] mCombinedBaseQualities;
     private final List<CigarElement> mCombinedCigar;
 
-    public SyncData()
+    public CombinedSyncData()
     {
         mCombinedCigar = Lists.newArrayList();
         mCombinedBases = null;
@@ -64,19 +62,19 @@ public class SyncData
             return new FragmentSyncOutcome(INVERSION);
         }
 
-        SyncData syncData = new SyncData();
+        CombinedSyncData combinedSyncData = new CombinedSyncData();
 
-        if(!syncData.buildCombinedCigar(first, second))
+        if(!combinedSyncData.buildCombinedCigar(first, second))
         {
             return new FragmentSyncOutcome(CIGAR_MISMATCH);
         }
 
-        if(!syncData.setBaseAndQualities(first, second))
+        if(!combinedSyncData.setBaseAndQualities(first, second))
         {
             return new FragmentSyncOutcome(BASE_MISMATCH);
         }
 
-        return new FragmentSyncOutcome(syncData.buildSyncedRead(first, second), COMBINED);
+        return new FragmentSyncOutcome(combinedSyncData.buildSyncedRead(first, second), COMBINED);
     }
 
     private SAMRecord buildSyncedRead(final SAMRecord first, final SAMRecord second)
@@ -385,4 +383,28 @@ public class SyncData
 
         return readIndex;
     }
+
+    protected static boolean ignoreCigarOperatorMismatch(final CigarOperator first, final CigarOperator second)
+    {
+        return (first == M || first == S) && (second == M || second == S);
+    }
+
+    protected static byte[] getCombinedBaseAndQual(byte firstBase, byte firstQual, byte secondBase, byte secondQual)
+    {
+        if(firstBase == secondBase)
+        {
+            byte qual = (byte)max(firstQual, secondQual);
+            return new byte[] { firstBase, qual };
+        }
+        else if(firstQual > secondQual)
+        {
+            // use the difference in quals
+            return new byte[] { firstBase, (byte)((int)firstQual - (int)secondQual) };
+        }
+        else
+        {
+            return new byte[] { secondBase, (byte)((int)secondQual - (int)firstQual) };
+        }
+    }
+
 }
