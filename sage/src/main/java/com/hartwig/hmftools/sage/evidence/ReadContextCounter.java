@@ -294,16 +294,23 @@ public class ReadContextCounter//  extends SimpleVariant
         return format("%s:%d %s>%s", mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
     }
 
-    public enum MatchType
+    public enum MatchType implements Comparable<MatchType>
     {
-        NONE,
-        FULL,
-        PARTIAL,
-        CORE,
-        REALIGNED,
-        CORE_PARTIAL,
-        REF,
-        ALT;
+        FULL(0),
+        PARTIAL(1),
+        CORE(2),
+        REALIGNED(3),
+        CORE_PARTIAL(4),
+        ALT(5),
+        REF(6),
+        NONE(7);
+
+        public final int SortKey;
+
+        MatchType(int sortKey)
+        {
+            SortKey = sortKey;
+        }
     }
 
     public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)

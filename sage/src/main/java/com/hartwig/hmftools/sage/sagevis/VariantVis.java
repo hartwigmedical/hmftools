@@ -59,7 +59,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -95,16 +97,9 @@ public class VariantVis
     private static final AtomicReference<DomContent> JAVASCRIPT = new AtomicReference<>(null);
     private static final DomContent JQUERY_SCRIPT =
             rawHtml("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script>");
-
-    private static final List<ReadContextCounter.MatchType> SORTED_MATCH_TYPES = Lists.newArrayList(
-            ReadContextCounter.MatchType.FULL,
-            ReadContextCounter.MatchType.PARTIAL,
-            ReadContextCounter.MatchType.CORE,
-            ReadContextCounter.MatchType.REALIGNED,
-            ReadContextCounter.MatchType.CORE_PARTIAL,
-            ReadContextCounter.MatchType.ALT,
-            ReadContextCounter.MatchType.REF,
-            ReadContextCounter.MatchType.NONE);
+    private static final List<ReadContextCounter.MatchType> SORTED_MATCH_TYPES = Arrays.stream(ReadContextCounter.MatchType.values())
+            .sorted(Comparator.comparingInt(x -> x.SortKey))
+            .collect(Collectors.toList());
 
     private final SageConfig mConfig;
     private final String mSample;
