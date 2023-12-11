@@ -1,0 +1,41 @@
+	CancerType	CancerSubtype	RnaReadLength
+Pro_1	Prostate	Prostate	151
+Pro_2	Prostate	Prostate	151
+Pro_3	Prostate	Prostate	0
+Pro_4	Prostate	Prostate	0
+Pro_5	Prostate	Prostate	151
+Pro_6	Prostate	Prostate	0
+Pro_7	Prostate	Prostate	0
+Pro_8	Prostate	Prostate	151
+Pro_9	Prostate	Prostate	151
+Pro_10	Prostate	Prostate	151
+Ski_1	Skin	Skin: Other	0
+Ski_2	Skin	Skin: Other	151
+Ski_3	Skin	Skin: Other	151
+Ski_4	Skin	Skin: Other	151
+Ski_5	Skin	Skin: Other	0
+Ski_6	Skin	Skin: Other	0
+Ski_7	Skin	Skin: Other	151
+Ski_8	Skin	Skin: Other	151
+Mye_1	Myeloid	Myeloid: Acute myeloid leukemia	0
+Mye_2	Myeloid	Myeloid: Acute myeloid leukemia	0
+Mye_3	Myeloid	Myeloid: Acute myeloid leukemia	0
+Mye_4	Myeloid	Myeloid: Acute myeloid leukemia	0
+Mye_5	Myeloid	Myeloid: Acute myeloid leukemia	0
+Mye_6	Myeloid	Myeloid: Acute myeloid leukemia	0
+Mye_7	Myeloid	Myeloid: Acute myeloid leukemia	0
+Mye_8	Myeloid	Myeloid: Acute myeloid leukemia	0
+Mye_9	Myeloid	Myeloid: Acute myeloid leukemia	0
+Mye_10	Myeloid	Myeloid: Acute myeloid leukemia	0
+Gyn_1	Gynecologic	Gynecologic: Ovary/Fallopian tube	151
+Gyn_2	Gynecologic	Gynecologic: Ovary/Fallopian tube	151
+Gyn_3	Gynecologic	Gynecologic: Ovary/Fallopian tube	151
+Gyn_4	Gynecologic	Gynecologic: Ovary/Fallopian tube	151
+Gyn_5	Gynecologic	Gynecologic: Ovary/Fallopian tube	0
+Gyn_6	Gynecologic	Gynecologic: Ovary/Fallopian tube	0
+Gyn_7	Gynecologic	Gynecologic: Ovary/Fallopian tube	151
+Gyn_8	Gynecologic	Gynecologic: Ovary/Fallopian tube	151
+Gyn_9	Gynecologic	Gynecologic: Ovary/Fallopian tube	151
+Gyn_10	Gynecologic	Gynecologic: Ovary/Fallopian tube	151
+Gyn_11	Gynecologic	Gynecologic: Ovary/Fallopian tube	151
+Gyn_12	Gynecologic	Gynecologic: Ovary/Fallopian tube	151

@@ -1,0 +1,3 @@
+recursive-include resources/mock_data/*
+recursive-include resources/feature_overrides/*
+recursive-include resources/feature_names/*

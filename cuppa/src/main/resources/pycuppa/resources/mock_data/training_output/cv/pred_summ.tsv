@@ -1,0 +1,321 @@
+sample_id	actual_class	clf_group	clf_name	is_correct_pred	which_correct_pred	pred_class_1	pred_class_2	pred_class_3	pred_prob_1	pred_prob_2	pred_prob_3	feat_contrib_1	feat_contrib_2	feat_contrib_3
+Pro_9	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7250428368797789	0.27473332287894675	0.00022384024127436615			
+Pro_9	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6478217077965683	0.24547268294104435	0.10670560926238727			
+Pro_9	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Pro_9	Prostate	dna	gen_pos	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.359294385728385	0.27749148585560823	0.22299565073156574			
+Pro_9	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.7732381161819043	0.10255994103474066	0.0911260746938588			
+Pro_9	Prostate	dna	event	False	2.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.3898000605101379	0.2721134272468857	0.22065117593972428	event.sv.SIMPLE_DUP_100KB_5MB=29.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.0 | event.tmb.indels_per_mb=0.38: 0.0	event.sv.MAX_COMPLEX_SIZE=28.0: 0.1 | event.tmb.indels_per_mb=0.38: 0.0 | event.tmb.snv_count=6700.0: 0.0	event.tmb.indels_per_mb=0.38: 0.0 | event.tmb.snv_count=6700.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=28.0: 0.0
+Pro_9	Prostate	rna	gene_exp	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Pro_9	Prostate	rna	alt_sj	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Ski_5	Skin: Other	combined	combined											
+Ski_5	Skin: Other	dna	dna_combined	True	1.0	Skin: Other	Myeloid: Acute myeloid leukemia	Prostate	0.9361280453683652	0.0638719546316347	0.0			
+Ski_5	Skin: Other	rna	rna_combined											
+Ski_5	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5923859201722006	0.1998856533195546	0.14051197430285778			
+Ski_5	Skin: Other	dna	snv96	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9634968142875335	0.030119238740907765	0.0040900743243017425			
+Ski_5	Skin: Other	dna	event	False	3.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.2965995111172879	0.26419531613798775	0.25887843579613556	event.sv.SIMPLE_DUP_32B_200B=1.0: 0.0 | event.tmb.indels_per_mb=0.18: 0.0 | event.tmb.snv_count=140000.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=1.0: 0.3 | event.sv.SIMPLE_DEL_20KB_1MB=5.0: 0.1 | event.tmb.indels_per_mb=0.18: 0.0	event.tmb.indels_per_mb=0.18: 0.0 | event.tmb.snv_count=140000.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=5.0: 0.0
+Ski_5	Skin: Other	rna	gene_exp											
+Ski_5	Skin: Other	rna	alt_sj											
+Mye_6	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_6	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.7373444723309241	0.16740803058117765	0.09524749708789819			
+Mye_6	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_6	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.2820610803765789	0.27821053044405053	0.24067009550660157			
+Mye_6	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7004577026597569	0.10864629724480356	0.09704311455218663			
+Mye_6	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6963054951921204	0.1455971853642893	0.1114018562011311	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.2 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.8 | event.tmb.indels_per_mb=0.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=0.0: 0.0 | event.tmb.indels_per_mb=0.0: 0.0 | event.tmb.snv_count=290.0: 0.0	event.tmb.indels_per_mb=0.0: 0.0 | event.tmb.snv_count=290.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=0.0: 0.0
+Mye_6	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_6	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_9	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8082331243662864	0.1915480438306714	0.0002188318030422958			
+Gyn_9	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.7386797651254293	0.1750641736417526	0.08625606123281815			
+Gyn_9	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_9	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.44602803056733514	0.22992687310102816	0.17257751162886145			
+Gyn_9	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.36160104914014585	0.32105102669689395	0.20438851053200444			
+Gyn_9	Gynecologic: Ovary/Fallopian tube	dna	event	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.396903357784508	0.26661614161769887	0.25261365439241235	event.sv.MAX_COMPLEX_SIZE=160.0: 0.7 | event.tmb.indels_per_mb=0.03: 0.0 | event.tmb.snv_count=4500.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=11.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.0 | event.tmb.indels_per_mb=0.03: 0.0	event.sv.TELOMERIC_SGL=1.0: 0.2 | event.tmb.indels_per_mb=0.03: 0.0 | event.tmb.snv_count=4500.0: 0.0
+Gyn_9	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Gyn_9	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Pro_5	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6989507610223031	0.30082476567099975	0.00022447330669701437			
+Pro_5	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6227473291207143	0.268027205637454	0.10922546524183165			
+Pro_5	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Pro_5	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3177504594198969	0.29642422224633463	0.2669910688995827			
+Pro_5	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.47743256002332646	0.4242829938128625	0.08916293879857459			
+Pro_5	Prostate	dna	event	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.4235430115019345	0.2958782205344729	0.2485698044030323	event.sv.MAX_COMPLEX_SIZE=270.0: 0.5 | event.tmb.indels_per_mb=0.27: 0.1 | event.tmb.snv_count=8000.0: 0.0	event.sv.TELOMERIC_SGL=2.0: 0.2 | event.tmb.snv_count=8000.0: 0.0 | event.sv.SIMPLE_DUP_32B_200B=3.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=18.0: 0.0 | event.tmb.snv_count=8000.0: 0.0 | event.sv.TELOMERIC_SGL=2.0: 0.0
+Pro_5	Prostate	rna	gene_exp	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Pro_5	Prostate	rna	alt_sj	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Ski_1	Skin: Other	combined	combined											
+Ski_1	Skin: Other	dna	dna_combined	False	2.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.4434623287498561	0.2832764836624881	0.27326118758765583			
+Ski_1	Skin: Other	rna	rna_combined											
+Ski_1	Skin: Other	dna	gen_pos	False	2.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.2862769047772352	0.25226531552737136	0.24730955723723705			
+Ski_1	Skin: Other	dna	snv96	False	3.0	Myeloid: Acute myeloid leukemia	Prostate	Skin: Other	0.38903987974933596	0.26752558006779026	0.1986012398621586			
+Ski_1	Skin: Other	dna	event	False	3.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.4199425691609675	0.26619968919189985	0.1595169688834734	event.sv.SIMPLE_DEL_20KB_1MB=1.0: 0.8 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.4 | event.tmb.indels_per_mb=0.017: 0.0	event.tmb.indels_per_mb=0.017: 0.1 | event.sv.SIMPLE_DUP_100KB_5MB=7.0: 0.0 | event.tmb.snv_count=1500.0: 0.0	event.tmb.indels_per_mb=0.017: 0.0 | event.sv.MAX_COMPLEX_SIZE=3.0: 0.0 | event.sv.SIMPLE_DUP_100KB_5MB=7.0: 0.0
+Ski_1	Skin: Other	rna	gene_exp											
+Ski_1	Skin: Other	rna	alt_sj											
+Mye_5	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_5	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9927838966094197	0.003826633706614279	0.0033894696839660904			
+Mye_5	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_5	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.2978340787425846	0.26567447882484463	0.22855704513992742			
+Mye_5	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Prostate	Gynecologic: Ovary/Fallopian tube	0.5770388245109598	0.19576969280620532	0.13186882088581928			
+Mye_5	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.4403444129239268	0.2527952962287705	0.16104173047548048	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.3 | event.tmb.indels_per_mb=0.016: 0.0 | event.tmb.snv_count=1400.0: 0.0	event.tmb.indels_per_mb=0.016: 0.1 | event.tmb.snv_count=1400.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0 | event.tmb.indels_per_mb=0.016: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0
+Mye_5	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_5	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_2	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.5441617329396242	0.45561625381527754	0.00022201324509820946			
+Gyn_2	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.4902065484416569	0.4104406055717368	0.09935284598660635			
+Gyn_2	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_2	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.3409318731506692	0.3219284610309191	0.18761644989808401			
+Gyn_2	Gynecologic: Ovary/Fallopian tube	dna	snv96	False	3.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5026064567111752	0.39115641741760565	0.09330520551594004			
+Gyn_2	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.31506116986401417	0.26568345278165856	0.2523178119347631	event.sv.MAX_COMPLEX_SIZE=120.0: 0.4 | event.tmb.indels_per_mb=0.16: 0.0 | event.tmb.snv_count=18000.0: 0.0	event.tmb.snv_count=18000.0: 0.2 | event.sv.TELOMERIC_SGL=1.0: 0.1 | event.tmb.indels_per_mb=0.16: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=38.0: 0.1 | event.tmb.snv_count=18000.0: 0.0 | event.sv.TELOMERIC_SGL=1.0: 0.0
+Gyn_2	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Gyn_2	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Pro_2	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7090594203317578	0.290715753835312	0.00022482583293021298			
+Pro_2	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6307632989415886	0.2586141904124973	0.11062251064591408			
+Pro_2	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Pro_2	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.34119140312478347	0.3145416961513362	0.21465885648454075			
+Pro_2	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5371495411872935	0.31726918165250495	0.10105090873833093			
+Pro_2	Prostate	dna	event	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3876003364885072	0.2897730847564181	0.27368059145237766	event.sv.MAX_COMPLEX_SIZE=140.0: 0.2 | event.tmb.indels_per_mb=0.24: 0.2 | event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=16.0: 0.0 | event.tmb.indels_per_mb=0.24: 0.0 | event.tmb.snv_count=8000.0: 0.0	event.tmb.indels_per_mb=0.24: 0.0 | event.tmb.snv_count=8000.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=140.0: 0.0
+Pro_2	Prostate	rna	gene_exp	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Pro_2	Prostate	rna	alt_sj	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Ski_6	Skin: Other	combined	combined											
+Ski_6	Skin: Other	dna	dna_combined	True	1.0	Skin: Other	Prostate	Myeloid: Acute myeloid leukemia	0.8952222318223695	0.06399949473562036	0.040778273442010245			
+Ski_6	Skin: Other	rna	rna_combined											
+Ski_6	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.6352001662874521	0.16255025543492244	0.13896072697554734			
+Ski_6	Skin: Other	dna	snv96	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9902692997723701	0.008827145349205165	0.0008132841315247848			
+Ski_6	Skin: Other	dna	event	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3391897085952171	0.2872489342460044	0.28214296450516113	event.tmb.indels_per_mb=0.35: 0.4 | event.sv.SIMPLE_DUP_32B_200B=9.0: 0.1 | event.tmb.snv_count=610000.0: 0.0	event.tmb.indels_per_mb=0.35: 0.0 | event.tmb.snv_count=610000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.35: 0.0 | event.tmb.snv_count=610000.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=3.0: 0.0
+Ski_6	Skin: Other	rna	gene_exp											
+Ski_6	Skin: Other	rna	alt_sj											
+Mye_2	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_2	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9961325029050593	0.0023947899326518395	0.0014727071622888976			
+Mye_2	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_2	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.29601524769028575	0.25605700865645137	0.2345682263282374			
+Mye_2	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Prostate	Skin: Other	0.718005233696074	0.11185450659457183	0.09239346252883526			
+Mye_2	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6476940040172425	0.13575422654175173	0.13482171562728984	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.7 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.5 | event.tmb.indels_per_mb=0.0052: 0.0	event.tmb.indels_per_mb=0.0052: 0.0 | event.tmb.snv_count=910.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=4.0: 0.0	event.tmb.indels_per_mb=0.0052: 0.0 | event.tmb.snv_count=910.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Mye_2	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_2	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_4	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8307113167912857	0.16905982550895934	0.0002288576997549287			
+Gyn_4	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.7259631794611668	0.14774230947002992	0.12629451106880318			
+Gyn_4	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_4	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.3830273822651156	0.2839384827841931	0.17214156562168098			
+Gyn_4	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Myeloid: Acute myeloid leukemia	0.46186321464840985	0.21694741953087665	0.19633143171372616			
+Gyn_4	Gynecologic: Ovary/Fallopian tube	dna	event	False	2.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.32721918198010747	0.23904276531316682	0.23114434353412747	event.sv.SIMPLE_DEL_20KB_1MB=1.0: 1.1 | event.tmb.indels_per_mb=0.11: 0.0 | event.tmb.snv_count=5200.0: 0.0	event.tmb.indels_per_mb=0.11: 0.0 | event.tmb.snv_count=5200.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.11: 0.0 | event.tmb.snv_count=5200.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=11.0: 0.0
+Gyn_4	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Gyn_4	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.5893724416904622	0.240732510135259	0.16989504817427878			
+Pro_8	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7397669659157118	0.26001135989636875	0.00022167418791946132			
+Pro_8	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6674362701935185	0.23458875599069395	0.09797497381578775			
+Pro_8	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Pro_8	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3352094860239608	0.3139355223622064	0.24953507577997733			
+Pro_8	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6591988498495689	0.20583438177458932	0.09504186439581058			
+Pro_8	Prostate	dna	event	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.36361133915345	0.3067132553353231	0.2789585316363146	event.sv.MAX_COMPLEX_SIZE=43.0: 0.3 | event.tmb.indels_per_mb=0.18: 0.1 | event.tmb.snv_count=7400.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=8.0: 0.0 | event.tmb.indels_per_mb=0.18: 0.0 | event.tmb.snv_count=7400.0: 0.0	event.tmb.snv_count=7400.0: 0.0 | event.tmb.indels_per_mb=0.18: 0.0 | event.sv.MAX_COMPLEX_SIZE=43.0: 0.0
+Pro_8	Prostate	rna	gene_exp	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Pro_8	Prostate	rna	alt_sj	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Ski_8	Skin: Other	combined	combined	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9893120014916089	0.010478429910187355	0.00020956859820374713			
+Ski_8	Skin: Other	dna	dna_combined	True	1.0	Skin: Other	Myeloid: Acute myeloid leukemia	Prostate	0.9441414505524138	0.05585854944758615	0.0			
+Ski_8	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Ski_8	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.45454728180580845	0.38666124780381167	0.10834384374093363			
+Ski_8	Skin: Other	dna	snv96	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9893404902816494	0.008757781539417265	0.0015730539149632888			
+Ski_8	Skin: Other	dna	event	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.462518460505488	0.2638479557878146	0.23552851884267054	event.sv.MAX_COMPLEX_SIZE=83.0: 0.5 | event.tmb.indels_per_mb=0.32: 0.4 | event.tmb.snv_count=230000.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=15.0: 0.1 | event.tmb.indels_per_mb=0.32: 0.0 | event.tmb.snv_count=230000.0: 0.0	event.tmb.snv_count=230000.0: 0.0 | event.tmb.indels_per_mb=0.32: 0.0 | event.sv.MAX_COMPLEX_SIZE=83.0: 0.0
+Ski_8	Skin: Other	rna	gene_exp	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Ski_8	Skin: Other	rna	alt_sj	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Mye_3	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_3	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.9609203338555637	0.03238867628435754	0.006690989860078588			
+Mye_3	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_3	Myeloid: Acute myeloid leukemia	dna	gen_pos	False	3.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	0.29799207461073085	0.27524392051790225	0.22483622782100837			
+Mye_3	Myeloid: Acute myeloid leukemia	dna	snv96	False	2.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.6780397005215096	0.20496108455985806	0.09898156434797323			
+Mye_3	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6451359845154572	0.14707922171314933	0.13618531636689793	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.4 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.6 | event.tmb.indels_per_mb=0.011: 0.0	event.tmb.indels_per_mb=0.011: 0.0 | event.sv.MAX_COMPLEX_SIZE=4.0: 0.0 | event.sv.SIMPLE_DUP_100KB_5MB=0.0: 0.0	event.tmb.indels_per_mb=0.011: 0.0 | event.tmb.snv_count=2600.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Mye_3	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_3	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_10	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8828857405249203	0.116902367958644	0.00021189151643562565			
+Gyn_10	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.833337507207985	0.11034171629439433	0.056320776497620545			
+Gyn_10	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_10	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.546096343046483	0.20141977553053692	0.1283704796402998			
+Gyn_10	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.6121644222991393	0.2807333563149445	0.09331723635629997			
+Gyn_10	Gynecologic: Ovary/Fallopian tube	dna	event	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.33687216639400586	0.3051895751375683	0.27418946864663063	event.sv.SIMPLE_DUP_100KB_5MB=34.0: 0.1 | event.tmb.indels_per_mb=0.087: 0.0 | event.tmb.snv_count=7900.0: 0.0	event.sv.MAX_COMPLEX_SIZE=47.0: 0.3 | event.tmb.snv_count=7900.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.snv_count=7900.0: 0.0 | event.tmb.indels_per_mb=0.087: 0.0 | event.sv.MAX_COMPLEX_SIZE=47.0: 0.0
+Gyn_10	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Gyn_10	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Pro_10	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6810173018291481	0.31875299546122154	0.0002297027096303847			
+Pro_10	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.5929553925811106	0.2775352506499622	0.12950935676892722			
+Pro_10	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Pro_10	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.31773228440685425	0.2971534114328836	0.21898127032784284			
+Pro_10	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.4784613002137078	0.33803735190830586	0.12909472543073672			
+Pro_10	Prostate	dna	event	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.376501403842656	0.31466572448435814	0.2485096997176548	event.sv.MAX_COMPLEX_SIZE=280.0: 0.3 | event.tmb.indels_per_mb=0.15: 0.0 | event.tmb.snv_count=4500.0: 0.0	event.tmb.indels_per_mb=0.15: 0.0 | event.tmb.snv_count=4500.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.15: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=280.0: 0.0
+Pro_10	Prostate	rna	gene_exp	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Pro_10	Prostate	rna	alt_sj	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Ski_3	Skin: Other	combined	combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5055006656582904	0.49409699656842215	0.00040233777328734595			
+Ski_3	Skin: Other	dna	dna_combined	False	2.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.5031052371447065	0.25128173351860084	0.24561302933669252			
+Ski_3	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Ski_3	Skin: Other	dna	gen_pos	False	4.0	Myeloid: Acute myeloid leukemia	Prostate	Gynecologic: Ovary/Fallopian tube	0.28849752590149486	0.2647641525628027	0.2350340166413974			
+Ski_3	Skin: Other	dna	snv96	False	4.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Prostate	0.4928539311795564	0.1766332014429453	0.1733197390060646			
+Ski_3	Skin: Other	dna	event	False	3.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3662441674705686	0.2928235940215373	0.17102765301468661	event.sv.SIMPLE_DEL_20KB_1MB=1.0: 1.0 | event.tmb.indels_per_mb=0.026: 0.0 | event.tmb.snv_count=1200.0: 0.0	event.tmb.indels_per_mb=0.026: 0.0 | event.tmb.snv_count=1200.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.026: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0
+Ski_3	Skin: Other	rna	gene_exp	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Ski_3	Skin: Other	rna	alt_sj	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Mye_4	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_4	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.8750970857138974	0.12490291428610258	0.0			
+Mye_4	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_4	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.33409557656987227	0.2718489914805958	0.20724377585867435			
+Mye_4	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Prostate	Gynecologic: Ovary/Fallopian tube	0.8212674094286635	0.07248824246745597	0.05626448213518963			
+Mye_4	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Prostate	0.6712437536762343	0.1611929007380917	0.08845055348497577	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.5 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.5 | event.tmb.indels_per_mb=0.0035: 0.0	event.tmb.indels_per_mb=0.0035: 0.0 | event.tmb.snv_count=540.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.snv_count=540.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.SIMPLE_DUP_100KB_5MB=0.0: 0.0
+Mye_4	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_4	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_11	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8496834248115861	0.15010420335793284	0.00021237183048105005			
+Gyn_11	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.800184678812573	0.14135980559938402	0.05845551558804286			
+Gyn_11	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_11	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.37762004071920896	0.28376233461156336	0.22409325844974365			
+Gyn_11	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8120390622357984	0.0860889183528655	0.08250039539720232			
+Gyn_11	Gynecologic: Ovary/Fallopian tube	dna	event	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.3258655772357282	0.3184691809123536	0.2627765089790939	event.tmb.indels_per_mb=0.077: 0.0 | event.tmb.snv_count=11000.0: 0.0 | event.sv.TELOMERIC_SGL=1.0: 0.0	event.tmb.snv_count=11000.0: 0.1 | event.tmb.indels_per_mb=0.077: 0.0 | event.sv.TELOMERIC_SGL=1.0: 0.0	event.sv.MAX_COMPLEX_SIZE=24.0: 0.0 | event.tmb.snv_count=11000.0: 0.0 | event.sv.TELOMERIC_SGL=1.0: 0.0
+Gyn_11	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Gyn_11	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Pro_1	Prostate	combined	combined	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.8357132080358154	0.16406809165352076	0.00021870031066383895			
+Pro_1	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.7642542486557122	0.15003919395954352	0.08570655738474424			
+Pro_1	Prostate	rna	rna_combined	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Pro_1	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.43605520033087025	0.23343511749523235	0.17870323116718148			
+Pro_1	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8225958378280264	0.08741485677010367	0.05760180495102683			
+Pro_1	Prostate	dna	event	False	2.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.30775642119521096	0.2892971318749265	0.2838630436323738	event.sv.SIMPLE_DUP_100KB_5MB=15.0: 0.2 | event.tmb.indels_per_mb=0.25: 0.0 | event.tmb.snv_count=5000.0: 0.0	event.tmb.indels_per_mb=0.25: 0.2 | event.sv.MAX_COMPLEX_SIZE=23.0: 0.1 | event.tmb.snv_count=5000.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=3.0: 0.1 | event.tmb.indels_per_mb=0.25: 0.0 | event.tmb.snv_count=5000.0: 0.0
+Pro_1	Prostate	rna	gene_exp	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Pro_1	Prostate	rna	alt_sj	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Ski_4	Skin: Other	combined	combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.9323880334770601	0.06740373074916335	0.00020823577377642057			
+Ski_4	Skin: Other	dna	dna_combined	True	1.0	Skin: Other	Prostate	Myeloid: Acute myeloid leukemia	0.8955118676948854	0.0647378973619909	0.039750234943123616			
+Ski_4	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Ski_4	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.6203658228639511	0.1772552840497018	0.14349379168272083			
+Ski_4	Skin: Other	dna	snv96	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.9979046374934523	0.0017900847628072225	0.0001872007087995485			
+Ski_4	Skin: Other	dna	event	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.3158796160870756	0.30739642139085094	0.29751073084553775	event.sv.SIMPLE_DUP_32B_200B=3.0: 0.1 | event.tmb.indels_per_mb=0.31: 0.0 | event.tmb.snv_count=640000.0: 0.0	event.tmb.indels_per_mb=0.31: 0.2 | event.tmb.snv_count=640000.0: 0.0 | event.sv.TELOMERIC_SGL=4.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=7.0: 0.0 | event.tmb.indels_per_mb=0.31: 0.0 | event.tmb.snv_count=640000.0: 0.0
+Ski_4	Skin: Other	rna	gene_exp	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Ski_4	Skin: Other	rna	alt_sj	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Mye_1	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_1	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9955884870476579	0.002809246046195761	0.0016022669061463444			
+Mye_1	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_1	Myeloid: Acute myeloid leukemia	dna	gen_pos	False	2.0	Skin: Other	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	0.29826906709563794	0.2866824978673386	0.2165312532415096			
+Mye_1	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Prostate	0.7151318832269049	0.10891021109781626	0.09234757102796189			
+Mye_1	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5789385333816522	0.19168408472144904	0.13769976960671357	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.5 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.2 | event.tmb.indels_per_mb=0.018: 0.0	event.tmb.indels_per_mb=0.018: 0.0 | event.tmb.snv_count=1500.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.018: 0.0 | event.tmb.snv_count=1500.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Mye_1	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_1	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_1	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.7926077700034699	0.2071313283138908	0.00026090168263933293			
+Gyn_1	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.6075911523339315	0.23362771124831197	0.1587811364177566			
+Gyn_1	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_1	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.3307166543357217	0.2521040820758765	0.2334318677071363			
+Gyn_1	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Prostate	0.3454325418040365	0.26391863298855817	0.25286742613580737			
+Gyn_1	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5194490758391975	0.234429137611771	0.15414032931622543	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.5 | event.tmb.indels_per_mb=0.022: 0.0 | event.tmb.snv_count=1900.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0 | event.tmb.indels_per_mb=0.022: 0.0 | event.tmb.snv_count=1900.0: 0.0	event.tmb.indels_per_mb=0.022: 0.0 | event.tmb.snv_count=1900.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Gyn_1	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Gyn_1	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8704666349610956	0.12674355971607285	0.002789805322831642			
+Pro_4	Prostate	combined	combined											
+Pro_4	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.5790334961844538	0.3076443918444249	0.11332211197112135			
+Pro_4	Prostate	rna	rna_combined											
+Pro_4	Prostate	dna	gen_pos	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.3275625463221405	0.3262972954948437	0.21432814279994683			
+Pro_4	Prostate	dna	snv96	False	2.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.43859658304732135	0.4249388887066937	0.12246279283340326			
+Pro_4	Prostate	dna	event	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.38037291985644084	0.3345686687762657	0.2587486213809076	event.sv.MAX_COMPLEX_SIZE=590.0: 0.6 | event.tmb.snv_count=6400.0: 0.0 | event.sv.TELOMERIC_SGL=3.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=34.0: 0.2 | event.tmb.indels_per_mb=0.1: 0.0 | event.tmb.snv_count=6400.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=4.0: 0.0 | event.tmb.snv_count=6400.0: 0.0 | event.tmb.indels_per_mb=0.1: 0.0
+Pro_4	Prostate	rna	gene_exp											
+Pro_4	Prostate	rna	alt_sj											
+Ski_2	Skin: Other	combined	combined	False	2.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6116827986274044	0.3880983925962122	0.00021880877638341976			
+Ski_2	Skin: Other	dna	dna_combined	False	2.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.5591026180371754	0.3547375009457074	0.0861598810171173			
+Ski_2	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Ski_2	Skin: Other	dna	gen_pos	True	1.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5866463049269377	0.20436389308695604	0.13475740152460802			
+Ski_2	Skin: Other	dna	snv96	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.7722761022102184	0.12724182693330147	0.09784525449740569			
+Ski_2	Skin: Other	dna	event	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.35682176896095325	0.2967294764076957	0.289251051528014	event.tmb.snv_count=75000.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=5.0: 0.0 | event.tmb.indels_per_mb=0.19: 0.0	event.tmb.indels_per_mb=0.19: 0.2 | event.sv.MAX_COMPLEX_SIZE=15.0: 0.0 | event.tmb.snv_count=75000.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=6.0: 0.0 | event.tmb.snv_count=75000.0: 0.0 | event.sv.TELOMERIC_SGL=2.0: 0.0
+Ski_2	Skin: Other	rna	gene_exp	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
+Ski_2	Skin: Other	rna	alt_sj	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
+Mye_10	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_10	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9980666300334667	0.0019333699665332158	0.0			
+Mye_10	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_10	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3010777498387323	0.2483212026495235	0.24382901897381237			
+Mye_10	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.7924999672728356	0.080745675846343	0.07027432590603774			
+Mye_10	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6594446935327636	0.15237459755315352	0.12622596477581494	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.6 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.6 | event.tmb.indels_per_mb=0.0035: 0.0	event.tmb.indels_per_mb=0.0035: 0.2 | event.tmb.snv_count=700.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.0035: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0
+Mye_10	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_10	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_7	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8867055961409808	0.11308549171032754	0.0002089121486916856			
+Gyn_7	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.8488789203442532	0.1082612882194995	0.04285979143624738			
+Gyn_7	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_7	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.5082775992569503	0.30632014254468165	0.09405018936210277			
+Gyn_7	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.7625647477490529	0.18082853353570236	0.05454640190378528			
+Gyn_7	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5342911856704315	0.23600653644956693	0.21505627343293496	event.sv.MAX_COMPLEX_SIZE=310.0: 0.6 | event.tmb.indels_per_mb=0.33: 0.5 | event.tmb.snv_count=25000.0: 0.0	event.tmb.snv_count=25000.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0 | event.tmb.indels_per_mb=0.33: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=300.0: 0.3 | event.tmb.snv_count=25000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Gyn_7	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
+Gyn_7	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
+Pro_7	Prostate	combined	combined											
+Pro_7	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6256946396440611	0.23867702257395332	0.13562833778198546			
+Pro_7	Prostate	rna	rna_combined											
+Pro_7	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3276099047741119	0.2925570064638171	0.20896066260566074			
+Pro_7	Prostate	dna	snv96	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6438737977142246	0.1261327325843658	0.11970716058698862			
+Pro_7	Prostate	dna	event	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.31706865939819373	0.3025954574344864	0.2735530029268468	event.sv.MAX_COMPLEX_SIZE=53.0: 0.3 | event.tmb.snv_count=3600.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=8.0: 0.2 | event.tmb.indels_per_mb=0.12: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.12: 0.0 | event.tmb.snv_count=3600.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Pro_7	Prostate	rna	gene_exp											
+Pro_7	Prostate	rna	alt_sj											
+Ski_7	Skin: Other	combined	combined	False	2.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.6597941743261251	0.3399749654232285	0.00023086025064646804			
+Ski_7	Skin: Other	dna	dna_combined	False	2.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.5715961690923681	0.2945288021400057	0.13387502876762625			
+Ski_7	Skin: Other	rna	rna_combined	True	1.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.5	0.5	0.0			
+Ski_7	Skin: Other	dna	gen_pos	False	2.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.3441316370732288	0.3197314675879797	0.24748848018823374			
+Ski_7	Skin: Other	dna	snv96	False	3.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.6440360582520561	0.30995010282182117	0.040467026433725614			
+Ski_7	Skin: Other	dna	event	False	2.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.4101496220121352	0.298725535700242	0.27551782912256195	event.sv.MAX_COMPLEX_SIZE=120.0: 0.5 | event.tmb.indels_per_mb=0.2: 0.1 | event.tmb.snv_count=26000.0: 0.0	event.tmb.snv_count=26000.0: 0.1 | event.sv.SIMPLE_DUP_32B_200B=5.0: 0.1 | event.tmb.indels_per_mb=0.2: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=16.0: 0.1 | event.tmb.indels_per_mb=0.2: 0.0 | event.tmb.snv_count=26000.0: 0.0
+Ski_7	Skin: Other	rna	gene_exp	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
+Ski_7	Skin: Other	rna	alt_sj	False	3.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
+Mye_9	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_9	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.9960124802528293	0.0025387584602631504	0.0014487612869076107			
+Mye_9	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_9	Myeloid: Acute myeloid leukemia	dna	gen_pos	False	3.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.2754502957967018	0.26212541329257577	0.24925940801519628			
+Mye_9	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.7172418944100166	0.10984374681639854	0.0928079887098557			
+Mye_9	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6604054265492048	0.1545145905287332	0.11482797216898341	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.4 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.5 | event.tmb.indels_per_mb=0.0007: 0.0	event.tmb.indels_per_mb=0.0007: 0.0 | event.tmb.snv_count=180.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.MAX_COMPLEX_SIZE=2.0: 0.0 | event.tmb.indels_per_mb=0.0007: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Mye_9	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_9	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_8	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.892861624442569	0.10692779320393353	0.00021058235349750886			
+Gyn_8	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.8479928252422455	0.10155437189108864	0.05045280286666586			
+Gyn_8	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_8	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.40873312004708534	0.3264635190263306	0.15735300709458783			
+Gyn_8	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.838773922800859	0.11987136275676173	0.02936679932336848			
+Gyn_8	Gynecologic: Ovary/Fallopian tube	dna	event	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.37003580050199875	0.349067176395821	0.22703130902231816	event.sv.SIMPLE_DUP_100KB_5MB=19.0: 0.1 | event.tmb.indels_per_mb=0.054: 0.0 | event.tmb.snv_count=9300.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=3.0: 0.1 | event.tmb.snv_count=9300.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=14.0: 0.0	event.tmb.snv_count=9300.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.SIMPLE_DUP_100KB_5MB=19.0: 0.0
+Gyn_8	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
+Gyn_8	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.3669434128965285	0.36168225565461193	0.27137433144885964			
+Pro_6	Prostate	combined	combined											
+Pro_6	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.6356232447770299	0.2713184253731265	0.09305832984984364			
+Pro_6	Prostate	rna	rna_combined											
+Pro_6	Prostate	dna	gen_pos	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.3698594931063685	0.3106807982509611	0.18984083269555166			
+Pro_6	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6252189940423473	0.27465954539521514	0.08769724459674474			
+Pro_6	Prostate	dna	event	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.39609166140005314	0.30489528641880986	0.2785637578874951	event.sv.SIMPLE_DUP_32B_200B=12.0: 0.6 | event.tmb.snv_count=7600.0: 0.0 | event.tmb.indels_per_mb=0.26: 0.0	event.sv.MAX_COMPLEX_SIZE=47.0: 0.3 | event.tmb.indels_per_mb=0.26: 0.1 | event.tmb.snv_count=7600.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=31.0: 0.2 | event.tmb.indels_per_mb=0.26: 0.0 | event.tmb.snv_count=7600.0: 0.0
+Pro_6	Prostate	rna	gene_exp											
+Pro_6	Prostate	rna	alt_sj											
+Mye_8	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_8	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.761894835437521	0.1515383797451143	0.08656678481736464			
+Mye_8	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_8	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.27327911729254833	0.26956393458425243	0.25489516002355256			
+Mye_8	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Prostate	Skin: Other	0.7934573641515613	0.08470764583919471	0.06901503186846257			
+Mye_8	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.6711188884002061	0.1438554264187657	0.1031403090047507	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.4 | event.sv.SIMPLE_DUP_32B_200B=0.0: 0.6 | event.tmb.indels_per_mb=0.0091: 0.0	event.tmb.indels_per_mb=0.0091: 0.0 | event.tmb.snv_count=1500.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.0091: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0
+Mye_8	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_8	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_5	Gynecologic: Ovary/Fallopian tube	combined	combined											
+Gyn_5	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.8136009650093899	0.1338557400192086	0.052543294971401505			
+Gyn_5	Gynecologic: Ovary/Fallopian tube	rna	rna_combined											
+Gyn_5	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.4544324253907256	0.3081130286151227	0.13528845522032418			
+Gyn_5	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.5754931048827865	0.3515930082932005	0.069776326187724			
+Gyn_5	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3843126122583504	0.29787130452430943	0.27966907020661125	event.sv.MAX_COMPLEX_SIZE=140.0: 0.6 | event.tmb.snv_count=13000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.SIMPLE_DUP_32B_200B=4.0: 0.3 | event.tmb.snv_count=13000.0: 0.0 | event.tmb.indels_per_mb=0.096: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=30.0: 0.2 | event.tmb.indels_per_mb=0.096: 0.0 | event.tmb.snv_count=13000.0: 0.0
+Gyn_5	Gynecologic: Ovary/Fallopian tube	rna	gene_exp											
+Gyn_5	Gynecologic: Ovary/Fallopian tube	rna	alt_sj											
+Gyn_12	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.8047154946263114	0.1950693176511455	0.0002151877225432263			
+Gyn_12	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.7479195235821713	0.1813015309104919	0.07077894550733688			
+Gyn_12	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_12	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.36895374560182315	0.27107581878370096	0.23013160912769			
+Gyn_12	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.5724757878032124	0.3412653413599615	0.0695823033095042			
+Gyn_12	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.3296425906606167	0.3025966180232639	0.2982301631241662	event.sv.SIMPLE_DUP_32B_200B=3.0: 0.2 | event.tmb.snv_count=6700.0: 0.0 | event.tmb.indels_per_mb=0.057: 0.0	event.sv.MAX_COMPLEX_SIZE=33.0: 0.2 | event.tmb.snv_count=6700.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=6.0: 0.0 | event.tmb.indels_per_mb=0.057: 0.0 | event.tmb.snv_count=6700.0: 0.0
+Gyn_12	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8508659209455863	0.08213545626441494	0.06699862278999888			
+Gyn_12	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8508659209455863	0.08213545626441494	0.06699862278999888			
+Pro_3	Prostate	combined	combined											
+Pro_3	Prostate	dna	dna_combined	True	1.0	Prostate	Skin: Other	Myeloid: Acute myeloid leukemia	0.7362861827059533	0.1778712028601792	0.08584261443386755			
+Pro_3	Prostate	rna	rna_combined											
+Pro_3	Prostate	dna	gen_pos	True	1.0	Prostate	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.36004207441982233	0.30123292950344205	0.18554082493643087			
+Pro_3	Prostate	dna	snv96	True	1.0	Prostate	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	0.8216869774796081	0.08698381868918391	0.05333206795063769			
+Pro_3	Prostate	dna	event	False	2.0	Skin: Other	Prostate	Gynecologic: Ovary/Fallopian tube	0.37794349466545907	0.31659734671584305	0.24123574530539765	event.sv.SIMPLE_DUP_32B_200B=8.0: 0.2 | event.tmb.indels_per_mb=0.25: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.25: 0.1 | event.sv.MAX_COMPLEX_SIZE=22.0: 0.0 | event.tmb.snv_count=4200.0: 0.0	event.tmb.snv_count=4200.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=22.0: 0.0
+Pro_3	Prostate	rna	gene_exp											
+Pro_3	Prostate	rna	alt_sj											
+Mye_7	Myeloid: Acute myeloid leukemia	combined	combined											
+Mye_7	Myeloid: Acute myeloid leukemia	dna	dna_combined	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Prostate	0.8090266134181993	0.19097338658180066	0.0			
+Mye_7	Myeloid: Acute myeloid leukemia	rna	rna_combined											
+Mye_7	Myeloid: Acute myeloid leukemia	dna	gen_pos	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.3131867112644883	0.25272773407961974	0.22737292032721002			
+Mye_7	Myeloid: Acute myeloid leukemia	dna	snv96	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.7847236413386761	0.09076214064444509	0.0793810470987653			
+Mye_7	Myeloid: Acute myeloid leukemia	dna	event	True	1.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5800605335645531	0.16889953011491454	0.1601982649033732	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.6 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.2 | event.tmb.indels_per_mb=0.0024: 0.0	event.tmb.indels_per_mb=0.0024: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=2.0: 0.0	event.tmb.indels_per_mb=0.0024: 0.2 | event.tmb.snv_count=720.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Mye_7	Myeloid: Acute myeloid leukemia	rna	gene_exp											
+Mye_7	Myeloid: Acute myeloid leukemia	rna	alt_sj											
+Gyn_3	Gynecologic: Ovary/Fallopian tube	combined	combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Prostate	0.7416250847602229	0.25810319878195265	0.00027171645782435175			
+Gyn_3	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Skin: Other	0.5458816081281603	0.26413858656405753	0.18997980530778208			
+Gyn_3	Gynecologic: Ovary/Fallopian tube	rna	rna_combined	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.5	0.5	0.0			
+Gyn_3	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.31521441899399	0.3094492906156354	0.1897090529881154			
+Gyn_3	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Myeloid: Acute myeloid leukemia	Prostate	0.3141424057646103	0.29119420924491884	0.24668723712474236			
+Gyn_3	Gynecologic: Ovary/Fallopian tube	dna	event	False	3.0	Myeloid: Acute myeloid leukemia	Skin: Other	Gynecologic: Ovary/Fallopian tube	0.5912863174240498	0.17250337899119464	0.15032085241024476	event.sv.SIMPLE_DEL_20KB_1MB=0.0: 1.6 | event.sv.SIMPLE_DUP_32B_200B=1.0: 0.2 | event.tmb.indels_per_mb=0.041: 0.0	event.tmb.indels_per_mb=0.041: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0 | event.sv.MAX_COMPLEX_SIZE=1.0: 0.0	event.tmb.indels_per_mb=0.041: 0.2 | event.tmb.snv_count=2900.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Gyn_3	Gynecologic: Ovary/Fallopian tube	rna	gene_exp	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8508659209455863	0.08213545626441494	0.06699862278999888			
+Gyn_3	Gynecologic: Ovary/Fallopian tube	rna	alt_sj	False	2.0	Prostate	Gynecologic: Ovary/Fallopian tube	Skin: Other	0.8508659209455863	0.08213545626441494	0.06699862278999888			
+Gyn_6	Gynecologic: Ovary/Fallopian tube	combined	combined											
+Gyn_6	Gynecologic: Ovary/Fallopian tube	dna	dna_combined	True	1.0	Gynecologic: Ovary/Fallopian tube	Skin: Other	Myeloid: Acute myeloid leukemia	0.8005716011603072	0.15190636980759722	0.0475220290320955			
+Gyn_6	Gynecologic: Ovary/Fallopian tube	rna	rna_combined											
+Gyn_6	Gynecologic: Ovary/Fallopian tube	dna	gen_pos	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.445024935894781	0.31735614595875955	0.15712242425711884			
+Gyn_6	Gynecologic: Ovary/Fallopian tube	dna	snv96	True	1.0	Gynecologic: Ovary/Fallopian tube	Prostate	Skin: Other	0.7893964669716429	0.15375033704238117	0.05600905777769741			
+Gyn_6	Gynecologic: Ovary/Fallopian tube	dna	event	False	2.0	Skin: Other	Gynecologic: Ovary/Fallopian tube	Prostate	0.34682088547847273	0.32162865925991774	0.3011553903648131	event.sv.SIMPLE_DUP_32B_200B=2.0: 0.0 | event.tmb.snv_count=28000.0: 0.0 | event.tmb.indels_per_mb=0.3: 0.0	event.sv.SIMPLE_DUP_100KB_5MB=25.0: 0.2 | event.tmb.snv_count=28000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0	event.tmb.indels_per_mb=0.3: 0.1 | event.tmb.snv_count=28000.0: 0.0 | event.sv.TELOMERIC_SGL=0.0: 0.0
+Gyn_6	Gynecologic: Ovary/Fallopian tube	rna	gene_exp											
+Gyn_6	Gynecologic: Ovary/Fallopian tube	rna	alt_sj											

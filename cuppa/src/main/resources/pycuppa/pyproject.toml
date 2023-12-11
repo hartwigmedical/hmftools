@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pycuppa"
+version = "2.0.0"
+authors = [{ name="Luan Nguyen", email="lnguyen@hartwigmedicalfoundation.nl" }]
+description = "Python machine learning component of CUPPA"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas == 2.0.3",
+    "numpy == 1.24.3",
+    "scikit-learn == 1.3.0",
+    "scipy == 1.11.1",
+    "matplotlib == 3.7.2",
+    "plotnine == 0.10.1",
+    "mizani == 0.9.2",
+    "pytest == 7.4.0"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+
+[tool.setuptools.packages.find]
+where = ["cuppa"]
+include = ["classifier","components", "compose", "misc", "performance", "sample_data", "test", "visualization"]
