@@ -2,8 +2,8 @@ package com.hartwig.hmftools.sage.sagevis;
 
 import static java.lang.Math.abs;
 
+import static com.hartwig.hmftools.common.samtools.CigarUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.sage.sagevis.ColorUtil.DARK_GREEN;
 import static com.hartwig.hmftools.sage.sagevis.ColorUtil.PURPLE;
 import static com.hartwig.hmftools.sage.sagevis.ColorUtil.interpolateColors;

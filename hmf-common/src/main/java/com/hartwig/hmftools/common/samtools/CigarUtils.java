@@ -1,5 +1,9 @@
 package com.hartwig.hmftools.common.samtools;
 
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_CIGAR;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
+
 import static htsjdk.samtools.CigarOperator.D;
 import static htsjdk.samtools.CigarOperator.N;
 
@@ -173,4 +177,12 @@ public final class CigarUtils
         return currentPosition - 1;
     }
 
+    public static int getMateAlignmentEnd(final SAMRecord read)
+    {
+        String mateCigarStr = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+        if(mateCigarStr == null || mateCigarStr.equals(NO_CIGAR))
+            return NO_POSITION;
+
+        return getEndPosition(read.getMateAlignmentStart(), mateCigarStr, false, false);
+    }
 }

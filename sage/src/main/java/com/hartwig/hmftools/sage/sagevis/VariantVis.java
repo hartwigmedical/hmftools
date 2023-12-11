@@ -8,13 +8,13 @@ import static java.util.Map.entry;
 
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.samtools.CigarUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO_DELIM;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
-import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getOrientationString;
 import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;

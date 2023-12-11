@@ -19,7 +19,6 @@ import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.TextCigarCodec;
 
 public final class SamRecordUtils
 {
@@ -166,18 +165,6 @@ public final class SamRecordUtils
         }
 
         return mappedCoords;
-    }
-
-    public static int getMateAlignmentEnd(final SAMRecord read)
-    {
-        String mateCigarStr = read.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
-        if(mateCigarStr == null || mateCigarStr.equals(NO_CIGAR))
-        {
-            return NO_POSITION;
-        }
-
-        Cigar mateCigar = TextCigarCodec.decode(mateCigarStr);
-        return read.getMateAlignmentStart() + mateCigar.getReferenceLength() - 1;
     }
 
     public static String getOrientationString(final SAMRecord read)
