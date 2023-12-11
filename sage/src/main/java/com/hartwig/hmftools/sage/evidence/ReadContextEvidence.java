@@ -6,8 +6,8 @@ import static java.lang.Math.min;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 
 import static htsjdk.samtools.CigarOperator.S;
 
@@ -21,14 +21,14 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.region.ChrBaseRegion;
-import com.hartwig.hmftools.sage.candidate.Candidate;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
+import com.hartwig.hmftools.sage.candidate.Candidate;
+import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.common.SamSlicerFactory;
 import com.hartwig.hmftools.sage.common.SamSlicerInterface;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.bqr.BqrRecordMap;
-import com.hartwig.hmftools.sage.common.RefSequence;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 import com.hartwig.hmftools.sage.sync.FragmentSync;
@@ -250,7 +250,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             ReadContextCounter readCounter = mReadCounters.get(prevIndex);
 
-            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.exceedsMaxCoverage())
+            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.skipReadCounter())
             {
                 mLastCandidateIndex = prevIndex;
                 mSelectedReadCounters.add(0, readCounter);
@@ -270,7 +270,7 @@ public class ReadContextEvidence implements FragmentSyncReadHandler
         {
             ReadContextCounter readCounter = mReadCounters.get(nextIndex);
 
-            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.exceedsMaxCoverage())
+            if(positionWithin(readCounter.position(), readStart, readEnd) && !readCounter.skipReadCounter())
             {
                 mSelectedReadCounters.add(readCounter);
             }

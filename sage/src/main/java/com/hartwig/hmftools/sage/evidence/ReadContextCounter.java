@@ -7,16 +7,16 @@ import static java.lang.Math.pow;
 import static java.lang.Math.round;
 import static java.lang.String.format;
 
+import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.leftSoftClipLength;
 import static com.hartwig.hmftools.common.samtools.CigarUtils.rightSoftClipLength;
-import static com.hartwig.hmftools.common.region.BaseRegion.positionsOverlap;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.extractUmiType;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.UMI_TYPE_COUNT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.CORE;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.FULL;
+import static com.hartwig.hmftools.common.variant.VariantReadSupport.OTHER_ALT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.PARTIAL;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REALIGNED;
-import static com.hartwig.hmftools.common.variant.VariantReadSupport.OTHER_ALT;
 import static com.hartwig.hmftools.common.variant.VariantReadSupport.REF;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
 import static com.hartwig.hmftools.sage.SageConstants.CORE_LOW_QUAL_MISMATCH_BASE_LENGTH;
@@ -30,15 +30,15 @@ import static com.hartwig.hmftools.sage.SageConstants.SC_READ_EVENTS_FACTOR;
 import static com.hartwig.hmftools.sage.candidate.RefContextConsumer.ignoreSoftClipAdapter;
 import static com.hartwig.hmftools.sage.common.ReadContextMatch.NONE;
 import static com.hartwig.hmftools.sage.evidence.ReadEdgeDistance.calcAdjustedVariantPosition;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.ALT_SUPPORT;
-import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.CHIMERIC;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.IN_SPLIT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.MAP_QUAL;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.MAX_COVERAGE;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.NON_CORE;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.REF_SUPPORT;
 import static com.hartwig.hmftools.sage.evidence.ReadMatchType.SOFT_CLIP;
+import static com.hartwig.hmftools.sage.evidence.ReadMatchType.UNRELATED;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.CORE_PARTIAL;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.EXACT;
 import static com.hartwig.hmftools.sage.evidence.RealignedType.LENGTHENED;
@@ -60,15 +60,16 @@ import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.samtools.UmiReadType;
 import com.hartwig.hmftools.common.variant.VariantReadSupport;
 import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.ReadContextMatch;
 import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantTier;
 import com.hartwig.hmftools.sage.filter.FragmentCoords;
 import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
-import com.hartwig.hmftools.sage.read.SplitReadUtils;
 import com.hartwig.hmftools.sage.read.NumberEvents;
-import com.hartwig.hmftools.sage.common.ReadContext;
-import com.hartwig.hmftools.sage.common.ReadContextMatch;
-import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.read.SplitReadUtils;
+import com.hartwig.hmftools.sage.sagevis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
 import htsjdk.samtools.CigarElement;
@@ -85,6 +86,7 @@ public class ReadContextCounter//  extends SimpleVariant
     private final QualityCalculator mQualityCalculator;
     private final String mSample;
     private final int mMaxCoverage;
+    private final VariantVis mVariantVis;
 
     // local variant-related state
     private final int mMinNumberOfEvents;
@@ -144,6 +146,8 @@ public class ReadContextCounter//  extends SimpleVariant
 
         mReadContext = readContext;
         mVariant = variant;
+
+        mVariantVis = config.VisOutputDir == null ? null : new VariantVis(mConfig, mSample, mVariant, mReadContext, mTier);
 
         // set local state to avoid testing on each read
         mIsMnv = variant.isMNV();
@@ -246,6 +250,17 @@ public class ReadContextCounter//  extends SimpleVariant
     public ReadEdgeDistance readEdgeDistance() { return mReadEdgeDistance; }
     public int minNumberOfEvents() { return mMinNumberOfEvents; }
 
+    @Nullable
+    public VariantVis variantVis()
+    {
+        return mVariantVis;
+    }
+
+    public String sample()
+    {
+        return mSample;
+    }
+
     public double averageAltBaseQuality()
     {
         // excludes realigned
@@ -266,6 +281,11 @@ public class ReadContextCounter//  extends SimpleVariant
 
     public boolean exceedsMaxCoverage() { return mCounts.Total >= mMaxCoverage; }
 
+    public boolean skipReadCounter()
+    {
+        return mVariantVis == null && exceedsMaxCoverage();
+    }
+
     public boolean belowMinFragmentCoords() { return mFragmentCoords != null && !mFragmentCoords.atCapacity(); }
 
     public String toString()
@@ -279,38 +299,45 @@ public class ReadContextCounter//  extends SimpleVariant
         return format("%s:%d %s>%s", mVariant.chromosome(), mVariant.position(), mVariant.ref(), mVariant.alt());
     }
 
-    private enum MatchType
+    public enum MatchType
     {
         NONE,
         FULL,
         PARTIAL,
         CORE,
         REALIGNED,
-        CORE_PARTIAL,REF,
+        CORE_PARTIAL,
+        REF,
         ALT;
     }
 
     public ReadMatchType processRead(final SAMRecord record, int numberOfEvents, @Nullable final FragmentData fragmentData)
     {
-        if(exceedsMaxCoverage())
+        boolean isMaxCovered = exceedsMaxCoverage();
+        if(isMaxCovered && mVariantVis == null)
             return MAX_COVERAGE;
 
         if(mTier != VariantTier.HOTSPOT)
         {
             if(mConfig.Quality.MapQualityRatioFactor == 0 && record.getMappingQuality() < EVIDENCE_MIN_MAP_QUAL)
-                return MAP_QUAL;
+            {
+                addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+                return isMaxCovered ? MAX_COVERAGE : MAP_QUAL;
+            }
         }
 
         if(mConfig.Quality.HighBaseMode && isChimericRead(record))
         {
-            return CHIMERIC;
+            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            return isMaxCovered ? MAX_COVERAGE : CHIMERIC;
         }
 
         RawContext rawContext = RawContext.create(mVariant, record);
 
         if(mConfig.Quality.HighBaseMode && rawContext.ReadIndexInSoftClip)
         {
-            return SOFT_CLIP;
+            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            return isMaxCovered ? MAX_COVERAGE : SOFT_CLIP;
         }
 
         if(rawContext.ReadIndex < 0 && !ignoreSoftClipAdapter(record))
@@ -325,26 +352,37 @@ public class ReadContextCounter//  extends SimpleVariant
             rawContext = createRawContextFromCoreMatch(record);
 
             if(rawContext.ReadIndex < 0)
-                return UNRELATED;
+            {
+                addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+                return isMaxCovered ? MAX_COVERAGE : UNRELATED;
+            }
         }
 
         if(rawContext.ReadIndexInSkipped)
-            return IN_SPLIT;
+        {
+            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            return isMaxCovered ? MAX_COVERAGE : IN_SPLIT;
+        }
 
         int readIndex = rawContext.ReadIndex;
         boolean baseDeleted = rawContext.ReadIndexInDelete;
 
-        mRawDepth += rawContext.DepthSupport ? 1 : 0;
+        mRawDepth += !isMaxCovered && rawContext.DepthSupport ? 1 : 0;
 
-        if(rawContext.ReadIndexInSoftClip && rawContext.AltSupport)
+        if(!isMaxCovered && rawContext.ReadIndexInSoftClip && rawContext.AltSupport)
             ++mSoftClipInsertSupport;
 
         boolean covered = mReadContext.indexedBases().isCoreCovered(readIndex, record.getReadBases().length);
 
         if(!covered)
         {
-            registerRawSupport(rawContext);
-            return NON_CORE;
+            if(!isMaxCovered)
+            {
+                registerRawSupport(rawContext);
+            }
+
+            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            return isMaxCovered ? MAX_COVERAGE : NON_CORE;
         }
 
         double adjustedNumOfEvents = numberOfEvents;
@@ -364,14 +402,18 @@ public class ReadContextCounter//  extends SimpleVariant
 
         if(mConfig.Quality.HighBaseMode && rawBaseQuality < mConfig.Quality.HighBaseQualLimit)
         {
-            if(rawContext.AltSupport)
+            if(!isMaxCovered && rawContext.AltSupport)
                 countAltSupportMetrics(record, fragmentData);
 
-            return UNRELATED;
+            addVariantVisRecord(record, MatchType.NONE, null, fragmentData);
+            return isMaxCovered ? MAX_COVERAGE : UNRELATED;
         }
 
-        double quality = mQualityCalculator.calculateQualityScore(
-                this, readIndex, record, adjustedNumOfEvents, rawBaseQuality);
+        QualityCalculator.QualityScores modifiedQualities =
+                mQualityCalculator.calculateQualityScores(this, readIndex, record, adjustedNumOfEvents, rawBaseQuality);
+        modifiedQualities.setRawBaseQuality(rawBaseQuality);
+
+        double quality = modifiedQualities.ModifiedQuality;
 
         MatchType matchType = MatchType.NONE;
 
@@ -402,20 +444,33 @@ public class ReadContextCounter//  extends SimpleVariant
                         break;
                 }
 
-                registerReadSupport(record, readSupport, quality);
+                if(!isMaxCovered)
+                {
+                    registerReadSupport(record, readSupport, quality);
 
-                mTotalMapQuality += record.getMappingQuality();
-                mTotalAltMapQuality += record.getMappingQuality();
-                mTotalNmCount += numberOfEvents;
-                mTotalAltNmCount += numberOfEvents;
+                    mTotalMapQuality += record.getMappingQuality();
+                    mTotalAltMapQuality += record.getMappingQuality();
+                    mTotalNmCount += numberOfEvents;
+                    mTotalAltNmCount += numberOfEvents;
 
-                mSupportAltBaseQualityTotal += rawBaseQuality;
+                    mSupportAltBaseQualityTotal += rawBaseQuality;
 
-                registerRawSupport(rawContext);
+                    registerRawSupport(rawContext);
 
-                if(rawContext.AltSupport)
-                    mReadEdgeDistance.update(record, fragmentData, true);
+                    if(rawContext.AltSupport)
+                    {
+                        mReadEdgeDistance.update(record, fragmentData, true);
+                    }
 
+                    if(rawContext.AltSupport || readSupport != null)
+                    {
+                        countAltSupportMetrics(record, fragmentData);
+                    }
+
+                    checkImproperCount(record);
+                }
+
+                addVariantVisRecord(record, matchType, modifiedQualities, fragmentData);
                 logReadEvidence(record, matchType, readIndex, quality);
 
                 /*
@@ -425,11 +480,7 @@ public class ReadContextCounter//  extends SimpleVariant
                 }
                 */
 
-                if(rawContext.AltSupport || readSupport != null)
-                    countAltSupportMetrics(record, fragmentData);
-
-                checkImproperCount(record);
-                return ALT_SUPPORT;
+                return isMaxCovered ? MAX_COVERAGE : ALT_SUPPORT;
             }
             else if(match == ReadContextMatch.CORE_PARTIAL)
             {
@@ -443,18 +494,21 @@ public class ReadContextCounter//  extends SimpleVariant
 
         if(realignment.Type == EXACT)
         {
-            registerReadSupport(record, REALIGNED, quality);
+            if(!isMaxCovered)
+            {
+                registerReadSupport(record, REALIGNED, quality);
 
-            mTotalMapQuality += record.getMappingQuality();
-            mTotalAltMapQuality += record.getMappingQuality();
-            mTotalNmCount += numberOfEvents;
-            mTotalAltNmCount += numberOfEvents;
+                mTotalMapQuality += record.getMappingQuality();
+                mTotalAltMapQuality += record.getMappingQuality();
+                mTotalNmCount += numberOfEvents;
+                mTotalAltNmCount += numberOfEvents;
 
-            logReadEvidence(record, MatchType.REALIGNED, readIndex,quality);
-            rawContext.updateSupport(false, rawContext.AltSupport);
-            registerRawSupport(rawContext);
+                rawContext.updateSupport(false, rawContext.AltSupport);
+                registerRawSupport(rawContext);
+            }
 
-            return ALT_SUPPORT;
+            addVariantVisRecord(record, MatchType.REALIGNED, modifiedQualities, fragmentData);
+            return isMaxCovered ? MAX_COVERAGE : ALT_SUPPORT;
         }
         else if(realignment.Type == CORE_PARTIAL)
         {
@@ -462,7 +516,10 @@ public class ReadContextCounter//  extends SimpleVariant
             rawContext.updateSupport(false, false);
         }
 
-        registerRawSupport(rawContext);
+        if(!isMaxCovered)
+        {
+            registerRawSupport(rawContext);
+        }
 
         // switch back to the old method to test for jitter
         RealignedContext jitterRealign = Realignment.realignedAroundIndex(mReadContext, readIndex, record.getReadBases(), getMaxRealignDistance(record));
@@ -470,52 +527,65 @@ public class ReadContextCounter//  extends SimpleVariant
         if(rawContext.ReadIndexInSoftClip && !rawContext.AltSupport)
         {
             if(jitterRealign.Type != LENGTHENED && jitterRealign.Type != SHORTENED)
-                return SOFT_CLIP;
+            {
+                addVariantVisRecord(record, MatchType.NONE, modifiedQualities, fragmentData);
+                return isMaxCovered ? MAX_COVERAGE : SOFT_CLIP;
+            }
         }
 
         ReadMatchType readMatchType = UNRELATED;
 
-        mTotalMapQuality += record.getMappingQuality();
-        mTotalNmCount += numberOfEvents;
+        if(!isMaxCovered)
+        {
+            mTotalMapQuality += record.getMappingQuality();
+            mTotalNmCount += numberOfEvents;
 
-        VariantReadSupport readSupport = null;
+            VariantReadSupport readSupport = null;
+
+            if(rawContext.RefSupport)
+            {
+                readSupport = REF;
+
+                mRefFragmentStrandBias.registerFragment(record);
+                mRefReadStrandBias.registerRead(record, fragmentData, mVariant);
+
+                mReadEdgeDistance.update(record, fragmentData, false);
+            }
+            else if(rawContext.AltSupport)
+            {
+                readSupport = OTHER_ALT;
+
+                mTotalAltMapQuality += record.getMappingQuality();
+                mTotalAltNmCount += numberOfEvents;
+
+                countAltSupportMetrics(record, fragmentData);
+            }
+
+            registerReadSupport(record, readSupport, quality);
+
+            // add to jitter penalty as a function of the number of repeats found
+            mJitterData.update(jitterRealign, mConfig.Quality);
+        }
 
         if(rawContext.RefSupport)
         {
-            readSupport = REF;
             readMatchType = REF_SUPPORT;
+        }
 
-            mRefFragmentStrandBias.registerFragment(record);
-            mRefReadStrandBias.registerRead(record, fragmentData, mVariant);
-
-            mReadEdgeDistance.update(record, fragmentData, false);
+        if(rawContext.RefSupport)
+        {
+            matchType = MatchType.REF;
         }
         else if(rawContext.AltSupport)
         {
-            readSupport = OTHER_ALT;
-
-            mTotalAltMapQuality += record.getMappingQuality();
-            mTotalAltNmCount += numberOfEvents;
-
-            countAltSupportMetrics(record, fragmentData);
+            matchType = MatchType.ALT;
         }
 
-        registerReadSupport(record, readSupport, quality);
-
-        // add to jitter penalty as a function of the number of repeats found
-        mJitterData.update(jitterRealign, mConfig.Quality);
-
+        addVariantVisRecord(record, matchType, modifiedQualities, fragmentData);
         if(mConfig.LogEvidenceReads)
-        {
-            if(rawContext.RefSupport)
-                matchType = MatchType.REF;
-            else if(rawContext.AltSupport)
-                matchType = MatchType.ALT;
-
             logReadEvidence(record, matchType, readIndex, quality);
-        }
 
-        return readMatchType;
+        return isMaxCovered ? MAX_COVERAGE : readMatchType;
     }
 
     private ReadContextMatch determineReadContextMatch(final SAMRecord record, int readIndex, boolean allowCoreVariation)
@@ -587,6 +657,13 @@ public class ReadContextCounter//  extends SimpleVariant
             ++mRawRefSupport;
             mRawRefBaseQuality += rawContext.BaseQuality;
         }
+    }
+
+    private void addVariantVisRecord(final SAMRecord record, final MatchType matchType,
+            @Nullable QualityCalculator.QualityScores modifiedQualities, @Nullable final FragmentData fragmentData)
+    {
+        if(mVariantVis != null)
+            mVariantVis.addEvidence(record, fragmentData, matchType, modifiedQualities);
     }
 
     private void logReadEvidence(final SAMRecord record, final MatchType matchType, int readIndex, double quality)

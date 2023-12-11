@@ -3,7 +3,6 @@ package com.hartwig.hmftools.sage.quality;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
-import static java.lang.String.format;
 
 import static com.hartwig.hmftools.sage.SageConstants.MAX_MAP_QUALITY;
 
@@ -46,7 +45,35 @@ public class QualityCalculator
         return config.MapQualityRatioFactor > 0 ? min(MAX_MAP_QUALITY, modifiedMapQuality) : modifiedMapQuality;
     }
 
-    public double calculateQualityScore(
+    public static class QualityScores
+    {
+        public final int ModifiedMapQuality;
+        public final double ModifiedBaseQuality;
+        public final double ModifiedQuality;
+
+        private double mRawBaseQuality;
+
+        public QualityScores(int modifiedMapQuality, double modifiedBaseQuality, double modifiedQuality)
+        {
+            ModifiedMapQuality = modifiedMapQuality;
+            ModifiedBaseQuality = modifiedBaseQuality;
+            ModifiedQuality = modifiedQuality;
+
+            mRawBaseQuality = 0.0;
+        }
+
+        public double rawBaseQuality()
+        {
+            return mRawBaseQuality;
+        }
+
+        public void setRawBaseQuality(double rawBaseQuality)
+        {
+            mRawBaseQuality = rawBaseQuality;
+        }
+    }
+
+    public QualityScores calculateQualityScores(
             final ReadContextCounter readContextCounter, int readBaseIndex, final SAMRecord record, double numberOfEvents, double rawBaseQuality)
     {
         double baseQuality = readContextCounter.isIndel() ?
@@ -77,11 +104,10 @@ public class QualityCalculator
         }
         */
 
-        return modifiedQuality;
+        return new QualityScores(max(0, modifiedMapQuality), max(0.0, modifiedBaseQuality), modifiedQuality);
     }
 
     public static boolean isImproperPair(final SAMRecord record) { return record.getReadPairedFlag() && !record.getProperPairFlag(); }
-
 
     public static double rawBaseQuality(final ReadContextCounter readContextCounter, int readIndex, final SAMRecord record)
     {
@@ -162,5 +188,4 @@ public class QualityCalculator
         // take the smaller of the left and right core index
         return max(0, min(adjustedLeftIndex, record.getReadBases().length - 1 - adjustedRightIndex));
     }
-
 }

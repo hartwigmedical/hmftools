@@ -1,0 +1,684 @@
+package com.hartwig.hmftools.sage.sagevis;
+
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.String.format;
+import static java.util.Map.entry;
+
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.loadRefGenome;
+import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_INFO_DELIM;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.CONSENSUS_READ_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.MATE_CIGAR_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NUM_MUTATONS_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.UMI_TYPE_ATTRIBUTE;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getMateAlignmentEnd;
+import static com.hartwig.hmftools.common.samtools.SamRecordUtils.getOrientationString;
+import static com.hartwig.hmftools.common.utils.Doubles.round;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
+import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
+import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
+import static com.hartwig.hmftools.sage.sagevis.ColorUtil.DARK_BLUE;
+import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.FINAL_QUAL_COL;
+import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.MAP_QUAL_COL;
+import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.MATE_TYPE_COL;
+import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.MOD_BASE_QUAL_COL;
+import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.MOD_MAP_QUAL_COL;
+import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.ORIENTATION_COL;
+import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.RAW_BASE_QUAL_COL;
+import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.BASE_FONT_STYLE;
+import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
+import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.READ_HEIGHT_PX;
+import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
+import static com.hartwig.hmftools.sage.sagevis.SvgRender.renderBaseSeq;
+import static com.hartwig.hmftools.sage.sagevis.SvgRender.renderCoords;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.FRAG_STRAND_BIAS;
+import static com.hartwig.hmftools.sage.vcf.VariantVCF.READ_STRAND_BIAS;
+
+import static htsjdk.variant.vcf.VCFConstants.ALLELE_FREQUENCY_KEY;
+import static j2html.TagCreator.body;
+import static j2html.TagCreator.div;
+import static j2html.TagCreator.header;
+import static j2html.TagCreator.html;
+import static j2html.TagCreator.rawHtml;
+import static j2html.TagCreator.script;
+import static j2html.TagCreator.span;
+import static j2html.TagCreator.table;
+import static j2html.TagCreator.td;
+import static j2html.TagCreator.tr;
+
+import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeCoordinates;
+import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
+import com.hartwig.hmftools.common.region.BaseRegion;
+import com.hartwig.hmftools.sage.SageConfig;
+import com.hartwig.hmftools.sage.common.IndexedBases;
+import com.hartwig.hmftools.sage.common.ReadContext;
+import com.hartwig.hmftools.sage.common.SageVariant;
+import com.hartwig.hmftools.sage.common.SimpleVariant;
+import com.hartwig.hmftools.sage.common.VariantTier;
+import com.hartwig.hmftools.sage.evidence.ReadContextCounter;
+import com.hartwig.hmftools.sage.quality.QualityCalculator;
+import com.hartwig.hmftools.sage.sync.FragmentData;
+
+import org.jetbrains.annotations.Nullable;
+import org.jfree.svg.SVGGraphics2D;
+
+import htsjdk.samtools.SAMRecord;
+import j2html.tags.DomContent;
+import j2html.tags.specialized.TdTag;
+
+public class VariantVis
+{
+    private static final AtomicReference<DomContent> JAVASCRIPT = new AtomicReference<>(null);
+    private static final DomContent JQUERY_SCRIPT =
+            rawHtml("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script>");
+
+    private static final List<ReadContextCounter.MatchType> SORTED_MATCH_TYPES = Lists.newArrayList(
+            ReadContextCounter.MatchType.FULL,
+            ReadContextCounter.MatchType.PARTIAL,
+            ReadContextCounter.MatchType.CORE,
+            ReadContextCounter.MatchType.REALIGNED,
+            ReadContextCounter.MatchType.CORE_PARTIAL,
+            ReadContextCounter.MatchType.ALT,
+            ReadContextCounter.MatchType.REF,
+            ReadContextCounter.MatchType.NONE);
+
+    private final SageConfig mConfig;
+    private final String mSample;
+    private final SimpleVariant mVariant;
+    private final VariantTier mVariantTier;
+    private final EnumMap<ReadContextCounter.MatchType, List<ReadEvidenceRecord>> mReadEvidenceRecordsByType;
+    private final ReadContext mReadContext;
+    private final BaseRegion mViewRegion;
+    private final Map<Integer, List<SvgRender.BoxBorder>> mContextBorders;
+    private final BaseSeqViewModel mRefViewModel;
+    private final BaseSeqViewModel mContextViewModel;
+    private final EnumMap<ReadContextCounter.MatchType, Integer> mReadCountByType;
+
+    private int mReadCount;
+
+    public VariantVis(final SageConfig config, final String sample, final SimpleVariant variant, final ReadContext readContext,
+            final VariantTier variantTier)
+    {
+        mConfig = config;
+        mSample = sample;
+        mVariant = variant;
+        mVariantTier = variantTier;
+        mReadEvidenceRecordsByType = Maps.newEnumMap(ReadContextCounter.MatchType.class);
+        mReadContext = readContext;
+
+        IndexedBases indexedBases = mReadContext.indexedBases();
+        int indelSize = mVariant.ref().length() - mVariant.alt().length();
+        int coreStart = indexedBases.corePositionStart();
+        int coreEnd = indexedBases.corePositionEnd() + indelSize;
+        int flankStart = coreStart + indexedBases.LeftFlankIndex - indexedBases.LeftCoreIndex;
+        int flankEnd = coreEnd + indexedBases.RightFlankIndex - indexedBases.RightCoreIndex;
+        mViewRegion = new BaseRegion(coreStart - SageVisConstants.READ_EXTEND_LENGTH, coreEnd + SageVisConstants.READ_EXTEND_LENGTH);
+
+        mContextBorders = Map.ofEntries(
+                entry(mReadContext.Position,
+                        Lists.newArrayList(
+                                new SvgRender.BoxBorder(SvgRender.BorderLocation.LEFT, Color.BLACK),
+                                new SvgRender.BoxBorder(SvgRender.BorderLocation.RIGHT, Color.BLACK))),
+                entry(coreStart,
+                        Lists.newArrayList(
+                                new SvgRender.BoxBorder(SvgRender.BorderLocation.LEFT, Color.BLUE))),
+                entry(coreEnd,
+                        Lists.newArrayList(
+                                new SvgRender.BoxBorder(SvgRender.BorderLocation.RIGHT, Color.BLUE))),
+                entry(flankStart,
+                        Lists.newArrayList(
+                                new SvgRender.BoxBorder(SvgRender.BorderLocation.LEFT, DARK_BLUE))),
+                entry(flankEnd,
+                        Lists.newArrayList(
+                                new SvgRender.BoxBorder(SvgRender.BorderLocation.RIGHT, DARK_BLUE)))
+        );
+
+        RefGenomeCoordinates refGenCoords = config.RefGenVersion == V37 ? RefGenomeCoordinates.COORDS_37 : RefGenomeCoordinates.COORDS_38;
+        int chromosomeLength = refGenCoords.length(mVariant.chromosome());
+        int refPosStart = max(1, mViewRegion.start());
+        int refPosEnd = min(chromosomeLength, mViewRegion.end());
+        RefGenomeInterface refGen = loadRefGenome(config.RefGenomeFile);
+        String refBases = refGen.getBaseString(mVariant.chromosome(), refPosStart, refPosEnd);
+        mRefViewModel = BaseSeqViewModel.fromStr(refBases, refPosStart);
+        mContextViewModel = BaseSeqViewModel.fromVariant(indexedBases, mVariant.ref(), mVariant.alt());
+
+        mReadCountByType = Maps.newEnumMap(ReadContextCounter.MatchType.class);
+        mReadCount = 0;
+    }
+
+    private static DomContent styledTable(final List<DomContent> elems, final CssBuilder style)
+    {
+        return table().with(elems).withStyle(BASE_FONT_STYLE.merge(style).toString());
+    }
+
+    public static void writeToHtmlFile(final SageVariant sageVariant)
+    {
+        List<ReadContextCounter> tumorReadCounters = sageVariant.tumorReadCounters();
+        List<ReadContextCounter> normalReadCounters = sageVariant.normalReadCounters();
+
+        List<VariantVis> tumorVis =
+                tumorReadCounters.stream().map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
+        List<VariantVis> normalVis =
+                normalReadCounters.stream().map(ReadContextCounter::variantVis).filter(x -> x != null).collect(Collectors.toList());
+
+        if(tumorVis.isEmpty() && normalVis.isEmpty())
+        {
+            return;
+        }
+
+        ReadContextCounter firstCounter = !tumorReadCounters.isEmpty() ? tumorReadCounters.get(0) : normalReadCounters.get(0);
+        VariantVis firstVis = !tumorVis.isEmpty() ? tumorVis.get(0) : normalVis.get(0);
+
+        String filename = firstVis.getFilename();
+
+        int tumorTotalReadCount = tumorVis.stream().mapToInt(x -> x.mReadCount).sum();
+        int normalTotalReadCount = normalVis.stream().mapToInt(x -> x.mReadCount).sum();
+        int totalReadCount = tumorTotalReadCount + normalTotalReadCount;
+        if(totalReadCount == 0)
+        {
+            SG_LOGGER.info("Not writing variant vis file {}, because there are no associated reads", filename);
+            return;
+        }
+
+        tumorVis.forEach(x -> x.downsampleReadEvidenceRecords());
+        normalVis.forEach(x -> x.downsampleReadEvidenceRecords());
+
+        Stream<DomContent> tumorReadTableRows = tumorVis.stream().map(x -> x.renderReads(true)).flatMap(x -> x.stream());
+        Stream<DomContent> normalReadTableRows = normalVis.stream().map(x -> x.renderReads(false)).flatMap(x -> x.stream());
+        List<DomContent> readTableRows = Stream.concat(tumorReadTableRows, normalReadTableRows).collect(Collectors.toList());
+
+        CssBuilder readTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);
+        CssBuilder verticalSpacerStyle = CssBuilder.EMPTY.height(CssSize.em(1));
+
+        DomContent readTable = div(styledTable(readTableRows, readTableStyle));
+        DomContent verticalSpacer = div().withStyle(verticalSpacerStyle.toString());
+        String htmlStr = html(
+                header(JQUERY_SCRIPT),
+                body(
+                        firstVis.renderVariantInfo(
+                                sageVariant.totalQuality(),
+                                firstCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge()),
+                        verticalSpacer,
+                        renderSampleInfoTable(tumorReadCounters, normalReadCounters),
+                        readTable,
+                        getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
+
+        String filePath = Paths.get(firstVis.mConfig.VisOutputDir, filename).toString();
+        SG_LOGGER.info("Writing variant vis file {}", filePath);
+        try
+        {
+            BufferedWriter outputWriter = createBufferedWriter(filePath, false);
+            outputWriter.write(htmlStr);
+            outputWriter.newLine();
+            closeBufferedWriter(outputWriter);
+        }
+        catch(IOException e)
+        {
+            SG_LOGGER.error("Failed to write output to {}: {}", filePath, e.toString());
+            System.exit(1);
+        }
+    }
+
+    private static DomContent renderSampleInfoTable(final List<ReadContextCounter> tumorReadCounters,
+            final List<ReadContextCounter> normalReadCounters)
+    {
+        CssBuilder sampleInfoTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);
+        CssBuilder firstColCellStyle = CssBuilder.EMPTY.paddingLeft(CssSize.em(0.5)).paddingRight(CssSize.em(0.5));
+        CssBuilder cellStyle = firstColCellStyle.textAlign("right");
+        CssBuilder firstColHeaderStyle = firstColCellStyle.backgroundColor(Color.LIGHT_GRAY);
+        CssBuilder headerStyle = cellStyle.backgroundColor(Color.LIGHT_GRAY);
+
+        List<DomContent> rows = Lists.newArrayList();
+
+        List<String> headers = Lists.newArrayList("SAMPLE", "QUAL", "AD", ALLELE_FREQUENCY_KEY, "DP");
+        headers.addAll(SORTED_MATCH_TYPES.stream().map(ReadContextCounter.MatchType::name).collect(Collectors.toList()));
+        headers.addAll(Lists.newArrayList(AVG_BASE_QUAL, AVG_MAP_QUALITY, AVG_NM_COUNT, FRAG_STRAND_BIAS, READ_STRAND_BIAS, "JIT"));
+
+        List<DomContent> headerColumns = Lists.newArrayList();
+        for(int i = 0; i < headers.size(); i++)
+        {
+            CssBuilder style = i == 0 ? firstColHeaderStyle : headerStyle;
+            headerColumns.add(td(headers.get(i)).withStyle(style.toString()));
+        }
+
+        rows.add(tr().with(headerColumns));
+
+        List<ReadContextCounter> allCounters = Stream.concat(
+                tumorReadCounters.stream(),
+                normalReadCounters.stream()).filter(x -> x.variantVis() != null).collect(Collectors.toList());
+
+        for(ReadContextCounter counter : allCounters)
+        {
+            int depth = counter.depth();
+            int altSupport = counter.altSupport();
+            int avgAltMapQuality = altSupport > 0 ? (int) Math.round(counter.altMapQuality() / (double) altSupport) : 0;
+            double avgAltNmCount = altSupport > 0 ? round(counter.altNmCount() / (double) altSupport, 1) : 0;
+
+            List<TdTag> columnElems = Lists.newArrayList(
+                    td(counter.sample()),
+                    td(String.valueOf(counter.tumorQuality())),
+                    td(String.valueOf(altSupport)),
+                    td(format("%.3f", counter.vaf())),
+                    td(String.valueOf(depth)));
+
+            VariantVis variantVis = counter.variantVis();
+            for(ReadContextCounter.MatchType matchType : SORTED_MATCH_TYPES)
+            {
+                int count = variantVis.mReadCountByType.getOrDefault(matchType, 0);
+                columnElems.add(td(String.valueOf(count)));
+            }
+
+            columnElems.addAll(Lists.newArrayList(
+                    td(String.valueOf((int) counter.averageAltBaseQuality())),
+                    td(format("%d", avgAltMapQuality)),
+                    td(format("%.1f", avgAltNmCount)),
+                    td(format("%.2f", counter.fragmentStrandBiasAlt().bias())),
+                    td(format("%.2f", counter.readStrandBiasAlt().bias())),
+                    td(String.valueOf(counter.jitter()[2]))));
+
+            for(int i = 0; i < columnElems.size(); ++i)
+            {
+                CssBuilder style = i == 0 ? firstColCellStyle : cellStyle;
+                columnElems.set(i, columnElems.get(i).withStyle(style.toString()));
+            }
+
+            rows.add(tr().with(columnElems));
+        }
+
+        DomContent sampleInfoTable = styledTable(rows, sampleInfoTableStyle);
+        return div(sampleInfoTable);
+    }
+
+    private static DomContent getJavascript()
+    {
+        return JAVASCRIPT.updateAndGet((final DomContent currentRef) ->
+        {
+            if(currentRef != null)
+            {
+                return currentRef;
+            }
+
+            InputStream inputStream = VariantVis.class.getResourceAsStream("/sagevis/sagevis.js");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String scriptContent = reader.lines().collect(Collectors.joining("\n"));
+            return script(rawHtml(scriptContent)).attr("type", "text/javascript");
+        });
+    }
+
+    private String getFilename()
+    {
+        IndexedBases indexedBases = mReadContext.indexedBases();
+
+        StringJoiner filenameBuilder = new StringJoiner("_");
+        filenameBuilder.add(mVariant.chromosome());
+        filenameBuilder.add(String.valueOf(mReadContext.Position));
+        filenameBuilder.add(mVariant.ref());
+        filenameBuilder.add(mVariant.alt());
+        filenameBuilder.add(String.valueOf(indexedBases.Index));
+        filenameBuilder.add(String.valueOf(indexedBases.LeftCoreIndex));
+        filenameBuilder.add(String.valueOf(indexedBases.RightCoreIndex));
+        filenameBuilder.add(String.valueOf(indexedBases.FlankSize));
+        filenameBuilder.add(new String(indexedBases.Bases));
+
+        return filenameBuilder + ".html";
+    }
+
+    public void addEvidence(final SAMRecord read, @Nullable final FragmentData fragment, final ReadContextCounter.MatchType matchType,
+            @Nullable final QualityCalculator.QualityScores modifiedQualities)
+    {
+        ++mReadCount;
+        mReadCountByType.put(matchType, mReadCountByType.getOrDefault(matchType, 0) + 1);
+
+        List<ReadEvidenceRecord> records = mReadEvidenceRecordsByType.get(matchType);
+        if(records == null)
+        {
+            records = Lists.newArrayList();
+            mReadEvidenceRecordsByType.put(matchType, records);
+        }
+
+        if(fragment == null)
+        {
+            records.add(new ReadEvidenceRecord(read, null, matchType, modifiedQualities, mReadContext.Position));
+            return;
+        }
+
+        BaseRegion firstUnclippedRegion = new BaseRegion(fragment.First.getUnclippedStart(), fragment.First.getUnclippedEnd());
+        boolean firstIsVisible = mViewRegion.overlaps(firstUnclippedRegion);
+
+        BaseRegion secondUnclippedRegion = new BaseRegion(fragment.Second.getUnclippedStart(), fragment.Second.getUnclippedEnd());
+        boolean secondIsVisible = mViewRegion.overlaps(secondUnclippedRegion);
+        if(firstIsVisible && !secondIsVisible)
+        {
+            records.add(new ReadEvidenceRecord(fragment.First, null, matchType, modifiedQualities, mReadContext.Position));
+            return;
+        }
+
+        if(!firstIsVisible && secondIsVisible)
+        {
+            records.add(new ReadEvidenceRecord(fragment.Second, null, matchType, modifiedQualities, mReadContext.Position));
+            return;
+        }
+
+        records.add(new ReadEvidenceRecord(read, fragment, matchType, modifiedQualities, mReadContext.Position));
+    }
+
+    private DomContent renderVariantInfo(int totalTumorQuality, int maxDistanceFromEdge)
+    {
+        CssBuilder horizontalSpacerStyle = CssBuilder.EMPTY.width(VARIANT_INFO_SPACING_SIZE).display("inline-block");
+        CssBuilder coreStyle = CssBuilder.EMPTY.fontWeight("bold");
+
+        DomContent horizontalSpacer = div().withStyle(horizontalSpacerStyle.toString());
+
+        String repeatStr = "NO REPEAT";
+        if(mReadContext.RepeatCount > 0)
+        {
+            repeatStr = format("REPEAT = %dx%s", mReadContext.RepeatCount, mReadContext.Repeat);
+        }
+
+        IndexedBases indexedBases = mReadContext.indexedBases();
+        List<DomContent> contextElems = Lists.newArrayList();
+        contextElems.add(span("CONTEXT = "));
+        contextElems.add(span(indexedBases.leftFlankString()));
+        contextElems.add(span(indexedBases.coreString()).withStyle(coreStyle.toString()));
+        contextElems.add(span(indexedBases.rightFlankString()));
+
+        DomContent variantInfoRow = tr(
+                td(mVariant.chromosome() + ":" + mReadContext.Position),
+                td(horizontalSpacer),
+                td(mVariant.ref() + " > " + mVariant.alt()),
+                td(horizontalSpacer),
+                td("TIER = " + mVariantTier.name()),
+                td(horizontalSpacer),
+                td("QUAL = " + totalTumorQuality),
+                td(horizontalSpacer),
+                td(repeatStr),
+                td(horizontalSpacer),
+                td("MED = " + maxDistanceFromEdge),
+                td(horizontalSpacer),
+                td().with(contextElems));
+
+        DomContent variantInfoTable = styledTable(Lists.newArrayList(variantInfoRow), CssBuilder.EMPTY);
+        return div(variantInfoTable);
+    }
+
+    private List<DomContent> renderReads(boolean isTumor)
+    {
+        CssBuilder lightGrayBgStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY);
+        CssBuilder verticalHeaderStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY).writingMode("vertical-rl");
+        CssBuilder headerStyle = CssBuilder.EMPTY.backgroundColor(Color.LIGHT_GRAY).textAlign("center");
+        CssBuilder matchTypeBorderStyle = CssBuilder.EMPTY.borderBottom(CssSize.px(2), "solid", Color.BLACK);
+        CssBuilder matchTypeStyle = verticalHeaderStyle.merge(matchTypeBorderStyle).textAlign("center").padding(CssSize.px(4));
+        CssBuilder tableInfoCellStyle = CssBuilder.EMPTY.fontSizePt((int) Math.round(2.0 / 3.0 * READ_HEIGHT_PX)).fontWeight("bold");
+        CssBuilder verticalSpacerDivStyle = CssBuilder.EMPTY.height(CssSize.em(1)).padding(CssSize.ZERO).margin(CssSize.ZERO);
+
+        List<ReadTableColumn> columns = Lists.newArrayList(
+                MATE_TYPE_COL, MAP_QUAL_COL, FINAL_QUAL_COL, MOD_BASE_QUAL_COL, MOD_MAP_QUAL_COL, RAW_BASE_QUAL_COL, ORIENTATION_COL);
+
+        List<DomContent> tableRows = Lists.newArrayList();
+
+        // spacing row
+        tableRows.add(tr(td(div().withStyle(verticalSpacerDivStyle.toString())).attr("colspan", columns.size() + 2)));
+
+        // sample row
+        String sampleAnnotation = isTumor ? "(tumor)" : "(normal)";
+        tableRows.add(tr(td(mSample + " " + sampleAnnotation).attr("colspan", columns.size() + 2)));
+
+        // header row
+        List<DomContent> headerCols = Lists.newArrayList();
+        headerCols.add(td("Type").withStyle(verticalHeaderStyle.toString()));
+        for(ReadTableColumn column : columns)
+        {
+            headerCols.add(td(column.Header).withStyle(verticalHeaderStyle.toString()));
+        }
+
+        headerCols.add(td(rawHtml(renderCoords(READ_HEIGHT_PX, mViewRegion, mVariant.position(), DISPLAY_EVERY_NTH_COORD).getSVGElement())).withStyle(lightGrayBgStyle.toString()));
+        DomContent headerRow = tr().with(headerCols);
+        tableRows.add(headerRow);
+
+        // ref row
+        DomContent refRow = tr(td("ref").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderRef()));
+        tableRows.add(refRow);
+
+        // context row
+        DomContent contextRow =
+                tr(td("context").attr("colspan", columns.size() + 1).withStyle(headerStyle.toString()), td(renderContext()));
+        tableRows.add(contextRow);
+
+        for(ReadContextCounter.MatchType matchType : SORTED_MATCH_TYPES)
+        {
+            List<ReadEvidenceRecord> records = mReadEvidenceRecordsByType.get(matchType);
+            if(records == null || records.isEmpty())
+            {
+                continue;
+            }
+
+            Collections.sort(records);
+            DomContent typeColContent =
+                    rawHtml(format("%s<br>(%d/%d)", matchType.name(), records.size(), mReadCountByType.getOrDefault(matchType, 0)));
+            for(int i = 0; i < records.size(); ++i)
+            {
+                ReadEvidenceRecord record = records.get(i);
+                boolean isLastOfType = i == records.size() - 1;
+
+                List<DomContent> cols = Lists.newArrayList();
+                if(i == 0)
+                {
+                    cols.add(td(typeColContent).attr("rowspan", records.size()).withStyle(matchTypeStyle.toString()));
+                }
+
+                for(ReadTableColumn column : columns)
+                {
+                    ReadTableColumn.ContentAndStyle contentAndStyle = column.getContentAndStyle(record);
+                    CssBuilder style = tableInfoCellStyle.merge(contentAndStyle.Style);
+                    if(isLastOfType)
+                    {
+                        style = style.merge(matchTypeBorderStyle);
+                    }
+
+                    cols.add(contentAndStyle.Content.withStyle(style.toString()));
+                }
+
+                if(isLastOfType)
+                {
+                    cols.add(td(renderRead(record)).withStyle(matchTypeBorderStyle.toString()));
+                }
+                else
+                {
+                    cols.add(td(renderRead(record)));
+                }
+
+                tableRows.add(tr().with(cols));
+            }
+        }
+
+        return tableRows;
+    }
+
+    private DomContent renderRef()
+    {
+        return renderBases(mRefViewModel, false, false);
+    }
+
+    private DomContent renderContext()
+    {
+        return renderBases(mContextViewModel, false, true);
+    }
+
+    private DomContent renderReadInfoTable(final SAMRecord firstRead, @Nullable final SAMRecord secondRead)
+    {
+        CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
+        CssBuilder readInfoStyle = baseDivStyle.display("none");
+
+        List<DomContent> readInfoRows = Lists.newArrayList();
+
+        readInfoRows.add(tr(td("Read name:"), td(firstRead.getReadName())));
+
+        String alignmentStr = format("%s:%s-%s", firstRead.getReferenceName(), firstRead.getAlignmentStart(), firstRead.getAlignmentEnd());
+        String mateAlignmentStr = "unmapped";
+        if(!firstRead.getMateUnmappedFlag())
+        {
+            String mateChromosome = firstRead.getMateReferenceName();
+            int mateAlignmentStart = firstRead.getMateAlignmentStart();
+            int mateAlignmentEnd = getMateAlignmentEnd(firstRead);
+            String mateAlignmentEndStr = mateAlignmentEnd == NO_POSITION ? "?" : String.valueOf(mateAlignmentEnd);
+            mateAlignmentStr = format("%s:%d-%s", mateChromosome, mateAlignmentStart, mateAlignmentEndStr);
+        }
+        readInfoRows.add(tr(td("Alignment:"), td(alignmentStr + ", " + mateAlignmentStr)));
+
+        String mateCigarStr = firstRead.getStringAttribute(MATE_CIGAR_ATTRIBUTE);
+        if(mateCigarStr == null)
+        {
+            mateCigarStr = "missing";
+        }
+
+        readInfoRows.add(tr(td("Cigar:"), td(firstRead.getCigarString() + ", " + mateCigarStr)));
+
+        readInfoRows.add(tr(td("Insert size:"), td(String.valueOf(abs(firstRead.getInferredInsertSize())))));
+        readInfoRows.add(tr(td("Orientation:"), td(getOrientationString(firstRead))));
+
+        String firstMapQStr = String.valueOf(firstRead.getMappingQuality());
+        String secondMapQStr = secondRead == null ? "" : String.valueOf(secondRead.getMappingQuality());
+        String mapQStr = secondRead == null ? firstMapQStr : firstMapQStr + ", " + secondMapQStr;
+        readInfoRows.add(tr(td("MapQ:"), td(mapQStr)));
+
+        Integer firstNumMutations = firstRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+        String firstNumMutationsStr = firstNumMutations == null ? "" : String.valueOf(firstNumMutations);
+        Integer secondNumMutations = secondRead == null ? null : secondRead.getIntegerAttribute(NUM_MUTATONS_ATTRIBUTE);
+        String secondNumMutationsStr = secondNumMutations == null ? "" : String.valueOf(secondNumMutations);
+        String numMutationsStr = secondRead == null ? firstNumMutationsStr : firstNumMutationsStr + ", " + secondNumMutationsStr;
+        readInfoRows.add(tr(td("NM:"), td(numMutationsStr)));
+
+        String umiTypeStr = firstRead.getStringAttribute(UMI_TYPE_ATTRIBUTE);
+        if(umiTypeStr != null)
+        {
+            readInfoRows.add(tr(td("Dup type:"), td(umiTypeStr)));
+        }
+
+        String dupCountStr = "0";
+        if(firstRead.hasAttribute(CONSENSUS_READ_ATTRIBUTE))
+        {
+            dupCountStr = firstRead.getStringAttribute(CONSENSUS_READ_ATTRIBUTE).split(CONSENSUS_INFO_DELIM, 2)[0];
+        }
+
+        readInfoRows.add(tr(td("Dup count:"), td(dupCountStr)));
+
+        DomContent readInfoTable = styledTable(readInfoRows, CssBuilder.EMPTY);
+        return div(readInfoTable).withClass("read-info").withStyle(readInfoStyle.toString());
+    }
+
+    private DomContent renderRead(final ReadEvidenceRecord readEvidence)
+    {
+        BaseSeqViewModel readViewModel = null;
+        BaseSeqViewModel firstViewModel = null;
+        BaseSeqViewModel secondViewModel = null;
+        if(readEvidence.Fragment == null)
+        {
+            readViewModel = BaseSeqViewModel.fromRead(readEvidence.Read);
+        }
+        else
+        {
+            firstViewModel = BaseSeqViewModel.fromRead(readEvidence.Fragment.First);
+            secondViewModel = BaseSeqViewModel.fromRead(readEvidence.Fragment.Second);
+            readViewModel = BaseSeqViewModel.fromConsensusFragment(readEvidence.Read, firstViewModel, secondViewModel);
+        }
+
+        SAMRecord firstRead = readEvidence.Read;
+        SAMRecord secondRead = null;
+        if(readEvidence.Fragment != null)
+        {
+            firstRead = readEvidence.Fragment.First.getFirstOfPairFlag() ? readEvidence.Fragment.First : readEvidence.Fragment.Second;
+            secondRead = readEvidence.Fragment.First.getFirstOfPairFlag() ? readEvidence.Fragment.Second : readEvidence.Fragment.First;
+        }
+
+        CssBuilder baseDivStyle = CssBuilder.EMPTY.padding(CssSize.ZERO).margin(CssSize.ZERO);
+
+        DomContent svgEl = renderBases(readViewModel, true, true);
+        DomContent svgDiv = div(svgEl).withClass("read-svg").withStyle(baseDivStyle.toString());
+        DomContent readInfoDiv = renderReadInfoTable(firstRead, secondRead);
+
+        DomContent containerDiv;
+        if(readEvidence.Fragment == null)
+        {
+            containerDiv = div(svgDiv, readInfoDiv).withStyle(baseDivStyle.toString());
+        }
+        else
+        {
+            CssBuilder divStyle = baseDivStyle.display("none");
+
+            DomContent firstSvgEl = renderBases(firstViewModel, true, true);
+            DomContent firstSvgDiv = div(firstSvgEl).withClass("read-of-fragment-sgv").withStyle(divStyle.toString());
+
+            DomContent secondSvgEl = renderBases(secondViewModel, true, true);
+            DomContent secondSvgDiv = div(secondSvgEl).withClass("read-of-fragment-sgv").withStyle(divStyle.toString());
+
+            containerDiv = div(svgDiv, firstSvgDiv, secondSvgDiv, readInfoDiv).withStyle(baseDivStyle.toString());
+        }
+
+        return containerDiv;
+    }
+
+    private DomContent renderBases(final BaseSeqViewModel bases, boolean shadeQuals, boolean compareToRef)
+    {
+        SVGGraphics2D svgCanvas =
+                renderBaseSeq(READ_HEIGHT_PX, mViewRegion, bases, shadeQuals, mContextBorders, compareToRef ? mRefViewModel : null);
+        return rawHtml(svgCanvas.getSVGElement());
+    }
+
+    private void downsampleReadEvidenceRecords()
+    {
+        for(Map.Entry<ReadContextCounter.MatchType, List<ReadEvidenceRecord>> entry : mReadEvidenceRecordsByType.entrySet())
+        {
+            ReadContextCounter.MatchType matchType = entry.getKey();
+            List<ReadEvidenceRecord> records = entry.getValue();
+
+            int maxReads = SageVisConstants.MAX_READS_PER_TYPE.get(matchType);
+            List<ReadEvidenceRecord> newRecords = Lists.newArrayList();
+            while(!records.isEmpty() && newRecords.size() < maxReads)
+            {
+                if(records.size() == 1)
+                {
+                    newRecords.add(records.get(0));
+                    records.remove(0);
+                    continue;
+                }
+
+                int i = (int) Math.round(Math.floor(records.size() * Math.random()));
+                if(i < records.size() - 1)
+                {
+                    ReadEvidenceRecord tmp = records.get(i);
+                    records.set(i, records.get(records.size() - 1));
+                    records.set(records.size() - 1, tmp);
+                }
+
+                newRecords.add(records.get(records.size() - 1));
+                records.remove(records.size() - 1);
+            }
+
+            mReadEvidenceRecordsByType.put(matchType, newRecords);
+        }
+    }
+}
