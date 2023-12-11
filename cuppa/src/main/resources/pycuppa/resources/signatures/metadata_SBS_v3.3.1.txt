@@ -1,0 +1,80 @@
+name	etiology	blacklisted	blacklist_reason
+SBS1	Age	FALSE	
+SBS2	APOBEC	FALSE	
+SBS3	HRD	FALSE	
+SBS4	Tobacco smoking	FALSE	
+SBS5	Age	FALSE	
+SBS6	MMR deficiency	FALSE	
+SBS7a	UV	FALSE	
+SBS7b	UV	FALSE	
+SBS7c	UV	FALSE	
+SBS7d	UV	FALSE	
+SBS8	Unknown	FALSE	
+SBS9	AID non-canonical	FALSE	
+SBS10a	POLE	FALSE	
+SBS10b	POLE	FALSE	
+SBS10c	POLD1 proofreading defect	FALSE	
+SBS10d	POLD1 proofreading defect	FALSE	
+SBS11	Temozolomide	FALSE	
+SBS12	Liver associated	FALSE	
+SBS13	APOBEC	FALSE	
+SBS14	"MMR deficiency, POLE"	FALSE	
+SBS15	MMR deficiency	FALSE	
+SBS16	Liver associated	FALSE	
+SBS17a	ROS	FALSE	
+SBS17b	"ROS, 5FU"	FALSE	
+SBS18	ROS	FALSE	
+SBS19	Unknown	FALSE	
+SBS20	"MMR deficiency, POLD1"	FALSE	
+SBS21	MMR deficiency	FALSE	
+SBS22	Aristolochic acid	FALSE	
+SBS23	Unknown	FALSE	
+SBS24	Aflatoxin	FALSE	
+SBS25	Chemo. unknown	FALSE	
+SBS26	MMR deficiency	FALSE	
+SBS27		TRUE	Sequencing artefact
+SBS28	Unknown	FALSE	
+SBS29	Tobacco chewing	FALSE	
+SBS30	BER deficiency	FALSE	
+SBS31	Platinum	FALSE	
+SBS32	Azathioprine	FALSE	
+SBS33	Unknown	FALSE	
+SBS34	Unknown	FALSE	
+SBS35	Platinum	FALSE	
+SBS36	BER deficiency	FALSE	
+SBS37	Unknown	FALSE	
+SBS38	UV indirect	FALSE	
+SBS39	Unknown	FALSE	
+SBS40	Age	FALSE	
+SBS41	Unknown	FALSE	
+SBS42	Haloalkanes	FALSE	
+SBS43		TRUE	Sequencing artefact
+SBS44	MMR deficiency	FALSE	
+SBS45		TRUE	Sequencing artefact
+SBS46		TRUE	Sequencing artefact
+SBS47		TRUE	Sequencing artefact
+SBS48		TRUE	Sequencing artefact
+SBS49		TRUE	Sequencing artefact
+SBS50		TRUE	Sequencing artefact
+SBS51		TRUE	Sequencing artefact
+SBS52		TRUE	Sequencing artefact
+SBS53		TRUE	Sequencing artefact
+SBS54		TRUE	Sequencing artefact
+SBS55		TRUE	Sequencing artefact
+SBS56		TRUE	Sequencing artefact
+SBS57		TRUE	Sequencing artefact
+SBS58		TRUE	Sequencing artefact
+SBS59		TRUE	Sequencing artefact
+SBS60		TRUE	Sequencing artefact
+SBS84	AID canonical	FALSE	
+SBS85	AID indirect	FALSE	
+SBS86	Chemo. unknown	FALSE	
+SBS87	Thiopurine	FALSE	
+SBS88	Colibactin	FALSE	
+SBS89	Unknown	FALSE	
+SBS90	Duocarmycin	FALSE	
+SBS91	Unknown	FALSE	
+SBS92	Tobacco smoking	FALSE	
+SBS93	Unknown	FALSE	
+SBS94	Unknown	FALSE	
+SBS95		TRUE	Sequencing artefact
