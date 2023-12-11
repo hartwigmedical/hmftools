@@ -170,7 +170,7 @@ public class VariantVis
         return table().with(elems).withStyle(BASE_FONT_STYLE.merge(style).toString());
     }
 
-    public static void writeToHtmlFile(final SageVariant sageVariant)
+    public static void writeToHtmlFile(final SageVariant sageVariant, final List<String> tumorIds, final List<String> normalIds)
     {
         List<ReadContextCounter> tumorReadCounters = sageVariant.tumorReadCounters();
         List<ReadContextCounter> normalReadCounters = sageVariant.normalReadCounters();
@@ -218,7 +218,7 @@ public class VariantVis
                                 sageVariant.totalQuality(),
                                 firstCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge()),
                         verticalSpacer,
-                        renderSampleInfoTable(tumorReadCounters, normalReadCounters),
+                        renderSampleInfoTable(tumorReadCounters, normalReadCounters, tumorIds, normalIds),
                         readTable,
                         getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
 
@@ -239,7 +239,7 @@ public class VariantVis
     }
 
     private static DomContent renderSampleInfoTable(final List<ReadContextCounter> tumorReadCounters,
-            final List<ReadContextCounter> normalReadCounters)
+            final List<ReadContextCounter> normalReadCounters, final List<String> tumorIds, final List<String> normalIds)
     {
         CssBuilder sampleInfoTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);
         CssBuilder firstColCellStyle = CssBuilder.EMPTY.paddingLeft(CssSize.em(0.5)).paddingRight(CssSize.em(0.5));
@@ -262,19 +262,40 @@ public class VariantVis
 
         rows.add(tr().with(headerColumns));
 
-        List<ReadContextCounter> allCounters = Stream.concat(
-                tumorReadCounters.stream(),
-                normalReadCounters.stream()).filter(x -> x.variantVis() != null).collect(Collectors.toList());
-
-        for(ReadContextCounter counter : allCounters)
+        List<String> allIds = Lists.newArrayList();
+        List<ReadContextCounter> allCounters = Lists.newArrayList();
+        for (int i = 0; i < tumorReadCounters.size(); i++)
         {
+            ReadContextCounter counter = tumorReadCounters.get(i);
+            if (counter.variantVis() == null)
+                continue;
+
+            allIds.add(tumorIds.get(i));
+            allCounters.add(counter);
+        }
+
+        for (int i = 0; i < normalReadCounters.size(); i++)
+        {
+            ReadContextCounter counter = normalReadCounters.get(i);
+            if (counter.variantVis() == null)
+                continue;
+
+            allIds.add(normalIds.get(i));
+            allCounters.add(counter);
+        }
+
+        for(int i = 0; i < allCounters.size(); ++i)
+        {
+            ReadContextCounter counter = allCounters.get(i);
+            String sampleId = allIds.get(i);
+
             int depth = counter.depth();
             int altSupport = counter.altSupport();
             int avgAltMapQuality = altSupport > 0 ? (int) Math.round(counter.altMapQuality() / (double) altSupport) : 0;
             double avgAltNmCount = altSupport > 0 ? round(counter.altNmCount() / (double) altSupport, 1) : 0;
 
             List<TdTag> columnElems = Lists.newArrayList(
-                    td(counter.sample()),
+                    td(sampleId),
                     td(String.valueOf(counter.tumorQuality())),
                     td(String.valueOf(altSupport)),
                     td(format("%.3f", counter.vaf())),
@@ -295,10 +316,10 @@ public class VariantVis
                     td(format("%.2f", counter.readStrandBiasAlt().bias())),
                     td(String.valueOf(counter.jitter()[2]))));
 
-            for(int i = 0; i < columnElems.size(); ++i)
+            for(int j = 0; j < columnElems.size(); ++j)
             {
-                CssBuilder style = i == 0 ? firstColCellStyle : cellStyle;
-                columnElems.set(i, columnElems.get(i).withStyle(style.toString()));
+                CssBuilder style = j == 0 ? firstColCellStyle : cellStyle;
+                columnElems.set(j, columnElems.get(j).withStyle(style.toString()));
             }
 
             rows.add(tr().with(columnElems));

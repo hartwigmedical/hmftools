@@ -256,11 +256,6 @@ public class ReadContextCounter//  extends SimpleVariant
         return mVariantVis;
     }
 
-    public String sample()
-    {
-        return mSample;
-    }
-
     public double averageAltBaseQuality()
     {
         // excludes realigned

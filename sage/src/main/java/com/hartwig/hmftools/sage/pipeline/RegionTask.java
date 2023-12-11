@@ -185,7 +185,7 @@ public class RegionTask
 
     private void finaliseResults()
     {
-        mSageVariants.forEach(VariantVis::writeToHtmlFile);
+        mSageVariants.forEach(variant -> VariantVis.writeToHtmlFile(variant, mConfig.TumorIds, mConfig.Common.ReferenceIds));
         mSageVariants.stream().filter(x -> x.isPassing() && x.hasLocalPhaseSets()).forEach(x -> mPassingPhaseSets.addAll(x.localPhaseSets()));
 
         List<SageVariant> finalVariants = mSageVariants.stream()
