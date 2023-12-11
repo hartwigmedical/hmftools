@@ -82,7 +82,7 @@ class RunnerArgParser:
     def add_sample_id(self) -> None:
         self.parser.add_argument(
             "--sample_id",
-            help="If provided, will prepend `sample_id` to output filenames"
+            help="If provided, will prepend `sample_id` to the output filenames"
         )
 
     def add_compress_tsv_files(self):
