@@ -3,7 +3,7 @@
 # Introduction
 
 CUPPA is a tissue of origin classifier that uses features derived from whole genome sequencing (WGS; DNA) and/or whole 
-transcriptome sequencing data (WTS; RNA). The classifier component of CUPPA is built off the 
+transcriptome sequencing data (WTS; RNA). The Python classifier component of CUPPA is built off the 
 [scikit-learn](https://scikit-learn.org/) library and is based on multiple logistic regressions chained together. Please 
 see the section [Classifier structure](#classifier-structure) for more information.
 
@@ -78,7 +78,7 @@ CUPPA can be installed via `pip` using the below bash commands.
 
 ```commandline
 ## Download CUPPA
-git clone https://github.com/hartwigmedical/analysis/tree/master/cup/pycuppa/ ~
+git clone https://github.com/hartwigmedical/hmftools/tree/master/cuppa/src/main/resources/pycuppa/ ~
 
 ## Create python virtual environment
 python3 -m venv ~/pycuppa_env
@@ -126,6 +126,8 @@ The below table lists all possible arguments of `TrainingRunner` and `Prediction
 | `output_dir`                | Both             | **Required**. Output directory                                                                                                                                                             |
 | `metadata_path`             | TrainingRunner   | **Required**. Path to the metadata file with cancer type labels per sample                                                                                                                 |
 | `classifier_path`           | PredictionRunner | Path to the pickle file of the classifier. If not specified, the default classifier will be used located at `pycuppa/resources/cuppa_classifier.pickle.gz`                                 |
+| `sample_id`                 | PredictionRunner | If provided, will prepend `sample_id` to the output filenames when running `PredictionRunner`                                                                                              |
+| `compress_tsv_files`        | PredictionRunner | Compress tsv files with gzip? (will add .gz to the file extension)                                                                                                                         |
 | `using_old_features_format` | Both             | Are the features from `features_path` in the old input features format?                                                                                                                    |
 | `genome_version`            | Both             | Genome version, Can be 37 or 38. Used for getting the gen_pos bin names. Default: 37                                                                                                       |
 | `excl_chroms`               | Both             | Comma separated list of chromosomes to exclude from the gen_pos matrix. E.g. 'chrY' or 'chr1,chr2'. Default: ChrY,Y                                                                        |
