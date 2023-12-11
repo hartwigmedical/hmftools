@@ -2,7 +2,6 @@ package com.hartwig.hmftools.sage.sagevis;
 
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 
 import org.jfree.svg.SVGGraphics2D;
@@ -52,27 +51,5 @@ public class SvgUtil
         Rectangle2D boundingRect = getStringBoundsFromCenter(currentFont, string, centerX, centerY);
         canvas.drawString(string, (int) (centerX - 0.5 * boundingRect.getWidth()), (int) (centerY + 0.5 * boundingRect.getHeight()
                 - getFontDescent(currentFont)));
-    }
-
-    public static void drawForwardArrow(final SVGGraphics2D svgCanvas, double left, double top, double width, double height)
-    {
-        Path2D.Double forwardArrowPath = new Path2D.Double();
-        forwardArrowPath.moveTo(left, top);
-        forwardArrowPath.lineTo(left + width, top + 0.5 * height);
-        forwardArrowPath.lineTo(left, top + height);
-        forwardArrowPath.closePath();
-
-        svgCanvas.fill(forwardArrowPath);
-    }
-
-    public static void drawReverseArrow(final SVGGraphics2D svgCanvas, double left, double top, double width, double height)
-    {
-        Path2D.Double reverseArrowPath = new Path2D.Double();
-        reverseArrowPath.moveTo(left, top + 0.5 * height);
-        reverseArrowPath.lineTo(left + width, top);
-        reverseArrowPath.lineTo(left + width, top + height);
-        reverseArrowPath.closePath();
-
-        svgCanvas.fill(reverseArrowPath);
     }
 }

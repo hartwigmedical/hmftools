@@ -5,14 +5,13 @@ import static java.util.Map.entry;
 
 import static com.hartwig.hmftools.sage.sagevis.ColorUtil.PURPLE;
 import static com.hartwig.hmftools.sage.sagevis.ColorUtil.lighten;
-import static com.hartwig.hmftools.sage.sagevis.SvgUtil.drawForwardArrow;
-import static com.hartwig.hmftools.sage.sagevis.SvgUtil.drawReverseArrow;
 import static com.hartwig.hmftools.sage.sagevis.SvgUtil.drawStringFromCenter;
 import static com.hartwig.hmftools.sage.sagevis.SvgUtil.getStringBounds;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.Locale;
@@ -405,6 +404,28 @@ public class SvgRender
         }
 
         return svgCanvas;
+    }
+
+    public static void drawForwardArrow(final SVGGraphics2D svgCanvas, double left, double top, double width, double height)
+    {
+        Path2D.Double forwardArrowPath = new Path2D.Double();
+        forwardArrowPath.moveTo(left, top);
+        forwardArrowPath.lineTo(left + width, top + 0.5 * height);
+        forwardArrowPath.lineTo(left, top + height);
+        forwardArrowPath.closePath();
+
+        svgCanvas.fill(forwardArrowPath);
+    }
+
+    public static void drawReverseArrow(final SVGGraphics2D svgCanvas, double left, double top, double width, double height)
+    {
+        Path2D.Double reverseArrowPath = new Path2D.Double();
+        reverseArrowPath.moveTo(left, top + 0.5 * height);
+        reverseArrowPath.lineTo(left + width, top);
+        reverseArrowPath.lineTo(left + width, top + height);
+        reverseArrowPath.closePath();
+
+        svgCanvas.fill(reverseArrowPath);
     }
 
     public static SVGGraphics2D renderColoredBox(double sizePx, final Color color)
