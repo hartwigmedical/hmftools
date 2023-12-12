@@ -289,13 +289,27 @@ class FeatureLoaderNew(LoggerMixin):
         "Temozolomide (SBS11)"
     )
 
-    def _exclude_features(self, feat_info: pd.DataFrame) -> None:
+    def _mark_excluded_features(self, feat_info: pd.DataFrame) -> None:
         if self.verbose:
-            self.logger.debug("Excluding %s feature rows" % str(len(self.EXCLUDED_FEATURES)))
+            self.logger.debug("Excluding %i features: %s" % (
+                len(self.EXCLUDED_FEATURES),
+                ", ".join(self.EXCLUDED_FEATURES)
+            ))
 
         feat_info["is_excluded"] = feat_info["key_renamed"]\
             .isin(self.EXCLUDED_FEATURES)\
             .values
+
+    def _mark_duplicate_features(self, feat_info: pd.DataFrame):
+
+        feat_info["is_duplicated"] = feat_info["key_renamed"].duplicated()
+        duplicate_features = feat_info.query("is_duplicated")["feat_name"]
+
+        if self.verbose and len(duplicate_features)>0:
+            self.logger.warning("Removing %i duplicate features: %s" % (
+                len(duplicate_features),
+                ", ".join(duplicate_features)
+            ))
 
     ## Main ================================
     def parse_feature_names(self) -> pd.DataFrame:
@@ -309,7 +323,8 @@ class FeatureLoaderNew(LoggerMixin):
         self._rename_keys(feat_info)
         self._make_final_feat_names(feat_info)
         self._get_feat_types(feat_info)
-        self._exclude_features(feat_info)
+        self._mark_excluded_features(feat_info)
+        self._mark_duplicate_features(feat_info)
 
         return feat_info.drop(["category_renamed", "key_renamed"], axis=1)
 
@@ -333,8 +348,10 @@ class FeatureLoaderNew(LoggerMixin):
         df.index = feat_info["feat_name"].values
 
         ## Remove some features
-        df = df.loc[~feat_info["is_excluded"].values]
-
+        df = df.loc[
+            ~feat_info["is_excluded"].values &
+            ~feat_info["is_duplicated"].values
+        ]
         df = df.transpose()
 
         return CuppaFeatures(df)
