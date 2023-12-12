@@ -1,14 +1,11 @@
 package com.hartwig.hmftools.wisp.purity.variant;
 
-import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseValue;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_COUNT_MODEL_MIN_AVG_DEPTH;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_COUNT_MODEL_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SYNTHETIC_TUMOR_VAF;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_AVG_DEPTH;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_FRAG_VARIANTS;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.isRecomputed;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.HIGH_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.calcLimitOfDetection;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedProbability;
 import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.estimatedPurity;
