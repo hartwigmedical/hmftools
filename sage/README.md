@@ -75,7 +75,7 @@ Argument | Default | Description
 ---|-------|---
 disable_bqr | false | Disable base quality recalibration
 write_bqr_data | NA    | Write BQR calculations - for information purposes, or to re-use if Sage is run again with 'load_bqr_files'
-load_bqr_files | NA    | Attempts to reload previously generated BQR files
+load_bqr | NA    | Reload previously generated BQR files to avoid re-running this stage, or if running on a sliced BAM
 write_bqr_plot | NA    | Generate base-quality recalibration plots (requires R)
 bqr_sample_size | 2,000,000 | Sample size of each autosome
 bqr_max_alt_count | 3     | Max support of variant before it is considered likely to be real and not a sequencing error

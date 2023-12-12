@@ -180,14 +180,17 @@ public class BaseQualityRecalibration
         for(Map.Entry<BqrKey,Integer> entry : allQualityCounts.entrySet())
         {
             BqrKey key = entry.getKey();
+
+            if(key.Quality == 0)
+                continue;
+
             BqrKey refKey = new BqrKey(key.Ref, key.Ref, key.TrinucleotideContext, key.Quality);
 
             int refCount = refCountMap.getOrDefault(refKey, 0);
+
             if(refCount > 0)
             {
-                double recalibratedQual = key.Alt == key.Ref
-                        ? key.Quality : recalibratedQual(refCount, entry.getValue());
-
+                double recalibratedQual = key.Alt == key.Ref ? key.Quality : recalibratedQual(refCount, entry.getValue());
                 result.add(new BqrRecord(key, entry.getValue(), recalibratedQual));
             }
         }
@@ -263,6 +266,7 @@ public class BaseQualityRecalibration
         {
             final String tsvFile = generateBqrFilename(mConfig.outputDir(), sampleId);
             SG_LOGGER.debug("writing base quality recalibration file: {}", tsvFile);
+
 
             BqrFile.write(tsvFile, records.stream().collect(Collectors.toList()));
 
