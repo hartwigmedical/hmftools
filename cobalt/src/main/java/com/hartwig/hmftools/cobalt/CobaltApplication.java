@@ -104,7 +104,7 @@ public class CobaltApplication
 
             Table ratios;
 
-            switch (mConfig.mode())
+            switch(mConfig.mode())
             {
                 case TUMOR_ONLY:
                     final Table diploidRegions = new DiploidRegionLoader(mConfig.TumorOnlyDiploidBed, chromosomePosCodec).build();
