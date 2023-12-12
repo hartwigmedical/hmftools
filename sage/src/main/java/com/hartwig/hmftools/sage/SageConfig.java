@@ -5,12 +5,12 @@ import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeSource.addRe
 import static com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion.V37;
 import static com.hartwig.hmftools.common.region.SpecificRegions.addSpecificChromosomesRegionsConfig;
 import static com.hartwig.hmftools.common.samtools.BamUtils.addValidationStringencyOption;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
+import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.config.CommonConfig.SAMPLE_DATA_DIR_CFG;
 import static com.hartwig.hmftools.common.utils.config.ConfigUtils.addLoggingOptions;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ITEM_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.addThreadOptions;
-import static com.hartwig.hmftools.common.utils.TaskExecutor.parseThreads;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.pathFromFile;
 import static com.hartwig.hmftools.sage.SageCommon.SAMPLE_DELIM;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
@@ -36,9 +36,9 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeVersion;
 import com.hartwig.hmftools.common.region.SpecificRegions;
 import com.hartwig.hmftools.common.samtools.BamUtils;
 import com.hartwig.hmftools.common.utils.config.ConfigBuilder;
+import com.hartwig.hmftools.sage.bqr.BqrConfig;
 import com.hartwig.hmftools.sage.filter.FilterConfig;
 import com.hartwig.hmftools.sage.quality.QualityConfig;
-import com.hartwig.hmftools.sage.bqr.BqrConfig;
 
 import org.apache.logging.log4j.util.Strings;
 
@@ -73,6 +73,8 @@ public class SageConfig
     public final boolean TrackUMIs;
     public final boolean WriteFragmentLengths;
 
+    public final String VisOutputDir;
+
     // debug
     public final SpecificRegions SpecificChrRegions;
     public final Set<Integer> SpecificPositions;
@@ -99,6 +101,7 @@ public class SageConfig
     private static final String TRACK_UMIS = "track_umis";
     private static final String WRITE_FRAG_LENGTHS = "write_frag_lengths";
     private static final String MAX_PARTITION_SLICES = "max_partition_slices";
+    private static final String VIS_OUTPUT_DIR = "vis_output_dir";
 
     private static final String SPECIFIC_POSITIONS = "specific_positions";
     private static final String LOG_EVIDENCE_READS = "log_evidence_reads";
@@ -109,7 +112,7 @@ public class SageConfig
     {
         mIsValid = true;
         Version = version;
-        
+
         RefGenVersion = RefGenomeVersion.from(configBuilder);
 
         ReferenceIds = Lists.newArrayList();
@@ -163,6 +166,7 @@ public class SageConfig
 
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
+        VisOutputDir = configBuilder.hasValue(VIS_OUTPUT_DIR) ? configBuilder.getValue(VIS_OUTPUT_DIR) : null;
 
         SpecificPositions = Sets.newHashSet();
         if(configBuilder.hasValue(SPECIFIC_POSITIONS))
@@ -284,6 +288,7 @@ public class SageConfig
         configBuilder.addFlag(NO_FRAGMENT_SYNC, "Disable fragment reads sync in evidence phase");
         configBuilder.addFlag(TRACK_UMIS, "Record counts of UMI types");
         configBuilder.addFlag(WRITE_FRAG_LENGTHS, "Write fragment lengths to file");
+        configBuilder.addPath(VIS_OUTPUT_DIR, false, "Output dir for variant vis html files");
         addValidationStringencyOption(configBuilder);
 
         FilterConfig.registerConfig(configBuilder);
@@ -331,6 +336,7 @@ public class SageConfig
         BamStringency = ValidationStringency.DEFAULT_STRINGENCY;
         TrackUMIs = false;
         WriteFragmentLengths = false;
+        VisOutputDir = null;
         SyncFragments = true;
         SpecificPositions = Sets.newHashSet();
         LogEvidenceReads = false;

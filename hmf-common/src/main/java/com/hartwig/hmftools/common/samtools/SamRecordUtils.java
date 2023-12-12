@@ -166,4 +166,28 @@ public final class SamRecordUtils
 
         return mappedCoords;
     }
+
+    public static String getOrientationString(final SAMRecord read)
+    {
+        if(!read.getReadPairedFlag())
+            return "";
+
+        if(read.getReadUnmappedFlag() || read.getMateUnmappedFlag())
+            return "";
+
+        String firstStr;
+        String secondStr;
+        if(read.getFirstOfPairFlag())
+        {
+            firstStr = read.getReadNegativeStrandFlag() ? "R" : "F";
+            secondStr = read.getMateNegativeStrandFlag() ? "R" : "F";
+        }
+        else
+        {
+            firstStr = read.getMateNegativeStrandFlag() ? "R" : "F";
+            secondStr = read.getReadNegativeStrandFlag() ? "R" : "F";
+        }
+
+        return format("%s1%s2", firstStr, secondStr);
+    }
 }
