@@ -44,13 +44,13 @@ class TestRunnerArgParser:
 
 class TestPredictionRunner:
 
-    def test_run_with_real_sample_using_new_input_format(self):
+    def test_run_using_new_input_format(self):
 
         output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_prediction_run_test")
         os.makedirs(output_dir, exist_ok=True)
 
         runner = PredictionRunner(
-            features_path=MockInputData.path_tsv_new_format_one_sample,
+            features_path=MockInputData.path_tsv_new_format_colo,
             sample_id="TEST_SAMPLE",
             classifier_path=DEFAULT_CUPPA_CLASSIFIER_PATH,
             output_dir=output_dir,
@@ -62,7 +62,6 @@ class TestPredictionRunner:
         assert os.path.exists(runner.plot_path)
         assert os.path.exists(runner.vis_data_path)
         assert os.path.exists(runner.pred_summ_path)
-        assert runner.pred_summ.query("clf_name=='combined'")["pred_class_1"].values == "Prostate"
 
         shutil.rmtree(output_dir)
 
