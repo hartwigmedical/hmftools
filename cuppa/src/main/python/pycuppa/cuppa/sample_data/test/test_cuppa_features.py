@@ -29,7 +29,7 @@ class TestCuppaFeatures:
         model_path = "/Users/lnguyen/Hartwig/hartwigmedical/analysis/cup/pycuppa/data/models/Hartwig_PCAWG/29-pre_prod/04-NET_as_prefix/cuppa_classifier.pickle.gz"
         cuppa_classifier = CuppaClassifier.from_file(model_path)
 
-        features_path = MockInputData.path_tsv_new_format_one_sample
+        features_path = MockInputData.path_tsv_new_format_colo
 
         loader = FeatureLoaderNew(features_path)
         features = loader.load()
@@ -65,7 +65,8 @@ class TestFeatureLoaderOld:
 
 class TestFeatureLoaderNew:
 
-    loader = FeatureLoaderNew(MockInputData.path_tsv_new_format_one_sample)
+    #loader = FeatureLoaderNew(MockInputData.path_tsv_new_format_colo, verbose=True)
+    loader = FeatureLoaderNew(MockInputData.path_tsv_new_format_prostate, verbose=True)
     feat_info = loader.parse_feature_names()
 
     def test_exclude_features(self):
