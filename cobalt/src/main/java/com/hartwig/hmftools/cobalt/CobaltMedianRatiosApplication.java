@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.cobalt;
 
 import static com.hartwig.hmftools.cobalt.CobaltConfig.CB_LOGGER;
-import static com.hartwig.hmftools.cobalt.CobaltConfig.REFERENCE;
-import static com.hartwig.hmftools.cobalt.CobaltConfig.TUMOR;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.REFERENCE;
+import static com.hartwig.hmftools.common.utils.config.CommonConfig.TUMOR;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.OUTPUT_DIR;
 
 import java.io.File;

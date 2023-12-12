@@ -148,8 +148,8 @@ public class BamReadCounter
 
     private void sliceRegionTask(ThreadLocal<SamReader> samReaderSupplier, ChrBaseRegion region, ReadDepthAccumulator readDepthAccumulator)
     {
-        CB_LOGGER.printf(Level.INFO, "Accumulating read depth, region(%s:%,d-%,d)",
-                region.chromosome(), region.start(), region.end());
+        CB_LOGGER.debug("accumulating read depth, region(%s)", region);
+
         final SamReader reader = samReaderSupplier.get();
         BamSlicer bamSlicer = new BamSlicer(mMinMappingQuality, false, false, false);
         bamSlicer.slice(reader, region, samRecord -> processRead(samRecord, region, readDepthAccumulator));
@@ -166,7 +166,8 @@ public class BamReadCounter
         }
     }
 
-    static void accumulateAlignmentBlock(final ChrBaseRegion region, final ReadDepthAccumulator readDepthAccumulator,
+    static void accumulateAlignmentBlock(
+            final ChrBaseRegion region, final ReadDepthAccumulator readDepthAccumulator,
             final int alignmentBlockReadStart, final int alignmentBlockReferenceStart, final int alignmentBlockLength,
             byte[] readBases)
     {

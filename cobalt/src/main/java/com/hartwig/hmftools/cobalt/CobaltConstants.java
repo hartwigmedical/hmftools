@@ -2,6 +2,8 @@ package com.hartwig.hmftools.cobalt;
 
 public class CobaltConstants
 {
+    public static final String APP_NAME = "Cobalt";
+
     public static final int INVALID_VALUE_INDICATOR = -1;
     public static final double MIN_DIPLOID = 0.85;
     public static final double MAX_DIPLOID = 1.15;
