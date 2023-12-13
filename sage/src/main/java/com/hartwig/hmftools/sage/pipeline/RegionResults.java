@@ -90,6 +90,10 @@ public class RegionResults
         Arrays.stream(FragmentSyncType.values())
                 .filter(x -> mSyncCounts[x.ordinal()] > 0)
                 .forEach(x -> sj.add(format("%s=%d", x, mSyncCounts[x.ordinal()])));
-        SG_LOGGER.debug("fragment sync counts: {}", sj);
+
+        if(sj.length() > 0)
+        {
+            SG_LOGGER.debug("fragment sync counts: {}", sj);
+        }
     }
 }

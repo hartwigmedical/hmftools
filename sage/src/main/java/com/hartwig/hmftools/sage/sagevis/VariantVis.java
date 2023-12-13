@@ -223,7 +223,9 @@ public class VariantVis
                         getJavascript()).withStyle(BASE_FONT_STYLE.toString())).render();
 
         String filePath = Paths.get(firstVis.mConfig.VisOutputDir, filename).toString();
-        SG_LOGGER.info("Writing variant vis file {}", filePath);
+
+        SG_LOGGER.debug("writing variant vis file: {}", filePath);
+
         try
         {
             BufferedWriter outputWriter = createBufferedWriter(filePath, false);
@@ -233,12 +235,13 @@ public class VariantVis
         }
         catch(IOException e)
         {
-            SG_LOGGER.error("Failed to write output to {}: {}", filePath, e.toString());
+            SG_LOGGER.error("failed to write output file({}): {}", filePath, e.toString());
             System.exit(1);
         }
     }
 
-    private static DomContent renderSampleInfoTable(final List<ReadContextCounter> tumorReadCounters,
+    private static DomContent renderSampleInfoTable(
+            final List<ReadContextCounter> tumorReadCounters,
             final List<ReadContextCounter> normalReadCounters, final List<String> tumorIds, final List<String> normalIds)
     {
         CssBuilder sampleInfoTableStyle = CssBuilder.EMPTY.borderSpacing(CssSize.ZERO);

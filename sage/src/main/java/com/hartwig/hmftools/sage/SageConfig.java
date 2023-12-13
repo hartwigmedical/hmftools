@@ -166,7 +166,16 @@ public class SageConfig
 
         TrackUMIs = configBuilder.hasFlag(TRACK_UMIS);
         WriteFragmentLengths = configBuilder.hasFlag(WRITE_FRAG_LENGTHS);
-        VisOutputDir = configBuilder.hasValue(VIS_OUTPUT_DIR) ? configBuilder.getValue(VIS_OUTPUT_DIR) : null;
+
+        if(configBuilder.hasValue(VIS_OUTPUT_DIR))
+        {
+            String visDir = checkAddDirSeparator(configBuilder.getValue(VIS_OUTPUT_DIR));
+            VisOutputDir = SampleDataDir != null ? SampleDataDir + visDir : visDir;
+        }
+        else
+        {
+            VisOutputDir = null;
+        }
 
         SpecificPositions = Sets.newHashSet();
         if(configBuilder.hasValue(SPECIFIC_POSITIONS))
@@ -288,7 +297,7 @@ public class SageConfig
         configBuilder.addFlag(NO_FRAGMENT_SYNC, "Disable fragment reads sync in evidence phase");
         configBuilder.addFlag(TRACK_UMIS, "Record counts of UMI types");
         configBuilder.addFlag(WRITE_FRAG_LENGTHS, "Write fragment lengths to file");
-        configBuilder.addPath(VIS_OUTPUT_DIR, false, "Output dir for variant vis html files");
+        configBuilder.addPrefixedPath(VIS_OUTPUT_DIR, false, "Output dir for variant vis html files", SAMPLE_DATA_DIR_CFG);
         addValidationStringencyOption(configBuilder);
 
         FilterConfig.registerConfig(configBuilder);
