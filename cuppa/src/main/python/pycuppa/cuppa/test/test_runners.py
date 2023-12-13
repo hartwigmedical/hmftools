@@ -7,7 +7,7 @@ import pandas as pd
 
 from cuppa.runners import PredictionRunner, TrainingRunner, RunnerArgParser
 from cuppa.constants import DEFAULT_FUSION_OVERRIDES_PATH, DEFAULT_CUPPA_CLASSIFIER_PATH
-from cuppa.misc.mock_data import MockTrainingData, MockTrainingOutput, MockInputData, MockCvOutput
+from cuppa.misc.mock_data import MockTrainingData, MockCuppaClassifier, MockInputData, MockCvOutput
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 
 
@@ -46,7 +46,8 @@ class TestPredictionRunner:
 
     def test_run_using_new_input_format(self):
 
-        output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_prediction_run_test")
+        output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_test")
+        shutil.rmtree(output_dir, ignore_errors=True)
         os.makedirs(output_dir, exist_ok=True)
 
         runner = PredictionRunner(
@@ -65,20 +66,33 @@ class TestPredictionRunner:
 
         shutil.rmtree(output_dir)
 
-    def test_run_on_mock_data_without_outputting_files(self):
+    def test_run_on_mock_data(self):
+
+        output_dir = os.path.join(tempfile.gettempdir(), "pycuppa_test")
+        shutil.rmtree(output_dir, ignore_errors=True)
+        os.makedirs(output_dir, exist_ok=True)
+
+        path_cuppa_classifier = os.path.join(output_dir, "cuppa_classifier.pickle.gz")
+        MockCuppaClassifier.cuppa_classifier.to_file(path_cuppa_classifier)
 
         runner = PredictionRunner(
-            features_path="/PLACEHOLDER",
-            output_dir="/PLACEHOLDER",
-            classifier_path=MockTrainingOutput.path_cuppa_classifier
+            features_path="/PLACEHOLDER", ## TODO: change to tmp path
+            output_dir=output_dir, ## TODO: change to tmp path
+            classifier_path=path_cuppa_classifier,
+            using_old_features_format=True
         )
 
+        ## The old features format is as multiple LINX and PURPLE files.
+        ## However, these are not a resource in pycuppa. Instead, the mock training features data frame is used.
         runner.X = MockTrainingData.X
+
         runner.get_predictions()
         runner.get_pred_summ()
 
         assert isinstance(runner.predictions, CuppaPrediction)
         assert isinstance(runner.pred_summ, CuppaPredSummary)
+
+        shutil.rmtree(output_dir)
 
 
 class TestTrainingRunner:
