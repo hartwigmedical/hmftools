@@ -550,8 +550,7 @@ public class ReadContextCounter//  extends SimpleVariant
             matchType = MatchType.ALT;
 
         addVariantVisRecord(record, matchType, modifiedQualities, fragmentData);
-        if(mConfig.LogEvidenceReads)
-            logReadEvidence(record, matchType, readIndex, quality);
+        logReadEvidence(record, matchType, readIndex, quality);
 
         return readMatchType;
     }
@@ -627,7 +626,8 @@ public class ReadContextCounter//  extends SimpleVariant
         }
     }
 
-    private void addVariantVisRecord(final SAMRecord record, final MatchType matchType,
+    private void addVariantVisRecord(
+            final SAMRecord record, final MatchType matchType,
             @Nullable QualityCalculator.QualityScores modifiedQualities, @Nullable final FragmentData fragmentData)
     {
         if(mVariantVis != null)
