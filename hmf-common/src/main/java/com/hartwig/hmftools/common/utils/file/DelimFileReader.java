@@ -55,12 +55,12 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
     private Map<String, Integer> mColumnIndexMap = null;
     private List<String> mColumnNames = null;
 
-    public DelimFileReader(@NotNull BufferedReader reader)
+    public DelimFileReader(final BufferedReader reader)
     {
         mReader = reader;
     }
 
-    public DelimFileReader(@NotNull String filename)
+    public DelimFileReader(final String filename)
     {
         try
         {
@@ -72,7 +72,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         }
     }
 
-    public void setDelimiter(@NotNull String delimiter)
+    public void setDelimiter(final String delimiter)
     {
         if(mColumnIndexMap != null)
         {
@@ -86,7 +86,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
      *
      * @param columnNames name of columns
      */
-    public void setColumnNames(@NotNull List<String> columnNames)
+    public void setColumnNames(final List<String> columnNames)
     {
         if(mColumnIndexMap != null)
         {
@@ -104,7 +104,6 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         mColumnNames = Collections.unmodifiableList(columnNames);
     }
 
-    @NotNull
     public List<String> getColumnNames()
     {
         if(mColumnIndexMap == null)
@@ -135,7 +134,6 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         }
     }
 
-    @NotNull
     @Override
     public Iterator<Row> iterator()
     {
@@ -186,10 +184,11 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         };
     }
 
-    @NotNull
     public Stream<Row> stream()
     {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false);
+        return StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(
+                        iterator(), Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false);
     }
 
     public static class Row
@@ -208,7 +207,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             return valueIndicatesNull(parseRawValue(column));
         }
 
-        public @NotNull String get(String column)
+        public String get(String column)
         {
             String v = parseRawValue(column);
             if(valueIndicatesNull(v))
@@ -299,7 +298,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             return isNull(column.name());
         }
 
-        public @NotNull String get(Enum<?> column)
+        public String get(Enum<?> column)
         {
             return get(column.name());
         }
@@ -363,7 +362,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
         }
 
         // get the value that is stored in the row
-        private @NotNull String parseRawValue(String column)
+        private String parseRawValue(String column)
         {
             Integer index = mColumnIndexMap.get(column);
             if(index == null)
@@ -373,7 +372,7 @@ public class DelimFileReader implements Iterable<DelimFileReader.Row>, AutoClose
             return mValues[index];
         }
 
-        private static boolean valueIndicatesNull(@NotNull String rawValue)
+        private static boolean valueIndicatesNull(String rawValue)
         {
             return rawValue.isEmpty() || rawValue.equals("null") || rawValue.equals("NULL");
         }
