@@ -1,6 +1,5 @@
 package com.hartwig.hmftools.pave;
 
-import static com.hartwig.hmftools.common.codon.AminoAcids.AMINO_ACID_TO_CODON_MAP;
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.START_CODON;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_CODON_1;
@@ -24,15 +23,12 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOS
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAINED;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
-import static com.hartwig.hmftools.pave.ImpactClassifier.checkStopStartCodons;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidCodon;
 import static com.hartwig.hmftools.pave.ImpactTestUtils.getAminoAcidsCodons;
-import static com.hartwig.hmftools.pave.ProteinUtils.getExtraBases;
+import static com.hartwig.hmftools.pave.impact.ProteinUtils.getExtraBases;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
-
-import java.util.List;
 
 import com.hartwig.hmftools.common.codon.AminoAcids;
 import com.hartwig.hmftools.common.fusion.FusionCommon;
@@ -40,6 +36,8 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.pave.impact.ImpactClassifier;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.impact;
 
 import static com.hartwig.hmftools.common.gene.CodingBaseData.PHASE_NONE;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.CODING;
@@ -12,6 +12,7 @@ import java.util.StringJoiner;
 
 import com.hartwig.hmftools.common.gene.TranscriptCodingType;
 import com.hartwig.hmftools.common.gene.TranscriptRegionType;
+import com.hartwig.hmftools.pave.VariantData;
 
 public class CodingContext
 {

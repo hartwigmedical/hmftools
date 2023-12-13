@@ -27,6 +27,8 @@ import static junit.framework.TestCase.assertTrue;
 
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.test.MockRefGenome;
+import com.hartwig.hmftools.pave.impact.ImpactClassifier;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 import org.junit.Test;
 

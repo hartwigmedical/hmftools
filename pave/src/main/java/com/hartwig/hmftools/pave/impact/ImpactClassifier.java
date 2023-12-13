@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.impact;
 
 import static com.hartwig.hmftools.common.codon.Codons.START_AMINO_ACID;
 import static com.hartwig.hmftools.common.codon.Codons.STOP_AMINO_ACID;
@@ -16,11 +16,11 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOU
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.THREE_PRIME_UTR;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isSplice;
-import static com.hartwig.hmftools.pave.HgvsProtein.HGVS_SPLICE_UNKNOWN;
-import static com.hartwig.hmftools.pave.HgvsProtein.reportProteinImpact;
-import static com.hartwig.hmftools.pave.PaveUtils.withinTransRange;
-import static com.hartwig.hmftools.pave.SpliceClassifier.checkStraddlesSpliceRegion;
-import static com.hartwig.hmftools.pave.SpliceClassifier.isWithinSpliceRegion;
+import static com.hartwig.hmftools.pave.impact.HgvsProtein.HGVS_SPLICE_UNKNOWN;
+import static com.hartwig.hmftools.pave.impact.HgvsProtein.reportProteinImpact;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.withinTransRange;
+import static com.hartwig.hmftools.pave.impact.SpliceClassifier.checkStraddlesSpliceRegion;
+import static com.hartwig.hmftools.pave.impact.SpliceClassifier.isWithinSpliceRegion;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +30,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.pave.VariantData;
 
 public class ImpactClassifier
 {

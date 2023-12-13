@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.impact;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -21,10 +21,11 @@ import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_END;
 import static com.hartwig.hmftools.common.utils.sv.StartEndIterator.SE_START;
 import static com.hartwig.hmftools.pave.PaveConstants.PROMOTOR_UPSTREAM_DISTANCE;
 import static com.hartwig.hmftools.pave.PaveConstants.PROMOTOR_UPSTREAM_GENE_IDS;
-import static com.hartwig.hmftools.pave.ProteinUtils.getOpenCodonBases;
+import static com.hartwig.hmftools.pave.impact.ProteinUtils.getOpenCodonBases;
 
 import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
+import com.hartwig.hmftools.pave.VariantData;
 
 public final class CodingUtils
 {

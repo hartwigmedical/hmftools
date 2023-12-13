@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.impact;
 
 public enum SpliceImpactType
 {

@@ -1,8 +1,8 @@
 package com.hartwig.hmftools.pave.compare;
 
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.PaveUtils.createRightAlignedVariant;
-import static com.hartwig.hmftools.pave.PaveUtils.findVariantImpacts;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.createRightAlignedVariant;
+import static com.hartwig.hmftools.pave.impact.PaveUtils.findVariantImpacts;
 import static com.hartwig.hmftools.pave.VariantData.NO_LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasCodingEffectDiff;
 import static com.hartwig.hmftools.pave.compare.ComparisonUtils.hasHgvsCodingDiff;
@@ -22,11 +22,11 @@ import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.utils.PerformanceCounter;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.pave.GeneDataCache;
-import com.hartwig.hmftools.pave.ImpactClassifier;
+import com.hartwig.hmftools.pave.impact.ImpactClassifier;
 import com.hartwig.hmftools.pave.annotation.Reportability;
 import com.hartwig.hmftools.pave.VariantData;
-import com.hartwig.hmftools.pave.VariantImpactBuilder;
-import com.hartwig.hmftools.pave.VariantTransImpact;
+import com.hartwig.hmftools.pave.impact.VariantImpactBuilder;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 public class SampleComparisonTask implements Callable
 {

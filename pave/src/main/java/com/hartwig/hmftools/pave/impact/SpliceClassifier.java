@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.impact;
 
 import static java.lang.Math.abs;
 
@@ -14,12 +14,12 @@ import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_ACCEPTOR_POSITIONS;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_DONOR_POSITIONS;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_EXON_RANGE;
 import static com.hartwig.hmftools.pave.PaveConstants.SPLICE_REGION_INTRON_RANGE;
-import static com.hartwig.hmftools.pave.SpliceImpactType.BASE_CHANGE;
-import static com.hartwig.hmftools.pave.SpliceImpactType.BASE_SHIFT;
-import static com.hartwig.hmftools.pave.SpliceImpactType.HOMOLOGY_SHIFT;
-import static com.hartwig.hmftools.pave.SpliceImpactType.OUTSIDE_RANGE;
-import static com.hartwig.hmftools.pave.SpliceImpactType.REGION_DELETED;
-import static com.hartwig.hmftools.pave.SpliceImpactType.UNKNOWN;
+import static com.hartwig.hmftools.pave.impact.SpliceImpactType.BASE_CHANGE;
+import static com.hartwig.hmftools.pave.impact.SpliceImpactType.BASE_SHIFT;
+import static com.hartwig.hmftools.pave.impact.SpliceImpactType.HOMOLOGY_SHIFT;
+import static com.hartwig.hmftools.pave.impact.SpliceImpactType.OUTSIDE_RANGE;
+import static com.hartwig.hmftools.pave.impact.SpliceImpactType.REGION_DELETED;
+import static com.hartwig.hmftools.pave.impact.SpliceImpactType.UNKNOWN;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -28,6 +28,7 @@ import com.hartwig.hmftools.common.gene.ExonData;
 import com.hartwig.hmftools.common.gene.TranscriptData;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.pave.VariantData;
 
 import org.apache.commons.compress.utils.Lists;
 

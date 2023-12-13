@@ -4,14 +4,14 @@ import static com.hartwig.hmftools.common.variant.CodingEffect.NONE;
 import static com.hartwig.hmftools.common.variant.CodingEffect.UNDEFINED;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.UPSTREAM_GENE;
-import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DUP;
-import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_INS;
+import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_TYPE_DUP;
+import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_TYPE_INS;
 
 
 import com.hartwig.hmftools.common.variant.CodingEffect;
 import com.hartwig.hmftools.common.variant.impact.VariantImpact;
 import com.hartwig.hmftools.pave.VariantData;
-import com.hartwig.hmftools.pave.VariantTransImpact;
+import com.hartwig.hmftools.pave.impact.VariantTransImpact;
 
 public final class ComparisonUtils
 {

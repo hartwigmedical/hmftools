@@ -1,8 +1,9 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.impact;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.hartwig.hmftools.pave.VariantData;
 
 public class PhasedVariants
 {

@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.impact;
 
 import static com.hartwig.hmftools.common.codon.Codons.isCodonMultiple;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;

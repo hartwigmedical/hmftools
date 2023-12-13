@@ -5,11 +5,13 @@ import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_3P;
 import static com.hartwig.hmftools.common.gene.TranscriptCodingType.UTR_5P;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.EXONIC;
 import static com.hartwig.hmftools.common.gene.TranscriptRegionType.INTRONIC;
-import static com.hartwig.hmftools.common.gene.TranscriptRegionType.UPSTREAM;
 import static com.hartwig.hmftools.common.genome.region.Strand.POS_STRAND;
 import static com.hartwig.hmftools.common.test.GeneTestUtils.CHR_1;
 
 import static junit.framework.TestCase.assertEquals;
+
+import com.hartwig.hmftools.pave.impact.CodingContext;
+import com.hartwig.hmftools.pave.impact.HgvsCoding;
 
 import org.junit.Test;
 
