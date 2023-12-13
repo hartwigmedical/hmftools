@@ -1,6 +1,5 @@
 import pandas as pd
-from cuppa.classifier.cuppa_classifier import CuppaClassifier
-from cuppa.misc.mock_data import MockTrainingOutput
+from cuppa.misc.mock_data import MockCuppaClassifier
 from cuppa.classifier.feature_importance import FeatureImportance
 
 
@@ -9,7 +8,7 @@ class TestFeatureImportance:
     #from cuppa.classifier.test.test_feature_importance import TestFeatureImportance
     #self = TestFeatureImportance
 
-    cuppa_classifier = MockTrainingOutput.cuppa_classifier
+    cuppa_classifier = MockCuppaClassifier.cuppa_classifier
     feat_imp = FeatureImportance.from_cuppa_classifier(cuppa_classifier)
 
     def test_summarize_outputs_expected_columns(self):

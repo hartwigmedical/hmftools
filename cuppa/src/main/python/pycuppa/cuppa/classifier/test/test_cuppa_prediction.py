@@ -1,13 +1,13 @@
 import pandas as pd
 from cuppa.classifier.cuppa_prediction import CuppaPredictionBuilder, CuppaPrediction, CuppaPredSummaryBuilder, CuppaPredSummary
-from cuppa.misc.mock_data import MockCvOutput, MockTrainingOutput, MockTrainingData
+from cuppa.misc.mock_data import MockCvOutput, MockCuppaClassifier, MockTrainingData
 
 
 class TestCuppaPredictionBuilder:
     #from cuppa.classifier.test.test_cuppa_prediction import TestCuppaPredictionBuilder
     #self=TestCuppaPredictionBuilder
 
-    cuppa_classifier = MockTrainingOutput.cuppa_classifier
+    cuppa_classifier = MockCuppaClassifier.cuppa_classifier
     X = MockTrainingData.X
     cuppa_classifier.cv_performance = MockCvOutput.performance
 

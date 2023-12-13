@@ -1,6 +1,6 @@
 import pandas as pd
 
-from cuppa.misc.mock_data import MockTrainingData, MockTrainingOutput
+from cuppa.misc.mock_data import MockTrainingData, MockCuppaClassifier
 from cuppa.components.prob_combiner import ProbCombiner
 
 
@@ -39,7 +39,7 @@ class TestProbCombiner:
         assert probs_combined["Breast"][0] == 0.998
 
     def _probs_from_mock_data(self):
-        cuppa_classifier = MockTrainingOutput.cuppa_classifier
+        cuppa_classifier = MockCuppaClassifier.cuppa_classifier
         X = MockTrainingData.X
         cuppa_classifier._set_sample_sexes(X)
         dna_rna_combined_probs = cuppa_classifier.transform(X, until_step="meta_clfs")
