@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from cuppa.misc.mock_data import MockCuppaClassifier, MockTrainingData, MockProbsFromFitTransform
@@ -21,7 +22,7 @@ class TestMissingFeaturesHandler:
 
     def test_fill_when_no_rna_features_are_present(self):
         X = pd.DataFrame(
-            [[1, 1, 1, 1, 1]],
+            [[1, 1, 1, 1, 0]],
             columns=["gen_pos.feat_1", "snv96.feat_1", "event.feat_1", "sig.feat_1", "UNUSED_FEATURE"],
             index=["sample_1"]
         )
@@ -47,8 +48,38 @@ class TestMissingFeaturesHandler:
         assert len(handler.removed_features) == 1
         assert len(handler.added_features) == 8
 
-        assert X_filled[required_rna_features].isna().all()
+        assert X_filled[required_rna_features].isna().iloc[0].all()
         assert X_filled["gen_pos.feat_2"][0] == 0
+
+    def test_fill_when_some_samples_lack_rna_features(self):
+        X = pd.DataFrame(
+            [
+                [1, 1, 1, 1, 1],
+                [1, 1, 1, 1, np.nan],
+            ],
+            columns=["gen_pos.feat_1", "snv96.feat_1", "event.feat_1", "sig.feat_1", "gene_exp.feat_1"],
+            index=["sample_1", "sample_2"]
+        )
+
+        required_dna_features = [
+            "gen_pos.feat_1",   "gen_pos.feat_2",
+            "snv96.feat_1",     "snv96.feat_2",
+            "event.feat_1",     "event.feat_2",
+            "sig.feat_1",       "sig.feat_2",
+        ]
+
+        required_rna_features = [
+            "gene_exp.feat_1",  "gene_exp.feat_2",
+            "alt_sj.feat_1",    "alt_sj.feat_2"
+        ]
+
+        required_features = pd.Series(required_dna_features + required_rna_features)
+        handler = MissingFeaturesHandler(required_features=required_features)
+
+        X_filled = handler.fill_missing_cols(X)
+
+        assert X_filled.loc["sample_1", "gene_exp.feat_2"] == 0
+        assert X_filled.loc["sample_2", required_rna_features].isna().all()
 
     def test_fill_missing_features_from_cuppa_classifier(self):
         classifier = MockCuppaClassifier.cuppa_classifier
