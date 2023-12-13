@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 import com.hartwig.hmftools.common.cuppa2.Categories;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
+import com.hartwig.hmftools.common.cuppa2.CuppaVisDataEntry;
+import com.hartwig.hmftools.common.cuppa2.CuppaVisData;
 import com.hartwig.hmftools.patientdb.database.hmfpatients.tables.records.CuppaRecord;
 
 import org.jetbrains.annotations.NotNull;
@@ -61,7 +61,7 @@ public class CuppaDAO
 
     void writeCuppa2(
             @NotNull final String sample,
-            @NotNull CuppaPredictions cuppaPredictions,
+            @NotNull CuppaVisData visData,
             @NotNull final int topNProbs
     ) throws IOException
     {
@@ -80,20 +80,20 @@ public class CuppaDAO
 
         LocalDateTime timestamp = LocalDateTime.now();
 
-        cuppaPredictions = cuppaPredictions
+        visData = visData
                 .subsetByDataType(Categories.DataType.PROB)
                 .getTopPredictions(topNProbs)
                 .sortByRank();
 
-        for(CuppaPredictionEntry cuppaPredictionEntry : cuppaPredictions.PredictionEntries)
+        for(CuppaVisDataEntry visDataEntry : visData.VisDataEntries)
         {
             inserter.values(
                     timestamp,
-                    cuppaPredictionEntry.SampleId,
-                    parseClfName(cuppaPredictionEntry.ClfName),
-                    cuppaPredictionEntry.CancerType,
-                    parseDouble(cuppaPredictionEntry.DataValue),
-                    cuppaPredictionEntry.Rank,
+                    visDataEntry.SampleId,
+                    parseClfName(visDataEntry.ClfName),
+                    visDataEntry.CancerType,
+                    parseDouble(visDataEntry.DataValue),
+                    visDataEntry.Rank,
                     (byte) 0
             );
         }

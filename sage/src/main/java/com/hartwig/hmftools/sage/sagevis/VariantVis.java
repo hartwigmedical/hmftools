@@ -65,6 +65,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -216,7 +217,7 @@ public class VariantVis
                 body(
                         firstVis.renderVariantInfo(
                                 sageVariant.totalQuality(),
-                                firstCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge()),
+                                firstCounter.readEdgeDistance().maxAltDistanceFromUnclippedEdge(), sageVariant.filters()),
                         verticalSpacer,
                         renderSampleInfoTable(tumorReadCounters, normalReadCounters, tumorIds, normalIds),
                         readTable,
@@ -405,7 +406,7 @@ public class VariantVis
         records.add(new ReadEvidenceRecord(read, fragment, matchType, modifiedQualities, mReadContext.Position));
     }
 
-    private DomContent renderVariantInfo(int totalTumorQuality, int maxDistanceFromEdge)
+    private DomContent renderVariantInfo(int totalTumorQuality, int maxDistanceFromEdge, final Set<String> filters)
     {
         CssBuilder horizontalSpacerStyle = CssBuilder.EMPTY.width(VARIANT_INFO_SPACING_SIZE).display("inline-block");
         CssBuilder coreStyle = CssBuilder.EMPTY.fontWeight("bold");
@@ -417,6 +418,10 @@ public class VariantVis
         {
             repeatStr = format("REPEAT = %dx%s", mReadContext.RepeatCount, mReadContext.Repeat);
         }
+
+        String filterStr = "FILTER = PASS";
+        if(!filters.isEmpty())
+            filterStr = "FILTER = " + filters.stream().collect(Collectors.joining(","));
 
         IndexedBases indexedBases = mReadContext.indexedBases();
         List<DomContent> contextElems = Lists.newArrayList();
@@ -437,6 +442,8 @@ public class VariantVis
                 td(repeatStr),
                 td(horizontalSpacer),
                 td("MED = " + maxDistanceFromEdge),
+                td(horizontalSpacer),
+                td(filterStr),
                 td(horizontalSpacer),
                 td().with(contextElems));
 

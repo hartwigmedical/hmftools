@@ -78,7 +78,7 @@ public final class TestOrangeReportFactory
                 .lilac(ImmutableLilacRecord.builder().qc(Strings.EMPTY).build())
                 .virusInterpreter(ImmutableVirusInterpreterData.builder().build())
                 .chord(OrangeConversion.convert(ChordTestFactory.createMinimalTestChordAnalysis()))
-                .cuppa(TestCuppaFactory.createMinimalCuppaData())
+                .cuppa2(TestCuppaFactory.createMinimalCuppa2Data())
                 .plots(createMinimalOrangePlots());
     }
 
