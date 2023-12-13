@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.sagevis;
+package com.hartwig.hmftools.sage.vis;
 
 import static com.hartwig.hmftools.common.region.BaseRegion.positionWithin;
 

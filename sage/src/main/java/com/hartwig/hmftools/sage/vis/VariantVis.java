@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.sagevis;
+package com.hartwig.hmftools.sage.vis;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -20,20 +20,20 @@ import static com.hartwig.hmftools.common.utils.Doubles.round;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.closeBufferedWriter;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.sage.SageCommon.SG_LOGGER;
-import static com.hartwig.hmftools.sage.sagevis.ColorUtil.DARK_BLUE;
-import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.FINAL_QUAL_COL;
-import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.MAP_QUAL_COL;
-import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.MATE_TYPE_COL;
-import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.MOD_BASE_QUAL_COL;
-import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.MOD_MAP_QUAL_COL;
-import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.ORIENTATION_COL;
-import static com.hartwig.hmftools.sage.sagevis.ReadTableColumn.RAW_BASE_QUAL_COL;
-import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.BASE_FONT_STYLE;
-import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
-import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.READ_HEIGHT_PX;
-import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
-import static com.hartwig.hmftools.sage.sagevis.SvgRender.renderBaseSeq;
-import static com.hartwig.hmftools.sage.sagevis.SvgRender.renderCoords;
+import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_BLUE;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.FINAL_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MAP_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MATE_TYPE_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MOD_BASE_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.MOD_MAP_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.ORIENTATION_COL;
+import static com.hartwig.hmftools.sage.vis.ReadTableColumn.RAW_BASE_QUAL_COL;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.BASE_FONT_STYLE;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.DISPLAY_EVERY_NTH_COORD;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.VARIANT_INFO_SPACING_SIZE;
+import static com.hartwig.hmftools.sage.vis.SvgRender.renderBaseSeq;
+import static com.hartwig.hmftools.sage.vis.SvgRender.renderCoords;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_BASE_QUAL;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_MAP_QUALITY;
 import static com.hartwig.hmftools.sage.vcf.VariantVCF.AVG_NM_COUNT;
@@ -196,7 +196,7 @@ public class VariantVis
         int totalReadCount = tumorTotalReadCount + normalTotalReadCount;
         if(totalReadCount == 0)
         {
-            SG_LOGGER.info("Not writing variant vis file {}, because there are no associated reads", filename);
+            SG_LOGGER.info("not writing variant vis file {}, because there are no associated reads", filename);
             return;
         }
 
@@ -342,7 +342,7 @@ public class VariantVis
                 return currentRef;
             }
 
-            InputStream inputStream = VariantVis.class.getResourceAsStream("/sagevis/sagevis.js");
+            InputStream inputStream = VariantVis.class.getResourceAsStream("/vis/sagevis.js");
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             String scriptContent = reader.lines().collect(Collectors.joining("\n"));
             return script(rawHtml(scriptContent)).attr("type", "text/javascript");

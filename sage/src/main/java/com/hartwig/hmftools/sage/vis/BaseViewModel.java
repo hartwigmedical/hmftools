@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.sagevis;
+package com.hartwig.hmftools.sage.vis;
 
 public class BaseViewModel
 {

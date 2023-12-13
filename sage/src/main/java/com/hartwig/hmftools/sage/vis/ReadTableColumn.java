@@ -1,18 +1,18 @@
-package com.hartwig.hmftools.sage.sagevis;
+package com.hartwig.hmftools.sage.vis;
 
 import static java.lang.Math.abs;
 
 import static com.hartwig.hmftools.common.samtools.CigarUtils.getMateAlignmentEnd;
 import static com.hartwig.hmftools.common.samtools.SamRecordUtils.NO_POSITION;
-import static com.hartwig.hmftools.sage.sagevis.ColorUtil.DARK_GREEN;
-import static com.hartwig.hmftools.sage.sagevis.ColorUtil.PURPLE;
-import static com.hartwig.hmftools.sage.sagevis.ColorUtil.interpolateColors;
-import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.MAX_MAPQ_SHADING_CUTTOFF;
-import static com.hartwig.hmftools.sage.sagevis.SageVisConstants.READ_HEIGHT_PX;
-import static com.hartwig.hmftools.sage.sagevis.SvgRender.FORWARD_STRAND_COLOR;
-import static com.hartwig.hmftools.sage.sagevis.SvgRender.OVERLAPPING_FRAGMENT_BORDER_COLOR;
-import static com.hartwig.hmftools.sage.sagevis.SvgRender.REVERSE_STRAND_COLOR;
-import static com.hartwig.hmftools.sage.sagevis.SvgRender.renderColoredBox;
+import static com.hartwig.hmftools.sage.vis.ColorUtil.DARK_GREEN;
+import static com.hartwig.hmftools.sage.vis.ColorUtil.PURPLE;
+import static com.hartwig.hmftools.sage.vis.ColorUtil.interpolateColors;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.MAX_MAPQ_SHADING_CUTTOFF;
+import static com.hartwig.hmftools.sage.vis.SageVisConstants.READ_HEIGHT_PX;
+import static com.hartwig.hmftools.sage.vis.SvgRender.FORWARD_STRAND_COLOR;
+import static com.hartwig.hmftools.sage.vis.SvgRender.OVERLAPPING_FRAGMENT_BORDER_COLOR;
+import static com.hartwig.hmftools.sage.vis.SvgRender.REVERSE_STRAND_COLOR;
+import static com.hartwig.hmftools.sage.vis.SvgRender.renderColoredBox;
 
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.td;
