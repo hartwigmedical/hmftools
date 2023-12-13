@@ -1,12 +1,11 @@
 import pandas as pd
 import os
-import joblib
 
 from cuppa.classifier.cuppa_classifier import CuppaClassifier
 from cuppa.classifier.cuppa_prediction import CuppaPrediction, CuppaPredSummary
 from cuppa.performance.performance_stats import PerformanceStats
 from cuppa.misc.cached_class_property import cached_class_property
-from cuppa.constants import MOCK_DATA_DIR
+from cuppa.constants import MOCK_DATA_DIR, DEFAULT_FUSION_OVERRIDES_PATH
 
 """
 @cached_class_property is used throughout this module so that data is only loaded when actually needed (lazy loading) 
@@ -41,9 +40,9 @@ class MockTrainingData:
 
 class MockCvOutput:
 
-    path_predictions = os.path.join(MOCK_DATA_DIR, "training_output/cv/predictions.tsv")
-    path_pred_summ = os.path.join(MOCK_DATA_DIR, "training_output/cv/pred_summ.tsv")
-    path_performance = os.path.join(MOCK_DATA_DIR, "training_output/cv/performance.tsv")
+    path_predictions = os.path.join(MOCK_DATA_DIR, "cv_output/predictions.tsv")
+    path_pred_summ = os.path.join(MOCK_DATA_DIR, "cv_output/pred_summ.tsv")
+    path_performance = os.path.join(MOCK_DATA_DIR, "cv_output/performance.tsv")
 
     path_predictions_for_vis = os.path.join(MOCK_DATA_DIR, "visualization/predictions.tsv.gz")
 
@@ -64,13 +63,15 @@ class MockCvOutput:
         return CuppaPrediction.from_tsv(self.path_predictions_for_vis)
 
 
-class MockTrainingOutput:
-
-    path_cuppa_classifier = os.path.join(MOCK_DATA_DIR, "training_output/cuppa_classifier.pickle.gz")
+class MockCuppaClassifier:
 
     @cached_class_property
     def cuppa_classifier(self) -> CuppaClassifier:
-        return joblib.load(self.path_cuppa_classifier)
+
+        classifier = CuppaClassifier(fusion_overrides_path=DEFAULT_FUSION_OVERRIDES_PATH)
+        classifier.fit(X = MockTrainingData.X, y = MockTrainingData.y)
+
+        return classifier
 
 
 class MockProbsFromFitTransform:
