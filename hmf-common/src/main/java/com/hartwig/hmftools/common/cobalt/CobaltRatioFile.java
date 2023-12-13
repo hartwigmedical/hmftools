@@ -33,10 +33,8 @@ public final class CobaltRatioFile
     {
         chromosome,
         position,
-        referenceReadDepth, // old column name for backwards compatibility
-        referenceReadCount,
+        referenceReadDepth,
         tumorReadDepth,
-        tumorReadCount,
         referenceGCRatio,
         tumorGCRatio,
         referenceGCDiploidRatio,
@@ -47,6 +45,10 @@ public final class CobaltRatioFile
     private static final DecimalFormat FORMAT = new DecimalFormat("#.####", new DecimalFormatSymbols(Locale.ENGLISH));
 
     private static final String EXTENSION = ".cobalt.ratio.tsv.gz";
+
+    // old column names for backwards compatibility
+    private static final String COL_REF_READ_COUNT  = "referenceReadCount";
+    private static final String COL_TUMOR_READ_COUNT  = "tumorReadCount";
 
     @Deprecated
     public static final String TUMOR_ONLY_REFERENCE_SAMPLE = "DIPLOID";
@@ -122,8 +124,8 @@ public final class CobaltRatioFile
             Integer tumorGcContentIndex = reader.getColumnIndex(Column.tumorGCContent);
 
             // v1.15 backwards compatibility with conversion below
-            Integer refReadCountIndex = reader.getColumnIndex(Column.referenceReadCount);
-            Integer tumorReadCountIndex = reader.getColumnIndex(Column.tumorReadCount);
+            Integer refReadCountIndex = reader.getColumnIndex(COL_REF_READ_COUNT);
+            Integer tumorReadCountIndex = reader.getColumnIndex(COL_TUMOR_READ_COUNT);
 
             boolean useReadCount = refReadCountIndex != null && tumorReadCountIndex != null;
             boolean hasGcContent = refGcContentIndex != null && tumorGcContentIndex != null;
