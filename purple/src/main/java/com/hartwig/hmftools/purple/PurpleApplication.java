@@ -566,16 +566,19 @@ public class PurpleApplication
 
         if(mConfig.runTumor())
         {
-            somaticDriverCatalog.addAll(somaticStream.buildDrivers(geneCopyNumberMap));
+            List<DriverCatalog> somaticDrivers = somaticStream.buildDrivers(geneCopyNumberMap);
 
-            final AmplificationDrivers amplificationDrivers = new AmplificationDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
+            somaticDriverCatalog.addAll(somaticDrivers);
+
+            List<DriverCatalog> ampDrivers = AmplificationDrivers.findAmplifications(
+                    purityContext.qc().status(), purityContext.qc().amberGender(), mReferenceData.DriverGenes,
+                    purityContext.bestFit().ploidy(), geneCopyNumbers, mConfig.TargetRegionsMode);
+
+            somaticDriverCatalog.addAll(ampDrivers);
+
             final DeletionDrivers delDrivers = new DeletionDrivers(purityContext.qc().status(), mReferenceData.DriverGenes);
 
             somaticDriverCatalog.addAll(delDrivers.deletions(geneCopyNumbers, mConfig.TargetRegionsMode));
-
-            // partial AMPs are only allowed for WGS
-            somaticDriverCatalog.addAll(amplificationDrivers.amplifications(
-                    purityContext.bestFit().ploidy(), geneCopyNumbers, mConfig.TargetRegionsMode));
 
             DriverCatalogFile.write(DriverCatalogFile.generateFilenameForWriting(mConfig.OutputDir, tumorSample, true), somaticDriverCatalog);
         }
