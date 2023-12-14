@@ -146,8 +146,7 @@ public class IndelDeduper
 
         List<VariantData> dedupedVariants = Lists.newArrayListWithCapacity(dedupGroup.size());
 
-        int indelPosStart = indel.position();
-        int indelPosEnd = indel.positionEnd();
+        int indelPosition = indel.position();
 
         List<VariantData> overlappedIndels = Lists.newArrayList();
 
@@ -164,7 +163,7 @@ public class IndelDeduper
             // treat old indel dedup as PASS for this test
             hasPassingVariant |= variant.Variant.filters().size() == 1 && variant.Variant.filters().contains(DEDUP_INDEL_FILTER_OLD);
 
-            if(variant.Variant.isDelete() && positionsOverlap(indelPosStart, indelPosEnd, variant.position(), variant.positionEnd()))
+            if(variant.Variant.isDelete() && positionsOverlap(indelPosition, indelPosition, variant.position(), variant.positionEnd()))
             {
                 dedupGroup.remove(index);
                 overlappedIndels.add(variant);
