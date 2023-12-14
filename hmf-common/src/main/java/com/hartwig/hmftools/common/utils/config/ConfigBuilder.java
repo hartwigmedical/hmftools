@@ -338,8 +338,6 @@ public class ConfigBuilder
     {
         List<String> output = Lists.newArrayList();
 
-        output.add("registered config items:");
-
         for(ConfigItem item : mItems)
         {
             StringBuilder sb = new StringBuilder();
@@ -360,6 +358,8 @@ public class ConfigBuilder
         }
 
         Collections.sort(output);
+
+        output.add(0, "registered config items:");
 
         if(asLog)
             output.forEach(x -> LOGGER.info(x));
