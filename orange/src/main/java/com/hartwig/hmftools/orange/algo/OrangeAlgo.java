@@ -246,6 +246,7 @@ public class OrangeAlgo
                 .lilac(OrangeConversion.convert(lilac, hasRef, hasRna))
                 .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
+                //.cuppa(cuppa)
                 .cuppa2(cuppa2)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(ConversionUtil.mapToIterable(sigAllocations, OrangeConversion::convert))
