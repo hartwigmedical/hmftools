@@ -1,9 +1,0 @@
-sample_id	clf_group	clf_name	pred_class_1	pred_class_2	pred_class_3	pred_prob_1	pred_prob_2	pred_prob_3	extra_info	extra_info_format
-Value	combined	combined	Prostate	Urothelial tract	CNS: Glioma	0.9967951497668447	0.00010015156978610446	0.00010015156978610446		
-Value	dna	dna_combined	Prostate	Bone/Soft tissue: Cartilaginous neoplasm	Urothelial tract	0.9999851851095112	1.4814890488794223e-05	0.0		
-Value	rna	rna_combined	Prostate	NET: Lung	Bone/Soft tissue: Undiff. sarcoma	0.9953013412825323	0.00187458953055368	0.0013550853383250767		
-Value	dna	gen_pos	Prostate	Bone/Soft tissue: Other	Lung: Non-small cell: LUAD	0.999175933192759	0.00011869861549084252	7.217340170095298e-05		
-Value	dna	snv96	Prostate	HPB: Pancreas	Colorectum/Small intestine/Appendix	0.6434096329423064	0.08309287280798874	0.051121161102989386	AID/APOBEC (SBS2/13)=295.9,4.4%; UV (SBS7)=62.5,0.9%	{sig_name}={count},{percent}
-Value	dna	event	Prostate	Bone/Soft tissue: Other	Kidney: Other	0.9971204616703503	0.0004733713699452524	0.00045738645323508906	1: fusion.TMPRSS2_ERG=1.0,6.8; trait.is_male=1.0,1.9; sv.SIMPLE_DUP_100KB_5MB=61.0,0.9 || 2: driver.TP53.mut=0.0,0.3; trait.whole_genome_duplication=1.0,0.2; sv.SIMPLE_DUP_100KB_5MB=61.0,0.1 || 3: sv.SIMPLE_DUP_32B_200B=9.0,1.3; driver.TP53.mut=0.0,0.6; trait.is_male=1.0,0.4	{pred_class_n}: {feat_name}={value},{log_odds}
-Value	rna	gene_exp	Prostate	Skin: Other	Head and neck: Other	0.998798742023636	0.0008914530035686509	0.0001432881801623383		
-Value	rna	alt_sj	Prostate	Head and neck: Other	Breast: Other	0.9975670228783837	0.001188485830864813	0.0003085985781338084		
