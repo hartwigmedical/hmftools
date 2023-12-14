@@ -2,7 +2,7 @@ package com.hartwig.hmftools.orange.algo.cuppa2;
 import java.io.IOException;
 
 import com.google.common.io.Resources;
-import com.hartwig.hmftools.common.cuppa2.CuppaVisData;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppa2Data;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableFeatureContributionEntry;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableProbabilityEntry;
@@ -15,7 +15,7 @@ public class Cuppa2DataFactoryTest
     public Cuppa2DataFactoryTest() throws IOException {}
 
     private static final String CUPPA_VIS_DATA_TSV = Resources.getResource("cuppa/cuppa_vis_data.tsv").getPath();
-    CuppaVisData cuppaPredictions = CuppaVisData.fromTsv(CUPPA_VIS_DATA_TSV);
+    CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(CUPPA_VIS_DATA_TSV);
 
     @Test
     public void topPredictionIsCorrect()

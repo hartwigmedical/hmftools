@@ -10,13 +10,13 @@ import java.util.stream.Collectors;
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileReaderUtils.createFieldsIndexMap;
 
-public class CuppaVisData
+public class CuppaPredictions
 {
-    public final List<CuppaVisDataEntry> VisDataEntries;
+    public final List<CuppaPredictionEntry> PredictionEntries;
 
-    public CuppaVisData(final List<CuppaVisDataEntry> visDataEntries)
+    public CuppaPredictions(final List<CuppaPredictionEntry> predictionEntries)
     {
-        VisDataEntries = visDataEntries;
+        PredictionEntries = predictionEntries;
     }
 
     private static double parseDouble(String string)
@@ -48,7 +48,7 @@ public class CuppaVisData
         return "NONE";
     }
 
-    public static CuppaVisData fromTsv(final String filename) throws IOException
+    public static CuppaPredictions fromTsv(final String filename) throws IOException
     {
         String delimiter = TSV_DELIM;
 
@@ -56,18 +56,18 @@ public class CuppaVisData
 
         String line = fileReader.readLine();
         final Map<String, Integer> fieldsMap = createFieldsIndexMap(line, delimiter);
-        int sampleIdIndex = fieldsMap.get(CuppaVisDataEntry.FLD_SAMPLE_ID);
-        int dataTypeIndex = fieldsMap.get(CuppaVisDataEntry.FLD_DATA_TYPE);
-        int clfGroupIndex = fieldsMap.get(CuppaVisDataEntry.FLD_CLF_GROUP);
-        int clfNameIndex = fieldsMap.get(CuppaVisDataEntry.FLD_CLF_NAME);
-        int featNameIndex = fieldsMap.get(CuppaVisDataEntry.FLD_FEAT_NAME);
-        int featValueIndex = fieldsMap.get(CuppaVisDataEntry.FLD_FEAT_VALUE);
-        int cancerTypeIndex = fieldsMap.get(CuppaVisDataEntry.FLD_CANCER_TYPE);
-        int dataValueIndex = fieldsMap.get(CuppaVisDataEntry.FLD_DATA_VALUE);
-        int rankIndex = fieldsMap.get(CuppaVisDataEntry.FLD_RANK);
-        int rankGroupIndex = fieldsMap.get(CuppaVisDataEntry.FLD_RANK_GROUP);
+        int sampleIdIndex = fieldsMap.get(CuppaPredictionEntry.FLD_SAMPLE_ID);
+        int dataTypeIndex = fieldsMap.get(CuppaPredictionEntry.FLD_DATA_TYPE);
+        int clfGroupIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CLF_GROUP);
+        int clfNameIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CLF_NAME);
+        int featNameIndex = fieldsMap.get(CuppaPredictionEntry.FLD_FEAT_NAME);
+        int featValueIndex = fieldsMap.get(CuppaPredictionEntry.FLD_FEAT_VALUE);
+        int cancerTypeIndex = fieldsMap.get(CuppaPredictionEntry.FLD_CANCER_TYPE);
+        int dataValueIndex = fieldsMap.get(CuppaPredictionEntry.FLD_DATA_VALUE);
+        int rankIndex = fieldsMap.get(CuppaPredictionEntry.FLD_RANK);
+        int rankGroupIndex = fieldsMap.get(CuppaPredictionEntry.FLD_RANK_GROUP);
 
-        List<CuppaVisDataEntry> visDataEntries = new ArrayList<>();
+        List<CuppaPredictionEntry> cuppaPredictions = new ArrayList<>();
         while((line = fileReader.readLine()) != null)
         {
             String[] rowValues = line.split(delimiter, -1);
@@ -96,24 +96,24 @@ public class CuppaVisData
             int rank = Integer.parseInt(rowValues[rankIndex]);
             int rankGroup = Integer.parseInt(rowValues[rankGroupIndex]);
 
-            CuppaVisDataEntry visDataEntry = new CuppaVisDataEntry(
+            CuppaPredictionEntry cuppaPrediction = new CuppaPredictionEntry(
                     sampleId, dataType, clfGroup, clfName,
                     featName, featValue, cancerType, dataValue,
                     rank, rankGroup
             );
 
-            visDataEntries.add(visDataEntry);
+            cuppaPredictions.add(cuppaPrediction);
         }
 
-        return new CuppaVisData(visDataEntries);
+        return new CuppaPredictions(cuppaPredictions);
     }
 
-    public void printEntries(int nRows)
+    public void printPredictions(int nRows)
     {
         int i = 0;
-        for(CuppaVisDataEntry visDataEntry : VisDataEntries)
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
-            System.out.println( visDataEntry.toString());
+            System.out.println( cuppaPrediction.toString());
 
             i++;
             if(nRows == i)
@@ -124,28 +124,28 @@ public class CuppaVisData
         }
     }
 
-    public void printEntries()
+    public void printPredictions()
     {
-        printEntries(10);
+        printPredictions(10);
     }
 
-    public CuppaVisDataEntry get(int index)
+    public CuppaPredictionEntry get(int index)
     {
-        return VisDataEntries.get(index);
+        return PredictionEntries.get(index);
     }
 
     public int size()
     {
-        return VisDataEntries.size();
+        return PredictionEntries.size();
     }
 
     private boolean checkIsOneSample()
     {
-        String targetSampleId = VisDataEntries.get(0).SampleId;
+        String targetSampleId = PredictionEntries.get(0).SampleId;
 
-        for(CuppaVisDataEntry visDataEntry : VisDataEntries)
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
-            if(!visDataEntry.SampleId.equals(targetSampleId))
+            if(!cuppaPrediction.SampleId.equals(targetSampleId))
             {
                 return false;
             }
@@ -156,14 +156,14 @@ public class CuppaVisData
 
     public boolean checkHasRnaPredictions()
     {
-        for(CuppaVisDataEntry visDataEntry : VisDataEntries)
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
-            if(!visDataEntry.DataType.equals(Categories.DataType.PROB))
+            if(!cuppaPrediction.DataType.equals(Categories.DataType.PROB))
             {
                 continue;
             }
 
-            if(visDataEntry.ClfName.equals(Categories.ClfName.RNA_COMBINED) & !Double.isNaN(visDataEntry.DataValue))
+            if(cuppaPrediction.ClfName.equals(Categories.ClfName.RNA_COMBINED) & !Double.isNaN(cuppaPrediction.DataValue))
             {
                 return true;
             }
@@ -181,58 +181,58 @@ public class CuppaVisData
         return Categories.ClfName.DNA_COMBINED;
     }
 
-    public CuppaVisData subsetByDataType(Categories.DataType dataType)
+    public CuppaPredictions subsetByDataType(Categories.DataType dataType)
     {
-        List<CuppaVisDataEntry> newVisDataEntries = new ArrayList<>();
-        for(CuppaVisDataEntry visDataEntry : VisDataEntries)
+        List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
-            if(!visDataEntry.DataType.equals(dataType))
+            if(!cuppaPrediction.DataType.equals(dataType))
             {
                 continue;
             }
-            newVisDataEntries.add(visDataEntry);
+            newPredictionEntries.add(cuppaPrediction);
         }
-        return new CuppaVisData(newVisDataEntries);
+        return new CuppaPredictions(newPredictionEntries);
     }
 
-    public CuppaVisData subsetByClfName(Categories.ClfName clfName)
+    public CuppaPredictions subsetByClfName(Categories.ClfName clfName)
     {
-        List<CuppaVisDataEntry> newVisDataEntries = new ArrayList<>();
-        for(CuppaVisDataEntry visDataEntry : VisDataEntries)
+        List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
-            if(!visDataEntry.ClfName.equals(clfName))
+            if(!cuppaPrediction.ClfName.equals(clfName))
             {
                 continue;
             }
-            newVisDataEntries.add(visDataEntry);
+            newPredictionEntries.add(cuppaPrediction);
         }
-        return new CuppaVisData(newVisDataEntries);
+        return new CuppaPredictions(newPredictionEntries);
     }
 
-    public CuppaVisData getTopPredictions(int n)
+    public CuppaPredictions getTopPredictions(int n)
     {
-        List<CuppaVisDataEntry> newVisDataEntries = new ArrayList<>();
-        for(CuppaVisDataEntry visDataEntry : VisDataEntries)
+        List<CuppaPredictionEntry> newPredictionEntries = new ArrayList<>();
+        for(CuppaPredictionEntry cuppaPrediction : PredictionEntries)
         {
-            if(visDataEntry.Rank <= n)
+            if(cuppaPrediction.Rank <= n)
             {
-                newVisDataEntries.add(visDataEntry);
+                newPredictionEntries.add(cuppaPrediction);
             }
         }
-        return new CuppaVisData(newVisDataEntries);
+        return new CuppaPredictions(newPredictionEntries);
     }
 
-    public CuppaVisData sortByRank()
+    public CuppaPredictions sortByRank()
     {
-        Comparator<CuppaVisDataEntry> comparator = Comparator.comparing(visDataEntry -> visDataEntry.RankGroup);
-        comparator = comparator.thenComparing(visDataEntry -> visDataEntry.Rank);
+        Comparator<CuppaPredictionEntry> comparator = Comparator.comparing(cuppaPrediction -> cuppaPrediction.RankGroup);
+        comparator = comparator.thenComparing(cuppaPrediction -> cuppaPrediction.Rank);
 
-        List<CuppaVisDataEntry> sortedVisDataEntries = VisDataEntries
+        List<CuppaPredictionEntry> sortPredictionEntries = PredictionEntries
                 .stream()
                 .sorted(comparator)
                 .collect(Collectors.toList());
 
-        return new CuppaVisData(sortedVisDataEntries);
+        return new CuppaPredictions(sortPredictionEntries);
     }
 
 }

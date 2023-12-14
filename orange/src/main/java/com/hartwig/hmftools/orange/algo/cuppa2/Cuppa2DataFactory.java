@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.hartwig.hmftools.common.cuppa2.Categories;
-import com.hartwig.hmftools.common.cuppa2.CuppaVisDataEntry;
-import com.hartwig.hmftools.common.cuppa2.CuppaVisData;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictionEntry;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableCuppa2Data;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableProbabilityEntry;
 import com.hartwig.hmftools.datamodel.cuppa2.ImmutableFeatureContributionEntry;
@@ -16,50 +16,50 @@ import org.jetbrains.annotations.NotNull;
 public class Cuppa2DataFactory
 {
     @NotNull
-    public static ImmutableCuppa2Data create(@NotNull CuppaVisData visData)
+    public static ImmutableCuppa2Data create(@NotNull CuppaPredictions cuppaPredictions)
     {
         return ImmutableCuppa2Data.builder()
-                .topPrediction(getTopPrediction(visData))
-                .probs(getProbabilities(visData))
-                .featContribs(getFeatureContributions(visData))
-                .sigQuantiles(getSignatureQuantiles(visData))
+                .topPrediction(getTopPrediction(cuppaPredictions))
+                .probs(getProbabilities(cuppaPredictions))
+                .featContribs(getFeatureContributions(cuppaPredictions))
+                .sigQuantiles(getSignatureQuantiles(cuppaPredictions))
                 .build();
     }
 
     @NotNull
-    public static ImmutableProbabilityEntry getTopPrediction(CuppaVisData visData)
+    public static ImmutableProbabilityEntry getTopPrediction(CuppaPredictions cuppaPredictions)
     {
-        Categories.ClfName mainCombinedClfName = visData.getMainCombinedClfName();
+        Categories.ClfName mainCombinedClfName = cuppaPredictions.getMainCombinedClfName();
 
-        CuppaVisDataEntry visDataEntry = visData
+        CuppaPredictionEntry predictionEntry = cuppaPredictions
                 .subsetByDataType(Categories.DataType.PROB)
                 .subsetByClfName(mainCombinedClfName)
                 .getTopPredictions(1)
                 .get(0);
 
         return ImmutableProbabilityEntry.builder()
-                .clfName(visDataEntry.ClfName.toString())
-                .cancerType(visDataEntry.CancerType)
-                .dataValue(visDataEntry.DataValue)
-                .rank(visDataEntry.Rank)
-                .rankGroup(visDataEntry.RankGroup)
+                .clfName(predictionEntry.ClfName.toString())
+                .cancerType(predictionEntry.CancerType)
+                .dataValue(predictionEntry.DataValue)
+                .rank(predictionEntry.Rank)
+                .rankGroup(predictionEntry.RankGroup)
                 .build();
     }
 
     @NotNull
-    public static List<ImmutableProbabilityEntry> getProbabilities(CuppaVisData visData){
+    public static List<ImmutableProbabilityEntry> getProbabilities(CuppaPredictions cuppaPredictions){
 
-        CuppaVisData probs = visData.subsetByDataType(Categories.DataType.PROB);
+        CuppaPredictions probs = cuppaPredictions.subsetByDataType(Categories.DataType.PROB);
 
         List<ImmutableProbabilityEntry> probsNew = new ArrayList<>();
-        for(CuppaVisDataEntry visDataEntry : probs.VisDataEntries)
+        for(CuppaPredictionEntry predictionEntry : probs.PredictionEntries)
         {
             ImmutableProbabilityEntry probabilityEntry = ImmutableProbabilityEntry.builder()
-                    .clfName(visDataEntry.ClfName.toString())
-                    .cancerType(visDataEntry.CancerType)
-                    .dataValue(visDataEntry.DataValue)
-                    .rank(visDataEntry.Rank)
-                    .rankGroup(visDataEntry.RankGroup)
+                    .clfName(predictionEntry.ClfName.toString())
+                    .cancerType(predictionEntry.CancerType)
+                    .dataValue(predictionEntry.DataValue)
+                    .rank(predictionEntry.Rank)
+                    .rankGroup(predictionEntry.RankGroup)
                     .build();
             probsNew.add(probabilityEntry);
         }
@@ -67,21 +67,21 @@ public class Cuppa2DataFactory
     }
 
     @NotNull
-    public static List<ImmutableFeatureContributionEntry> getFeatureContributions(CuppaVisData visData){
+    public static List<ImmutableFeatureContributionEntry> getFeatureContributions(CuppaPredictions cuppaPredictions){
 
-        CuppaVisData contribs = visData.subsetByDataType(Categories.DataType.FEAT_CONTRIB);
+        CuppaPredictions contribs = cuppaPredictions.subsetByDataType(Categories.DataType.FEAT_CONTRIB);
 
         List<ImmutableFeatureContributionEntry> contribsNew = new ArrayList<>();
-        for(CuppaVisDataEntry visDataEntry : contribs.VisDataEntries)
+        for(CuppaPredictionEntry predictionEntry : contribs.PredictionEntries)
         {
             ImmutableFeatureContributionEntry contribsEntry = ImmutableFeatureContributionEntry.builder()
-                    .clfName(visDataEntry.ClfName.toString())
-                    .featName(visDataEntry.FeatName)
-                    .featValue(visDataEntry.FeatValue)
-                    .cancerType(visDataEntry.CancerType)
-                    .dataValue(visDataEntry.DataValue)
-                    .rank(visDataEntry.Rank)
-                    .rankGroup(visDataEntry.RankGroup)
+                    .clfName(predictionEntry.ClfName.toString())
+                    .featName(predictionEntry.FeatName)
+                    .featValue(predictionEntry.FeatValue)
+                    .cancerType(predictionEntry.CancerType)
+                    .dataValue(predictionEntry.DataValue)
+                    .rank(predictionEntry.Rank)
+                    .rankGroup(predictionEntry.RankGroup)
                     .build();
 
             contribsNew.add(contribsEntry);
@@ -90,20 +90,20 @@ public class Cuppa2DataFactory
     }
 
     @NotNull
-    public static List<ImmutableSignatureQuantileEntry> getSignatureQuantiles(CuppaVisData visData){
+    public static List<ImmutableSignatureQuantileEntry> getSignatureQuantiles(CuppaPredictions cuppaPredictions){
 
-        CuppaVisData sigQuantiles = visData.subsetByDataType(Categories.DataType.SIG_QUANTILE);
+        CuppaPredictions sigQuantiles = cuppaPredictions.subsetByDataType(Categories.DataType.SIG_QUANTILE);
 
         List<ImmutableSignatureQuantileEntry> sigQuantilesNew = new ArrayList<>();
-        for(CuppaVisDataEntry visDataEntry : sigQuantiles.VisDataEntries)
+        for(CuppaPredictionEntry predictionEntry : sigQuantiles.PredictionEntries)
         {
             ImmutableSignatureQuantileEntry sigQuantilesEntry = ImmutableSignatureQuantileEntry.builder()
-                    .featName(visDataEntry.FeatName)
-                    .featValue(visDataEntry.FeatValue)
-                    .cancerType(visDataEntry.CancerType)
-                    .dataValue(visDataEntry.DataValue)
-                    .rank(visDataEntry.Rank)
-                    .rankGroup(visDataEntry.RankGroup)
+                    .featName(predictionEntry.FeatName)
+                    .featValue(predictionEntry.FeatValue)
+                    .cancerType(predictionEntry.CancerType)
+                    .dataValue(predictionEntry.DataValue)
+                    .rank(predictionEntry.Rank)
+                    .rankGroup(predictionEntry.RankGroup)
                     .build();
 
             sigQuantilesNew.add(sigQuantilesEntry);
