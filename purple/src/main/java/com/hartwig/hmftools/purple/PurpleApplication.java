@@ -154,10 +154,10 @@ public class PurpleApplication
                 performFit(sampleData);
             }
         }
-        catch(Exception e)
+        catch(Throwable t)
         {
-            PPL_LOGGER.error("failed processing sample({}): {}", mConfig.TumorId, e.toString());
-            e.printStackTrace();
+            PPL_LOGGER.error("failed processing sample({}): {}", mConfig.TumorId, t.toString());
+            t.printStackTrace();
             System.exit(1);
         }
 

@@ -42,6 +42,9 @@ public class HotspotEnrichment
         if(!HumanChromosome.contains(variant.getContig()))
             return;
 
+        if(variant.hasAttribute(HOTSPOT_FLAG) || variant.hasAttribute(NEAR_HOTSPOT_FLAG))
+            return;
+
         final Chromosome chromosome = HumanChromosome.fromString(variant.getContig());
         Collection<VariantHotspot> hotspots = mHotspots.get(chromosome);
 
