@@ -6,16 +6,16 @@ public class Cuppa2DataFiles
 {
     public static String generatePredictionsPath(final String basePath, final String sample)
     {
-        return checkAddDirSeparator(basePath) + sample + ".cuppa.vis_data.tsv";
+        return checkAddDirSeparator(basePath) + sample + ".cuppa_vis_data.tsv";
     }
 
     public static String generateVisPlotPath(final String basePath, final String sample)
     {
-        return checkAddDirSeparator(basePath) + sample + ".cuppa.vis.png";
+        return checkAddDirSeparator(basePath) + sample + ".cuppa_vis.png";
     }
 
     public static String generatePredSummPath(final String basePath, final String sample)
     {
-        return checkAddDirSeparator(basePath) + sample + ".cuppa.pred_summ.tsv";
+        return checkAddDirSeparator(basePath) + sample + ".pred_summ.tsv";
     }
 }
