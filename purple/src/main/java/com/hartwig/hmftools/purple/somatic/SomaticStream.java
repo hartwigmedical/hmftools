@@ -286,8 +286,7 @@ public class SomaticStream
 
         if(reported && updateVcf)
         {
-            if(!variant.context().hasAttribute(REPORTED_FLAG))
-                variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+            variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
 
             mReportedGenes.add(variant.decorator().gene());
 
