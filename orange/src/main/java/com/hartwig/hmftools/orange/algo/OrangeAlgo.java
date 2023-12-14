@@ -20,7 +20,6 @@ import com.google.common.collect.Sets;
 import com.hartwig.hmftools.common.chord.ChordData;
 import com.hartwig.hmftools.common.chord.ChordDataFile;
 import com.hartwig.hmftools.common.cuppa.CuppaDataFile;
-import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.common.doid.DiseaseOntology;
 import com.hartwig.hmftools.common.doid.DoidEntry;
 import com.hartwig.hmftools.common.doid.DoidNode;
@@ -49,7 +48,6 @@ import com.hartwig.hmftools.common.virus.VirusInterpreterDataLoader;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaPrediction;
-import com.hartwig.hmftools.datamodel.cuppa2.Cuppa2Data;
 import com.hartwig.hmftools.datamodel.flagstat.Flagstat;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -66,7 +64,6 @@ import com.hartwig.hmftools.datamodel.wildtype.WildTypeGene;
 import com.hartwig.hmftools.orange.OrangeConfig;
 import com.hartwig.hmftools.orange.OrangeRnaConfig;
 import com.hartwig.hmftools.orange.algo.cuppa.CuppaDataFactory;
-import com.hartwig.hmftools.orange.algo.cuppa2.Cuppa2DataFactory;
 import com.hartwig.hmftools.orange.algo.isofox.IsofoxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxInterpreter;
 import com.hartwig.hmftools.orange.algo.linx.LinxReportableClusters;
@@ -186,8 +183,7 @@ public class OrangeAlgo
         ChordData chord = loadChordAnalysis(config);
         LilacSummaryData lilac = loadLilacData(config);
         VirusInterpreterData virusInterpreter = loadVirusInterpreterData(config);
-        //CuppaData cuppa = loadCuppaData(config);
-        Cuppa2Data cuppa2 = loadCuppa2Data(config);
+        CuppaData cuppa = loadCuppaData(config);
         List<PeachGenotype> peach = loadPeachData(config);
         List<SignatureAllocation> sigAllocations = loadSigAllocations(config);
         IsofoxData isofoxData = loadIsofoxData(config);
@@ -250,8 +246,7 @@ public class OrangeAlgo
                 .lilac(OrangeConversion.convert(lilac, hasRef, hasRna))
                 .virusInterpreter(virusInterpreter != null ? OrangeConversion.convert(virusInterpreter) : null)
                 .chord(chord != null ? OrangeConversion.convert(chord) : null)
-                //.cuppa(cuppa)
-                .cuppa2(cuppa2)
+                .cuppa(cuppa)
                 .peach(ConversionUtil.mapToIterable(peach, OrangeConversion::convert))
                 .sigAllocations(ConversionUtil.mapToIterable(sigAllocations, OrangeConversion::convert))
                 .cohortEvaluations(evaluateCohortPercentiles(config, purple))
@@ -571,31 +566,29 @@ public class OrangeAlgo
     }
 
     @Nullable
-    private static Cuppa2Data loadCuppa2Data(@NotNull OrangeConfig config) throws IOException
+    private static CuppaData loadCuppaData(@NotNull OrangeConfig config) throws IOException
     {
         if(config.wgsRefConfig() == null)
         {
             return null;
         }
 
-        String cuppaPredictionsTsv = config.wgsRefConfig().cuppa2Predictions();
-        if(cuppaPredictionsTsv == null)
+        String cuppaResultTsv = config.wgsRefConfig().cuppaResultCsv();
+        if(cuppaResultTsv == null)
         {
             LOGGER.debug("Skipping CUPPA loading as no input has been provided");
             return null;
         }
 
-        LOGGER.info("Loading CUPPA from {}", new File(cuppaPredictionsTsv).getParent());
-        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaPredictionsTsv);
+        LOGGER.info("Loading CUPPA from {}", new File(cuppaResultTsv).getParent());
+        List<CuppaDataFile> cuppaEntries = CuppaDataFile.read(cuppaResultTsv);
+        LOGGER.info(" Loaded {} entries from {}", cuppaEntries.size(), cuppaResultTsv);
 
-        Cuppa2Data cuppa2Data = Cuppa2DataFactory.create(cuppaPredictions);
-        LOGGER.info(
-                " Predicted cancer type '{}' with likelihood {}",
-                cuppa2Data.topPrediction().cancerType(),
-                cuppa2Data.topPrediction().dataValue()
-        );
+        CuppaData cuppaData = CuppaDataFactory.create(cuppaEntries);
+        CuppaPrediction best = cuppaData.predictions().get(0);
+        LOGGER.info(" Predicted cancer type '{}' with likelihood {}", best.cancerType(), best.likelihood());
 
-        return cuppa2Data;
+        return cuppaData;
     }
 
     @Nullable
@@ -704,10 +697,29 @@ public class OrangeAlgo
         String purplePurityRangePlot = plotManager.processPlotFile(purplePlotBasePath + ".purity.range.png");
         String purpleKataegisPlot = plotManager.processPlotFile(purplePlotBasePath + ".somatic.rainfall.png");
 
-        String cuppa2VisPlot = null;
-        if(config.wgsRefConfig() != null)
+        String cuppaSummaryPlot = null;
+        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaSummaryPlot() != null)
         {
-            cuppa2VisPlot = plotManager.processPlotFile(config.wgsRefConfig().cuppa2VisPlot());
+            cuppaSummaryPlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaSummaryPlot());
+        }
+
+        String cuppaFeaturePlot = null;
+        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaFeaturePlot() != null && new File(config.wgsRefConfig()
+                .cuppaFeaturePlot()).exists())
+        {
+            cuppaFeaturePlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaFeaturePlot());
+        }
+
+        String cuppaChartPlot = null;
+        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaChartPlot() != null)
+        {
+            cuppaChartPlot = plotManager.processPlotFile(config.wgsRefConfig().cuppaChartPlot());
+        }
+
+        String cuppa2Visualization = null;
+        if(config.wgsRefConfig() != null && config.wgsRefConfig().cuppaChartPlot() != null)
+        {
+            cuppa2Visualization = plotManager.processPlotFile(config.wgsRefConfig().cuppa2Visualization());
         }
 
         return ImmutableOrangePlots.builder()
@@ -721,7 +733,10 @@ public class OrangeAlgo
                 .purplePurityRangePlot(purplePurityRangePlot)
                 .purpleKataegisPlot(purpleKataegisPlot)
                 .linxDriverPlots(linxDriverPlots)
-                .cuppa2VisPlot(cuppa2VisPlot)
+                .cuppaSummaryPlot(cuppaSummaryPlot)
+                .cuppaFeaturePlot(cuppaFeaturePlot)
+                .cuppaChartPlot(cuppaChartPlot)
+                .cuppa2Visualization(cuppa2Visualization)
                 .build();
     }
 
