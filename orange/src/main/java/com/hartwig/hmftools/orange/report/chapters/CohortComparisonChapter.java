@@ -62,10 +62,9 @@ public class CohortComparisonChapter implements ReportChapter
 
     private void addCuppaVisPlot(@NotNull Document document)
     {
-        Image cuppaVisPlotImage = Images.build(plotPathResolver.resolve(report.plots().cuppa2VisPlot()));
-        cuppaVisPlotImage.setMaxWidth(740);
-        cuppaVisPlotImage.setMaxHeight(430);
-        cuppaVisPlotImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
-        document.add(cuppaVisPlotImage);
+        Image cuppaSummaryImage = Images.build(plotPathResolver.resolve(report.plots().cuppa2VisPlot()));
+        cuppaSummaryImage.setMaxWidth(740);
+        cuppaSummaryImage.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        document.add(cuppaSummaryImage);
     }
 }
