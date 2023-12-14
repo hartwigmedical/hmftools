@@ -1,10 +1,13 @@
 package com.hartwig.hmftools.common.cobalt;
 
+import static com.hartwig.hmftools.common.utils.file.FileDelimiters.ZIP_EXTENSION;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.checkAddDirSeparator;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createGzipBufferedWriter;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -62,7 +65,18 @@ public final class CobaltRatioFile
     @NotNull
     public static String generateFilenameForReading(final String basePath, final String sample)
     {
-        return generateFilename(basePath, sample);
+        // some old samples have unzipped ratio files, so check for these
+        String filename = generateFilename(basePath, sample);
+
+        if(Files.exists(Paths.get(filename)))
+            return filename;
+
+        String unzippedFile = filename.replaceAll(ZIP_EXTENSION, "");
+
+        if(Files.exists(Paths.get(unzippedFile)))
+            return unzippedFile;
+
+        return filename;
     }
 
     public static ListMultimap<Chromosome,CobaltRatio> read(final String filename) throws IOException
