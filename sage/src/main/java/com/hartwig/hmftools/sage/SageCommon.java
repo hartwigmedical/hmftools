@@ -58,9 +58,8 @@ public class SageCommon
         }
         else
         {
-            SG_LOGGER.info("BAM read-length sampling failed, using default read length({})", DEFAULT_READ_LENGTH);
+            SG_LOGGER.debug("BAM read-length sampling using default read length({})", DEFAULT_READ_LENGTH);
             config.setReadLength(DEFAULT_READ_LENGTH);
         }
     }
-
 }

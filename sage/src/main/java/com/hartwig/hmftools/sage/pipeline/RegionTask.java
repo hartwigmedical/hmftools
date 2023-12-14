@@ -32,7 +32,7 @@ import com.hartwig.hmftools.sage.evidence.ReadContextCounters;
 import com.hartwig.hmftools.sage.filter.VariantFilters;
 import com.hartwig.hmftools.sage.phase.PhaseSetCounter;
 import com.hartwig.hmftools.sage.phase.VariantPhaser;
-import com.hartwig.hmftools.sage.sagevis.VariantVis;
+import com.hartwig.hmftools.sage.vis.VariantVis;
 
 public class RegionTask
 {

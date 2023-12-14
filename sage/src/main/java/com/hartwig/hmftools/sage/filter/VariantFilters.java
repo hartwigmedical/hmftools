@@ -17,6 +17,7 @@ import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE;
 import static com.hartwig.hmftools.sage.SageConstants.MAX_READ_EDGE_DISTANCE_PROB;
 import static com.hartwig.hmftools.sage.SageConstants.NORMAL_RAW_ALT_BQ_MAX;
 import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD;
+import static com.hartwig.hmftools.sage.SageConstants.VAF_PROBABILITY_THRESHOLD_HOTSPOT;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -236,7 +237,10 @@ public class VariantFilters
 
         double pValue = 1.0 - distribution.cumulativeProbability(adjustedAltSupportCount - 1);
 
-        return pValue > VAF_PROBABILITY_THRESHOLD;
+        if(primaryTumor.tier() == VariantTier.HOTSPOT)
+            return pValue > VAF_PROBABILITY_THRESHOLD_HOTSPOT;
+        else
+            return pValue > VAF_PROBABILITY_THRESHOLD;
     }
 
     private boolean belowMinAverageBaseQuality(final ReadContextCounter primaryTumor, final VariantTier tier)

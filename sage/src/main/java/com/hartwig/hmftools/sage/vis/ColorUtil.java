@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.sage.sagevis;
+package com.hartwig.hmftools.sage.vis;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

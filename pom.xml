@@ -61,9 +61,9 @@
         <amber.version>4.0</amber.version>
         <bam-tools.version>1.2</bam-tools.version>
         <cider.version>1.0.2</cider.version>
-        <cobalt.version>1.16.0</cobalt.version>
+        <cobalt.version>1.16</cobalt.version>
         <compar.version>1.2</compar.version>
-        <cuppa.version>1.9</cuppa.version>
+        <cuppa.version>2.0</cuppa.version>
         <fastq-tools.version>1.0</fastq-tools.version>
         <gene-utils.version>1.1</gene-utils.version>
         <gripss.version>2.4</gripss.version>

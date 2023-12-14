@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.impact;
 
 import static java.lang.Math.min;
 
@@ -11,10 +11,10 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_GAIN
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isInframe;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.isNonsenseOrFrameshift;
-import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DEL;
-import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_DUP;
-import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_TYPE_INS;
-import static com.hartwig.hmftools.pave.HgvsCoding.HGVS_UNKNOWN;
+import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_TYPE_DEL;
+import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_TYPE_DUP;
+import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_TYPE_INS;
+import static com.hartwig.hmftools.pave.impact.HgvsCoding.HGVS_UNKNOWN;
 
 import java.util.List;
 import java.util.Map;

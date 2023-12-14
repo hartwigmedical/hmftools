@@ -10,6 +10,8 @@ import static com.hartwig.hmftools.common.stats.PoissonCalcs.calcPoissonNoiseVal
 import static com.hartwig.hmftools.common.utils.file.FileDelimiters.TSV_DELIM;
 import static com.hartwig.hmftools.common.utils.file.FileWriterUtils.createBufferedWriter;
 import static com.hartwig.hmftools.wisp.common.CommonUtils.CT_LOGGER;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.HIGH_PROBABILITY;
+import static com.hartwig.hmftools.wisp.purity.PurityConstants.LOW_PROBABILITY;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MAX;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_BANDWIDTH_MIN;
 import static com.hartwig.hmftools.wisp.purity.PurityConstants.SOMATIC_PEAK_MIN_DEPTH_PERC;
@@ -25,10 +27,6 @@ import static com.hartwig.hmftools.wisp.purity.ResultsWriter.addCommonHeaderFiel
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityData.NO_RESULT;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.NO_PEAK;
 import static com.hartwig.hmftools.wisp.purity.variant.ClonalityMethod.VAF_PEAK;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.HIGH_PROBABILITY;
-import static com.hartwig.hmftools.wisp.purity.variant.SomaticPurityCalcs.LOW_PROBABILITY;
-
-import static org.apache.commons.lang3.ObjectUtils.median;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -37,7 +35,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 
 import com.google.common.collect.Lists;
 import com.hartwig.hmftools.common.utils.Doubles;

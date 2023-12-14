@@ -1,12 +1,12 @@
-package com.hartwig.hmftools.sage.sagevis;
+package com.hartwig.hmftools.sage.vis;
 
 import static java.lang.String.format;
 import static java.util.Map.entry;
 
-import static com.hartwig.hmftools.sage.sagevis.ColorUtil.PURPLE;
-import static com.hartwig.hmftools.sage.sagevis.ColorUtil.lighten;
-import static com.hartwig.hmftools.sage.sagevis.SvgUtil.drawStringFromCenter;
-import static com.hartwig.hmftools.sage.sagevis.SvgUtil.getStringBounds;
+import static com.hartwig.hmftools.sage.vis.ColorUtil.PURPLE;
+import static com.hartwig.hmftools.sage.vis.ColorUtil.lighten;
+import static com.hartwig.hmftools.sage.vis.SvgUtil.drawStringFromCenter;
+import static com.hartwig.hmftools.sage.vis.SvgUtil.getStringBounds;
 
 import java.awt.Color;
 import java.awt.Font;

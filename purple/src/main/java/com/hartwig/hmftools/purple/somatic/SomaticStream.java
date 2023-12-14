@@ -4,6 +4,8 @@ import static java.lang.Math.round;
 
 import static com.hartwig.hmftools.common.variant.CodingEffect.hasProteinImpact;
 import static com.hartwig.hmftools.common.variant.CommonVcfTags.REPORTED_FLAG;
+import static com.hartwig.hmftools.common.variant.Hotspot.HOTSPOT_FLAG;
+import static com.hartwig.hmftools.common.variant.Hotspot.NEAR_HOTSPOT_FLAG;
 import static com.hartwig.hmftools.common.variant.SageVcfTags.LOCAL_PHASE_SET;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_DELETION;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_INFRAME_INSERTION;
@@ -284,7 +286,9 @@ public class SomaticStream
 
         if(reported && updateVcf)
         {
-            variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+            if(!variant.context().hasAttribute(REPORTED_FLAG))
+                variant.context().getCommonInfo().putAttribute(REPORTED_FLAG, true);
+
             mReportedGenes.add(variant.decorator().gene());
 
             // check alt transcript status vs canonical

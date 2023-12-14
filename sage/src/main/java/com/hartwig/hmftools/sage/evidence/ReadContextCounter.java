@@ -69,7 +69,7 @@ import com.hartwig.hmftools.sage.filter.StrandBiasData;
 import com.hartwig.hmftools.sage.quality.QualityCalculator;
 import com.hartwig.hmftools.sage.read.NumberEvents;
 import com.hartwig.hmftools.sage.read.SplitReadUtils;
-import com.hartwig.hmftools.sage.sagevis.VariantVis;
+import com.hartwig.hmftools.sage.vis.VariantVis;
 import com.hartwig.hmftools.sage.sync.FragmentData;
 
 import htsjdk.samtools.CigarElement;
@@ -550,8 +550,7 @@ public class ReadContextCounter//  extends SimpleVariant
             matchType = MatchType.ALT;
 
         addVariantVisRecord(record, matchType, modifiedQualities, fragmentData);
-        if(mConfig.LogEvidenceReads)
-            logReadEvidence(record, matchType, readIndex, quality);
+        logReadEvidence(record, matchType, readIndex, quality);
 
         return readMatchType;
     }
@@ -627,7 +626,8 @@ public class ReadContextCounter//  extends SimpleVariant
         }
     }
 
-    private void addVariantVisRecord(final SAMRecord record, final MatchType matchType,
+    private void addVariantVisRecord(
+            final SAMRecord record, final MatchType matchType,
             @Nullable QualityCalculator.QualityScores modifiedQualities, @Nullable final FragmentData fragmentData)
     {
         if(mVariantVis != null)

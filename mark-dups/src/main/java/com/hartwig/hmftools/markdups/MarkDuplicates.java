@@ -193,6 +193,9 @@ public class MarkDuplicates
 
     private long writeUnmappedReads(final FileWriterCache fileWriterCache)
     {
+        if(mConfig.SpecificChrRegions.hasFilters() || !mConfig.WriteBam)
+            return 0;
+
         BamWriter bamWriter = fileWriterCache.getFullyUnmappedReadsBamWriter();
 
         BamReader bamReader = new BamReader(mConfig);

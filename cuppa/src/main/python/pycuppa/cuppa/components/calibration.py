@@ -223,7 +223,7 @@ class RollingAvgCalibration(BaseEstimator, LoggerMixin):
         return self
 
     def predict_proba(self, X: pd.DataFrame, normalize: bool = True) -> pd.DataFrame:
-        if self.bypass:
+        if self.bypass or X.shape[0] == 0:
             return X
 
         if not isinstance(X, pd.DataFrame):

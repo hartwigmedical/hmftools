@@ -1,4 +1,4 @@
-package com.hartwig.hmftools.pave;
+package com.hartwig.hmftools.pave.impact;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
@@ -20,9 +20,9 @@ import static com.hartwig.hmftools.common.variant.impact.VariantEffect.PHASED_SY
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.START_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.STOP_LOST;
 import static com.hartwig.hmftools.common.variant.impact.VariantEffect.SYNONYMOUS;
-import static com.hartwig.hmftools.pave.ImpactClassifier.checkStopStartCodons;
+import static com.hartwig.hmftools.pave.impact.ImpactClassifier.checkStopStartCodons;
 import static com.hartwig.hmftools.pave.PaveConfig.PV_LOGGER;
-import static com.hartwig.hmftools.pave.ProteinUtils.trimAminoAcids;
+import static com.hartwig.hmftools.pave.impact.ProteinUtils.trimAminoAcids;
 
 import java.util.List;
 import java.util.Map;
@@ -33,6 +33,7 @@ import com.hartwig.hmftools.common.codon.Codons;
 import com.hartwig.hmftools.common.codon.Nucleotides;
 import com.hartwig.hmftools.common.genome.refgenome.RefGenomeInterface;
 import com.hartwig.hmftools.common.variant.impact.VariantEffect;
+import com.hartwig.hmftools.pave.VariantData;
 
 public class PhasedVariantClassifier
 {

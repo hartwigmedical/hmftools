@@ -17,8 +17,7 @@ class DiploidRatioNormalization
     private final List<Double> mResults;
     private final RollingMedian mRollingMedian;
 
-    DiploidRatioNormalization(final double expectedRatio, int maxWindowDistance, int minWindowCoverage,
-            final List<Double> ratios)
+    DiploidRatioNormalization(final double expectedRatio, int maxWindowDistance, int minWindowCoverage, final List<Double> ratios)
     {
         mStartIndex = 0;
         mEndIndex = -1;
