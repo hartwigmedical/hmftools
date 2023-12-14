@@ -108,7 +108,7 @@ public final class TestOrangeConfigFactory
                         .cuppaResultCsv(CUPPA_RESULT_CSV)
                         .cuppaSummaryPlot(CUPPA_SUMMARY_PLOT)
                         .cuppaChartPlot(CUPPA_CHART_PLOT)
-                        .cuppa2VisPlot(CUPPA_VIS_PLOT)
+                        .cuppa2Visualization(CUPPA_VIS_PLOT)
                         .sigsAllocationTsv(SIGS_ALLOCATION_TSV)
                         .build())
                 .build();
