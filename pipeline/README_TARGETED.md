@@ -49,10 +49,10 @@ Follow the steps below to produce the training files listed above:
 
 ### Cobalt normalisation
 
-1. Run Cobalt on each of the training samples: 
+1. Run Cobalt on each sample: 
 
 ```
-java -jar -Xmx8G cobalt.jar \
+java -jar cobalt.jar \
     -tumor SAMPLE_ID \
     -tumor_bam /sample_data/SAMPLE_ID.bam \ 
     -output_dir /sample_data/cobalt \ 
@@ -140,6 +140,13 @@ The following manual HOTSPOT variant was added to the PON:
 
 2. Call the Isofox Normalisation Builder .. (TOOD)
 
+In order to adjust for the degree of amplification in panel sequencing relative to WGS,
+1. calculate the median adjusted TPM for each gene across the panel samples.
+2. Repeat step 1 for the same list of genes in WGS samples. In instances where the whole genome median is zero, a replacement value of 0.01 is used instead.
+3. The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for each gene.
+
+Note: The adjustment factors are calculated at the gene level and not at the transcript level. This means the adjusted TPMs for transcripts from panel sequencing are not reliable.
+
 
 ## Pipeline Tool Functional Differences
 
@@ -207,21 +214,14 @@ There is also no somatic fit mode or somatic penalty and no SV recovery in PURPL
 
 
 ### Isofox
-TPM is normalised to bring panel gene expression in-line with WGS expression rates. This has been performed for the TSO500 panel.
-
-In order to adjust for the degree of amplification in panel sequencing relative to WGS, 
-1. calculate the median adjusted TPM for each gene across the panel samples.
-2. Repeat step 1 for the same list of genes in WGS samples. In instances where the whole genome median is zero, a replacement value of 0.01 is used instead.
-3. The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for each gene. 
-
-Note: The adjustment factors are calculated at the gene level and not at the transcript level. This means the adjusted TPMs for transcripts from panel sequencing are not reliable.
+TPM is normalised to bring panel gene expression in-line with WGS expression rates.
 
 
 ### Sage
 Sage is run with specialised parameters and logic to minimise false positives from higher depth. See Sage readme for details.
 
-CHANGE
-## Recommended parameters values for Targeted Mode:
+
+## Recommended parameters values
 The following parameters are calibrated for panel sequencing and are set differently to WGS. These are the default panel parameter values.
 
 Amber
@@ -273,26 +273,21 @@ Purple
 ```
 
 ## Future improvements
-TODO
 * Off Target normalisation and integration** - This is implemented, but not used as currently does not yield a benefit over on target alone.
 MSI thresholds - We could better estimate if we had a more diverse range of samples for testing with known MSIndelsPerMb rates around and above the MSI cutoff.
 * Purity & ploidy estimates** - Purity and ploidy estimates are only correct approximately half the time. The fit could be made more robust by improving -COBALT/AMBER parameterisation, merging on and off target regions or changing PURPLE fit functionality
 
 
-### Example Pipeline Scripts
+## Example Pipeline Scripts
 
-These scripts demonstrate how to run each HMF component in turn to produce DNA variant calling and analysis on a panel tumor BAM.
-
-They match the current tool version, configuration and resource files as used in the current HMF GCP pipeline (see [Platinum](https://github.com/hartwigmedical/platinum)).
-
-## Set-up
+These scripts demonstrate how to run the HMF pipeline in targeted panel mode on a panel tumor BAM.
 
 1. Download the latest release JAR for each tool as listed [here](https://github.com/hartwigmedical/hmftools#current-versions).
 - also ensure that samtools (1.10 or higher) and bwa (0.7.17 or higher) are on the path
 
 2. Download the resources files for either GRCh37 or GRCh38 from [HMFTools-Resources > DNA-Resources](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/dna_pipeline/).
-- The latest resource files version is v5.31.
-- The latest resource files for the TSO-500 panel is labeled 'hmf_tso500_pipeline_resources.38_v5.31.gz'
+- The latest resource files version is v5.33.
+- The latest resource files for the TSO-500 panel is labeled 'hmf_tso500_pipeline_resources.38_v5.33.gz'
 - The reference genome files are available separately [HMFTools-Resources > Ref-Genome](https://console.cloud.google.com/storage/browser/hmf-public/HMFtools-Resources/ref_genome/).
 
 3. Call the pipeline with the following arguments:
