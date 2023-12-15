@@ -221,7 +221,7 @@ TPM is normalised to bring panel gene expression in-line with WGS expression rat
 Sage is run with specialised parameters and logic to minimise false positives from higher depth. See Sage readme for details.
 
 
-## Recommended parameters values
+## Recommended parameter values
 The following parameters are calibrated for panel sequencing and are set differently to WGS. These are the default panel parameter values.
 
 Amber
@@ -273,9 +273,11 @@ Purple
 ```
 
 ## Future improvements
-* Off Target normalisation and integration** - This is implemented, but not used as currently does not yield a benefit over on target alone.
+
+* **Off Target normalisation and integration** - This is implemented, but not used as currently does not yield a benefit over on target alone.
 MSI thresholds - We could better estimate if we had a more diverse range of samples for testing with known MSIndelsPerMb rates around and above the MSI cutoff.
-* Purity & ploidy estimates** - Purity and ploidy estimates are only correct approximately half the time. The fit could be made more robust by improving -COBALT/AMBER parameterisation, merging on and off target regions or changing PURPLE fit functionality
+* **Purity & ploidy estimates** - There are two known issues in panel's purity and ploidy estimations. Relative to the WGS truth set, Purple can at times estimate ploidy at 1/2 of whole genome and estimate purity to be 100%. A somatic readjustment to fix these issues is currently work-in-progress.
+* **Exon validation** - Validation on exon sequencing to further inform parameterisation in targeted mode is expected by release 5.35.
 
 
 ## Example Pipeline Scripts
