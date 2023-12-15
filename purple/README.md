@@ -940,6 +940,13 @@ We can determine the likelihood of a variant being subclonal at any given varian
   <img src="src/main/resources/readme/COLO829T.somatic.clonality.png" width="500" alt="Somatic clonality">
 </p>
 
+## HRD (homologous recombination deficiency) classifier
+
+In Targeted Mode from release 5.34, Purple provides a HRD+ or HRD- prediction akin to the CHORD module.
+
+This HRD classifier is still in experimental stage due to the small number of training and validation samples available. This tool will be continuously improved as more HRD+ samples are received. 
+
+
 ## Known issues / points for improvement
 
 - **MOSAIC Y LOSS** - Common in adult males.  Should be detected in germline similar to MOSAIC X.  Currently all males are assumed to have 1 copy in germline, which may lead to copy number being under estimated in tumor.  
