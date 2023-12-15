@@ -8,7 +8,6 @@ import java.util.Set;
 import com.hartwig.hmftools.datamodel.chord.ChordRecord;
 import com.hartwig.hmftools.datamodel.cohort.Evaluation;
 import com.hartwig.hmftools.datamodel.cuppa.CuppaData;
-import com.hartwig.hmftools.datamodel.cuppa2.Cuppa2Data;
 import com.hartwig.hmftools.datamodel.hla.LilacRecord;
 import com.hartwig.hmftools.datamodel.isofox.IsofoxRecord;
 import com.hartwig.hmftools.datamodel.linx.LinxRecord;
@@ -78,9 +77,6 @@ public interface OrangeRecord
 
     @Nullable
     CuppaData cuppa();
-
-    @Nullable
-    Cuppa2Data cuppa2();
 
     @Nullable
     Set<PeachGenotype> peach();

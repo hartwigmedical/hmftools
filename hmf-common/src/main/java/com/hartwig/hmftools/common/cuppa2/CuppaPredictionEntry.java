@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CuppaVisDataEntry
+public class CuppaPredictionEntry
 {
     public static final String FLD_SAMPLE_ID = "sample_id";
     public static final String FLD_DATA_TYPE = "data_type";
@@ -29,7 +29,7 @@ public class CuppaVisDataEntry
     public final int Rank;
     public final int RankGroup;
 
-    public CuppaVisDataEntry(
+    public CuppaPredictionEntry(
             @NotNull final String sampleId,
             @NotNull final Categories.DataType dataType,
             @NotNull final Categories.ClfGroup clfGroup,

@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 @Gson.TypeAdapters
 @Value.Immutable
 @Value.Style(passAnnotations = { NotNull.class, Nullable.class })
-public interface Cuppa2Data
+public interface CuppaPredictions
 {
     @NotNull
     ProbabilityEntry topPrediction();

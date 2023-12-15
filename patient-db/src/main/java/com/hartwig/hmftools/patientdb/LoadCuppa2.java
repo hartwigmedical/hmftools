@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.hartwig.hmftools.common.cuppa2.CuppaVisData;
+import com.hartwig.hmftools.common.cuppa2.CuppaPredictions;
 import com.hartwig.hmftools.patientdb.dao.DatabaseAccess;
 
 import org.apache.commons.cli.*;
@@ -47,14 +47,14 @@ public class LoadCuppa2
         logVersion();
 
         LOGGER.info("Loading CUPPA from {}", new File(cuppaVisDataTsv).getParent());
-        CuppaVisData visData = CuppaVisData.fromTsv(cuppaVisDataTsv);
-        String sample = visData.get(0).SampleId;
-        LOGGER.info("Loaded {} entries from {} for sample {}", visData.size(), cuppaVisDataTsv, sample);
+        CuppaPredictions cuppaPredictions = CuppaPredictions.fromTsv(cuppaVisDataTsv);
+        String sample = cuppaPredictions.get(0).SampleId;
+        LOGGER.info("Loaded {} entries from {} for sample {}", cuppaPredictions.size(), cuppaVisDataTsv, sample);
 
         int TOP_N_PROBS = 3;
         LOGGER.info("Writing top {} probabilities from all classifiers to database", TOP_N_PROBS);
         DatabaseAccess dbWriter = databaseAccess(cmd);
-        dbWriter.writeCuppa2(sample, visData, TOP_N_PROBS);
+        dbWriter.writeCuppa2(sample, cuppaPredictions, TOP_N_PROBS);
         LOGGER.info("Complete");
     }
 }
