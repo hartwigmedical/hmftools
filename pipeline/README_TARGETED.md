@@ -209,8 +209,10 @@ There is also no somatic fit mode or somatic penalty and no SV recovery in PURPL
 ### Isofox
 TPM is normalised to bring panel gene expression in-line with WGS expression rates. This has been performed for the TSO500 panel.
 
-CHANGE
-In order to adjust for the degree of amplification in panel sequencing relative to WGS, 1) calculate the median adjusted TPM for each gene across the panel samples. 2) Repeat step 1) for the same list of genes in WGS samples. In instances where the whole genome median is zero, a replacement value of 0.01 is used instead. 3) The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for each gene. 
+In order to adjust for the degree of amplification in panel sequencing relative to WGS, 
+1. calculate the median adjusted TPM for each gene across the panel samples.
+2. Repeat step 1 for the same list of genes in WGS samples. In instances where the whole genome median is zero, a replacement value of 0.01 is used instead.
+3. The adjustment factor is calculated by dividing the panel median value by the corresponding whole genome value for each gene. 
 
 Note: The adjustment factors are calculated at the gene level and not at the transcript level. This means the adjusted TPMs for transcripts from panel sequencing are not reliable.
 
